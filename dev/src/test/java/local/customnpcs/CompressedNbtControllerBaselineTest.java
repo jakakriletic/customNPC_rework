@@ -1,6 +1,7 @@
 package local.customnpcs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Method;
 
@@ -8,6 +9,7 @@ import noppes.npcs.controllers.BankController;
 import noppes.npcs.controllers.FactionController;
 import noppes.npcs.controllers.GlobalDataController;
 import noppes.npcs.controllers.RecipeController;
+import noppes.npcs.controllers.SchematicController;
 import noppes.npcs.controllers.SpawnController;
 import noppes.npcs.controllers.TransportController;
 import noppes.npcs.client.controllers.PresetController;
@@ -25,10 +27,21 @@ public class CompressedNbtControllerBaselineTest {
         assertVoidMethod(RecipeController.class, "saveCategories");
         assertVoidMethod(SpawnController.class, "saveData");
         assertVoidMethod(PresetController.class, "save");
+        assertMethodNamed(SchematicController.class, "save");
     }
 
     private static void assertVoidMethod(Class<?> type, String name) throws Exception {
         Method method = type.getDeclaredMethod(name);
         assertEquals(Void.TYPE, method.getReturnType());
+    }
+
+    private static void assertMethodNamed(Class<?> type, String name) {
+        for (Method method : type.getDeclaredMethods()) {
+            if (method.getName().equals(name)) {
+                assertEquals(Void.TYPE, method.getReturnType());
+                return;
+            }
+        }
+        assertTrue(type.getName() + " has no " + name + " method", false);
     }
 }
