@@ -225,3 +225,4 @@ Odločitve se ne brišejo — če se preglasi, se doda nova, ki staro označi za
 | D-006 | 2026-09-11 | Vsa nova koda v `noppes/npcs/rework/` | jasna meja med originalom in reworkom; možnost izklopa |
 | D-007 | 2026-09-11 | Vsaka funkcionalna sprememba privzeto v original načinu | brez tihih sprememb obnašanja obstoječih svetov |
 | D-008 | 2026-09-11 | Forenzika in migracija za minorni R9 sta odloženi; splošna B1/B2 zaščita ostane | uporabnik nima pokvarjenih datotek; simptoma `waiting` → `following` ne širimo v drag obnovitveni projekt, ko imajo R1–R8 večji vpliv |
+| D-009 | 2026-09-11 | Asinhroni world zapisi imajo executor na server sejo; splošni `CustomNPCsScheduler` ostane ločen | world pot in snapshot se zajameta ob zahtevi, shutdown izprazni samo podatkovne zapise; klientskih paketov in GUI zamikov ne smemo prekiniti z ugašanjem globalnega schedulerja |

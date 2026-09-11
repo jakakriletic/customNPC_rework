@@ -11,9 +11,9 @@
 |---|---|
 | Zadnja posodobitev | **2026-09-11** |
 | Trenutni milestone | **M1 — Integriteta podatkov** (M0 še ni zaključen) |
-| Naslednji paketi | **M1.6** (async lifecycle), nato **M1.9** (fault injection) |
-| Prevedljivih razredov | 19 — prejšnjih 10 + 8 stisnjenih-NBT controllerjev + `CompressedNbtFile` |
-| Testi | 29 primerjalnih v obeh načinih + 5 za varna writerja; zeleni |
+| Naslednji paketi | **M1.9** (fault injection), nato M2 |
+| Prevedljivih razredov | 21 — prejšnjih 19 + `CustomNpcs` + `WorldSaveSession` |
+| Testi | 31 primerjalnih v obeh načinih + 7 za varne writerje/session; zeleni |
 | Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
 
 ---
@@ -23,7 +23,7 @@
 | Milestone | Stanje | Opomba |
 |---|---|---|
 | M0 Temelj | **v teku** (≈70 %) | M0.1–M0.4 narejeno; M0.5–M0.8 odprto |
-| M1 Integriteta podatkov | **v teku** (≈80 %) | M1.1–M1.3 in M1.5 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
+| M1 Integriteta podatkov | **v teku** (≈90 %) | M1.1–M1.3, M1.5 in M1.6 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | ni začeto | |
 | M3 Jedro entitete | ni začeto | analiza narejena, glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
@@ -43,7 +43,7 @@
 | M1.3 | Nov tipno varen NBT↔JSON serializer + fuzz testi | **narejeno** |
 | M1.4 | Bralnik za že pokvarjene datoteke, popravek tipov kjer je mogoče | **odloženo** — ni vhodnih datotek, R9 je minoren |
 | M1.5 | `SafeFileWriter` + preklop vseh controllerjev (B1) | **narejeno** — clone, player, sinhroni JSON in stisnjeni NBT |
-| M1.6 | Lifecycle asinhronih zapisov (B2) | odprto |
+| M1.6 | Lifecycle asinhronih zapisov (B2) | **narejeno** — session executor, zajeta pot/snapshot, drain pred resetom |
 | M1.7 | Verzioniranje `SaveFormat` + migracija | **ni več nujno za R9** — format nespremenjen |
 | M1.8 | `.\dev.ps1 auditClones` | **odloženo** — brez konkretnih poškodovanih datotek |
 | M1.9 | Fault injection testi | odprto |
@@ -51,6 +51,49 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-11 (8) — M1.6: lifecycle asinhronih world zapisov
+
+**Paket:** M1.6
+**Stanje:** končano
+
+**Narejeno:**
+
+- `CustomNpcs` je bil prenesen v prevedljivo drevo in shranjen v ločenem baseline commitu;
+  popravljeni so bili samo trije generični artefakti dekompilacije.
+- Dodan `rework/data/WorldSaveSession`: ločen enonitni executor za vsako server-world sejo,
+  z absolutnim rootom sveta, zajetim ob `FMLServerAboutToStartEvent`.
+- `PlayerData.save` ob zahtevi zajame NBT snapshot in ime cilja ter ga preda aktivni seji;
+  ne izračunava več poti znotraj pozno izvedene naloge na globalnem schedulerju.
+- Ob `FMLServerStoppedEvent` seja najprej preneha sprejemati zapise in izprazni vrsto, šele
+  nato se `CustomNpcs.Server` nastavi na `null`. Nečist drain je eksplicitno zabeležen kot napaka.
+- Če save izjemoma nastane brez aktivne server seje, se pot zajame in zapis izvede sinhrono;
+  podatki se ne odložijo na neupravljano globalno vrsto.
+- Testi pokrijejo svet A → drain → svet B z istim imenom igralca, zavrnitev poznega zapisa ter
+  propagacijo I/O napake v rezultat draina. Primerjalni bytecode test potrdi staro in novo vezavo.
+- Vseh 31 primerjalnih testov ter 7 testov varnih writerjev/session je zelenih v Javi 8.
+- Build zapakira 40 razredov; `verify-package` je pregledal 1716 originalnih vnosov in našel
+  samo 25 pričakovanih zamenjav originalnih class datotek.
+
+**Ni narejeno in zakaj:**
+
+- Zaklenjen cilj, zavrnjen dostop in procesne prekinitve spadajo v M1.9 fault injection.
+- Splošni `CustomNPCsScheduler` ni ugasnjen, ker ga uporabljajo klient, paketni sendi, GUI zamiki
+  in `BankData`; slednji je ločen bug B4 in se ne sme spreminjati v tem paketu.
+
+**Ugotovitve:**
+
+- Edini pregledani datotečni zapis na globalnem schedulerju je bil `PlayerData.save`; drugi
+  uporabniki izvajajo omrežne ali GUI naloge, zato bi globalni shutdown povzročil regresije.
+
+**Spremembe obnašanja:** pending player zapisi se ob ustavitvi izpraznijo pred resetom serverja;
+zapis starega sveta ne more uporabiti poti novega sveta.
+
+**Meritve:** nobene
+
+**Naslednja seja:** M1.9, fault injection in zaključni kriteriji integritete podatkov.
+
+---
 
 ### 2026-09-11 (7) — M1.5d: varen zapis stisnjenega NBT
 
@@ -366,6 +409,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 | 2026-09-11 | Player JSON se zapiše in validira pred zamenjavo; stari ostane ob napaki | B1 | ne | varni zapis |
 | 2026-09-11 | Dialog, quest, linked NPC in trader market JSON se zapišejo neposredno skozi validirano atomsko zamenjavo | B1 | ne | varni zapis |
 | 2026-09-11 | World controllerji, klientovi preseti in schematiki uporabljajo validiran atomski zapis stisnjenega NBT | B1 | ne | varni zapis |
+| 2026-09-11 | Player save vrsta je vezana na world sejo in se izprazni pred resetom server globalov | B2 | ne | varen lifecycle |
 
 Vse zgornje so popravki tihe izgube podatkov, zato so brez stikala in privzeto vklopljene.
 Format datotek se ne spremeni, zato ni migracije. Izjema je zadnji stolpec pri praznem

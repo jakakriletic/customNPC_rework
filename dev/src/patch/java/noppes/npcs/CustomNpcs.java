@@ -42,6 +42,7 @@ package noppes.npcs;
 import com.mojang.authlib.GameProfile;
 import java.io.File;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockIce;
 import net.minecraft.block.BlockLeaves;
@@ -109,6 +110,7 @@ import noppes.npcs.controllers.data.MarkData;
 import noppes.npcs.controllers.data.PlayerData;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.items.ItemScripted;
+import noppes.npcs.rework.data.WorldSaveSession;
 
 @Mod(modid="customnpcs", name="CustomNpcs", version="1.12", acceptedMinecraftVersions="1.12, 1.12.1, 1.12.2")
 public class CustomNpcs {
@@ -253,6 +255,7 @@ public class CustomNpcs {
     public void setAboutToStart(FMLServerAboutToStartEvent event) {
         Availability.scoreboardValues.clear();
         Server = event.getServer();
+        WorldSaveSession.begin(CustomNpcs.getWorldSaveDirectory());
         ChunkController.instance.clear();
         FactionController.instance.load();
         new PlayerDataController();
@@ -293,6 +296,9 @@ public class CustomNpcs {
 
     @Mod.EventHandler
     public void stopped(FMLServerStoppedEvent event) {
+        if (!WorldSaveSession.end(30L, TimeUnit.SECONDS)) {
+            LogWriter.error("CustomNPCs world save queue did not drain cleanly before shutdown");
+        }
         ServerCloneController.Instance = null;
         Server = null;
         ItemScripted.Resources.clear();
@@ -351,4 +357,3 @@ public class CustomNpcs {
         VerboseDebug = false;
     }
 }
-

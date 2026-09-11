@@ -46,8 +46,8 @@ import noppes.npcs.entity.EntityCustomNpc;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.entity.data.DataTimers;
 import noppes.npcs.roles.RoleCompanion;
-import noppes.npcs.util.CustomNPCsScheduler;
 import noppes.npcs.util.NBTJsonUtil;
+import noppes.npcs.rework.data.WorldSaveSession;
 
 public class PlayerData
 implements ICapabilityProvider {
@@ -191,7 +191,12 @@ implements ICapabilityProvider {
     public synchronized void save(boolean update) {
         NBTTagCompound compound = this.getNBT();
         String filename = this.uuid + ".json";
-        CustomNPCsScheduler.runTack(() -> {
+        WorldSaveSession session = WorldSaveSession.current();
+        if (session != null) {
+            if (!session.savePlayerData(filename, compound)) {
+                LogWriter.error("Player data save rejected because the world is stopping: " + filename);
+            }
+        } else {
             try {
                 File saveDir = CustomNpcs.getWorldSaveDirectory("playerdata");
                 File file = new File(saveDir, filename);
@@ -200,7 +205,7 @@ implements ICapabilityProvider {
             catch (Exception e) {
                 LogWriter.except(e);
             }
-        });
+        }
         if (update) {
             this.updateClient = true;
         }
@@ -279,5 +284,4 @@ implements ICapabilityProvider {
         return data;
     }
 }
-
 
