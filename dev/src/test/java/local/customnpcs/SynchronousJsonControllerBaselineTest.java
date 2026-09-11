@@ -11,6 +11,7 @@ import noppes.npcs.controllers.data.Dialog;
 import noppes.npcs.controllers.data.DialogCategory;
 import noppes.npcs.controllers.data.Quest;
 import noppes.npcs.controllers.data.QuestCategory;
+import noppes.npcs.roles.RoleTrader;
 
 import org.junit.Test;
 
@@ -38,5 +39,13 @@ public class SynchronousJsonControllerBaselineTest {
 
         assertEquals("LinkedNpc", data.getNBT().getString("LinkedName"));
         assertEquals(0, data.getNBT().getCompoundTag("NPCData").getSize());
+    }
+
+    @Test
+    public void traderSaveEntryPointKeepsItsOriginalSignature() throws Exception {
+        Method method = RoleTrader.class.getDeclaredMethod("save", RoleTrader.class,
+                String.class);
+
+        assertEquals(Void.TYPE, method.getReturnType());
     }
 }
