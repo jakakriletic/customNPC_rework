@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -27,6 +28,42 @@ public final class SafeFileWriter {
         void validate(File candidate) throws IOException;
     }
 
+    interface FileOperations {
+        boolean exists(Path path);
+        void createDirectories(Path path) throws IOException;
+        Path createTempFile(Path directory, String prefix, String suffix) throws IOException;
+        void move(Path source, Path target, CopyOption... options) throws IOException;
+        void deleteIfExists(Path path) throws IOException;
+    }
+
+    private static final FileOperations REAL_FILES = new FileOperations() {
+        @Override
+        public boolean exists(Path path) {
+            return Files.exists(path);
+        }
+
+        @Override
+        public void createDirectories(Path path) throws IOException {
+            Files.createDirectories(path);
+        }
+
+        @Override
+        public Path createTempFile(Path directory, String prefix, String suffix)
+                throws IOException {
+            return Files.createTempFile(directory, prefix, suffix);
+        }
+
+        @Override
+        public void move(Path source, Path target, CopyOption... options) throws IOException {
+            Files.move(source, target, options);
+        }
+
+        @Override
+        public void deleteIfExists(Path path) throws IOException {
+            Files.deleteIfExists(path);
+        }
+    };
+
     public static void writeUtf8(File target, final String text, Validator validator)
             throws IOException {
         write(target, new OutputAction() {
@@ -39,6 +76,11 @@ public final class SafeFileWriter {
 
     public static void write(File target, OutputAction action, Validator validator)
             throws IOException {
+        write(target, action, validator, REAL_FILES);
+    }
+
+    static void write(File target, OutputAction action, Validator validator,
+            FileOperations files) throws IOException {
         if (target == null || action == null || validator == null) {
             throw new NullPointerException("target, action and validator are required");
         }
@@ -49,33 +91,33 @@ public final class SafeFileWriter {
             throw new IOException("Target has no parent directory: " + target);
         }
         Path parent = parentFile.toPath();
-        Files.createDirectories(parent);
+        files.createDirectories(parent);
 
         Path destination = absoluteTarget.toPath();
         Path backup = parent.resolve(absoluteTarget.getName() + ".bak");
-        if (!Files.exists(destination) && Files.exists(backup)) {
+        if (!files.exists(destination) && files.exists(backup)) {
             throw new IOException("Recovery backup exists while target is missing: " + backup);
         }
 
-        Path temporary = Files.createTempFile(parent, absoluteTarget.getName() + ".", ".tmp");
+        Path temporary = files.createTempFile(parent, absoluteTarget.getName() + ".", ".tmp");
         boolean installed = false;
         try {
             writeAndSync(temporary, action);
             validator.validate(temporary.toFile());
 
             try {
-                Files.move(temporary, destination, StandardCopyOption.ATOMIC_MOVE,
+                files.move(temporary, destination, StandardCopyOption.ATOMIC_MOVE,
                         StandardCopyOption.REPLACE_EXISTING);
                 installed = true;
             } catch (AtomicMoveNotSupportedException unsupported) {
-                replaceWithBackup(temporary, destination, backup, validator);
+                replaceWithBackup(temporary, destination, backup, validator, files);
                 installed = true;
             }
 
             validator.validate(destination.toFile());
         } finally {
             if (!installed) {
-                Files.deleteIfExists(temporary);
+                files.deleteIfExists(temporary);
             }
         }
     }
@@ -92,21 +134,21 @@ public final class SafeFileWriter {
     }
 
     private static void replaceWithBackup(Path temporary, Path destination, Path backup,
-            Validator validator) throws IOException {
-        boolean hadTarget = Files.exists(destination);
+            Validator validator, FileOperations files) throws IOException {
+        boolean hadTarget = files.exists(destination);
         if (hadTarget) {
-            Files.move(destination, backup, StandardCopyOption.REPLACE_EXISTING);
+            files.move(destination, backup, StandardCopyOption.REPLACE_EXISTING);
         }
 
         try {
-            Files.move(temporary, destination, StandardCopyOption.REPLACE_EXISTING);
+            files.move(temporary, destination, StandardCopyOption.REPLACE_EXISTING);
             validator.validate(destination.toFile());
-            Files.deleteIfExists(backup);
+            files.deleteIfExists(backup);
         } catch (IOException failure) {
-            if (hadTarget && Files.exists(backup)) {
-                Files.deleteIfExists(destination);
+            if (hadTarget && files.exists(backup)) {
+                files.deleteIfExists(destination);
                 try {
-                    Files.move(backup, destination, StandardCopyOption.REPLACE_EXISTING);
+                    files.move(backup, destination, StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException restoreFailure) {
                     failure.addSuppressed(restoreFailure);
                 }

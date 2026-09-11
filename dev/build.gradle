@@ -78,6 +78,7 @@ task testOriginal(type: Test) {
     exclude '**/SafeFileWriterTest.class'
     exclude '**/CompressedNbtFileTest.class'
     exclude '**/WorldSaveSessionTest.class'
+    exclude '**/SafeFileWriterFaultInjectionTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

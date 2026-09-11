@@ -10,10 +10,10 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-11** |
-| Trenutni milestone | **M1 — Integriteta podatkov** (M0 še ni zaključen) |
-| Naslednji paketi | **M1.9** (fault injection), nato M2 |
+| Trenutni milestone | **M0 — dokončanje temelja**; M1 je zaključen |
+| Naslednji paketi | **M0.5** (dedicated-server smoke), **M0.6** (ponovljiv testni svet), nato M2 |
 | Prevedljivih razredov | 21 — prejšnjih 19 + `CustomNpcs` + `WorldSaveSession` |
-| Testi | 31 primerjalnih v obeh načinih + 7 za varne writerje/session; zeleni |
+| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection; zeleni |
 | Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
 
 ---
@@ -23,7 +23,7 @@
 | Milestone | Stanje | Opomba |
 |---|---|---|
 | M0 Temelj | **v teku** (≈70 %) | M0.1–M0.4 narejeno; M0.5–M0.8 odprto |
-| M1 Integriteta podatkov | **v teku** (≈90 %) | M1.1–M1.3, M1.5 in M1.6 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
+| M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | ni začeto | |
 | M3 Jedro entitete | ni začeto | analiza narejena, glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
@@ -46,11 +46,52 @@
 | M1.6 | Lifecycle asinhronih zapisov (B2) | **narejeno** — session executor, zajeta pot/snapshot, drain pred resetom |
 | M1.7 | Verzioniranje `SaveFormat` + migracija | **ni več nujno za R9** — format nespremenjen |
 | M1.8 | `.\dev.ps1 auditClones` | **odloženo** — brez konkretnih poškodovanih datotek |
-| M1.9 | Fault injection testi | odprto |
+| M1.9 | Fault injection testi | **narejeno** — 9 determinističnih odpovednih scenarijev |
 
 ---
 
 ## Dnevnik sej
+
+### 2026-09-11 (9) — M1.9: fault injection varnih zapisov
+
+**Paket:** M1.9
+**Stanje:** končano
+
+**Narejeno:**
+
+- `SafeFileWriter` je dobil package-private datotečno mejo za deterministično fault injection;
+  javni API in produkcijska pot še vedno uporabljata neposredno `java.nio.file.Files` implementacijo.
+- Dodanih je 9 scenarijev: prekinitev med pisanjem pred zamenjavo, zaklenjen/zavrnjen cilj,
+  zavrnjen dostop do imenika, nepodprt atomski premik, odpoved fallback namestitve, prekinitev
+  po fallback zamenjavi, odpoved same obnove, pokvarjen JSON kandidat in restart z orphaned `.bak`.
+- Pri vsaki odpovedi test zahteva, da ostane zadnja verzija na cilju ali kot eksplicitno
+  obnovljiv `.bak`; začasne `.tmp` datoteke se ne puščajo.
+- Normalna atomska zamenjava je ponovno uspešno tekla na dejanskem Windows datotečnem sistemu;
+  redke OS veje uporabljajo deterministično vržene standardne Java NIO izjeme.
+- Vseh 31 primerjalnih testov ter 16 testov writerjev, session lifecyclea in fault injection
+  je zelenih v Javi 8.
+- Build zapakira 42 razredov; `verify-package` je pregledal 1716 originalnih vnosov in našel
+  samo 25 pričakovanih zamenjav originalnih class datotek.
+
+**Ni narejeno in zakaj:**
+
+- M1.4 in M1.8 ostajata zavestno odložena brez konkretne poškodovane uporabnikove datoteke.
+- M1.7 ni potreben, ker se save format ni spremenil.
+
+**Ugotovitve:**
+
+- Če odpovesta tako namestitev kot obnova cilja, `SafeFileWriter` pusti staro vsebino v `.bak`
+  in pripne napako obnove kot suppressed exception; podatki so še vedno obnovljivi.
+- Orphaned backup se ne prepiše samodejno. Writer zavrne nov zapis, da ohrani zadnjo znano
+  obnovljivo verzijo za pregled namesto ugibanja.
+
+**Spremembe obnašanja:** nobene; dodana testna meja ni del javnega API-ja.
+
+**Meritve:** nobene
+
+**Naslednja seja:** M0.5 dedicated-server smoke, nato M0.6 testni svet kot vhod za M2.
+
+---
 
 ### 2026-09-11 (8) — M1.6: lifecycle asinhronih world zapisov
 

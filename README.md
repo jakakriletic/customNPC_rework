@@ -14,8 +14,8 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-09-11 |
-| Trenutna faza | **M1 — Integriteta podatkov** (M0 še ni zaključen) |
-| Naslednji korak | M1.9 fault injection za varne zapise, nato M2; glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Trenutna faza | **M0 — dokončanje temelja**; M1 integriteta podatkov je zaključena |
+| Naslednji korak | M0.5 dedicated-server smoke, nato M0.6 ponovljiv testni svet; glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
 | Prevedljivih razredov | 21 od ~746; podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Okolje deluje | da — `runClient` uspešno naloži Forge + CustomNPCs |
