@@ -10,6 +10,7 @@ import noppes.npcs.controllers.GlobalDataController;
 import noppes.npcs.controllers.RecipeController;
 import noppes.npcs.controllers.SpawnController;
 import noppes.npcs.controllers.TransportController;
+import noppes.npcs.client.controllers.PresetController;
 
 import org.junit.Test;
 
@@ -23,6 +24,7 @@ public class CompressedNbtControllerBaselineTest {
         assertVoidMethod(TransportController.class, "saveCategories");
         assertVoidMethod(RecipeController.class, "saveCategories");
         assertVoidMethod(SpawnController.class, "saveData");
+        assertVoidMethod(PresetController.class, "save");
     }
 
     private static void assertVoidMethod(Class<?> type, String name) throws Exception {
