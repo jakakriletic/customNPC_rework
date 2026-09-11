@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.lang.reflect.Method;
 
 import noppes.npcs.controllers.DialogController;
+import noppes.npcs.controllers.LinkedNpcController;
 import noppes.npcs.controllers.QuestController;
 import noppes.npcs.controllers.data.Dialog;
 import noppes.npcs.controllers.data.DialogCategory;
@@ -29,5 +30,13 @@ public class SynchronousJsonControllerBaselineTest {
                 QuestCategory.class, Quest.class);
 
         assertEquals(Void.TYPE, method.getReturnType());
+    }
+
+    @Test
+    public void linkedNpcDataKeepsItsOriginalNbtShape() {
+        LinkedNpcController.LinkedData data = new LinkedNpcController.LinkedData();
+
+        assertEquals("LinkedNpc", data.getNBT().getString("LinkedName"));
+        assertEquals(0, data.getNBT().getCompoundTag("NPCData").getSize());
     }
 }
