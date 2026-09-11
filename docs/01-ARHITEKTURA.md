@@ -224,3 +224,4 @@ Odločitve se ne brišejo — če se preglasi, se doda nova, ki staro označi za
 | D-005 | 2026-09-11 | Samo 1.12.2, brez multi-verzijske abstrakcije | vsa energija v eno verzijo; Java 8 zaradi Nashorna ostane |
 | D-006 | 2026-09-11 | Vsa nova koda v `noppes/npcs/rework/` | jasna meja med originalom in reworkom; možnost izklopa |
 | D-007 | 2026-09-11 | Vsaka funkcionalna sprememba privzeto v original načinu | brez tihih sprememb obnašanja obstoječih svetov |
+| D-008 | 2026-09-11 | Forenzika in migracija za minorni R9 sta odloženi; splošna B1/B2 zaščita ostane | uporabnik nima pokvarjenih datotek; simptoma `waiting` → `following` ne širimo v drag obnovitveni projekt, ko imajo R1–R8 večji vpliv |

@@ -602,15 +602,18 @@ rework/chat/
 
 ---
 
-## R9 — Clone tab: pomešane in izgubljene JSON vrednosti
+## R9 — Clone follower: stanje `waiting` se lahko povrne v `following`
 
 > *"Boljše shranjevanje v clone tabu. Starim NPC-jem ki jih imam dolgo shranjene se zna
 > zgoditi da se jim JSON vrednosti kar pomešajo (npr. following gre iz waiting na following)."*
 
-**Faza:** M1 (prva!) · **Velikost:** srednja · **Tveganje:** nizko · **Vrednost:** zelo visoka
+**Faza:** M1 · **Velikost:** majhna po pojasnilu uporabnika · **Tveganje:** nizko · **Prioriteta:** nizka po osnovnem popravku
 
-To je edina zahteva, kjer **koda kaže več nedvoumnih napak, ki natanko proizvedejo opisani
-simptom**. Zato gre prva.
+Pojasnilo uporabnika 2026-09-11: ne gre za zbirko pokvarjenih datotek, temveč za minoren
+robni primer pri kloniranju NPC-ja z vlogo follower in trenutno akcijo `waiting`; akcija se
+lahko vrne v `following`. Splošne napake serializerja so bile kljub temu resnične in so že
+popravljene. Brez konkretnega save primera ne porabljamo nadaljnjega časa za forenziko,
+migracijo ali ugibanje specifičnega ključa.
 
 ### Stanje: POTRJENO EMPIRIČNO (2026-09-11)
 
@@ -782,31 +785,27 @@ ubežnih narekovajev v ključu.
    - iterativnim parserjem (brez rekurzije)
    - `StringBuilder` namesto konkatenacije
    - `Files.readAllBytes` / `BufferedWriter` s `flush()` in `close()`
-3. **Bralna združljivost** (M1.3): nov bralec mora znati prebrati **stare, že pokvarjene
-   datoteke** in kjer je mogoče **popraviti tip nazaj**. Tam kjer ni mogoče (izgubljeni
-   longi iz R9-a), se vrednost označi kot sumljiva in zapiše v poročilo, ne ugiba se.
+3. **Bralna združljivost za že pokvarjene datoteke — odloženo.** Uporabnik takih datotek
+   nima; brez konkretnega primera ne ugibamo tipov ali porabljamo časa za migrator.
 4. **Atomski zapis** (M1.4): skupen `SafeFileWriter` v `rework/data/` —
    temp datoteka v isti mapi → `flush` + `sync` → `close` → **preveri z branjem** →
    `Files.move(ATOMIC_MOVE)` z fallbackom → šele nato pobriši backup.
    **Vsi** controllerji (Clone, Bank, Faction, GlobalData, Transport, Recipe, Spawn, Script)
    gredo skozenj. To je hkrati popravek B1.
-5. **Verzioniranje** (M1.5): polje `SaveFormat` + backup pred migracijo (D-004).
-6. **Orodje za pregled** (M1.6): `.\dev.ps1 auditClones` — prebere vse clone datoteke, poroča
-   o pokvarjenih tipih, sumljivih vrednostih in sirotah `*.json_new`. Uporabnik dobi seznam
-   prizadetih NPC-jev, preden karkoli spremenimo.
+5. **Verzioniranje — ni potrebno za R9.** Novi serializer ohranja isti format.
+6. **Orodje `auditClones` — odloženo.** Ponovno se odpre samo ob konkretnem poškodovanem saveu.
 
 ### Kaj je treba še preveriti
 
-- **Reprodukcija simptoma**: vzeti enega uporabnikovega problematičnega clone NPC-ja,
-  poslati skozi save→load→save in primerjati. Če se ena od zgornjih točk pokaže, je vzrok
-  potrjen. Uporabnik mora priskrbeti primer prizadete datoteke.
+- Specifičnega `waiting` → `following` simptoma brez uporabnikove datoteke ne reproduciramo;
+  po njegovi oceni ni vreden dodatnega razvojnega časa.
 - Ali so bile te napake **dovolj** za uporabnikov simptom. Potrjene napake se sprožijo pri
   seznamih bytov/intov/longov, praznih tipiziranih arrayih, nizih z vodilnim presledkom in
   posebnih številskih vrednostih. Lastni `NBTTags` helperji CustomNPCs-a vsak int zavijejo v
   compound, zato jih R9-b ne zadene — zadene pa vsak tak vzorec v vanilla entity NBT-ju,
   v NBT-ju predmetov in v podatkih drugih modov, shranjenih na NPC-ju.
-- Ali "following → waiting" ustreza konkretnemu NBT ključu v `RoleFollower` / `JobFollower`
-  in kakšen tip ima — če je to `NBTTagList`, je R9-b neposredna razlaga.
+- Če se prioriteta kdaj spremeni, je treba najprej identificirati konkreten ključ v
+  `RoleFollower` / `JobFollower`, ne širiti splošnega migracijskega sistema.
 
 ---
 
@@ -823,4 +822,5 @@ R6 (M3) ──┘
 M2 (meritve) ──> R5 (M5) ──> R7 (M6)  [odstranitev script locka je skupna]
 ```
 
-Kritična pot je **R9 → R7 → R4**. Vse ostalo lahko teče vzporedno, če je čas.
+Osnovni R9 serializer je končan. Kritična pot je zdaj **B1/B2 → M2 → R1/R6 → R2/R5 →
+R7 → R4**; dodatna R9 forenzika ni več na kritični poti.

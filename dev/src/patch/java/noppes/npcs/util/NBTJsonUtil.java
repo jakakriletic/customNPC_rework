@@ -4,14 +4,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.Writer;
 import java.nio.charset.Charset;
 
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import noppes.npcs.rework.data.NbtJson;
+import noppes.npcs.rework.data.SafeFileWriter;
 
 /**
  * Compatibility shim. The public signatures are unchanged from the October 2019 release so
@@ -28,6 +27,7 @@ public class NBTJsonUtil {
      * binary. {@code local.customnpcs.NbtJsonBaselineTest} looks this field up reflectively.
      */
     public static final boolean REWORK_SERIALIZER = true;
+    public static final boolean REWORK_SAFE_WRITER = true;
 
     private static final Charset UTF_8 = Charset.forName("UTF-8");
 
@@ -88,14 +88,21 @@ public class NBTJsonUtil {
      * failure is passed to the caller rather than leaving a half written file behind silently.
      */
     public static void SaveFile(File file, NBTTagCompound compound) throws IOException, JsonException {
-        String json = NbtJson.write(compound);
-        Writer writer = new OutputStreamWriter(new java.io.FileOutputStream(file), UTF_8);
-        try {
-            writer.write(json);
-            writer.flush();
-        } finally {
-            writer.close();
-        }
+        final NBTTagCompound expected = compound.copy();
+        String json = NbtJson.write(expected);
+        SafeFileWriter.writeUtf8(file, json, new SafeFileWriter.Validator() {
+            @Override
+            public void validate(File candidate) throws IOException {
+                try {
+                    NBTTagCompound actual = LoadFile(candidate);
+                    if (!expected.equals(actual)) {
+                        throw new IOException("NBT verification failed for " + candidate);
+                    }
+                } catch (JsonException e) {
+                    throw new IOException("JSON verification failed for " + candidate, e);
+                }
+            }
+        });
     }
 
     public static class JsonException extends Exception {

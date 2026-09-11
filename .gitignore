@@ -7,3 +7,4 @@ dev/libs/
 dev/baseline/
 audit/tools/
 *.log
+*.log.gz

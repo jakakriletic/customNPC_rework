@@ -140,13 +140,8 @@ implements ICloneHandler {
                 dir.mkdir();
             }
             String filename = name + ".json";
-            File file = new File(dir, filename + "_new");
-            File file2 = new File(dir, filename);
+            File file = new File(dir, filename);
             NBTJsonUtil.SaveFile(file, compound);
-            if (file2.exists()) {
-                file2.delete();
-            }
-            file.renameTo(file2);
         }
         catch (Exception e) {
             LogWriter.except(e);

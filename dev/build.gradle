@@ -74,6 +74,8 @@ task testOriginal(type: Test) {
     description = 'Runs characterization tests against the original remapped binary, without patch classes.'
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = (sourceSets.test.output + sourceSets.test.compileClasspath) - sourceSets.main.output
+    // Tests for brand-new rework classes cannot be loaded against the untouched binary.
+    exclude '**/SafeFileWriterTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

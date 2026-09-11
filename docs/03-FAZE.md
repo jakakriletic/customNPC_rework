@@ -71,18 +71,18 @@ Rešuje **R9** in hkrati **B1** in **B2** iz `PLAN_IMPLEMENTACIJE.md`.
 | M1.1 | Prenos `NBTJsonUtil` in `ServerCloneController` v `src/patch/java`; karakterizacijski testi, ki **dokumentirajo trenutne napake** (R9-a do R9-j) | M |
 | M1.2 | `javap` verifikacija R9-d (byte/long array `toString`) in R9-e (`SaveFile` writer) na originalnem bytecode | S |
 | M1.3 | Nov tipno varen NBT↔JSON serializer v `rework/data/` + fuzz round-trip testi za vse NBT tipe | M |
-| M1.4 | Bralnik za stare in pokvarjene datoteke; popravek tipov kjer je mogoče, poročilo kjer ni | M |
+| M1.4 | Bralnik za stare in pokvarjene datoteke | **odloženo** — uporabnik nima takih datotek; ne ugibamo | M |
 | M1.5 | `SafeFileWriter` — atomski zapis z verifikacijo; preklop **vseh** controllerjev nanj (popravek B1) | M |
 | M1.6 | Lifecycle asinhronih zapisov (popravek B2): zajem poti in seje ob zahtevi, kontroliran shutdown | M |
-| M1.7 | Verzioniranje `SaveFormat` + backup + enosmerna migracija (D-004) | S |
-| M1.8 | `.\dev.ps1 auditClones` — poročilo o stanju vseh clone datotek | S |
+| M1.7 | Verzioniranje `SaveFormat` + migracija | **ni potrebno za R9** — format je ostal združljiv | S |
+| M1.8 | `.\dev.ps1 auditClones` | **odloženo** — ni konkretnih poškodovanih datotek | S |
 | M1.9 | Fault injection testi: zaklenjena datoteka, zavrnjen dostop, I/O napaka, prekinitev pred/po zamenjavi, pokvarjen JSON, restart med migracijo | M |
 
 **Izhodni kriterij:**
 - round-trip test čez vse NBT tipe (vključno z `byte[]`, `int[]`, `long[]`, prazni seznami,
   gnezdenimi strukturami, unicode, ubežnimi znaki) je **bit-identičen**
 - po vsakem fault injection scenariju ostane obnovljiva zadnja veljavna verzija
-- `auditClones` na uporabnikovih dejanskih datotekah da poročilo, ki ga uporabnik potrdi
+- dodatna obnova/audit se odpre samo, če se pojavi konkretna poškodovana datoteka
 - `verify-package.ps1` pokaže točno pričakovan seznam spremenjenih razredov
 
 **Tveganja:**

@@ -15,13 +15,16 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 |---|---|
 | Datum zadnje posodobitve | 2026-09-11 |
 | Trenutna faza | **M1 — Integriteta podatkov** (M0 še ni zaključen) |
-| Naslednji korak | M1.5 (`SafeFileWriter`) in M0.5 (server smoke), glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Naslednji korak | Dokončanje M1.5 (preostali save controllerji), nato M1.6 in M0.5; glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 1 od ~746 (`noppes/npcs/entity/data/DataTimers.java`) |
+| Prevedljivih razredov | 5 od ~746; podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Okolje deluje | da — `runClient` uspešno naloži Forge + CustomNPCs |
 
-**Pomembno:** nobena od devetih zahtev (R1–R9) še ni implementirana. Do zdaj je narejeno
-razvojno okolje, dekompilacija, audit in ta načrt.
+**Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in
+testirano. Uporabnikov konkretni simptom je zelo majhen robni primer: NPC z vlogo follower,
+ki je ob kloniranju v stanju `waiting`, se lahko vrne v `following`. Ker ni pokvarjenih
+datotek za obnovo in ima mod pomembnejše težave, se dodatna forenzika R9, migracija ter
+`auditClones` **odložijo**. Že narejenega splošnega popravka ne odstranjujemo.
 
 ---
 
@@ -52,7 +55,7 @@ razvojno okolje, dekompilacija, audit in ta načrt.
 | **R6** | Solid hitbox — NPC-ja se ne da odriniti (kot v 1.16.5) | M3 | majhna |
 | **R7** | Scripting v Javi namesto Nashorn JavaScripta, optimiziran za AI | M6 | zelo velika |
 | **R8** | Chatbot v NPC-jih, API ključ v GUI | M9 | srednja |
-| **R9** | Clone tab — JSON vrednosti se pomešajo / izgubijo | M1 | srednja |
+| **R9** | Clone follower: `waiting` se lahko po kloniranju vrne v `following` | M1 | majhna; jedro popravljeno, dodatno delo odloženo |
 
 Podrobnosti, dokazi iz kode in kaj je še treba preveriti: [`docs/02-ZAHTEVE.md`](docs/02-ZAHTEVE.md).
 
@@ -76,8 +79,9 @@ M10 Release kandidat            soak, rollback vaja, dokumentacija
 
 Zakaj ta vrstni red:
 
-1. **Podatki prvi.** Dokler se clone tab in save pot tiho kvarita (R9, B1, B2), vsako novo
-   polje, ki ga dodamo, samo poveča površino za izgubo podatkov. R9 se popravi prvo.
+1. **Podatki prvi.** Serializer za R9 je popravljen. Dokončamo še splošno zaščito zapisovanja
+   (B1/B2), ker varuje ves svet; specifične forenzike minornega clone simptoma ne širimo brez
+   konkretnega primera.
 2. **Meriti pred optimiziranjem.** Brez reprodukcije R1 in brez baseline meritev ni mogoče
    dokazati, da smo karkoli popravili ali pohitrili.
 3. **Entiteta pred gibanjem.** R1 in R6 oba posegata v hitbox, kolizije in passenger logiko
