@@ -11,9 +11,9 @@
 |---|---|
 | Zadnja posodobitev | **2026-09-11** |
 | Trenutni milestone | **M1 — Integriteta podatkov** (M0 še ni zaključen) |
-| Naslednji paketi | **M1.5b** (preostali save controllerji), **M1.6** (async lifecycle), **M0.5** (server smoke) |
-| Prevedljivih razredov | 5 — `DataTimers`, `NBTJsonUtil`, `ServerCloneController`, `NbtJson`, `SafeFileWriter` |
-| Testi | 21 primerjalnih v obeh načinih + 4 za novi varni writer; zeleni |
+| Naslednji paketi | **M1.5c** (sinhroni JSON controllerji), **M1.5d** (stisnjeni NBT), **M1.6** (async lifecycle) |
+| Prevedljivih razredov | 6 — prejšnjih 5 + `controllers/data/PlayerData` |
+| Testi | 22 primerjalnih v obeh načinih + 4 za novi varni writer; zeleni |
 | Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
 
 ---
@@ -23,7 +23,7 @@
 | Milestone | Stanje | Opomba |
 |---|---|---|
 | M0 Temelj | **v teku** (≈70 %) | M0.1–M0.4 narejeno; M0.5–M0.8 odprto |
-| M1 Integriteta podatkov | **v teku** (≈55 %) | M1.1–M1.3 narejeno; M1.5 delno; M1.4/M1.7/M1.8 zavestno odloženi |
+| M1 Integriteta podatkov | **v teku** (≈60 %) | M1.1–M1.3 narejeno; M1.5a/b narejena; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | ni začeto | |
 | M3 Jedro entitete | ni začeto | analiza narejena, glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
@@ -42,7 +42,7 @@
 | M1.2 | `javap` verifikacija sumljive logike | **narejeno** — dve hipotezi ovrženi |
 | M1.3 | Nov tipno varen NBT↔JSON serializer + fuzz testi | **narejeno** |
 | M1.4 | Bralnik za že pokvarjene datoteke, popravek tipov kjer je mogoče | **odloženo** — ni vhodnih datotek, R9 je minoren |
-| M1.5 | `SafeFileWriter` + preklop vseh controllerjev (B1) | **delno** — helper, NBT JSON in clone controller narejeni; ostali controllerji odprti |
+| M1.5 | `SafeFileWriter` + preklop vseh controllerjev (B1) | **delno** — a) clone in b) `PlayerData` narejena; c) sinhroni JSON in d) stisnjeni NBT odprta |
 | M1.6 | Lifecycle asinhronih zapisov (B2) | odprto |
 | M1.7 | Verzioniranje `SaveFormat` + migracija | **ni več nujno za R9** — format nespremenjen |
 | M1.8 | `.\dev.ps1 auditClones` | **odloženo** — brez konkretnih poškodovanih datotek |
@@ -51,6 +51,41 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-11 (5) — M1.5b: varen zapis PlayerData
+
+**Paket:** M1.5 (drugi del)
+**Stanje:** končano
+
+**Narejeno:**
+
+- `PlayerData` prenesen v prevedljivo drevo brez funkcionalnih sprememb in shranjen v ločenem
+  baseline commitu.
+- Dodan karakterizacijski test privzetega `PlayerData` NBT snapshota; zelen je proti originalu
+  in obnovljenemu razredu.
+- Asinhroni zapis igralca ne uporablja več `_new` → izbriši cilj → nepreverjen `renameTo`,
+  ampak ciljno JSON datoteko preda `NBTJsonUtil.SaveFile` oziroma `SafeFileWriter`.
+- Vseh 22 primerjalnih testov ter 4 testi varnega writerja so zeleni.
+- Build zapakira 15 razredov; `verify-package` je pregledal 1716 originalnih vnosov in našel
+  samo 7 dovoljenih zamenjav.
+
+**Ni narejeno in zakaj:**
+
+- Zajem poti/sveta in zaključevanje async vrste ostajata nespremenjena; to je M1.6, ne B1.
+- Drugi JSON in stisnjeni NBT controllerji ostajajo M1.5c/d.
+
+**Ugotovitve:**
+
+- `PlayerData` povezuje B1 in B2, zato sta bila atomski zapis in async lifecycle namenoma
+  ločena v zaporedna paketa.
+
+**Spremembe obnašanja:** veljaven player JSON se ne izbriše pred uspešnim zapisom in validacijo novega.
+
+**Meritve:** nobene
+
+**Naslednja seja:** M1.5c, sinhroni JSON controllerji.
+
+---
 
 ### 2026-09-11 (4) — M1.5a: varen zapis clone JSON
 
@@ -248,6 +283,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 | 2026-09-11 | Prazen ključ se zapiše kot `"": vrednost` namesto da se izpusti | R9-e3 | ne | popravljeno |
 | 2026-09-11 | `SaveFile` po pisanju eksplicitno flusha | — | ne | popravljeno |
 | 2026-09-11 | Clone JSON se zapiše, sinhronizira in validira pred atomsko zamenjavo | B1 / R9-f | ne | varni zapis |
+| 2026-09-11 | Player JSON se zapiše in validira pred zamenjavo; stari ostane ob napaki | B1 | ne | varni zapis |
 
 Vse zgornje so popravki tihe izgube podatkov, zato so brez stikala in privzeto vklopljene.
 Format datotek se ne spremeni, zato ni migracije. Izjema je zadnji stolpec pri praznem

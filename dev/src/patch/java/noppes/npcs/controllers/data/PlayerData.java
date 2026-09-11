@@ -194,13 +194,8 @@ implements ICapabilityProvider {
         CustomNPCsScheduler.runTack(() -> {
             try {
                 File saveDir = CustomNpcs.getWorldSaveDirectory("playerdata");
-                File file = new File(saveDir, filename + "_new");
-                File file1 = new File(saveDir, filename);
+                File file = new File(saveDir, filename);
                 NBTJsonUtil.SaveFile(file, compound);
-                if (file1.exists()) {
-                    file1.delete();
-                }
-                file.renameTo(file1);
             }
             catch (Exception e) {
                 LogWriter.except(e);
@@ -284,6 +279,5 @@ implements ICapabilityProvider {
         return data;
     }
 }
-
 
 

@@ -78,6 +78,10 @@ Rešuje **R9** in hkrati **B1** in **B2** iz `PLAN_IMPLEMENTACIJE.md`.
 | M1.8 | `.\dev.ps1 auditClones` | **odloženo** — ni konkretnih poškodovanih datotek | S |
 | M1.9 | Fault injection testi: zaklenjena datoteka, zavrnjen dostop, I/O napaka, prekinitev pred/po zamenjavi, pokvarjen JSON, restart med migracijo | M |
 
+M1.5 se zaradi pravil postopnega prenosa originalnih razredov izvaja v manjših preverljivih
+korakih: **a)** clone JSON, **b)** `PlayerData`, **c)** preostali sinhroni JSON controllerji,
+**d)** controllerji s stisnjenim NBT. Vsak korak dobi baseline commit pred funkcionalno spremembo.
+
 **Izhodni kriterij:**
 - round-trip test čez vse NBT tipe (vključno z `byte[]`, `int[]`, `long[]`, prazni seznami,
   gnezdenimi strukturami, unicode, ubežnimi znaki) je **bit-identičen**
