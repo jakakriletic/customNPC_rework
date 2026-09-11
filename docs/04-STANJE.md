@@ -11,9 +11,9 @@
 |---|---|
 | Zadnja posodobitev | **2026-09-11** |
 | Trenutni milestone | **M1 — Integriteta podatkov** (M0 še ni zaključen) |
-| Naslednji paketi | **M1.5d** (stisnjeni NBT controllerji), **M1.6** (async lifecycle) |
-| Prevedljivih razredov | 10 — prejšnjih 6 + `DialogController`, `QuestController`, `LinkedNpcController`, `RoleTrader` |
-| Testi | 27 primerjalnih v obeh načinih + 4 za novi varni writer; zeleni |
+| Naslednji paketi | **M1.6** (async lifecycle), nato **M1.9** (fault injection) |
+| Prevedljivih razredov | 19 — prejšnjih 10 + 8 stisnjenih-NBT controllerjev + `CompressedNbtFile` |
+| Testi | 29 primerjalnih v obeh načinih + 5 za varna writerja; zeleni |
 | Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
 
 ---
@@ -23,7 +23,7 @@
 | Milestone | Stanje | Opomba |
 |---|---|---|
 | M0 Temelj | **v teku** (≈70 %) | M0.1–M0.4 narejeno; M0.5–M0.8 odprto |
-| M1 Integriteta podatkov | **v teku** (≈70 %) | M1.1–M1.3 narejeno; M1.5a/b/c narejena; M1.4/M1.7/M1.8 zavestno odloženi |
+| M1 Integriteta podatkov | **v teku** (≈80 %) | M1.1–M1.3 in M1.5 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | ni začeto | |
 | M3 Jedro entitete | ni začeto | analiza narejena, glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
@@ -42,7 +42,7 @@
 | M1.2 | `javap` verifikacija sumljive logike | **narejeno** — dve hipotezi ovrženi |
 | M1.3 | Nov tipno varen NBT↔JSON serializer + fuzz testi | **narejeno** |
 | M1.4 | Bralnik za že pokvarjene datoteke, popravek tipov kjer je mogoče | **odloženo** — ni vhodnih datotek, R9 je minoren |
-| M1.5 | `SafeFileWriter` + preklop vseh controllerjev (B1) | **delno** — a) clone, b) `PlayerData` in c) sinhroni JSON narejeni; d) stisnjeni NBT odprt |
+| M1.5 | `SafeFileWriter` + preklop vseh controllerjev (B1) | **narejeno** — clone, player, sinhroni JSON in stisnjeni NBT |
 | M1.6 | Lifecycle asinhronih zapisov (B2) | odprto |
 | M1.7 | Verzioniranje `SaveFormat` + migracija | **ni več nujno za R9** — format nespremenjen |
 | M1.8 | `.\dev.ps1 auditClones` | **odloženo** — brez konkretnih poškodovanih datotek |
@@ -51,6 +51,47 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-11 (7) — M1.5d: varen zapis stisnjenega NBT
+
+**Paket:** M1.5 (četrti del)
+**Stanje:** končano
+
+**Narejeno:**
+
+- `BankController`, `FactionController`, `GlobalDataController`, `TransportController`,
+  `RecipeController`, `SpawnController`, klientov `PresetController` in `SchematicController`
+  so bili vsak preneseni v prevedljivo drevo z ločenim baseline commitom.
+- Dodan `rework/data/CompressedNbtFile`, ki stisnjeni NBT zapiše skozi `SafeFileWriter`, ga
+  ponovno prebere in zahteva enak NBT pred atomsko zamenjavo cilja.
+- Vseh osem controllerjev zdaj zapisuje neposredno na končno pot; odstranjena so zaporedja
+  `.dat_new` → brisanje/preimenovanje in neposredno prepisovanje schematic datoteke.
+- Regresijski test je pred popravkom dokazano padel, po popravku pa bytecode vseh controllerjev
+  potrdi odsotnost nevarnih suffixov oziroma uporabo novega varnega writerja.
+- Vseh 29 primerjalnih testov ter 5 testov varnih writerjev je zelenih v Javi 8.
+- Build zapakira 32 razredov; `verify-package` je pregledal 1716 originalnih vnosov in našel
+  samo 20 pričakovanih zamenjav originalnih class datotek.
+
+**Ni narejeno in zakaj:**
+
+- Lifecycle asinhronih player zapisov je ločen problem B2 in ostaja M1.6.
+- Širši fault-injection scenariji (zaklenjen cilj, zavrnjen dostop, prekinitev procesa) so M1.9.
+
+**Ugotovitve:**
+
+- `CompressedStreamTools.writeCompressed` zapre podani stream. `CompressedNbtFile` zato uporabi
+  non-closing ovoj, da lahko `SafeFileWriter` po koncu stiskanja še izvede `flush` in disk `sync`.
+- Prvotni seznam šestih world controllerjev ni bil popoln; isti problem sta imela tudi klientov
+  preset zapis in neposreden schematic zapis, zato sta vključena v isti paket.
+
+**Spremembe obnašanja:** banke, factioni, globalni podatki, transporti, recepti, spawni,
+klientovi preseti in schematiki ob neuspelem zapisu ohranijo zadnjo veljavno datoteko.
+
+**Meritve:** nobene
+
+**Naslednja seja:** M1.6, upravljan lifecycle asinhronih zapisov.
+
+---
 
 ### 2026-09-11 (6) — M1.5c: varen zapis sinhronih JSON datotek
 
@@ -324,6 +365,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 | 2026-09-11 | Clone JSON se zapiše, sinhronizira in validira pred atomsko zamenjavo | B1 / R9-f | ne | varni zapis |
 | 2026-09-11 | Player JSON se zapiše in validira pred zamenjavo; stari ostane ob napaki | B1 | ne | varni zapis |
 | 2026-09-11 | Dialog, quest, linked NPC in trader market JSON se zapišejo neposredno skozi validirano atomsko zamenjavo | B1 | ne | varni zapis |
+| 2026-09-11 | World controllerji, klientovi preseti in schematiki uporabljajo validiran atomski zapis stisnjenega NBT | B1 | ne | varni zapis |
 
 Vse zgornje so popravki tihe izgube podatkov, zato so brez stikala in privzeto vklopljene.
 Format datotek se ne spremeni, zato ni migracije. Izjema je zadnji stolpec pri praznem

@@ -31,6 +31,7 @@ import net.minecraft.util.WeightedRandom;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.LogWriter;
 import noppes.npcs.controllers.data.SpawnData;
+import noppes.npcs.rework.data.CompressedNbtFile;
 
 public class SpawnController {
     public HashMap<String, List<SpawnData>> biomes = new HashMap();
@@ -107,21 +108,8 @@ public class SpawnController {
     public void saveData() {
         try {
             File saveDir = CustomNpcs.getWorldSaveDirectory();
-            File file = new File(saveDir, "spawns.dat_new");
-            File file1 = new File(saveDir, "spawns.dat_old");
-            File file2 = new File(saveDir, "spawns.dat");
-            CompressedStreamTools.writeCompressed((NBTTagCompound)this.getNBT(), (OutputStream)new FileOutputStream(file));
-            if (file1.exists()) {
-                file1.delete();
-            }
-            file2.renameTo(file1);
-            if (file2.exists()) {
-                file2.delete();
-            }
-            file.renameTo(file2);
-            if (file.exists()) {
-                file.delete();
-            }
+            File file = new File(saveDir, "spawns.dat");
+            CompressedNbtFile.save(file, this.getNBT());
         }
         catch (Exception e) {
             LogWriter.except(e);
@@ -201,4 +189,3 @@ public class SpawnController {
         return map;
     }
 }
-

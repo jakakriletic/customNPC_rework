@@ -21,6 +21,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import noppes.npcs.LogWriter;
 import noppes.npcs.client.controllers.Preset;
+import noppes.npcs.rework.data.CompressedNbtFile;
 
 public class PresetController {
     public HashMap<String, Preset> presets = new HashMap();
@@ -94,21 +95,8 @@ public class PresetController {
     private void savePreset(NBTTagCompound compound) {
         String filename = "presets.dat";
         try {
-            File file = new File(this.dir, filename + "_new");
-            File file1 = new File(this.dir, filename + "_old");
-            File file2 = new File(this.dir, filename);
-            CompressedStreamTools.writeCompressed((NBTTagCompound)compound, (OutputStream)new FileOutputStream(file));
-            if (file1.exists()) {
-                file1.delete();
-            }
-            file2.renameTo(file1);
-            if (file2.exists()) {
-                file2.delete();
-            }
-            file.renameTo(file2);
-            if (file.exists()) {
-                file.delete();
-            }
+            File file = new File(this.dir, filename);
+            CompressedNbtFile.save(file, compound);
         }
         catch (Exception e) {
             LogWriter.except(e);
@@ -131,5 +119,4 @@ public class PresetController {
         this.save();
     }
 }
-
 

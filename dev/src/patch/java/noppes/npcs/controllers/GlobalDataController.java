@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import noppes.npcs.CustomNpcs;
+import noppes.npcs.rework.data.CompressedNbtFile;
 
 public class GlobalDataController {
     public static GlobalDataController instance;
@@ -56,21 +57,8 @@ public class GlobalDataController {
             File saveDir = CustomNpcs.getWorldSaveDirectory();
             NBTTagCompound nbttagcompound = new NBTTagCompound();
             nbttagcompound.setInteger("itemGiverId", this.itemGiverId);
-            File file = new File(saveDir, "global.dat_new");
-            File file1 = new File(saveDir, "global.dat_old");
-            File file2 = new File(saveDir, "global.dat");
-            CompressedStreamTools.writeCompressed((NBTTagCompound)nbttagcompound, (OutputStream)new FileOutputStream(file));
-            if (file1.exists()) {
-                file1.delete();
-            }
-            file2.renameTo(file1);
-            if (file2.exists()) {
-                file2.delete();
-            }
-            file.renameTo(file2);
-            if (file.exists()) {
-                file.delete();
-            }
+            File file = new File(saveDir, "global.dat");
+            CompressedNbtFile.save(file, nbttagcompound);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -83,5 +71,4 @@ public class GlobalDataController {
         return this.itemGiverId;
     }
 }
-
 

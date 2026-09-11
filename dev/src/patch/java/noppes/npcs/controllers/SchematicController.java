@@ -40,6 +40,7 @@ import noppes.npcs.schematics.BlueprintUtil;
 import noppes.npcs.schematics.ISchematic;
 import noppes.npcs.schematics.Schematic;
 import noppes.npcs.schematics.SchematicWrapper;
+import noppes.npcs.rework.data.CompressedNbtFile;
 
 public class SchematicController {
     public static SchematicController Instance = new SchematicController();
@@ -174,12 +175,11 @@ public class SchematicController {
         }
         NoppesUtilServer.NotifyOPs("Schematic " + name + " succesfully created", new Object[0]);
         try {
-            CompressedStreamTools.writeCompressed((NBTTagCompound)schema.getNBT(), (OutputStream)new FileOutputStream(file));
+            CompressedNbtFile.save(file, schema.getNBT());
         }
         catch (Exception e) {
             e.printStackTrace();
         }
     }
 }
-
 

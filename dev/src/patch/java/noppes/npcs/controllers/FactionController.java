@@ -33,6 +33,7 @@ import noppes.npcs.api.handler.IFactionHandler;
 import noppes.npcs.api.handler.data.IFaction;
 import noppes.npcs.constants.EnumPacketClient;
 import noppes.npcs.controllers.data.Faction;
+import noppes.npcs.rework.data.CompressedNbtFile;
 
 public class FactionController
 implements IFactionHandler {
@@ -126,21 +127,8 @@ implements IFactionHandler {
     public void saveFactions() {
         try {
             File saveDir = CustomNpcs.getWorldSaveDirectory();
-            File file = new File(saveDir, "factions.dat_new");
-            File file1 = new File(saveDir, "factions.dat_old");
-            File file2 = new File(saveDir, "factions.dat");
-            CompressedStreamTools.writeCompressed((NBTTagCompound)this.getNBT(), (OutputStream)new FileOutputStream(file));
-            if (file1.exists()) {
-                file1.delete();
-            }
-            file2.renameTo(file1);
-            if (file2.exists()) {
-                file2.delete();
-            }
-            file.renameTo(file2);
-            if (file.exists()) {
-                file.delete();
-            }
+            File file = new File(saveDir, "factions.dat");
+            CompressedNbtFile.save(file, this.getNBT());
         }
         catch (Exception e) {
             LogWriter.except(e);
@@ -256,5 +244,4 @@ implements IFactionHandler {
         return this.factions.get(id);
     }
 }
-
 

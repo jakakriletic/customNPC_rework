@@ -22,6 +22,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.controllers.data.Bank;
+import noppes.npcs.rework.data.CompressedNbtFile;
 
 public class BankController {
     public HashMap<Integer, Bank> banks;
@@ -127,21 +128,8 @@ public class BankController {
     public void saveBanks() {
         try {
             File saveDir = CustomNpcs.getWorldSaveDirectory();
-            File file = new File(saveDir, "bank.dat_new");
-            File file1 = new File(saveDir, "bank.dat_old");
-            File file2 = new File(saveDir, "bank.dat");
-            CompressedStreamTools.writeCompressed((NBTTagCompound)this.getNBT(), (OutputStream)new FileOutputStream(file));
-            if (file1.exists()) {
-                file1.delete();
-            }
-            file2.renameTo(file1);
-            if (file2.exists()) {
-                file2.delete();
-            }
-            file.renameTo(file2);
-            if (file.exists()) {
-                file.delete();
-            }
+            File file = new File(saveDir, "bank.dat");
+            CompressedNbtFile.save(file, this.getNBT());
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -172,5 +160,4 @@ public class BankController {
         this.saveBanks();
     }
 }
-
 

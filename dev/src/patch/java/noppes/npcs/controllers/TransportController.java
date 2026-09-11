@@ -26,6 +26,7 @@ import noppes.npcs.CustomNpcs;
 import noppes.npcs.LogWriter;
 import noppes.npcs.controllers.data.TransportCategory;
 import noppes.npcs.controllers.data.TransportLocation;
+import noppes.npcs.rework.data.CompressedNbtFile;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.roles.RoleTransporter;
 
@@ -110,21 +111,8 @@ public class TransportController {
     public void saveCategories() {
         try {
             File saveDir = CustomNpcs.getWorldSaveDirectory();
-            File file = new File(saveDir, "transport.dat_new");
-            File file1 = new File(saveDir, "transport.dat_old");
-            File file2 = new File(saveDir, "transport.dat");
-            CompressedStreamTools.writeCompressed((NBTTagCompound)this.getNBT(), (OutputStream)new FileOutputStream(file));
-            if (file1.exists()) {
-                file1.delete();
-            }
-            file2.renameTo(file1);
-            if (file2.exists()) {
-                file2.delete();
-            }
-            file.renameTo(file2);
-            if (file.exists()) {
-                file.delete();
-            }
+            File file = new File(saveDir, "transport.dat");
+            CompressedNbtFile.save(file, this.getNBT());
         }
         catch (Exception e) {
             LogWriter.except(e);
@@ -271,5 +259,4 @@ public class TransportController {
         return location;
     }
 }
-
 

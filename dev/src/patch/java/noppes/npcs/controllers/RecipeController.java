@@ -40,6 +40,7 @@ import noppes.npcs.Server;
 import noppes.npcs.api.handler.IRecipeHandler;
 import noppes.npcs.constants.EnumPacketClient;
 import noppes.npcs.controllers.data.RecipeCarpentry;
+import noppes.npcs.rework.data.CompressedNbtFile;
 import noppes.npcs.controllers.data.RecipesDefault;
 
 public class RecipeController
@@ -138,21 +139,8 @@ implements IRecipeHandler {
             nbttagcompound.setTag("Data", (NBTBase)list);
             nbttagcompound.setInteger("LastId", this.nextId);
             nbttagcompound.setInteger("Version", 1);
-            File file = new File(saveDir, "recipes.dat_new");
-            File file1 = new File(saveDir, "recipes.dat_old");
-            File file2 = new File(saveDir, "recipes.dat");
-            CompressedStreamTools.writeCompressed((NBTTagCompound)nbttagcompound, (OutputStream)new FileOutputStream(file));
-            if (file1.exists()) {
-                file1.delete();
-            }
-            file2.renameTo(file1);
-            if (file2.exists()) {
-                file2.delete();
-            }
-            file.renameTo(file2);
-            if (file.exists()) {
-                file.delete();
-            }
+            File file = new File(saveDir, "recipes.dat");
+            CompressedNbtFile.save(file, nbttagcompound);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -288,5 +276,4 @@ implements IRecipeHandler {
         syncRecipes = new HashMap();
     }
 }
-
 

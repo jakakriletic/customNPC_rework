@@ -15,9 +15,9 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 |---|---|
 | Datum zadnje posodobitve | 2026-09-11 |
 | Trenutna faza | **M1 — Integriteta podatkov** (M0 še ni zaključen) |
-| Naslednji korak | M1.5d (stisnjeni NBT controllerji), nato M1.6; glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Naslednji korak | M1.6 (lifecycle asinhronih zapisov), nato M1.9 fault injection; glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 10 od ~746; podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Prevedljivih razredov | 19 od ~746; podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Okolje deluje | da — `runClient` uspešno naloži Forge + CustomNPCs |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in

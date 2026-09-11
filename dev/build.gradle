@@ -76,6 +76,7 @@ task testOriginal(type: Test) {
     classpath = (sourceSets.test.output + sourceSets.test.compileClasspath) - sourceSets.main.output
     // Tests for brand-new rework classes cannot be loaded against the untouched binary.
     exclude '**/SafeFileWriterTest.class'
+    exclude '**/CompressedNbtFileTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 
