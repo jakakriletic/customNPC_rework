@@ -1,0 +1,9 @@
+.tools/
+downloads/
+dev/.gradle/
+dev/build/
+dev/run/
+dev/libs/
+dev/baseline/
+audit/tools/
+*.log

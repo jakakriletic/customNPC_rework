@@ -1,0 +1,613 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  net.minecraft.block.material.Material
+ *  net.minecraft.entity.Entity
+ *  net.minecraft.entity.EntityList
+ *  net.minecraft.nbt.NBTBase
+ *  net.minecraft.nbt.NBTPrimitive
+ *  net.minecraft.nbt.NBTTagCompound
+ *  net.minecraft.nbt.NBTTagString
+ *  net.minecraft.network.Packet
+ *  net.minecraft.network.play.server.SPacketAnimation
+ *  net.minecraft.util.DamageSource
+ *  net.minecraft.util.ResourceLocation
+ *  net.minecraft.util.math.AxisAlignedBB
+ *  net.minecraft.util.math.MathHelper
+ *  net.minecraft.util.math.RayTraceResult
+ *  net.minecraft.util.math.Vec3d
+ *  net.minecraft.util.text.translation.I18n
+ *  net.minecraft.world.WorldServer
+ */
+package noppes.npcs.api.wrapper;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import net.minecraft.block.material.Material;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTPrimitive;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagString;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.server.SPacketAnimation;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.translation.I18n;
+import net.minecraft.world.WorldServer;
+import noppes.npcs.api.CustomNPCsException;
+import noppes.npcs.api.INbt;
+import noppes.npcs.api.IPos;
+import noppes.npcs.api.IRayTrace;
+import noppes.npcs.api.IWorld;
+import noppes.npcs.api.NpcAPI;
+import noppes.npcs.api.entity.IEntity;
+import noppes.npcs.api.entity.IEntityItem;
+import noppes.npcs.api.entity.data.IData;
+import noppes.npcs.api.item.IItemStack;
+import noppes.npcs.api.wrapper.BlockPosWrapper;
+import noppes.npcs.api.wrapper.RayTraceWrapper;
+import noppes.npcs.controllers.ServerCloneController;
+
+public class EntityWrapper<T extends Entity>
+implements IEntity {
+    protected T entity;
+    private Map<String, Object> tempData = new HashMap<String, Object>();
+    private IWorld worldWrapper;
+    private final IData tempdata = new IData(){
+
+        @Override
+        public void put(String key, Object value) {
+            EntityWrapper.this.tempData.put(key, value);
+        }
+
+        @Override
+        public Object get(String key) {
+            return EntityWrapper.this.tempData.get(key);
+        }
+
+        @Override
+        public void remove(String key) {
+            EntityWrapper.this.tempData.remove(key);
+        }
+
+        @Override
+        public boolean has(String key) {
+            return EntityWrapper.this.tempData.containsKey(key);
+        }
+
+        @Override
+        public void clear() {
+            EntityWrapper.this.tempData.clear();
+        }
+
+        @Override
+        public String[] getKeys() {
+            return EntityWrapper.this.tempData.keySet().toArray(new String[EntityWrapper.this.tempData.size()]);
+        }
+    };
+    private final IData storeddata = new IData(){
+
+        @Override
+        public void put(String key, Object value) {
+            NBTTagCompound compound = this.getStoredCompound();
+            if (value instanceof Number) {
+                compound.setDouble(key, ((Number)value).doubleValue());
+            } else if (value instanceof String) {
+                compound.setString(key, (String)value);
+            }
+            this.saveStoredCompound(compound);
+        }
+
+        @Override
+        public Object get(String key) {
+            NBTTagCompound compound = this.getStoredCompound();
+            if (!compound.hasKey(key)) {
+                return null;
+            }
+            NBTBase base = compound.getTag(key);
+            if (base instanceof NBTPrimitive) {
+                return ((NBTPrimitive)base).getDouble();
+            }
+            return ((NBTTagString)base).getString();
+        }
+
+        @Override
+        public void remove(String key) {
+            NBTTagCompound compound = this.getStoredCompound();
+            compound.removeTag(key);
+            this.saveStoredCompound(compound);
+        }
+
+        @Override
+        public boolean has(String key) {
+            return this.getStoredCompound().hasKey(key);
+        }
+
+        @Override
+        public void clear() {
+            EntityWrapper.this.entity.getEntityData().removeTag("CNPCStoredData");
+        }
+
+        private NBTTagCompound getStoredCompound() {
+            NBTTagCompound compound = EntityWrapper.this.entity.getEntityData().getCompoundTag("CNPCStoredData");
+            if (compound == null) {
+                compound = new NBTTagCompound();
+                EntityWrapper.this.entity.getEntityData().setTag("CNPCStoredData", (NBTBase)compound);
+            }
+            return compound;
+        }
+
+        private void saveStoredCompound(NBTTagCompound compound) {
+            EntityWrapper.this.entity.getEntityData().setTag("CNPCStoredData", (NBTBase)compound);
+        }
+
+        @Override
+        public String[] getKeys() {
+            NBTTagCompound compound = this.getStoredCompound();
+            return compound.getKeySet().toArray(new String[compound.getKeySet().size()]);
+        }
+    };
+
+    public EntityWrapper(T entity) {
+        this.entity = entity;
+        this.worldWrapper = NpcAPI.Instance().getIWorld((WorldServer)((Entity)entity).world);
+    }
+
+    @Override
+    public double getX() {
+        return ((Entity)this.entity).posX;
+    }
+
+    @Override
+    public void setX(double x) {
+        ((Entity)this.entity).posX = x;
+    }
+
+    @Override
+    public double getY() {
+        return ((Entity)this.entity).posY;
+    }
+
+    @Override
+    public void setY(double y) {
+        ((Entity)this.entity).posY = y;
+    }
+
+    @Override
+    public double getZ() {
+        return ((Entity)this.entity).posZ;
+    }
+
+    @Override
+    public void setZ(double z) {
+        ((Entity)this.entity).posZ = z;
+    }
+
+    @Override
+    public int getBlockX() {
+        return MathHelper.floor((double)((Entity)this.entity).posX);
+    }
+
+    @Override
+    public int getBlockY() {
+        return MathHelper.floor((double)((Entity)this.entity).posY);
+    }
+
+    @Override
+    public int getBlockZ() {
+        return MathHelper.floor((double)((Entity)this.entity).posZ);
+    }
+
+    @Override
+    public String getEntityName() {
+        String s = EntityList.getEntityString(this.entity);
+        if (s == null) {
+            s = "generic";
+        }
+        return I18n.translateToLocal((String)("entity." + s + ".name"));
+    }
+
+    @Override
+    public String getName() {
+        return this.entity.getName();
+    }
+
+    @Override
+    public void setName(String name) {
+        this.entity.setCustomNameTag(name);
+    }
+
+    @Override
+    public boolean hasCustomName() {
+        return this.entity.hasCustomName();
+    }
+
+    @Override
+    public void setPosition(double x, double y, double z) {
+        this.entity.setPosition(x, y, z);
+    }
+
+    @Override
+    public IWorld getWorld() {
+        if (((Entity)this.entity).world != this.worldWrapper.getMCWorld()) {
+            this.worldWrapper = NpcAPI.Instance().getIWorld((WorldServer)((Entity)this.entity).world);
+        }
+        return this.worldWrapper;
+    }
+
+    @Override
+    public boolean isAlive() {
+        return this.entity.isEntityAlive();
+    }
+
+    @Override
+    public IData getTempdata() {
+        return this.tempdata;
+    }
+
+    @Override
+    public IData getStoreddata() {
+        return this.storeddata;
+    }
+
+    @Override
+    public long getAge() {
+        return ((Entity)this.entity).ticksExisted;
+    }
+
+    @Override
+    public void damage(float amount) {
+        this.entity.attackEntityFrom(DamageSource.GENERIC, amount);
+    }
+
+    @Override
+    public void despawn() {
+        ((Entity)this.entity).isDead = true;
+    }
+
+    @Override
+    public void spawn() {
+        if (this.worldWrapper.getMCWorld().getEntityFromUuid(this.entity.getUniqueID()) != null) {
+            throw new CustomNPCsException("Entity is already spawned", new Object[0]);
+        }
+        ((Entity)this.entity).isDead = false;
+        this.worldWrapper.getMCWorld().spawnEntity(this.entity);
+    }
+
+    @Override
+    public void kill() {
+        this.entity.setDead();
+    }
+
+    @Override
+    public boolean inWater() {
+        return this.entity.isInsideOfMaterial(Material.WATER);
+    }
+
+    @Override
+    public boolean inLava() {
+        return this.entity.isInsideOfMaterial(Material.LAVA);
+    }
+
+    @Override
+    public boolean inFire() {
+        return this.entity.isInsideOfMaterial(Material.FIRE);
+    }
+
+    @Override
+    public boolean isBurning() {
+        return this.entity.isBurning();
+    }
+
+    @Override
+    public void setBurning(int ticks) {
+        this.entity.setFire(ticks);
+    }
+
+    @Override
+    public void extinguish() {
+        this.entity.extinguish();
+    }
+
+    @Override
+    public String getTypeName() {
+        return EntityList.getEntityString(this.entity);
+    }
+
+    @Override
+    public IEntityItem dropItem(IItemStack item) {
+        return (IEntityItem)NpcAPI.Instance().getIEntity((Entity)this.entity.entityDropItem(item.getMCItemStack(), 0.0f));
+    }
+
+    @Override
+    public IEntity[] getRiders() {
+        List list = this.entity.getPassengers();
+        IEntity[] riders = new IEntity[list.size()];
+        for (int i = 0; i < list.size(); ++i) {
+            riders[i] = NpcAPI.Instance().getIEntity((Entity)list.get(i));
+        }
+        return riders;
+    }
+
+    @Override
+    public IRayTrace rayTraceBlock(double distance, boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox) {
+        Vec3d vec3d = this.entity.getPositionEyes(1.0f);
+        Vec3d vec3d1 = this.entity.getLook(1.0f);
+        Vec3d vec3d2 = vec3d.addVector(vec3d1.x * distance, vec3d1.y * distance, vec3d1.z * distance);
+        RayTraceResult result = ((Entity)this.entity).world.rayTraceBlocks(vec3d, vec3d2, stopOnLiquid, ignoreBlockWithoutBoundingBox, true);
+        if (result == null) {
+            return null;
+        }
+        return new RayTraceWrapper(NpcAPI.Instance().getIBlock(((Entity)this.entity).world, result.getBlockPos()), result.sideHit.getIndex());
+    }
+
+    @Override
+    public IEntity[] rayTraceEntities(double distance, boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox) {
+        Vec3d vec3d = this.entity.getPositionEyes(1.0f);
+        Vec3d vec3d1 = this.entity.getLook(1.0f);
+        Vec3d vec3d2 = vec3d.addVector(vec3d1.x * distance, vec3d1.y * distance, vec3d1.z * distance);
+        RayTraceResult result = ((Entity)this.entity).world.rayTraceBlocks(vec3d, vec3d2, stopOnLiquid, ignoreBlockWithoutBoundingBox, false);
+        if (result != null) {
+            vec3d2 = new Vec3d(result.hitVec.x, result.hitVec.y, result.hitVec.z);
+        }
+        return this.findEntityOnPath(distance, vec3d, vec3d2);
+    }
+
+    private IEntity[] findEntityOnPath(double distance, Vec3d vec3d, Vec3d vec3d1) {
+        List list = ((Entity)this.entity).world.getEntitiesWithinAABBExcludingEntity(this.entity, this.entity.getEntityBoundingBox().grow(distance));
+        ArrayList<IEntity> result = new ArrayList<IEntity>();
+        for (Entity entity1 : list) {
+            AxisAlignedBB axisalignedbb;
+            RayTraceResult raytraceresult1;
+            if (!entity1.canBeCollidedWith() || entity1 == this.entity || (raytraceresult1 = (axisalignedbb = entity1.getEntityBoundingBox().grow((double)entity1.getCollisionBorderSize())).calculateIntercept(vec3d, vec3d1)) == null) continue;
+            result.add(NpcAPI.Instance().getIEntity(entity1));
+        }
+        result.sort((o1, o2) -> {
+            double d2;
+            double d1 = this.entity.getDistanceSq(o1.getMCEntity());
+            if (d1 == (d2 = this.entity.getDistanceSq(o2.getMCEntity()))) {
+                return 0;
+            }
+            return d1 > d2 ? 1 : -1;
+        });
+        return result.toArray(new IEntity[result.size()]);
+    }
+
+    @Override
+    public IEntity[] getAllRiders() {
+        ArrayList list = new ArrayList(this.entity.getRecursivePassengers());
+        IEntity[] riders = new IEntity[list.size()];
+        for (int i = 0; i < list.size(); ++i) {
+            riders[i] = NpcAPI.Instance().getIEntity((Entity)list.get(i));
+        }
+        return riders;
+    }
+
+    @Override
+    public void addRider(IEntity entity) {
+        if (entity != null) {
+            entity.getMCEntity().startRiding(this.entity, true);
+        }
+    }
+
+    @Override
+    public void clearRiders() {
+        this.entity.removePassengers();
+    }
+
+    @Override
+    public IEntity getMount() {
+        return NpcAPI.Instance().getIEntity(this.entity.getRidingEntity());
+    }
+
+    @Override
+    public void setMount(IEntity entity) {
+        if (entity == null) {
+            this.entity.dismountRidingEntity();
+        } else {
+            this.entity.startRiding(entity.getMCEntity(), true);
+        }
+    }
+
+    @Override
+    public void setRotation(float rotation) {
+        ((Entity)this.entity).rotationYaw = rotation;
+    }
+
+    @Override
+    public float getRotation() {
+        return ((Entity)this.entity).rotationYaw;
+    }
+
+    @Override
+    public void setPitch(float rotation) {
+        ((Entity)this.entity).rotationPitch = rotation;
+    }
+
+    @Override
+    public float getPitch() {
+        return ((Entity)this.entity).rotationPitch;
+    }
+
+    @Override
+    public void knockback(int power, float direction) {
+        float v = direction * (float)Math.PI / 180.0f;
+        this.entity.addVelocity((double)(-MathHelper.sin((float)v) * (float)power), 0.1 + (double)((float)power * 0.04f), (double)(MathHelper.cos((float)v) * (float)power));
+        ((Entity)this.entity).motionX *= 0.6;
+        ((Entity)this.entity).motionZ *= 0.6;
+        ((Entity)this.entity).velocityChanged = true;
+    }
+
+    @Override
+    public boolean isSneaking() {
+        return this.entity.isSneaking();
+    }
+
+    @Override
+    public boolean isSprinting() {
+        return this.entity.isSprinting();
+    }
+
+    @Override
+    public T getMCEntity() {
+        return this.entity;
+    }
+
+    @Override
+    public int getType() {
+        return 0;
+    }
+
+    @Override
+    public boolean typeOf(int type) {
+        return type == this.getType();
+    }
+
+    @Override
+    public String getUUID() {
+        return this.entity.getUniqueID().toString();
+    }
+
+    @Override
+    public String generateNewUUID() {
+        UUID id = UUID.randomUUID();
+        this.entity.setUniqueId(id);
+        return id.toString();
+    }
+
+    @Override
+    public INbt getNbt() {
+        return NpcAPI.Instance().getINbt(this.entity.getEntityData());
+    }
+
+    @Override
+    public void storeAsClone(int tab, String name) {
+        NBTTagCompound compound = new NBTTagCompound();
+        if (!this.entity.writeToNBTAtomically(compound)) {
+            throw new CustomNPCsException("Cannot store dead entities", new Object[0]);
+        }
+        ServerCloneController.Instance.addClone(compound, name, tab);
+    }
+
+    @Override
+    public INbt getEntityNbt() {
+        NBTTagCompound compound = new NBTTagCompound();
+        this.entity.writeToNBT(compound);
+        ResourceLocation resourcelocation = EntityList.getKey(this.entity);
+        if (this.getType() == 1) {
+            resourcelocation = new ResourceLocation("player");
+        }
+        if (resourcelocation != null) {
+            compound.setString("id", resourcelocation.toString());
+        }
+        return NpcAPI.Instance().getINbt(compound);
+    }
+
+    @Override
+    public void setEntityNbt(INbt nbt) {
+        this.entity.readFromNBT(nbt.getMCNBT());
+    }
+
+    @Override
+    public void playAnimation(int type) {
+        this.worldWrapper.getMCWorld().getEntityTracker().sendToTrackingAndSelf(this.entity, (Packet)new SPacketAnimation(this.entity, type));
+    }
+
+    @Override
+    public float getHeight() {
+        return ((Entity)this.entity).height;
+    }
+
+    @Override
+    public float getEyeHeight() {
+        return this.entity.getEyeHeight();
+    }
+
+    @Override
+    public float getWidth() {
+        return ((Entity)this.entity).width;
+    }
+
+    @Override
+    public IPos getPos() {
+        return new BlockPosWrapper(this.entity.getPosition());
+    }
+
+    @Override
+    public void setPos(IPos pos) {
+        this.entity.setPosition((double)((float)pos.getX() + 0.5f), (double)pos.getY(), (double)((float)pos.getZ() + 0.5f));
+    }
+
+    @Override
+    public String[] getTags() {
+        return this.entity.getTags().toArray(new String[this.entity.getTags().size()]);
+    }
+
+    @Override
+    public void addTag(String tag) {
+        this.entity.addTag(tag);
+    }
+
+    @Override
+    public boolean hasTag(String tag) {
+        return this.entity.getTags().contains(tag);
+    }
+
+    @Override
+    public void removeTag(String tag) {
+        this.entity.removeTag(tag);
+    }
+
+    @Override
+    public double getMotionX() {
+        return ((Entity)this.entity).motionX;
+    }
+
+    @Override
+    public double getMotionY() {
+        return ((Entity)this.entity).motionY;
+    }
+
+    @Override
+    public double getMotionZ() {
+        return ((Entity)this.entity).motionZ;
+    }
+
+    @Override
+    public void setMotionX(double motion) {
+        if (((Entity)this.entity).motionX == motion) {
+            return;
+        }
+        ((Entity)this.entity).motionX = motion;
+        ((Entity)this.entity).velocityChanged = true;
+    }
+
+    @Override
+    public void setMotionY(double motion) {
+        if (((Entity)this.entity).motionY == motion) {
+            return;
+        }
+        ((Entity)this.entity).motionY = motion;
+        ((Entity)this.entity).velocityChanged = true;
+    }
+
+    @Override
+    public void setMotionZ(double motion) {
+        if (((Entity)this.entity).motionZ == motion) {
+            return;
+        }
+        ((Entity)this.entity).motionZ = motion;
+        ((Entity)this.entity).velocityChanged = true;
+    }
+}
+

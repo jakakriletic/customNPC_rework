@@ -1,0 +1,26 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  net.minecraft.nbt.NBTTagCompound
+ */
+package noppes.npcs.roles.companion;
+
+import net.minecraft.nbt.NBTTagCompound;
+import noppes.npcs.entity.EntityNPCInterface;
+
+public abstract class CompanionJobInterface {
+    public EntityNPCInterface npc;
+
+    public abstract NBTTagCompound getNBT();
+
+    public abstract void setNBT(NBTTagCompound var1);
+
+    public void onUpdate() {
+    }
+
+    public boolean isSelfSufficient() {
+        return false;
+    }
+}
+

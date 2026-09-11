@@ -1,0 +1,271 @@
+Compiled from "DataTimers.java"
+public class noppes.npcs.entity.data.DataTimers implements noppes.npcs.api.ITimers {
+  private java.lang.Object parent;
+
+  private java.util.Map<java.lang.Integer, noppes.npcs.entity.data.DataTimers$Timer> timers;
+
+  public noppes.npcs.entity.data.DataTimers(java.lang.Object);
+    Code:
+       0: aload_0
+       1: invokespecial #20                 // Method java/lang/Object."<init>":()V
+       4: aload_0
+       5: new           #22                 // class java/util/HashMap
+       8: dup
+       9: invokespecial #23                 // Method java/util/HashMap."<init>":()V
+      12: putfield      #25                 // Field timers:Ljava/util/Map;
+      15: aload_0
+      16: aload_1
+      17: putfield      #27                 // Field parent:Ljava/lang/Object;
+      20: return
+
+  public void start(int, int, boolean);
+    Code:
+       0: aload_0
+       1: getfield      #25                 // Field timers:Ljava/util/Map;
+       4: iload_1
+       5: invokestatic  #37                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       8: invokeinterface #43,  2           // InterfaceMethod java/util/Map.containsKey:(Ljava/lang/Object;)Z
+      13: ifeq          47
+      16: new           #45                 // class noppes/npcs/api/CustomNPCsException
+      19: dup
+      20: new           #47                 // class java/lang/StringBuilder
+      23: dup
+      24: invokespecial #48                 // Method java/lang/StringBuilder."<init>":()V
+      27: ldc           #50                 // String There is already a timer with id:
+      29: invokevirtual #54                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      32: iload_1
+      33: invokevirtual #57                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+      36: invokevirtual #61                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+      39: iconst_0
+      40: anewarray     #4                  // class java/lang/Object
+      43: invokespecial #64                 // Method noppes/npcs/api/CustomNPCsException."<init>":(Ljava/lang/String;[Ljava/lang/Object;)V
+      46: athrow
+      47: aload_0
+      48: getfield      #25                 // Field timers:Ljava/util/Map;
+      51: iload_1
+      52: invokestatic  #37                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+      55: new           #9                  // class noppes/npcs/entity/data/DataTimers$Timer
+      58: dup
+      59: aload_0
+      60: iload_1
+      61: iload_2
+      62: iload_3
+      63: invokespecial #67                 // Method noppes/npcs/entity/data/DataTimers$Timer."<init>":(Lnoppes/npcs/entity/data/DataTimers;IIZ)V
+      66: invokeinterface #71,  3           // InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+      71: pop
+      72: return
+
+  public void forceStart(int, int, boolean);
+    Code:
+       0: aload_0
+       1: getfield      #25                 // Field timers:Ljava/util/Map;
+       4: iload_1
+       5: invokestatic  #37                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       8: new           #9                  // class noppes/npcs/entity/data/DataTimers$Timer
+      11: dup
+      12: aload_0
+      13: iload_1
+      14: iload_2
+      15: iload_3
+      16: invokespecial #67                 // Method noppes/npcs/entity/data/DataTimers$Timer."<init>":(Lnoppes/npcs/entity/data/DataTimers;IIZ)V
+      19: invokeinterface #71,  3           // InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+      24: pop
+      25: return
+
+  public boolean has(int);
+    Code:
+       0: aload_0
+       1: getfield      #25                 // Field timers:Ljava/util/Map;
+       4: iload_1
+       5: invokestatic  #37                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       8: invokeinterface #43,  2           // InterfaceMethod java/util/Map.containsKey:(Ljava/lang/Object;)Z
+      13: ireturn
+
+  public boolean stop(int);
+    Code:
+       0: aload_0
+       1: getfield      #25                 // Field timers:Ljava/util/Map;
+       4: iload_1
+       5: invokestatic  #37                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       8: invokeinterface #84,  2           // InterfaceMethod java/util/Map.remove:(Ljava/lang/Object;)Ljava/lang/Object;
+      13: ifnull        20
+      16: iconst_1
+      17: goto          21
+      20: iconst_0
+      21: ireturn
+
+  public void reset(int);
+    Code:
+       0: aload_0
+       1: getfield      #25                 // Field timers:Ljava/util/Map;
+       4: iload_1
+       5: invokestatic  #37                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       8: invokeinterface #89,  2           // InterfaceMethod java/util/Map.get:(Ljava/lang/Object;)Ljava/lang/Object;
+      13: checkcast     #9                  // class noppes/npcs/entity/data/DataTimers$Timer
+      16: astore_2
+      17: aload_2
+      18: ifnonnull     52
+      21: new           #45                 // class noppes/npcs/api/CustomNPCsException
+      24: dup
+      25: new           #47                 // class java/lang/StringBuilder
+      28: dup
+      29: invokespecial #48                 // Method java/lang/StringBuilder."<init>":()V
+      32: ldc           #91                 // String There is no timer with id:
+      34: invokevirtual #54                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      37: iload_1
+      38: invokevirtual #57                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+      41: invokevirtual #61                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+      44: iconst_0
+      45: anewarray     #4                  // class java/lang/Object
+      48: invokespecial #64                 // Method noppes/npcs/api/CustomNPCsException."<init>":(Ljava/lang/String;[Ljava/lang/Object;)V
+      51: athrow
+      52: aload_2
+      53: iconst_0
+      54: invokestatic  #95                 // Method noppes/npcs/entity/data/DataTimers$Timer.access$002:(Lnoppes/npcs/entity/data/DataTimers$Timer;I)I
+      57: pop
+      58: return
+
+  public void writeToNBT(net.minecraft.nbt.NBTTagCompound);
+    Code:
+       0: new           #101                // class net/minecraft/nbt/NBTTagList
+       3: dup
+       4: invokespecial #102                // Method net/minecraft/nbt/NBTTagList."<init>":()V
+       7: astore_2
+       8: aload_0
+       9: getfield      #25                 // Field timers:Ljava/util/Map;
+      12: invokeinterface #106,  1          // InterfaceMethod java/util/Map.values:()Ljava/util/Collection;
+      17: invokeinterface #112,  1          // InterfaceMethod java/util/Collection.iterator:()Ljava/util/Iterator;
+      22: astore_3
+      23: aload_3
+      24: invokeinterface #118,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+      29: ifeq          109
+      32: aload_3
+      33: invokeinterface #122,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+      38: checkcast     #9                  // class noppes/npcs/entity/data/DataTimers$Timer
+      41: astore        4
+      43: new           #124                // class net/minecraft/nbt/NBTTagCompound
+      46: dup
+      47: invokespecial #125                // Method net/minecraft/nbt/NBTTagCompound."<init>":()V
+      50: astore        5
+      52: aload         5
+      54: ldc           #127                // String ID
+      56: aload         4
+      58: getfield      #129                // Field noppes/npcs/entity/data/DataTimers$Timer.id:I
+      61: invokevirtual #133                // Method net/minecraft/nbt/NBTTagCompound.func_74768_a:(Ljava/lang/String;I)V
+      64: aload         5
+      66: ldc           #135                // String TimerTicks
+      68: aload         4
+      70: getfield      #129                // Field noppes/npcs/entity/data/DataTimers$Timer.id:I
+      73: invokevirtual #133                // Method net/minecraft/nbt/NBTTagCompound.func_74768_a:(Ljava/lang/String;I)V
+      76: aload         5
+      78: ldc           #137                // String Repeat
+      80: aload         4
+      82: invokestatic  #141                // Method noppes/npcs/entity/data/DataTimers$Timer.access$100:(Lnoppes/npcs/entity/data/DataTimers$Timer;)Z
+      85: invokevirtual #145                // Method net/minecraft/nbt/NBTTagCompound.func_74757_a:(Ljava/lang/String;Z)V
+      88: aload         5
+      90: ldc           #147                // String Ticks
+      92: aload         4
+      94: invokestatic  #151                // Method noppes/npcs/entity/data/DataTimers$Timer.access$000:(Lnoppes/npcs/entity/data/DataTimers$Timer;)I
+      97: invokevirtual #133                // Method net/minecraft/nbt/NBTTagCompound.func_74768_a:(Ljava/lang/String;I)V
+     100: aload_2
+     101: aload         5
+     103: invokevirtual #155                // Method net/minecraft/nbt/NBTTagList.func_74742_a:(Lnet/minecraft/nbt/NBTBase;)V
+     106: goto          23
+     109: aload_1
+     110: ldc           #157                // String NpcsTimers
+     112: aload_2
+     113: invokevirtual #161                // Method net/minecraft/nbt/NBTTagCompound.func_74782_a:(Ljava/lang/String;Lnet/minecraft/nbt/NBTBase;)V
+     116: return
+
+  public void readFromNBT(net.minecraft.nbt.NBTTagCompound);
+    Code:
+       0: new           #22                 // class java/util/HashMap
+       3: dup
+       4: invokespecial #23                 // Method java/util/HashMap."<init>":()V
+       7: astore_2
+       8: aload_1
+       9: ldc           #157                // String NpcsTimers
+      11: bipush        10
+      13: invokevirtual #171                // Method net/minecraft/nbt/NBTTagCompound.func_150295_c:(Ljava/lang/String;I)Lnet/minecraft/nbt/NBTTagList;
+      16: astore_3
+      17: iconst_0
+      18: istore        4
+      20: iload         4
+      22: aload_3
+      23: invokevirtual #175                // Method net/minecraft/nbt/NBTTagList.func_74745_c:()I
+      26: if_icmpge     104
+      29: aload_3
+      30: iload         4
+      32: invokevirtual #179                // Method net/minecraft/nbt/NBTTagList.func_150305_b:(I)Lnet/minecraft/nbt/NBTTagCompound;
+      35: astore        5
+      37: new           #9                  // class noppes/npcs/entity/data/DataTimers$Timer
+      40: dup
+      41: aload_0
+      42: aload         5
+      44: ldc           #127                // String ID
+      46: invokevirtual #183                // Method net/minecraft/nbt/NBTTagCompound.func_74762_e:(Ljava/lang/String;)I
+      49: aload         5
+      51: ldc           #135                // String TimerTicks
+      53: invokevirtual #183                // Method net/minecraft/nbt/NBTTagCompound.func_74762_e:(Ljava/lang/String;)I
+      56: aload         5
+      58: ldc           #137                // String Repeat
+      60: invokevirtual #187                // Method net/minecraft/nbt/NBTTagCompound.func_74767_n:(Ljava/lang/String;)Z
+      63: invokespecial #67                 // Method noppes/npcs/entity/data/DataTimers$Timer."<init>":(Lnoppes/npcs/entity/data/DataTimers;IIZ)V
+      66: astore        6
+      68: aload         6
+      70: aload         5
+      72: ldc           #147                // String Ticks
+      74: invokevirtual #183                // Method net/minecraft/nbt/NBTTagCompound.func_74762_e:(Ljava/lang/String;)I
+      77: invokestatic  #95                 // Method noppes/npcs/entity/data/DataTimers$Timer.access$002:(Lnoppes/npcs/entity/data/DataTimers$Timer;I)I
+      80: pop
+      81: aload_2
+      82: aload         6
+      84: getfield      #129                // Field noppes/npcs/entity/data/DataTimers$Timer.id:I
+      87: invokestatic  #37                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+      90: aload         6
+      92: invokeinterface #71,  3           // InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+      97: pop
+      98: iinc          4, 1
+     101: goto          20
+     104: aload_0
+     105: aload_2
+     106: putfield      #25                 // Field timers:Ljava/util/Map;
+     109: return
+
+  public void update();
+    Code:
+       0: new           #192                // class java/util/ArrayList
+       3: dup
+       4: aload_0
+       5: getfield      #25                 // Field timers:Ljava/util/Map;
+       8: invokeinterface #106,  1          // InterfaceMethod java/util/Map.values:()Ljava/util/Collection;
+      13: invokespecial #195                // Method java/util/ArrayList."<init>":(Ljava/util/Collection;)V
+      16: invokevirtual #196                // Method java/util/ArrayList.iterator:()Ljava/util/Iterator;
+      19: astore_1
+      20: aload_1
+      21: invokeinterface #118,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+      26: ifeq          46
+      29: aload_1
+      30: invokeinterface #122,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+      35: checkcast     #9                  // class noppes/npcs/entity/data/DataTimers$Timer
+      38: astore_2
+      39: aload_2
+      40: invokevirtual #198                // Method noppes/npcs/entity/data/DataTimers$Timer.update:()V
+      43: goto          20
+      46: return
+
+  public void clear();
+    Code:
+       0: aload_0
+       1: new           #22                 // class java/util/HashMap
+       4: dup
+       5: invokespecial #23                 // Method java/util/HashMap."<init>":()V
+       8: putfield      #25                 // Field timers:Ljava/util/Map;
+      11: return
+
+  static java.lang.Object access$200(noppes.npcs.entity.data.DataTimers);
+    Code:
+       0: aload_0
+       1: getfield      #27                 // Field parent:Ljava/lang/Object;
+       4: areturn
+}

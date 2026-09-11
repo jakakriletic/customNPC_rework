@@ -1,0 +1,23 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  net.minecraft.client.model.ModelBase
+ */
+package noppes.npcs.client.renderer;
+
+import net.minecraft.client.model.ModelBase;
+import noppes.npcs.client.layer.LayerSlimeNpc;
+import noppes.npcs.client.renderer.RenderNPCInterface;
+
+public class RenderNpcSlime
+extends RenderNPCInterface {
+    private ModelBase scaleAmount;
+
+    public RenderNpcSlime(ModelBase par1ModelBase, ModelBase par2ModelBase, float par3) {
+        super(par1ModelBase, par3);
+        this.scaleAmount = par2ModelBase;
+        this.func_177094_a(new LayerSlimeNpc(this));
+    }
+}
+

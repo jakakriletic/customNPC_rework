@@ -1,0 +1,67 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  net.minecraft.nbt.NBTTagCompound
+ */
+package noppes.npcs.client.gui.roles;
+
+import java.util.ArrayList;
+import java.util.List;
+import net.minecraft.nbt.NBTTagCompound;
+import noppes.npcs.client.Client;
+import noppes.npcs.client.gui.util.GuiCustomScroll;
+import noppes.npcs.client.gui.util.GuiNPCInterface2;
+import noppes.npcs.client.gui.util.GuiNpcLabel;
+import noppes.npcs.client.gui.util.GuiNpcTextField;
+import noppes.npcs.client.gui.util.ICustomScrollListener;
+import noppes.npcs.constants.EnumPacketServer;
+import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.roles.JobFollower;
+
+public class GuiNpcFollowerJob
+extends GuiNPCInterface2
+implements ICustomScrollListener {
+    private JobFollower job;
+    private GuiCustomScroll scroll;
+
+    public GuiNpcFollowerJob(EntityNPCInterface npc) {
+        super(npc);
+        this.job = (JobFollower)npc.jobInterface;
+    }
+
+    @Override
+    public void func_73866_w_() {
+        super.func_73866_w_();
+        this.addLabel(new GuiNpcLabel(1, "gui.name", this.guiLeft + 6, this.guiTop + 110));
+        this.addTextField(new GuiNpcTextField(1, this, this.field_146289_q, this.guiLeft + 50, this.guiTop + 105, 200, 20, this.job.name));
+        this.scroll = new GuiCustomScroll(this, 0);
+        this.scroll.setSize(143, 208);
+        this.scroll.guiLeft = this.guiLeft + 268;
+        this.scroll.guiTop = this.guiTop + 4;
+        this.addScroll(this.scroll);
+        ArrayList<String> names = new ArrayList<String>();
+        List list = this.npc.field_70170_p.func_72872_a(EntityNPCInterface.class, this.npc.func_174813_aQ().func_72314_b(40.0, 40.0, 40.0));
+        for (EntityNPCInterface npc : list) {
+            if (npc == this.npc || names.contains(npc.display.getName())) continue;
+            names.add(npc.display.getName());
+        }
+        this.scroll.setList(names);
+    }
+
+    @Override
+    public void save() {
+        this.job.name = this.getTextField(1).func_146179_b();
+        Client.sendData(EnumPacketServer.JobSave, this.job.writeToNBT(new NBTTagCompound()));
+    }
+
+    @Override
+    public void scrollClicked(int i, int j, int k, GuiCustomScroll guiCustomScroll) {
+        this.getTextField(1).func_146180_a(guiCustomScroll.getSelected());
+    }
+
+    @Override
+    public void scrollDoubleClicked(String selection, GuiCustomScroll scroll) {
+    }
+}
+

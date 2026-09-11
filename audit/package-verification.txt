@@ -1,0 +1,3 @@
+PASS: 1716 original entries checked; only 2 explicitly compiled class entries changed.
+  noppes/npcs/entity/data/DataTimers$Timer.class
+  noppes/npcs/entity/data/DataTimers.class

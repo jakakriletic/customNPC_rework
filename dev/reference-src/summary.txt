@@ -1,0 +1,2 @@
+Summary for C:\Users\jaka.kriletic\.gradle\caches\minecraft\deobfedDeps\deobf\local\original\customnpcs-original\01Oct19\customnpcs-original-01Oct19.jar
+Decompiled with CFR 0.152

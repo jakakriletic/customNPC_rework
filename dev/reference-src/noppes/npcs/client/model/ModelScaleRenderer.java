@@ -1,0 +1,98 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  net.minecraft.client.model.ModelBase
+ *  net.minecraft.client.model.ModelBox
+ *  net.minecraft.client.model.ModelRenderer
+ *  net.minecraft.client.renderer.BufferBuilder
+ *  net.minecraft.client.renderer.GLAllocation
+ *  net.minecraft.client.renderer.GlStateManager
+ *  net.minecraft.client.renderer.Tessellator
+ *  org.lwjgl.opengl.GL11
+ */
+package noppes.npcs.client.model;
+
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.model.ModelBox;
+import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import noppes.npcs.ModelPartConfig;
+import noppes.npcs.constants.EnumParts;
+import org.lwjgl.opengl.GL11;
+
+public class ModelScaleRenderer
+extends ModelRenderer {
+    public boolean isCompiled;
+    public int displayList;
+    public ModelPartConfig config;
+    public EnumParts part;
+
+    public ModelScaleRenderer(ModelBase par1ModelBase, EnumParts part) {
+        super(par1ModelBase);
+        this.part = part;
+    }
+
+    public ModelScaleRenderer(ModelBase par1ModelBase, int par2, int par3, EnumParts part) {
+        this(par1ModelBase, part);
+        this.setTextureOffset(par2, par3);
+    }
+
+    public void setRotation(ModelRenderer model, float x, float y, float z) {
+        model.rotateAngleX = x;
+        model.rotateAngleY = y;
+        model.rotateAngleZ = z;
+    }
+
+    public void render(float par1) {
+        if (!this.showModel || this.isHidden) {
+            return;
+        }
+        if (!this.isCompiled) {
+            this.compile(par1);
+        }
+        GlStateManager.pushMatrix();
+        this.postRender(par1);
+        GlStateManager.callList((int)this.displayList);
+        if (this.childModels != null) {
+            for (int i = 0; i < this.childModels.size(); ++i) {
+                ((ModelRenderer)this.childModels.get(i)).render(par1);
+            }
+        }
+        GlStateManager.popMatrix();
+    }
+
+    public void postRender(float par1) {
+        if (this.config != null) {
+            GlStateManager.translate((float)this.config.transX, (float)this.config.transY, (float)this.config.transZ);
+        }
+        super.postRender(par1);
+        if (this.config != null) {
+            GlStateManager.scale((float)this.config.scaleX, (float)this.config.scaleY, (float)this.config.scaleZ);
+        }
+    }
+
+    public void postRenderNoScale(float par1) {
+        GlStateManager.translate((float)this.config.transX, (float)this.config.transY, (float)this.config.transZ);
+        super.postRender(par1);
+    }
+
+    public void parentRender(float par1) {
+        super.render(par1);
+    }
+
+    public void compile(float par1) {
+        this.displayList = GLAllocation.generateDisplayLists((int)1);
+        GlStateManager.glNewList((int)this.displayList, (int)4864);
+        BufferBuilder tessellator = Tessellator.getInstance().getBuffer();
+        for (int i = 0; i < this.cubeList.size(); ++i) {
+            ((ModelBox)this.cubeList.get(i)).render(tessellator, par1);
+        }
+        GL11.glEndList();
+        this.isCompiled = true;
+    }
+}
+
