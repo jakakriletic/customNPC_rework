@@ -81,14 +81,9 @@ public class LinkedNpcController {
     }
 
     private void saveNpc(LinkedData npc) throws IOException {
-        File file = new File(this.getDir(), npc.name + ".json_new");
-        File file1 = new File(this.getDir(), npc.name + ".json");
+        File file = new File(this.getDir(), npc.name + ".json");
         try {
             NBTJsonUtil.SaveFile(file, npc.getNBT());
-            if (file1.exists()) {
-                file1.delete();
-            }
-            file.renameTo(file1);
         }
         catch (NBTJsonUtil.JsonException e) {
             LogWriter.except(e);
@@ -202,5 +197,4 @@ public class LinkedNpcController {
         }
     }
 }
-
 

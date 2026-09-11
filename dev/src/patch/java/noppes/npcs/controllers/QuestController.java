@@ -219,14 +219,9 @@ implements IQuestHandler {
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        File file = new File(dir, quest.id + ".json_new");
-        File file2 = new File(dir, quest.id + ".json");
+        File file = new File(dir, quest.id + ".json");
         try {
             NBTJsonUtil.SaveFile(file, quest.writeToNBTPartial(new NBTTagCompound()));
-            if (file2.exists()) {
-                file2.delete();
-            }
-            file.renameTo(file2);
             Server.sendToAll(CustomNpcs.Server, EnumPacketClient.SYNC_UPDATE, 2, quest.writeToNBT(new NBTTagCompound()), category.id);
         }
         catch (Exception e) {
@@ -258,5 +253,4 @@ implements IQuestHandler {
         return this.quests.get(id);
     }
 }
-
 

@@ -163,14 +163,9 @@ implements IRoleTrader {
         if (name.isEmpty()) {
             return;
         }
-        File file = RoleTrader.getFile(name + "_new");
-        File file1 = RoleTrader.getFile(name);
+        File file = RoleTrader.getFile(name);
         try {
             NBTJsonUtil.SaveFile(file, r.writeNBT(new NBTTagCompound()));
-            if (file1.exists()) {
-                file1.delete();
-            }
-            file.renameTo(file1);
         }
         catch (Exception exception) {
             // empty catch block
@@ -211,4 +206,3 @@ implements IRoleTrader {
         RoleTrader.load((RoleTrader)npc.roleInterface, marketName);
     }
 }
-

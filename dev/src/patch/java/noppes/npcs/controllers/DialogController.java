@@ -272,15 +272,10 @@ implements IDialogHandler {
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        File file = new File(dir, dialog.id + ".json_new");
-        File file2 = new File(dir, dialog.id + ".json");
+        File file = new File(dir, dialog.id + ".json");
         try {
             NBTTagCompound compound = dialog.writeToNBT(new NBTTagCompound());
             NBTJsonUtil.SaveFile(file, compound);
-            if (file2.exists()) {
-                file2.delete();
-            }
-            file.renameTo(file2);
             Server.sendToAll(CustomNpcs.Server, EnumPacketClient.SYNC_UPDATE, 4, compound, category.id);
         }
         catch (Exception e) {
@@ -318,5 +313,4 @@ implements IDialogHandler {
         return this.dialogs.get(id);
     }
 }
-
 
