@@ -112,3 +112,83 @@ task buildPatchedMod(dependsOn: ['reobfJar', 'test', 'testOriginal']) {
         } finally { output.close(); input.close(); patches.close() }
     }
 }
+
+// --- M0.2r: ponovna izdelava dev/libs/customnpcs-mapped-01Oct19.jar ---------
+// Aktivno samo z -PremapOriginal, zato normalen build ostane nespremenjen.
+//
+// Zakaj obstaja: dev/libs/ je v .gitignore, izvorno okolje je bilo na drugem
+// racunalniku, zato je na novi delovni postaji mapiran jar treba regenerirati iz
+// SHA-256-preverjenega originala. Uporablja isto ForgeGradle deobf pot kot
+// prvotna postavitev, da je rezultat cim bolj verjetno bitno enak zapisu v
+// environment-lock.json.
+//
+// ForgeGradle 2.3 sprejme za deobfCompile samo ExternalModuleDependency;
+// 'deobfCompile files(...)' zavrne z "Only allowed to use maven dependencies for
+// this." Zato se original prekopira v flatDir repozitorij pod imenom
+// <ime>-<verzija>.jar in navede kot modulna odvisnost. Original v baseline/
+// ostane nedotaknjen.
+if (project.hasProperty('remapOriginal')) {
+    def originalJar    = file('baseline/customnpcs-original-01Oct19.jar')
+    def remapStageRoot = file("$buildDir/remap-stage")
+    def stageGroupDir  = new File(remapStageRoot, 'local.customnpcs')
+    def stagedOriginal = new File(stageGroupDir, 'customnpcs-original-01Oct19-01Oct19.jar')
+    stageGroupDir.mkdirs()
+    if (!stagedOriginal.isFile() || stagedOriginal.length() != originalJar.length()) {
+        stagedOriginal.bytes = originalJar.bytes
+    }
+
+    // Ivy repozitorij s [organisation] v vzorcu, ne flatDir. flatDir ignorira
+    // group in bi zato odgovoril tudi na ForgeGradlovo lastno poizvedbo
+    // 'deobf.<group>:<ime>:<verzija>' -- vrnil bi nazaj neprevedeni original
+    // namesto deobf rezultata in remap se sploh ne bi zgodil.
+    repositories {
+        ivy {
+            url remapStageRoot.toURI()
+            // Gradle 4.9 se nima patternLayout(); layout('pattern') je ekvivalent.
+            layout('pattern') { artifact '[organisation]/[module]-[revision].[ext]' }
+        }
+    }
+    dependencies { deobfCompile 'local.customnpcs:customnpcs-original-01Oct19:01Oct19' }
+
+    // deobfCompileDummyTask je tisti, od katerega so odvisni vsi TaskSingleDeobfBin;
+    // brez te odvisnosti se remap nikoli ne izvede.
+    task exportMappedOriginal(dependsOn: 'deobfCompileDummyTask') {
+        description = 'Izvozi ForgeGradle deobf rezultat v dev/libs/customnpcs-mapped-01Oct19.jar'
+        doLast {
+            def sha = { File f -> java.security.MessageDigest.getInstance('SHA-256').digest(f.bytes).encodeHex().toString().toUpperCase() }
+
+            if (sha(originalJar) != 'CAFACADE45FB2AA6AC52956487889D0F4A9D4F6A1682EA28A1F7ACA1BA100FA1') {
+                throw new GradleException('Original JAR hash mismatch; refusing to export.')
+            }
+
+            // Deobf se pri ForgeGradle 2.3 zgodi sele ob resolvanju konfiguracije,
+            // ne ob konfiguraciji projekta. Zato se rezultat vzame neposredno iz
+            // resolvanega compile classpatha, ne z iskanjem po disku. Staging kopija
+            // originala se izloci, ker vsebuje isti marker v SRG imenih.
+            def marker = 'noppes/npcs/util/NBTJsonUtil.class'
+            def resolved = configurations.compile.files
+            def candidates = resolved.findAll { f ->
+                if (!f.isFile() || !f.name.endsWith('.jar')) return false
+                if (f.absolutePath.replace('\\', '/').contains('/remap-stage/')) return false
+                try {
+                    return new java.util.zip.ZipFile(f).withCloseable { z -> z.getEntry(marker) != null }
+                } catch (ignored) { return false }
+            }
+            if (candidates.isEmpty()) {
+                throw new GradleException("Deobf rezultata ni najti v compile classpathu. Resolvano:\n  " + resolved*.absolutePath.join('\n  '))
+            }
+            def source = candidates.max { it.lastModified() }
+            println "vir: ${source.absolutePath}"
+
+            def out = file('libs/customnpcs-mapped-01Oct19.jar')
+            out.parentFile.mkdirs()
+            out.bytes = source.bytes
+
+            def got  = sha(out)
+            def want = '9C2AD37C6F64AE7B7801378E32A9CCDE70600E1F2E7F082C4E9394C38FDC8CC3'
+            println "dobljeni SHA-256 = ${got}"
+            println "lock     SHA-256 = ${want}"
+            println got == want ? 'UJEMA SE z environment-lock.json' : 'NE UJEMA SE -> jar je lahko vseeno pravilen; odlocijo testi (testOriginal + test), nato odlocitev D-0NN in posodobitev locka'
+        }
+    }
+}
