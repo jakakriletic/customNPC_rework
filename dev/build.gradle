@@ -63,6 +63,12 @@ afterEvaluate {
         }
     }
 }
+// Dev server mora brati ukaze s standardnega vhoda. Gradlov JavaExec privzeto
+// poda prazen vhod, zato je konzola dev serverja brez tega mrtva in ga ni mogoce
+// niti cisto ustaviti z 'stop'. Deluje samo z --no-daemon, ker mora biti System.in
+// resnicni vhod procesa. Potrebno za M0.5 in za vsak skriptiran server scenarij.
+afterEvaluate { tasks.getByName('runServer').standardInput = System.in }
+
 task workspacePaths {
     doLast {
         file("$buildDir/workspace-classpath.txt").text = sourceSets.main.compileClasspath.asPath

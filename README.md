@@ -13,12 +13,12 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 
 | | |
 |---|---|
-| Datum zadnje posodobitve | 2026-09-11 |
+| Datum zadnje posodobitve | 2026-09-14 |
 | Trenutna faza | **M0 — dokončanje temelja**; M1 integriteta podatkov je zaključena |
-| Naslednji korak | M0.5 dedicated-server smoke, nato M0.6 ponovljiv testni svet; glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Naslednji korak | M0.6 ponovljiv testni svet, nato M0.7 integracijska matrika; glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
 | Prevedljivih razredov | 21 od ~746; podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
-| Okolje deluje | da — `runClient` uspešno naloži Forge + CustomNPCs |
+| Okolje deluje | da — `runClient` in `runServer` uspešno naložita Forge + CustomNPCs |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in
 testirano. Uporabnikov konkretni simptom je zelo majhen robni primer: NPC z vlogo follower,
@@ -108,12 +108,14 @@ Vse odločitve, ki jih sprejmeš med sejo, gredo v `docs/01-ARHITEKTURA.md` pod
 ## Osnovni ukazi (PowerShell, iz korena mape)
 
 ```powershell
+.\obnovi-okolje.ps1                        # nova delovna postaja: obnovi dev/libs in preveri vse
 .\dev.ps1 setupDecompWorkspace --offline   # priprava Minecraft/Forge odvisnosti
 .\dev.ps1 testOriginal test --offline      # testi originala + obnovljene kode
 .\dev.ps1 buildPatchedMod --offline        # sestavi lokalni testni mod
 .\verify-package.ps1                       # dokaže, kaj točno se je spremenilo proti originalu
 .\dev.ps1 runClient --offline              # razvojni klient
 .\dev.ps1 runServer --offline              # razvojni dedicated server
+.\smoke-server.ps1                         # M0.5 server smoke (skriptiran, 13 preverb)
 ```
 
 Podrobnosti in opozorila: [`OKOLJE.md`](OKOLJE.md).
@@ -127,12 +129,15 @@ CustomNPC_mod_rework/
 ├── README.md                    ← ta datoteka
 ├── OKOLJE.md                    razvojno okolje
 ├── PLAN_IMPLEMENTACIJE.md       audit originala (B1–B8)
+├── obnovi-okolje.ps1            obnova okolja na novi delovni postaji
+├── smoke-server.ps1             M0.5 dedicated-server smoke test
 ├── docs/                        načrt reworka
 │   ├── 01-ARHITEKTURA.md
 │   ├── 02-ZAHTEVE.md
 │   ├── 03-FAZE.md
 │   ├── 04-STANJE.md             ← živ dnevnik
-│   └── 05-SEJA-PROTOKOL.md
+│   ├── 05-SEJA-PROTOKOL.md
+│   └── scenariji/               ponovljivi integracijski scenariji
 ├── dev/                         gradle projekt
 │   ├── src/patch/java/          razredi, ki se dejansko prevajajo
 │   ├── src/test/java/           testi

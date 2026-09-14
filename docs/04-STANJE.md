@@ -9,11 +9,11 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-09-11** |
+| Zadnja posodobitev | **2026-09-14** |
 | Trenutni milestone | **M0 — dokončanje temelja**; M1 je zaključen |
-| Naslednji paketi | **M0.5** (dedicated-server smoke), **M0.6** (ponovljiv testni svet), nato M2 |
+| Naslednji paketi | **M0.6** (ponovljiv testni svet), **M0.7** (integracijska matrika), **M0.8** (podatki od uporabnika), nato M2 |
 | Prevedljivih razredov | 21 — prejšnjih 19 + `CustomNpcs` + `WorldSaveSession` |
-| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection; zeleni |
+| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection; zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
 
 ---
@@ -22,7 +22,7 @@
 
 | Milestone | Stanje | Opomba |
 |---|---|---|
-| M0 Temelj | **v teku** (≈70 %) | M0.1–M0.4 narejeno; M0.5–M0.8 odprto |
+| M0 Temelj | **v teku** (≈85 %) | M0.1–M0.5 narejeno (+ M0.2r obnova okolja); M0.6–M0.8 odprto |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | ni začeto | |
 | M3 Jedro entitete | ni začeto | analiza narejena, glej R1 in R6 |
@@ -51,6 +51,103 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-14 (11) — M0.5: dedicated-server smoke test
+
+**Paket:** M0.5
+**Stanje:** končano
+
+**Narejeno:**
+
+- `dev/build.gradle` poveže `runServer.standardInput = System.in`. Gradlov `JavaExec`
+  privzeto poda prazen vhod, zato je bila konzola dev serverja doslej mrtva in serverja
+  ni bilo mogoče niti čisto ustaviti z `stop`. Deluje samo z `--no-daemon`.
+- Dodan `smoke-server.ps1`: skriptiran, ponovljiv smoke test s 13 preverbami. Svet
+  `m05-smoke` se vsakič zbriše in ustvari na novo (FLAT, seed 20260914, brez spawna mobov,
+  `max-tick-time=-1`), ukazi gredo na standardni vhod, izpisi v `audit\m05-server-*.log`.
+- Postopek zapisan kot ponovljiv scenarij v `docs/scenariji/M0.5-server-smoke.md`.
+- Izid: vseh 13 preverb zeleno. Server naloži 5 modov, `Done (1.337s)`, NPC se ustvari,
+  preživi `save-all flush` in restart, po restartu konzola izpiše `[SmokeNPC] M05-NPC-PRESENT`.
+- Minecraft EULA je bila sprejeta na izrecno zahtevo uporabnika; skripta je zapiše samo
+  z zastavico `-AcceptEula`.
+
+**Ni narejeno in zakaj:**
+
+- Igralec v svetu ni bil uporabljen; NPC je ustvarjen z `summon` in NBT, ne prek GUI-ja.
+  Preverjen je en NPC in en NBT ključ, ne celotno stanje NPC-ja. To je obseg M0.7.
+- M0.6 (testni svet z znanimi NPC-ji, questi, dialogi in skriptami) ostaja ločen paket;
+  M0.5 mu je pripravil determinističen svet in spawn.
+
+**Ugotovitve:**
+
+- `CommandSummon` v 1.12.2 javi `Cannot summon the object out of the world` tudi takrat,
+  ko **ciljni chunk ni naložen**, ne samo pri neveljavnih koordinatah. Spawn superflat
+  sveta lahko pade do 256 blokov od izhodišča, zato chunk `0,0` ni nujno med spawn chunki.
+  Zato ima test tri zagone: prvi pribije world spawn na `0 5 0`.
+- `execute @e[…] ~ ~ ~ say` je boljša preverba kot `testfor`, ker konzola izpiše ime NPC-ja
+  v oklepaju. En marker dokaže troje: entiteta obstaja, je pravega tipa in NBT ključ `Name`
+  je preživel round-trip skozi popravljeno save pot.
+- `save-all` v 1.12.2 izpiše `Saved the world`, ne `Saved the game`. Prvi osnutek skripte je
+  čakal na napačen niz in 180 s lovil timeout.
+
+**Spremembe obnašanja:** nobene v modu. Dev server zdaj bere konzolo; to je razvojno orodje,
+ne del zapakiranega moda.
+
+**Meritve:** nobene
+
+**Naslednja seja:** M0.6 — testni svet z znanimi NPC-ji, questi, dialogi in skriptami, na
+podlagi determinističnega sveta iz M0.5.
+
+---
+
+### 2026-09-14 (10) — M0.2r: obnova razvojnega okolja na novi delovni postaji
+
+**Paket:** M0.2r (neplaniran, blokiral je vse ostalo)
+**Stanje:** končano
+
+**Narejeno:**
+
+- Projekt je bil prestavljen na drug računalnik. `dev/libs`, `dev/baseline` in `.tools` so v
+  `.gitignore`, zato na novi postavitvi **ni bilo mapiranega originala** in nič se ni prevajalo.
+- `dev/build.gradle` je dobil task `exportMappedOriginal` (aktiven samo z `-PremapOriginal`),
+  ki regenerira `dev/libs/customnpcs-mapped-01Oct19.jar` iz SHA-256-preverjenega originala po
+  isti ForgeGradle deobf poti kot prvotna postavitev.
+- `obnovi-okolje.ps1` preveri JDK 8 in hashe, nato požene `setupDecompWorkspace`, remap,
+  `testOriginal` + `test`, `buildPatchedMod` in `verify-package.ps1`. Gradle koraki najprej
+  poskusijo `--offline` in ob neuspehu ponovijo z omrežjem.
+- Rezultat: `testOriginal` 31, `test` 47, build zapakira 42 razredov, `verify-package.ps1`
+  pregleda 1716 vnosov in najde 25 pričakovanih zamenjav — **enako kot pred selitvijo**.
+
+**Ni narejeno in zakaj:**
+
+- `downloads\forge-1.12.2-14.23.5.2847-mdk.zip` na tej postaji ne obstaja in ni bil obnovljen;
+  Gradle cache ima vse potrebno, zato paket ni blokiran. Vnos v locku ostane kot zapis izvora.
+
+**Ugotovitve:**
+
+- Tri napake v prvem osnutku remap taska, vse potrjene z izvedbo, ne z branjem:
+  1. `deobfCompile files(...)` ForgeGradle 2.3 zavrne — zahteva `ExternalModuleDependency`.
+  2. `flatDir` ignorira group in odgovori tudi na ForgeGradlovo lastno poizvedbo
+     `deobf.<group>:<ime>:<verzija>`, zato vrne **neremapiran original** namesto deobf
+     rezultata in remap se sploh ne zgodi. Rešitev je `ivy` repozitorij z `[organisation]`
+     v vzorcu.
+  3. Remap sproži šele `deobfCompileDummyTask`; brez te odvisnosti task ne naredi ničesar.
+- `$ErrorActionPreference = 'Stop'` v PowerShellu spremeni **vsako vrstico stderr** zunanjega
+  programa v terminating error. Že `java -version` je prekinil skripto. Native klici zato
+  tečejo z `Continue`, uspeh pa se presoja po `$LASTEXITCODE`.
+- Regeneriran jar **ni bitno enak** hashu v `environment-lock.json`, vsebinsko pa je enak:
+  1716 vnosov se ujema po imenu, vseh **815 resourcev je bitno enakih**, remapiranih je 571
+  razredov. Deobf izhod ForgeGradla torej ni bitno ponovljiv med postavitvami. Lock je
+  posodobljen; razlog je zapisan kot odločitev **D-010**.
+
+**Spremembe obnašanja:** nobene. Normalen build je nespremenjen; remap koda se naloži samo
+z `-PremapOriginal`.
+
+**Meritve:** nobene
+
+**Naslednja seja:** M0.5.
+
+---
 
 ### 2026-09-11 (9) — M1.9: fault injection varnih zapisov
 
@@ -481,6 +578,6 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
 - Združljivost z uporabnikovim dejanskim modpackom ni preverjena (Q1).
 - Bugi iz `PLAN_IMPLEMENTACIJE.md`: B1 in B2 sta v M1.5/M1.6, B5 v M6.5. B3, B4, B6, B7, B8
   še niso razporejeni v milestone.
-- Dedicated server in igranje v svetu še nista preverjena (M0.5).
+- Dedicated server je preverjen (M0.5). Igranje v svetu z igralcem, GUI in questi še ni (M0.6/M0.7).
 - Že pokvarjenih datotek na disku nova koda ne popravlja; M1.4 je po navodilu uporabnika
   odložen, dokler ne obstaja konkreten primer.

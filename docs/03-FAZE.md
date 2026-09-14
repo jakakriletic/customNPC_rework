@@ -42,14 +42,14 @@ razvojna zanka, sledljiva zgodovina sprememb.
 | M0.2 | Gradle okolje, zaklenjene verzije, `environment-lock.json` | **narejeno** | — |
 | M0.3 | Karakterizacijski testi + `verify-package.ps1` + smoke test klienta | **narejeno** | — |
 | M0.4 | **Git repozitorij** — `git init`, prvi commit, `.gitignore` preverjen | **narejeno** | S |
-| M0.5 | **Dedicated server smoke test** — `runServer`, EULA, spawn/save/restart | odprto | S |
+| M0.5 | **Dedicated server smoke test** — `runServer`, EULA, spawn/save/restart | **narejeno** — `docs/scenariji/M0.5-server-smoke.md` | S |
 | M0.6 | **Testni svet** z znanimi NPC-ji, questi, dialogi in skriptami, kot ponovljiv seed | odprto | S |
 | M0.7 | **Integracijska matrika** zapisana kot ponovljiv postopek v `docs/scenariji/` | odprto | S |
 | M0.8 | Pridobiti od uporabnika: modpack, Forge verzija, config, kopijo pravega sveta, primer pokvarjenega clone NPC-ja | odprto | S |
 
 **Izhodni kriterij:**
 - `git log` ima zgodovino; nobena sprememba ni več neizsledljiva
-- `runServer` se zažene, NPC preživi save + restart
+- `runServer` se zažene, NPC preživi save + restart — **izpolnjeno 2026-09-14**
 - obstaja testni svet, ki ga lahko katerakoli seja odpre in ponovi scenarij
 - M0.8 je bodisi izpolnjen bodisi zabeležen kot blokada z jasnim vplivom
 
