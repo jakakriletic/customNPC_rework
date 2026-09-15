@@ -1,0 +1,34 @@
+# M0.6 — postavitev prizorisca. Prilepi v server konzolo po prvem zagonu
+# testnega sveta. Ukazi so idempotentni: ponovni zagon jih sme ponoviti.
+
+# --- determinizem ---
+gamerule doDaylightCycle false
+gamerule doWeatherCycle false
+gamerule doMobSpawning false
+gamerule doFireTick false
+gamerule mobGriefing false
+gamerule randomTickSpeed 0
+gamerule announceAdvancements false
+gamerule spectatorsGenerateChunks false
+time set 6000
+weather clear 1000000
+setworldspawn 0 4 0
+
+# --- ovira za R2 (leteci NPC mora cez steno) ---
+fill 20 4 -8 20 12 8 minecraft:stone
+
+# --- ograda za R1 (jahac na nosilcu) ---
+fill -8 4 20 8 4 20 minecraft:stone
+fill -8 4 36 8 4 36 minecraft:stone
+
+# --- fixture NPC-ji na fiksnih koordinatah ---
+noppes clone spawn T_Stand 1 0,4,0
+noppes clone spawn T_Wander 1 4,4,0
+noppes clone spawn T_Flyer 1 8,4,0
+noppes clone spawn T_Carrier 1 0,4,8
+noppes clone spawn T_Rider 1 2,4,8
+noppes clone spawn T_Follower 1 4,4,8
+noppes clone spawn T_Trader 1 6,4,8
+noppes clone spawn T_Scripted 1 8,4,8
+
+save-all flush

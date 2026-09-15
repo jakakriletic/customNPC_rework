@@ -9,12 +9,13 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-09-14** |
+| Zadnja posodobitev | **2026-09-15** |
 | Trenutni milestone | **M0 — dokončanje temelja**; M1 je zaključen |
-| Naslednji paketi | **M0.6** (ponovljiv testni svet), **M0.7** (integracijska matrika), **M0.8** (podatki od uporabnika), nato M2 |
+| Naslednji paketi | **M0.6 čaka na izvedbo scenarija** (seme in `verify-testworld.ps1` sta pripravljena), nato **M0.7** (integracijska matrika), **M0.8** (podatki od uporabnika), nato M2 |
 | Prevedljivih razredov | 21 — prejšnjih 19 + `CustomNpcs` + `WorldSaveSession` |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection; zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
+| Omejitev orodij | seja **ne more zaganjati ukazov** na uporabnikovem računalniku (glej Znane omejitve); gradle, teste in git poganja uporabnik |
 
 ---
 
@@ -22,7 +23,7 @@
 
 | Milestone | Stanje | Opomba |
 |---|---|---|
-| M0 Temelj | **v teku** (≈85 %) | M0.1–M0.5 narejeno (+ M0.2r obnova okolja); M0.6–M0.8 odprto |
+| M0 Temelj | **v teku** (≈85 %) | M0.1–M0.5 narejeno (+ M0.2r obnova okolja); M0.6 pripravljen, čaka zagon scenarija; M0.7–M0.8 odprto |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | ni začeto | |
 | M3 Jedro entitete | ni začeto | analiza narejena, glej R1 in R6 |
@@ -52,7 +53,81 @@
 
 ## Dnevnik sej
 
-### 2026-09-14 (11) — M0.5: dedicated-server smoke test
+### 2026-09-15 (13) — M0.6: seme testnega sveta in samodejno ovrednotenje
+
+**Paket:** M0.6
+**Stanje:** delno — vse datoteke so pripravljene in preverjene proti izvorni kodi;
+scenarij še ni bil pognan, ker seja ni mogla zagnati ukazov na uporabnikovem računalniku.
+
+**Narejeno:**
+
+- Pregled semena, ki je nastalo ob koncu prejšnje seje (`dev/testworld/`, `testworld.ps1`,
+  `docs/scenariji/M0.6-testni-svet.md`). Prejšnja seja jih ni ne commitala ne zabeležila
+  v ta dnevnik; to je bila odprta luknja in je zdaj zaprta.
+- **Verifikacija semena proti izvorni kodi** (ne proti spominu):
+  - `CmdClone.spawn` ima podpis `<name> <tab> [[world:]x,y,z] [newname]` —
+    `setup-commands.txt` ga uporablja pravilno (`CmdClone.java:112`).
+  - `CmdClone.grid` ima `<name> <tab> <lenght> <width> [[world:]x,y,z]` — kot je navedeno
+    v scenariju za M2.4 (`CmdClone.java:173`).
+  - `DataScript.readFromNBT` bere `Scripts`, `ScriptLanguage` in `ScriptEnabled` iz
+    **korenskega** compounda entitete; `T_Scripted.json` ima vse tri na pravem mestu.
+  - `ScriptContainer.readFromNBT` bere `Script`, `Console`, `ScriptList` — struktura v
+    fixture datoteki se ujema.
+  - Vseh 8 fixture datotek se ujema s tabelo v `dev/testworld/README.md`
+    (`MovementType`, `MovingState`, `Role`, `Invulnerable`, `PersistenceRequired`, tagi).
+- **Popravljeno merilo W5.** Prvotno merilo je bilo "`T_Scripted` ne vrže script napake",
+  kar je lažno pozitivno, če scripting sploh ne teče. `DataScript.isEnabled()` zahteva
+  `ScriptEnabled` **in** `ScriptController.HasStart` **in** `CustomNpcs.EnableScripting`
+  (`CustomNpcs.java:271` postavi `HasStart=false` ob load, `:293` na `true` šele ob
+  `FMLServerStartedEvent`). Merilo zdaj zahteva pozitiven izpis iz same skripte.
+- Skripta v `T_Scripted` zato ob `init` požene `/say TW-SCRIPT-OK` in ob 200. `tick`
+  `/say TW-SCRIPT-TICK-200`. Pot je `NPCWrapper.executeCommand` →
+  `NoppesUtilServer.runCommand`, ki zahteva vklopljene command bloke; seme jih ima
+  (`enable-command-block=true`). Izhod `/say` pride v konzolo tudi brez igralca.
+- Nov `verify-testworld.ps1` samodejno ovrednoti W1–W8 iz `dev/run/logs/latest.log` in
+  datotečnega sistema ter vrne izhodno kodo 0/1. S tem scenarij ni več odvisen od ročnega
+  branja loga in ga lahko katerakoli seja ponovi enako.
+- Scenarij in `dev/testworld/README.md` posodobljena; postopek ima zdaj eksplicitno fazo
+  restarta za W6.
+
+**Ni narejeno in zakaj:**
+
+- Scenarij ni pognan iz seje. Windows posodobitev z 8. 9. je onemogočila, da bi seja
+  dosegla uporabnikov datotečni sistem prek lupine; seja lahko datoteke bere in piše, ne
+  pa izvajati gradle, server ali git. Zagon je naredil uporabnik.
+- Commit in push je naredil uporabnik. Push je bil najprej zavrnjen: na `origin/main` sta
+  bila commita `M0.2r` in `M0.5` z **druge delovne postaje**, ki ju ta postaja ni imela.
+  Delo je bilo združeno brez force-pusha; oba M0.5 zapisa (ročni z 11. 9. in skriptirani
+  s 14. 9.) sta ohranjena, dnevnik pa preštevilčen, ker sta obe veji uporabili številko (10).
+- W6 in W7 sta preverljiva šele po dejanskem zagonu; do takrat M0.6 ostane *delno*.
+
+**Ugotovitve:**
+
+- `ScriptContainer.run` sinhronizira na **statičnem** `lock` objektu, torej si vse skripte
+  vseh NPC-jev delijo eno ključavnico. To je konkreten dokaz za kandidata iz M5
+  (odstranitev globalnega script locka) in za R7; zabeleženo, ne popravljeno.
+- `ScriptContainer` ob napaki pokliče `NoppesUtilServer.NotifyOPs(... " script errored")`,
+  kar je iskalni niz za negativno stran W5.
+- Prejšnja seja je fixture NPC-je generirala iz pravega NPC zapisa (`ModRev 18`, polna
+  lista atributov z `generic.flyingSpeed`), ne iz ugibanja. Pravilo iz
+  `dev/testworld/README.md` je torej spoštovano; edina ročna sprememba v tej seji je
+  vsebina niza `Script`, kar ni sprememba strukture NBT.
+
+**Spremembe obnašanja:** nobene — spremenjeno je le testno seme in dokumentacija; v
+`src/patch/java` ni sprememb, zato `verify-package.ps1` ostane pri istem seznamu razredov.
+
+**Meritve:** nobene
+
+**Odprto:** projekt zdaj teče na **dveh delovnih postajah**. Vsaka seja mora pred delom
+pognati `git fetch origin` in preveriti, ali je `origin/main` pred njo; sicer se dnevnik
+razide, kot se je tokrat.
+
+**Naslednja seja:** zapisati rezultat W1–W8 iz uporabnikovega zagona; če je PASS, zapreti
+M0.6 in odpreti M0.7 (integracijska matrika + quest/dialog fixture iz GUI-ja).
+
+---
+
+### 2026-09-14 (12) — M0.5: dedicated-server smoke test
 
 **Paket:** M0.5
 **Stanje:** končano
@@ -100,7 +175,7 @@ podlagi determinističnega sveta iz M0.5.
 
 ---
 
-### 2026-09-14 (10) — M0.2r: obnova razvojnega okolja na novi delovni postaji
+### 2026-09-14 (11) — M0.2r: obnova razvojnega okolja na novi delovni postaji
 
 **Paket:** M0.2r (neplaniran, blokiral je vse ostalo)
 **Stanje:** končano
@@ -146,6 +221,55 @@ z `-PremapOriginal`.
 **Meritve:** nobene
 
 **Naslednja seja:** M0.5.
+
+---
+
+### 2026-09-11 (10) — M0.5: dedicated server smoke test
+
+**Paket:** M0.5
+**Stanje:** končano
+
+**Narejeno:**
+
+- Scenarij je zapisan kot ponovljiv postopek v [`scenariji/M0.5-server-smoke.md`](scenariji/M0.5-server-smoke.md)
+  z devetimi merili sprejemljivosti, tako da ga lahko katerakoli kasnejša seja ponovi.
+- Dedicated server se zažene iz popravljenega drevesa: Forge 14.23.5.2847, Java 1.8.0_492,
+  5 modov naloženih, `Done (12.031s)` ob prvem in `Done (2.077s)` ob ponovnem zagonu.
+- NPC `SmokeM05` (`customnpcs:CustomNpc`) spawnan na `(0,72,0)`, dodan v clone tab 1,
+  nato `save-all flush` in `stop`.
+- Po restartu: `M05-SURVIVED` 1× in `M05-TAG-OK` 1× — entiteta **in** vanilla `Tags`
+  so preživeli serializacijo. `noppes clone list 1` še vedno vsebuje `SmokeM05`,
+  `noppes clone spawn` uspe in `M05-AFTER-CLONE-SPAWN` se pojavi 2×.
+- `world/customnpcs/clones/1/SmokeM05.json` (7399 B) je na disku brez ostankov `.tmp` ali
+  `.bak`; vsebina ima pričakovane ključe `Name`, `Tags`, `Invulnerable`, `NoGravity`.
+  To je prva potrditev popravka M1.5a na dejanskem strežniku, ne samo v testu.
+- Oba `stop`-a sta čista: `Saving players` → `Saving worlds` → `Unloading dimension 0`
+  brez izjeme; drain world seje iz M1.6 ni javil nečistega zaključka.
+- V logu ni nobene napake iz `noppes.*`. Edina `ERROR` vnosa sta okoljska in prisotna tudi
+  pri originalu (maven library folder, manjkajoči FML podpisi).
+
+**Ni narejeno in zakaj:**
+
+- Pot ob prijavi igralca (`PlayerData.save`, torej B1 in B2 v realnem obratovanju) ni pokrita,
+  ker se noben klient ni povezal. Spada v M0.6/M0.7, kjer bo testni svet imel tudi igralca.
+- Git commit te seje ni bil narejen iz seje; razlog je nova omejitev orodij spodaj.
+
+**Ugotovitve:**
+
+- Ukazi iz server konzole se izvajajo na `(0,0,0)`, ne na world spawnu `(132,64,-32)`,
+  `/noppes clone add` pa išče NPC-je v radiju 80 blokov od pošiljatelja. Vsak kasnejši
+  konzolni scenarij mora entitete postaviti blizu izhodišča ali uporabiti klienta.
+- V shranjenem clone JSON je `"id": "customnpcs:customnpc"` z malimi črkami, registry ime
+  entitete pa je `customnpcs:CustomNpc`. Za `/summon` in `@e[type=...]` je obvezna oblika
+  z velikimi črkami. Zaenkrat neškodljivo, a kandidat za preverbo pri M8.
+- Clone datoteke niso strog JSON (`1b`, `1.0f`). To je originalni format, ki ga `NbtJson`
+  namerno ohranja; strog JSON parser jih ne prebere in to ni napaka.
+
+**Spremembe obnašanja:** nobene
+
+**Meritve:** nobene; zagon 12,0 s oziroma 2,1 s je informativen podatek, ne meritev po protokolu.
+
+**Naslednja seja:** M0.6 — ponovljiv testni svet z znanimi NPC-ji, dialogi in skriptami.
 
 ---
 
@@ -579,5 +703,15 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
 - Bugi iz `PLAN_IMPLEMENTACIJE.md`: B1 in B2 sta v M1.5/M1.6, B5 v M6.5. B3, B4, B6, B7, B8
   še niso razporejeni v milestone.
 - Dedicated server je preverjen (M0.5). Igranje v svetu z igralcem, GUI in questi še ni (M0.6/M0.7).
+- **Seja ne more zaganjati ukazov na uporabnikovem računalniku.** Windows posodobitev z
+  8. 9. 2026 je pokvarila priklop map v delavniško lupino. Seja datoteke še vedno bere in
+  piše, gradle, teste, `verify-package.ps1` in git pa mora pognati uporabnik in rezultat
+  javiti nazaj. Do preklica velja: seja pripravi točen ukaz in merila, uporabnik izvede,
+  seja preveri log in datoteke.
+- Datotek, globljih od 7 map pod korenom projekta, ni mogoče prenesti v sejo. To zadene
+  `dev/src/patch/java/noppes/npcs/rework/data/`; te datoteke seja bere prek `reference-src`
+  ali pa jih uporabnik priloži.
+- Projekt teče na dveh delovnih postajah proti istemu `origin/main`. Seja začne z
+  `git fetch origin` in preveri, ali je oddaljena veja pred lokalno.
 - Že pokvarjenih datotek na disku nova koda ne popravlja; M1.4 je po navodilu uporabnika
   odložen, dokler ne obstaja konkreten primer.

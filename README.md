@@ -13,12 +13,12 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 
 | | |
 |---|---|
-| Datum zadnje posodobitve | 2026-09-14 |
+| Datum zadnje posodobitve | 2026-09-15 |
 | Trenutna faza | **M0 — dokončanje temelja**; M1 integriteta podatkov je zaključena |
-| Naslednji korak | M0.6 ponovljiv testni svet, nato M0.7 integracijska matrika; glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Naslednji korak | pognati scenarij M0.6 (`.\testworld.ps1` → server → `.\verify-testworld.ps1`), nato M0.7 integracijska matrika; glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
 | Prevedljivih razredov | 21 od ~746; podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
-| Okolje deluje | da — `runClient` in `runServer` uspešno naložita Forge + CustomNPCs |
+| Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5) |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in
 testirano. Uporabnikov konkretni simptom je zelo majhen robni primer: NPC z vlogo follower,
@@ -64,8 +64,8 @@ Podrobnosti, dokazi iz kode in kaj je še treba preveriti: [`docs/02-ZAHTEVE.md`
 ## Vrstni red faz
 
 ```
-M0  Temelj                      okolje, build, testi, git            ← delno
-M1  Integriteta podatkov        R9 + B1/B2, atomski zapis, migracija ← smo tu
+M0  Temelj                      okolje, build, testi, git            ← smo tu
+M1  Integriteta podatkov        R9 + B1/B2, atomski zapis, migracija ← zaključeno
 M2  Diagnostika in meritve      reprodukcije, profiling, baseline
 M3  Jedro entitete              R1 mount, R6 solid hitbox
 M4  Gibanje in navigacija       R2 letenje, 3D pathfinding
@@ -116,6 +116,9 @@ Vse odločitve, ki jih sprejmeš med sejo, gredo v `docs/01-ARHITEKTURA.md` pod
 .\dev.ps1 runClient --offline              # razvojni klient
 .\dev.ps1 runServer --offline              # razvojni dedicated server
 .\smoke-server.ps1                         # M0.5 server smoke (skriptiran, 13 preverb)
+
+.\testworld.ps1                            # postavi ponovljiv testni svet (M0.6)
+.\verify-testworld.ps1                     # ovrednoti merila W1-W8 testnega sveta
 ```
 
 Podrobnosti in opozorila: [`OKOLJE.md`](OKOLJE.md).
@@ -138,7 +141,10 @@ CustomNPC_mod_rework/
 │   ├── 04-STANJE.md             ← živ dnevnik
 │   ├── 05-SEJA-PROTOKOL.md
 │   └── scenariji/               ponovljivi integracijski scenariji
+├── testworld.ps1                postavi testni svet iz semena
+├── verify-testworld.ps1         ovrednoti merila testnega sveta
 ├── dev/                         gradle projekt
+│   ├── testworld/               seme ponovljivega testnega sveta
 │   ├── src/patch/java/          razredi, ki se dejansko prevajajo
 │   ├── src/test/java/           testi
 │   ├── reference-src/           dekompiliran izpis z mapiranimi imeni (branje)
