@@ -11,7 +11,7 @@
 |---|---|
 | Zadnja posodobitev | **2026-09-15** |
 | Trenutni milestone | **M2 — diagnostika** (M2.1a narejen); M0.7/M0.8 čakata na uporabnika, M1 je zaključen |
-| Naslednji paketi | **M2.2** (reprodukcija R1), nato M2.4/M2.5/M2.6; **M0.7** takoj ko uporabnik naredi quest in dialog v GUI-ju |
+| Naslednji paketi | razčistiti `npc.per.tick` p50 = 0 (glej meritev), nato **M2.2** (reprodukcija R1); **M0.7** takoj ko uporabnik naredi quest in dialog v GUI-ju |
 | Prevedljivih razredov | 30 — prejšnjih 21 + 9 novih v `rework/diag` |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **23 za instrumentacijo**; zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
@@ -25,7 +25,7 @@
 |---|---|---|
 | M0 Temelj | **v teku** (≈90 %) | M0.1–M0.6 narejeno (+ M0.2r obnova okolja); M0.7–M0.8 odprto |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
-| M2 Diagnostika | **v teku** (≈25 %) | M2.1a narejen — `rework/diag` + ukaz `/rwdiag` |
+| M2 Diagnostika | **v teku** (≈30 %) | M2.1a zaključen in preverjen v svetu (D1–D7) |
 | M3 Jedro entitete | ni začeto | analiza narejena, glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
@@ -53,7 +53,7 @@
 
 | ID | Paket | Stanje |
 |---|---|---|
-| M2.1a | `rework/diag` jedro + zbiralnik na Forge dogodkih + ukaz `/rwdiag` | **narejeno** — glej `docs/scenariji/M2.1-diag.md` |
+| M2.1a | `rework/diag` jedro + zbiralnik na Forge dogodkih + ukaz `/rwdiag` | **zaključeno** — D1–D7 zelena, `.\rwdiag-run.ps1` |
 | M2.1b | Klicna mesta za pot, skripte in AI taske | **čaka na prenos** `EntityNPCInterface`/`ai` (M3.1) in `ScriptContainer` (M5.1) |
 | M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih) | naslednji na vrsti |
 | M2.3 | Reprodukcija R2 (leteči NPC in ovira) | ni začeto |
@@ -122,7 +122,64 @@ izklopljen zbiralnik meritev. Na obnašanje NPC-jev, shranjevanje in mrežo ne v
 
 **Meritve:** nobene — to je paket, ki meritve šele omogoči.
 
-**Naslednja seja:** pognati merila D1–D7 iz `docs/scenariji/M2.1-diag.md`, nato M2.2
+**Preverjeno isti dan ob 10:52 (uporabnik je pognal, seja je preverila izpise in datoteke):**
+
+- **D1 zeleno** — `.\dev.ps1 test`: `DiagTest` 10, `DistributionTest` 8, `DiagSnapshotTest` 5,
+  skupaj 23 testov, 0 napak, 0 napak izvajanja (`dev/build/test-results/test/`). Testi zdaj
+  tečejo na Javi 8 na uporabnikovem računalniku, ne le na OpenJDK 21 v seji.
+- **D2 zeleno** — `testOriginal` je tekel brez treh novih razredov, kot mora.
+- **D3 zeleno** — seja je sama primerjala `dev/build/libs/CustomNPCs_1.12.2-01Oct19-workspace.jar`
+  z originalom: 25 spremenjenih razredov (vsi pričakovani, isti nabor kot prej + `CustomNpcs`),
+  27 dodanih (11 `rework/data` + 11 `rework/diag` + notranji razredi), **0 odstranjenih**.
+  `CommandRwDiag` in `DiagEventCollector` sta v jarju, kar pomeni, da se Forge in MC API, ki ju
+  seja ni mogla prevesti, dejansko prevedeta — to je bilo edino resno tveganje tega paketa.
+- **Commit in push narejena** — `c28b654` "M2.1a: instrumentacija rework/diag + ukaz /rwdiag";
+  `origin/main` kaže na isti commit. V indeksu je vseh 9 datotek paketa, 3 testi, scenarij in
+  posodobljeni dokumenti.
+- **D4–D7 zelena ob 12:17** (`.\rwdiag-run.ps1`, izpis `audit\m21-rwdiag.log`):
+  - **D4** — server z novim jarjem se naloži in čisto ustavi, `TW-SCRIPT-OK` je v logu,
+    **nobene `ERROR` vrstice iz `noppes.*`**, nobenega `script errored`, `BUILD SUCCESSFUL`.
+  - **D5** — `RWDIAG-OK ticki=1226 npc=1896` po 61 s merjenja.
+  - **D6** — trije posnetki v `dev\run\logs\rwdiag\`, vsak v `.txt` in `.json`, nobeden prazen.
+  - **D7** — pred vklopom `RWDIAG stanje=off ticki=0`; po `rwdiag off` sta dva posnetka v
+    razmiku 10 s pokazala **enaka** števca (1246 / 1896), kar dokazuje, da je zbiralnik res
+    odjavljen z event busa in ne le tiho.
+- Da se ročno tipkanje v gradle konzolo ne ponovi (15. 9. je dvakrat tiho odpovedalo), je
+  nastala skripta **`rwdiag-run.ps1`** — isti mehanizem kot `testworld-run.ps1`: požene
+  server, pošlje `rwdiag status|on|dump|off`, primerja števce pred in po izklopu, preveri
+  zapisane posnetke, ustavi server in izpiše prvo tabelo. Izhodna koda 0 = D4–D7 zelena.
+- **Prva številka in prvo presenečenje.** MSPT p50 = 0,16 ms, p95 = 1,21 ms — pri osmih
+  NPC-jih je server prazen. Toda `npc.per.tick` ima **p50 = 0** in je binaren (0 ali 8):
+  NPC-ji tikajo le v približno vsakem petem ticku, ne v vsakem. To ni napaka števca, ampak
+  lastnost sveta brez igralca; razčistiti jo je treba **pred** M2.4, sicer bodo merilni
+  scenariji merili nekaj drugega, kot mislimo. Podrobnosti, kandidati in naslednji korak:
+  [`docs/meritve/2026-09-15-M2.1-prvi-posnetek.md`](meritve/2026-09-15-M2.1-prvi-posnetek.md).
+- Najdaljši tick 74,5 ms sovpada z autosave. M2.5 mora autosave tick izločiti ali poročati
+  posebej, sicer bo p99 vedno meril shranjevanje in ne AI.
+
+**M2.1c — instrumentacija za razčiščenje `npc.per.tick` (isti dan, 12:2x):**
+
+Da odgovor ne bo ugibanje, je zbiralnik dobil pet novih velicin, vse še vedno samo na Forge
+dogodkih in samo dokler je merjenje vklopljeno:
+
+- `npc.tick.gap` — razmik v tickih med dvema tickoma z NPC-ji. Enakomeren razmik pomeni
+  sistematiko, razmetan pomeni chunk loading.
+- `world.tick` — server ticki po svetovih, vsota čez dimenzije.
+- `world.entities.loaded`, `world.npc.loaded`, `world.npc.killed`, `world.players` —
+  vzorčenje `loadedEntityList` in `playerEntities` enkrat na sekundo, sešteto čez vse svetove.
+
+`world.npc.killed` je tam zaradi pasti iz M0.6: ubit CustomNPC ostane v svetu in čaka na
+respawn. Če je meritev tekla nad mrtvimi NPC-ji, so številke o nečem drugem, kot mislimo.
+
+Uporabljeni so samo tisti deli MC API-ja, ki so potrjeni v `reference-src`
+(`loadedEntityList` in `playerEntities` v `NPCSpawning`, `isKilled()` v
+`EntityNPCInterface`); `addedToChunk` in `provider.getDimension()` sta bila namenoma
+izpuščena, ker ju v dekompilatu ni bilo mogoče potrditi, prevesti pa jih seja ne more.
+Jedro paketa se je v seji znova prevedlo z `javac --release 8` in 23 testov je zelenih.
+
+**Naslednja seja:** pognati `.\rwdiag-run.ps1` z novo instrumentacijo in iz `world.*` ter
+`npc.tick.gap` razbrati, zakaj NPC-ji ne tikajo v vsakem ticku (glej meritev z dne
+15. 9.), nato M2.2
 (reprodukcija R1). Uporabnik je potrdil, da sta pri R1 **oba NPC-ja CustomNPC** (jahač in
 nosilec), zato reprodukcija ne potrebuje vanilla konja.
 
@@ -827,6 +884,7 @@ prebrati.
 | 2026-09-11 | NBT↔JSON round-trip, 4000 naključnih struktur | original 1598 napak (40 %), novi 0 | [zapis](meritve/2026-09-11-M1-nbtjson.md) |
 | 2026-09-11 | NBT↔JSON zapis, 1500 ključev (68 KB) | 235,3 ms → 2,9 ms (81×) | [zapis](meritve/2026-09-11-M1-nbtjson.md) |
 | 2026-09-11 | NBT↔JSON branje, 1500 ključev | 2386,3 ms → 6,5 ms (367×) | [zapis](meritve/2026-09-11-M1-nbtjson.md) |
+| 2026-09-15 | M2.1 prvi posnetek: 8 NPC-jev, 61 s, brez igralca | MSPT p50 0,16 ms / p95 1,21 ms; `npc.per.tick` p50 = 0 | [zapis](meritve/2026-09-15-M2.1-prvi-posnetek.md) |
 | — | baseline MSPT še ni izmerjen (M2.6) | — | — |
 
 Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Javi 8 je odprta.
@@ -853,6 +911,10 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
   ali pa jih uporabnik priloži.
 - Projekt teče na dveh delovnih postajah proti istemu `origin/main`. Seja začne z
   `git fetch origin` in preveri, ali je oddaljena veja pred lokalno.
+- **Zapis iste datoteke dvakrat v isti seji lahko tiho ne uspe.** 15. 9. je drugi zapis
+  `docs/04-STANJE.md` javil uspeh, na disku pa je ostala prejšnja verzija (45 479 B namesto
+  46 946 B). Zapis pod novim imenom je uspel takoj. Pravilo: po vsakem zapisu preveri
+  velikost datoteke, ob neujemanju zapiši pod novim imenom.
 - `npc.update.window` je zgornja meja, ne točna poraba časa na NPC; točna meritev pride z M3.1.
 - Že pokvarjenih datotek na disku nova koda ne popravlja; M1.4 je po navodilu uporabnika
   odložen, dokler ne obstaja konkreten primer.

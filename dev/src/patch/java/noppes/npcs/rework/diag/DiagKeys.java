@@ -40,6 +40,37 @@ public final class DiagKeys {
     /** Stevilo NPC-jev, ki so tiknili v posameznem ticku. */
     public static final Distribution NPCS_PER_TICK = Diag.distribution("npc.per.tick", "npc");
 
+    /**
+     * Razmik v server tickih med dvema tickoma, v katerih je tiknil vsaj en NPC.
+     *
+     * <p>Obstaja zaradi meritve z 15. 9.: `npc.per.tick` je bil binaren (0 ali 8), NPC-ji so
+     * tiknili priblizno vsak peti tick. Ta porazdelitev pove, ali je razmik enakomeren
+     * (nekaj v vanilli ali v modu posodablja entitete redkeje) ali razmetan (chunki se
+     * nalagajo in odlagajo).
+     */
+    public static final Distribution NPC_TICK_GAP = Diag.distribution("npc.tick.gap", "tick");
+
+    /** Server tick za posamezen svet; vsota cez vse svetove. */
+    public static final DiagKey WORLD_TICK = Diag.key("world.tick", "tick");
+
+    /** Vzorcenje na sekundo: koliko entitet je v `loadedEntityList` posameznega sveta. */
+    public static final Distribution WORLD_ENTITIES = Diag.distribution("world.entities.loaded", "entiteta");
+
+    /** Vzorcenje na sekundo: koliko od teh je NPC-jev. */
+    public static final Distribution WORLD_NPCS = Diag.distribution("world.npc.loaded", "npc");
+
+    /**
+     * Vzorcenje na sekundo: koliko NPC-jev je v stanju killed.
+     *
+     * <p>Ubit CustomNPC ostane v svetu in caka na respawn (`RespawnTime = 20`,
+     * `SpawnCycle = 0`). Ce se meritev dela nad svetom, polnim mrtvih NPC-jev, so stevilke
+     * o necem drugem, kot mislimo.
+     */
+    public static final Distribution WORLD_NPCS_KILLED = Diag.distribution("world.npc.killed", "npc");
+
+    /** Vzorcenje na sekundo: koliko igralcev je v svetu. Vpliva na to, kaj sploh tika. */
+    public static final Distribution WORLD_PLAYERS = Diag.distribution("world.players", "igralec");
+
     /** Trajanje server ticka. Isti kljuc polni {@link Diag#tick(long)}. */
     public static final Distribution SERVER_TICK_NANOS = Diag.distribution("server.tick.ns", "ns");
 

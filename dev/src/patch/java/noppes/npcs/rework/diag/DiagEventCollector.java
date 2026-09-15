@@ -1,5 +1,6 @@
 package noppes.npcs.rework.diag;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
@@ -15,18 +16,31 @@ import noppes.npcs.entity.EntityNPCInterface;
  * <p>Zakaj na dogodkih in ne v {@code EntityNPCInterface}: ta razred se v M2 se ni
  * prenesen v {@code src/patch/java}. Prenese se v M3.1, skupaj s celotnim {@code ai}
  * paketom. Do takrat Forge dogodki dajo dovolj za osnovni posnetek: koliko NPC-jev tika,
- * koliko traja server tick in kaksen delez casa gre v NPC-je.
+ * koliko traja server tick, kaksen delez casa gre v NPC-je in kaj sploh je v svetu.
  *
  * <p>Zbiralnik je na event bus prijavljen <b>samo dokler je merjenje vklopljeno</b>.
  * Izklopljena instrumentacija zato ne stane niti enega klica na entiteto na tick.
  */
 public final class DiagEventCollector {
+    /** Kako pogosto se presteje vsebina svetov. 20 tickov = enkrat na sekundo. */
+    private static final int SAMPLE_EVERY_TICKS = 20;
+
     private static DiagEventCollector registered;
 
     private long serverTickStart;
     private long windowStart;
     private DiagKey windowKey;
     private int npcsThisTick;
+
+    private long tickIndex;
+    private long lastTickWithNpcs = -1L;
+
+    private int sampleCountdown = 1;
+    private boolean sampleNow;
+    private int sampleEntities;
+    private int sampleNpcs;
+    private int sampleKilled;
+    private int samplePlayers;
 
     private DiagEventCollector() {
     }
@@ -74,14 +88,73 @@ public final class DiagEventCollector {
             closeWindow();
             this.serverTickStart = System.nanoTime();
             this.npcsThisTick = 0;
+            // Vzorcenje se odloci na zacetku ticka, da ga vsi svetovi v istem ticku
+            // uporabijo, prestete vrednosti pa se seste v en vzorec na koncu ticka.
+            if (--this.sampleCountdown <= 0) {
+                this.sampleCountdown = SAMPLE_EVERY_TICKS;
+                this.sampleNow = true;
+                this.sampleEntities = 0;
+                this.sampleNpcs = 0;
+                this.sampleKilled = 0;
+                this.samplePlayers = 0;
+            }
             return;
         }
+
         closeWindow();
         Diag.record(DiagKeys.NPCS_PER_TICK, this.npcsThisTick);
+        if (this.npcsThisTick > 0) {
+            if (this.lastTickWithNpcs >= 0L) {
+                Diag.record(DiagKeys.NPC_TICK_GAP, this.tickIndex - this.lastTickWithNpcs);
+            }
+            this.lastTickWithNpcs = this.tickIndex;
+        }
+        this.tickIndex++;
+        if (this.sampleNow) {
+            this.sampleNow = false;
+            DiagKeys.WORLD_ENTITIES.record(this.sampleEntities);
+            DiagKeys.WORLD_NPCS.record(this.sampleNpcs);
+            DiagKeys.WORLD_NPCS_KILLED.record(this.sampleKilled);
+            DiagKeys.WORLD_PLAYERS.record(this.samplePlayers);
+        }
         if (this.serverTickStart != 0L) {
             Diag.tick(System.nanoTime() - this.serverTickStart);
             this.serverTickStart = 0L;
         }
+    }
+
+    /**
+     * Presteje vsebino sveta enkrat na sekundo.
+     *
+     * <p>Brez tega se iz stevca posodobitev ne da lociti med "entitete so v svetu, a ne
+     * tikajo" in "entitet v svetu sploh ni". Zanka cez {@code loadedEntityList} je dovolj
+     * poceni enkrat na 20 tickov in tece samo, dokler je merjenje vklopljeno.
+     */
+    @SubscribeEvent
+    public void onWorldTick(TickEvent.WorldTickEvent event) {
+        if (event.side != Side.SERVER || event.phase != TickEvent.Phase.END) {
+            return;
+        }
+        World world = event.world;
+        if (world == null || world.isRemote) {
+            return;
+        }
+        DiagKeys.WORLD_TICK.increment();
+        if (!this.sampleNow) {
+            return;
+        }
+        for (int i = 0; i < world.loadedEntityList.size(); i++) {
+            Entity entity = (Entity) world.loadedEntityList.get(i);
+            this.sampleEntities++;
+            if (!(entity instanceof EntityNPCInterface)) {
+                continue;
+            }
+            this.sampleNpcs++;
+            if (((EntityNPCInterface) entity).isKilled()) {
+                this.sampleKilled++;
+            }
+        }
+        this.samplePlayers += world.playerEntities.size();
     }
 
     @SubscribeEvent
