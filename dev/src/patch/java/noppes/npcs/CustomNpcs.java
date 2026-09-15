@@ -111,6 +111,8 @@ import noppes.npcs.controllers.data.PlayerData;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.items.ItemScripted;
 import noppes.npcs.rework.data.WorldSaveSession;
+import noppes.npcs.rework.diag.CommandRwDiag;
+import noppes.npcs.rework.diag.DiagEventCollector;
 
 @Mod(modid="customnpcs", name="CustomNpcs", version="1.12", acceptedMinecraftVersions="1.12, 1.12.1, 1.12.2")
 public class CustomNpcs {
@@ -296,6 +298,7 @@ public class CustomNpcs {
 
     @Mod.EventHandler
     public void stopped(FMLServerStoppedEvent event) {
+        DiagEventCollector.disable();
         if (!WorldSaveSession.end(30L, TimeUnit.SECONDS)) {
             LogWriter.error("CustomNPCs world save queue did not drain cleanly before shutdown");
         }
@@ -307,6 +310,11 @@ public class CustomNpcs {
     @Mod.EventHandler
     public void serverstart(FMLServerStartingEvent event) {
         event.registerServerCommand((ICommand)NoppesCommand);
+        // M2.1: instrumentacija je privzeto izklopljena in takrat sploh ni prijavljena na
+        // event bus. Ukaz je registriran vedno, da jo je mogoce vklopiti brez zagona z
+        // drugacnimi parametri; -Drwdiag=on jo vklopi ze pred prvim tickom.
+        event.registerServerCommand((ICommand)new CommandRwDiag());
+        DiagEventCollector.enableIfRequestedByProperty();
         EntityNPCInterface.ChatEventPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.ChatEventProfile);
         EntityNPCInterface.CommandPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.CommandProfile);
         EntityNPCInterface.GenericPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.GenericProfile);

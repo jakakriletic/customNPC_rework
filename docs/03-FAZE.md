@@ -108,6 +108,8 @@ spremenimo.
 | ID | Paket | Vel. |
 |---|---|---|
 | M2.1 | `rework/diag/` — instrumentacija: koliko NPC-jev tika, koliko izračunov poti, koliko script klicev, koliko časa v katerem AI tasku | M |
+| M2.1a | jedro `rework/diag`, zbiralnik na Forge dogodkih, ukaz `/rwdiag`, 23 testov | **narejeno** — `docs/scenariji/M2.1-diag.md` |
+| M2.1b | klicna mesta za pot (M3.1), AI taske (M3.1) in skripte (M5.1) | odprto — vezano na prenos teh razredov |
 | M2.2 | Reprodukcija **R1**: 8 jahačev na 8 nosilcih, skupen cilj, log pozicij po ticku | S |
 | M2.3 | Reprodukcija **R2**: leteči NPC z oviro med seboj in ciljem; izmeriti, ali sploh pride | S |
 | M2.4 | Scenariji za meritve: 50 / 200 / 500 NPC-jev, ločeno idle / combat / scripts / render | M |

@@ -10,10 +10,10 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-15** |
-| Trenutni milestone | **M0 — dokončanje temelja**; M1 je zaključen |
-| Naslednji paketi | **M0.7** (integracijska matrika, quest in dialog fixture iz GUI-ja), **M0.8** (podatki od uporabnika), nato M2 |
-| Prevedljivih razredov | 21 — prejšnjih 19 + `CustomNpcs` + `WorldSaveSession` |
-| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection; zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
+| Trenutni milestone | **M2 — diagnostika** (M2.1a narejen); M0.7/M0.8 čakata na uporabnika, M1 je zaključen |
+| Naslednji paketi | **M2.2** (reprodukcija R1), nato M2.4/M2.5/M2.6; **M0.7** takoj ko uporabnik naredi quest in dialog v GUI-ju |
+| Prevedljivih razredov | 30 — prejšnjih 21 + 9 novih v `rework/diag` |
+| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **23 za instrumentacijo**; zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
 | Omejitev orodij | seja **ne more zaganjati ukazov** na uporabnikovem računalniku (glej Znane omejitve); gradle, teste in git poganja uporabnik |
 
@@ -25,7 +25,7 @@
 |---|---|---|
 | M0 Temelj | **v teku** (≈90 %) | M0.1–M0.6 narejeno (+ M0.2r obnova okolja); M0.7–M0.8 odprto |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
-| M2 Diagnostika | ni začeto | |
+| M2 Diagnostika | **v teku** (≈25 %) | M2.1a narejen — `rework/diag` + ukaz `/rwdiag` |
 | M3 Jedro entitete | ni začeto | analiza narejena, glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
@@ -49,9 +49,84 @@
 | M1.8 | `.\dev.ps1 auditClones` | **odloženo** — brez konkretnih poškodovanih datotek |
 | M1.9 | Fault injection testi | **narejeno** — 9 determinističnih odpovednih scenarijev |
 
+### M2 po paketih
+
+| ID | Paket | Stanje |
+|---|---|---|
+| M2.1a | `rework/diag` jedro + zbiralnik na Forge dogodkih + ukaz `/rwdiag` | **narejeno** — glej `docs/scenariji/M2.1-diag.md` |
+| M2.1b | Klicna mesta za pot, skripte in AI taske | **čaka na prenos** `EntityNPCInterface`/`ai` (M3.1) in `ScriptContainer` (M5.1) |
+| M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih) | naslednji na vrsti |
+| M2.3 | Reprodukcija R2 (leteči NPC in ovira) | ni začeto |
+| M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
+| M2.5 | Merilni protokol kot skripta | ni začeto |
+| M2.6 | Baseline meritve originala | ni začeto |
+
 ---
 
 ## Dnevnik sej
+
+### 2026-09-15 (15) — M2.1a: instrumentacija `rework/diag`
+
+**Paket:** M2.1 (del a)
+**Stanje:** koda napisana in enotsko preverjena; gradle, `verify-package.ps1` in zagon v
+svetu mora pognati uporabnik (seja še vedno ne more zaganjati ukazov na njegovem računalniku)
+
+**Narejeno:**
+
+- Nov paket `dev/src/patch/java/noppes/npcs/rework/diag/` z devetimi datotekami:
+  `Diag` (vstopna točka, vklop/izklop, kljuci, posnetek), `DiagKey` (števec + čas na
+  `LongAdder`), `Distribution` (logaritemski koši, p50/p95/p99), `DiagSnapshot`
+  (nespremenljiv posnetek, tabela + JSON), `DiagKeys` (imena velicin na enem mestu),
+  `DiagDump` (zapis v `logs/rwdiag/`), `DiagEventCollector` (zbiranje na Forge dogodkih),
+  `CommandRwDiag` (ukaz `/rwdiag`) in `package-info`.
+- **Izklopljena instrumentacija ne stane nič.** Zbiralnik se na Forge event bus prijavi
+  šele ob `/rwdiag on` in se ob `off` odjavi, zato ni klica na entiteto na tick. Vsa
+  klicna mesta v kodi moda pa se najprej vprašajo za eno `volatile` polje.
+- 23 novih JUnit testov (`DiagTest`, `DistributionTest`, `DiagSnapshotTest`). Pokrivajo:
+  izklopljeno stanje ne šteje nič, vklop počisti prejšnje števce, meritev, ki prečka
+  vklop ali izklop, se zavrže, natančnost percentilov, ekstremne vrednosti, točnost
+  štetja pod osmimi nitmi hkrati, in to, da se posnetek med izpisom ne premika.
+- `CustomNpcs.java`: tri vrstice — registracija ukaza, `-Drwdiag=on` ob zagonu serverja in
+  izklop ob `FMLServerStoppedEvent`.
+- `dev/build.gradle`: novi testi so izključeni iz `testOriginal`, ker se nanašajo na
+  razrede, ki jih v nedotaknjenem originalu ni.
+- `docs/scenariji/M2.1-diag.md`: kaj se meri, kako se bere, merila D1–D7 in postopek.
+
+**Ugotovitve:**
+
+- Meritev časa posodobitve NPC-ja je zaenkrat **približek**: `EntityNPCInterface` še ni
+  prenesen, Forge pa da le dogodek ob začetku posodobitve entitete. Čas se zato meri kot
+  razmik do naslednje žive entitete v istem ticku — to je zgornja meja, ne točna poraba.
+  Točna meritev pride z M3.1 in takrat se stolpca primerjata.
+- Povprečje je pri performancu neuporabno, zato `Distribution` hrani porazdelitev v
+  logaritemskih koših. 32 podkošev na potenco dvojke da ~3,2 % napake navzgor pri 16 KB na
+  velicino; prvotnih 8 podkošev (~12 %) je bilo pri MSPT premalo natančnih — p95 in p99
+  sta padla v isti koš.
+- Ukaz je namenoma `/rwdiag` in ne podukaz `/noppes`: instrumentacija mora delovati tudi,
+  če je z mod ukazi kaj narobe, in ne sme spreminjati obstoječega ukaznega drevesa.
+
+**Ni narejeno in zakaj:**
+
+- Števci za izračune poti, klice skript in čas po AI taskih (M2.1b) so **rezervirani z
+  imenom, a prazni**. Njihova klicna mesta so v `EntityNPCInterface`, paketu `ai` in
+  `ScriptContainer`, ki še niso preneseni v `src/patch/java`. Prenos teh razredov je
+  vsebina M3.1 in M5.1; delati ga zdaj bi pomenilo velik prenos brez pripadajočega
+  popravka, kar je v nasprotju s pravilom "en paket = en commit = ena stvar".
+- Koda ni prevedena z gradle in ni tekla v Minecraftu. Jedro paketa (brez Minecrafta) je
+  bilo prevedeno z `javac --release 8` in vseh 23 testov je v seji zelenih, razreda
+  `DiagEventCollector` in `CommandRwDiag` pa se opirata na Forge in MC API, zato ju je
+  preverila samo primerjava s klici v `reference-src` (`CommandNoppes`, `ScriptPlayerEventHandler`).
+
+**Spremembe obnašanja:** nov ukaz `/rwdiag` (raven dovoljenja 2) in nov, privzeto
+izklopljen zbiralnik meritev. Na obnašanje NPC-jev, shranjevanje in mrežo ne vpliva nič.
+
+**Meritve:** nobene — to je paket, ki meritve šele omogoči.
+
+**Naslednja seja:** pognati merila D1–D7 iz `docs/scenariji/M2.1-diag.md`, nato M2.2
+(reprodukcija R1). Uporabnik je potrdil, da sta pri R1 **oba NPC-ja CustomNPC** (jahač in
+nosilec), zato reprodukcija ne potrebuje vanilla konja.
+
+---
 
 ### 2026-09-15 (14) — M0.6 zaključen: skriptiran scenarij testnega sveta
 
@@ -700,11 +775,11 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 | Q2 | Kopija sveta s problematičnimi NPC-ji | M1.4 | zaprto — uporabnik je nima; paket odložen |
 | Q3 | Konkretna pokvarjena clone JSON datoteka | M1.4 | zaprto — ne obstaja; paket odložen |
 | Q4 | Katera nastavitev se vrne nazaj? | R9 | odgovorjeno — follower role, action `waiting` se po clone lahko vrne v `following`; minorno |
-| Q5 | Pri R1 — jahač in nosilec sta oba CustomNPC, ali je eden vanilla mob (konj)? | M2.2 | odprto |
+| Q5 | Pri R1 — jahač in nosilec sta oba CustomNPC, ali je eden vanilla mob (konj)? | M2.2 | **odgovorjeno 15. 9.** — oba sta CustomNPC |
 | Q6 | Pri R2 — "letala" pomenijo NPC kot vozilo, ki ga igralec krmili, ali NPC, ki leti sam? | M4 obseg | odprto |
 | Q7 | Pri R3 — katerih 5–8 funkcij CustomNPC+ je najbolj pomembnih? | M8.2 | odprto — najprej katalog |
 | Q8 | Pri R8 — kateri provider (Anthropic / OpenAI / lokalni model)? | M9.3 | odprto |
-| Q9 | Koliko NPC-jev je "veliko" v tvojem primeru? 100? 500? 2000? | M2.4, cilj za M5 | odprto |
+| Q9 | Koliko NPC-jev je "veliko" v tvojem primeru? 100? 500? 2000? | M2.4, cilj za M5 | **odgovorjeno 15. 9.** — cilj še ni določen; merimo 50/200/500 in se odločimo po podatkih |
 | Q10 | Ali strežnik, kjer to teče, sploh ima izhodni internetni dostop? | M9.1 | odprto |
 
 ---
@@ -736,6 +811,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 | 2026-09-11 | Dialog, quest, linked NPC in trader market JSON se zapišejo neposredno skozi validirano atomsko zamenjavo | B1 | ne | varni zapis |
 | 2026-09-11 | World controllerji, klientovi preseti in schematiki uporabljajo validiran atomski zapis stisnjenega NBT | B1 | ne | varni zapis |
 | 2026-09-11 | Player save vrsta je vezana na world sejo in se izprazni pred resetom server globalov | B2 | ne | varen lifecycle |
+| 2026-09-15 | Nov ukaz `/rwdiag` in zbiralnik meritev `rework/diag` | M2.1 | da — `/rwdiag on\|off`, `-Drwdiag=on` | izklopljeno |
 
 Vse zgornje so popravki tihe izgube podatkov, zato so brez stikala in privzeto vklopljene.
 Format datotek se ne spremeni, zato ni migracije. Izjema je zadnji stolpec pri praznem
@@ -777,5 +853,6 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
   ali pa jih uporabnik priloži.
 - Projekt teče na dveh delovnih postajah proti istemu `origin/main`. Seja začne z
   `git fetch origin` in preveri, ali je oddaljena veja pred lokalno.
+- `npc.update.window` je zgornja meja, ne točna poraba časa na NPC; točna meritev pride z M3.1.
 - Že pokvarjenih datotek na disku nova koda ne popravlja; M1.4 je po navodilu uporabnika
   odložen, dokler ne obstaja konkreten primer.

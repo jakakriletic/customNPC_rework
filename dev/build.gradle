@@ -96,6 +96,9 @@ task testOriginal(type: Test) {
     exclude '**/CompressedNbtFileTest.class'
     exclude '**/WorldSaveSessionTest.class'
     exclude '**/SafeFileWriterFaultInjectionTest.class'
+    exclude '**/DiagTest.class'
+    exclude '**/DistributionTest.class'
+    exclude '**/DiagSnapshotTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

@@ -14,10 +14,10 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-09-15 |
-| Trenutna faza | **M0 — dokončanje temelja**; M1 integriteta podatkov je zaključena |
-| Naslednji korak | **M0.7** integracijska matrika (quest in dialog fixture iz GUI-ja), nato M0.8 in M2; glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Trenutna faza | **M2 — diagnostika**; M2.1a (instrumentacija) narejen, M1 zaključen, M0.7/M0.8 čakata na uporabnika |
+| Naslednji korak | pognati merila D1–D7 iz [`docs/scenariji/M2.1-diag.md`](docs/scenariji/M2.1-diag.md), nato **M2.2** reprodukcija R1; glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 21 od ~746; podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Prevedljivih razredov | 30 (21 prenesenih + 9 novih v `rework/diag`); podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in
@@ -64,9 +64,9 @@ Podrobnosti, dokazi iz kode in kaj je še treba preveriti: [`docs/02-ZAHTEVE.md`
 ## Vrstni red faz
 
 ```
-M0  Temelj                      okolje, build, testi, git            ← smo tu (M0.7)
+M0  Temelj                      okolje, build, testi, git            ← M0.7/M0.8 čakata na uporabnika
 M1  Integriteta podatkov        R9 + B1/B2, atomski zapis, migracija ← zaključeno
-M2  Diagnostika in meritve      reprodukcije, profiling, baseline
+M2  Diagnostika in meritve      reprodukcije, profiling, baseline    ← smo tu (M2.1a)
 M3  Jedro entitete              R1 mount, R6 solid hitbox
 M4  Gibanje in navigacija       R2 letenje, 3D pathfinding
 M5  Performance AI              R5, odstranitev globalnega script locka
@@ -120,6 +120,14 @@ Vse odločitve, ki jih sprejmeš med sejo, gredo v `docs/01-ARHITEKTURA.md` pod
 .\testworld-run.ps1                        # M0.6 testni svet, skriptiran scenarij od zacetka do konca
 .\testworld.ps1                            # samo postavi seme testnega sveta
 .\verify-testworld.ps1                     # ovrednoti merila W1-W8 iz loga
+```
+
+Instrumentacija (M2.1), v konzoli serverja ali kot ukaz v igri:
+
+```
+rwdiag on            # vklopi merjenje in pocisti stevce
+rwdiag dump m21      # zapise posnetek v dev\run\logs\rwdiag\ in ga izpise
+rwdiag off           # izklopi in se odjavi z event busa
 ```
 
 Podrobnosti in opozorila: [`OKOLJE.md`](OKOLJE.md).
