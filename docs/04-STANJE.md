@@ -11,7 +11,7 @@
 |---|---|
 | Zadnja posodobitev | **2026-09-15** |
 | Trenutni milestone | **M0 — dokončanje temelja**; M1 je zaključen |
-| Naslednji paketi | **M0.6 čaka na izvedbo scenarija** (seme in `verify-testworld.ps1` sta pripravljena), nato **M0.7** (integracijska matrika), **M0.8** (podatki od uporabnika), nato M2 |
+| Naslednji paketi | **M0.7** (integracijska matrika, quest in dialog fixture iz GUI-ja), **M0.8** (podatki od uporabnika), nato M2 |
 | Prevedljivih razredov | 21 — prejšnjih 19 + `CustomNpcs` + `WorldSaveSession` |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection; zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
@@ -23,7 +23,7 @@
 
 | Milestone | Stanje | Opomba |
 |---|---|---|
-| M0 Temelj | **v teku** (≈85 %) | M0.1–M0.5 narejeno (+ M0.2r obnova okolja); M0.6 pripravljen, čaka zagon scenarija; M0.7–M0.8 odprto |
+| M0 Temelj | **v teku** (≈90 %) | M0.1–M0.6 narejeno (+ M0.2r obnova okolja); M0.7–M0.8 odprto |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | ni začeto | |
 | M3 Jedro entitete | ni začeto | analiza narejena, glej R1 in R6 |
@@ -52,6 +52,70 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-15 (14) — M0.6 zaključen: skriptiran scenarij testnega sveta
+
+**Paket:** M0.6
+**Stanje:** končano
+
+**Narejeno:**
+
+- `testworld-run.ps1` požene cel scenarij brez človeka: trije server zagoni, ukazi na
+  standardni vhod, izpis v `audit/m06-testworld-{a,b,c}.log`, na koncu `verify-testworld.ps1`
+  nad logoma B in C. Mehanizem je prevzet iz `smoke-server.ps1` (M0.5).
+- **Izid: vse preverbe zelene.** Zagon B `32 entities deleted` in `TW-OK` 8×; zagon C po
+  restartu `TW-OK` 8×, `TW-SCRIPT-OK` 1×, `TW-SCRIPT-TICK-10` 1×. Nobene `ERROR` vrstice iz
+  `noppes.*`, nobenega `script errored`. Scenarij je tekel nad svetom, onesnaženim z 32
+  NPC-ji iz neuspelih poskusov, in ga je sam počistil — s tem je dokazana idempotentnost.
+- Merila W1–W8 veljajo; M0.6 je izhodni pogoj za M2 in je izpolnjen.
+
+**Ni narejeno in zakaj:**
+
+- Quest in dialog fixture ostajata v M0.7 — obojega ni mogoče sestaviti brez GUI-ja,
+  ugibanje NBT strukture pa protokol prepoveduje.
+- Igralec se še ni povezal v testni svet; `PlayerData.save` (B1/B2 v realnem obratovanju)
+  zato še ni pokrit. Prav tako M0.7.
+
+**Ugotovitve — štiri pasti, vsaka je stala en neuspel zagon:**
+
+1. **Ročno lepljenje ukazov v gradle konzolo je nezanesljivo.** Prvi poskus je izgledal kot
+   okvara testnega sveta: `noppes clone list 1` je izpisal vseh 8 imen, a
+   `execute @e[tag=testworld]` je javil `found nothing`. V logu ni bilo **nobenega**
+   `gamerule`, `fill` ali `clone spawn` — vsebina `setup-commands.txt` ni nikoli prišla do
+   serverja. Odslej vsak scenarij pošilja ukaze skriptirano.
+2. **`runServer` je lahko `UP-TO-DATE` in se sploh ne zažene.** ForgeGradle prijavi `dev/run`
+   kot izhod naloge; če se med dvema zagonoma tam nič ne spremeni, Gradle nalogo preskoči,
+   build se konča v 20 s in skripta čaka na marker do timeouta. Popravljeno v
+   `dev/build.gradle` z `outputs.upToDateWhen { false }` za `runClient` in `runServer`.
+   Velja tudi za `smoke-server.ps1`.
+3. **`/kill` CustomNPC-ja ne odstrani, ampak ga respawna.** `DataStats` ima privzeto
+   `RespawnTime = 20` in `SpawnCycle = 0` (`:30-31`); ubit NPC se shrani kot mrtev in ob
+   nalaganju sveta oživi. Po dveh poskusih je bilo v svetu 24 in nato 32 NPC-jev, čeprav je
+   `kill` vsakič javil, da jih je pobil. Pravi ukaz je `noppes slay npcs` →
+   `entity.isDead = true` (`CmdSlay.java:140`). **Pomembno za M2**, kjer je število NPC-jev
+   merjena količina.
+4. **Zapis datoteke na uporabnikov disk je lahko tiho neuspešen.** Dvakrat je orodje javilo
+   uspešen zapis, na disku pa je ostala prejšnja verzija (`setup-commands.txt` 1321 B namesto
+   1654 B, `testworld-run.ps1` 9828 B namesto 10400 B), zato je zagon tekel s staro logiko in
+   izgledal kot nova napaka v modu. Odslej seja po vsakem zapisu preveri velikost datoteke,
+   preden zahteva zagon.
+
+Poleg tega: `fill` javi `No blocks filled`, kadar so bloki že na mestu — izpis zgleda kot
+odpoved, pa ni. In `EntityNPCInterface` kliče `EventHooks.onNPCTick` vsak 10. tick (`:358`),
+torej je script tick 2 Hz na NPC; vsi ti klici gredo skozi en statičen `lock` v
+`ScriptContainer.run`, kar je vhodni podatek za M5.
+
+**Spremembe obnašanja:** v modu nobene. `dev/build.gradle` je dobil
+`outputs.upToDateWhen { false }` za `runClient` in `runServer`; to je razvojno orodje, ne
+del zapakiranega moda, zato `verify-package.ps1` ostane pri istem seznamu razredov.
+
+**Meritve:** nobene.
+
+**Naslednja seja:** M0.7 — integracijska matrika. Prvi korak zahteva uporabnika: v GUI-ju
+narediti en quest in en dialog, pripeti dialog na fixture NPC-ja, nato se
+`world/customnpcs/quests/` in `dialogs/` posname v `dev/testworld/`.
+
+---
 
 ### 2026-09-15 (13) — M0.6: seme testnega sveta in samodejno ovrednotenje
 

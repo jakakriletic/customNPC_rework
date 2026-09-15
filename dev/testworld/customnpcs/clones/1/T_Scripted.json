@@ -330,7 +330,7 @@
     "pXlr8": 0b,
     "Scripts": [
         {
-            "Script": "var ticks = 0; function init(e) { e.npc.executeCommand('/say TW-SCRIPT-OK'); } function tick(e) { ticks++; if (ticks == 200) { e.npc.executeCommand('/say TW-SCRIPT-TICK-200'); } }",
+            "Script": "var ticks = 0; function init(e) { e.npc.executeCommand('/say TW-SCRIPT-OK'); } function tick(e) { ticks++; if (ticks == 10) { e.npc.executeCommand('/say TW-SCRIPT-TICK-10'); } }",
             "Console": [
             ],
             "ScriptList": [

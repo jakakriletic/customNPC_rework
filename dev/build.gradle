@@ -69,6 +69,17 @@ afterEvaluate {
 // resnicni vhod procesa. Potrebno za M0.5 in za vsak skriptiran server scenarij.
 afterEvaluate { tasks.getByName('runServer').standardInput = System.in }
 
+// runServer in runClient nikoli nista "up to date". ForgeGradle jima prijavi
+// dev/run kot izhod, zato je Gradle 15. 9. med skriptiranim scenarijem M0.6 drugi
+// zagon preskocil ('Task :runServer UP-TO-DATE') - med zagonoma se v dev/run ni
+// nic spremenilo. Server se ni zagnal, skripta pa je cakala na marker do timeouta.
+// Zagon serverja je akcija, ne gradnja izhoda; caching tu nima smisla.
+afterEvaluate {
+    ['runClient', 'runServer'].each { taskName ->
+        tasks.getByName(taskName).outputs.upToDateWhen { false }
+    }
+}
+
 task workspacePaths {
     doLast {
         file("$buildDir/workspace-classpath.txt").text = sourceSets.main.compileClasspath.asPath

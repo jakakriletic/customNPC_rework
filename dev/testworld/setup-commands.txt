@@ -1,5 +1,14 @@
-# M0.6 — postavitev prizorisca. Prilepi v server konzolo po prvem zagonu
-# testnega sveta. Ukazi so idempotentni: ponovni zagon jih sme ponoviti.
+# M0.6 - postavitev prizorisca. Ukaze poslje .\testworld-run.ps1 na standardni
+# vhod serverja; rocno lepljenje v konzolo je nezanesljivo.
+#
+# Ukazi so idempotentni. Prva verzija to ni bila: ponovni zagon je NPC-je spawnal
+# se enkrat cez obstojece in 'TW-OK' se je izpisal 16-krat namesto 8-krat.
+#
+# Ciscenje NE sme biti 'kill @e[tag=testworld]'. CustomNPC ima privzeto
+# RespawnTime=20 in SpawnCycle=0 (DataStats.java:30-31), zato ga /kill samo ubije,
+# NPC pa se shrani kot mrtev in po restartu spet ozivi - po drugem poskusu je bilo
+# v svetu 24 NPC-jev. 'noppes slay npcs' namesto tega postavi isDead=true
+# (CmdSlay.java:140), torej entiteto zares odstrani in respawna ni.
 
 # --- determinizem ---
 gamerule doDaylightCycle false
@@ -22,6 +31,8 @@ fill -8 4 20 8 4 20 minecraft:stone
 fill -8 4 36 8 4 36 minecraft:stone
 
 # --- fixture NPC-ji na fiksnih koordinatah ---
+# odstrani NPC-je iz prejsnjega zagona (privzeti radij 120 od izhodisca)
+noppes slay npcs
 noppes clone spawn T_Stand 1 0,4,0
 noppes clone spawn T_Wander 1 4,4,0
 noppes clone spawn T_Flyer 1 8,4,0
