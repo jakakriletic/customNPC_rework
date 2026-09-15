@@ -21,7 +21,9 @@ import noppes.npcs.LogWriter;
  */
 public class CommandRwDiag extends CommandBase {
     private static final List<String> SUBCOMMANDS =
-            Arrays.asList("on", "off", "status", "reset", "dump");
+            Arrays.asList("on", "off", "status", "reset", "dump", "chunks");
+
+    private static final List<String> CHUNK_ACTIONS = Arrays.asList("on", "off", "status");
 
     @Override
     public String getName() {
@@ -30,7 +32,7 @@ public class CommandRwDiag extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/rwdiag <on|off|status|reset|dump [ime]>";
+        return "/rwdiag <on|off|status|reset|dump [ime]|chunks <on [obroc]|off|status>>";
     }
 
     @Override
@@ -62,6 +64,36 @@ public class CommandRwDiag extends CommandBase {
                     + " ticki=" + snapshot.ticks() + " trajanje=" + snapshot.elapsedMillis() + "ms");
             return;
         }
+        // M2.1d: pogoj meritve. Namenoma ni del `rwdiag on` — meritev brez prisilno
+        // nalozenih chunkov je veljavna le, ce je v svetu igralec, in ta razlika mora biti
+        // v scenariju vidna, ne skrita v vklopu instrumentacije.
+        if (action.equals("chunks")) {
+            String what = args.length > 1 ? args[1].toLowerCase(java.util.Locale.ROOT) : "status";
+            if (what.equals("on")) {
+                int ring = DiagChunkLoader.DEFAULT_RADIUS;
+                if (args.length > 2) {
+                    try {
+                        ring = Integer.parseInt(args[2]);
+                    } catch (NumberFormatException notANumber) {
+                        reply(sender, "RWDIAG-CHUNKS-NAPAKA obroc ni stevilo: " + args[2]);
+                        return;
+                    }
+                }
+                reply(sender, DiagChunkLoader.enable(server, ring));
+                return;
+            }
+            if (what.equals("off")) {
+                DiagChunkLoader.disable();
+                reply(sender, DiagChunkLoader.status());
+                return;
+            }
+            if (what.equals("status")) {
+                reply(sender, DiagChunkLoader.status());
+                return;
+            }
+            reply(sender, "RWDIAG neznan podukaz: chunks " + what + "; " + getUsage(sender));
+            return;
+        }
         if (action.equals("dump")) {
             DiagSnapshot snapshot = Diag.snapshot();
             String label = args.length > 1 ? args[1] : "dump";
@@ -84,6 +116,9 @@ public class CommandRwDiag extends CommandBase {
             String[] args, @Nullable BlockPos targetPos) {
         if (args.length == 1) {
             return CommandBase.getListOfStringsMatchingLastWord(args, SUBCOMMANDS);
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("chunks")) {
+            return CommandBase.getListOfStringsMatchingLastWord(args, CHUNK_ACTIONS);
         }
         return java.util.Collections.emptyList();
     }

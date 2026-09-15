@@ -10,12 +10,12 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-15** |
-| Trenutni milestone | **M2 — diagnostika** (M2.1a narejen); M0.7/M0.8 čakata na uporabnika, M1 je zaključen |
-| Naslednji paketi | razčistiti `npc.per.tick` p50 = 0 (glej meritev), nato **M2.2** (reprodukcija R1); **M0.7** takoj ko uporabnik naredi quest in dialog v GUI-ju |
-| Prevedljivih razredov | 30 — prejšnjih 21 + 9 novih v `rework/diag` |
-| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **23 za instrumentacijo**; zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
+| Trenutni milestone | **M2 — diagnostika** (M2.1a in M2.1c narejena); M0.7/M0.8 čakata na uporabnika, M1 je zaključen |
+| Naslednji paketi | razčistiti prepad `server.tick.ns` p95 = 1,6 ms → p99 = 81,8 ms (ponovitev z ogrevanjem, nato M2.5); nato **M2.2** (reprodukcija R1); **M0.7** takoj ko uporabnik naredi quest in dialog v GUI-ju |
+| Prevedljivih razredov | 32 — prejšnjih 21 + 11 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`) |
+| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **33 za instrumentacijo** (23 + 10 novih za `DiagChunkPlan`); zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
-| Omejitev orodij | seja **ne more zaganjati ukazov** na uporabnikovem računalniku (glej Znane omejitve); gradle, teste in git poganja uporabnik |
+| Omejitev orodij | seja **ne more zaganjati ukazov** na uporabnikovem računalniku (glej Znane omejitve); gradle, teste in git poganja uporabnik. Datoteke lahko bere in piše; od 15. 9. je za to poleg korena projekta priključena tudi mapa `dev` (razlog v Znanih omejitvah) |
 
 ---
 
@@ -25,7 +25,7 @@
 |---|---|---|
 | M0 Temelj | **v teku** (≈90 %) | M0.1–M0.6 narejeno (+ M0.2r obnova okolja); M0.7–M0.8 odprto |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
-| M2 Diagnostika | **v teku** (≈30 %) | M2.1a zaključen in preverjen v svetu (D1–D7) |
+| M2 Diagnostika | **v teku** (≈45 %) | M2.1a, M2.1c in M2.1d zaključeni in preverjeni v svetu; prva veljavna meritev obstaja |
 | M3 Jedro entitete | ni začeto | analiza narejena, glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
@@ -55,7 +55,9 @@
 |---|---|---|
 | M2.1a | `rework/diag` jedro + zbiralnik na Forge dogodkih + ukaz `/rwdiag` | **zaključeno** — D1–D7 zelena, `.\rwdiag-run.ps1` |
 | M2.1b | Klicna mesta za pot, skripte in AI taske | **čaka na prenos** `EntityNPCInterface`/`ai` (M3.1) in `ScriptContainer` (M5.1) |
-| M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih) | naslednji na vrsti |
+| M2.1c | Števci za razčiščenje `npc.per.tick` = 0 | **zaključeno** — vzrok imenovan in dokazan, glej meritev |
+| M2.1d | Pogoj meritve: `ForgeChunkManager` ticket za chunke z merjenimi NPC-ji | **zaključeno** — C1–C6 zelena v svetu, prva veljavna meritev obstaja |
+| M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih) | za M2.1d |
 | M2.3 | Reprodukcija R2 (leteči NPC in ovira) | ni začeto |
 | M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
 | M2.5 | Merilni protokol kot skripta | ni začeto |
@@ -64,6 +66,171 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-15 (17) — M2.1d: pogoj meritve (prisilno naloženi chunki)
+
+**Paket:** M2.1 (del d)
+**Stanje:** končano — C1–C6 zelena v svetu isti dan ob 14:07
+
+**Narejeno:**
+
+- `rework/diag/DiagChunkPlan.java` — **čista** logika načrta: pretvorba blok→chunk (z
+  `floor >> 4`, ne deljenjem, ki pri negativnih koordinatah pokrije napačen chunk),
+  odstranjevanje podvojenih chunkov, razširjanje po obročih in proračun. Brez Minecraft
+  tipov, zato je edini del paketa, ki se da enotsko testirati.
+- `rework/diag/DiagChunkLoader.java` — lastni `ForgeChunkManager` ticketi tipa `NORMAL`,
+  prisilno nalaganje chunkov vseh naloženih NPC-jev, osvežitev enkrat na sekundo prek
+  `WorldTickEvent` (ta prinese svet s sabo, zato razred ne potrebuje poti do
+  `MinecraftServer` izven ukaza), sprostitev ob `chunks off` in ob `FMLServerStoppedEvent`.
+- `CommandRwDiag`: nov podukaz `/rwdiag chunks <on [obroč]|off|status>` z markerjem
+  `RWDIAG-CHUNKS`. **Namenoma ni del `rwdiag on`** — meritev brez prisilno naloženih
+  chunkov je veljavna le z igralcem v svetu, in ta razlika mora biti v scenariju vidna.
+- `DiagKeys`: `world.chunks.forced` (vzorči se vsako sekundo skozi celo meritev) in
+  `diag.chunks.added`. Prvi **zapiše pogoj meritve v sam posnetek**, da meritve brez pogoja
+  ni več mogoče pomotoma brati kot veljavne.
+- `rwdiag-run.ps1`: `chunks on` pred `rwdiag on`, nova merila **C1–C6**, stikali
+  `-ChunkRadius` in `-NoChunks`. **C3 in C4 sta tisto, kar 15. 9. ni bilo preverjeno in
+  zato ni bilo opaženo:** vsi števci so rasli, samo NPC-ji niso tikali. Skripta zdaj bere
+  `npc.per.tick` in `npc.tick.gap` iz tabele posnetka in pade, če NPC-ji nehajo tikati.
+- 10 novih JUnit testov (`DiagChunkPlanTest`); v seji je bilo zelenih vseh 33 testov
+  instrumentacije, prevedenih z `javac --release 8`.
+- Odločitev **D-011** v `01-ARHITEKTURA.md`; scenarij `docs/scenariji/M2.1-diag.md`
+  dopolnjen z razdelkom M2.1d in merili C1–C7.
+
+**Ugotovitve:**
+
+- **Mod je že registriran chunkloader.** `CustomNpcs.load` kliče
+  `ForgeChunkManager.setForcedChunkLoadingCallback(this, new ChunkController())`. To je
+  bilo bistveno: `ForgeChunkManager.requestTicket` **vrže `RuntimeException`**, če mod
+  nima registriranega `LoadingCallback`. Nova koda zato callbacka ne dodaja in ne spreminja.
+- Proračun: 25 chunkov na ticket, 200 ticketov (`dev\run\config\forgeChunkLoading.cfg`),
+  torej do 5000 chunkov. Omejitev v kodi je 400 chunkov na svet (16 ticketov).
+- **Dve napaki v originalnem `ChunkController`** (najdeni med branjem, nista popravljeni —
+  protokol prepoveduje popravljati mimogrede):
+  1. `getTicket` (`:40-56`) ob uspešnem ustvarjanju ticketa vrne `null` namesto ticketa.
+     Klicatelj torej misli, da je ustvarjanje spodletelo, čeprav je ticket shranjen.
+  2. `ticketsLoaded` (`:70`) preverja `tickets.contains(npc)`, kjer je `tickets` seznam
+     ticketov, `npc` pa entiteta — pogoj je vedno `false` in je mrtev.
+  Nista razporejeni v milestone; spadata k opravilu „Chunk Loader“ (job 8), ki v M2 ni
+  predmet dela. To je tudi razlog, da si merilni pogoj ne izposodi tega razreda.
+
+**Preverjeno isti dan ob 14:07 (uporabnik je pognal, seja je preverila izpise in posnetke):**
+
+- **Deluje.** `npc.update` = **9832** (prej 1968), kar je 8,007 na tick; `npc.update` / 8 =
+  1229 = število tickov. NPC-ji so tikali **v vsakem ticku celotne meritve**.
+  `npc.tick.gap` ima 1227 vzorcev in vsi so 1 — brez ene same luknje. `npc.per.tick`
+  p50 = 8 (prej 0).
+- **C1–C6 zelena**: `chunki=9 tiketi=1 obroc=1 zavrnjeni=0 npc=8`; po `chunks off`
+  `chunki=0 tiketi=0`; `TW-SCRIPT-OK`, `TW-SCRIPT-TICK-10`, 0 `ERROR` iz `noppes.*`,
+  `BUILD SUCCESSFUL`.
+- Polni zapis: [`docs/meritve/2026-09-15-M2.1d-prva-veljavna.md`](meritve/2026-09-15-M2.1d-prva-veljavna.md).
+
+**Napaka v merilu, ki jo je ta zagon razkril:** C5 je bilo napisano kot `min = max` in bi
+**zavrglo prav to, prvo veljavno meritev projekta**. Nabor je zrasel z 9 na 12 chunkov, ker
+so trije NPC-ji zatavali iz pokritega območja in jih je osvežitev pokrila
+(`diag.chunks.added = 3`) — to je delo zbiralnika, ne napaka. Pravo merilo je `min > 0`:
+padec na 0 pomeni, da pogoj ni držal, rast ne pomeni ničesar slabega. Popravljeno v
+`rwdiag-run.ps1` in v scenariju. Prestrogo merilo, ki zavrže veljavno meritev, je enako
+škodljivo kot ohlapno, ki spusti neveljavno.
+
+**Ni narejeno in zakaj:**
+
+- `rwdiag-run.ps1` ni bil sintaktično preverjen v seji (ni PowerShella); preverila ga je
+  šele uporabnikova izvedba, ki je tekla do konca.
+- Prepad p95/p99 ni razčiščen (glej spodaj); to je M2.5, ne ta paket.
+
+**Spremembe obnašanja:** nov podukaz `/rwdiag chunks` (raven dovoljenja 2). Dokler se ne
+pokliče, ta koda ne pokliče ničesar iz `ForgeChunkManager` in ni prijavljena na event bus.
+Na obnašanje NPC-jev, shranjevanje in mrežo ne vpliva nič.
+
+**Meritve:** prva veljavna meritev projekta. p50 = 0,557 ms, p95 = 1,638 ms od 50 ms
+proračuna pri 8 NPC-jih. **p99 = 81,789 ms in max = 269,019 ms se ne smeta navajati**,
+dokler prepad ni pojasnjen.
+
+**Novo odprto vprašanje — prepad med p95 in p99.** Med 61. in 12. najslabšim tickom je
+faktor 50. Približno 12 tickov od 1228 je čez 81 ms, in 12 je natanko toliko, kolikor je
+bilo v tej meritvi priklopljenih chunkov (9 + 3). Ujemanje je sumljivo dobro, a je zaenkrat
+samo ujemanje števil. Drugi kandidat je autosave (prej je dal 1–2 počasna ticka, ne 12),
+tretji je delo NPC-jev samo (a takrat bi pričakovali višji p95, ne prepada za njim). Prvi
+korak, ki je hkrati pravilna praksa in test prvega kandidata: `rwdiag-run.ps1` ima odslej
+**ogrevanje** (`-WarmupSeconds`, privzeto 10 s) med `chunks on` in `rwdiag on`.
+
+**Naslednja seja:** ponoviti `.\rwdiag-run.ps1` z ogrevanjem in primerjati p99. Če pade na
+nekaj ms, je bil vzrok nalaganje chunkov in vprašanje je zaprto; sicer je treba počasne
+ticke pripisati z indeksom in časom, kar je vsebina M2.5. Nato M2.2 (reprodukcija R1;
+uporabnik je potrdil, da sta oba NPC-ja CustomNPC).
+
+---
+
+### 2026-09-15 (16) — M2.1c zaključen: zakaj NPC-ji nehajo tikati
+
+**Paket:** M2.1 (del c)
+**Stanje:** končano — vzrok je imenovan z datoteko in vrstico, ne z domnevo
+
+**Narejeno:**
+
+- Uporabnik je pognal `.\rwdiag-run.ps1` s števcem `npc.update.blocked` (tretja meritev,
+  12:47). Izid: **`npc.update.blocked` = 0 in `entity.update.blocked` = 0** v 61 sekundah.
+- Preden je ničla sprejeta kot podatek, je bilo preverjeno, da števec ni tiho mrtev —
+  in to na **jarju, ki ga je server res naložil** (`customnpcs-dev-runtime.jar`, žig
+  12:46:54; gradle je izvedel `:compileJava`, `:devRuntimeMod`, `:jar`, nobenega kot
+  `UP-TO-DATE`). `DiagKeys.class` vsebuje oba ključa, `DiagEventCollector.class` ima
+  `onCanUpdate` z `@SubscribeEvent` in parametrom `EntityEvent$CanUpdate`.
+- **Mehanizem 1 izključen.** `World.updateEntityWithOptionalForce` (`World.java:2139-2155`)
+  doseže `ForgeEventFactory.canEntityUpdate` samo, kadar preverba območja ±32 blokov pade.
+  Nobenega dogodka ⇒ preverba ni padla niti enkrat.
+- **Mehanizem 2 imenovan.** `WorldServer.updateEntities()` (`WorldServer.java:628-644`):
+
+  ```java
+  if (this.playerEntities.isEmpty() && getPersistentChunks().isEmpty()) {
+      if (this.updateEntityTick++ >= 300) { return; }
+  } else { this.resetUpdateEntityTick(); }
+  ```
+
+  Vanilla neha posodabljati entitete **300 tickov (15 s)** po nalaganju sveta, če ni
+  igralca in ni prisilno naloženega chunka. Zanka do entitet sploh ne pride.
+- Aritmetika se ujema pri vseh treh zagonih (247, 246 in 237 tickov z NPC-ji, glede na
+  zamik med `Done` in `rwdiag on`; ločljivost žigov v logu je 1 s = ±20 tickov).
+- Razrešeno tudi navidezno protislovje "`world.tick` šteje, NPC-ji pa ne tikajo":
+  `MinecraftServer.updateTimeLightAndEntities` kliče `worldserver.tick()` (`:831`) in
+  `worldserver.updateEntities()` (`:842`) ločeno, `onPostWorldTick` pa je za obema (`:851`).
+- Polni zapis, tabele in številke:
+  [`docs/meritve/2026-09-15-M2.1-prvi-posnetek.md`](meritve/2026-09-15-M2.1-prvi-posnetek.md).
+
+**Ugotovitve:**
+
+- **Vse tri dosedanje meritve so neveljavne kot izhodišče.** Za ~80 % svojega trajanja so
+  merile prazen tek, zato se `server.tick.ns` percentili ne smejo navajati kot baseline.
+  Prva uporabna številka pride šele po M2.1d.
+- Ista vrstica, ki je vzrok, je tudi popravek. Dovolj je, da **eno** od dvojega ne drži.
+  `ForgeChunkManager` ticket je strožje jamstvo kot igralec: odklene zanko
+  `updateEntities()` (pogoj na ravni sveta) **in** postavi `range = 0` v preverbi ±32
+  blokov (pogoj na ravni chunka), in ne potrebuje človeka pred zaslonom. Scenarij mora
+  pokriti chunke vseh merjenih NPC-jev, ne le enega.
+- Najdaljši tick je bil 123,9 ms (prej 74,5 in 58,1) in še vedno sovpada z autosave. Merilo
+  za M2.5 ostaja nespremenjeno: autosave tick izločiti ali poročati posebej.
+
+**Ni narejeno in zakaj:**
+
+- M2.1d ni začet. Po protokolu je to svoj paket s svojim commitom; poleg tega bo takoj po
+  njem treba ponoviti meritev, kar spet zahteva uporabnika.
+- Commit ni narejen v seji — seja ne more poganjati `git`. Vsebina commita: ta dnevnik,
+  dopolnjena meritev in obstoječa (že napisana) koda M2.1c, če še ni commitana.
+
+**Spremembe obnašanja:** nobene. Za M2.1c ni bila spremenjena nobena vrstica kode; ta seja
+je samo pognala, preverila in razložila.
+
+**Meritve:** tretja meritev M2.1, `audit\m21-rwdiag.log`, posnetki
+`dev\run\logs\rwdiag\rwdiag-20260915-1248*`. Zeleno: `TW-SCRIPT-OK`, 0 `ERROR` vrstic iz
+`noppes.*`, 0 `script errored`, `BUILD SUCCESSFUL`, števci po `rwdiag off` mirujejo
+(1268/1968 → 1268/1968).
+
+**Naslednja seja:** **M2.1d** — `ForgeChunkManager` ticket za chunke z merjenimi NPC-ji,
+pod stikalom in privzeto izklopljen (D-007), plus merilo: ista meritev mora pokazati
+`npc.per.tick` p50 = 8 čez celotno trajanje in `npc.tick.gap` max = 1 pri ≥ 1200 vzorcih.
+Šele nato M2.2 (reprodukcija R1; uporabnik je potrdil, da sta oba NPC-ja CustomNPC).
+
+---
 
 ### 2026-09-15 (15) — M2.1a: instrumentacija `rework/diag`
 
@@ -177,9 +344,31 @@ Uporabljeni so samo tisti deli MC API-ja, ki so potrjeni v `reference-src`
 izpuščena, ker ju v dekompilatu ni bilo mogoče potrditi, prevesti pa jih seja ne more.
 Jedro paketa se je v seji znova prevedlo z `javac --release 8` in 23 testov je zelenih.
 
-**Naslednja seja:** pognati `.\rwdiag-run.ps1` z novo instrumentacijo in iz `world.*` ter
-`npc.tick.gap` razbrati, zakaj NPC-ji ne tikajo v vsakem ticku (glej meritev z dne
-15. 9.), nato M2.2
+**Druga meritev (12:32) je vprašanje razčistila do polovice.** Novi števci so izključili dva
+kandidata od treh in pokazali nekaj, česar prva meritev ni mogla: `npc.tick.gap` ima 246
+vzorcev in **vsi so 1**, skupaj 1976 = 8 × 247. NPC-ji so torej tikali v **247 zaporednih
+tickih in nato nikoli več** — ne "vsak peti tick", ampak en strnjen blok na začetku.
+`world.npc.loaded` je 62 vzorcev zapored točno 8, `world.npc.killed` 0, `world.tick` 1229
+pri 1228 server tickih, `world.players` 0.
+
+**Ugotovitev: približno 14 sekund po nalaganju sveta vanilla neha posodabljati entitete,
+ker v svetu ni igralca.** Mod s tem nima nič. To pomeni, da sta obe dosedanji meritvi merili
+prvih ~14 s dogajanja in nato prazen tek — in razloži, zakaj je MSPT tako nizek.
+
+Ostaneta dva mehanizma: (1) `updateEntityWithOptionalForce` preskoči posodobitev, ker
+območje 32 blokov okoli entitete ni naloženo — takrat Forge posije `EntityEvent.CanUpdate`;
+(2) zanka `updateEntities` do entitet sploh ne pride. Zato je dodan števec
+**`npc.update.blocked`**, ki šteje `EntityEvent.CanUpdate` za NPC-je in dogodka ne
+spreminja. Naslednji zagon loči mehanizma brez ugibanja.
+
+**Posledica za M2.4/M2.6, ki velja ne glede na izid:** vsak merilni scenarij mora
+eksplicitno določiti, ali je v svetu igralec, ali pa morajo biti chunki z NPC-ji prisilno
+naloženi (`ForgeChunkManager`). Dokler to ni urejeno, nobena številka iz M2 ni primerljiva
+s produkcijskim strežnikom. Podrobnosti:
+[`docs/meritve/2026-09-15-M2.1-prvi-posnetek.md`](meritve/2026-09-15-M2.1-prvi-posnetek.md).
+
+**Naslednja seja:** pognati `.\rwdiag-run.ps1` s števcem `npc.update.blocked` in dokončati
+odgovor, nato urediti pogoj meritve (igralec ali prisilno naloženi chunki) in šele nato M2.2
 (reprodukcija R1). Uporabnik je potrdil, da sta pri R1 **oba NPC-ja CustomNPC** (jahač in
 nosilec), zato reprodukcija ne potrebuje vanilla konja.
 
@@ -906,9 +1095,15 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
   piše, gradle, teste, `verify-package.ps1` in git pa mora pognati uporabnik in rezultat
   javiti nazaj. Do preklica velja: seja pripravi točen ukaz in merila, uporabnik izvede,
   seja preveri log in datoteke.
-- Datotek, globljih od 7 map pod korenom projekta, ni mogoče prenesti v sejo. To zadene
-  `dev/src/patch/java/noppes/npcs/rework/data/`; te datoteke seja bere prek `reference-src`
-  ali pa jih uporabnik priloži.
+- Datotek, globljih od 7 map pod **priključeno** mapo, ni mogoče prenesti v sejo.
+  **Rešeno 15. 9.:** poleg korena projekta je zdaj priključena tudi mapa `dev`, s čimer sta
+  pod mejo `dev/src/patch/java/noppes/npcs/rework/…` (7 map) in dekompilirani Minecraft v
+  `dev/build/tmp/recompileMc/sources/net/minecraft/…` (7 map). Če nova seja teh datotek ne
+  vidi, mora uporabnik v namizni aplikaciji dodati mapo `CustomNPC_mod_rework\dev` —
+  priključitev globlje mape (`…\src\patch\java`) ni potrebna in koren sam ne zadošča.
+- **Dekompiliran, Forge-patchan Minecraft je v projektu** in je verodostojnejši vir od
+  spomina: `dev/build/tmp/recompileMc/sources/` (izvorna koda) in `…/compiled/` (razredi).
+  Nastane ob `setupDecompWorkspace`. Uporabljen v M2.1c za `WorldServer` in `World`.
 - Projekt teče na dveh delovnih postajah proti istemu `origin/main`. Seja začne z
   `git fetch origin` in preveri, ali je oddaljena veja pred lokalno.
 - **Zapis iste datoteke dvakrat v isti seji lahko tiho ne uspe.** 15. 9. je drugi zapis
@@ -916,5 +1111,10 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
   46 946 B). Zapis pod novim imenom je uspel takoj. Pravilo: po vsakem zapisu preveri
   velikost datoteke, ob neujemanju zapiši pod novim imenom.
 - `npc.update.window` je zgornja meja, ne točna poraba časa na NPC; točna meritev pride z M3.1.
+- **Meritev brez prisilno naloženih chunkov ali brez igralca je neveljavna** po 300 tickih
+  (`WorldServer.updateEntities():628-644`). Vsak posnetek ima zato `world.chunks.forced`;
+  če je ta 0 in je `world.players` 0, posnetek meri prazen tek. Velja za vse meritve M2+.
+- **Rep porazdelitve `server.tick.ns` (p99, max) zaenkrat ni merodajen.** Prva veljavna
+  meritev ima p95 = 1,6 ms in p99 = 81,8 ms; prepad ni pojasnjen. p50 in p95 sta uporabna.
 - Že pokvarjenih datotek na disku nova koda ne popravlja; M1.4 je po navodilu uporabnika
   odložen, dokler ne obstaja konkreten primer.

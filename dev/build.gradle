@@ -99,6 +99,7 @@ task testOriginal(type: Test) {
     exclude '**/DiagTest.class'
     exclude '**/DistributionTest.class'
     exclude '**/DiagSnapshotTest.class'
+    exclude '**/DiagChunkPlanTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

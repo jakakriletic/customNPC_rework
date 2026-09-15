@@ -112,6 +112,7 @@ import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.items.ItemScripted;
 import noppes.npcs.rework.data.WorldSaveSession;
 import noppes.npcs.rework.diag.CommandRwDiag;
+import noppes.npcs.rework.diag.DiagChunkLoader;
 import noppes.npcs.rework.diag.DiagEventCollector;
 
 @Mod(modid="customnpcs", name="CustomNpcs", version="1.12", acceptedMinecraftVersions="1.12, 1.12.1, 1.12.2")
@@ -299,6 +300,9 @@ public class CustomNpcs {
     @Mod.EventHandler
     public void stopped(FMLServerStoppedEvent event) {
         DiagEventCollector.disable();
+        // M2.1d: merilni ticketi ne smejo prezivet zaustavitve serverja. Ce bi se zapisali
+        // v forcedchunks.dat, bi naslednji zagon tiho tekel pod drugacnim pogojem meritve.
+        DiagChunkLoader.disable();
         if (!WorldSaveSession.end(30L, TimeUnit.SECONDS)) {
             LogWriter.error("CustomNPCs world save queue did not drain cleanly before shutdown");
         }

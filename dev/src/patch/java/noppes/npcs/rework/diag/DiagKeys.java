@@ -25,6 +25,22 @@ public final class DiagKeys {
     /** Posodobitve zivih entitet, ki niso NPC — za primerjavo, koliksen delez so NPC-ji. */
     public static final DiagKey OTHER_LIVING_UPDATE = Diag.key("entity.living.update", "tick");
 
+    /**
+     * NPC, ki mu je vanilla zavrnila posodobitev.
+     *
+     * <p>Forge posije {@code EntityEvent.CanUpdate} natanko takrat, ko
+     * {@code World.updateEntityWithOptionalForce} ugotovi, da obmocje 32 blokov okoli
+     * entitete ni nalozeno, in bi posodobitev preskocil. Ce ta stevec tece, medtem ko
+     * {@code npc.per.tick} kaze 0, je vzrok v nalaganju obmocja. Ce ne tece, entitet sploh
+     * ne poskusa posodobiti nekaj visje - zanka sveta.
+     *
+     * <p>Zbiralnik dogodka nikoli ne spremeni; samo steje.
+     */
+    public static final DiagKey NPC_UPDATE_BLOCKED = Diag.key("npc.update.blocked", "tick");
+
+    /** Isto za entitete, ki niso NPC. */
+    public static final DiagKey OTHER_UPDATE_BLOCKED = Diag.key("entity.update.blocked", "tick");
+
     /** Se ne polni: zahteve po izracunu poti. Klicna mesta pridejo z M3.1/M4. */
     public static final DiagKey PATH_REQUEST = Diag.key("ai.path.request", "poizvedba");
 
@@ -70,6 +86,27 @@ public final class DiagKeys {
 
     /** Vzorcenje na sekundo: koliko igralcev je v svetu. Vpliva na to, kaj sploh tika. */
     public static final Distribution WORLD_PLAYERS = Diag.distribution("world.players", "igralec");
+
+    /**
+     * Vzorcenje na sekundo: koliko chunkov je prisilno nalozenih (vsi modi skupaj).
+     *
+     * <p>To ni zanimivost, ampak <b>zapisan pogoj meritve</b>. Ce je ta vrednost 0 in je
+     * {@code world.players} prav tako 0, je meritev po 300 tickih merila prazen tek in
+     * njeni percentili ne pomenijo nicesar (glej {@link DiagChunkLoader}). Ker se vzorec
+     * jemlje vso meritev, se iz porazdelitve vidi tudi, ali je pogoj veljal ves cas:
+     * {@code min} in {@code max} morata biti enaka.
+     */
+    public static final Distribution WORLD_CHUNKS_FORCED =
+            Diag.distribution("world.chunks.forced", "chunk");
+
+    /**
+     * Koliko chunkov je {@link DiagChunkLoader} dodal <b>po</b> zacetnem naboru.
+     *
+     * <p>Raste, kadar NPC-ji tavajo iz pokritega obmocja. Ce je ob koncu meritve velik, je
+     * bil obroc za ta scenarij premajhen in meritev je lahko del casa tekla nad NPC-ji,
+     * ki niso bili pokriti.
+     */
+    public static final DiagKey DIAG_CHUNKS_ADDED = Diag.key("diag.chunks.added", "chunk");
 
     /** Trajanje server ticka. Isti kljuc polni {@link Diag#tick(long)}. */
     public static final Distribution SERVER_TICK_NANOS = Diag.distribution("server.tick.ns", "ns");

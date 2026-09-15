@@ -4,6 +4,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -41,6 +42,7 @@ public final class DiagEventCollector {
     private int sampleNpcs;
     private int sampleKilled;
     private int samplePlayers;
+    private int sampleForcedChunks;
 
     private DiagEventCollector() {
     }
@@ -97,6 +99,7 @@ public final class DiagEventCollector {
                 this.sampleNpcs = 0;
                 this.sampleKilled = 0;
                 this.samplePlayers = 0;
+                this.sampleForcedChunks = 0;
             }
             return;
         }
@@ -116,6 +119,7 @@ public final class DiagEventCollector {
             DiagKeys.WORLD_NPCS.record(this.sampleNpcs);
             DiagKeys.WORLD_NPCS_KILLED.record(this.sampleKilled);
             DiagKeys.WORLD_PLAYERS.record(this.samplePlayers);
+            DiagKeys.WORLD_CHUNKS_FORCED.record(this.sampleForcedChunks);
         }
         if (this.serverTickStart != 0L) {
             Diag.tick(System.nanoTime() - this.serverTickStart);
@@ -155,6 +159,9 @@ public final class DiagEventCollector {
             }
         }
         this.samplePlayers += world.playerEntities.size();
+        // Pogoj meritve se zapise v sam posnetek. Brez tega se iz posnetka ne da lociti
+        // meritve, ki je tekla pod pravim pogojem, od take, ki je merila prazen tek.
+        this.sampleForcedChunks += world.getPersistentChunks().keySet().size();
     }
 
     @SubscribeEvent
@@ -177,6 +184,23 @@ public final class DiagEventCollector {
             this.windowStart = System.nanoTime();
         } else {
             DiagKeys.OTHER_LIVING_UPDATE.increment();
+        }
+    }
+
+    /**
+     * Steje entitete, ki jim je vanilla zavrnila posodobitev, ker okolica ni nalozena.
+     * Dogodka ne spreminja - instrumentacija ne sme spremeniti obnasanja.
+     */
+    @SubscribeEvent
+    public void onCanUpdate(EntityEvent.CanUpdate event) {
+        Entity entity = event.getEntity();
+        if (entity == null || entity.world == null || entity.world.isRemote) {
+            return;
+        }
+        if (entity instanceof EntityNPCInterface) {
+            DiagKeys.NPC_UPDATE_BLOCKED.increment();
+        } else {
+            DiagKeys.OTHER_UPDATE_BLOCKED.increment();
         }
     }
 
