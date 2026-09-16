@@ -6,6 +6,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.world.ChunkEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -35,6 +37,13 @@ public final class DiagEventCollector {
 
     private long tickIndex;
     private long lastTickWithNpcs = -1L;
+
+    // Kontekst tekocega ticka. Nastavi se na 0 na zacetku ticka in se ob koncu preda
+    // tabeli najpocasnejsih tickov, zato je iz posnetka razvidno, kaj je v pocasnem ticku
+    // tekla poleg NPC-jev.
+    private int chunkLoadsThisTick;
+    private int chunkUnloadsThisTick;
+    private int savesThisTick;
 
     private int sampleCountdown = 1;
     private boolean sampleNow;
@@ -90,6 +99,9 @@ public final class DiagEventCollector {
             closeWindow();
             this.serverTickStart = System.nanoTime();
             this.npcsThisTick = 0;
+            this.chunkLoadsThisTick = 0;
+            this.chunkUnloadsThisTick = 0;
+            this.savesThisTick = 0;
             // Vzorcenje se odloci na zacetku ticka, da ga vsi svetovi v istem ticku
             // uporabijo, prestete vrednosti pa se seste v en vzorec na koncu ticka.
             if (--this.sampleCountdown <= 0) {
@@ -112,7 +124,7 @@ public final class DiagEventCollector {
             }
             this.lastTickWithNpcs = this.tickIndex;
         }
-        this.tickIndex++;
+        long index = this.tickIndex++;
         if (this.sampleNow) {
             this.sampleNow = false;
             DiagKeys.WORLD_ENTITIES.record(this.sampleEntities);
@@ -122,7 +134,8 @@ public final class DiagEventCollector {
             DiagKeys.WORLD_CHUNKS_FORCED.record(this.sampleForcedChunks);
         }
         if (this.serverTickStart != 0L) {
-            Diag.tick(System.nanoTime() - this.serverTickStart);
+            Diag.tick(System.nanoTime() - this.serverTickStart, index, this.npcsThisTick,
+                    this.chunkLoadsThisTick, this.chunkUnloadsThisTick, this.savesThisTick);
             this.serverTickStart = 0L;
         }
     }
@@ -191,6 +204,49 @@ public final class DiagEventCollector {
      * Steje entitete, ki jim je vanilla zavrnila posodobitev, ker okolica ni nalozena.
      * Dogodka ne spreminja - instrumentacija ne sme spremeniti obnasanja.
      */
+    /**
+     * Steje nalaganje chunkov, tako skupno kot v tekocem ticku.
+     *
+     * <p>Chunk se na server strani nalozi sinhrono v ticku, zato je to prvi kandidat za
+     * razlago posameznih dolgih tickov. Dogodek se ne spreminja.
+     */
+    @SubscribeEvent
+    public void onChunkLoad(ChunkEvent.Load event) {
+        if (isRemote(event)) {
+            return;
+        }
+        DiagKeys.CHUNK_LOAD.increment();
+        this.chunkLoadsThisTick++;
+    }
+
+    /** Isto za odlaganje chunkov. */
+    @SubscribeEvent
+    public void onChunkUnload(ChunkEvent.Unload event) {
+        if (isRemote(event)) {
+            return;
+        }
+        DiagKeys.CHUNK_UNLOAD.increment();
+        this.chunkUnloadsThisTick++;
+    }
+
+    /**
+     * Steje shranjevanje svetov. Autosave je edino delo v ticku, ki se ga da vnaprej
+     * napovedati (vsakih 900 tickov), zato mora biti v posnetku locljivo od ostalega.
+     */
+    @SubscribeEvent
+    public void onWorldSave(WorldEvent.Save event) {
+        if (isRemote(event)) {
+            return;
+        }
+        DiagKeys.WORLD_SAVE.increment();
+        this.savesThisTick++;
+    }
+
+    private static boolean isRemote(WorldEvent event) {
+        World world = event.getWorld();
+        return world == null || world.isRemote;
+    }
+
     @SubscribeEvent
     public void onCanUpdate(EntityEvent.CanUpdate event) {
         Entity entity = event.getEntity();

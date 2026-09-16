@@ -9,6 +9,11 @@
 # posodabljati entitete 300 tickov po nalaganju sveta (WorldServer.updateEntities, :628-644)
 # in meritev meri prvih 15 sekund, nato prazen tek. Glej docs/scenariji/M2.1-diag.md.
 #
+# M2.5a: posnetek ima tabelo najpocasnejsih tickov s kontekstom (nalaganje chunkov,
+# autosave, stevilo NPC-jev). Merila S1-S4 preverijo, da je tabela tam, da meri iste ticke
+# kot porazdelitev, in izpisejo pripis repa - prepada med p95 in p99 se ne sme vec
+# ugibati. Glej razdelek M2.5a v docs/scenariji/M2.1-diag.md.
+#
 # Zagon:
 #     .\rwdiag-run.ps1                 # 60 s merjenja, chunki prisilno nalozeni (obroc 1)
 #     .\rwdiag-run.ps1 -Seconds 180    # daljse merjenje
@@ -151,6 +156,65 @@ function Read-Distribution([string]$LogPath, [string]$Name) {
              [long]$hit.Groups[7].Value)
 }
 
+# Prebere tabelo najpocasnejsih tickov iz zapisanega posnetka (.txt).
+#   "najpocasnejsi ticki (16 od 1228)"
+#   "1   900   43.2   269.019   8   0   0   1"
+#   "ticki nad ravnijo: 10ms=14 25ms=14 50ms=14 100ms=1"
+# Vrne psobject z Kept/Recorded/Rows/Levels ali $null, ce tabele v posnetku ni.
+function Read-SlowTable([string]$Path) {
+    if (-not (Test-Path $Path)) { return $null }
+    $text = Get-Content $Path -Raw -ErrorAction SilentlyContinue
+    if ($null -eq $text) { return $null }
+    $head = [regex]::Match($text, '(?m)^najpocasnejsi ticki \((\d+) od (\d+)\)\s*$')
+    if (-not $head.Success) { return $null }
+    $rows = @()
+    foreach ($m in [regex]::Matches($text,
+            '(?m)^(\d+)\s+(\d+|-)\s+([\d.]+)\s+([\d.]+)\s+(\d+|-)\s+(\d+|-)\s+(\d+|-)\s+(\d+|-)\s*$')) {
+        $rows += [pscustomobject]@{
+            Rank    = [int]$m.Groups[1].Value
+            Tick    = $m.Groups[2].Value
+            AtSec   = [double]$m.Groups[3].Value
+            Ms      = [double]$m.Groups[4].Value
+            Npc     = $m.Groups[5].Value
+            ChunkIn = $m.Groups[6].Value
+            ChunkOut= $m.Groups[7].Value
+            Save    = $m.Groups[8].Value
+        }
+    }
+    $levels = @{}
+    $lv = [regex]::Match($text, '(?m)^ticki nad ravnijo:(.*)$')
+    if ($lv.Success) {
+        foreach ($one in [regex]::Matches($lv.Groups[1].Value, '(\d+)ms=(\d+)')) {
+            $levels[[int]$one.Groups[1].Value] = [long]$one.Groups[2].Value
+        }
+    }
+    return [pscustomobject]@{
+        Kept     = [int]$head.Groups[1].Value
+        Recorded = [long]$head.Groups[2].Value
+        Rows     = @($rows | Sort-Object Rank)
+        Levels   = $levels
+    }
+}
+
+# Vrne vrednost stolpca kot stevilo; "-" (neznan kontekst) je -1.
+function Get-ColumnNumber($value) {
+    if ($value -eq '-') { return -1 }
+    return [long]$value
+}
+
+# server.tick.ns je v tabeli izpisan v milisekundah z decimalkami ("server.tick.ns (ms)"),
+# zato ga Read-Distribution (cela stevila) ne prebere. Vrne [double[]](n, min, povp, p50,
+# p95, p99, max) v ms ali $null.
+function Read-TickMillis([string]$LogPath) {
+    $pattern = '(?m)^\s*server\.tick\.ns \(ms\)\s+(\d+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*$'
+    $m = [regex]::Matches((Get-LogText $LogPath), $pattern)
+    if ($m.Count -eq 0) { return $null }
+    $hit = $m[0]
+    return @([double]$hit.Groups[1].Value, [double]$hit.Groups[2].Value, [double]$hit.Groups[3].Value,
+             [double]$hit.Groups[4].Value, [double]$hit.Groups[5].Value, [double]$hit.Groups[6].Value,
+             [double]$hit.Groups[7].Value)
+}
+
 try {
     $env:JAVA_HOME = Join-Path $root '.tools\jdk8'
     $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
@@ -252,6 +316,74 @@ try {
         }
     }
 
+    # M2.5a: pripis repa porazdelitve. Porazdelitev pove, KOLIKO tickov je pocasnih;
+    # tabela pove, KATERI so bili in kaj je v njih teklo. Prva veljavna meritev (15. 9.)
+    # ima p95 = 1,6 ms in p99 = 81,8 ms; brez pripisa se ta prepad lahko samo ugiba.
+    Step '5c' 'S1-S4: pripis najpocasnejsih tickov'
+    $dumpFiles = @(Get-ChildItem -Path $dumps -Filter '*m21-prvi*.txt' -ErrorAction SilentlyContinue |
+                   Sort-Object LastWriteTime -Descending)
+    $slow = $null
+    if ($dumpFiles.Count -gt 0) { $slow = Read-SlowTable $dumpFiles[0].FullName }
+    $ms = Read-TickMillis $s.Log
+    if ($null -eq $slow) {
+        Check 'S1: posnetek ima tabelo najpocasnejsih tickov' $false
+    } else {
+        Check ("S1: tabela ima vrstice (hranjenih={0} od {1} tickov)" -f $slow.Kept, $slow.Recorded) ($slow.Rows.Count -gt 0)
+        $expected = [long]($first[0] * 0.95)
+        Check ("S1b: tabela je iz iste meritve (zabelezenih={0}, ticki={1})" -f $slow.Recorded, $first[0]) ($slow.Recorded -ge $expected)
+
+        if ($null -eq $ms) {
+            Check 'S2: server.tick.ns je berljiv iz tabele posnetka' $false
+        } elseif ($slow.Rows.Count -eq 0) {
+            Check 'S2: tabela nima vrstice, ki bi jo primerjali z max porazdelitve' $false
+        } else {
+            # Isti tick mora biti max porazdelitve in prva vrstica tabele. Ce nista, vsak
+            # od njiju meri nekaj drugega in pripis ne dokazuje nicesar.
+            $topMs = $slow.Rows[0].Ms
+            $diff  = [math]::Abs($topMs - $ms[6])
+            Check ("S2: najpocasnejsi tick v tabeli = max porazdelitve ({0:N3} vs {1:N3} ms)" -f $topMs, $ms[6]) ($diff -le 0.002)
+        }
+
+        if ($slow.Levels.Count -eq 0) {
+            Check 'S3: posnetek poroca ticke nad ravnijo proracuna' $false
+        } else {
+            $levelKeys = @($slow.Levels.Keys | Sort-Object)
+            $monotone = $true
+            for ($i = 1; $i -lt $levelKeys.Count; $i++) {
+                if ($slow.Levels[$levelKeys[$i]] -gt $slow.Levels[$levelKeys[$i - 1]]) { $monotone = $false }
+            }
+            $summary = ($levelKeys | ForEach-Object { "{0}ms={1}" -f $_, $slow.Levels[$_] }) -join ' '
+            Check ("S3: ticki nad ravnijo so poroceni in dosledni ({0})" -f $summary) $monotone
+        }
+
+        # Pripis: kaj je teklo v tickih, ki so presegli cel proracun (50 ms).
+        $overBudget = @($slow.Rows | Where-Object { $_.Ms -ge 50.0 })
+        $withSave   = @($overBudget | Where-Object { (Get-ColumnNumber $_.Save) -gt 0 })
+        $withChunks = @($overBudget | Where-Object { (Get-ColumnNumber $_.ChunkIn) -gt 0 })
+        $plain      = @($overBudget | Where-Object {
+                          ((Get-ColumnNumber $_.Save) -le 0) -and ((Get-ColumnNumber $_.ChunkIn) -le 0) })
+        $attribution = "  pripis tickov nad 50 ms: skupaj {0}, z autosave {1}, z nalaganjem chunkov {2}, brez obojega {3}"
+        Write-Host ($attribution -f $overBudget.Count, $withSave.Count, $withChunks.Count, $plain.Count)
+
+        # S4 ne trdi, kaj je vzrok - trdi le, da rep ni izgubljen. Ce ima porazdelitev
+        # dolg rep (p99 vsaj 5x p95), mora biti ta rep viden tudi v tabeli, sicer pripisa
+        # ni mogoce narediti in meritev je treba ponoviti z vecjo tabelo.
+        if (($null -ne $ms) -and ($slow.Rows.Count -gt 0)) {
+            if ($ms[5] -ge (5.0 * $ms[4])) {
+                $tailRows = @($slow.Rows | Where-Object { $_.Ms -ge (0.9 * $ms[5]) })
+                Check ("S4: rep (p95={0:N3} -> p99={1:N3} ms) je viden v tabeli ({2} vrstic)" -f $ms[4], $ms[5], $tailRows.Count) ($tailRows.Count -gt 0)
+            } else {
+                Write-Host ("  OK       S4: porazdelitev nima prepada (p95={0:N3} ms, p99={1:N3} ms), pripis ni potreben" -f $ms[4], $ms[5])
+            }
+        }
+
+        Write-Host '  najpocasnejsi ticki (do 10 vrstic):'
+        $rowFormat = "    #{0,-3} tick={1,-8} ob={2,7:N1} s  {3,10:N3} ms  npc={4,-4} chunk+={5,-4} chunk-={6,-4} save={7}"
+        $slow.Rows | Select-Object -First 10 | ForEach-Object {
+            Write-Host ($rowFormat -f $_.Rank, $_.Tick, $_.AtSec, $_.Ms, $_.Npc, $_.ChunkIn, $_.ChunkOut, $_.Save)
+        }
+    }
+
     # Med prvim posnetkom in izklopom ticki se vedno tecejo, zato se drugi posnetek
     # naredi takoj po izklopu, tretji pa 10 s kasneje; primerjata se drugi in tretji.
     Step 6 'D7b: po izklopu se ticki ne smejo vec nabirati'
@@ -303,7 +435,7 @@ try {
     Step 9 'Izid'
     if ($failures.Count -eq 0) {
         Write-Host ''
-        Write-Host 'M2.1 D4-D7 in C1-C6 USPESNO: pogoj meritve drzi in NPC-ji tikajo ves cas.'
+        Write-Host 'M2.1 D4-D7, C1-C6 in S1-S4 USPESNO: pogoj meritve drzi, NPC-ji tikajo ves cas in rep porazdelitve je pripisan.'
         Write-Host ("Posnetki: {0}" -f $dumps)
         Write-Host ("Izpis:    {0}" -f $s.Log)
         exit 0

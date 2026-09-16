@@ -10,13 +10,13 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-17** |
-| Trenutni milestone | **M2 — diagnostika** (M2.1, **M2.2** in **M2.3 faza A** zaključene; **M2.3 fazi B/C čakata na ponovni zagon**); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen |
-| Naslednji paketi | **prvi korak je ponovni zagon `.\r2-run.ps1`** z novima merjenima veličinama `dStarost` in `gib` (merili L9, L10) — razloži naj zmrznitev letečih NPC-jev iz faz B in C (pojav P1, dnevnik 29). Po tem **M2.4** (50/200/500 NPC-jev) ali **M2.7** (merila navigacije, vhodni pogoj za M4/M5). Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
-| Prevedljivih razredov | 32 — prejšnjih 21 + 11 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`) |
-| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **33 za instrumentacijo** (23 + 10 novih za `DiagChunkPlan`); zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
+| Trenutni milestone | **M2 — diagnostika** (M2.1, **M2.2** in **M2.3 faza A** zaključene; **M2.3 fazi B/C čakata na ponovni zagon**); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen. **M2.5a** (pripis počasnih tickov) je prišel z druge delovne postaje: koda in testi so tu, zagona v svetu še ni |
+| Naslednji paketi | **prvi korak je ponovni zagon `.\r2-run.ps1`** z novima merjenima veličinama `dStarost` in `gib` (merili L9, L10) — razloži naj zmrznitev letečih NPC-jev iz faz B in C (pojav P1, dnevnik 29). Po tem **M2.4** (50/200/500 NPC-jev) ali **M2.7** (merila navigacije, vhodni pogoj za M4/M5). Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1. Ob prvem naslednjem zagonu `.\rwdiag-run.ps1` se prebere še vrstica pripisa počasnih tickov (merila S1–S4, M2.5a) |
+| Prevedljivih razredov | 33 — prejšnjih 21 + 12 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`) |
+| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **55 za instrumentacijo** (33 + 22 novih za `SlowTicks`); zeleni, zadnjič prevedeni in pognani v seji 17. 9. (D-014). Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Odprti pojavi | **P1** — po `setPosition` se leteči NPC ne premakne več, čeprav navigator javlja celo pot (17. 9.); nereproduciran, hipoteza, blokira fazi B in C scenarija M2.3 |
 | Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8, Q10 in Q12 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
-| Omejitev orodij | **spremenjeno 17. 9.**: seja ima lupino na uporabnikovem računalniku, a **linuxovo** in brez PowerShella, Gradla in Minecrafta. Bere, piše, ureja, `git`, `python3`, `node`, `jq` — da. `.\dev.ps1`, `.\*-run.ps1`, build in zagon sveta — **ne**, to poganja uporabnik. Podrobnosti v Znanih omejitvah |
+| Omejitev orodij | **spremenjeno 17. 9.**: seja ima lupino na uporabnikovem računalniku, a **linuxovo** in brez PowerShella, Gradla in Minecrafta. Bere, piše, ureja, `git`, `python3`, `node`, `jq` — da. `.\dev.ps1`, `.\*-run.ps1`, build in zagon sveta — **ne**, to poganja uporabnik. Podrobnosti v Znanih omejitvah. Seja **prevede in požene teste** `rework/**` v oblačnem okolju proti mapiranim razredom (D-014) in sintaktično preveri `.ps1` s prenesenim PowerShellom |
 
 ---
 
@@ -60,8 +60,9 @@
 | M2.1d | Pogoj meritve: `ForgeChunkManager` ticket za chunke z merjenimi NPC-ji | **zaključeno** — C1–C6 zelena v svetu, prva veljavna meritev obstaja |
 | M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih + kontrolna skupina brez jahačev) | **zaključeno** — E1–E6 zelena, R1 reproduciran; [meritev](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
 | M2.3 | Reprodukcija R2 (leteči NPC in ovira) | **pognano 17. 9. — faza A veljavna, R2 reproduciran**; fazi B in C neveljavni zaradi pojava P1. Dodani merili L9, L10 in veličini `dStarost`, `gib`; čaka na ponovni zagon. [meritev](meritve/2026-09-17-M2.3-R2-reprodukcija.md), [scenarij](scenariji/M2.3-R2.md) |
+| M2.5a | Pripis počasnih tickov: `SlowTicks` + merila S1–S4 v `rwdiag-run.ps1` | **koda in testi narejeni** (22 testov, prevedeno v seji 16. 9.); čaka na prvi zagon v svetu |
 | M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
-| M2.5 | Merilni protokol kot skripta | ni začeto |
+| M2.5 | Merilni protokol kot skripta | **v teku** — M2.5a (pripis počasnih tickov) narejen; ostaja izločitev autosave ticka in protokol ponovitev |
 | M2.6 | Baseline meritve originala | ni začeto |
 | M2.7 | **Merila kakovosti navigacije** (šest veličin, izmerjenih na originalu) | **nov paket 17. 9.** — podlaga za M4.10–M4.12 in M5.6; brez njega se navigacijski sklop ne začne |
 
@@ -69,6 +70,83 @@
 
 ## Dnevnik sej
 
+### 2026-09-16 (30) — M2.5a: pripis počasnih tickov + seja prevaja in testira sama
+
+> **Opomba o vrstnem redu.** Ta vnos je nastal 16. 9. na drugi delovni postaji in je v
+> skupno zgodovino prišel šele 17. 9., ko sta se veji združili. Zato stoji pred vnosi
+> z dne 17. 9., čeprav ima starejši datum. Številka (30) je naslednja prosta; vnos (18)
+> je bil ob združitvi že zaseden.
+
+
+**Paket:** M2.5 (del a)
+**Stanje:** koda in testi končani in preverjeni v seji; zagon v svetu čaka na uporabnika
+
+**Narejeno:**
+
+- `rework/diag/SlowTicks.java` — tabela 16 najpočasnejših tickov meritve s kontekstom:
+  zaporedna številka ticka, čas od začetka meritve, trajanje, koliko NPC-jev je tiknilo,
+  koliko chunkov se je naložilo/odložilo, koliko svetov se je shranilo. Ločeno še števci,
+  koliko tickov je preseglo 10, 25, 50 in 100 ms. Brez Minecraft tipov, zato enotsko
+  testljiv; na vroči poti ena primerjava na tick brez alokacije.
+- `DiagKeys`: `chunk.load`, `chunk.unload`, `world.save`.
+- `DiagEventCollector`: naročnine na `ChunkEvent.Load`, `ChunkEvent.Unload` in
+  `WorldEvent.Save` (vse s preverbo `world.isRemote`), števci na tick se ob `START`
+  počistijo in se ob `END` predajo tabeli skupaj z indeksom ticka.
+- `Diag.tick(...)` dobi različico s kontekstom; stara `tick(long)` ostane in zapiše
+  kontekst kot neznan (`-`), da obstoječi testi in klici ostanejo veljavni.
+- `DiagSnapshot`: nov razdelek v berljivem izpisu in ključ `slowTicks` v JSON.
+- `rwdiag-run.ps1`: merila **S1–S4**, bralnika `Read-SlowTable` in `Read-TickMillis`
+  (`server.tick.ns` je v tabeli izpisan v ms z decimalkami, zato ga stari bralnik celih
+  števil ni prebral) ter vrstica pripisa
+  `skupaj N, z autosave X, z nalaganjem chunkov Y, brez obojega Z`.
+- 22 novih testov (`SlowTicksTest`); skupaj 55 testov instrumentacije, vsi zeleni.
+- Scenarij: nov razdelek **M2.5a** v `docs/scenariji/M2.1-diag.md`. Odločitvi **D-013**
+  (zakaj tabela top-N in ne profiler) in **D-014** (seja prevaja in testira sama).
+
+**Ugotovitve:**
+
+- **Seja lahko od zdaj sama prevaja in poganja teste.** Priključena mapa je dosegljiva
+  skozi lupino na uporabnikovem računalniku, prevajanje pa teče v oblačnem okolju proti
+  mapiranim razredom iz `dev/build/tmp/recompileMc/compiled` (28 MB, Forge + Minecraft z
+  mapiranimi imeni) in `dev/libs/customnpcs-mapped-01Oct19.jar`. Manjkata samo `guava` in
+  `log4j`, ki v repozitoriju ne obstajata; za prevajanje ju nadomestita dva minimalna
+  nadomestka **izven** repozitorija. S tem je preverjeno: sintaksa, imena in podpisi Forge
+  API-jev (`ChunkEvent.Load#getChunk`, `WorldEvent.Save`, `WorldEvent#getWorld`) in vsa
+  logika brez Minecrafta. 27 testov iz M1, ki potrebujejo `log4j` v času izvajanja, se v
+  seji ne da pognati; te še vedno pokrije `.\dev.ps1 test --offline`.
+- Napaka, ki jo je ujel prvi test: števci ravni so bili najprej šteti od najvišje ravni
+  navzdol z ustavitvijo pri prvi nedoseženi — tick z 30 ms zato ni bil štet niti pri
+  10 ms. Test `tickOverALevelCountsInEveryLowerLevelToo` je to pokazal takoj. Ravni se
+  odslej štejejo navzgor. To je natanko razlog za D-014: napaka bi sicer prišla v svet.
+- Aritmetika, ki jo bo izid potrdil ali ovrgel: autosave teče vsakih 900 tickov
+  (`MinecraftServer.tick():762`), torej sta v 60-sekundni meritvi to **največ dva** ticka.
+  Počasnih tickov je bilo približno 12. Če jih pripis pripiše autosave, se nekaj ne ujema
+  in je treba pogledati, kaj še piše v istem ticku.
+
+**Ni narejeno in zakaj:**
+
+- Meritev ni ponovljena. Zagon `rwdiag-run.ps1` potrebuje Windows, PowerShell, Javo 8 in
+  gradle z Minecraftom; seja ima lupino na uporabnikovem računalniku, ne pa tega okolja.
+- `rwdiag-run.ps1` spet ni sintaktično preverjen (ni PowerShella). Vsi štirje novi
+  regularni izrazi pa **so** preverjeni proti pravemu izpisu posnetka, ki ga je seja
+  ustvarila lokalno, vključno s tem, da stari bralnik celih števil še vedno bere
+  `npc.per.tick`.
+- M2.5 ni zaključen: izločitev autosave ticka iz percentilov in protokol ponovitev
+  (koliko zagonov, kako se povprečijo) ostajata.
+
+**Spremembe obnašanja:** nobene v modu. Trije novi števci in tabela se polnijo samo,
+dokler je merjenje vklopljeno; zbiralnik je na event bus prijavljen samo takrat. Nobena
+nova koda ne posega v entitete, shranjevanje ali mrežo.
+
+**Meritve:** nobene nove — ta paket je orodje, s katerim bo naslednja meritev povedala
+vzrok namesto številke.
+
+**Naslednja seja:** pognati `.\dev.ps1 test --offline` (pričakovano 55 testov
+instrumentacije zelenih) in `.\rwdiag-run.ps1`, nato prebrati vrstico
+`pripis tickov nad 50 ms: …`. Odločitveno drevo je v razdelku M2.5a scenarija:
+chunki → podaljšaj ogrevanje in ponovi; autosave → poročaj posebej; brez obojega → rep je
+delo v ticku in naslednji korak so klicna mesta (M2.1b), ne porazdelitve. Šele nato M2.2
+(reprodukcija R1; uporabnik je potrdil, da sta oba NPC-ja CustomNPC).
 ### 2026-09-17 (29) — M2.3 pognan: R2 reproduciran v fazi A, fazi B in C razveljavi zmrznitev
 
 **Paket:** M2.3 (reprodukcija R2)
@@ -1896,6 +1974,13 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
   `dev/build/tmp/recompileMc/sources/net/minecraft/…` (7 map). Če nova seja teh datotek ne
   vidi, mora uporabnik v namizni aplikaciji dodati mapo `CustomNPC_mod_rework\dev` —
   priključitev globlje mape (`…\src\patch\java`) ni potrebna in koren sam ne zadošča.
+- **Seja sama prevede `noppes/npcs/rework/**` in požene njegove teste** (D-014), v oblačnem
+  okolju proti mapiranim razredom iz `dev/build/tmp/recompileMc/compiled` in
+  `dev/libs/customnpcs-mapped-01Oct19.jar`; manjkajoča guava in log4j se nadomestita z
+  minimalnima nadomestkoma **izven** repozitorija. To preveri sintakso, podpise Forge
+  API-jev in vso logiko brez Minecrafta — ne pa nalaganja moda ali obnašanja v svetu.
+- **Prenesena datoteka se v seji ne osveži, če ima isto ime kot prej** — 16. 9. je prvi
+  poskus tiho prevedel stare izvorne datoteke. Vsak nov prenos gre pod novim imenom.
 - **Dekompiliran, Forge-patchan Minecraft je v projektu** in je verodostojnejši vir od
   spomina: `dev/build/tmp/recompileMc/sources/` (izvorna koda) in `…/compiled/` (razredi).
   Nastane ob `setupDecompWorkspace`. Uporabljen v M2.1c za `WorldServer` in `World`.
@@ -1933,5 +2018,9 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
   (dva zagona zapored, primerjava p99), ne ugibati.
 - `server.tick.ns` **max** je pri vsakem zagonu en sam tick, ki sovpada z autosave
   (58 / 74 / 87 / 124 ms). M2.5 ga mora izločiti ali poročati posebej.
+- Od M2.5a ima posnetek **tabelo najpočasnejših tickov s kontekstom** (koliko NPC-jev je
+  tiknilo, koliko chunkov se je naložilo, ali je tekel autosave) in števce tickov nad
+  10/25/50/100 ms. Merila S1–S4 v `rwdiag-run.ps1` bodo ob prvem zagonu pripis autosave
+  ticka potrdila ali ovrgla strojno, ne z branjem številk.
 - Že pokvarjenih datotek na disku nova koda ne popravlja; M1.4 je po navodilu uporabnika
   odložen, dokler ne obstaja konkreten primer.

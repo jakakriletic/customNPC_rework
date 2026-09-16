@@ -14,10 +14,10 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-09-17 |
-| Trenutna faza | **M2 — diagnostika**; M2.1 in M2.2 zaključena (R1 reproduciran), M2.3 napisan in čaka na zagon, **M0 in M1 zaključena** |
+| Trenutna faza | **M2 — diagnostika**; M2.1 in M2.2 zaključena (R1 reproduciran), M2.3 napisan in čaka na zagon, **M0 in M1 zaključena**; `SlowTicks` (M2.5a) je v kodi, njegova merila S1–S4 čakajo na prvi zagon |
 | Naslednji korak | **pognati `.\r2-run.ps1`** — scenarij M2.3 (reprodukcija R2) je napisan in čaka na zagon v svetu; nato **M2.4** ali **M2.7**. Glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 32 (21 prenesenih + 11 novih v `rework/diag`); podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Prevedljivih razredov | 33 (21 prenesenih + 12 novih v `rework/diag`); podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in
@@ -133,9 +133,14 @@ Instrumentacija (M2.1), v konzoli serverja ali kot ukaz v igri:
 
 ```
 rwdiag on            # vklopi merjenje in pocisti stevce
+rwdiag chunks on 1   # pogoj meritve: prisilno nalozi chunke z NPC-ji (M2.1d)
 rwdiag dump m21      # zapise posnetek v dev\run\logs\rwdiag\ in ga izpise
 rwdiag off           # izklopi in se odjavi z event busa
 ```
+
+Posnetek ima od M2.5a tabelo **najpočasnejših tickov s kontekstom** (koliko NPC-jev je
+tiknilo, koliko chunkov se je naložilo, ali je tekel autosave). Percentil pove, koliko
+tickov je počasnih; tabela pove, kateri in kaj je v njih teklo.
 
 Podrobnosti in opozorila: [`OKOLJE.md`](OKOLJE.md).
 

@@ -41,6 +41,7 @@ public final class Diag {
 
     private static final DiagKey TICKS = key("server.tick", "tick");
     private static final Distribution TICK_NANOS = distribution("server.tick.ns", "ns");
+    private static final SlowTicks SLOW_TICKS = new SlowTicks();
 
     private Diag() {
     }
@@ -151,13 +152,39 @@ public final class Diag {
         diagKey.record(elapsed);
     }
 
-    /** Zabelezi konec server ticka in njegovo trajanje. */
+    /**
+     * Zabelezi konec server ticka brez konteksta. Za meritev je uporabna samo
+     * porazdelitev; tabela najpocasnejsih tickov bo imela stolpce prazne.
+     */
     public static void tick(long tickNanos) {
+        tick(tickNanos, SlowTicks.UNKNOWN, SlowTicks.UNKNOWN, SlowTicks.UNKNOWN,
+                SlowTicks.UNKNOWN, SlowTicks.UNKNOWN);
+    }
+
+    /**
+     * Zabelezi konec server ticka, njegovo trajanje in kontekst, v katerem je tekel.
+     *
+     * <p>Kontekst je tu zato, ker porazdelitev pove <i>koliko</i> je pocasnih tickov, ne
+     * pa <i>zakaj</i>. Prepad med p95 in p99 v prvi veljavni meritvi se brez pripisa ne da
+     * razlociti med autosave, nalaganjem chunkov in delom NPC-jev.
+     */
+    public static void tick(long tickNanos, long tickIndex, int npcs, int chunkLoads,
+            int chunkUnloads, int saves) {
         if (!enabled) {
             return;
         }
+        long nanos = tickNanos < 0L ? 0L : tickNanos;
         TICKS.increment();
-        TICK_NANOS.record(tickNanos < 0L ? 0L : tickNanos);
+        TICK_NANOS.record(nanos);
+        long offsetMillis = startedNanos == 0L
+                ? 0L
+                : Math.max(0L, (System.nanoTime() - startedNanos) / 1000000L);
+        SLOW_TICKS.record(tickIndex, offsetMillis, nanos, npcs, chunkLoads, chunkUnloads, saves);
+    }
+
+    /** Tabela najpocasnejsih tickov trenutne meritve. */
+    public static SlowTicks slowTicks() {
+        return SLOW_TICKS;
     }
 
     public static long ticks() {
@@ -173,7 +200,8 @@ public final class Diag {
         long elapsedMillis = startedMillis == 0L
                 ? 0L
                 : Math.max(0L, (System.nanoTime() - startedNanos) / 1000000L);
-        return DiagSnapshot.of(enabled, startedMillis, elapsedMillis, TICKS.count(), keys, distributions);
+        return DiagSnapshot.of(enabled, startedMillis, elapsedMillis, TICKS.count(), keys,
+                distributions, SLOW_TICKS.copy());
     }
 
     /** Pocisti vse stevce in porazdelitve; registrirani kljuci ostanejo. */
@@ -184,6 +212,7 @@ public final class Diag {
         for (Distribution d : DISTRIBUTIONS.values()) {
             d.reset();
         }
+        SLOW_TICKS.reset();
         startedNanos = System.nanoTime();
         startedMillis = System.currentTimeMillis();
     }

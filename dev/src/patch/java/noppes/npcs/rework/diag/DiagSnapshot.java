@@ -23,25 +23,27 @@ public final class DiagSnapshot {
     private final long ticks;
     private final List<Row> rows;
     private final List<Distribution> distributions;
+    private final SlowTicks slowTicks;
 
     private DiagSnapshot(boolean enabled, long startedMillis, long elapsedMillis, long ticks,
-            List<Row> rows, List<Distribution> distributions) {
+            List<Row> rows, List<Distribution> distributions, SlowTicks slowTicks) {
         this.enabled = enabled;
         this.startedMillis = startedMillis;
         this.elapsedMillis = elapsedMillis;
         this.ticks = ticks;
         this.rows = Collections.unmodifiableList(rows);
         this.distributions = Collections.unmodifiableList(distributions);
+        this.slowTicks = slowTicks;
     }
 
     static DiagSnapshot of(boolean enabled, long startedMillis, long elapsedMillis, long ticks,
-            List<DiagKey> keys, List<Distribution> distributions) {
+            List<DiagKey> keys, List<Distribution> distributions, SlowTicks slowTicks) {
         List<Row> rows = new ArrayList<Row>(keys.size());
         for (DiagKey key : keys) {
             rows.add(new Row(key.name(), key.unit(), key.count(), key.nanos()));
         }
         return new DiagSnapshot(enabled, startedMillis, elapsedMillis, ticks, rows,
-                new ArrayList<Distribution>(distributions));
+                new ArrayList<Distribution>(distributions), slowTicks);
     }
 
     public boolean enabled() {
@@ -62,6 +64,11 @@ public final class DiagSnapshot {
 
     public List<Distribution> distributions() {
         return this.distributions;
+    }
+
+    /** Tabela najpocasnejsih tickov te meritve. */
+    public SlowTicks slowTicks() {
+        return this.slowTicks;
     }
 
     public Row row(String name) {
@@ -161,6 +168,11 @@ public final class DiagSnapshot {
             out.append('\n');
         }
 
+        String slow = this.slowTicks == null ? "" : this.slowTicks.toText();
+        if (!slow.isEmpty()) {
+            out.append('\n').append(slow);
+        }
+
         Distribution tick = this.distribution("server.tick.ns");
         if (tick != null && tick.count() > 0L) {
             double p95ms = tick.percentile(0.95) / 1000000.0;
@@ -213,7 +225,11 @@ public final class DiagSnapshot {
             out.append(",\"p95\":").append(d.percentile(0.95));
             out.append(",\"p99\":").append(d.percentile(0.99)).append('}');
         }
-        out.append("]}");
+        out.append(']');
+        if (this.slowTicks != null) {
+            out.append(",\"slowTicks\":").append(this.slowTicks.toJson());
+        }
+        out.append('}');
         return out.toString();
     }
 

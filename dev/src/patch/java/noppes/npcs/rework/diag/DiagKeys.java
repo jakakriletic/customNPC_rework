@@ -108,6 +108,28 @@ public final class DiagKeys {
      */
     public static final DiagKey DIAG_CHUNKS_ADDED = Diag.key("diag.chunks.added", "chunk");
 
+    /**
+     * Nalozeni chunki. Steje se {@code ChunkEvent.Load} na server strani.
+     *
+     * <p>Kandidat za razlago prepada med p95 in p99: nalaganje chunka je sinhrono delo v
+     * server ticku (branje z diska ali generiranje), zato se pokaze kot posamezen dolg
+     * tick, ne kot dvig celotne porazdelitve.
+     */
+    public static final DiagKey CHUNK_LOAD = Diag.key("chunk.load", "chunk");
+
+    /** Odlozeni chunki; {@code ChunkEvent.Unload} na server strani. */
+    public static final DiagKey CHUNK_UNLOAD = Diag.key("chunk.unload", "chunk");
+
+    /**
+     * Shranjeni svetovi; {@code WorldEvent.Save} na server strani.
+     *
+     * <p>Autosave tece v server ticku vsakih 900 tickov (45 s,
+     * {@code MinecraftServer.tick():762}). V 60-sekundni meritvi sta to najvec dva ticka,
+     * zato sam po sebi ne more razloziti ducata pocasnih tickov - ta stevec to trditev
+     * spremeni iz sklepanja v podatek.
+     */
+    public static final DiagKey WORLD_SAVE = Diag.key("world.save", "svet");
+
     /** Trajanje server ticka. Isti kljuc polni {@link Diag#tick(long)}. */
     public static final Distribution SERVER_TICK_NANOS = Diag.distribution("server.tick.ns", "ns");
 
