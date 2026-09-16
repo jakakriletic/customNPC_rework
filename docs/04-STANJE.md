@@ -133,6 +133,11 @@
   `npc.per.tick`.
 - M2.5 ni zaključen: izločitev autosave ticka iz percentilov in protokol ponovitev
   (koliko zagonov, kako se povprečijo) ostajata.
+- **Commit `f3ea71f` je narejen, `push` ne.** Lupina seje je Linux in nima dostopa do
+  Windows Credential Managerja, zato `git push` vpraša za geslo, ki ga ni. Uporabnik
+  požene `git push origin main` iz korena projekta. Enkraten pogoj tega paketa je bil tudi
+  `rm .git/index.lock` — `git fetch` iz prejšnje seje je pustil zaklep, brisanje pa je v
+  priključeni mapi privzeto onemogočeno, dokler ga uporabnik ne dovoli.
 
 **Spremembe obnašanja:** nobene v modu. Trije novi števci in tabela se polnijo samo,
 dokler je merjenje vklopljeno; zbiralnik je na event bus prijavljen samo takrat. Nobena
