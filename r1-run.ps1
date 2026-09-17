@@ -192,6 +192,34 @@ try {
         Write-Host '    Ce padejo vse preverbe R1-*, preveri enable-command-block in pozeni znova.'
     }
 
+    # Fixture se kopirajo v dev\run\world, server pa nalozi svet, ki ga imenuje level-name
+    # v dev\run\server.properties. Ce se to dvoje razide, server zazene DRUG svet: vsak
+    # 'noppes clone spawn' javi "Could not find clone file", v svetu ni NPC-jev, scenarij
+    # pa nato deset minut caka na markerje, ki jih ne bo. 17. 9. je to stalo cel zagon -
+    # server.properties je bil od smoke testa (level-name=m05-smoke). Popravek ene vrstice
+    # ne bi zadoscal: smoke test prepise cel server.properties (drug seed, druga vidna
+    # razdalja, druga tezavnost), zato scenarij raje pade takoj in pove, kaj pognati.
+    function Get-Prop([string]$File, [string]$Key) {
+        $line = @(Get-Content $File | Where-Object { $_ -match ('^' + [regex]::Escape($Key) + '\s*=') })
+        if ($line.Count -eq 0) { return '' }
+        return ($line[0] -replace ('^' + [regex]::Escape($Key) + '\s*=\s*'), '').Trim()
+    }
+    $seedProps = Join-Path $seed 'server.properties'
+    if ((Test-Path $propsFile) -and (Test-Path $seedProps)) {
+        $mismatch = @()
+        foreach ($key in @('level-name', 'level-seed')) {
+            $want = Get-Prop $seedProps $key
+            $have = Get-Prop $propsFile $key
+            if ($want -ne $have) { $mismatch += ("{0} je '{1}', pricakovano '{2}'" -f $key, $have, $want) }
+        }
+        if ($mismatch.Count -eq 0) {
+            Check ("dev\run\server.properties je od testnega sveta (level-name={0})" -f (Get-Prop $propsFile 'level-name')) $true
+        } else {
+            Check ("dev\run\server.properties ni od testnega sveta - " + ($mismatch -join '; ')) $false
+            throw "server.properties je od drugega scenarija (najbrz smoke test). Pozeni najprej .\testworld.ps1, nato ta scenarij."
+        }
+    }
+
     # Fixture morajo biti v svetu, preden se server zazene: ServerCloneController jih
     # nalozi ob zagonu. Kopiramo jih, da scenarij ne zahteva ponovne postavitve sveta.
     $srcClones = Join-Path $seed 'customnpcs\clones\1'

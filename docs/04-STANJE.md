@@ -70,6 +70,56 @@
 
 ## Dnevnik sej
 
+### 2026-09-17 (32) — Zakaj je `r2-run.ps1` obstal: napačen svet, ne zanka
+
+**Paket:** M2.3 (zagon), brez sprememb v modu
+**Stanje:** vzrok imenovan, scenarija zaščitena; ponovni zagon je na uporabniku
+
+**Kaj se je zgodilo:**
+
+- Uporabnik je javil, da se je `.\r2-run.ps1` "zaciklal". Ni bila zanka: skripta je čakala
+  na markerje `R2-INIT` in `R2-{A,B,C}-START`, ki jih ni moglo biti — v svetu ni bilo
+  nobenega NPC-ja. V logu je bilo 20× `Could not find clone file` / `Unknown npc` in
+  `RWDIAG-CHUNKS ... npc=0 razlog=v svetovih ni nalozenih NPC-jev`. Trije timeouti po
+  180 s dajo ~10 minut navideznega obstanka, nato bi skripta padla z NEUSPESNO.
+- **Vzrok:** `dev\run\server.properties` je bil od smoke testa (`level-name=m05-smoke`),
+  zato je server naložil svet `dev\run\m05-smoke`. `r2-run.ps1` fixture kopira v
+  `dev\run\world` — v drug svet. Na tej postaji testni svet sploh ni bil postavljen:
+  v `dev\run\world` je bila samo mapa `customnpcs`, brez `level.dat`.
+- Preverba "štiri R2 fixture datoteke so v svetu (kopiranih 4)" je bila **zelena in
+  neresnična**: datoteke so res bile kopirane, samo ne v svet, ki se je zagnal.
+
+**Narejeno:**
+
+- `r1-run.ps1` in `r2-run.ps1` ob zagonu primerjata `level-name` in `level-seed` z
+  `dev\testworld\server.properties`. Ob neujemanju scenarij **pade takoj**, še pred zagonom
+  serverja, in pove, naj se požene `.\testworld.ps1`. Popravek ene vrstice (samo
+  `level-name`) je bil zavrnjen: smoke test prepiše cel `server.properties`, zato bi
+  meritev tekla v drugem okolju (seed, vidna razdalja, težavnost), le v pravem svetu.
+- `fixture-run.ps1` in `matrika-run.ps1` popravka ne potrebujeta — `testworld.ps1` kličeta
+  sama in s tem dobita pravi `server.properties`.
+- Preverjeno v seji: oba scenarija sta sintaktično brez napak (PowerShell 7.4.6
+  `Parser::ParseFile`), logika preverbe pa je **pognana** nad tremi pravimi datotekami
+  (smoke properties, seme, popravljeno stanje) — smoke properties pade, seme in
+  popravljeno stanje gresta skozi.
+
+**Ugotovitve:**
+
+- Merilo, ki preverja **dejanje** (datoteke so kopirane) namesto **učinka** (server jih
+  vidi), ne varuje pred ničimer. Pravilna oblika je tista iz M2.1d: pogoj meritve se
+  prebere iz sistema, ki ga meri — tu iz `server.properties`, ki ga bere server.
+- Ta razred napake je drag na tak način, da ga je lahko spregledati: nič ni padlo, nič ni
+  javilo napake, samo počakalo je deset minut in potem povedalo napačno zgodbo.
+
+**Spremembe obnašanja:** nobene v modu; samo dve skripti.
+
+**Meritve:** nobene — zagon ni dal veljavnih podatkov.
+
+**Naslednja seja:** ponovni zagon `.\r2-run.ps1` po `.\testworld.ps1` (uporabnik je svet
+medtem že postavil; `server.properties` je spet od testnega sveta).
+
+---
+
 ### 2026-09-17 (31) — Združitev vej: podvojen M2.2, M2.5a prestavljen na origin
 
 **Paket:** brez novega paketa — sanacija razhajanja med delovnima postajama
@@ -2079,6 +2129,13 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
   (Git Credential Manager), v linuxovi lupini jih ni. Seja ima tudi svojo identiteto
   neznano, zato commita z `git -c user.name=… -c user.email=…`. **Push je vedno na
   uporabniku**, in seja mu to na koncu pove.
+- **`smoke-server.ps1` prepiše `dev\run\server.properties` s svojim** (`level-name=m05-smoke`,
+  seed `20260914`, druga vidna razdalja in težavnost). `r1-run.ps1` in `r2-run.ps1` pa
+  fixture kopirata v `dev\run\world`, zato po smoke testu tečeta proti **drugemu svetu**:
+  vsak `noppes clone spawn` javi `Could not find clone file`, v svetu ni NPC-jev in
+  scenarij ~10 minut čaka na markerje, ki jih ne bo. Zgodilo se je 17. 9. Od takrat oba
+  scenarija ob zagonu primerjata `level-name` in `level-seed` z `dev\testworld\server.properties`
+  in ob neujemanju **padeta takoj** z navodilom, naj se požene `.\testworld.ps1`.
 - **`.git/index.lock` zna ostati za sabo.** Brisanje datotek je v priključeni mapi privzeto
   izklopljeno, zato prekinjen `git` ukaz pusti `index.lock` in vsak naslednji `git add` ali
   `git commit` pade. Seja mora takrat zaprositi za dovoljenje za brisanje in datoteko
