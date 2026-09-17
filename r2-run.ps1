@@ -1,4 +1,4 @@
-# M2.3 - skriptirana reprodukcija R2 (leteci NPC in ovira), merila L1-L8.
+﻿# M2.3 - skriptirana reprodukcija R2 (leteci NPC in ovira), merila L1-L8.
 #
 # Scenarij in razlaga: docs/scenariji/M2.3-R2.md
 #
@@ -145,7 +145,8 @@ function Read-Samples([string]$LogPath, [string]$Phase, [string]$Lane) {
                ' yPovp=(-?[\d.]+) yMax=(-?[\d.]+)' +
                ' cezOviro=(\d+)/\d+' +
                ' doCiljaMin=(-?[\d.]+) doCiljaPovp=(-?[\d.]+)' +
-               ' razpon=(-?[\d.]+) zastoj=(\d+)/\d+'
+               ' razpon=(-?[\d.]+) zastoj=(\d+)/\d+' +
+               ' dStarost=(-?\d+)/(-?\d+) gib=([\d.]+)/([\d.]+)'
     $out = @()
     foreach ($m in [regex]::Matches((Get-MarkerText $LogPath), $pattern)) {
         $out += [pscustomobject]@{
@@ -162,6 +163,10 @@ function Read-Samples([string]$LogPath, [string]$Phase, [string]$Lane) {
             DoCiljaAvg   = [double]$m.Groups[11].Value
             Razpon       = [double]$m.Groups[12].Value
             Zastoj       = [int]$m.Groups[13].Value
+            DStarostMin  = [int]$m.Groups[14].Value
+            DStarostMax  = [int]$m.Groups[15].Value
+            GibAvg       = [double]$m.Groups[16].Value
+            GibMax       = [double]$m.Groups[17].Value
         }
     }
     return $out
@@ -189,14 +194,35 @@ function Min-DoCilja($Samples) {
     return $min
 }
 
+# Najmanjsi prirastek starosti med dvema vzorcema. Prvi vzorec faze se izpusti: njegov
+# prirastek meri razmik med fazama, ne merilnega intervala.
+# -1 pomeni 'ni podatka', ne 'entiteta ne tika'.
+function Min-DStarost($Samples) {
+    if ($Samples.Count -lt 2) { return -1 }
+    $min = [int]::MaxValue
+    for ($i = 1; $i -lt $Samples.Count; $i++) {
+        if ($Samples[$i].DStarostMin -lt $min) { $min = $Samples[$i].DStarostMin }
+    }
+    return $min
+}
+
+# Najvecje gibanje v celi fazi. Nic pri mirujoci progi pomeni, da moveHelper ni dodal
+# gibanja; vec kot nic pomeni, da je gibanje bilo in ga je pojel move().
+function Max-Gib($Samples) {
+    $max = 0.0
+    foreach ($s in $Samples) { if ($s.GibMax -gt $max) { $max = $s.GibMax } }
+    return $max
+}
+
 function Format-Lane([string]$Phase, [string]$Lane, $Samples) {
     if ($Samples.Count -eq 0) { return ("  faza {0} proga {1}: NI VZORCEV" -f $Phase, $Lane) }
     $last = $Samples[$Samples.Count - 1]
-    return ("  faza {0} proga {1} ({2,-14}): vzorcev={3,2} | konec: navig={4}/{5} cele={6}/{5} cezOviro={7}/{5} zastoj={8}/{5} prevozeno(povp/max)={9}/{10} y(povp/max)={11}/{12} doCilja(min/povp)={13}/{14} razpon={15}" -f `
+    return ("  faza {0} proga {1} ({2,-14}): vzorcev={3,2} | konec: navig={4}/{5} cele={6}/{5} cezOviro={7}/{5} zastoj={8}/{5} prevozeno(povp/max)={9}/{10} y(povp/max)={11}/{12} doCilja(min/povp)={13}/{14} razpon={15} | dStarost(min)={16} gib(max)={17}" -f `
         $Phase, $Lane, $laneOpis[$Lane], $Samples.Count,
         $last.Navig, $last.Skupaj, $last.Cele, $last.CezOviro, $last.Zastoj,
         $last.PrevozenoAvg, $last.PrevozenoMax, $last.YAvg, $last.YMax,
-        $last.DoCiljaMin, $last.DoCiljaAvg, $last.Razpon)
+        $last.DoCiljaMin, $last.DoCiljaAvg, $last.Razpon,
+        (Min-DStarost $Samples), (Max-Gib $Samples))
 }
 
 try {
@@ -308,7 +334,7 @@ try {
     if ($modErrors.Count -gt 0) { $modErrors | Select-Object -First 5 | ForEach-Object { Write-Host "      $_" } }
     Check 'brez "script errored"' (-not $log.Contains('script errored'))
 
-    Step 8 'L4-L8: izid po fazah in progah'
+    Step 8 'L4-L10: izid po fazah in progah'
     $result = @{}
     $lines  = @()
     foreach ($ph in $phases) {
@@ -350,6 +376,45 @@ try {
     }
     Check ("L5: kopenska proga W ne pride cez zid v nobeni fazi (najvec {0}/6)" -f $cezW) ($cezW -eq 0)
 
+    # L9: entitete se morajo tikati. Ce se ne, izid faze ne govori o navigaciji, ampak o
+    # tem, da World.updateEntity teh entitet ne poklice - drugacna ugotovitev in drugacen
+    # popravek. Pri prvem zagonu (17. 9.) te preverbe ni bilo in faza B je ostala nejasna.
+    foreach ($ph in $phases) {
+        foreach ($lane in $lanes) {
+            $key = "$ph$lane"
+            $d = Min-DStarost $result[$key]
+            Check ("L9: faza/proga {0} se tika (dStarost min={1}, pricakovano 20)" -f $key, $d) `
+                  (($d -ge 15) -and ($d -le 25))
+        }
+    }
+
+    # L10: preverba samega merilnika gibanja na znanem primeru. Proga P v fazi A je edina,
+    # za katero je ze izmerjeno, da se premika; ce je tam gib 0, je pokvarjeno merjenje in
+    # ne NPC.
+    $gibAP = Max-Gib $result['AP']
+    Check ("L10: proga P v fazi A ima izmerjeno gibanje (gibMax={0})" -f $gibAP) ($gibAP -gt 0)
+
+    # Diagnostika zmrznitve: tabela za vse pare, ki se niso premaknili.
+    $mrtvi = @()
+    foreach ($ph in $phases) {
+        foreach ($lane in $lanes) {
+            $key = "$ph$lane"
+            if ($result[$key].Count -eq 0) { continue }
+            if ((Max-Prevozeno $result[$key]) -lt 0.05) {
+                $mrtvi += ("  {0}: dStarost(min)={1} gib(max)={2} -> {3}" -f $key,
+                    (Min-DStarost $result[$key]), (Max-Gib $result[$key]),
+                    $(if ((Min-DStarost $result[$key]) -lt 15) { 'entiteta se ne tika' }
+                      elseif ((Max-Gib $result[$key]) -le 0) { 'tika se, moveHelper ne doda gibanja' }
+                      else { 'gibanje je, a ga move() poje' }))
+            }
+        }
+    }
+    if ($mrtvi.Count -gt 0) {
+        Write-Host ''
+        Write-Host 'Diagnostika: proge, ki se niso premaknile'
+        $mrtvi | ForEach-Object { Write-Host $_ }
+    }
+
     # L8: cele je poslan za vsako progo in fazo - to je zadetek regexa, ne vrednost.
     $celeOk = $true
     foreach ($ph in $phases) { foreach ($lane in $lanes) { if ($result["$ph$lane"].Count -eq 0) { $celeOk = $false } } }
@@ -363,11 +428,19 @@ try {
     $head += ''
     $head += 'Scenarij: `docs/scenariji/M2.3-R2.md`. Proge: F = leteci + zid, W = kopenski + zid, P = leteci brez ovire.'
     $head += ''
-    $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'L1-L8 zelena' } else { ("padlo {0}" -f $failures.Count) }))
+    $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'L1-L10 zelena' } else { ("padlo {0}" -f $failures.Count) }))
     $head += ''
     $head += '```'
     $head += $lines
     $head += '```'
+    if ($mrtvi.Count -gt 0) {
+        $head += ''
+        $head += '## Proge, ki se niso premaknile'
+        $head += ''
+        $head += '```'
+        $head += $mrtvi
+        $head += '```'
+    }
     if ($failures.Count -gt 0) {
         $head += ''
         $head += '## Padle preverbe'
@@ -380,7 +453,7 @@ try {
     Step 10 'Izid'
     if ($failures.Count -eq 0) {
         Write-Host ''
-        Write-Host 'M2.3 L1-L8 USPESNO: reprodukcija je veljavna. Stevilke zgoraj gredo v docs/meritve/.'
+        Write-Host 'M2.3 L1-L10 USPESNO: reprodukcija je veljavna. Stevilke zgoraj gredo v docs/meritve/.'
         Write-Host ("Izpis:    {0}" -f $s.Log)
         Write-Host ("Posnetek: {0}" -f $dumps)
         exit 0

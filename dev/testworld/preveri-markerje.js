@@ -35,6 +35,7 @@ function Ent(tag, x, y, z, opts) {
     this._nav = opts.nav === undefined ? true : opts.nav;
     this._final = opts.final || null;
     this._step = opts.step || 0;
+    this._age = 0;
 }
 Ent.prototype.hasTag = function (t) { return this._tag === t; };
 Ent.prototype.getX = function () { return this._x; };
@@ -47,6 +48,11 @@ Ent.prototype.navigateTo = function () { };
 Ent.prototype.clearNavigation = function () { };
 Ent.prototype.setAttackTarget = function () { };
 Ent.prototype.setPosition = function (x, y, z) { this._x = x; this._y = y; this._z = z; };
+// Dodano 17. 9. skupaj z diagnostiko zmrznitve: en skriptni tick je 10 server tickov.
+Ent.prototype.getAge = function () { return this._age; };
+Ent.prototype.getMotionX = function () { return 0; };
+Ent.prototype.getMotionY = function () { return 0; };
+Ent.prototype.getMotionZ = function () { return -this._step / 10; };
 
 function pos(x, y, z) {
     return {
@@ -82,7 +88,10 @@ vm.runInContext(mini, sandbox);   // namenoma minificirana razlicica, ne vir
 
 sandbox.init({ npc: npc });
 for (var t = 1; t <= 146; t++) {
-    for (var k = 0; k < ents.length; k++) { if (ents[k]._step) { ents[k]._z -= ents[k]._step; } }
+    for (var k = 0; k < ents.length; k++) {
+        ents[k]._age += 10;
+        if (ents[k]._step) { ents[k]._z -= ents[k]._step; }
+    }
     sandbox.tick({ npc: npc });
 }
 
@@ -107,6 +116,14 @@ for (i = 0; i < faze.length; i++) {
     }
 }
 
+// Diagnostiki dStarost in gib sta del pogodbe z r2-run.ps1 od 17. 9. naprej; brez njiju
+// razclenjevalnik vzorca ne prepozna in faza B ostane neberljiva kot pri prvem zagonu.
+var vzorci = lines.filter(function (l) { return l.indexOf('R2-S ') === 0; });
+var diag = /dStarost=-?\d+\/-?\d+ gib=[\d.]+\/[\d.]+$/;
+var brez = vzorci.filter(function (l) { return !diag.test(l); }).length;
+if (brez > 0) { napake.push(brez + ' vzorcnih vrstic nima polj dStarost in gib'); }
+
+console.log('vzorcnih vrstic: ' + vzorci.length);
 console.log('vrstic skupaj: ' + lines.length);
 console.log('zapisano v:    ' + out);
 if (napake.length === 0) {

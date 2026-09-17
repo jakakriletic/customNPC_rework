@@ -46,6 +46,15 @@ var targetW = null;
 var targetP = null;
 var startPos = {};
 var prevPos = {};
+// Diagnostika zmrznitve, dodana 17. 9. po prvem zagonu. Prvi zagon je pokazal, da se
+// leteci NPC po resetu (setPosition) ne premakne vec, ceprav navigator javlja celo pot.
+// Za to so tri razlage in se med seboj izkljucujejo:
+//   a) entiteta se sploh ne tika       -> getAge() (ticksExisted) stoji
+//   b) tika se, moveHelper pa ne doda gibanja (WAIT iz FlyingMoveHelper:50)
+//                                      -> getAge() raste, gib = 0
+//   c) gibanje je, a ga move() poje    -> getAge() raste, gib > 0, polozaj stoji
+// Zato ima vsak vzorec dStarost in gib. Brez njiju je izid faze B in C neberljiv.
+var prevAge = {};
 
 function say(npc, msg) { npc.executeCommand('/say ' + msg); }
 
@@ -96,6 +105,7 @@ function rememberStart(list) {
         var p = { x: e.getX(), y: e.getY(), z: e.getZ() };
         startPos[e.getUUID()] = p;
         prevPos[e.getUUID()] = { x: p.x, y: p.y, z: p.z };
+        prevAge[e.getUUID()] = e.getAge();
     }
 }
 
@@ -117,8 +127,27 @@ function movedSinceLast(e) {
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
+// Koliko server tickov je entiteta prestala od prejsnjega vzorca. Pricakovano je
+// SAMPLE_EVERY * TICKS_PER_SCRIPT_TICK = 20. Nic pomeni, da World.updateEntity te
+// entitete sploh ne poklice - takrat meritev ne govori o letenju, ampak o posodabljanju.
+function ageDelta(e) {
+    var a = prevAge[e.getUUID()];
+    if (a === undefined) { return -1; }
+    return e.getAge() - a;
+}
+
+// Velikost vektorja gibanja. Loci 'moveHelper ne doda gibanja' od 'gibanje je, a ga
+// move() poje'.
+function motionLen(e) {
+    var mx = e.getMotionX();
+    var my = e.getMotionY();
+    var mz = e.getMotionZ();
+    return Math.sqrt(mx * mx + my * my + mz * mz);
+}
+
 function markPrev(e) {
     prevPos[e.getUUID()] = { x: e.getX(), y: e.getY(), z: e.getZ() };
+    prevAge[e.getUUID()] = e.getAge();
 }
 
 function celaPot(e, gx) {
@@ -182,8 +211,18 @@ function sample(npc, lane, list, gx) {
     var yMax = -1e9;
     var goalMin = 1e9;
     var goalSum = 0;
+    var ageMin = 1e9;
+    var ageMax = -1e9;
+    var gibSum = 0;
+    var gibMax = 0;
     for (var i = 0; i < list.length; i++) {
         var e = list[i];
+        var da = ageDelta(e);
+        if (da < ageMin) { ageMin = da; }
+        if (da > ageMax) { ageMax = da; }
+        var gl = motionLen(e);
+        gibSum += gl;
+        if (gl > gibMax) { gibMax = gl; }
         if (e.isNavigating()) { navig++; }
         if (celaPot(e, gx)) { cele++; }
         if (e.getZ() < WALL_Z) { cez++; }
@@ -213,7 +252,9 @@ function sample(npc, lane, list, gx) {
         + ' doCiljaMin=' + goalMin.toFixed(2)
         + ' doCiljaPovp=' + (goalSum / n).toFixed(2)
         + ' razpon=' + spread(list).toFixed(2)
-        + ' zastoj=' + zastoj + '/' + n);
+        + ' zastoj=' + zastoj + '/' + n
+        + ' dStarost=' + ageMin + '/' + ageMax
+        + ' gib=' + (gibSum / n).toFixed(4) + '/' + gibMax.toFixed(4));
 }
 
 function sampleAll(npc) {

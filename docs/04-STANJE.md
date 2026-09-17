@@ -10,11 +10,12 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-17** |
-| Trenutni milestone | **M2 — diagnostika** (M2.1 in **M2.2** zaključena, **M2.3 napisan in čaka na zagon**); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen |
-| Naslednji paketi | **prvi korak je zagon `.\r2-run.ps1`** — scenarij M2.3 je napisan, preverjen brez sveta in čaka na uporabnika (dnevnik 28). Po zagonu gre izid v `docs/meritve/`, nato **M2.4** (50/200/500 NPC-jev) ali **M2.7** (merila navigacije, vhodni pogoj za M4/M5). Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
+| Trenutni milestone | **M2 — diagnostika** (M2.1, **M2.2** in **M2.3 faza A** zaključene; **M2.3 fazi B/C čakata na ponovni zagon**); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen |
+| Naslednji paketi | **prvi korak je ponovni zagon `.\r2-run.ps1`** z novima merjenima veličinama `dStarost` in `gib` (merili L9, L10) — razloži naj zmrznitev letečih NPC-jev iz faz B in C (pojav P1, dnevnik 29). Po tem **M2.4** (50/200/500 NPC-jev) ali **M2.7** (merila navigacije, vhodni pogoj za M4/M5). Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
 | Prevedljivih razredov | 32 — prejšnjih 21 + 11 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **33 za instrumentacijo** (23 + 10 novih za `DiagChunkPlan`); zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
-| Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8 in Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
+| Odprti pojavi | **P1** — po `setPosition` se leteči NPC ne premakne več, čeprav navigator javlja celo pot (17. 9.); nereproduciran, hipoteza, blokira fazi B in C scenarija M2.3 |
+| Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8, Q10 in Q12 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
 | Omejitev orodij | **spremenjeno 17. 9.**: seja ima lupino na uporabnikovem računalniku, a **linuxovo** in brez PowerShella, Gradla in Minecrafta. Bere, piše, ureja, `git`, `python3`, `node`, `jq` — da. `.\dev.ps1`, `.\*-run.ps1`, build in zagon sveta — **ne**, to poganja uporabnik. Podrobnosti v Znanih omejitvah |
 
 ---
@@ -25,7 +26,7 @@
 |---|---|---|
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
-| M2 Diagnostika | **v teku** (≈65 %) | M2.1 in M2.2 zaključena in preverjena v svetu; **R1 je reproduciran in izmerjen**; M2.3 napisan, zagon je na uporabniku |
+| M2 Diagnostika | **v teku** (≈75 %) | M2.1, M2.2 in faza A M2.3 preverjene v svetu; **R1 in R2 sta reproducirana in izmerjena**; fazi B/C M2.3 čakata na ponovni zagon (P1) |
 | M3 Jedro entitete | ni začeto | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
@@ -58,7 +59,7 @@
 | M2.1c | Števci za razčiščenje `npc.per.tick` = 0 | **zaključeno** — vzrok imenovan in dokazan, glej meritev |
 | M2.1d | Pogoj meritve: `ForgeChunkManager` ticket za chunke z merjenimi NPC-ji | **zaključeno** — C1–C6 zelena v svetu, prva veljavna meritev obstaja |
 | M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih + kontrolna skupina brez jahačev) | **zaključeno** — E1–E6 zelena, R1 reproduciran; [meritev](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
-| M2.3 | Reprodukcija R2 (leteči NPC in ovira) | **napisano 17. 9., ni še pognano** — tri proge, merila L1–L8, [scenarij](scenariji/M2.3-R2.md); `.\r2-run.ps1` |
+| M2.3 | Reprodukcija R2 (leteči NPC in ovira) | **pognano 17. 9. — faza A veljavna, R2 reproduciran**; fazi B in C neveljavni zaradi pojava P1. Dodani merili L9, L10 in veličini `dStarost`, `gib`; čaka na ponovni zagon. [meritev](meritve/2026-09-17-M2.3-R2-reprodukcija.md), [scenarij](scenariji/M2.3-R2.md) |
 | M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
 | M2.5 | Merilni protokol kot skripta | ni začeto |
 | M2.6 | Baseline meritve originala | ni začeto |
@@ -67,6 +68,115 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-17 (29) — M2.3 pognan: R2 reproduciran v fazi A, fazi B in C razveljavi zmrznitev
+
+**Paket:** M2.3 (reprodukcija R2)
+**Stanje:** **delno.** Faza A je veljavna in R2 je reproduciran. Fazi B in C sta
+razveljavljeni zaradi novega pojava; scenarij je razširjen tako, da ga naslednji zagon
+razloži.
+
+**Narejeno:**
+
+- Ovrednoten zagon uporabnika z dne 17. 9. ob 12:17 (`audit/m23-r2.log`,
+  `audit/m23-r2-2026-09-17-1217.md`).
+- Napisana meritev [`meritve/2026-09-17-M2.3-R2-reprodukcija.md`](meritve/2026-09-17-M2.3-R2-reprodukcija.md).
+- V `dev/testworld/r2-control.js` dodani merjeni veličini `dStarost` (`getAge()`, torej
+  `ticksExisted`) in `gib` (`motionX/Y/Z`); skripta na novo vložena v `R2_Control.json`.
+- V `r2-run.ps1` dodana merili **L9** (entitete se tikajo) in **L10** (merilnik gibanja
+  dela), funkciji `Min-DStarost` in `Max-Gib` ter razdelek poročila „Proge, ki se niso
+  premaknile", ki razlago pove sam.
+- `preveri-markerje.js` dopolnjen z `getAge`/`getMotion*` in preverbo, da ima vsaka vzorčna
+  vrstica novi polji.
+- Scenarij `docs/scenariji/M2.3-R2.md` dopolnjen z obema veličinama, meriloma L9/L10 in
+  razlago, zakaj sta nastala.
+
+**Ugotovitve — R2 (faza A, veljavna):**
+
+- **Leteči NPC se pri oviri obnaša kot kopenski.** Proga F (leteči + zid) prevozi 7,95
+  bloka in obstane **pri zidu**; proga W (kopenski + isti zid) prevozi 6,93. `cezOviro` je
+  0/6 pri obeh. Zid je visok 4 bloke; leteči se dvigne za en blok (y max 5,00) in tam
+  obvisi.
+- **Letenje samo po sebi deluje.** Proga P (leteči, prosto) prevozi 16,27 bloka in pride na
+  1,00 bloka do cilja, `cele=6/6`. Razlika F proti P je zato razlika **ovire**, ne letenja.
+- **Najpomembnejša številka je `cele=0/6` na progi F, že v prvem vzorcu.** Leteči NPC ne
+  obstane zato, ker bi vodenje odpovedalo, ampak zato, ker **iskanje poti ne vrne poti čez
+  zid**. Pot čez zid je ≈ 24 blokov, torej pod `NpcNavRange` 32 — domet ni vzrok in past
+  Q11 je izključena že s postavitvijo.
+- Skupina se pred oviro **zgosti** (`razpon` 6,65 → 1,26), enako kot pri R1.
+
+**Ugotovitve — pojav P1 (fazi B in C, neveljavni):**
+
+- Po resetu z `setPosition` se **nobeden od dvanajstih letečih NPC-jev ne premakne niti za
+  0,01 bloka** v 900 tickih, v dveh različnih načinih vodenja. Kopenska proga se premika
+  normalno, torej reset sam po sebi ni pokvarjen.
+- Navigator zanje ves čas javlja `navig=6/6` in na prosti progi `cele=6/6`: **pot je cela,
+  premika ni.**
+- Števec `npc.update` kaže 21,99 klicev na tick čez vseh 1531 tickov, torej svet entitete
+  posodablja; razlaga „svet jih ne posodablja" je malo verjetna, a je števec agregaten.
+- Ostanejo tri razlage, ki se izključujejo (ne posodablja se / vodenje ne doda gibanja /
+  gibanje poje `move()`). Med njimi loči natanko par `dStarost` + `gib`, ki je zdaj dodan.
+  **Razlaga pride iz zagona, ne iz ugibanja** — to je pravilo, ki se je pri Q11 že enkrat
+  izplačalo.
+
+**Ni narejeno in zakaj:**
+
+- P1 ni pojasnjen. Za to je potreben zagon na Windowsu, ki ga seja ne more izvesti.
+- M2.4 in M2.7 nista začeta; smiselna sta šele, ko je M2.3 veljaven v vseh treh fazah.
+- Vzrok, zakaj iskanje poti ne vrne poti čez zid, ni dokazan. Omejitev 200 vozlišč
+  (`PathFinder.findPath:65`) je hipoteza; dokaz zahteva klicna mesta v `PathNavigate`
+  (M2.1b, čaka na M3.1).
+
+**Spremembe obnašanja:** nobene. Ta seja ni spremenila moda.
+
+**Meritve:** [`meritve/2026-09-17-M2.3-R2-reprodukcija.md`](meritve/2026-09-17-M2.3-R2-reprodukcija.md)
+
+**Preverjeno brez sveta:**
+
+| Kaj | Kako | Izid |
+|---|---|---|
+| `r2-control.js` je veljaven ES5 | `node --check` | zeleno |
+| skripta je vložena v klon | `vstavi-skripto.py` | zeleno, 6997 znakov |
+| `r2-run.ps1` in `matrika-run.ps1` se razčlenita | PowerShell 7.4.6 `Parser::ParseFile` | zeleno |
+| **novi polji prideta skozi razčlenjevalnik** | `preveri-markerje.js` + `Read-Samples`/`Min-DStarost`/`Max-Gib` iz AST-ja | zeleno: `dStarost(min)=20`, `gib(max)=0,04` na gibajoči progi in 0 na mirujoči |
+| koordinate se ujemajo med tremi datotekami | `preveri-skladnost.py` | zeleno |
+
+**Naslednja seja:** pognati `.\r2-run.ps1`, razdelek „Proge, ki se niso premaknile" prepisati
+v meritev, P1 razložiti ali zavreči, nato **M2.4** ali **M2.7**.
+
+---
+
+### 2026-09-17 (29) — Q12 odprt: uvoz zunanjih 3D modelov ni v načrtu
+
+**Paket:** brez (vprašanje uporabnika, brez spremembe kode)
+
+Uporabnik je vprašal, ali rework kje predvideva podporo za **prenesene modele** (npr. model
+zmaja s spleta, dodan prek kode, URL-ja ali lokalne namestitve), ki bi jih NPC lahko prevzel,
+in ali to morda že pokriva R3 (migracija 1.7.10+).
+
+**Ne pokriva.** Preverjeno v `docs/02-ZAHTEVE.md` (R3), `docs/03-FAZE.md` (M8.1–M8.11) in
+`README.md`: katalog M8 ne vsebuje uvoza modelov, ker tega nima niti CustomNPC+.
+
+**Kaj mod zna danes (iz dekompilata):**
+
+- `INPCDisplay.setSkinUrl()` / `setCapeTexture()` / `setOverlayTexture()` — samo **teksture**,
+  ne geometrija.
+- `INPCDisplay.setModel(String id)` (`entity/data/DataDisplay.java:405`) — NPC prevzame model
+  **katerekoli registrirane entitete** iz Forge registryja (`ModelData.entityClass`). Zmaj iz
+  že nameščenega moda torej deluje že zdaj; samostojna datoteka ne.
+- `ModelData` / `ModelPartData` in `client/model/` (`ModelNpcDragon`, `ModelPony`, part paketi)
+  so **hardcoded Java `ModelBase` razredi**. Runtime loaderja za modelne datoteke ni.
+
+**Kaj bi dodajanje pomenilo (nepotrjena ocena, XL):** loader formata (`.bbmodel` je
+najverjetnejši kandidat), mapiranje kosti na obstoječi part sistem (sicer odpadejo oprema,
+skaliranje po delih in hitbox), vezava na animacijski format iz M7 — ki mora govoriti o
+kosteh zunanjega modela, ne o fiksnih Steve delih —, distribucija modela do vseh igralcev in
+render cache invalidacija (tveganje je že zapisano v `PLAN_IMPLEMENTACIJE.md`).
+
+**Odločitev:** zaenkrat **samo odprto vprašanje Q12**, brez nove zahteve in brez faze.
+Odgovor ima smisel šele, ko je M7 dovolj jasen, da je znano, na kakšen skelet se model veže.
+
+---
 
 ### 2026-09-17 (28) — M2.3 napisan: reprodukcija R2 s tremi progami, brez zagona
 
@@ -1677,6 +1787,18 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 | Q9 | Koliko NPC-jev je "veliko" v tvojem primeru? 100? 500? 2000? | M2.4, cilj za M5 | **odgovorjeno 15. 9.** — cilj še ni določen; merimo 50/200/500 in se odločimo po podatkih |
 | Q10 | Ali strežnik, kjer to teče, sploh ima izhodni internetni dostop? | M9.1 | odprto |
 | Q11 | Zakaj skupina obstane pred **drugo** stopnico (z = 36), prvo (z = 20) pa prestopi? | M2.3/M2.4, kakovost scenarijev | **zaprto 17. 9.** — ni bila ovira, ampak domet iskanja poti; glej Znane omejitve |
+| Q12 | Uvoz zunanjih 3D modelov (npr. prenesen model zmaja) kot model NPC-ja — je to v obsegu? Če da: kateri format (`.bbmodel` / OBJ / JSON), in kako model pride do igralcev (resource pack / lokalna mapa / prenos z URL-ja / push s strežnika)? | nova zahteva (R10?); odvisna od M7, ker zunanji model prinese svoj skelet | **odprto, odprto 17. 9.** — danes mod zna samo (a) teksture prek URL-ja (`skinUrl`, `capeTexture`, `overlayTexture`) in (b) prevzem modela **registrirane entitete** (`setModel(id)` → `ModelData.entityClass`, `DataDisplay:405`), torej model iz že nameščenega moda. Geometrija iz datoteke ne obstaja: vsi modeli so hardcoded `ModelBase` razredi (`client/model/`). V M8 katalogu tega ni, ker tega nima niti CustomNPC+. Ocena XL; odločitev šele ko je M7 (animacijski skelet) jasen |
+
+---
+
+## Odprti pojavi (nereproducirani — hipoteze)
+
+| ID | Pojav | Kje se vidi | Stanje |
+|---|---|---|---|
+| P1 | Po `setPosition` se leteči NPC (`MovementType 1`) ne premakne več, čeprav navigator javlja **celo** pot; kopenski v istem svetu se premika normalno | M2.3 fazi B in C, 17. 9.; 12 NPC-jev, 0,00 bloka v 900 tickih | **odprt** — dodani veličini `dStarost` in `gib` ter merili L9/L10; razloži ga naslednji zagon `.\r2-run.ps1` |
+
+Pravilo iz `05-SEJA-PROTOKOL.md`: bug brez reprodukcije je hipoteza. P1 ima meritev, nima
+pa še razlage in ni ločen od možne napake scenarija, zato je tu in ne med bugi.
 
 ---
 
@@ -1726,6 +1848,9 @@ prebrati.
 | 2026-09-15 | M2.1 prvi posnetek: 8 NPC-jev, 61 s, brez igralca | MSPT p50 0,16 ms / p95 1,21 ms; `npc.per.tick` p50 = 0 | [zapis](meritve/2026-09-15-M2.1-prvi-posnetek.md) |
 | 2026-09-17 | M2.2 R1: 8 nosilcev z jahači proti 8 brez, dve fazi, 945 tickov | proga M `isNavigating` **0/8 ves čas**, prevozeno 0,06 bloka; kontrola 8/8 in 22,71 bloka | [zapis](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
 | 2026-09-17 | poraba pri 27 dejavnih NPC-jih (ni baseline) | `npc.update.window` 207,3 µs/NPC; MSPT p95 10,75 ms, p99 115,3 ms | [zapis](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
+| 2026-09-17 | M2.3 R2 faza A: 6 letečih + zid, 6 kopenskih + isti zid, 6 letečih prosto | leteči čez zid **0/6**, prevozeno 7,95 in `cele=0/6`; kopenski 6,93; leteči brez ovire 16,27 in `cele=6/6` | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
+| 2026-09-17 | M2.3 fazi B in C — **neveljavni** (pojav P1) | 12 letečih NPC-jev 0,00 bloka v 900 tickih pri `navig=6/6` | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
+| 2026-09-17 | poraba pri 21 NPC-jih med M2.3 (ni baseline) | `npc.update.window` 162,5 µs/NPC; MSPT p50 0,84 ms, p95 8,91 ms, p99 102,8 ms | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
 | — | baseline MSPT še ni izmerjen (M2.6) | — | — |
 
 Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Javi 8 je odprta.
