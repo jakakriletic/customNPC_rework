@@ -49,4 +49,24 @@ in ne naključne smrti. Vsi imajo tag `testworld`, zato jih je mogoče izbrati z
   Če se save format kdaj spremeni, se regenerirajo iz sveta, ne popravljajo ročno.
 - Spremembo fixture NPC-ja vedno spremlja vnos v `docs/04-STANJE.md`; meritve pred
   spremembo in po njej niso primerljive.
-- Quest fixture še ne obstaja (potrebuje GUI); to je odprta točka M0.7.
+- Quest in dialog fixture nastaneta **avtomatsko**: `.\fixture-run.ps1` pozene server, krmilnik
+  `TW_Control` pa ju ustvari prek scripting API-ja moda (`IQuestCategory.create()` /
+  `IDialogCategory.create()`), mod pa ju shrani po svoji poti. Rezultat pride v
+  `customnpcs/quests/TW/` in `customnpcs/dialogs/TW/`, dialog pa je pripet na `T_Trader`.
+  Postopek in omejitve: [`../../docs/scenariji/M0.7-integracijska-matrika.md`](../../docs/scenariji/M0.7-integracijska-matrika.md) §4.
+
+## Krmilnik TW_Control
+
+`tw-fixture.js` je **vir resnice**. V `customnpcs/clones/1/TW_Control.json` ga vloži isto
+orodje kot pri R1:
+
+```
+python3 dev/testworld/vstavi-skripto.py dev/testworld/tw-fixture.js dev/testworld/customnpcs/clones/1/TW_Control.json
+```
+
+Vložena različica gre v commit; `fixture-run.ps1` samo preveri, da je tam, in datoteko
+prekopira v svet. **Nobene druge minifikacije ne uvajamo** — dve vzporedni implementaciji sta
+17. 9. povzročili `script errored` (komentar na koncu vrstice je po strnitvi pojedel pol skripte).
+
+V skriptah so dovoljeni **samo enojni narekovaji**, Nashorn na Javi 8 pa ne pozna `let`,
+puščičnih funkcij in šablonskih nizov.

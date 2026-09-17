@@ -13,11 +13,11 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 
 | | |
 |---|---|
-| Datum zadnje posodobitve | 2026-09-15 |
-| Trenutna faza | **M2 — diagnostika**; M2.1a (instrumentacija) narejen, M1 zaključen, M0.7/M0.8 čakata na uporabnika |
-| Naslednji korak | pognati merila D1–D7 iz [`docs/scenariji/M2.1-diag.md`](docs/scenariji/M2.1-diag.md), nato **M2.2** reprodukcija R1; glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Datum zadnje posodobitve | 2026-09-17 |
+| Trenutna faza | **M2 — diagnostika**; M2.1 in M2.2 zaključena (R1 reproduciran), **M0 in M1 zaključena** |
+| Naslednji korak | **M2.3** (reprodukcija R2) ali **M2.4** (50/200/500 NPC-jev); pred predajo prvič pognati prehod 1 [integracijske matrike](docs/scenariji/M0.7-integracijska-matrika.md). Glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 30 (21 prenesenih + 9 novih v `rework/diag`); podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Prevedljivih razredov | 32 (21 prenesenih + 11 novih v `rework/diag`); podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in
@@ -40,6 +40,7 @@ datotek za obnovo in ima mod pomembnejše težave, se dodatna forenzika R9, migr
 | [`docs/05-SEJA-PROTOKOL.md`](docs/05-SEJA-PROTOKOL.md) | kako seja začne, dela in zaključi | vedno, tudi na koncu seje |
 | [`OKOLJE.md`](OKOLJE.md) | razvojno okolje, verzije, gradle ukazi | ko nekaj ne zbuilda |
 | [`PLAN_IMPLEMENTACIJE.md`](PLAN_IMPLEMENTACIJE.md) | audit originala: bugi B1–B8 in performance kandidati | referenca; še vedno velja |
+| [`docs/scenariji/M0.7-integracijska-matrika.md`](docs/scenariji/M0.7-integracijska-matrika.md) | 47 preverb obnašanja v svetu, postopek in pokritost | pred predajo vsakega paketa |
 
 ---
 
@@ -64,11 +65,11 @@ Podrobnosti, dokazi iz kode in kaj je še treba preveriti: [`docs/02-ZAHTEVE.md`
 ## Vrstni red faz
 
 ```
-M0  Temelj                      okolje, build, testi, git            ← M0.7/M0.8 čakata na uporabnika
+M0  Temelj                      okolje, build, testi, git            ← zakljuceno (M0.8 = zabelezena blokada)
 M1  Integriteta podatkov        R9 + B1/B2, atomski zapis, migracija ← zaključeno
-M2  Diagnostika in meritve      reprodukcije, profiling, baseline    ← smo tu (M2.1a)
+M2  Diagnostika in meritve      reprodukcije, profiling, baseline    ← smo tu (M2.1, M2.2 zakljucena)
 M3  Jedro entitete              R1 mount, R6 solid hitbox
-M4  Gibanje in navigacija       R2 letenje, 3D pathfinding
+M4  Gibanje in navigacija       R2 letenje, 3D pathfinding, kopenska navigacija
 M5  Performance AI              R5, odstranitev globalnega script locka
 M6  Scripting platforma         R7 Java scripting, hook registry
 M7  Animacije + AI okolje       R4 animacijski sistem in avtorsko okolje

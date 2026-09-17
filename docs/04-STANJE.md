@@ -10,13 +10,11 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-17** |
-| Trenutni milestone | **M2 — diagnostika** (M2.1 in **M2.2** zaključena); M0.7/M0.8 čakata na uporabnika, M1 je zaključen |
-| Naslednji paketi | **M2.3** (reprodukcija R2) ali **M2.4** (50/200/500 NPC-jev); **M0.7** takoj ko uporabnik naredi quest in dialog v GUI-ju. Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
 | Trenutni milestone | **M2 — diagnostika** (M2.1 in **M2.2** zaključena); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen |
-| Naslednji paketi | uporabnik pozene `.\matrika-run.ps1` in `.\fixture-run.ps1` (prvi zagon, 17. 9.), nato **M2.3** (reprodukcija R2) ali **M2.4** (50/200/500 NPC-jev); **M2.7** je nov in je vhodni pogoj za navigacijski sklop M4/M5. Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
+| Naslednji paketi | uporabnik pozene `.\fixture-run.ps1` in `.\matrika-run.ps1` **znova** (prvi zagon 17. 9. je odkril tri napake v skriptah, vse popravljene — dnevnik 25), nato **M2.3** (reprodukcija R2) ali **M2.4** (50/200/500 NPC-jev); **M2.7** je nov in je vhodni pogoj za navigacijski sklop M4/M5. Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
 | Prevedljivih razredov | 32 — prejšnjih 21 + 11 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **33 za instrumentacijo** (23 + 10 novih za `DiagChunkPlan`); zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
-| Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
+| Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8 in Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
 | Omejitev orodij | **spremenjeno 17. 9.**: seja ima lupino na uporabnikovem računalniku, a **linuxovo** in brez PowerShella, Gradla in Minecrafta. Bere, piše, ureja, `git`, `python3`, `node`, `jq` — da. `.\dev.ps1`, `.\*-run.ps1`, build in zagon sveta — **ne**, to poganja uporabnik. Podrobnosti v Znanih omejitvah |
 
 ---
@@ -25,7 +23,7 @@
 
 | Milestone | Stanje | Opomba |
 |---|---|---|
-| M0 Temelj | **v teku** (≈90 %) | M0.1–M0.6 narejeno (+ M0.2r obnova okolja); M0.7–M0.8 odprto |
+| M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | **v teku** (≈60 %) | M2.1 in M2.2 zaključena in preverjena v svetu; **R1 je reproduciran in izmerjen** |
 | M3 Jedro entitete | ni začeto | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
@@ -69,6 +67,53 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-17 (25) — Prvi zagon M0.7: tri napake, vse v mojih skriptah
+
+**Paket:** M0.7 (popravki po prvem realnem zagonu)
+**Stanje:** uporabnik je pognal `.\fixture-run.ps1` in `.\matrika-run.ps1`; oba sta padla,
+vzroki so najdeni in popravljeni. Ponoven zagon je na uporabniku.
+
+**Kaj je padlo in zakaj:**
+
+1. **`fixture-run.ps1` — `script errored`, noben `TW-FIX-*` marker**
+   (`audit/m07-fixture-b.log:170`). Vzrok ni bil mod in ne API, ampak **dve vzporedni
+   minifikaciji skripte**: `vstavi-skripto.py` iz M2.2 (briše `//` kjerkoli in izid preveri)
+   in moja lastna PowerShell različica v `fixture-run.ps1` (brisala je samo cele
+   komentarjske vrstice). Komentar na koncu vrstice `q.setType(5); // 5 = manual…` je po
+   strnitvi v eno vrstico zakomentiral **preostanek skripte** → Nashorn sintaktična napaka.
+   Stack trace gre v NPC-jev `console` v NBT, v log pride samo `script errored`, zato je
+   izgledalo kot napaka moda.
+   **Popravek:** PowerShell minifikacija je odstranjena. Skripto vloži izključno
+   `vstavi-skripto.py`, in to **ob commitu**; runner samo preveri, da je vložena, in fixture
+   prekopira v svet — enak vzorec kot `r1-run.ps1`. Vložena skripta je sintaktično preverjena
+   (`new Function(code)` v node) in v repozitoriju.
+2. **`verify-testworld.ps1` — W1 lažno negativen.** Merilo je zahtevalo **točno 8** datotek v
+   `clones/1`, mapa pa je skupna in ima zdaj 13 (8 M0.6 + 4 R1 + TW_Control). W2–W8 so bile
+   zelene, `TW-OK` 8× v B in C — svet je bil torej v redu, padlo je merilo.
+   **Popravek:** W1 zdaj preverja, da je prisotnih vseh **8 pričakovanih** fixturov, tuje pa
+   samo prešteje in poimenuje.
+3. **`matrika-run.ps1` — poročilo brez števcev** (`Izid | zeleno, rdece, 2 preskoceno`).
+   `.Count` na praznem rezultatu `Where-Object` v PS 5.1 ni `0`, ampak nič, in `-f` izpiše
+   prazen niz. **Popravek:** `@(...)` okoli vseh treh. Poleg tega je `Tee-Object` pisal
+   UTF-16 (log neberljiv v grepu in git diffu) in `Out-File -Encoding UTF8` je dodal BOM v
+   naslov poročila — oboje zdaj piše UTF-8 brez BOM.
+
+**Ugotovitev, ki velja širše:** dve implementaciji istega koraka sta v tem projektu že drugič
+tiha napaka (prvič ročno lepljenje ukazov v konzolo, M0.6). Pravilo: en korak, eno orodje,
+in orodje samo preveri svoj izid.
+
+**Kaj je zagon vseeno dokazal:** `verify-package` zeleno; testni svet zeleno v W2–W8 po
+restartu; `matrika-run.ps1` se je ustavil ob prvi rdeči stopnji, kot je zamišljeno, in
+napisal `audit/m07-matrika-2026-09-17-1026.md` s hashem jarja in commitom.
+
+**Spremembe obnašanja:** v modu nobene. Popravljeni so trije razvojni skripti.
+
+**Meritve:** nobene.
+
+**Naslednja seja:** rezultat ponovnega zagona; nato **M2.3** ali **M2.7**.
+
+---
 
 ### 2026-09-17 (24) — Ovrednotenje navigacije in umestitev v plan (D-012)
 
@@ -172,6 +217,57 @@ Ni nujna za izid M2.2; dala bi čistejšo kontrolo (proga S bi v fazi A prišla 
 **Meritve:** nobene nove.
 
 **Naslednja seja:** M2.3 (reprodukcija R2) z upoštevanim pravilom o dometu poti.
+
+---
+
+### 2026-09-17 (22) — M0.7: prehod 1 in fixture kot dve skripti
+
+**Paket:** M0.7 (avtomatizacija)
+**Stanje:** koda napisana in pregledana proti izvorni kodi; **ni bila pognana** — seja nima
+PowerShella, Gradla ne Minecrafta. Prvi zagon je na uporabniku.
+
+**Narejeno:**
+
+- **`matrika-run.ps1`** — prehod 1 matrike v enem zagonu. Orkestrator: pogane `dev.ps1 build`,
+  `verify-package.ps1`, `testworld-run.ps1`, `rwdiag-run.ps1` in `r1-run.ps1`, ujame izhodne kode
+  in napiše `audit\m07-matrika-<datum>.md` s SHA-256 jarja, `git` commitom, trajanji in seznamom
+  vrstic matrike, ki jih prehod 1 ne pokriva. Privzeto se ustavi ob prvi padli stopnji
+  (`-ContinueOnFail` to izklopi), zna `-SkipBuild` in `-Only <stopnja>`.
+- **`fixture-run.ps1` + `dev/testworld/tw-fixture.js`** — quest in dialog fixture **brez GUI-ja**.
+  Ključna ugotovitev: `noppes quest/dialog` ne zna `create`, zato je bila IC1/IC2 blokada videti
+  trdna — a scripting API ima `IQuestCategory.create()` in `IDialogCategory.create()`
+  (`api/handler/data/IQuestCategory.java:14`, `IDialogCategory.java:14`), `Quest.save()` pa gre
+  skozi `QuestController.saveQuest` → `NBTJsonUtil.SaveFile`, torej **isto save pot kot GUI**.
+  Formata ne interpretiramo; ustvari ga mod.
+- Druga ugotovitev: quest kategorija nastane iz **imena mape** (`QuestController.java:94`), zato
+  je edina stvar, ki jo pripravimo mi, prazna mapa `quests\TW` — kategorije brez tega ni, ker
+  `QuestController.load()` na svežem svetu ne naredi privzete (dialogi jo dobijo,
+  `loadDefaultDialogs`).
+- Trije zagoni po vzorcu M0.5: A pribije world spawn, B ustvari `TW_Quest` (tip 5 manual, nagrada
+  1× `minecraft:stone`) in `TW_Dialog`, poveže dialog s questom, ga pripne na `T_Trader`
+  (`ICustomNpc.setDialog`) in NPC-ja shrani z `noppes clone add`, C po restartu isti objekt
+  **najde** namesto ustvari (`nov=0`) — round-trip dokaz. Merila F1–F16.
+- `tw-fixture.js` je vir resnice; `TW_Control.json` ima oznako `@@SCRIPT@@`, ki jo skripta ob
+  zagonu zamenja s strnjeno vsebino `.js`. Enaka disciplina kot pri `r1-control.js`, le da je
+  vlaganje zdaj skriptirano in ne ročno.
+- Dokumentacija: §3 in §4 matrike prepisana, `dev/testworld/README.md` dopolnjen.
+
+**Ni narejeno in zakaj:**
+
+- Quest tipa `item` ostane GUI delo: `QuestItem.items` ni v API-ju, zato ga skripta ne nastavi.
+  Fixture je tipa `manual`; za IC2 to zadošča, za item objective ne.
+- Klikanje dialoga in dejanski prevzem questa zahtevata prijavljenega igralca → prehod 2.
+- Nobena skripta ni bila pognana. `noppes clone add` je bil preverjen v izvorni kodi
+  (`CmdClone.java:50-71` — primerja **ime**, ne selektorja, in išče 80 blokov okoli pošiljatelja,
+  kar za konzolo pri `0,0,0` in `T_Trader` pri `8,4,8` drži), ne pa v svetu.
+
+**Spremembe obnašanja:** v modu nobene. Nova sta dva razvojna skripta in en fixture krmilnik;
+`verify-package.ps1` ostane pri istem seznamu razredov.
+
+**Meritve:** nobene.
+
+**Naslednja seja:** rezultat prvega zagona `matrika-run.ps1` in `fixture-run.ps1` zapisati v ta
+dnevnik, popraviti, kar pade, nato **M2.3** ali **M2.4**.
 
 ---
 
@@ -1410,7 +1506,7 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 
 | # | Vprašanje | Vpliva na | Stanje |
 |---|---|---|---|
-| Q1 | Kateri modpack in Forge verzijo dejansko uporabljaš? | vse; združljivost je do takrat neznanka | odprto |
+| Q1 | Kateri modpack in Forge verzijo dejansko uporabljaš? | vse; združljivost je do takrat neznanka | **odgovorjeno 17. 9.** — uporabnik nima dostopa; zabeleženo kot blokada (M0.7 §6), ponovno odpreti pred M10 |
 | Q2 | Kopija sveta s problematičnimi NPC-ji | M1.4 | zaprto — uporabnik je nima; paket odložen |
 | Q3 | Konkretna pokvarjena clone JSON datoteka | M1.4 | zaprto — ne obstaja; paket odložen |
 | Q4 | Katera nastavitev se vrne nazaj? | R9 | odgovorjeno — follower role, action `waiting` se po clone lahko vrne v `following`; minorno |
@@ -1482,10 +1578,12 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
 - Dekompilacija **ni** izvorna koda. To je bilo tokrat dvakrat potrjeno v praksi: dve trditvi
   iz prvotne analize sta bili napačni. Sumljivo logiko vedno preveri z `javap`.
 - Vseh 746 dekompiliranih datotek **ni** ročno pregledanih.
-- Združljivost z uporabnikovim dejanskim modpackom ni preverjena (Q1).
+- Združljivost z uporabnikovim dejanskim modpackom ni preverjena (Q1) — **trajna blokada do M10**;
+  uporabnik gradiv nima, vpliv je razčlenjen v `scenariji/M0.7-integracijska-matrika.md` §6.
 - Bugi iz `PLAN_IMPLEMENTACIJE.md`: B1 in B2 sta v M1.5/M1.6, B5 v M6.5. B3, B4, B6, B7, B8
   še niso razporejeni v milestone.
-- Dedicated server je preverjen (M0.5). Igranje v svetu z igralcem, GUI in questi še ni (M0.6/M0.7).
+- Dedicated server je preverjen (M0.5). Igranje v svetu z igralcem, GUI in questi še ni — to so vrstice
+  IC1–IC6, IK1–IK5 in IL2–IL3 integracijske matrike (M0.7), vse še nepokrite.
 - **Seja ima lupino na uporabnikovem računalniku, a linuxovo.** *(popravljeno 17. 9.;
   prej je tu pisalo, da lupine sploh ni.)* Priključene mape so v njej pod
   `$HOME/mnt/<mapa>`, na voljo so `git`, `python3`, `node`, `jq`, `sed`, `diff`. Kar v njej

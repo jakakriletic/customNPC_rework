@@ -13,11 +13,11 @@ Ocene so grobe in se popravljajo v `docs/04-STANJE.md`.
 
 | Milestone | Cilj | Zahteve | Velikost |
 |---|---|---|---|
-| **M0** | Temelj: okolje, build, testi, git | — | M (delno) |
+| **M0** | Temelj: okolje, build, testi, git | — | **zaključeno** |
 | **M1** | Integriteta podatkov | R9, B1, B2 | L |
 | **M2** | Diagnostika, reprodukcije, baseline meritve | podpora R1, R5 | M |
 | **M3** | Jedro entitete: mount in solid hitbox | R1, R6 | L |
-| **M4** | Gibanje: letenje in 3D navigacija | R2 | L |
+| **M4** | Gibanje: navigacija po tleh in letenje | R2 | L |
 | **M5** | Performance AI | R5 | L |
 | **M6** | Scripting platforma v Javi | R7 | XL |
 | **M7** | Animacijski sistem in AI avtorsko okolje | R4 | XL |
@@ -44,8 +44,8 @@ razvojna zanka, sledljiva zgodovina sprememb.
 | M0.4 | **Git repozitorij** — `git init`, prvi commit, `.gitignore` preverjen | **narejeno** | S |
 | M0.5 | **Dedicated server smoke test** — `runServer`, EULA, spawn/save/restart | **narejeno** — `docs/scenariji/M0.5-server-smoke.md` | S |
 | M0.6 | **Testni svet** z znanimi NPC-ji, questi, dialogi in skriptami, kot ponovljiv seed | **narejeno** — `.\testworld-run.ps1`, `docs/scenariji/M0.6-testni-svet.md` | S |
-| M0.7 | **Integracijska matrika** zapisana kot ponovljiv postopek v `docs/scenariji/` | odprto | S |
-| M0.8 | Pridobiti od uporabnika: modpack, Forge verzija, config, kopijo pravega sveta, primer pokvarjenega clone NPC-ja | odprto | S |
+| M0.7 | **Integracijska matrika** zapisana kot ponovljiv postopek v `docs/scenariji/` | **narejeno** — `docs/scenariji/M0.7-integracijska-matrika.md` | S |
+| M0.8 | Pridobiti od uporabnika: modpack, Forge verzija, config, kopijo pravega sveta, primer pokvarjenega clone NPC-ja | **zaključeno kot zabeležena blokada** (17. 9.) — gradiv ni; vpliv v M0.7 §6 | S |
 
 **Izhodni kriterij:**
 - `git log` ima zgodovino; nobena sprememba ni več neizsledljiva
@@ -54,6 +54,12 @@ razvojna zanka, sledljiva zgodovina sprememb.
 - M0.8 je bodisi izpolnjen bodisi zabeležen kot blokada z jasnim vplivom
 
 **Tveganja:** brez M0.8 je združljivost z uporabnikovim dejanskim modpackom neznanka do M10.
+
+**M0 je zaključen 2026-09-17.** Vsi štirje izhodni kriteriji so izpolnjeni: git zgodovina
+obstaja, `runServer` in restart sta dokazana (M0.5), testni svet je ponovljiv (M0.6), M0.8 pa
+je zabeležen kot blokada z opisanim vplivom v
+[`scenariji/M0.7-integracijska-matrika.md`](scenariji/M0.7-integracijska-matrika.md) §6.
+Integracijska matrika je s tem odprta in se polni skozi M1–M10.
 
 ---
 
@@ -115,6 +121,7 @@ spremenimo.
 | M2.4 | Scenariji za meritve: 50 / 200 / 500 NPC-jev, ločeno idle / combat / scripts / render | M |
 | M2.5 | Merilni protokol kot skripta: 2 min ogrevanja, 5 min merjenja, 3 ponovitve, izpis MSPT p50/p95/p99, alokacije, GC | M |
 | M2.6 | **Baseline meritve originala** — zapis v `docs/meritve/baseline-<datum>.md` | S |
+| M2.7 | **Merila kakovosti navigacije** (novo 17. 9., podlaga za M4.10–M4.12 in M5.6). Šest veličin, izmerjenih na originalu: (1) delež zahtev, ki vrnejo **celo** pot, ne delne; (2) dolžina poti proti zračni razdalji; (3) čas do cilja za skupino 8 NPC-jev; (4) razpon skupine na ozkem grlu; (5) µs na eno iskanje poti; (6) iskanj poti na tick. **Brez teh številk je vsak poseg v navigacijo nemerljiv** in ga po `05-SEJA-PROTOKOL.md` ni dovoljeno razglasiti za izboljšavo | S |
 
 **Izhodni kriterij:**
 - R1 in R2 imata reprodukcijo, ki jo lahko ponovi katerakoli seja in ki jasno pokaže napako
@@ -163,11 +170,13 @@ hitbox, kolizije in passenger logiko v `EntityNPCInterface`.
 
 ---
 
-## M4 — Gibanje: letenje in 3D navigacija
+## M4 — Gibanje: navigacija po tleh in letenje
 
-**Cilj:** **R2** — uporabno letenje v treh načinih.
+**Cilj:** **R2** — uporabno letenje v treh načinih — in odprava tistih slabosti kopenske
+navigacije, ki so **izmerjene**, ne občutene (D-012).
 
-**Vhodni pogoj:** M3.1 (`ai/` paket prenesen), M2.3 (reprodukcija R2).
+**Vhodni pogoj:** M3.1 (`ai/` paket prenesen), M2.3 (reprodukcija R2), **M2.7** (merila
+kakovosti navigacije) za pakete M4.10–M4.13.
 
 ### Paketi
 
@@ -182,6 +191,10 @@ hitbox, kolizije in passenger logiko v `EntityNPCInterface`.
 | M4.7 | Pitch in roll: server→klient sinhronizacija + render | M |
 | M4.8 | Vrata, zavetje in vodna navigacija za leteče NPC-je (trenutno zgodnji `return` pri `canFly()`) | S |
 | M4.9 | Meritve: strošek 3D pathfindinga proti obstoječemu, pri 50/200 letečih NPC-jih | S |
+| M4.10 | **Nadaljevanje delne poti.** Vanilla A* se prekine po 200 vozliščih in vrne **delno** pot (`PathFinder.findPath:65`), dolžino pa omeji na `getPathSearchRange()` = `FOLLOW_RANGE` = `NpcNavRange` = 32 (`EntityNPCInterface.java:334`). NPC obstane na koncu delne poti in to izgleda kot ovira. Popravek: ob prihodu na konec delne poti se pot obnovi, dokler cilj ni dosežen ali dokazano nedosegljiv, z omejitvijo števila obnov. Pod stikalom, privzeto original | S |
+| M4.11 | **Lasten `NodeProcessor`** — realna cena diagonale (1,41 namesto manhattanskih 2) in pregledani malusi `PathNodeType`. Vanilla uporablja manhattansko ceno **in** hevristiko pri 8-smernem gibanju (`PathPoint.distanceManhattan:86`), zato poti sistematično bežijo od diagonal; od tod stopničasto cikcakanje. A/B proti merilom M2.7 | M |
+| M4.12 | **Odločitvena točka: lasten `PathNavigate` z lastnim A\***. Izvede se **samo**, če M4.10, M4.11 in M5.6 po merilih M2.7 ne zadostujejo. Obseg: lasten proračun vozlišč, hevristika in domet; `Path`, `PathPoint` in move helper ostanejo vanilla, da vsi obstoječi AI taski delujejo nespremenjeno. **Brez asinhronega iskanja** | L |
+| M4.13 | Mehkejše sledenje poti: toleranca do waypointa in „string pulling" v `pathFollow` (`PathNavigate:271-305`). Samo če M2.7 pokaže trzanje in striženje vogalov kot merljiv pojav, ne kot občutek | S |
 
 **Izhodni kriterij:**
 - leteči NPC pride od A do B skozi labirint z ovirami, brez obtičanja
@@ -190,8 +203,17 @@ hitbox, kolizije in passenger logiko v `EntityNPCInterface`.
 - pathfinding pri 200 letečih NPC-jih ne pojé več kot dogovorjen delež MSPT-ja
 - obstoječi leteči NPC-ji brez `RwFlightMode` se obnašajo **enako kot prej**
 
+**Izhodni kriterij za kopenski del:** vsak od M4.10–M4.13 ima A/B meritev proti merilom
+M2.7, ki presega merilni šum; kandidat, ki ga ne, se **zavrže** in se ne obdrži „za vsak
+slučaj".
+
 **Tveganja:** 3D pathfinding je klasično ozko grlo. Če se izkaže za predrag, je fallback
 "smer + izogibanje oviram" brez polnega A*.
+
+**Kaj je tu zavrnjeno in zakaj** (D-012): asinhrono iskanje poti, flow fieldi za skupinsko
+gibanje in lasten gibalni sklad. Prvo je edini del tega sklopa z resnično visokim tveganjem
+(svet se med iskanjem spreminja), drugi dve spremenita občutek gibanja vseh obstoječih
+NPC-jev. Odprejo se šele, če po M4.10, M4.11 in M5.6 merila M2.7 še vedno padajo.
 
 ---
 
@@ -210,7 +232,8 @@ hitbox, kolizije in passenger logiko v `EntityNPCInterface`.
 | M5.3 | Deduplikacija poizvedb po svetu: faction check (`EntityNPCInterface.java:435-441`) in `onCollide` enkrat na chunk, ne na NPC-ja | M |
 | M5.4 | Alokacijska higiena: `StringBuilder` v `getFullCode` in `ConvertList`, lazy writerji v `run()`, zgodnji izhod v `DataTimers.update()` | S |
 | M5.5 | Meritev po vsakem od zgornjih; kandidat, ki ne preseže merilnega šuma, se **zavrže** | S |
-| M5.6 | Šele če po zgornjem ostane ozko grlo: cache poti, prostorski indeks, render LOD | L |
+| M5.6 | **Deljenje in predpomnjenje poti** (povišano iz „šele če" 17. 9., D-012). Osem NPC-jev proti istemu cilju danes izvede osem neodvisnih iskanj, vsako z novim `ChunkCache` čez ~6×6 chunkov in `getChunkFromChunkCoords` na vsak chunk (`PathNavigate:126-129`), kar na strežniku zna sprožiti tudi nalaganje chunka. Skupen ali bližnji cilj → eno iskanje in deljen rezultat, z invalidacijo ob spremembi blokov. **Največji pričakovani dobitek v celotnem navigacijskem sklopu** — večji od kakovosti samega A\* | M |
+| M5.7 | Šele če po zgornjem ostane ozko grlo: prostorski indeks, render LOD | L |
 
 **Izhodni kriterij:**
 - vsak sprejet paket ima A/B meritev, ki presega šum

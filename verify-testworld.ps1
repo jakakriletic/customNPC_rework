@@ -33,10 +33,20 @@ function Add-Result($id, $ok, $detail) {
     $results.Add([pscustomobject]@{ ID = $id; Stanje = $(if ($ok) { 'PASS' } else { 'FAIL' }); Podrobnost = $detail })
 }
 
-# --- W1: seme namesceno (posredno: 8 fixture datotek v semenu) ---
+# --- W1: seme namesceno (vseh 8 M0.6 fixturov je prisotnih) ---
+# Popravljeno 17. 9.: prej je merilo zahtevalo TOCNO 8 datotek v mapi in je padlo, ko so
+# prisli fixturi drugih scenarijev (R1_*, TW_Control). Mapa je skupna; W1 preverja, da so
+# prisotni pravi, ne da ni nicesar drugega.
 $seed = Join-Path $root 'dev\testworld\customnpcs\clones\1'
 $seedFiles = @(Get-ChildItem -Path $seed -Filter *.json -ErrorAction SilentlyContinue)
-Add-Result 'W1' ($seedFiles.Count -eq 8) ("seme vsebuje {0} fixture datotek (pricakovano 8)" -f $seedFiles.Count)
+$seedNames = @($seedFiles | ForEach-Object { $_.BaseName })
+$seedMissing = @($expected | Where-Object { $seedNames -notcontains $_ })
+$seedExtra = @($seedNames | Where-Object { $expected -notcontains $_ })
+Add-Result 'W1' ($seedMissing.Count -eq 0) (
+    "seme ima vseh {0}/8 M0.6 fixturov{1}; poleg njih {2} tujih ({3})" -f `
+        ($expected.Count - $seedMissing.Count),
+        $(if ($seedMissing.Count -gt 0) { ' - MANJKA: ' + ($seedMissing -join ', ') } else { '' }),
+        $seedExtra.Count, $(if ($seedExtra.Count -gt 0) { $seedExtra -join ', ' } else { '-' }))
 
 # --- W2: svet se pripravi brez izjeme ---
 $prepared = @($log | Select-String -SimpleMatch 'Preparing level "world"').Count
