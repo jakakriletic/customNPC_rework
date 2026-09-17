@@ -99,6 +99,27 @@ public class DiagSnapshotTest {
         assertTrue(text.contains("test.snapshot.count "));
     }
 
+    @Test
+    public void saveLineTellsHowManyTicksWereExcludedAndWhatItChanged() {
+        Diag.tick(1000000L, 1L, 8, 0, 0, 0);
+        Diag.tick(2000000L, 2L, 8, 0, 0, 0);
+        Diag.tick(120000000L, 3L, 8, 0, 0, 1);
+        String text = Diag.snapshot().toText();
+        assertTrue(text, text.contains("RWDIAG-SAVE izlocenih=1 brezKonteksta=0 ostalo=2"));
+        assertTrue("brez obeh repov merilo S6 nima kaj primerjati",
+                text.contains("maxVsi=120,00") || text.contains("maxVsi=120.00"));
+        assertTrue(text.contains("maxBrez=2,00") || text.contains("maxBrez=2.00"));
+        assertTrue(text.contains("server.tick.ns.nosave (ms)"));
+    }
+
+    @Test
+    public void saveLineIsAbsentWhenNoTickWasMeasured() {
+        Diag.key("test.snapshot.nolines", "klic").increment();
+        String text = Diag.snapshot().toText();
+        assertTrue("prazna meritev ne sme izpisati vrstice, ki pravi nic",
+                !text.contains("RWDIAG-SAVE"));
+    }
+
     private static int count(String value, char c) {
         int total = 0;
         for (int i = 0; i < value.length(); i++) {

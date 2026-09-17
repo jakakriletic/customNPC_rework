@@ -41,6 +41,32 @@ public final class Diag {
 
     private static final DiagKey TICKS = key("server.tick", "tick");
     private static final Distribution TICK_NANOS = distribution("server.tick.ns", "ns");
+
+    /**
+     * Ista porazdelitev brez tickov, v katerih je tekel autosave.
+     *
+     * <p><b>Zakaj posebej.</b> Autosave tece vsakih 900 tickov
+     * ({@code MinecraftServer.tick():762}) in v vsakem dosedanjem zagonu je bil prav ta
+     * tick najpocasnejsi v meritvi (58 / 74 / 87 / 124 ms). En sam tak tick na tisoc
+     * potegne {@code max} in pri kratkih meritvah tudi p99 — to je lastnost vanilla
+     * shranjevanja, ne cena NPC-jev, in v meritvi NPC-jev nima kaj iskati. Brisati ga ne
+     * smemo: server ga res porabi, zato ostane v {@code server.tick.ns} in v tabeli
+     * najpocasnejsih tickov. Locena porazdelitev je odgovor na obe zahtevi hkrati —
+     * primerjava pred/po tece na {@code .nosave}, celotna slika ostane v {@code .ns}.
+     */
+    private static final Distribution TICK_NANOS_NOSAVE =
+            distribution("server.tick.ns.nosave", "ns");
+
+    /** Ticki, v katerih se je shranil vsaj en svet; toliko jih je izlocenih iz .nosave. */
+    private static final DiagKey SAVE_TICKS = key("server.tick.save", "tick");
+
+    /**
+     * Ticki, pri katerih kontekst ni bil znan (stara {@link #tick(long)} brez konteksta).
+     * Tudi ti so izloceni iz {@code .nosave}: ne vemo, ali je v njih tekel autosave, in
+     * ugibanje bi porazdelitvi dalo videz natancnosti, ki je nima.
+     */
+    private static final DiagKey NOCONTEXT_TICKS = key("server.tick.nocontext", "tick");
+
     private static final SlowTicks SLOW_TICKS = new SlowTicks();
 
     private Diag() {
@@ -176,6 +202,13 @@ public final class Diag {
         long nanos = tickNanos < 0L ? 0L : tickNanos;
         TICKS.increment();
         TICK_NANOS.record(nanos);
+        if (saves == SlowTicks.UNKNOWN) {
+            NOCONTEXT_TICKS.increment();
+        } else if (saves > 0) {
+            SAVE_TICKS.increment();
+        } else {
+            TICK_NANOS_NOSAVE.record(nanos);
+        }
         long offsetMillis = startedNanos == 0L
                 ? 0L
                 : Math.max(0L, (System.nanoTime() - startedNanos) / 1000000L);

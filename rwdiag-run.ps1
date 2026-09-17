@@ -144,6 +144,27 @@ function Read-Counter([string]$LogPath, [string]$Name) {
     return [long]$m[$m.Count - 1].Groups[1].Value
 }
 
+# Prebere vrstico RWDIAG-SAVE iz zapisanega posnetka (.txt):
+#   "RWDIAG-SAVE izlocenih=1 brezKonteksta=0 ostalo=1199 p99vsi=0.705 p99brez=0.700 maxVsi=87.000 maxBrez=0.700"
+# Vrne psobject ali $null, ce vrstice ni (npr. posnetek brez enega samega ticka).
+function Read-SaveLine([string]$Path) {
+    if (-not (Test-Path $Path)) { return $null }
+    $text = Get-Content $Path -Raw -ErrorAction SilentlyContinue
+    if ($null -eq $text) { return $null }
+    $m = [regex]::Match($text, '(?m)^RWDIAG-SAVE izlocenih=(\d+) brezKonteksta=(\d+) ostalo=(\d+)' +
+                               '(?: p99vsi=([\d.]+) p99brez=([\d.]+) maxVsi=([\d.]+) maxBrez=([\d.]+))?\s*$')
+    if (-not $m.Success) { return $null }
+    return [pscustomobject]@{
+        Excluded  = [long]$m.Groups[1].Value
+        NoContext = [long]$m.Groups[2].Value
+        Kept      = [long]$m.Groups[3].Value
+        P99All    = if ($m.Groups[4].Success) { [double]$m.Groups[4].Value } else { [double]::NaN }
+        P99Clean  = if ($m.Groups[5].Success) { [double]$m.Groups[5].Value } else { [double]::NaN }
+        MaxAll    = if ($m.Groups[6].Success) { [double]$m.Groups[6].Value } else { [double]::NaN }
+        MaxClean  = if ($m.Groups[7].Success) { [double]$m.Groups[7].Value } else { [double]::NaN }
+    }
+}
+
 # Prebere vrstico porazdelitve iz tabele posnetka v logu:
 #   "npc.per.tick   1229   0   1   0   8   8   8" -> [long[]](n, min, povp, p50, p95, p99, max)
 function Read-Distribution([string]$LogPath, [string]$Name) {
@@ -381,6 +402,42 @@ try {
         $rowFormat = "    #{0,-3} tick={1,-8} ob={2,7:N1} s  {3,10:N3} ms  npc={4,-4} chunk+={5,-4} chunk-={6,-4} save={7}"
         $slow.Rows | Select-Object -First 10 | ForEach-Object {
             Write-Host ($rowFormat -f $_.Rank, $_.Tick, $_.AtSec, $_.Ms, $_.Npc, $_.ChunkIn, $_.ChunkOut, $_.Save)
+        }
+    }
+
+    # M2.5b: autosave ni cena NPC-jev. Tece vsakih 900 tickov (MinecraftServer.tick():762)
+    # in je bil v vsakem dosedanjem zagonu najpocasnejsi tick meritve (58 / 74 / 87 / 124 ms).
+    # Posnetek ga zato izloci v svojo porazdelitev, ne pa izbrise: server ta cas res porabi.
+    # Merili S5 in S6 preverita, da izlocitev nic ne izgubi in da rep res pripada autosave.
+    Step '5d' 'S5-S7: izlocitev autosave ticka'
+    $save = $null
+    if ($dumpFiles.Count -gt 0) { $save = Read-SaveLine $dumpFiles[0].FullName }
+    if ($null -eq $save) {
+        Check 'S5: posnetek loci ticke z autosave (vrstica RWDIAG-SAVE)' $false
+    } else {
+        Write-Host ("  izloceni={0} brezKonteksta={1} ostalo={2}" -f $save.Excluded, $save.NoContext, $save.Kept)
+        $sum = $save.Excluded + $save.NoContext + $save.Kept
+        $total = if ($null -ne $ms) { [long]$ms[0] } else { -1 }
+        Check ("S5: nobene meritve ne izgubimo ({0}+{1}+{2} = {3}, porazdelitev n={4})" -f `
+                $save.Excluded, $save.NoContext, $save.Kept, $sum, $total) `
+              (($total -ge 0) -and ($sum -eq $total))
+
+        if ([double]::IsNaN($save.P99Clean)) {
+            Write-Host '  OK       S6: v meritvi ni bilo ticka brez autosave, primerjave repa ni'
+        } else {
+            Check ("S6: rep brez autosave ni daljsi od celega (p99 {0:N3} -> {1:N3} ms, max {2:N3} -> {3:N3} ms)" -f `
+                    $save.P99All, $save.P99Clean, $save.MaxAll, $save.MaxClean) `
+                  (($save.P99Clean -le ($save.P99All + 0.001)) -and ($save.MaxClean -le ($save.MaxAll + 0.001)))
+
+            # S7 je navzkrizna preverba dveh neodvisnih mehanizmov: ce je autosave tisti,
+            # ki potegne max cez proracun, mora biti prva vrstica tabele najpocasnejsih
+            # tickov oznacena s save>0. Ce ni, si porazdelitev in tabela nasprotujeta.
+            if (($save.MaxAll -ge 50.0) -and ($save.MaxClean -lt 50.0) -and ($null -ne $slow) -and ($slow.Rows.Count -gt 0)) {
+                Check ("S7: najpocasnejsi tick je autosave (save={0})" -f $slow.Rows[0].Save) `
+                      ((Get-ColumnNumber $slow.Rows[0].Save) -gt 0)
+            } else {
+                Write-Host '  OK       S7: max ne pade pod proracun z izlocitvijo autosave; pripis ostane pri S2'
+            }
         }
     }
 

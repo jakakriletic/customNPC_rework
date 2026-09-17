@@ -159,6 +159,65 @@ public class DiagTest {
         assertEquals(3L, key.count());
     }
 
+    @Test
+    public void autosaveTickStaysInTheFullDistributionButNotInTheCleanOne() {
+        Diag.setEnabled(true);
+        Diag.tick(1000000L, 1L, 8, 0, 0, 0);
+        Diag.tick(2000000L, 2L, 8, 0, 0, 0);
+        Diag.tick(90000000L, 3L, 8, 0, 0, 1);
+        DiagSnapshot snapshot = Diag.snapshot();
+        assertEquals("cel tek ostane v server.tick.ns",
+                3L, snapshot.distribution("server.tick.ns").count());
+        assertEquals("autosave tick je izlocen iz .nosave",
+                2L, snapshot.distribution("server.tick.ns.nosave").count());
+        assertEquals(1L, snapshot.row("server.tick.save").count);
+        assertEquals(90000000L, snapshot.distribution("server.tick.ns").max());
+        assertEquals("rep brez autosave je drug rep",
+                2000000L, snapshot.distribution("server.tick.ns.nosave").max());
+    }
+
+    @Test
+    public void tickWithoutContextIsCountedSeparatelyAndNotGuessed() {
+        Diag.setEnabled(true);
+        Diag.tick(5000000L);
+        DiagSnapshot snapshot = Diag.snapshot();
+        assertEquals(1L, snapshot.distribution("server.tick.ns").count());
+        assertEquals("brez konteksta ne vemo, ali je tekel autosave; ugibanja ni",
+                0L, snapshot.distribution("server.tick.ns.nosave").count());
+        assertEquals(1L, snapshot.row("server.tick.nocontext").count);
+        assertEquals(0L, snapshot.row("server.tick.save").count);
+    }
+
+    @Test
+    public void everyTickLandsInExactlyOneOfTheThreeBuckets() {
+        Diag.setEnabled(true);
+        for (int i = 0; i < 7; i++) {
+            Diag.tick(1000000L, i, 4, 0, 0, i == 3 ? 1 : 0);
+        }
+        Diag.tick(1000000L);
+        DiagSnapshot snapshot = Diag.snapshot();
+        long all = snapshot.distribution("server.tick.ns").count();
+        long clean = snapshot.distribution("server.tick.ns.nosave").count();
+        long saves = snapshot.row("server.tick.save").count;
+        long unknown = snapshot.row("server.tick.nocontext").count;
+        assertEquals(8L, all);
+        assertEquals("brez tega merilo S5 ne more trditi, da je izpis popoln",
+                all, clean + saves + unknown);
+        assertEquals(all, Diag.ticks());
+    }
+
+    @Test
+    public void resetClearsTheSaveBucketsToo() {
+        Diag.setEnabled(true);
+        Diag.tick(1000000L, 1L, 4, 0, 0, 1);
+        Diag.tick(1000000L);
+        Diag.setEnabled(true);
+        DiagSnapshot snapshot = Diag.snapshot();
+        assertEquals(0L, snapshot.row("server.tick.save").count);
+        assertEquals(0L, snapshot.row("server.tick.nocontext").count);
+        assertEquals(0L, snapshot.distribution("server.tick.ns.nosave").count());
+    }
+
     private static void busyWork() {
         long sum = 0L;
         for (int i = 0; i < 20000; i++) {

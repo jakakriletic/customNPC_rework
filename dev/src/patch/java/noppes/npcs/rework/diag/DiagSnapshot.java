@@ -181,7 +181,46 @@ public final class DiagSnapshot {
                     .append(number(TICK_BUDGET_MS)).append(" ms proracuna (")
                     .append(number(p95ms / TICK_BUDGET_MS * 100.0)).append(" %)\n");
         }
+        out.append(saveLine(tick));
         return out.toString();
+    }
+
+    /**
+     * Vrstica, ki pove, koliko tickov je bilo izlocenih iz {@code server.tick.ns.nosave}
+     * in kaksna je razlika v repu.
+     *
+     * <p>Je samostojna vrstica z markerjem, ker jo bere {@code rwdiag-run.ps1} (merili
+     * S5, S6) iz loga dedicated serverja, kjer se vrstice razlicnih niti mesajo. Razlika
+     * {@code max} je tu zato, ker je od nje odvisna trditev, ki jo merilo preverja: da je
+     * najpocasnejsi tick meritve autosave in ne delo NPC-jev.
+     */
+    public String saveLine(Distribution all) {
+        Distribution clean = this.distribution("server.tick.ns.nosave");
+        Row saves = this.row("server.tick.save");
+        Row unknown = this.row("server.tick.nocontext");
+        long savesCount = saves == null ? 0L : saves.count;
+        long unknownCount = unknown == null ? 0L : unknown.count;
+        if (clean == null || clean.count() == 0L) {
+            if (savesCount == 0L && unknownCount == 0L) {
+                return "";
+            }
+            return "RWDIAG-SAVE izlocenih=" + savesCount + " brezKonteksta=" + unknownCount
+                    + " ostalo=0\n";
+        }
+        StringBuilder out = new StringBuilder(128);
+        out.append("RWDIAG-SAVE izlocenih=").append(savesCount)
+                .append(" brezKonteksta=").append(unknownCount)
+                .append(" ostalo=").append(clean.count())
+                .append(" p99vsi=").append(number(millis(all == null ? 0L : all.percentile(0.99))))
+                .append(" p99brez=").append(number(millis(clean.percentile(0.99))))
+                .append(" maxVsi=").append(number(millis(all == null ? 0L : all.max())))
+                .append(" maxBrez=").append(number(millis(clean.max())))
+                .append('\n');
+        return out.toString();
+    }
+
+    private static double millis(long nanos) {
+        return nanos / 1000000.0;
     }
 
     /** Strojno berljiv izpis za kasnejse primerjave pred/po. */

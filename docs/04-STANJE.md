@@ -13,7 +13,7 @@
 | Trenutni milestone | **M2 — diagnostika** (M2.1, **M2.2** in **M2.3 faza A** zaključene; **M2.3 fazi B/C čakata na ponovni zagon**); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen. **M2.5a** (pripis počasnih tickov) je prišel z druge delovne postaje: koda in testi so tu, zagona v svetu še ni |
 | Naslednji paketi | **prvi korak je ponovni zagon `.\r2-run.ps1`** z novima merjenima veličinama `dStarost` in `gib` (merili L9, L10) — razloži naj zmrznitev letečih NPC-jev iz faz B in C (pojav P1, dnevnik 29). Po tem **M2.4** (50/200/500 NPC-jev) ali **M2.7** (merila navigacije, vhodni pogoj za M4/M5). Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1. Ob prvem naslednjem zagonu `.\rwdiag-run.ps1` se prebere še vrstica pripisa počasnih tickov (merila S1–S4, M2.5a) |
 | Prevedljivih razredov | 33 — prejšnjih 21 + 12 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`) |
-| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **55 za instrumentacijo** (33 + 22 novih za `SlowTicks`); zeleni, zadnjič prevedeni in pognani v seji 17. 9. (D-014). Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
+| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **61 za instrumentacijo** (55 + 6 novih za izločitev autosave ticka); zeleni, zadnjič prevedeni in pognani v seji 17. 9. (D-014). Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Odprti pojavi | **P1** — po `setPosition` se leteči NPC ne premakne več, čeprav navigator javlja celo pot (17. 9.); nereproduciran, hipoteza, blokira fazi B in C scenarija M2.3 |
 | Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8, Q10 in Q12 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
 | Omejitev orodij | **spremenjeno 17. 9.**: seja ima lupino na uporabnikovem računalniku, a **linuxovo** in brez PowerShella, Gradla in Minecrafta. Bere, piše, ureja, `git`, `python3`, `node`, `jq` — da. `.\dev.ps1`, `.\*-run.ps1`, build in zagon sveta — **ne**, to poganja uporabnik. Podrobnosti v Znanih omejitvah. Seja **prevede in požene teste** `rework/**` v oblačnem okolju proti mapiranim razredom (D-014) in sintaktično preveri `.ps1` s prenesenim PowerShellom |
@@ -62,13 +62,80 @@
 | M2.3 | Reprodukcija R2 (leteči NPC in ovira) | **pognano 17. 9. — faza A veljavna, R2 reproduciran**; fazi B in C neveljavni zaradi pojava P1. Dodani merili L9, L10 in veličini `dStarost`, `gib`; čaka na ponovni zagon. [meritev](meritve/2026-09-17-M2.3-R2-reprodukcija.md), [scenarij](scenariji/M2.3-R2.md) |
 | M2.5a | Pripis počasnih tickov: `SlowTicks` + merila S1–S4 v `rwdiag-run.ps1` | **koda in testi narejeni** (22 testov, prevedeno v seji 16. 9.); čaka na prvi zagon v svetu |
 | M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
-| M2.5 | Merilni protokol kot skripta | **v teku** — M2.5a (pripis počasnih tickov) narejen; ostaja izločitev autosave ticka in protokol ponovitev |
+| M2.5 | Merilni protokol kot skripta | **v teku** — M2.5a (pripis počasnih tickov) in M2.5b (izločitev autosave ticka) narejena; ostaja protokol ponovitev (M2.5c) |
+| M2.5b | Izločitev autosave ticka: `server.tick.ns.nosave` + merila S5–S7 | **koda in testi narejeni** (6 testov, prevedeno v seji); čaka na prvi zagon v svetu |
 | M2.6 | Baseline meritve originala | ni začeto |
 | M2.7 | **Merila kakovosti navigacije** (šest veličin, izmerjenih na originalu) | **nov paket 17. 9.** — podlaga za M4.10–M4.12 in M5.6; brez njega se navigacijski sklop ne začne |
 
 ---
 
 ## Dnevnik sej
+
+### 2026-09-17 (33) — M2.5b: autosave tick ima svojo porazdelitev
+
+**Paket:** M2.5 (del b)
+**Stanje:** koda, testi in scenarij končani in preverjeni v seji; zagon v svetu čaka na uporabnika
+
+**Izhodišče:** meritev 17. 9. je vprašanje iz M2.5a zaprla — prepad `p95 → p99` je bilo
+ogrevanje (81,8 ms → 4,3 ms), `max` pa je v vsakem zagonu en sam tick, ki sovpada z
+autosave (58 / 74 / 87 / 124 ms). Ostalo je vprašanje, kaj s tem tickom: pustiti ga v
+porazdelitvi pomeni, da primerjava pred/po meri vanilla shranjevanje; izbrisati ga pomeni
+lagati, ker server ta čas res porabi.
+
+**Narejeno:**
+
+- `Diag.tick(...)` vsak tick uvrsti v natanko eno od treh veder: `server.tick.ns.nosave`
+  (porazdelitev brez autosave), števec `server.tick.save` (izločeni) in števec
+  `server.tick.nocontext` (tick brez konteksta, stara pot `Diag.tick(long)`). Tick brez
+  konteksta **ne** gre med čiste: ne vemo, ali je v njem tekel autosave, in ugibanje bi
+  porazdelitvi dalo videz natančnosti, ki je nima.
+- `server.tick.ns` ostane nespremenjen, tabela najpočasnejših tickov tudi — autosave tick
+  je v obeh še naprej viden. Nova je samo **druga** porazdelitev istega ticka.
+- Posnetek izpiše vrstico z markerjem:
+  `RWDIAG-SAVE izlocenih=1 brezKonteksta=0 ostalo=1199 p99vsi=0.705 p99brez=0.700 maxVsi=87.000 maxBrez=0.700`.
+- `rwdiag-run.ps1`: bralnik `Read-SaveLine` in merila **S5–S7**. S5 trdi, da se vedra
+  seštejejo v `n` porazdelitve (izločitev ne izgubi in ne šteje dvakrat), S6 da rep brez
+  autosave ni daljši od celotnega, S7 pa je navzkrižna preverba dveh **neodvisnih**
+  mehanizmov: kadar `max` pade pod proračun šele z izločitvijo autosave, mora biti prva
+  vrstica tabele najpočasnejših tickov označena s `save > 0`. Če si porazdelitev in
+  tabela nasprotujeta, je eden od njiju pokvarjen.
+- 6 novih testov (4 v `DiagTest`, 2 v `DiagSnapshotTest`); skupaj **61 testov
+  instrumentacije, vsi zeleni**, prevedeno z `javac --release 8` v seji.
+- Scenarij: nov razdelek **M2.5b** v `docs/scenariji/M2.1-diag.md`.
+
+**Preverjeno v seji:**
+
+- Prevedeno in pognano: 61/61 zelenih.
+- `rwdiag-run.ps1` sintaktično brez napak (PowerShell 7.4.6 `Parser::ParseFile`).
+- Bralnik `Read-SaveLine` in merila S5–S7 so **pognana nad pravim posnetkom**, ki ga je
+  ustvarila ista koda (1200 tickov, eden z autosave): S5 zelen (1 + 0 + 1199 = 1200),
+  S6 zelen (`p99 0,705 → 0,700`, `max 87,000 → 0,700`), pogoj za S7 izpolnjen.
+
+**Ugotovitve:**
+
+- **Izločitev mora biti preverljiva, ne samo narejena.** Brez S5 bi bila napaka v uvrščanju
+  (tick v dveh vedrih ali v nobenem) neopazna — porazdelitev bi izgledala lepše, ker bi ji
+  manjkali ticki. Vsota veder je najcenejša možna zaščita.
+- Ločitev je tudi priprava na **M2.6**: baseline originala mora navesti obe številki,
+  sicer primerjava po posegu v AI ni poštena v nobeno smer.
+
+**Ni narejeno in zakaj:**
+
+- **M2.5c — protokol ponovitev** (koliko zagonov, kako se povprečijo, kolikšen razpon je
+  še sprejemljiv) ostaja. Protokol iz `01-ARHITEKTURA.md` §7 zahteva 3 ponovitve; skripta
+  jih danes ne zna pognati v enem zagonu in razpona ne izpiše.
+- Zagona v svetu ni: `rwdiag-run.ps1` potrebuje Windows, Javo 8 in gradle z Minecraftom.
+
+**Spremembe obnašanja:** nobene v modu. Nova porazdelitev in dva števca se polnijo samo,
+dokler je merjenje vklopljeno.
+
+**Meritve:** nobene nove.
+
+**Naslednja seja:** prebrati izid `.\rwdiag-run.ps1` (S5–S7) in se odločiti, ali gre
+naprej M2.5c (protokol ponovitev) ali M2.4 (scenariji 50/200/500). Če `brezKonteksta > 0`,
+najprej najti klicno mesto, ki še kliče `Diag.tick(long)` brez konteksta.
+
+---
 
 ### 2026-09-17 (32) — Zakaj je `r2-run.ps1` obstal: napačen svet, ne zanka
 
