@@ -1,7 +1,11 @@
 package noppes.npcs.rework.diag;
 
+import java.util.IdentityHashMap;
+import java.util.Map;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.pathfinding.Path;
+import net.minecraft.pathfinding.PathNavigate;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent;
@@ -44,6 +48,13 @@ public final class DiagEventCollector {
     private int chunkLoadsThisTick;
     private int chunkUnloadsThisTick;
     private int savesThisTick;
+
+    // M2.7: opazovanje dodelitev poti. Kljuc je entiteta sama in ne njen id, ker
+    // IdentityHashMap za to ne alocira (id bi bilo treba zaviti v Integer na vsak NPC na
+    // tick). Mapa zivi samo, dokler je merjenje vklopljeno - vklop naredi nov zbiralnik.
+    private final Map<Entity, Path> lastPath = new IdentityHashMap<Entity, Path>();
+    private int newPathsThisTick;
+    private int navigatingThisTick;
 
     private int sampleCountdown = 1;
     private boolean sampleNow;
@@ -102,6 +113,8 @@ public final class DiagEventCollector {
             this.chunkLoadsThisTick = 0;
             this.chunkUnloadsThisTick = 0;
             this.savesThisTick = 0;
+            this.newPathsThisTick = 0;
+            this.navigatingThisTick = 0;
             // Vzorcenje se odloci na zacetku ticka, da ga vsi svetovi v istem ticku
             // uporabijo, prestete vrednosti pa se seste v en vzorec na koncu ticka.
             if (--this.sampleCountdown <= 0) {
@@ -118,6 +131,8 @@ public final class DiagEventCollector {
 
         closeWindow();
         Diag.record(DiagKeys.NPCS_PER_TICK, this.npcsThisTick);
+        Diag.record(DiagKeys.NAV_PATHS_PER_TICK, this.newPathsThisTick);
+        Diag.record(DiagKeys.NAV_NAVIGATING, this.navigatingThisTick);
         if (this.npcsThisTick > 0) {
             if (this.lastTickWithNpcs >= 0L) {
                 Diag.record(DiagKeys.NPC_TICK_GAP, this.tickIndex - this.lastTickWithNpcs);
@@ -193,6 +208,7 @@ public final class DiagEventCollector {
         if (entity instanceof EntityNPCInterface) {
             DiagKeys.NPC_UPDATE.increment();
             this.npcsThisTick++;
+            observePath((EntityNPCInterface) entity);
             this.windowKey = DiagKeys.NPC_UPDATE_WINDOW;
             this.windowStart = System.nanoTime();
         } else {
@@ -257,6 +273,34 @@ public final class DiagEventCollector {
             DiagKeys.NPC_UPDATE_BLOCKED.increment();
         } else {
             DiagKeys.OTHER_UPDATE_BLOCKED.increment();
+        }
+    }
+
+    /**
+     * Opazi, ali je NPC dobil novo pot (M2.7).
+     *
+     * <p>Primerja se <b>identiteta</b> objekta poti in ne njena vsebina: vanilla ob vsakem
+     * uspesnem iskanju ustvari nov {@code Path} ({@code PathFinder.createPath}), medtem ko
+     * hoja po ze dodeljeni poti isti objekt samo premika naprej. Primerjava vsebine bi
+     * zato stela iste poti veckrat ali pa jih zgresila.
+     *
+     * <p>Zapise se tudi {@code null}: brez tega bi pot, ki je bila pocisena in cez nekaj
+     * tickov znova dodeljena, ostala neopazna.
+     */
+    private void observePath(EntityNPCInterface npc) {
+        PathNavigate navigator = npc.getNavigator();
+        if (navigator == null) {
+            return;
+        }
+        Path path = navigator.getPath();
+        Path previous = this.lastPath.put(npc, path);
+        if (path == null) {
+            return;
+        }
+        this.navigatingThisTick++;
+        if (path != previous) {
+            this.newPathsThisTick++;
+            DiagKeys.NAV_PATH_NEW.increment();
         }
     }
 

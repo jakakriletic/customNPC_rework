@@ -21,9 +21,11 @@ import noppes.npcs.LogWriter;
  */
 public class CommandRwDiag extends CommandBase {
     private static final List<String> SUBCOMMANDS =
-            Arrays.asList("on", "off", "status", "reset", "dump", "chunks");
+            Arrays.asList("on", "off", "status", "reset", "dump", "chunks", "nav");
 
     private static final List<String> CHUNK_ACTIONS = Arrays.asList("on", "off", "status");
+
+    private static final List<String> NAV_ACTIONS = Arrays.asList("status");
 
     @Override
     public String getName() {
@@ -32,7 +34,8 @@ public class CommandRwDiag extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/rwdiag <on|off|status|reset|dump [ime]|chunks <on [obroc]|off|status>>";
+        return "/rwdiag <on|off|status|reset|dump [ime]|chunks <on [obroc]|off|status>"
+                + "|nav <x y z [ponovitev] [maxNpc] [imePredpona]|status>>";
     }
 
     @Override
@@ -94,6 +97,47 @@ public class CommandRwDiag extends CommandBase {
             reply(sender, "RWDIAG neznan podukaz: chunks " + what + "; " + getUsage(sender));
             return;
         }
+        // M2.7: sonda kakovosti navigacije. Loceno od `on` iz istega razloga kot `chunks`:
+        // pometanje je dejanje z znanim ciljem in mora biti v scenariju vidno kot svoj
+        // korak, ne skrito v vklopu merjenja.
+        if (action.equals("nav")) {
+            if (args.length > 1 && args[1].equalsIgnoreCase("status")) {
+                reply(sender, Diag.nav().markerLine());
+                return;
+            }
+            if (args.length < 4) {
+                reply(sender, "RWNAV-NAPAKA manjkajo koordinate; " + getUsage(sender));
+                return;
+            }
+            double x;
+            double y;
+            double z;
+            try {
+                x = Double.parseDouble(args[1]);
+                y = Double.parseDouble(args[2]);
+                z = Double.parseDouble(args[3]);
+            } catch (NumberFormatException notANumber) {
+                reply(sender, "RWNAV-NAPAKA koordinata ni stevilo: " + notANumber.getMessage());
+                return;
+            }
+            int repeats = NavSweep.DEFAULT_REPEATS;
+            int maxNpcs = NavSweep.DEFAULT_MAX_NPCS;
+            try {
+                if (args.length > 4) {
+                    repeats = Integer.parseInt(args[4]);
+                }
+                if (args.length > 5) {
+                    maxNpcs = Integer.parseInt(args[5]);
+                }
+            } catch (NumberFormatException notANumber) {
+                reply(sender, "RWNAV-NAPAKA ponovitev ali meja ni stevilo: " + notANumber.getMessage());
+                return;
+            }
+            String prefix = args.length > 6 ? args[6] : "";
+            reply(sender, NavSweep.sweep(server, x, y, z, repeats, maxNpcs, prefix));
+            reply(sender, Diag.nav().markerLine());
+            return;
+        }
         if (action.equals("dump")) {
             DiagSnapshot snapshot = Diag.snapshot();
             String label = args.length > 1 ? args[1] : "dump";
@@ -119,6 +163,9 @@ public class CommandRwDiag extends CommandBase {
         }
         if (args.length == 2 && args[0].equalsIgnoreCase("chunks")) {
             return CommandBase.getListOfStringsMatchingLastWord(args, CHUNK_ACTIONS);
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("nav")) {
+            return CommandBase.getListOfStringsMatchingLastWord(args, NAV_ACTIONS);
         }
         return java.util.Collections.emptyList();
     }

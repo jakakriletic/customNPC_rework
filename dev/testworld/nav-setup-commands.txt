@@ -1,0 +1,81 @@
+# M2.7 - postavitev prizorisca za merila kakovosti navigacije. Ukaze poslje
+# .\nav-run.ps1 na standardni vhod serverja; rocno lepljenje v konzolo je nezanesljivo
+# (M0.6, past 1).
+#
+# Dve vzporedni progi, vsaka 8 kopenskih NPC-jev, obe v istem svetu in istem ticku:
+#   proga G (x = -14..-7)  zid z enimi vrati med startom in ciljem   merjeno stanje
+#   proga O (x =  12..19)  odprto, brez ovire                        kontrola
+# Brez kontrole O cas skupine G ne pomeni nicesar: 'ni prisla' bi lahko pomenilo ozko
+# grlo ali pa to, da skupinska navigacija sploh ne dela. Razlogi v
+# docs/scenariji/M2.7-navigacija.md.
+#
+# Postavitev vzdolz +Z, superflat, povrsina y=3, entitete stojijo na y=4:
+#   z=64 start   z=72 zid (y 4..7), vrata pri x=-10 (y 4..5)   z=78 cilj
+#
+# Domet iskanja poti je NpcNavRange = 32 (EntityNPCInterface.java:334), vanilla pa
+# nabira ceno manhattansko (PathFinder.java:94, PathPoint.distanceManhattan:86). Zato:
+#   pot skozi vrata   priblizno 18 enot cene  -> v dometu
+#   obhod okoli zidu  vec kot 33 enot cene    -> izven dometa
+# Grlo je torej edina pot znotraj dometa; ce NPC pride cez zid drugje, je nekaj narobe
+# s prizoriscem in ne z navigacijo (merilo N7).
+#
+# Prizorisce je pri z >= 56, da se ne dotika ne M0.6 fixtur (x 0..8, z 0..8), ne prog
+# M2.2 (x -8..32, z 12..44) ne prog M2.3 (z -16..-32).
+#
+# Ukazi so idempotentni: 'noppes slay npcs' postavi isDead=true (CmdSlay.java:140),
+# medtem ko bi '/kill' CustomNPC-ja samo ubil in bi po restartu ozivel (M0.6, past 3).
+
+# --- determinizem ---
+gamerule doDaylightCycle false
+gamerule doWeatherCycle false
+gamerule doMobSpawning false
+gamerule doFireTick false
+gamerule mobGriefing false
+gamerule randomTickSpeed 0
+gamerule announceAdvancements false
+gamerule spectatorsGenerateChunks false
+time set 6000
+weather clear 1000000
+
+# --- ocisti prejsnji zagon ---
+noppes slay npcs
+
+# --- zid s cistino, sirok 35 blokov (x -30..4) ---
+# Visok 4 bloke (y 4..7): kopenski NPC prestopi najvec 1 blok. Zid se konca pri x=4,
+# zato je proga O pri x=12..19 zares prosta.
+fill -30 4 72 4 7 72 minecraft:stone
+
+# --- vrata: ena kolona, siroka 1, visoka 2 (y 4..5) ---
+# Sirina 1 je namerna: skupina osmih mora skozi eno odprtino in prav to je merjeno
+# ozko grlo (velicina 4, razpon skupine na ozkem grlu).
+fill -10 4 72 -10 5 72 minecraft:air
+
+# --- proga G: 8 kopenskih pred vrati ---
+noppes clone spawn NAV_WalkG 1 -14,4,64
+noppes clone spawn NAV_WalkG 1 -13,4,64
+noppes clone spawn NAV_WalkG 1 -12,4,64
+noppes clone spawn NAV_WalkG 1 -11,4,64
+noppes clone spawn NAV_WalkG 1 -10,4,64
+noppes clone spawn NAV_WalkG 1 -9,4,64
+noppes clone spawn NAV_WalkG 1 -8,4,64
+noppes clone spawn NAV_WalkG 1 -7,4,64
+
+# --- proga O: 8 kopenskih na odprtem ---
+noppes clone spawn NAV_WalkO 1 12,4,64
+noppes clone spawn NAV_WalkO 1 13,4,64
+noppes clone spawn NAV_WalkO 1 14,4,64
+noppes clone spawn NAV_WalkO 1 15,4,64
+noppes clone spawn NAV_WalkO 1 16,4,64
+noppes clone spawn NAV_WalkO 1 17,4,64
+noppes clone spawn NAV_WalkO 1 18,4,64
+noppes clone spawn NAV_WalkO 1 19,4,64
+
+save-all flush
+
+# Ciljnih NPC-jev tu NI, ceprav jih ima M2.3. Cilj je koordinata, in NPC, ki bi stal
+# na njej, bi zadnji blok zasedel - meritev 'je prispel' bi merila tudi njegovo
+# odrivanje. Prazen cilj je manj slikovit in bolj posten.
+#
+# NAV_Control tudi NI tu. Skripta zacne steti takoj ob spawnu, zato ga .\nav-run.ps1
+# spawna sele potem, ko sta pogoja meritve iz M2.1d izpolnjena (chunki prisilno
+# nalozeni, ogrevanje koncano) in ko je prvo pometanje sonde ze narejeno.

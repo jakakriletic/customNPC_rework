@@ -130,6 +130,34 @@ public final class DiagKeys {
      */
     public static final DiagKey WORLD_SAVE = Diag.key("world.save", "svet");
 
+    /**
+     * Nove poti, dodeljene NPC-jem, kot jih vidi opazovalec (M2.7, sesta velicina).
+     *
+     * <p><b>Kaj to je in kaj ni.</b> Vanilla ne poslje dogodka ob iskanju poti, klicnih
+     * mest pa v M2 se ne moremo instrumentirati ({@code EntityNPCInterface} in {@code ai}
+     * paket se nista prenesena, M3.1). Zbiralnik zato enkrat na tick primerja, ali ima NPC
+     * <b>drug objekt</b> {@code Path} kot prejsnji tick. To steje <b>uspesne dodelitve
+     * poti</b>, ne vseh iskanj: iskanje, ki vrne {@code null} ali ki ga
+     * {@code canNavigate()} zavrne, ne dodeli nicesar in je za ta stevec neviden.
+     *
+     * <p>Zato je ta stevec spodnja meja stevila iskanj in ne njihovo stevilo. Za ceno
+     * iskanja je namenjena sonda ({@link NavSweep}), ki meri cas enega iskanja; zmnozek
+     * obeh je ocena cene navigacije na tick. Tocno stevilo iskanj pride z M3.1.
+     */
+    public static final DiagKey NAV_PATH_NEW = Diag.key("nav.ai.path.new", "pot");
+
+    /** Koliko novih poti je bilo dodeljenih v posameznem ticku. */
+    public static final Distribution NAV_PATHS_PER_TICK =
+            Diag.distribution("nav.ai.paths.per.tick", "pot");
+
+    /**
+     * Koliko NPC-jev je v ticku imelo pot.
+     *
+     * <p>Brez tega je stevilo novih poti neberljivo: ena nova pot na tick pri osmih
+     * navigirajocih NPC-jih pomeni nekaj drugega kot ena pri dvesto.
+     */
+    public static final Distribution NAV_NAVIGATING = Diag.distribution("nav.ai.navigating", "npc");
+
     /** Trajanje server ticka. Isti kljuc polni {@link Diag#tick(long)}. */
     public static final Distribution SERVER_TICK_NANOS = Diag.distribution("server.tick.ns", "ns");
 

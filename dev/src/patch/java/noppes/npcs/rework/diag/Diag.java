@@ -69,6 +69,15 @@ public final class Diag {
 
     private static final SlowTicks SLOW_TICKS = new SlowTicks();
 
+    /**
+     * Merila kakovosti navigacije (M2.7).
+     *
+     * <p>Polni ga {@link NavSweep} in ne klicna mesta v modu: kakovosti poti se iz
+     * opazovanja AI-ja ne da prebrati, ker NPC na koncu delne poti izgleda enako kot NPC,
+     * ki se ne premika. Sonda zato sprozi lastna iskanja z znanim ciljem.
+     */
+    private static final NavProbe NAV = new NavProbe();
+
     private Diag() {
     }
 
@@ -215,6 +224,11 @@ public final class Diag {
         SLOW_TICKS.record(tickIndex, offsetMillis, nanos, npcs, chunkLoads, chunkUnloads, saves);
     }
 
+    /** Merila kakovosti navigacije trenutne meritve. */
+    public static NavProbe nav() {
+        return NAV;
+    }
+
     /** Tabela najpocasnejsih tickov trenutne meritve. */
     public static SlowTicks slowTicks() {
         return SLOW_TICKS;
@@ -234,7 +248,7 @@ public final class Diag {
                 ? 0L
                 : Math.max(0L, (System.nanoTime() - startedNanos) / 1000000L);
         return DiagSnapshot.of(enabled, startedMillis, elapsedMillis, TICKS.count(), keys,
-                distributions, SLOW_TICKS.copy());
+                distributions, SLOW_TICKS.copy(), NAV.copy());
     }
 
     /** Pocisti vse stevce in porazdelitve; registrirani kljuci ostanejo. */
@@ -246,6 +260,7 @@ public final class Diag {
             d.reset();
         }
         SLOW_TICKS.reset();
+        NAV.reset();
         startedNanos = System.nanoTime();
         startedMillis = System.currentTimeMillis();
     }

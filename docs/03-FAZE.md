@@ -123,6 +123,7 @@ spremenimo.
 | M2.5 | Merilni protokol kot skripta: 2 min ogrevanja, 5 min merjenja, 3 ponovitve, izpis MSPT p50/p95/p99, alokacije, GC | M |
 | M2.6 | **Baseline meritve originala** — zapis v `docs/meritve/baseline-<datum>.md` | S |
 | M2.7 | **Merila kakovosti navigacije** (novo 17. 9., podlaga za M4.10–M4.12 in M5.6). Šest veličin, izmerjenih na originalu: (1) delež zahtev, ki vrnejo **celo** pot, ne delne; (2) dolžina poti proti zračni razdalji; (3) čas do cilja za skupino 8 NPC-jev; (4) razpon skupine na ozkem grlu; (5) µs na eno iskanje poti; (6) iskanj poti na tick. **Brez teh številk je vsak poseg v navigacijo nemerljiv** in ga po `05-SEJA-PROTOKOL.md` ni dovoljeno razglasiti za izboljšavo | S |
+| M2.7a | sonda `rwdiag nav` (`NavProbe`, `NavSweep`), opazovalec dodelitev poti, scenarij z dvema progama (`NAV_WalkG/WalkO/Control`, `nav-control.js`, `nav-run.ps1`), merila N1–N12 | **narejeno** 17. 9. — `docs/scenariji/M2.7-navigacija.md`; čaka na prvi zagon v svetu |
 
 **Izhodni kriterij:**
 - R1 in R2 imata reprodukcijo, ki jo lahko ponovi katerakoli seja in ki jasno pokaže napako

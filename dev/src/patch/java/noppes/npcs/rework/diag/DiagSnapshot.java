@@ -24,9 +24,11 @@ public final class DiagSnapshot {
     private final List<Row> rows;
     private final List<Distribution> distributions;
     private final SlowTicks slowTicks;
+    private final NavProbe navProbe;
 
     private DiagSnapshot(boolean enabled, long startedMillis, long elapsedMillis, long ticks,
-            List<Row> rows, List<Distribution> distributions, SlowTicks slowTicks) {
+            List<Row> rows, List<Distribution> distributions, SlowTicks slowTicks,
+            NavProbe navProbe) {
         this.enabled = enabled;
         this.startedMillis = startedMillis;
         this.elapsedMillis = elapsedMillis;
@@ -34,16 +36,18 @@ public final class DiagSnapshot {
         this.rows = Collections.unmodifiableList(rows);
         this.distributions = Collections.unmodifiableList(distributions);
         this.slowTicks = slowTicks;
+        this.navProbe = navProbe;
     }
 
     static DiagSnapshot of(boolean enabled, long startedMillis, long elapsedMillis, long ticks,
-            List<DiagKey> keys, List<Distribution> distributions, SlowTicks slowTicks) {
+            List<DiagKey> keys, List<Distribution> distributions, SlowTicks slowTicks,
+            NavProbe navProbe) {
         List<Row> rows = new ArrayList<Row>(keys.size());
         for (DiagKey key : keys) {
             rows.add(new Row(key.name(), key.unit(), key.count(), key.nanos()));
         }
         return new DiagSnapshot(enabled, startedMillis, elapsedMillis, ticks, rows,
-                new ArrayList<Distribution>(distributions), slowTicks);
+                new ArrayList<Distribution>(distributions), slowTicks, navProbe);
     }
 
     public boolean enabled() {
@@ -69,6 +73,11 @@ public final class DiagSnapshot {
     /** Tabela najpocasnejsih tickov te meritve. */
     public SlowTicks slowTicks() {
         return this.slowTicks;
+    }
+
+    /** Merila kakovosti navigacije te meritve (M2.7). */
+    public NavProbe nav() {
+        return this.navProbe;
     }
 
     public Row row(String name) {
@@ -173,6 +182,14 @@ public final class DiagSnapshot {
             out.append('\n').append(slow);
         }
 
+        String nav = this.navProbe == null ? "" : this.navProbe.toText();
+        if (!nav.isEmpty()) {
+            out.append('\n').append(nav);
+            // Vrstica z markerjem gre v izpis tudi tu, ne samo kot odgovor ukaza: posnetek
+            // se zapise v datoteko in scenarij mora meriti iz istega vira kot clovek bere.
+            out.append(this.navProbe.markerLine()).append('\n');
+        }
+
         Distribution tick = this.distribution("server.tick.ns");
         if (tick != null && tick.count() > 0L) {
             double p95ms = tick.percentile(0.95) / 1000000.0;
@@ -182,6 +199,7 @@ public final class DiagSnapshot {
                     .append(number(p95ms / TICK_BUDGET_MS * 100.0)).append(" %)\n");
         }
         out.append(saveLine(tick));
+        out.append(navAiLine());
         return out.toString();
     }
 
@@ -215,6 +233,37 @@ public final class DiagSnapshot {
                 .append(" p99brez=").append(number(millis(clean.percentile(0.99))))
                 .append(" maxVsi=").append(number(millis(all == null ? 0L : all.max())))
                 .append(" maxBrez=").append(number(millis(clean.max())))
+                .append('\n');
+        return out.toString();
+    }
+
+    /**
+     * Vrstica o dodelitvah poti, ki jih je zbiralnik opazil (M2.7, sesta velicina).
+     *
+     * <p>Locena od vrstice sonde, ker gre za drugo vrsto podatka: sonda meri <b>ceno in
+     * kakovost</b> enega iskanja, ta vrstica pa <b>kako pogosto</b> se poti sploh
+     * dodeljujejo med igro. Merilo, ki bi obe stevilki bralo iz iste vrstice, bi ju lahko
+     * zamenjalo.
+     *
+     * <p>Prazna vrstica, kadar ni bilo niti ene dodelitve: merilo mora lociti "NPC-ji niso
+     * navigirali" od "opazovalec ni tekel".
+     */
+    public String navAiLine() {
+        Row created = this.row("nav.ai.path.new");
+        Distribution perTick = this.distribution("nav.ai.paths.per.tick");
+        Distribution navigating = this.distribution("nav.ai.navigating");
+        if (perTick == null || perTick.count() == 0L) {
+            return "";
+        }
+        long total = created == null ? 0L : created.count;
+        StringBuilder out = new StringBuilder(160);
+        out.append("RWNAV-AI novihPoti=").append(total)
+                .append(" tickov=").append(perTick.count())
+                .append(" naTick=").append(number(perTick.mean()))
+                .append(" naTickP95=").append(perTick.percentile(0.95))
+                .append(" naTickMax=").append(perTick.max())
+                .append(" navigirajoP50=").append(navigating == null ? 0L : navigating.percentile(0.50))
+                .append(" navigirajoMax=").append(navigating == null ? 0L : navigating.max())
                 .append('\n');
         return out.toString();
     }
@@ -267,6 +316,9 @@ public final class DiagSnapshot {
         out.append(']');
         if (this.slowTicks != null) {
             out.append(",\"slowTicks\":").append(this.slowTicks.toJson());
+        }
+        if (this.navProbe != null) {
+            out.append(",\"nav\":").append(this.navProbe.toJson());
         }
         out.append('}');
         return out.toString();

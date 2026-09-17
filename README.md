@@ -14,10 +14,10 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-09-17 |
-| Trenutna faza | **M2 — diagnostika**; M2.1 in M2.2 zaključena (R1 reproduciran), M2.3 napisan in čaka na zagon, **M0 in M1 zaključena**; `SlowTicks` (M2.5a) je v kodi, njegova merila S1–S4 čakajo na prvi zagon |
-| Naslednji korak | **pognati `.\r2-run.ps1`** — scenarij M2.3 (reprodukcija R2) je napisan in čaka na zagon v svetu; nato **M2.4** ali **M2.7**. Glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Trenutna faza | **M2 — diagnostika**; M2.1 in M2.2 zaključena (R1 reproduciran), M2.3 pognan (faza A veljavna), **M0 in M1 zaključena**; napisani in testirani, a še nepognani: `SlowTicks` (M2.5a, merila S1–S4), izločitev autosave ticka (M2.5b, S5–S7) in **merila kakovosti navigacije (M2.7, N1–N12)** |
+| Naslednji korak | **pognati `.\r2-run.ps1`** (pojav P1) **in `.\nav-run.ps1`** (izhodiščna tabela M2.7); nato **M2.4** ali **M2.5c**. Glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 33 (21 prenesenih + 12 novih v `rework/diag`); podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Prevedljivih razredov | 35 (21 prenesenih + 14 novih v `rework/diag`); podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in
@@ -41,7 +41,7 @@ datotek za obnovo in ima mod pomembnejše težave, se dodatna forenzika R9, migr
 | [`OKOLJE.md`](OKOLJE.md) | razvojno okolje, verzije, gradle ukazi | ko nekaj ne zbuilda |
 | [`PLAN_IMPLEMENTACIJE.md`](PLAN_IMPLEMENTACIJE.md) | audit originala: bugi B1–B8 in performance kandidati | referenca; še vedno velja |
 | [`docs/scenariji/M0.7-integracijska-matrika.md`](docs/scenariji/M0.7-integracijska-matrika.md) | 47 preverb obnašanja v svetu, postopek in pokritost | pred predajo vsakega paketa |
-| [`docs/scenariji/`](docs/scenariji/) | ponovljivi scenariji: M0.5 smoke, M0.6 testni svet, M2.1 diagnostika, M2.2 R1, **M2.3 R2** | ko poganjaš ali spreminjaš scenarij |
+| [`docs/scenariji/`](docs/scenariji/) | ponovljivi scenariji: M0.5 smoke, M0.6 testni svet, M2.1 diagnostika, M2.2 R1, M2.3 R2, **M2.7 navigacija** | ko poganjaš ali spreminjaš scenarij |
 
 ---
 
@@ -127,6 +127,7 @@ Vse odločitve, ki jih sprejmeš med sejo, gredo v `docs/01-ARHITEKTURA.md` pod
 .\rwdiag-run.ps1                           # M2.1 instrumentacija, merila D1-D7 in C1-C6
 .\r1-run.ps1                               # M2.2 reprodukcija R1 (NPC jaha NPC), merila E1-E6
 .\r2-run.ps1                               # M2.3 reprodukcija R2 (leteci NPC in ovira), merila L1-L8
+.\nav-run.ps1                              # M2.7 merila kakovosti navigacije, merila N1-N12
 ```
 
 Instrumentacija (M2.1), v konzoli serverja ali kot ukaz v igri:
@@ -136,7 +137,15 @@ rwdiag on            # vklopi merjenje in pocisti stevce
 rwdiag chunks on 1   # pogoj meritve: prisilno nalozi chunke z NPC-ji (M2.1d)
 rwdiag dump m21      # zapise posnetek v dev\run\logs\rwdiag\ in ga izpise
 rwdiag off           # izklopi in se odjavi z event busa
+
+rwdiag nav -10 4 78 3 32 NAV_WalkG   # M2.7: sonda poisce pot do cilja za vsak merjeni NPC
+rwdiag nav status                    # skupna vrstica sonde
 ```
+
+Od M2.7 ima posnetek tudi razdelek **kakovosti navigacije**: delež celih poti, razmerje
+med dolžino poti in zračno razdaljo, doseg delnih poti in čas enega iskanja. Številke
+nastanejo iz lastnih iskanj sonde (`rwdiag nav`), ne iz opazovanja AI-ja — razlog je v
+[`docs/scenariji/M2.7-navigacija.md`](docs/scenariji/M2.7-navigacija.md).
 
 Posnetek ima od M2.5a tabelo **najpočasnejših tickov s kontekstom** (koliko NPC-jev je
 tiknilo, koliko chunkov se je naložilo, ali je tekel autosave). Percentil pove, koliko

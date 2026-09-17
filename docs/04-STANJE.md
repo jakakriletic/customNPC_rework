@@ -10,10 +10,10 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-17** |
-| Trenutni milestone | **M2 — diagnostika** (M2.1, **M2.2** in **M2.3 faza A** zaključene; **M2.3 fazi B/C čakata na ponovni zagon**); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen. **M2.5a** (pripis počasnih tickov) je prišel z druge delovne postaje: koda in testi so tu, zagona v svetu še ni |
-| Naslednji paketi | **prvi korak je ponovni zagon `.\r2-run.ps1`** z novima merjenima veličinama `dStarost` in `gib` (merili L9, L10) — razloži naj zmrznitev letečih NPC-jev iz faz B in C (pojav P1, dnevnik 29). Po tem **M2.4** (50/200/500 NPC-jev) ali **M2.7** (merila navigacije, vhodni pogoj za M4/M5). Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1. Ob prvem naslednjem zagonu `.\rwdiag-run.ps1` se prebere še vrstica pripisa počasnih tickov (merila S1–S4, M2.5a) |
-| Prevedljivih razredov | 33 — prejšnjih 21 + 12 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`) |
-| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **61 za instrumentacijo** (55 + 6 novih za izločitev autosave ticka); zeleni, zadnjič prevedeni in pognani v seji 17. 9. (D-014). Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
+| Trenutni milestone | **M2 — diagnostika** (M2.1, **M2.2** in **M2.3 faza A** zaključene; **M2.3 fazi B/C čakata na ponovni zagon**); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen. **M2.5a**, **M2.5b** in **M2.7a** so napisani, prevedeni in testirani v seji; vsi trije čakajo na zagon v svetu |
+| Naslednji paketi | **dva zagona čakata na uporabnika**: (1) `.\r2-run.ps1` z `dStarost` in `gib` — razloži naj zmrznitev letečih NPC-jev iz faz B in C (pojav P1, dnevnik 29); (2) **`.\nav-run.ps1`** — izhodiščna tabela šestih veličin M2.7, brez katere se M4.10–M4.13 in M5.6 ne smejo začeti. Ob prvem `.\rwdiag-run.ps1` se prebere še pripis počasnih tickov (S1–S4) in izločitev autosave ticka (S5–S7). Po tem **M2.4** (50/200/500 NPC-jev) ali **M2.5c** (protokol ponovitev) |
+| Prevedljivih razredov | 35 — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
+| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **84 za instrumentacijo** (61 + 21 `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji 17. 9. (D-014). Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Odprti pojavi | **P1** — po `setPosition` se leteči NPC ne premakne več, čeprav navigator javlja celo pot (17. 9.); nereproduciran, hipoteza, blokira fazi B in C scenarija M2.3 |
 | Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8, Q10 in Q12 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
 | Omejitev orodij | **spremenjeno 17. 9.**: seja ima lupino na uporabnikovem računalniku, a **linuxovo** in brez PowerShella, Gradla in Minecrafta. Bere, piše, ureja, `git`, `python3`, `node`, `jq` — da. `.\dev.ps1`, `.\*-run.ps1`, build in zagon sveta — **ne**, to poganja uporabnik. Podrobnosti v Znanih omejitvah. Seja **prevede in požene teste** `rework/**` v oblačnem okolju proti mapiranim razredom (D-014) in sintaktično preveri `.ps1` s prenesenim PowerShellom |
@@ -65,11 +65,101 @@
 | M2.5 | Merilni protokol kot skripta | **v teku** — M2.5a (pripis počasnih tickov) in M2.5b (izločitev autosave ticka) narejena; ostaja protokol ponovitev (M2.5c) |
 | M2.5b | Izločitev autosave ticka: `server.tick.ns.nosave` + merila S5–S7 | **koda in testi narejeni** (6 testov, prevedeno v seji); čaka na prvi zagon v svetu |
 | M2.6 | Baseline meritve originala | ni začeto |
-| M2.7 | **Merila kakovosti navigacije** (šest veličin, izmerjenih na originalu) | **nov paket 17. 9.** — podlaga za M4.10–M4.12 in M5.6; brez njega se navigacijski sklop ne začne |
+| M2.7 | **Merila kakovosti navigacije** (šest veličin, izmerjenih na originalu) | **koda, scenarij in merila N1–N12 narejeni 17. 9.**; čaka na `.\nav-run.ps1` v svetu. Podlaga za M4.10–M4.13 in M5.6; brez izmerjenih številk se navigacijski sklop ne začne. [scenarij](scenariji/M2.7-navigacija.md) |
 
 ---
 
 ## Dnevnik sej
+
+### 2026-09-17 (34) — M2.7: merila kakovosti navigacije (sonda, opazovalec, scenarij)
+
+**Paket:** M2.7 (del a)
+**Stanje:** koda, testi, scenarij in merila končani in preverjeni v seji; zagon v svetu čaka na uporabnika
+
+**Izhodišče:** D-012 pravi, da vanilla pathfindinga ne prepisujemo, ampak ga popravljamo po
+stopnjah — vsako pod stikalom in z meritvijo. Meritve pa ni bilo: paketi M4.10–M4.13 in
+M5.6 so ostali brez številke, proti kateri bi se lahko izmerili. M2.7 je ta manjkajoči
+vhodni pogoj.
+
+**Narejeno:**
+
+- **`rework/diag/NavProbe.java`** — merilni razred brez Minecraft tipov (kot `SlowTicks`):
+  delež celih poti, razmerje dolžina/zračna razdalja, doseg delne poti in porazdelitev
+  časa iskanja. Ima vrstico z markerjem (`RWNAV-SONDA`, pod drugim markerjem tudi
+  `RWNAV-POMET`), razdelek v posnetku in JSON.
+- **`rework/diag/NavSweep.java`** — pometanje: vsak merjeni NPC poišče pot do istega cilja.
+  Filter po predponi imena, ponovitve, poročilo `naTleh` in `chunkiForced` v isti vrstici.
+- **Opazovalec v `DiagEventCollector`** — `nav.ai.path.new`, `nav.ai.paths.per.tick` in
+  `nav.ai.navigating`; vrstica `RWNAV-AI` v posnetku.
+- **Ukaz `rwdiag nav <x y z [ponovitev] [maxNpc] [imePredpona]>`** in `rwdiag nav status`.
+- **Scenarij:** `dev/testworld/nav-control.js` (dve progi, dve fazi), `nav-setup-commands.txt`,
+  fixture `NAV_WalkG`, `NAV_WalkO`, `NAV_Control`, `preveri-nav-markerje.js` in
+  **`nav-run.ps1` z merili N1–N12**. Dokument: `docs/scenariji/M2.7-navigacija.md`.
+- **23 novih testov** (21 `NavProbeTest`, 2 v `DiagSnapshotTest`); skupaj **84 testov
+  instrumentacije, vsi zeleni**, prevedeno z `javac --release 8` v seji.
+- Odločitev **D-015** (kako se meri in zakaj tako).
+
+**Preverjeno v seji:**
+
+- Prevedenih vseh 18 razredov `rework/diag` proti mapiranim Forge/Minecraft razredom;
+  84/84 testov zelenih.
+- `nav-run.ps1` sintaktično brez napak (PowerShell 7.4.6 `Parser::ParseFile`).
+- **Razčlenjevalnik je pognan nad pravim izpisom, ne nad izmišljenim.** Vrstice
+  `RWNAV-POMET`, `RWNAV-SONDA` in `RWNAV-AI` je ustvarila prevedena koda, vrstice `NAV-S`,
+  `NAV-CAS` in `NAV-PRISPEL` pa minificirana `nav-control.js` nad ponarejenim svetom
+  (`node preveri-nav-markerje.js`). Bralniki `Read-Samples`, `Read-Cas`, `Read-Pometi`,
+  `Read-Sonda` in `Read-NavAi` iz `nav-run.ps1` so bili nato pognani nad tem logom, skupaj
+  s podvojenimi vrsticami `[FINE/CustomNPCs]`: štiri pometanja so prebrana kot štiri in ne
+  kot osem.
+- `vstavi-skripto.py` je potrdil, da je skripta v `NAV_Control.json` po normalizaciji
+  identična viru.
+
+**Ugotovitve:**
+
+- **Navigatorjeva pot ni merilno orodje.** `PathNavigate.getPathToPos` (`:111-124`) si cilj
+  zapomni v `targetPos` in ob istem cilju vrne že izračunano pot. Sonda, ki bi ga
+  uporabila, bi spremenila stanje tistega, kar meri, pri ponovitvah pa bi merila branje
+  predpomnilnika namesto iskanja poti. Lasten `PathFinder` nad istim `NodeProcessor`-jem
+  meri isto kodo brez stranskega učinka.
+- **`Path.getTarget()` je `@SideOnly(Side.CLIENT)`** (`Path.java:152`). Celosti poti se na
+  strežniku torej ne da prebrati iz poti same; primerjati je treba zadnjo točko s ciljnim
+  vozliščem. To je drobna podrobnost, ki bi brez branja dekompiliranega izpisa prišla na
+  dan šele ob `NoSuchMethodError` v svetu.
+- **Razmerje dolžine sme meriti samo cela pot.** Razmerje delne poti primerja dolžino poti,
+  ki nikamor ne pride, z razdaljo do cilja, ki ga ni dosegla — čim prej bi iskanje obupalo,
+  tem „boljše" bi bilo razmerje. Test
+  `partialPathIsExcludedFromTheRatioButNotFromTheShare` drži to mejo.
+- **Ponovitve iskanja ne smejo skozi isto pot kot meritev kakovosti.** Prva različica je
+  ponovitve zapisovala kot navadna iskanja in delež celih poti bi bil odvisen od števila
+  ponovitev. Ločena `recordTimeOnly` to odpravi; test to zahteva.
+- **Šesta veličina je spodnja meja in tako je tudi zapisana.** Opazovalec šteje spremembo
+  identitete objekta `Path`, torej uspešne dodelitve; iskanje, ki vrne `null` ali ga
+  `canNavigate()` zavrne, je zanj nevidno. Številka, ki bi se delala natančnejšo, kot je,
+  bi bila slabša od odsotne.
+- **Vzorec razčlenjevalnika iz prave kode je poceni in ujame razred napake, ki ga sicer
+  ujame šele zagon.** Isti prijem kot pri M2.5b; tokrat je pokazal, da je bil pomožni
+  vzorec regexa shranjen v spremenljivki, ki bi ob preimenovanju tiho dala prazen niz —
+  zato je zdaj funkcija `Get-SondaVzorec`, katere manjkajoč klic pade takoj.
+
+**Ni narejeno in zakaj:**
+
+- **Meritve ni**, ker `nav-run.ps1` potrebuje Windows, Javo 8 in gradle z Minecraftom.
+  Tabela šestih veličin nastane ob prvem zagonu; do takrat M4.10–M4.13 in M5.6 ostanejo
+  zaprti.
+- Letečih NPC-jev scenarij ne meri (ima jih M2.3) in cene pri stotinah NPC-jev ne (M2.4).
+- `push` ni narejen — poverilnice so na Windows strani. Uporabnik požene
+  `git push origin main`; lokalno sta pred originom dva commita (M2.5b in ta).
+
+**Spremembe obnašanja:** nobene v modu. Sonda se sproži samo z ukazom, opazovalec pa teče
+le, dokler je merjenje vklopljeno (zbiralnik je takrat že prijavljen na event bus).
+
+**Meritve:** nobene nove.
+
+**Naslednja seja:** prebrati izid `.\nav-run.ps1` (N1–N12) in šest veličin prepisati v
+`docs/meritve/`; če je N10 zelen in N1–N9 padejo, je napaka v prizorišču, ne v sondi. Nato
+**M2.4** ali **M2.5c**.
+
+---
 
 ### 2026-09-17 (33) — M2.5b: autosave tick ima svojo porazdelitev
 
@@ -2233,5 +2323,16 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
   tiknilo, koliko chunkov se je naložilo, ali je tekel autosave) in števce tickov nad
   10/25/50/100 ms. Merila S1–S4 v `rwdiag-run.ps1` bodo ob prvem zagonu pripis autosave
   ticka potrdila ali ovrgla strojno, ne z branjem številk.
+- **Sonda kakovosti navigacije (M2.7) sme teči samo iz server niti.** `NodeProcessor` je
+  deljen z navigatorjem entitete, `PathFinder.findPath` pa ga na začetku inicializira in na
+  koncu počisti. Iz ukaza (server nit) je to varno, iz druge niti bi bila okvara in ne
+  meritev. Prav tako pometanje **zavrne delo, dokler ni `rwdiag on`**: `NavProbe` se ob
+  vklopu počisti, zato bi pometanje pred vklopom izginilo in scenarij bi bral prazno meritev.
+- **`Path.getTarget()` je `@SideOnly(Side.CLIENT)`** (`Path.java:152`), zato se celost poti
+  na strežniku ugotovi s primerjavo zadnje točke poti s ciljnim vozliščem (meja 2,0 bloka).
+- **`nav.ai.path.new` je spodnja meja, ne število iskanj poti.** Vanilla ob iskanju ne pošlje
+  dogodka; zbiralnik zato šteje spremembo identitete objekta `Path`, torej uspešne dodelitve.
+  Iskanje, ki vrne `null` ali ga `canNavigate()` zavrne, je nevidno. Cena navigacije na tick
+  se do M3.1 ocenjuje kot zmnožek časa enega iskanja (sonda) in te pogostosti.
 - Že pokvarjenih datotek na disku nova koda ne popravlja; M1.4 je po navodilu uporabnika
   odložen, dokler ne obstaja konkreten primer.

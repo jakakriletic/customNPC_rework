@@ -120,6 +120,29 @@ public class DiagSnapshotTest {
                 !text.contains("RWDIAG-SAVE"));
     }
 
+    /**
+     * M2.7, sesta velicina. Vrstica mora povedati oboje: koliko novih poti je bilo in cez
+     * koliko tickov. Sama vsota brez stevila tickov je neuporabna za primerjavo pred/po,
+     * ker meritvi skoraj nikoli nista enako dolgi.
+     */
+    @Test
+    public void navAiLineReportsNewPathsAndTheTicksTheyWereSpreadOver() {
+        Diag.record(noppes.npcs.rework.diag.DiagKeys.NAV_PATHS_PER_TICK, 0L);
+        Diag.record(noppes.npcs.rework.diag.DiagKeys.NAV_PATHS_PER_TICK, 2L);
+        Diag.record(noppes.npcs.rework.diag.DiagKeys.NAV_NAVIGATING, 8L);
+        noppes.npcs.rework.diag.DiagKeys.NAV_PATH_NEW.add(2L);
+        String line = Diag.snapshot().navAiLine();
+        assertTrue(line, line.contains("RWNAV-AI novihPoti=2 tickov=2"));
+        assertTrue(line, line.contains("naTick=1.000") || line.contains("naTick=1,000"));
+        assertTrue(line, line.contains("navigirajoMax=8"));
+    }
+
+    @Test
+    public void navAiLineIsAbsentWhenNothingNavigated() {
+        Diag.tick(1000000L, 1L, 0, 0, 0, 0);
+        assertEquals("", Diag.snapshot().navAiLine());
+    }
+
     private static int count(String value, char c) {
         int total = 0;
         for (int i = 0; i < value.length(); i++) {
