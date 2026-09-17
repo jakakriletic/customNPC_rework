@@ -9,6 +9,15 @@
 // konstante spodaj so v SKRIPTNIH tickih; ob izpisu se pretvorijo v server ticke.
 //
 // Nashorn na Javi 8: brez let, brez puscicnih funkcij, brez sablonskih nizov.
+//
+// POZOR - domet iskanja poti. Vanilla A* ima dve trdi meji: proracun 200 vozlisc
+// (PathFinder.java:65) in dolzino poti, omejeno z getPathSearchRange() = FOLLOW_RANGE =
+// CustomNpcs.NpcNavRange (privzeto 32, EntityNPCInterface.java:334). Nasa proga je dolga
+// natanko 32 blokov, z obvozom do vrat pa vec. En sam navigateTo zato vrne DELNO pot in
+// NPC obstane na njenem koncu - kar je 17. 9. izgledalo kot ovira pri z = 36 (Q11).
+// Zato se v fazi A navigateTo ponovi ob vsakem vzorcu; vsak klic tedaj isce samo se
+// preostanek poti. Vanilla AI taski delajo enako (EntityAIAttackTarget se prepathga sam,
+// zato je proga S v fazi B prisla do cilja, v fazi A pa ne).
 
 var TICKS_PER_SCRIPT_TICK = 10;
 
@@ -257,4 +266,10 @@ function tick(e) {
     if (t % SAMPLE_EVERY !== 0) { return; }
     sample(npc, "M", carriersM, GOAL_X_M, riders);
     sample(npc, "S", carriersS, GOAL_X_S, null);
+    // Vzorec se vzame PRED osvezitvijo poti, da navig= pove stanje ob koncu intervala,
+    // ne stanja takoj po svezem klicu.
+    if (phase === "A") {
+        driveNavigate(carriersM, GOAL_X_M);
+        driveNavigate(carriersS, GOAL_X_S);
+    }
 }

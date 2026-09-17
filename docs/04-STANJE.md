@@ -67,6 +67,99 @@
 
 ## Dnevnik sej
 
+### 2026-09-17 (22) — Q11 zaprt: meja iskanja poti, ne ovira
+
+**Paket:** M2.2 (popravek merilne naprave)
+**Stanje:** končano — popravek narejen in preverjen; ponovitev meritve ni pognana
+
+**Vprašanje:** zakaj se je kontrolna proga v fazi A ustavila pri 22,71 bloka, tik pred drugo
+stopnico, čeprav je prvo stopnico in vrata prešla.
+
+**Odgovor: ovira ni bila kriva.** Vanilla A* ima dve trdi meji, obe preverjeni v
+dekompiliranem Minecraftu v projektu:
+
+| Meja | Kje | Posledica |
+|---|---|---|
+| proračun **200 vozlišč** | `PathFinder.findPath:65` | vrne **delno pot** do najbližjega doseženega vozlišča, ne `null` |
+| dolžina poti `< maxDistance` | `PathFinder.findPath:94` | `maxDistance` = `getPathSearchRange()` = `FOLLOW_RANGE` |
+| `FOLLOW_RANGE = NpcNavRange` | `EntityNPCInterface.java:334`; `dev/run/config/CustomNpcs.cfg` → `NpcNavRange=32` | pot, daljša od 32, ni mogoča v enem klicu |
+
+Proga je dolga **natanko 32 blokov**, z obvozom do vrat pa več. En sam `navigateTo` zato ne
+more vrniti cele poti in NPC obstane na koncu delne. Skripta je `navigateTo` klicala enkrat
+na začetku faze A; `EntityAIAttackTarget` v fazi B se prepathga sam — **zato je proga S v
+fazi B cilj dosegla, v fazi A pa ne.** Vse tri opazke se ujamejo z isto razlago.
+
+**Na ugotovitev o R1 to ne vpliva.** Delna pot bi bila še vedno pot: `isNavigating()` bi bil
+`true` in `prevozeno` > 0. Proga M je imela 0/8 poti in 0,06 bloka. Meja pojasni samo
+stransko opažanje o kontroli, ne razlike M/S.
+
+**Narejeno:**
+
+- `r1-control.js` v fazi A `navigateTo` ponovi ob vsakem vzorcu; vzorec se vzame **pred**
+  osvežitvijo, da `navig=` pove stanje ob koncu intervala, ne takoj po svežem klicu.
+- Nastal je `dev/testworld/vstavi-skripto.py`: vstavi vir v polje `Script` clone JSON in
+  **sam preveri**, da sta vir in vstavljena različica po normalizaciji identična. Doslej je
+  bila to ročna operacija, ki jo je scenarij sam označil za pot do tihe napake.
+- Preverjeno: `R1_Control.json` se od prejšnjega commita razlikuje **samo** v vrstici
+  `Script`; izluščena minificirana skripta gre skozi `node --check`.
+
+**Ni narejeno in zakaj:** ponovitev `.\r1-run.ps1` s popravkom ni pognana — potrebuje Windows.
+Ni nujna za izid M2.2; dala bi čistejšo kontrolo (proga S bi v fazi A prišla do cilja).
+
+**Spremembe obnašanja:** nobene v modu.
+
+**Meritve:** nobene nove.
+
+**Naslednja seja:** M2.3 (reprodukcija R2) z upoštevanim pravilom o dometu poti.
+
+---
+
+### 2026-09-17 (21) — M0 zaključen: integracijska matrika (M0.7) in M0.8 kot blokada
+
+**Paket:** M0.7 (+ formalni zaključek M0.8)
+**Stanje:** končano — merila X1–X5 izpolnjena
+
+**Narejeno:**
+
+- Nov dokument [`scenariji/M0.7-integracijska-matrika.md`](scenariji/M0.7-integracijska-matrika.md):
+  funkcionalna matrika iz `PLAN_IMPLEMENTACIJE.md` §6 je prepisana v **47 oštevilčenih preverb**
+  (IN NPC, IA AI, IC vsebina, IS skripte, IL lifecycle, IK klient, IO omrežje). Vsaka vrstica ima
+  tip (**A** avtomatizirana / **R** ročna), imenovan dokaz (marker v logu, datoteka, NBT diff) in
+  pošteno stanje pokritosti.
+- Postopek izvedbe v treh prehodih: avtomatski server tek iz obstoječih skript
+  (`verify-package.ps1`, `testworld-run.ps1`, `rwdiag-run.ps1`, `r1-run.ps1`), ročni klientski
+  prehod in zapis izida v `audit\m07-matrika-<datum>.md`. Pravilo: **matrika ni nikoli zelena po
+  opustitvi** — neizvedena vrstica ni uspeh.
+- Zapisan enkratni postopek za quest/dialog fixture v GUI-ju (§4), ki odblokira IC1 in IC2.
+- **M0.8 zaprt kot zabeležena blokada.** Uporabnik je potrdil, da nima dostopa do dejanskega
+  modpacka, Forge builda, configa ne kopije pravega sveta in da nima nobenega pokvarjenega clone
+  zapisa. Vpliv je razčlenjen po milestonih v §6 matrike; izhodni kriterij M0 to izrecno dovoljuje.
+- `docs/03-FAZE.md`: M0 označen kot zaključen z datumom in sklicem na izpolnjene izhodne kriterije.
+
+**Trenutna pokritost matrike:** 6 vrstic pokrito (IN1, IN4, IA7, IS1, IL1, IL7), 4 delno (IN2, IN6,
+IA3, IL6), 3 blokirano (IC1, IC2 na GUI fixture; IO4 na M0.8), 34 ni pokrito. To je izhodišče,
+ne pomanjkljivost — matriko polnijo milestoni M1–M10.
+
+**Ni narejeno in zakaj:**
+
+- Matrika ni bila **pognana** — seja nima PowerShella, Gradla ne Minecrafta (glej Znane omejitve).
+  Prvi realni prehod 1 naj se izvede ob zaključku naslednjega paketa.
+- Quest in dialog fixture ostajata odprta; brez GUI-ja ju ni mogoče narediti, ugibanje NBT
+  strukture pa protokol prepoveduje.
+- Nobena vrstica ni bila avtomatizirana na novo; M0.7 je dokument, ne koda. Premik vrstic iz **R**
+  v **A** je delo pripadajočih milestonov.
+
+**Spremembe obnašanja:** nobene. Koda ni bila spremenjena, `verify-package.ps1` ostane pri istem
+seznamu razredov.
+
+**Meritve:** nobene.
+
+**Naslednja seja:** **M2.3** (reprodukcija R2 — leteči NPC čez steno na x=20) ali **M2.4**
+(merilni scenariji 50/200/500 NPC-jev). Pred predajo naslednjega paketa se prvič požene prehod 1
+integracijske matrike.
+
+---
+
 ### 2026-09-17 (20) — M2.2 zaključen: R1 je reproduciran in izmerjen
 
 **Paket:** M2.2
@@ -1266,7 +1359,7 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 | Q8 | Pri R8 — kateri provider (Anthropic / OpenAI / lokalni model)? | M9.3 | odprto |
 | Q9 | Koliko NPC-jev je "veliko" v tvojem primeru? 100? 500? 2000? | M2.4, cilj za M5 | **odgovorjeno 15. 9.** — cilj še ni določen; merimo 50/200/500 in se odločimo po podatkih |
 | Q10 | Ali strežnik, kjer to teče, sploh ima izhodni internetni dostop? | M9.1 | odprto |
-| Q11 | Zakaj skupina obstane pred **drugo** stopnico (z = 36), prvo (z = 20) pa prestopi? Velja za obe progi, torej ni povezano z jahanjem. | M2.3/M2.4, kakovost scenarijev | **novo 17. 9.** |
+| Q11 | Zakaj skupina obstane pred **drugo** stopnico (z = 36), prvo (z = 20) pa prestopi? | M2.3/M2.4, kakovost scenarijev | **zaprto 17. 9.** — ni bila ovira, ampak domet iskanja poti; glej Znane omejitve |
 
 ---
 
@@ -1360,6 +1453,13 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
   46 946 B). Zapis pod novim imenom je uspel takoj. Pravilo: po vsakem zapisu preveri
   velikost datoteke, ob neujemanju zapiši pod novim imenom.
 - `npc.update.window` je zgornja meja, ne točna poraba časa na NPC; točna meritev pride z M3.1.
+- **NPC-ja ni mogoče poslati dlje od `NpcNavRange` (32) z enim samim klicem `navigateTo`.**
+  Vanilla A* se prekine po 200 vozliščih in vrne **delno** pot (`PathFinder.findPath:65`),
+  dolžino poti pa omeji na `getPathSearchRange()` = `FOLLOW_RANGE` = `NpcNavRange`
+  (`:94`, `EntityNPCInterface.java:334`). NPC obstane na koncu delne poti in to izgleda kot
+  ovira ali okvara AI — 17. 9. je stalo eno napačno razlago (Q11). **Vsak scenarij, ki pelje
+  NPC dlje od 32 blokov ali po obvozu, mora pot osveževati.** Vanilla AI taski to počnejo
+  sami, skripte ne.
 - **Meritev brez prisilno naloženih chunkov ali brez igralca je neveljavna** po 300 tickih
   (`WorldServer.updateEntities():628-644`). Vsak posnetek ima zato `world.chunks.forced`;
   če je ta 0 in je `world.players` 0, posnetek meri prazen tek. Velja za vse meritve M2+.
