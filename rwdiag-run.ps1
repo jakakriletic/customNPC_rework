@@ -36,14 +36,25 @@ function Get-LogText([string]$LogPath) {
     return $c
 }
 
+# Vsak odgovor ukaza /rwdiag se v logu pojavi DVAKRAT: enkrat kot konzolni odgovor
+# ([minecraft/DedicatedServer]) in enkrat prek LogWriterja ([FINE/CustomNPCs]).
+# Steti markerje nad celim logom zato pomeni dvojne zadetke: 17. 9. je D7b padel
+# lazno, ker je bil "drugi posnetek" v resnici dvojnik prvega. Markerje odslej
+# stejemo samo nad konzolnim kanalom.
+function Get-MarkerText([string]$LogPath) {
+    $t = Get-LogText $LogPath
+    if ($t -eq '') { return '' }
+    return (($t -split "`n" | Where-Object { $_ -notmatch '\[FINE/CustomNPCs\]' }) -join "`n")
+}
+
 function Wait-ForCount($Srv, [string]$Marker, [int]$Count, [int]$TimeoutSec) {
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
     while ($true) {
-        $n = ([regex]::Matches((Get-LogText $Srv.Log), [regex]::Escape($Marker))).Count
+        $n = ([regex]::Matches((Get-MarkerText $Srv.Log), [regex]::Escape($Marker))).Count
         if ($n -ge $Count) { return $true }
         if ($Srv.Proc.HasExited) {
             Start-Sleep -Milliseconds 500
-            $n = ([regex]::Matches((Get-LogText $Srv.Log), [regex]::Escape($Marker))).Count
+            $n = ([regex]::Matches((Get-MarkerText $Srv.Log), [regex]::Escape($Marker))).Count
             if ($n -ge $Count) { return $true }
             Write-Host ("  ! proces se je koncal, preden se je pojavil marker '{0}'" -f $Marker)
             return $false
@@ -99,7 +110,7 @@ function Check([string]$What, [bool]$Ok) {
 
 # "RWDIAG-OK ticki=1234 npc=5678" -> [int[]](ticki, npc); ce ni zadetka, (-1,-1)
 function Read-OkMarker([string]$LogPath, [int]$Nth) {
-    $m = [regex]::Matches((Get-LogText $LogPath), 'RWDIAG-OK ticki=(\d+) npc=(\d+)')
+    $m = [regex]::Matches((Get-MarkerText $LogPath), 'RWDIAG-OK ticki=(\d+) npc=(\d+)')
     if ($m.Count -lt $Nth) { return @(-1, -1) }
     $hit = $m[$Nth - 1]
     return @([int]$hit.Groups[1].Value, [int]$hit.Groups[2].Value)
@@ -108,7 +119,8 @@ function Read-OkMarker([string]$LogPath, [int]$Nth) {
 # "RWDIAG-CHUNKS stanje=on chunki=12 tiketi=1 obroc=1 zavrnjeni=0 npc=8"
 #   -> [int[]](chunki, tiketi, npc, zavrnjeni); ce ni zadetka, (-1,-1,-1,-1)
 function Read-ChunkMarker([string]$LogPath, [int]$Nth) {
-    $m = [regex]::Matches((Get-LogText $LogPath),
+    # Get-MarkerText, ne Get-LogText: odgovor ukaza je v logu dvakrat (glej Get-MarkerText).
+    $m = [regex]::Matches((Get-MarkerText $LogPath),
         'RWDIAG-CHUNKS stanje=\w+ chunki=(\d+) tiketi=(\d+) obroc=\d+ zavrnjeni=(\d+)(?: npc=(\d+))?')
     if ($m.Count -eq 0) { return @(-1, -1, -1, -1) }
     # $Nth = 0 pomeni "zadnji zadetek"; sicer n-ti po vrsti.

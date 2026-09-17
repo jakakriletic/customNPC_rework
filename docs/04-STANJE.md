@@ -11,7 +11,7 @@
 |---|---|
 | Zadnja posodobitev | **2026-09-17** |
 | Trenutni milestone | **M2 — diagnostika** (M2.1 in **M2.2** zaključena); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen |
-| Naslednji paketi | uporabnik pozene `.\fixture-run.ps1` in `.\matrika-run.ps1` **znova** (prvi zagon 17. 9. je odkril tri napake v skriptah, vse popravljene — dnevnik 25), nato **M2.3** (reprodukcija R2) ali **M2.4** (50/200/500 NPC-jev); **M2.7** je nov in je vhodni pogoj za navigacijski sklop M4/M5. Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
+| Naslednji paketi | uporabnik pozene `.\matrika-run.ps1` (tretji zagon; fixture je 17. 9. zelen, D7b je bil lažno negativen — dnevnik 26), nato **M2.3** (reprodukcija R2) ali **M2.4** (50/200/500 NPC-jev); **M2.7** je nov in je vhodni pogoj za navigacijski sklop M4/M5. Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
 | Prevedljivih razredov | 32 — prejšnjih 21 + 11 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **33 za instrumentacijo** (23 + 10 novih za `DiagChunkPlan`); zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8 in Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
@@ -67,6 +67,52 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-17 (26) — Drugi zagon: fixture zelen, D7b lazno negativen
+
+**Paket:** M0.7 (drugi zagon in popravek harnessa)
+**Stanje:** `fixture-run.ps1` **zelen v celoti**; `matrika-run.ps1` zelen do M2.1, kjer je padel
+zaradi napake v merilni skripti, ne v modu. Popravljeno; tretji zagon je na uporabniku.
+
+**Fixture — deluje:**
+
+- Zagon B: `TW-FIX-QUEST id=1 ime=TW_Quest tip=5 nov=1`, `TW-FIX-DIALOG id=1 ime=TW_Dialog
+  quest=1 nov=1`, `TW-FIX-ATTACH npc=T_Trader slot=0 dialog=1`, `TW-FIX-DONE`.
+- Zagon C po restartu: ista dva objekta z **`nov=0`** in istim id — round-trip z diska drži.
+- V semenu sta zdaj `customnpcs/quests/TW/1.json` in `customnpcs/dialogs/TW/1.json`, oba
+  zapisana z modovim `NBTJsonUtil` (`ModRev 18`, `DialogQuest 1`). **IC1 in IC2 nista več
+  blokirana na GUI.**
+- Iz na novo shranjenega `T_Trader.json` je v seme prenesen **samo blok `NPCDialogOptions`**
+  (`Dialog 1`, `Title TW_Dialog`, `DialogSlot 0`). Cela datoteka bi prinesla še runtime šum
+  (`Motion`, `OnGround`, `Air`, `Fire`, trader polja) in tiho spremenila fixture, s tem pa
+  primerljivost meritev. `fixture-run.ps1` zdaj ta prenos naredi ciljno (merilo F17).
+
+**Matrika — W1–W8 zeleno, M2.1 rdeče, in to je bila napaka meritve:**
+
+`rwdiag-run.ps1` je javil `ticki mirujejo po izklopu (1227 -> 1267)`. Vzrok: **vsak odgovor
+ukaza `/rwdiag` je v logu dvakrat** — enkrat kot konzolni odgovor
+(`[minecraft/DedicatedServer]`) in enkrat prek `LogWriter` (`[FINE/CustomNPCs]`,
+`CommandRwDiag:133`). Trije posnetki so torej dali šest `RWDIAG-OK` vrstic, `Read-OkMarker`
+pa je n-ti zadetek štel nad celim logom: "drugi posnetek" je bil v resnici **dvojnik prvega**.
+Prave številke iz istega loga: dump1 = 1227, dump2 = 1267, dump3 = 1267 — **D7b drži**, ticki
+po `rwdiag off` res mirujejo. Isti zamik je delal `ticki so med merjenjem rasli` lažno zeleno.
+
+**Popravek:** nova `Get-MarkerText` vrne log **brez** `[FINE/CustomNPCs]` vrstic; `Wait-ForCount`,
+`Read-OkMarker` in `Read-ChunkMarker` štejejo samo konzolni kanal. `Read-Counter` in
+`Read-Distribution` berejo tabelo posnetka in ostaneta na celem logu.
+
+**Ugotovitev za naprej:** marker, ki gre v dva kanala, ni marker, ki se ga da šteti. Vsako
+merilo oblike "n-ti zadetek" mora povedati, nad katerim kanalom šteje.
+
+**Meritev iz tega zagona** (ni baseline, samo kontekst): 1227 server tickov v 61,3 s, 8 NPC-jev,
+`npc.per.tick` p50 = 8, `npc.tick.gap` max = 1, MSPT p95 = 1,475 ms od 50 ms proračuna (2,9 %).
+
+**Spremembe obnašanja:** v modu nobene. Popravljena sta `rwdiag-run.ps1` in `fixture-run.ps1`.
+
+**Naslednja seja:** tretji zagon `matrika-run.ps1` (pričakovano zeleno do vključno M2.2), nato
+**M2.3** ali **M2.7**.
+
+---
 
 ### 2026-09-17 (25) — Prvi zagon M0.7: tri napake, vse v mojih skriptah
 

@@ -263,10 +263,32 @@ if ($NoSeedUpdate) {
         New-Item -ItemType Directory -Force -Path $dst | Out-Null
         Copy-Item (Join-Path $pair[1] '*.json') -Destination $dst -Force
     }
-    $srcTrader = Join-Path $run 'world\customnpcs\clones\1\T_Trader.json'
-    if (Test-Path $srcTrader) {
-        Copy-Item $srcTrader -Destination (Join-Path $seed 'customnpcs\clones\1\T_Trader.json') -Force
+    # Iz na novo shranjenega T_Trader.json prenesemo SAMO blok NPCDialogOptions.
+    # Cela datoteka bi v seme prinesla se runtime sum (Motion, OnGround, Air, Fire,
+    # trader polja), kar bi tiho spremenilo fixture in s tem primerljivost meritev.
+    $srcTrader = Join-Path $run  'world\customnpcs\clones\1\T_Trader.json'
+    $dstTrader = Join-Path $seed 'customnpcs\clones\1\T_Trader.json'
+    if ((Test-Path $srcTrader) -and (Test-Path $dstTrader)) {
+        $sl = [System.Text.RegularExpressions.RegexOptions]::Singleline
+        $pat = '"NPCDialogOptions": \[.*?\r?\n    \],\r?\n'
+        $blockNew = [regex]::Match((Get-Content $srcTrader -Raw), $pat, $sl)
+        $dstText  = Get-Content $dstTrader -Raw
+        $blockOld = [regex]::Match($dstText, $pat, $sl)
+        if ($blockNew.Success -and $blockOld.Success) {
+            if ($blockNew.Value -ne $blockOld.Value) {
+                $merged = $dstText.Substring(0, $blockOld.Index) + $blockNew.Value +
+                          $dstText.Substring($blockOld.Index + $blockOld.Length)
+                [System.IO.File]::WriteAllText($dstTrader, $merged, (New-Object System.Text.UTF8Encoding($false)))
+                Write-Host '  T_Trader.json v semenu: blok NPCDialogOptions posodobljen'
+            } else {
+                Write-Host '  T_Trader.json v semenu je ze pripet na ta dialog'
+            }
+        } else {
+            Write-Host '  ! bloka NPCDialogOptions ni bilo mogoce prebrati; T_Trader.json v semenu ostaja nespremenjen'
+        }
     }
+    Check 'F17: T_Trader v semenu ima pripet dialog' (
+        (Get-Content $dstTrader -Raw) -match '"Title": "TW_Dialog"')
     $sq = @(Get-ChildItem (Join-Path $seed 'customnpcs\quests\TW')  -Filter '*.json' -ErrorAction SilentlyContinue)
     $sd = @(Get-ChildItem (Join-Path $seed 'customnpcs\dialogs\TW') -Filter '*.json' -ErrorAction SilentlyContinue)
     Check ("F15: seme ima quest fixture ({0})" -f $sq.Count)  ($sq.Count -ge 1)
@@ -277,7 +299,7 @@ if ($NoSeedUpdate) {
 
 Write-Host ''
 if ($failures.Count -eq 0) {
-    Write-Host 'FIXTURE USPESNO. Merila F1-F16 veljajo.'
+    Write-Host 'FIXTURE USPESNO. Merila F1-F17 veljajo.'
     Write-Host 'Vrstici IC1 in IC2 integracijske matrike nista vec blokirani na GUI.'
     Write-Host ("Logi: audit\m07-fixture-a.log, -b.log, -c.log")
     exit 0
