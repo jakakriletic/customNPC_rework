@@ -11,7 +11,7 @@
 |---|---|
 | Zadnja posodobitev | **2026-09-17** |
 | Trenutni milestone | **M2 — diagnostika** (M2.1 in **M2.2** zaključena); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen |
-| Naslednji paketi | uporabnik pozene `.\matrika-run.ps1` (tretji zagon; fixture je 17. 9. zelen, D7b je bil lažno negativen — dnevnik 26), nato **M2.3** (reprodukcija R2) ali **M2.4** (50/200/500 NPC-jev); **M2.7** je nov in je vhodni pogoj za navigacijski sklop M4/M5. Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
+| Naslednji paketi | **M0.7 je zaključen in pognan** (prehod 1 zelen 17. 9., dnevnik 27): nato **M2.3** (reprodukcija R2) ali **M2.4** (50/200/500 NPC-jev); **M2.7** je nov in je vhodni pogoj za navigacijski sklop M4/M5. Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
 | Prevedljivih razredov | 32 — prejšnjih 21 + 11 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **33 za instrumentacijo** (23 + 10 novih za `DiagChunkPlan`); zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8 in Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
@@ -67,6 +67,40 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-17 (27) — Prehod 1 integracijske matrike je zelen; M0.7 je s tem pognan
+
+**Paket:** M0.7 (zaključek)
+**Stanje:** **končano in pognano.** `audit/m07-matrika-2026-09-17-1133.md`, commit `49f7889`:
+**4 stopnje zelene, 0 rdečih, 0 preskočenih.**
+
+| Stopnja | Izid | Trajanje |
+|---|---|---|
+| verify-package | zeleno | 1 s |
+| M0.6 testni svet W1–W8 | zeleno | 172 s |
+| M2.1 diagnostika D1–D7, C1–C6 | zeleno | 118 s |
+| M2.2 reprodukcija R1 E1–E6 | zeleno | 109 s |
+
+Prehod 1 ni več samo dokument: postopek iz §3 matrike je izveden od začetka do konca, iz
+enega ukaza, s poročilom, ki nosi hash jarja in commit. Vrstice IN1, IN2, IN4, IN6, IA7, IS1,
+IL1 in IL7 so s tem **zelene v svetu**, ne samo na papirju.
+
+**Q11 popravek je hkrati potrjen z meritvijo.** V fazi A ima kontrolna proga zdaj **8/8 poti**
+in prevozi 24,68 bloka (prej 4/8 in 22,71), v fazi B pride do cilja (0,40 bloka). Proga M ima
+**0/8 poti v obeh fazah** — ugotovitev R1 drži neodvisno od Q11. Ponovitev je dopisana v
+[meritev](meritve/2026-09-17-M2.2-R1-reprodukcija.md).
+
+**Nova drobtina za M3:** proga M je tu prevozila 1,19 bloka (prvič 0,06). Ponavljajoči
+`navigateTo` torej premakne nosilca za dober blok, čeprav `isNavigating()` ostane `false` —
+premik brez poti. Ne spremeni izida, gre pa v M3 kot opažanje.
+
+**Spremembe obnašanja:** nobene. Ta seja ni spremenila ne moda ne skript, samo zapisala izid.
+
+**Naslednja seja:** **M2.3** (reprodukcija R2 — leteči NPC čez steno na x=20) ali **M2.7**
+(navigacijski sklop, vhodni pogoj za M4/M5). Prehod 1 se odslej pogane pred vsako predajo
+paketa; prehod 2 (klient, GUI, IC1–IC6) ostane odprt in zahteva igralca.
+
+---
 
 ### 2026-09-17 (26) — Drugi zagon: fixture zelen, D7b lazno negativen
 
