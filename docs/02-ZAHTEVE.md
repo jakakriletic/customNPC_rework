@@ -113,10 +113,20 @@ Teče vsak 4. tick za vsakega NPC-ja. Pri konjenici to podvoji strošek. Perform
 
 ### Kaj je treba še preveriti
 
-1. **Reprodukcija.** Testni svet: 8 NPC-jev jahačev na 8 nosilcih, skupen cilj 30 blokov
-   stran, ravna pot + ena stopnica + ena vrata. Posneti pozicije vsak tick.
-2. **Kdo od obeh je pokvarjen.** Hipoteza uporabnika je, da nosilec. Instrumentirati je treba
-   oba: ali nosilec sploh dobi pot (`getNavigator().noPath()`), ali mu jahač prepisuje pozicijo.
+1. ~~**Reprodukcija.**~~ **Narejeno 17. 9. (M2.2)**, s kontrolno progo brez jahačev.
+   Zapis: [`meritve/2026-09-17-M2.2-R1-reprodukcija.md`](meritve/2026-09-17-M2.2-R1-reprodukcija.md).
+2. ~~**Kdo od obeh je pokvarjen.**~~ **Odgovorjeno 17. 9.: nosilec, in sicer tako, da poti
+   sploh ne dobi.** `isNavigating()` je `false` v 40 od 40 vzorcev proge z jahači in `true`
+   na kontrolni progi. Jahač nosilcu **ne** prepisuje pozicije: `odstopMax = 0,00` v vseh
+   vzorcih, ker `EntityAIFollow` zahteva lastnika in ga fixture nima. Vprašanje se zato
+   preoblikuje: **zakaj `tryMoveTo*` na nosilcu ne da poti.** Vodilni kandidat je
+   `PathNavigateGround.canNavigate()` (`:32-35`), ki zahteva `onGround`; `isRiding()` v istem
+   izrazu velja za jahača, ne za nosilca. Dokaz zahteva števec `onGround` / `canNavigate()` /
+   `noPath()` na tick (M2.1b/M3.1) in ga **še ni**.
+2b. **Zgoščevanje v radiusu enega bloka ni reproducirano.** Izmerjeno je zgoščevanje na 7
+   blokov pred oviro. Za radius enega bloka je treba preizkusiti pogoj
+   `display.getHasHitbox() == false` (`minRange` v `EntityAIAttackTarget:98` postane ≈ 0).
+   Ločen scenarij.
 3. **Vanilla `EntityLivingBase.travel` in `EntityLiving.updateEntityActionState`** za primer,
    ko je entiteta hkrati `isBeingRidden()` in ima AI. Preveriti v `dev/reference-src/net/minecraft/`.
 4. Ali `ItemMounter` / `EnumPacketServer.SpawnRider` sploh gresta skozi `startRiding()` ali

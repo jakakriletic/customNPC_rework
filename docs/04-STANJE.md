@@ -10,8 +10,8 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-17** |
-| Trenutni milestone | **M2 — diagnostika** (M2.1a in M2.1c narejena); M0.7/M0.8 čakata na uporabnika, M1 je zaključen |
-| Naslednji paketi | **M2.2** — pognati `.\r1-run.ps1` (artefakti so preverjeni, dve blokirni napaki popravljeni) in zapisati razliko M/S v `docs/meritve/`; **M0.7** takoj ko uporabnik naredi quest in dialog v GUI-ju |
+| Trenutni milestone | **M2 — diagnostika** (M2.1 in **M2.2** zaključena); M0.7/M0.8 čakata na uporabnika, M1 je zaključen |
+| Naslednji paketi | **M2.3** (reprodukcija R2) ali **M2.4** (50/200/500 NPC-jev); **M0.7** takoj ko uporabnik naredi quest in dialog v GUI-ju. Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
 | Prevedljivih razredov | 32 — prejšnjih 21 + 11 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **33 za instrumentacijo** (23 + 10 novih za `DiagChunkPlan`); zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
@@ -25,8 +25,8 @@
 |---|---|---|
 | M0 Temelj | **v teku** (≈90 %) | M0.1–M0.6 narejeno (+ M0.2r obnova okolja); M0.7–M0.8 odprto |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
-| M2 Diagnostika | **v teku** (≈45 %) | M2.1a, M2.1c in M2.1d zaključeni in preverjeni v svetu; prva veljavna meritev obstaja |
-| M3 Jedro entitete | ni začeto | analiza narejena, glej R1 in R6 |
+| M2 Diagnostika | **v teku** (≈60 %) | M2.1 in M2.2 zaključena in preverjena v svetu; **R1 je reproduciran in izmerjen** |
+| M3 Jedro entitete | ni začeto | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
@@ -57,7 +57,7 @@
 | M2.1b | Klicna mesta za pot, skripte in AI taske | **čaka na prenos** `EntityNPCInterface`/`ai` (M3.1) in `ScriptContainer` (M5.1) |
 | M2.1c | Števci za razčiščenje `npc.per.tick` = 0 | **zaključeno** — vzrok imenovan in dokazan, glej meritev |
 | M2.1d | Pogoj meritve: `ForgeChunkManager` ticket za chunke z merjenimi NPC-ji | **zaključeno** — C1–C6 zelena v svetu, prva veljavna meritev obstaja |
-| M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih + kontrolna skupina brez jahačev) | **zgrajen in preverjen, ni pognan** — dve blokirni napaki najdeni pred zagonom in popravljeni |
+| M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih + kontrolna skupina brez jahačev) | **zaključeno** — E1–E6 zelena, R1 reproduciran; [meritev](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
 | M2.3 | Reprodukcija R2 (leteči NPC in ovira) | ni začeto |
 | M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
 | M2.5 | Merilni protokol kot skripta | ni začeto |
@@ -66,6 +66,73 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-17 (20) — M2.2 zaključen: R1 je reproduciran in izmerjen
+
+**Paket:** M2.2
+**Stanje:** končano — E1–E6 zelena
+
+**Izid v enem stavku:** nosilec z jahačem **nikoli ne dobi navigacijske poti**
+(`isNavigating()` je `false` v 40 od 40 vzorcev), medtem ko je identičen nosilec brez jahača
+v istem svetu in istem ticku na poti in prevozi 22,7 bloka.
+
+Polni zapis: [`meritve/2026-09-17-M2.2-R1-reprodukcija.md`](meritve/2026-09-17-M2.2-R1-reprodukcija.md).
+
+| Faza | Veličina | **M (jahači)** | **S (kontrola)** |
+|---|---|---|---|
+| A `navigateTo` | nosilcev s potjo | **0/8 ves čas** | 8/8 |
+| A | prevoženo povp. / max | **0,06 / 0,06** | 19,25 / 22,71 |
+| A | do cilja min | 31,44 (start 31,9) | 8,83 |
+| B `setAttackTarget` | nosilcev s potjo | **0/8 ves čas** | 0–4/8 |
+| B | prevoženo povp. / max | 8,26 / 9,17 | 19,62 / **32,70** |
+| B | razpon skupine | 13,45 → **7,00** | 5,04 → **33,53** |
+| B | do cilja min | 24,31 | **0,51** (cilj) |
+| obe | jahačev na nosilcu | **8/8 ves čas** | — |
+| obe | odstopanje jahač↔nosilec | **0,00 ves čas** | — |
+
+**Kar spremeni zahtevo R1:**
+
+- **Odprto vprašanje 2 v §R1 je odgovorjeno: nosilec poti sploh ne dobi.** Zahteva je
+  predpostavljala, da jo dobi in jo nekaj kvari.
+- **Hipoteza `EntityAIFollow.tpTo` se tu ne uresniči.** `odstopMax = 0,00` v vseh 40 vzorcih;
+  jahač ostane točno na nosilcu. `EntityAIFollow` zahteva lastnika, fixture ga nima. R1 se
+  reproducira **brez** te poti.
+- **Vez jahač–nosilec je stabilna** (`jahacev=8` ves čas, tudi čez teleport med fazama).
+  Pokvarjena ni vez, pokvarjena je navigacija nosilca.
+- **„Ne znajo čez bloke“ je izmerjeno.** V fazi B se nosilci z jahači ustavijo pri z ≈ 19,7 in
+  tam obstanejo 240 tickov. Stopnica je pri z = 20.
+- **Zgoščevanje obstaja, a ni „radius enega bloka“**: razpon pade na 7,00, kontrola gre v
+  nasprotno smer na 33,53. Za radius enega bloka §R1 imenuje poseben pogoj
+  (`hasHitbox == false` → `minRange ≈ 0`); ti fixture hitbox imajo, zato ta pogoj **ni bil
+  preizkušen**. Ločen scenarij.
+
+**Vodilna hipoteza mehanizma — še ni dokazana.** V fazi B se nosilci premikajo, pa `isNavigating()`
+ostane `false`; premikajo se torej mimo navigatorja. `PathNavigateGround.canNavigate()`
+(`:32-35`) zahteva `onGround || isInLiquid || isRiding`, pri čemer `isRiding()` velja za
+**jahača**, ne za nosilca. Preverjena in ovržena sta bila `addInteract()` (kliče ga samo
+`interact` in `EntityAIWander`, ta pa se pri `MovingState 0` ne doda) in `EntityAIReturn`
+(`ReturnToStart: 0b`). Test, ki hipotezo odloči: števec `onGround` / `canNavigate()` /
+`noPath()` na nosilec na tick → **M2.1b oziroma M3.1**. Do takrat je to hipoteza.
+
+**Stranski ugotovitvi:**
+
+- Tudi kontrolna proga v fazi A ne pride do cilja: obstane pri 22,71 bloka, tik pred **drugo**
+  stopnico (z = 36), `navig` pade z 8/8 na 4/8. Prvo stopnico in vrata je prešla (razpon se
+  pri vratih stisne na 2,87 — lijak). Zakaj druga stopnica ustavi skupino, prva pa ne, je novo
+  odprto vprašanje. Na razliko M/S ne vpliva, ker velja za obe progi.
+- `navig` niha (0–4/8) tudi na kontrolni progi v fazi B, kar se ujema z dokazano napako mutex
+  bitov v `EntityAIAttackTarget:38`. To je neodvisno od jahanja.
+
+**Meritve:** 27 NPC-jev, 945 tickov: `npc.update.window` 207,3 µs/NPC, `server.tick.ns`
+p50 = 1,93 ms, p95 = 10,75 ms, p99 = 115,3 ms. **Ni baseline** in se ne sme primerjati z M2.1d
+(66,6 µs pri 8 mirujočih NPC-jih) — tu jih 16 pathfinda čez oviro.
+
+**Spremembe obnašanja:** nobene.
+
+**Naslednja seja:** M2.3 (reprodukcija R2) ali M2.4 (50/200/500). Vzrok R1 se dokaže šele z
+instrumentacijo iz M2.1b/M3.1 in ne sme se ga razglasiti prej.
+
+---
 
 ### 2026-09-17 (19) — M2.2: preverba artefaktov in dve blokirni napaki pred zagonom
 
@@ -1199,6 +1266,7 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 | Q8 | Pri R8 — kateri provider (Anthropic / OpenAI / lokalni model)? | M9.3 | odprto |
 | Q9 | Koliko NPC-jev je "veliko" v tvojem primeru? 100? 500? 2000? | M2.4, cilj za M5 | **odgovorjeno 15. 9.** — cilj še ni določen; merimo 50/200/500 in se odločimo po podatkih |
 | Q10 | Ali strežnik, kjer to teče, sploh ima izhodni internetni dostop? | M9.1 | odprto |
+| Q11 | Zakaj skupina obstane pred **drugo** stopnico (z = 36), prvo (z = 20) pa prestopi? Velja za obe progi, torej ni povezano z jahanjem. | M2.3/M2.4, kakovost scenarijev | **novo 17. 9.** |
 
 ---
 
@@ -1246,6 +1314,8 @@ prebrati.
 | 2026-09-11 | NBT↔JSON zapis, 1500 ključev (68 KB) | 235,3 ms → 2,9 ms (81×) | [zapis](meritve/2026-09-11-M1-nbtjson.md) |
 | 2026-09-11 | NBT↔JSON branje, 1500 ključev | 2386,3 ms → 6,5 ms (367×) | [zapis](meritve/2026-09-11-M1-nbtjson.md) |
 | 2026-09-15 | M2.1 prvi posnetek: 8 NPC-jev, 61 s, brez igralca | MSPT p50 0,16 ms / p95 1,21 ms; `npc.per.tick` p50 = 0 | [zapis](meritve/2026-09-15-M2.1-prvi-posnetek.md) |
+| 2026-09-17 | M2.2 R1: 8 nosilcev z jahači proti 8 brez, dve fazi, 945 tickov | proga M `isNavigating` **0/8 ves čas**, prevozeno 0,06 bloka; kontrola 8/8 in 22,71 bloka | [zapis](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
+| 2026-09-17 | poraba pri 27 dejavnih NPC-jih (ni baseline) | `npc.update.window` 207,3 µs/NPC; MSPT p95 10,75 ms, p99 115,3 ms | [zapis](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
 | — | baseline MSPT še ni izmerjen (M2.6) | — | — |
 
 Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Javi 8 je odprta.
