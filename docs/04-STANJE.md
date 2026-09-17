@@ -12,6 +12,8 @@
 | Zadnja posodobitev | **2026-09-17** |
 | Trenutni milestone | **M2 — diagnostika** (M2.1 in **M2.2** zaključena); M0.7/M0.8 čakata na uporabnika, M1 je zaključen |
 | Naslednji paketi | **M2.3** (reprodukcija R2) ali **M2.4** (50/200/500 NPC-jev); **M0.7** takoj ko uporabnik naredi quest in dialog v GUI-ju. Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
+| Trenutni milestone | **M2 — diagnostika** (M2.1 in **M2.2** zaključena); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen |
+| Naslednji paketi | uporabnik pozene `.\matrika-run.ps1` in `.\fixture-run.ps1` (prvi zagon, 17. 9.), nato **M2.3** (reprodukcija R2) ali **M2.4** (50/200/500 NPC-jev); **M2.7** je nov in je vhodni pogoj za navigacijski sklop M4/M5. Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
 | Prevedljivih razredov | 32 — prejšnjih 21 + 11 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **33 za instrumentacijo** (23 + 10 novih za `DiagChunkPlan`); zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
@@ -62,12 +64,71 @@
 | M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
 | M2.5 | Merilni protokol kot skripta | ni začeto |
 | M2.6 | Baseline meritve originala | ni začeto |
+| M2.7 | **Merila kakovosti navigacije** (šest veličin, izmerjenih na originalu) | **nov paket 17. 9.** — podlaga za M4.10–M4.12 in M5.6; brez njega se navigacijski sklop ne začne |
 
 ---
 
 ## Dnevnik sej
 
-### 2026-09-17 (22) — Q11 zaprt: meja iskanja poti, ne ovira
+### 2026-09-17 (24) — Ovrednotenje navigacije in umestitev v plan (D-012)
+
+**Paket:** načrtovanje
+**Stanje:** končano — odločitev zapisana, paketi umeščeni
+
+**Vprašanje uporabnika:** kako izvedljivo je napisati lasten `navigateTo`, ki bi bil bistveno
+boljši od obstoječega.
+
+**Ugotovitev, ki odloči:** od štirih simptomov navigacije, izmerjenih 17. 9., **nobeden ni
+A\* algoritem**.
+
+| Simptom | Dejanski vzrok | Sloj |
+|---|---|---|
+| nosilec z jahačem nima poti (0/8) | predpogoj `PathNavigateGround.canNavigate()` | vanilla predpogoj |
+| obstanek pri 22,71 bloka | 200 vozlišč + `NpcNavRange` = 32, in en sam klic | konfiguracija in način uporabe |
+| `navig` niha 0–4/8 med napadom | mutex biti `EntityAIAttackTarget:38` | **CustomNPCs AI** |
+| zgoščevanje na kup | `minRange` vezan na `npc.width` (`:98`) | **CustomNPCs AI** |
+
+Prepis A\* bi tri od štirih pustil nedotaknjene. Dva sta že pokrita z M3.6 in M3.7.
+
+**Kje je vanilla res slab** (vse preverjeno v dekompiliranem Minecraftu v projektu):
+proračun 200 vozlišč vrne delno pot (`PathFinder:65`); manhattanska cena **in** hevristika pri
+8-smernem gibanju (`PathPoint:86`) sistematično odrivata diagonale; domet vezan na
+`FOLLOW_RANGE`; nič deljenja dela med NPC-ji, vsak z novim `ChunkCache` čez ~6×6 chunkov
+(`PathNavigate:126-129`); `checkForStuck` po 100 tickih tiho počisti pot.
+
+To so **namerne varovalke za MSPT**, ne napake. Pri 27 dejavnih NPC-jih je p99 že 115 ms od
+50 ms proračuna, zato bi večji proračun vozlišč brez predpomnjenja šel naravnost v lag.
+
+**Odločitev D-012:** vanilla pathfindinga ne prepisujemo. Popravki gredo po stopnjah, vsak
+pod stikalom in z A/B meritvijo; brez meritve se kandidat zavrže.
+
+**Dodano v plan:**
+
+| ID | Paket | Zakaj |
+|---|---|---|
+| **M2.7** | merila kakovosti navigacije — šest veličin na originalu | brez njih je „boljše" nemerljivo; vhodni pogoj za ves sklop |
+| **M4.10** | nadaljevanje delne poti | poceni, odpravi najbolj viden simptom (navidezne ovire) |
+| **M4.11** | lasten `NodeProcessor` z realno ceno diagonale | odpravi cikcakanje; omejen obseg, podprta razširitvena točka |
+| **M4.12** | lasten `PathNavigate` — **samo če** M4.10, M4.11 in M5.6 ne zadostujejo | drago; brez dokaza se ne začne |
+| **M4.13** | mehkejše sledenje poti — samo če je trzanje merljivo | kozmetika, dokler ni številke |
+| **M5.6** | deljenje in predpomnjenje poti, **povišano** iz „šele če" v redni paket | največji pričakovani dobitek v celem sklopu; 8 NPC-jev proti istemu cilju = 8 iskanj |
+
+M4 se preimenuje v „Gibanje: navigacija po tleh in letenje"; prej je pokrival samo letenje.
+
+**Zavrnjeno za zdaj:** asinhrono iskanje poti, flow fieldi za skupinsko gibanje, lasten
+gibalni sklad. Async je edini del sklopa z resnično visokim tveganjem (svet se med iskanjem
+spreminja), druga dva spremenita občutek gibanja vseh obstoječih NPC-jev. Odprejo se šele, če
+po M4.10, M4.11 in M5.6 merila M2.7 še vedno padajo.
+
+**Spremembe obnašanja:** nobene — to je načrtovalna seja.
+
+**Meritve:** nobene nove.
+
+**Naslednja seja:** M2.3 ali M2.4 po obstoječem vrstnem redu; M2.7 pred začetkom M4.
+
+---
+
+### 2026-09-17 (23) — Q11 zaprt: meja iskanja poti, ne ovira
 
 **Paket:** M2.2 (popravek merilne naprave)
 **Stanje:** končano — popravek narejen in preverjen; ponovitev meritve ni pognana
