@@ -11,10 +11,10 @@
 |---|---|
 | Zadnja posodobitev | **2026-09-18** |
 | Trenutni milestone | **M2 — diagnostika** (M2.1, M2.2, M2.3 faza A, **M2.7 in M2.5c zaključeni**); **M0 in M1 zaključena**. M2.3 fazi B/C čakata na ponovni zagon (P1); M2.5a in M2.5b sta v kodi, merila S1–S7 še niso bila strojno ovrednotena |
-| Naslednji paketi | **M2.7b** (več vzorcev za veličino 5 — edina šumna veličina), **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline). Odprta zagona: `.\r2-run.ps1` (pojav P1) in `.\rwdiag-run.ps1` (merila S1–S7, lahko kar prek `.\ponovitve-run.ps1 -Scenarij rwdiag`). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
+| Naslednji paketi | **M2.7b** (več vzorcev za veličino 5 — edina šumna veličina), **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline). Odprta zagona: `.\r2-run.ps1` (pojav P1; scenarij ima zdaj **fazo D** in razsodbo, ki jo skripta izpiše sama) in `.\rwdiag-run.ps1` (merila S1–S7, lahko kar prek `.\ponovitve-run.ps1 -Scenarij rwdiag`). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
 | Prevedljivih razredov | 35 — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **84 za instrumentacijo** (61 + 21 `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji 17. 9. (D-014). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
-| Odprti pojavi | **P1** — po `setPosition` se leteči NPC ne premakne več, čeprav navigator javlja celo pot (17. 9.); nereproduciran, hipoteza, blokira fazi B in C scenarija M2.3 |
+| Odprti pojavi | **P1** — leteči NPC, ki obstane **pol bloka izven mreže**, se ne premakne več (`gib = 0`), čeprav se tika in ima celo pot; kopenski v istem svetu se premika. Mehanizem ima kodno podlago (`pathFollow` 0,45 proti `FlyingMoveHelper` 0,5), poskus je pripravljen kot **faza D**; blokira fazi B in C scenarija M2.3 |
 | Šumni pas (M2.5c, 18. 9.) | **46 veličin od 59 ima razpon nič** čez tri ponovitve; vse, kar opisuje vedenje skupine in kakovost poti, je deterministično do enega ticka. Šumna je samo veličina 5 (µs na iskanje), do **114 %** — zato A/B na ceni iskanja (M4.11, M5.6) do M2.7b ni merljiv. [zapis](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
 | Odprta vprašanja iz M2.7 | dva NPC-ja od osmih na progi z grlom ne prispeta niti ob osveženi poti (zamašek ali `canNavigate()`, loči M3.1); najpočasnejši tick meritve (232 ms) ni bil autosave, ampak tick s pathfindingom |
 | Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8, Q10 in Q12 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
@@ -61,7 +61,7 @@
 | M2.1c | Števci za razčiščenje `npc.per.tick` = 0 | **zaključeno** — vzrok imenovan in dokazan, glej meritev |
 | M2.1d | Pogoj meritve: `ForgeChunkManager` ticket za chunke z merjenimi NPC-ji | **zaključeno** — C1–C6 zelena v svetu, prva veljavna meritev obstaja |
 | M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih + kontrolna skupina brez jahačev) | **zaključeno** — E1–E6 zelena, R1 reproduciran; [meritev](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
-| M2.3 | Reprodukcija R2 (leteči NPC in ovira) | **pognano 17. 9. — faza A veljavna, R2 reproduciran**; fazi B in C neveljavni zaradi pojava P1. Dodani merili L9, L10 in veličini `dStarost`, `gib`; čaka na ponovni zagon. [meritev](meritve/2026-09-17-M2.3-R2-reprodukcija.md), [scenarij](scenariji/M2.3-R2.md) |
+| M2.3 | Reprodukcija R2 (leteči NPC in ovira) | **pognano dvakrat 17. 9. — faza A veljavna, R2 reproduciran**; vzrok zmrznitve zožen na `FlyingMoveHelper` (dve razlagi ovrženi z meritvijo). Reset popravljen, dodana **faza D** in merilo L11; čaka na tretji zagon. [meritev](meritve/2026-09-17-M2.3-R2-reprodukcija.md), [scenarij](scenariji/M2.3-R2.md) |
 | M2.5a | Pripis počasnih tickov: `SlowTicks` + merila S1–S4 v `rwdiag-run.ps1` | **koda in testi narejeni** (22 testov, prevedeno v seji 16. 9.); čaka na prvi zagon v svetu |
 | M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
 | M2.5 | Merilni protokol kot skripta | **zaključeno** — M2.5a (pripis počasnih tickov), M2.5b (izločitev autosave ticka) in M2.5c (protokol ponovitev) narejeni; vsi trije čakajo na zagon v svetu |
@@ -74,6 +74,68 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-17 (39) — P1 zožen na `FlyingMoveHelper`; poskus s pol bloka pripravljen
+
+*(delo s 17. 9. na namizni postaji; v `origin/main` združeno 21. 9., zato je številka vnosa 39 in ne 30)*
+
+**Paket:** M2.3 (razčlenitev pojava P1)
+**Stanje:** **delno.** Dve od treh razlag sta ovrženi z meritvijo, tretja ima kodno podlago
+in poskus, ki jo potrdi ali ovrže. Zagon je na uporabniku.
+
+**Narejeno:**
+
+- Ovrednoten drugi zagon (12:37, `audit/m23-r2-2026-09-17-1237.md`), z `dStarost` in `gib`.
+- V meritev dopisan razdelek „Ponovitev 17. 9. ob 12:37 — P1 dobi odgovor".
+- **Popravljen `resetToStart`**: NPC se vrne na zapomnjeno izhodišče, ne na konstanto
+  `START_Z`. To je bila tiha napaka scenarija, ne moda.
+- **Nova faza D** v `r2-control.js`: enaka fazi B, samo izhodišče je pol bloka izven mreže
+  (`resetOffGrid`) — torej natanko stanje obeh dosedanjih zagonov.
+- `r2-run.ps1`: faza D v seznamu faz, merilo **L11** (kopenska kontrola v fazi D) in
+  razsodba `P1 POTRJEN / OVRŽEN / NEODLOČEN`, ki jo skripta izpiše sama in zapiše v
+  poročilo.
+- `preveri-markerje.js` razširjen na fazo D (markerja `R2-D-START`/`R2-D-END`, 264 vzorčnih
+  vrstic).
+
+**Ugotovitve:**
+
+- **`dStarost` je 20 v vseh fazah in progah.** Svet entitete posodablja ves čas; razlaga
+  „svet jih ne posodablja" je **ovržena**.
+- **`gib` je točno 0** v vseh 22 vzorcih obeh zmrznjenih faz, na istih NPC-jih pa je v fazi A
+  dosegel 0,2306. Razlaga „gibanje je, a ga poje `move()`" je **ovržena**. Ostane
+  `FlyingMoveHelper`, ki gibanja ne doda.
+- **Drugi zagon je znak za znak enak prvemu** v vseh starih veličinah. Scenarij je
+  determinističen, zato je primerjava med zagonoma veljavna.
+- **Iz samih številk se da prebrati, kje je razlika.** `doCiljaMin` po resetu je 16,01, kar
+  ustreza z = −16,0 (meja bloka); v fazi A se izide samo z = −15,5 (sredina bloka). Reset je
+  NPC-je premikal za pol bloka, česar ni načrtoval nihče.
+- **Kodna podlaga hipoteze:** `PathNavigate.pathFollow:286-292` prestevilči vozlišče samo pri
+  odmiku < 0,45 (`0,75 − width/2`, `width = 0,6` iz `updateHitbox:1083-1086`), medtem ko
+  `FlyingMoveHelper:39` doda gibanje samo pri `d3 > 0,5`. Odmik **točno 0,5** ne zadosti ne
+  enemu ne drugemu. `EntityMoveHelper` takega praga nima — zato kopenska proga teče naprej.
+- Če se to potrdi, P1 ni napaka scenarija, ampak **bug originala**, in ne velja samo za
+  teleport: enako obtiči leteči NPC, ki se ustavi na taki koordinati po prihodu na cilj ali
+  po spawnu. Takrat gre v M4 skupaj z obhodom ovire.
+
+**Ni narejeno in zakaj:**
+
+- Hipoteza ni potrjena. Za to je potreben zagon na Windowsu.
+- Merili L4a in L4b bosta v naslednjem zagonu povedali tudi, ali je popravek reseta zalegel;
+  če proga P v fazi B še vedno ne pride do cilja, vzrok ni bilo izhodišče.
+- M2.4 in M2.7 nista začeta.
+
+**Spremembe obnašanja:** nobene. Spremenjen je scenarij, ne mod.
+
+**Meritve:** [`meritve/2026-09-17-M2.3-R2-reprodukcija.md`](meritve/2026-09-17-M2.3-R2-reprodukcija.md), razdelek „Ponovitev ob 12:37"
+
+**Preverjeno brez sveta:** `node --check`, `vstavi-skripto.py` (7445 znakov, oba klona),
+`Parser::ParseFile` na `r2-run.ps1` in `matrika-run.ps1`, `preveri-markerje.js` s fazo D
+skozi `Read-Samples` (264 vzorcev, 4 faze × 3 proge po 22), `preveri-skladnost.py`.
+
+**Naslednja seja:** pognati `.\r2-run.ps1`, prepisati razsodbo o P1 v meritev, nato **M2.4**
+ali **M2.7**.
+
+---
 
 ### 2026-09-18 (38) — prva serija ponovitev: scenarij M2.7 je determinističen, šumen je samo čas
 
@@ -2393,7 +2455,7 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 
 | ID | Pojav | Kje se vidi | Stanje |
 |---|---|---|---|
-| P1 | Po `setPosition` se leteči NPC (`MovementType 1`) ne premakne več, čeprav navigator javlja **celo** pot; kopenski v istem svetu se premika normalno | M2.3 fazi B in C, 17. 9.; 12 NPC-jev, 0,00 bloka v 900 tickih | **odprt** — dodani veličini `dStarost` in `gib` ter merili L9/L10; razloži ga naslednji zagon `.\r2-run.ps1` |
+| P1 | Leteči NPC, ki obstane **natanko 0,5 bloka od sredine svojega vozlišča**, se ne premakne več: `gib = 0`, pot ostane cela, entiteta se normalno tika. Kopenski v istem svetu se premika | M2.3 fazi B in C, oba zagona 17. 9.; 12 NPC-jev, 0,00 bloka v 900 tickih, `dStarost = 20`, `gib = 0` | **zožen** — dve razlagi ovrženi z meritvijo. Ostane `FlyingMoveHelper`: `pathFollow` prestevilči pri < 0,45, `FlyingMoveHelper:39` premakne pri > 0,5. Potrdi ali ovrže ga **faza D** ob naslednjem zagonu |
 
 Pravilo iz `05-SEJA-PROTOKOL.md`: bug brez reprodukcije je hipoteza. P1 ima meritev, nima
 pa še razlage in ni ločen od možne napake scenarija, zato je tu in ne med bugi.
@@ -2448,6 +2510,7 @@ prebrati.
 | 2026-09-17 | poraba pri 27 dejavnih NPC-jih (ni baseline) | `npc.update.window` 207,3 µs/NPC; MSPT p95 10,75 ms, p99 115,3 ms | [zapis](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
 | 2026-09-17 | M2.3 R2 faza A: 6 letečih + zid, 6 kopenskih + isti zid, 6 letečih prosto | leteči čez zid **0/6**, prevozeno 7,95 in `cele=0/6`; kopenski 6,93; leteči brez ovire 16,27 in `cele=6/6` | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
 | 2026-09-17 | M2.3 fazi B in C — **neveljavni** (pojav P1) | 12 letečih NPC-jev 0,00 bloka v 900 tickih pri `navig=6/6` | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
+| 2026-09-17 | M2.3 ponovitev z `dStarost` in `gib` (12:37) | `dStarost` 20 povsod, `gib` točno 0 v zmrznjenih progah proti 0,2306 v fazi A — dve razlagi od treh ovrženi | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
 | 2026-09-18 | M2.5c: tri ponovitve scenarija M2.7, vsaka svež svet (2,6 / 2,1 / 2,0 min) | T1–T6 zelena; **46 veličin od 59 z razponom nič**, šumna samo veličina 5 (do 114 %) | [zapis](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
 | 2026-09-17 | poraba pri 21 NPC-jih med M2.3 (ni baseline) | `npc.update.window` 162,5 µs/NPC; MSPT p50 0,84 ms, p95 8,91 ms, p99 102,8 ms | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
 | — | baseline MSPT še ni izmerjen (M2.6) | — | — |

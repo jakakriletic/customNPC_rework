@@ -31,8 +31,8 @@ New-Item -ItemType Directory -Force -Path $audit | Out-Null
 
 $lanes      = @('F', 'W', 'P')
 $laneOpis   = @{ F = 'leteci + zid'; W = 'kopenski + zid'; P = 'leteci, prosto' }
-$phases     = @('A', 'B', 'C')
-$phaseOpis  = @{ A = 'navigateTo en sam klic'; B = 'navigateTo osvezen'; C = 'setAttackTarget' }
+$phases     = @('A', 'B', 'C', 'D')
+$phaseOpis  = @{ A = 'navigateTo en sam klic'; B = 'navigateTo osvezen'; C = 'setAttackTarget'; D = 'navigateTo osvezen, izhodisce pol bloka izven mreze' }
 
 function Step($n, $t) { Write-Host ''; Write-Host "===== $n : $t =====" }
 
@@ -362,7 +362,7 @@ try {
     if ($modErrors.Count -gt 0) { $modErrors | Select-Object -First 5 | ForEach-Object { Write-Host "      $_" } }
     Check 'brez "script errored"' (-not $log.Contains('script errored'))
 
-    Step 8 'L4-L10: izid po fazah in progah'
+    Step 8 'L4-L11: izid po fazah in progah'
     $result = @{}
     $lines  = @()
     foreach ($ph in $phases) {
@@ -437,11 +437,38 @@ try {
             }
         }
     }
+    $head += ''
+    $head += '## Razsodba o P1'
+    $head += ''
+    $head += $p1
     if ($mrtvi.Count -gt 0) {
         Write-Host ''
         Write-Host 'Diagnostika: proge, ki se niso premaknile'
         $mrtvi | ForEach-Object { Write-Host $_ }
     }
+
+    # L11 in razsodba o P1. Faza D se od faze B razlikuje v eni sami stvari: NPC zacne pol
+    # bloka izven mreze po z. Ce je to vzrok zmrznitve iz zagonov 12:17 in 12:37, mora biti
+    # proga P v fazi B ziva in v fazi D mrtva, kopenska proga W pa ziva v obeh - slednja je
+    # kontrola, ker EntityMoveHelper praga d3 > 0,5 nima.
+    $bpP = Max-Prevozeno $result['BP']
+    $dpP = Max-Prevozeno $result['DP']
+    $dwW = Max-Prevozeno $result['DW']
+    $gdW = Max-Gib $result['DW']
+    Check ("L11: kontrola P1 - kopenska proga W se v fazi D premika (prevozenoMax={0}, gibMax={1})" -f $dwW, $gdW) `
+          (($dwW -gt 0.05) -and ($gdW -gt 0))
+
+    if ($bpP -ge 12 -and $dpP -lt 0.05) {
+        $p1 = "P1 POTRJEN: proga P na mrezi prevozi {0}, izven mreze {1}. Pol bloka odloci." -f $bpP, $dpP
+    } elseif ($bpP -ge 12 -and $dpP -ge 12) {
+        $p1 = "P1 OVRZEN: proga P se premika na mrezi ({0}) in izven nje ({1}); vzrok zmrznitve je bil nekaj drugega." -f $bpP, $dpP
+    } elseif ($bpP -lt 12) {
+        $p1 = "P1 NEODLOCEN: proga P se ne premika niti v fazi B ({0}); popravek resetiranja ni zalegel." -f $bpP
+    } else {
+        $p1 = "P1 NEODLOCEN: B={0} D={1}" -f $bpP, $dpP
+    }
+    Write-Host ''
+    Write-Host $p1
 
     # L8: cele je poslan za vsako progo in fazo - to je zadetek regexa, ne vrednost.
     $celeOk = $true
@@ -456,7 +483,7 @@ try {
     $head += ''
     $head += 'Scenarij: `docs/scenariji/M2.3-R2.md`. Proge: F = leteci + zid, W = kopenski + zid, P = leteci brez ovire.'
     $head += ''
-    $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'L1-L10 zelena' } else { ("padlo {0}" -f $failures.Count) }))
+    $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'L1-L11 zelena' } else { ("padlo {0}" -f $failures.Count) }))
     $head += ''
     $head += '```'
     $head += $lines
@@ -481,7 +508,7 @@ try {
     Step 10 'Izid'
     if ($failures.Count -eq 0) {
         Write-Host ''
-        Write-Host 'M2.3 L1-L10 USPESNO: reprodukcija je veljavna. Stevilke zgoraj gredo v docs/meritve/.'
+        Write-Host 'M2.3 L1-L11 USPESNO: reprodukcija je veljavna. Stevilke zgoraj gredo v docs/meritve/.'
         Write-Host ("Izpis:    {0}" -f $s.Log)
         Write-Host ("Posnetek: {0}" -f $dumps)
         exit 0

@@ -87,7 +87,7 @@ vm.createContext(sandbox);
 vm.runInContext(mini, sandbox);   // namenoma minificirana razlicica, ne vir
 
 sandbox.init({ npc: npc });
-for (var t = 1; t <= 146; t++) {
+for (var t = 1; t <= 194; t++) {
     for (var k = 0; k < ents.length; k++) {
         ents[k]._age += 10;
         if (ents[k]._step) { ents[k]._z -= ents[k]._step; }
@@ -100,12 +100,12 @@ fs.writeFileSync(out, lines.join('\n') + '\n');
 
 var napake = [];
 var obvezni = ['R2-INIT', 'R2-SETUP ', 'R2-A-START', 'R2-A-END', 'R2-B-START', 'R2-B-END',
-               'R2-C-START', 'R2-C-END', 'R2-SUM'];
+               'R2-C-START', 'R2-C-END', 'R2-D-START', 'R2-D-END', 'R2-SUM'];
 for (i = 0; i < obvezni.length; i++) {
     var n = lines.filter(function (l) { return l.indexOf(obvezni[i]) === 0; }).length;
     if (n !== 1) { napake.push('marker ' + obvezni[i] + ' se pojavi ' + n + '-krat, pricakovano 1'); }
 }
-var faze = ['A', 'B', 'C'];
+var faze = ['A', 'B', 'C', 'D'];
 var proge = ['F', 'W', 'P'];
 for (i = 0; i < faze.length; i++) {
     for (var j = 0; j < proge.length; j++) {

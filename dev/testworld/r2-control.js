@@ -18,6 +18,10 @@ var B_START = 54;
 var B_END = 98;
 var C_START = 102;
 var C_END = 146;
+// Faza D je prisla iz zagona 17. 9. ob 12:37 in je poskus z eno samo spremenljivko:
+// ista vodenja kot faza B, samo izhodisce je za pol bloka izven mreze po z.
+var D_START = 150;
+var D_END = 194;
 var SAMPLE_EVERY = 2;
 
 var START_Z = -16;
@@ -190,7 +194,26 @@ function stopAll(list) {
     }
 }
 
+// Vrne NPC tocno tja, kjer je fazo zacel. Do 17. 9. je namesto zapomnjenega z postavljal
+// konstanto START_Z: NPC se je spawnal na sredini bloka (z = -15,5), reset pa ga je dal na
+// mejo bloka (z = -16,0). Ta pol bloka je bila edina razlika med fazo A, ki je delovala, in
+// fazama B in C, v katerih se ni premaknil noben leteci NPC.
 function resetToStart(list) {
+    for (var i = 0; i < list.length; i++) {
+        var e = list[i];
+        var s = startPos[e.getUUID()];
+        if (s) { e.setPosition(s.x, s.y, s.z); }
+    }
+}
+
+// Namerno napacen reset iz prvega in drugega zagona: x ostane na sredini bloka, z pade na
+// mejo bloka. Razdalja do sredine ciljnega vozlisca je s tem tocno 0,5 po eni osi.
+// Ce je mehanizem tak, kot ga opisuje koda, se mora leteci NPC v tej fazi ustaviti:
+//   PathNavigate.pathFollow:286-292  maxDistanceToWaypoint = 0,75 - sirina/2 = 0,45
+//                                    -> 0,5 > 0,45, vozlisce se ne prestevilci naprej
+//   FlyingMoveHelper:39              pogoj je d3 > 0,5 -> tocno 0,5 pade v WAIT
+// Kopenska proga W je kontrola: EntityMoveHelper takega praga nima in se mora premikati.
+function resetOffGrid(list) {
     for (var i = 0; i < list.length; i++) {
         var e = list[i];
         var s = startPos[e.getUUID()];
@@ -269,15 +292,16 @@ function navigateAll() {
     driveNavigate(laneP, GOAL_X_P);
 }
 
-function endPhase(npc, marker) {
+// reset je funkcija, ne zastavica: naslednja faza se zacne tocno tam, kamor jo postavi.
+function endPhase(npc, marker, reset) {
     sampleAll(npc);
     say(npc, marker);
     stopAll(laneF);
     stopAll(laneW);
     stopAll(laneP);
-    resetToStart(laneF);
-    resetToStart(laneW);
-    resetToStart(laneP);
+    reset(laneF);
+    reset(laneW);
+    reset(laneP);
     phase = '-';
 }
 
@@ -313,10 +337,10 @@ function tick(e) {
     }
 
     if (t === A_START) { startPhase(npc, 'A', 'R2-A-START navigateTo en sam klic'); navigateAll(); return; }
-    if (t === A_END)   { endPhase(npc, 'R2-A-END'); return; }
+    if (t === A_END)   { endPhase(npc, 'R2-A-END', resetToStart); return; }
 
     if (t === B_START) { startPhase(npc, 'B', 'R2-B-START navigateTo osvezen ob vsakem vzorcu'); navigateAll(); return; }
-    if (t === B_END)   { endPhase(npc, 'R2-B-END'); return; }
+    if (t === B_END)   { endPhase(npc, 'R2-B-END', resetToStart); return; }
 
     if (t === C_START) {
         startPhase(npc, 'C', 'R2-C-START setAttackTarget');
@@ -325,8 +349,16 @@ function tick(e) {
         driveAttack(laneP, targetP);
         return;
     }
-    if (t === C_END) {
-        endPhase(npc, 'R2-C-END');
+    // Konec faze C postavi NPC-je izven mreze: to je vhodni pogoj faze D.
+    if (t === C_END) { endPhase(npc, 'R2-C-END', resetOffGrid); return; }
+
+    if (t === D_START) {
+        startPhase(npc, 'D', 'R2-D-START navigateTo osvezen, izhodisce pol bloka izven mreze');
+        navigateAll();
+        return;
+    }
+    if (t === D_END) {
+        endPhase(npc, 'R2-D-END', resetToStart);
         say(npc, 'R2-SUM progaF=' + laneF.length + ' progaW=' + laneW.length + ' progaP=' + laneP.length);
         return;
     }
@@ -335,5 +367,5 @@ function tick(e) {
     if (t % SAMPLE_EVERY !== 0) { return; }
 
     sampleAll(npc);
-    if (phase === 'B') { navigateAll(); }
+    if (phase === 'B' || phase === 'D') { navigateAll(); }
 }
