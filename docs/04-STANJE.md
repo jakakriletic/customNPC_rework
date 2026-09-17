@@ -115,6 +115,13 @@ vzrok imenovali v prvih tridesetih sekundah.
 
 **Meritve:** nobene — zagon ni dal veljavnih podatkov.
 
+**Dopolnitev po drugem zagonu:** sam `setworldspawn 0 4 0` **ne zadošča** — `fill` je spet
+javil „Cannot place blocks outside of the world". Chunke okoli novega spawna naloži šele
+naslednji zagon serverja (`prepareSpawnArea`), zato ima M0.6 (`testworld-run.ps1`) **dva
+zagona**: A pribije spawn in shrani, B postavi prizorišče. `nav-run.ps1` ima zdaj isto.
+Opomba v M0.6 je bila zapisana že 16. 9. („Zakaj trije zagoni") — nov scenarij je moral
+prevzeti postopek, ne samo ukaz.
+
 **Naslednja seja:** ponovni `.\nav-run.ps1`.
 
 ---

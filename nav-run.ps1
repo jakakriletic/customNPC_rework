@@ -88,8 +88,9 @@ function Wait-ForMarker($Srv, [string]$Marker, [int]$TimeoutSec) {
     return (Wait-ForCount $Srv $Marker 1 $TimeoutSec)
 }
 
-function Start-DevServer {
-    $outLog = Join-Path $audit 'm27-nav.log'
+function Start-DevServer([string]$Tag = '') {
+    $name = if ($Tag -eq '') { 'm27-nav.log' } else { ('m27-nav-{0}.log' -f $Tag) }
+    $outLog = Join-Path $audit $name
     if (Test-Path $outLog) { Remove-Item $outLog -Force }
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName         = $env:ComSpec
@@ -436,12 +437,30 @@ try {
     Check ("tri NAV fixture datoteke so v svetu (kopiranih {0})" -f $copied) ($copied -eq 3)
     if ($failures.Count -gt 0) { throw "Fixture manjkajo v $srcClones" }
 
-    Step 2 'Zagon serverja'
-    $s = Start-DevServer
-    Check 'server je dosegel "Done ("' (Wait-ForMarker $s 'Done (' 900)
-    if ($failures.Count -gt 0) { throw "Server se ni zagnal. Glej $($s.Log)" }
+    # Zakaj dva zagona: spawn superflat sveta lahko pade dalec od izhodisca (v tem semenu
+    # je na 743,4,-231), dedicated server brez igralca pa drzi nalozene samo chunke v
+    # obmocju +-128 blokov okoli spawna (World.isSpawnChunk). Konzolni ukazi tecejo na
+    # (0,0,0), zato 'fill' javi "Cannot place blocks outside of the world" in
+    # 'noppes clone spawn' tiho ne postavi nicesar. Sam 'setworldspawn' ne zadosca -
+    # chunke okoli novega spawna nalozi sele naslednji zagon (prepareSpawnArea).
+    # Isti postopek ima M0.6 (testworld-run.ps1, zagona A in B); tu je bil 17. 9. pozabljen
+    # in je stal dva zagona (dnevnik 35).
+    Step 2 'Zagon A: pribij world spawn na 0 4 0'
+    $a = Start-DevServer 'a'
+    Check 'server A je dosegel "Done ("' (Wait-ForMarker $a 'Done (' 900)
+    if ($failures.Count -eq 0) {
+        Send-Command $a 'setworldspawn 0 4 0'
+        Check 'world spawn nastavljen' (Wait-ForMarker $a 'Set the world spawn point' 60)
+        Send-Command $a 'save-all flush'
+        Check 'svet shranjen (A)' (Wait-ForMarker $a 'Saved the world' 180)
+    }
+    Check 'server A se je cisto ustavil' (Stop-DevServer $a)
+    if ($failures.Count -gt 0) { throw "Zagon A ni uspel; nadaljevanje nima smisla. Glej $($a.Log)" }
 
-    Step 3 'Prizorisce in fixture NPC-ji'
+    Step 3 'Zagon B: prizorisce in fixture NPC-ji'
+    $s = Start-DevServer
+    Check 'server B je dosegel "Done ("' (Wait-ForMarker $s 'Done (' 900)
+    if ($failures.Count -gt 0) { throw "Server se ni zagnal. Glej $($s.Log)" }
     $null = Send-File $s (Join-Path $seed 'nav-setup-commands.txt')
     Start-Sleep -Seconds 3
 
