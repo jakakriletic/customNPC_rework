@@ -37,6 +37,15 @@ gamerule spectatorsGenerateChunks false
 time set 6000
 weather clear 1000000
 
+# --- spawn na (0,4,0) ---
+# BREZ TEGA SE SCENARIJ TIHO PODRE. Seme testnega sveta ima spawn na (743,4,-231),
+# dedicated server pa brez igralca drzi nalozene samo chunke v obmocju +-128 blokov okoli
+# spawna (World.isSpawnChunk). Prizorisce pri z=64..78 je takrat 750 blokov proc:
+# 'fill' javi "Cannot place blocks outside of the world", 'noppes clone spawn' pa ne javi
+# nicesar in NPC-ja ni nikjer. Zagon 17. 9. je to stal cel scenarij (dnevnik 35).
+# Isti ukaz imata M0.6 (setup-commands.txt) in fixture-run.ps1.
+setworldspawn 0 4 0
+
 # --- ocisti prejsnji zagon ---
 noppes slay npcs
 

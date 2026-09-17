@@ -291,6 +291,39 @@ function Read-NavAi([string]$LogPath) {
     }
 }
 
+# Vrstica RWDIAG-CHUNKS ima dve obliki: ob uspehu "stanje=on ... obroc=N zavrnjeni=N npc=N",
+# ob zavrnitvi pa "stanje=off chunki=0 tiketi=0 npc=0 razlog=...". Bralnik, ki pozna samo
+# prvo, ob neuspehu ne izpise nicesar in merilo pove "chunki niso nalozeni", ne pa tistega,
+# kar dejansko manjka: NPC-jev v svetu. Zagon 17. 9. je bil prav tak.
+function Read-Chunks([string]$LogPath) {
+    $t = Get-MarkerText $LogPath
+    $m = [regex]::Match($t, 'RWDIAG-CHUNKS stanje=(\w+) chunki=(\d+) tiketi=(\d+) obroc=\d+ zavrnjeni=(\d+) npc=(\d+)')
+    if ($m.Success) {
+        return [pscustomobject]@{ Stanje = $m.Groups[1].Value; Chunki = [int]$m.Groups[2].Value
+            Tiketi = [int]$m.Groups[3].Value; Zavrnjeni = [int]$m.Groups[4].Value; Npc = [int]$m.Groups[5].Value
+            Razlog = '' }
+    }
+    $m = [regex]::Match($t, 'RWDIAG-CHUNKS stanje=(\w+) chunki=(\d+) tiketi=(\d+) npc=(\d+) razlog=(.*)')
+    if ($m.Success) {
+        return [pscustomobject]@{ Stanje = $m.Groups[1].Value; Chunki = [int]$m.Groups[2].Value
+            Tiketi = [int]$m.Groups[3].Value; Zavrnjeni = -1; Npc = [int]$m.Groups[4].Value
+            Razlog = $m.Groups[5].Value.Trim() }
+    }
+    return $null
+}
+
+# Koliko blokov je postavil 'fill'. Vanilla odgovori "N blocks filled", ob nenalozenem
+# obmocju pa "Cannot place blocks outside of the world" - in prav to se je 17. 9. zgodilo
+# zidu, medtem ko je scenarij mirno tekel naprej proti prazni sceni.
+function Read-FillBlocks([string]$LogPath) {
+    $max = 0
+    foreach ($m in [regex]::Matches((Get-MarkerText $LogPath), '(\d+) blocks filled')) {
+        $n = [int]$m.Groups[1].Value
+        if ($n -gt $max) { $max = $n }
+    }
+    return $max
+}
+
 # Najmanjsi prirastek starosti med dvema vzorcema. Prvi vzorec faze se izpusti: njegov
 # prirastek meri razmik med fazama, ne merilnega intervala. -1 pomeni 'ni podatka'.
 function Min-DStarost($Samples) {
@@ -412,18 +445,29 @@ try {
     $null = Send-File $s (Join-Path $seed 'nav-setup-commands.txt')
     Start-Sleep -Seconds 3
 
-    Step 4 'N2: pogoj meritve (M2.1d)'
+    Step 4 'N2: prizorisce in pogoj meritve (M2.1d)'
+    # Zid najprej: ce ga ni, sta ozko grlo in vse, kar iz njega sledi, izmisljena.
+    $filled = Read-FillBlocks $s.Log
+    Check ("N2: zid je postavljen ({0} blokov)" -f $filled) ($filled -ge 100)
+    if ($filled -lt 100) {
+        throw "Zid ni bil postavljen. Ce log pravi 'Cannot place blocks outside of the world', obmocje ni nalozeno - preveri, da je v nav-setup-commands.txt ukaz 'setworldspawn 0 4 0'."
+    }
     Send-Command $s ("rwdiag chunks on {0}" -f $ChunkRadius)
     Check 'ukaz chunks odgovori' (Wait-ForMarker $s 'RWDIAG-CHUNKS' 30)
-    $chunks = [regex]::Match((Get-MarkerText $s.Log),
-        'RWDIAG-CHUNKS stanje=on chunki=(\d+) tiketi=(\d+) obroc=\d+ zavrnjeni=(\d+) npc=(\d+)')
-    Check 'N2: chunki so prisilno nalozeni' ($chunks.Success -and ([int]$chunks.Groups[1].Value -gt 0))
-    if ($chunks.Success) {
-        Write-Host ("  chunki={0} tiketi={1} zavrnjeni={2} npc={3}" -f `
-            $chunks.Groups[1].Value, $chunks.Groups[2].Value, $chunks.Groups[3].Value, $chunks.Groups[4].Value)
-        Check ("N2: noben chunk ni bil zavrnjen (zavrnjeni={0})" -f $chunks.Groups[3].Value) ([int]$chunks.Groups[3].Value -eq 0)
-        Check ("N2: v svetu je {0} NAV NPC-jev (najdenih {1})" -f $npcCount, $chunks.Groups[4].Value) `
-            ([int]$chunks.Groups[4].Value -eq $npcCount)
+    $chunks = Read-Chunks $s.Log
+    if ($null -ne $chunks) {
+        Write-Host ("  stanje={0} chunki={1} tiketi={2} zavrnjeni={3} npc={4} {5}" -f `
+            $chunks.Stanje, $chunks.Chunki, $chunks.Tiketi, $chunks.Zavrnjeni, $chunks.Npc, $chunks.Razlog)
+        # Brez NPC-jev nima smisla cakati na scenarij: krmilnik se ne bo oglasil in vsaka
+        # faza bo iztekla po 180 s. Zagon 17. 9. je tako porabil deset minut za nic.
+        Check ("N2: v svetu je {0} NAV NPC-jev (najdenih {1})" -f $npcCount, $chunks.Npc) ($chunks.Npc -eq $npcCount)
+        if ($chunks.Npc -eq 0) {
+            throw "V svetu ni NPC-jev - 'noppes clone spawn' ni nicesar postavil. Najpogostejsi vzrok: obmocje scenarija ni nalozeno (manjka 'setworldspawn 0 4 0') ali fixture NAV_*.json niso v dev\run\world\customnpcs\clones\1."
+        }
+        Check 'N2: chunki so prisilno nalozeni' ($chunks.Chunki -gt 0)
+        Check ("N2: noben chunk ni bil zavrnjen (zavrnjeni={0})" -f $chunks.Zavrnjeni) ($chunks.Zavrnjeni -le 0)
+    } else {
+        Check 'N2: vrstica RWDIAG-CHUNKS je berljiva' $false
     }
     Write-Host ("  ogrevanje {0} s" -f $WarmupSeconds)
     Start-Sleep -Seconds $WarmupSeconds

@@ -71,6 +71,54 @@
 
 ## Dnevnik sej
 
+### 2026-09-17 (35) — Prvi zagon M2.7: prizorišče 750 blokov od spawna
+
+**Paket:** M2.7 (zagon), brez sprememb v modu
+**Stanje:** vzrok imenovan in odpravljen; ponovni zagon je na uporabniku
+
+**Kaj se je zgodilo:** `.\nav-run.ps1` je padel na N2 in nato desetkrat iztekel v timeout.
+V logu: `Cannot place blocks outside of the world` (zid), nobenega odziva na 16 ukazov
+`noppes clone spawn`, `RWDIAG-CHUNKS … npc=0 razlog=v svetovih ni nalozenih NPC-jev`.
+
+**Vzrok:** seme testnega sveta ima spawn na **(743, 4, −231)**, dedicated server brez
+igralca pa drži naložene samo chunke v območju ±128 blokov okoli spawna
+(`World.isSpawnChunk`). Prizorišče M2.7 pri `z = 64…78` je bilo 750 blokov proč, torej
+sploh ni bilo naloženo: `fill` je padel, `noppes clone spawn` pa **ni javil ničesar** in
+NPC-jev ni bilo. `setup-commands.txt` (M0.6) in `fixture-run.ps1` imata zato
+`setworldspawn 0 4 0`; `nav-setup-commands.txt` ga ni imel.
+
+**Narejeno:**
+
+- `setworldspawn 0 4 0` v `nav-setup-commands.txt`, s pojasnilom, zakaj brez njega scenarij
+  tiho odpove.
+- `nav-run.ps1`: bralnik `Read-FillBlocks` in merilo **„zid je postavljen"** (`fill` mora
+  javiti vsaj 100 blokov) — preverja **učinek** in ne dejanja.
+- `Read-Chunks` zdaj bere **obe** obliki vrstice `RWDIAG-CHUNKS`; prej je ob zavrnitvi
+  regex zgrešil in scenarij je povedal „chunki niso naloženi" namesto „v svetu ni NPC-jev".
+- Ob `npc = 0` ali nepostavljenem zidu scenarij **pade takoj** namesto desetih minut
+  čakanja na markerje, ki jih ne bo.
+
+**Ugotovitve:**
+
+- **`noppes clone spawn` v nenaložen chunk molči.** Ne javi napake in ne postavi ničesar.
+  Edini znak je posredni (`npc=0`), zato ga mora scenarij izrecno preveriti.
+- Isti razred napake kot 17. 9. pri `server.properties` (dnevnik 32): preverba dejanja
+  („poslanih 30 ukazov") je bila zelena, učinka pa ni bilo. Vsak nov scenarij mora imeti
+  merilo, ki prebere **posledico** v svetu.
+
+**Preverjeno v seji:** `nav-run.ps1` sintaktično brez napak; `Read-Chunks` in
+`Read-FillBlocks` sta pognana nad **pravim logom padlega zagona** in dasta
+`npc=0, razlog=v svetovih ni nalozenih NPC-jev` ter `0 blokov` — torej bi novi merili
+vzrok imenovali v prvih tridesetih sekundah.
+
+**Spremembe obnašanja:** nobene.
+
+**Meritve:** nobene — zagon ni dal veljavnih podatkov.
+
+**Naslednja seja:** ponovni `.\nav-run.ps1`.
+
+---
+
 ### 2026-09-17 (34) — M2.7: merila kakovosti navigacije (sonda, opazovalec, scenarij)
 
 **Paket:** M2.7 (del a)
