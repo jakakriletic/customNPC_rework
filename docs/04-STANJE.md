@@ -70,6 +70,79 @@
 
 ## Dnevnik sej
 
+### 2026-09-17 (31) — Združitev vej: podvojen M2.2, M2.5a prestavljen na origin
+
+**Paket:** brez novega paketa — sanacija razhajanja med delovnima postajama
+**Stanje:** končano; `push` čaka na uporabnika
+
+**Kaj se je zgodilo:**
+
+- Seja je na namizni postaji začela z `git status` in nadaljevala nedokončan M2.2 iz seje
+  16. 9.: prevedla kodo, dopisala dva testa, napisala scenarij, popravila tri napake v
+  `rwr1-run.ps1` in commitala (`ec9ede6`).
+- Uporabnik je nato rekel, naj pogledam git. `origin/main` je bil star: stal je pri
+  `b7827cd` (M2.1d), ker `git fetch` na tej postaji pade na posredniškem strežniku
+  (`HTTP 403`). Prava oddaljena veja je bila `37e8d74` — **devet commitov naprej**.
+- Na originu so bili **M2.2 (R1 reproduciran in izmerjen), M0.7 (M0 zaključen) in M2.3
+  (R2, faza A)**. M2.2 je tam rešen povsem drugače: brez Java zbiralnika, s skriptami
+  NPC-jev (`r1-control.js`) in `r1-run.ps1`. **Današnji M2.2 je bil torej podvojeno delo.**
+
+**Narejeno:**
+
+- Oddaljena veja prenesena v repozitorij skozi oblačno okolje z `git bundle` (recept je v
+  Znanih omejitvah), `origin/main` je zdaj pravilen.
+- Današnji M2.2 **umaknjen z `main` na vejo `m22-seja`** (`ec9ede6`). Ni izbrisan in ni
+  združen: M2.2 je na originu zaključen in dvakratna reprodukcija iste zahteve bi bila
+  breme, ne varnost.
+- **M2.5a prestavljen (rebase) na `origin/main`.** Razrešeni trki: `README.md`,
+  `docs/04-STANJE.md` (glava, tabela M2, dnevnik, Znane omejitve, rep porazdelitve) in
+  `docs/01-ARHITEKTURA.md`.
+- **Trk ID-jev odločitev:** obe veji sta uporabili `D-012` (tu pripis počasnih tickov, na
+  originu navigacija). Naši odločitvi sta preštevilčeni v **D-013** (tabela top-N namesto
+  profilerja) in **D-014** (seja prevaja in testira sama); vse sklice v dnevniku sem
+  popravil. Odločitev originala `D-012` (navigacija) ostane nedotaknjena.
+- Preverjeno po združitvi: 17 razredov `rework/**` prevedenih z `javac --release 8`,
+  **55 testov instrumentacije zelenih**, `rwdiag-run.ps1` po samodejni združitvi
+  **sintaktično brez napak** (PowerShell 7.4.6 `Parser::ParseFile` v oblačnem okolju —
+  postopek z originala, prvič uporabljen tudi tu).
+
+**Ugotovitve:**
+
+- **Ista vrsta napake je bila najdena dvakrat neodvisno.** Origin jo je popravil v
+  `rwdiag-run.ps1` (`49f7889`, "n-ti zadetek nad celim logom je bral dvojnik prvega"),
+  ta seja pa v `rwr1-run.ps1` (merilo R1-1 je primerjalo fazo A samo s sabo). Vzrok je
+  isti: `reply()` piše markerje v log **in** pošiljatelju, zato je vsak marker podvojen.
+  To ni naključje dveh skript, ampak lastnost ukaza — vsak nov razčlenjevalnik markerjev
+  mora brati sidrano na oznako faze, ne po vrstnem redu pojavitve.
+- **Prepad `p95 → p99` je že pojasnjen**: origin ga je zaprl z ogrevanjem (81,8 ms → 4,3 ms),
+  `max` pa je vsakič en tick z autosave. Odprto vprašanje iz M2.5a je s tem odgovorjeno,
+  merila S1–S4 pa ostanejo uporabna kot strojna potrditev pripisa.
+- **Iz današnjega M2.2 ostanejo uporabne tri ugotovitve**, tudi če koda ostane na veji:
+  ime NPC-ja s presledkom ali podpičjem tiho razbije razčlenjevanje povzetka in stolpce
+  CSV (velja za vsak marker, ki ime piše nezaščiteno); `/summon` v 1.12.2 izpiše
+  `Object successfully summoned`, ne `Summoned new <ime>`; in zgornja ugotovitev o
+  podvojenih markerjih.
+
+**Ni narejeno in zakaj:**
+
+- `push` ni narejen — poverilnice so na Windows strani, lupina seje pa nima ne njih ne
+  dostopa do GitHuba. Uporabnik požene `git push origin main`; lokalno sta pred originom
+  **dva** commita (M2.5a), veja `m22-seja` pa ostane samo lokalno, dokler je ne potisne
+  posebej.
+- Veja `m22-seja` ni prečiščena in ne bo vzdrževana. Če se M2.5/M2.7 kdaj lotita merjenja
+  jahanja, je tam pripravljen Java zbiralnik z 78 zelenimi testi.
+
+**Spremembe obnašanja:** nobene. Koda se ni spremenila; spremenila se je zgodovina veje.
+
+**Meritve:** nobene.
+
+**Naslednja seja:** **najprej preveri, ali je `origin/main` res svež** (če `fetch` pade,
+uporabi recept z bundlom iz Znanih omejitev), šele nato izberi paket. Prvi na vrsti je
+ponovni zagon `.\r2-run.ps1` z `dStarost` in `gib` (pojav P1), ob prvem `.\rwdiag-run.ps1`
+pa še vrstica pripisa S1–S4.
+
+---
+
 ### 2026-09-16 (30) — M2.5a: pripis počasnih tickov + seja prevaja in testira sama
 
 > **Opomba o vrstnem redu.** Ta vnos je nastal 16. 9. na drugi delovni postaji in je v
@@ -1991,6 +2064,15 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
   Nastane ob `setupDecompWorkspace`. Uporabljen v M2.1c za `WorldServer` in `World`.
 - Projekt teče na dveh delovnih postajah proti istemu `origin/main`. Seja začne z
   `git fetch origin` in preveri, ali je oddaljena veja pred lokalno.
+- **Na namizni postaji `git fetch` ne deluje** *(ugotovljeno 17. 9.)*: lupina gre skozi
+  posredniški strežnik, ki za `github.com` vrne `HTTP 403 ... after CONNECT`. Posledica je
+  bila resna — seja je cel dan delala proti `origin/main`, ki je stal pri `b7827cd`, in
+  na slepo podvojila že narejen M2.2. **Obvod**, ko `fetch` pade: oblačno okolje seje do
+  GitHuba pride, zato tam `git clone`, nato
+  `git bundle create <ime>.bundle main --not <zadnji skupni commit>`, bundle se prenese v
+  `dev/build/tmp/` in lokalno se pobere z
+  `git fetch <pot-do-bundla> main:refs/remotes/origin/main`. Bundle iz 9 commitov je imel
+  128 KB. **Dokler `origin/main` ni potrjeno svež, seja ne sme začeti novega paketa.**
 - **Seja lahko commita, ne more pa pushati.** *(ugotovljeno 17. 9.)* V sejini lupini
   `git fetch` in `git ls-remote` delujeta, `git push` pa pade z
   `could not read Username for 'https://github.com'`: poverilnice so na Windows strani
