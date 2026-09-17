@@ -9,13 +9,13 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-09-15** |
+| Zadnja posodobitev | **2026-09-17** |
 | Trenutni milestone | **M2 — diagnostika** (M2.1a in M2.1c narejena); M0.7/M0.8 čakata na uporabnika, M1 je zaključen |
-| Naslednji paketi | razčistiti prepad `server.tick.ns` p95 = 1,6 ms → p99 = 81,8 ms (ponovitev z ogrevanjem, nato M2.5); nato **M2.2** (reprodukcija R1); **M0.7** takoj ko uporabnik naredi quest in dialog v GUI-ju |
+| Naslednji paketi | **M2.2** — pognati `.\r1-run.ps1` (artefakti so preverjeni, dve blokirni napaki popravljeni) in zapisati razliko M/S v `docs/meritve/`; **M0.7** takoj ko uporabnik naredi quest in dialog v GUI-ju |
 | Prevedljivih razredov | 32 — prejšnjih 21 + 11 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **33 za instrumentacijo** (23 + 10 novih za `DiagChunkPlan`); zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Blokade | Q1 in Q5–Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
-| Omejitev orodij | seja **ne more zaganjati ukazov** na uporabnikovem računalniku (glej Znane omejitve); gradle, teste in git poganja uporabnik. Datoteke lahko bere in piše; od 15. 9. je za to poleg korena projekta priključena tudi mapa `dev` (razlog v Znanih omejitvah) |
+| Omejitev orodij | **spremenjeno 17. 9.**: seja ima lupino na uporabnikovem računalniku, a **linuxovo** in brez PowerShella, Gradla in Minecrafta. Bere, piše, ureja, `git`, `python3`, `node`, `jq` — da. `.\dev.ps1`, `.\*-run.ps1`, build in zagon sveta — **ne**, to poganja uporabnik. Podrobnosti v Znanih omejitvah |
 
 ---
 
@@ -57,7 +57,7 @@
 | M2.1b | Klicna mesta za pot, skripte in AI taske | **čaka na prenos** `EntityNPCInterface`/`ai` (M3.1) in `ScriptContainer` (M5.1) |
 | M2.1c | Števci za razčiščenje `npc.per.tick` = 0 | **zaključeno** — vzrok imenovan in dokazan, glej meritev |
 | M2.1d | Pogoj meritve: `ForgeChunkManager` ticket za chunke z merjenimi NPC-ji | **zaključeno** — C1–C6 zelena v svetu, prva veljavna meritev obstaja |
-| M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih) | za M2.1d |
+| M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih + kontrolna skupina brez jahačev) | **zgrajen in preverjen, ni pognan** — dve blokirni napaki najdeni pred zagonom in popravljeni |
 | M2.3 | Reprodukcija R2 (leteči NPC in ovira) | ni začeto |
 | M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
 | M2.5 | Merilni protokol kot skripta | ni začeto |
@@ -66,6 +66,166 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-17 (19) — M2.2: preverba artefaktov in dve blokirni napaki pred zagonom
+
+**Paket:** M2.2 (preverba)
+**Stanje:** delno — vse, kar se da preveriti brez sveta, je preverjeno; zagon ostaja
+
+**Kontekst:** `git pull` je pokazal, da je oddaljena veja enaka lokalni in da je vse delo
+seje 18 (fixture, `r1-control.js`, `r1-setup-commands.txt`, `r1-run.ps1`, scenarij)
+necommitano. Seja 18 je naštela tri stvari, ki jih ni mogla preveriti. Ta seja jih je.
+
+**Zaprte vrzeli iz seje 18:**
+
+| Vrzel iz seje 18 | Kako je zaprta | Izid |
+|---|---|---|
+| `r1-run.ps1` ni sintaktično preverjen | PowerShell 7.4.6 v oblačnem okolju, `Parser::ParseFile` | 2165 žetonov, **0 napak** |
+| minificirana skripta v `R1_Control.json` morda ni enaka viru | normalizacija obeh (brez komentarjev, poenoteni narekovaji, stisnjeni presledki) in primerjava znak za znak | **identični** |
+| fixture morda vsebujejo več kot naštete spremembe | `diff` vsakega `R1_*` proti osnovi `T_*` | **natanko naštete spremembe, nič drugega** |
+
+Dodatno preverjeno: vsi klici API-ja v skripti obstajajo v `reference-src` s pravimi
+podpisi, in `IWorld.getAllEntities(int)` vrne **`IEntity[]`**, ne `List` — pri `List` bi
+`all.length` v Nashornu tiho vrnil `undefined` in `R1-MOUNT` bi javil `n=0`.
+
+**Napaka 1 — nosilci ne morejo skozi edina vrata v zidu.** `T_Carrier` in s tem
+`R1_Carrier` imata `DoorInteract: 2` (onemogočeno). Tedaj
+`EntityNPCInterface.doorInteractType()` (`:867-881`) ne doda vratnega AI taska in nastavi
+`setBreakDoors(false)`, kar je `canOpenDoors = false` (`PathNavigateGround.java:317-320`).
+V `WalkNodeProcessor.getPathNodeType` (`:359-362`) zaprta lesena vrata postanejo `WALKABLE`
+samo ob `canOpenDoors && canEnterDoors`; sicer ostanejo `DOOR_WOOD_CLOSED` s ceno `-1.0F`,
+enako kot `BLOCKED` (`PathNodeType.java:20`).
+
+Vrata so edini prehod skozi tri bloke visok zid pri z = 28, torej pot do cilja za nosilce
+**sploh ne bi obstajala** — na obeh progah enako. Pohod bi se ustavil 16 blokov od starta,
+merilo E2 (kontrolna proga prevozi vsaj 20 blokov) bi padlo in izid bi izgledal kot okvara
+navigacije. **Popravek:** `R1_Carrier` dobi `DoorInteract: 1`. Jahači, cilja in krmilnik
+ostanejo pri `2`, ker ne navigirajo.
+
+**Napaka 2 — merilni kanal bi lahko molčal.** Ves izpis gre skozi
+`npc.executeCommand('/say …')`. `NPCWrapper.executeCommand` (`:201-206`) vrže
+`CustomNPCsException`, če command bloki niso vklopljeni, `NoppesUtilServer.runCommand`
+(`:226-229`) pa v istem primeru samo zapiše opozorilo. Pri `enable-command-block=false` v
+logu ne bi bilo **nobene** vrstice `R1-*` in vse preverbe bi padle hkrati — videti kot
+pokvarjena skripta, v resnici nastavitev serverja. V `dev/run/server.properties` je
+trenutno `true` (iz M0.6), a nikjer ni bilo zapisano kot pogoj. `r1-run.ps1` to odslej
+preveri v koraku 1 in po potrebi popravi.
+
+**Tretja ugotovitev, ki ne blokira, a spreminja branje izida.** `isWalking()`
+(`EntityNPCInterface.java:1417`) je `movingType != 0 || isAttacking() || isFollower() ||
+Walking` in nadzoruje edino `addVelocity` (`:1020`). Navigacije ne blokira, zato
+`MovingState: 0` skriptnemu `navigateTo` ne škodi. Pomeni pa, da v fazi A nosilci **ne
+dobivajo sunkov ob medsebojnih trkih**, v fazi B pa jih, ker je `isAttacking()` takrat
+resničen. Veličina `razpon` zato **ni primerljiva med fazo A in fazo B**. Primerljiva je
+samo med progama M in S znotraj iste faze — kar je edina primerjava, ki jo scenarij trdi,
+tako da merila ostanejo veljavna.
+
+**Preverjeno tudi, da ne bo presenečenja:** `EntityAIReturn` se v `addRegularEntries()`
+(`:900`) doda **brezpogojno**, a `shouldExecute()` (`:40`) se konča takoj ob
+`!ais.shouldReturnHome()`. `ReturnToStart: 0b` iz seje 18 torej res izklopi vlečenje domov.
+
+**Ni narejeno in zakaj:**
+
+- **Scenarij še ni pognan.** Lupina te seje na uporabnikovem računalniku je linuxova in
+  nima PowerShella, Gradla ne Minecrafta. Zagon je na uporabniku; dogovorjeno 17. 9.
+- Krmilna skripta še vedno ni tekla v Nashornu. Preverjeni so sintaksa, podpisi API-ja in
+  vračilni tipi, ne pa izvedba.
+
+**Spremembe obnašanja:** v modu nobene. Spremenjena sta testni fixture in zagonska skripta.
+
+**Meritve:** nobene.
+
+**Naslednja seja:** uporabnik požene `.\r1-run.ps1` iz korena projekta; seja prebere
+`audit\m22-r1.log`, ovrednoti E1–E6 in zapiše razliko M/S v `docs/meritve/`. Če E1 pade
+(mount ne uspe), je to samo po sebi ugotovitev o R1 in gre v zahtevo. Če pade E2, je
+pokvarjena kontrola, ne mod.
+
+---
+
+### 2026-09-15 (18) — M2.2: raziskava in scenarij reprodukcije R1
+
+**Paket:** M2.2 (priprava)
+**Stanje:** delno — scenarij je zasnovan in zapisan, fixture in skripta še nista narejena
+
+**Narejeno — raziskava, ki odpre M2.2 brez prenosa kode:**
+
+| Vprašanje | Odgovor | Vir |
+|---|---|---|
+| Kako posaditi NPC na NPC brez GUI-ja? | `IEntity.setMount(IEntity)` iz skripte | `api/wrapper/EntityWrapper.java:414-420` |
+| Gre to skozi vanilla `startRiding`? | **da**, `startRiding(entity, true)` | isto, `:418` |
+| Ali gre `ItemMounter` po isti poti? | **ne**, paket `EnumPacketServer.SpawnRider` | `items/ItemMounter.java:31` |
+| Ali nosilec sploh dobi pot? | `isNavigating()`, `getNavigationPath()` | `api/wrapper/EntityLivingWrapper.java:43-58` |
+| Kako pognati skupino proti cilju? | `navigateTo(x,y,z,speed)`, `setAttackTarget(living)` | isto, `:32`, `:65` |
+| Kako najti fixture NPC-je? | `world.getAllEntities(2)` + `hasTag(...)` | `WorldWrapper.java:279-297` |
+
+- **Cela reprodukcija se da napisati kot skripta na enem krmilnem NPC-ju.** Nič ni treba
+  prenesti v `src/patch/java`. To je pomembno: M2 ne sme začeti prenašati
+  `EntityNPCInterface`, ker je to M3.1. S tem odpade zadnji razlog za prepletanje M2 in M3.
+- S tem je **odgovorjeno tudi na odprto vprašanje 4 iz `02-ZAHTEVE.md` §R1** (ali mount
+  sploh gre skozi `startRiding`) — za skriptno pot da. Za pot prek `ItemMounter` ne;
+  popravek v M3 mora pokriti obe in reprodukcija prek skripte o drugi ne pove nič.
+- Scenarij zapisan v [`docs/scenariji/M2.2-R1.md`](scenariji/M2.2-R1.md): prizorišče,
+  potek v dveh fazah, šest merjenih veličin in merila E1–E6.
+
+**Ugotovitev, ki spreminja zahtevo:** zahteva predpisuje „8 jahačev na 8 nosilcih“, **brez
+kontrolne skupine**. Tako postavljen poskus ne dokaže ničesar — če se nosilci slabo
+premikajo, je lahko vzrok jahanje ali pa se skupina osmih CustomNPC-jev tako premika tudi
+brez njih. Scenarij zato vodi **dve vzporedni progi hkrati**, v istem svetu in istem ticku:
+proga M (8 nosilcev z jahači) in proga S (8 istih nosilcev brez jahačev). Vsaka številka se
+poroča kot par M/S; razlika je ugotovitev, absolutna vrednost ni.
+
+Druga sprememba: scenarij ima dve fazi, ne eno. Faza A je prosta pot (`navigateTo`) — čista
+navigacija; faza B je `setAttackTarget`, torej uporabnikov dejanski primer („ko grejo
+napadat“) in edina, ki sproži `EntityAIAttackTarget` s sumljivimi mutex biti in `minRange`,
+odvisnim od širine.
+
+**Narejeno — gradnja (ista seja, po zasnovi):**
+
+- `dev/testworld/r1-control.js` — **vir** krmilne skripte, berljiv in komentiran. V
+  `R1_Control.json` je vstavljena minificirana (polje `Script` je en sam niz). Skripta
+  najde NPC-je po tagih, pari jahače z nosilci po koordinati x, vodi obe fazi in izpisuje
+  vzorce z markerjem `R1-S`.
+- Štirje fixture, **generirani iz obstoječih pravih NBT zapisov** (pravilo iz
+  `dev/testworld/README.md`), s točno naštetimi spremembami in nič drugim:
+  `R1_Carrier` (iz `T_Carrier`), `R1_Rider` (`T_Rider`), `R1_Target` (`T_Stand`),
+  `R1_Control` (`T_Scripted`).
+- `dev/testworld/r1-setup-commands.txt` — prizorišče in 26 NPC-jev.
+- `r1-run.ps1` — zagon in samodejno ovrednotenje E1–E6, vključno z izpisom razlike M/S.
+
+**Ugotovitve iz gradnje — vse preverjene v kodi, nobena po spominu:**
+
+- **Hrastova vrata se v 1.12.2 registrirajo kot `minecraft:wooden_door`, ne `oak_door`**
+  (`net/minecraft/init/Blocks.java:392`). Edina vrsta vrat s starim imenom; ugibanje bi
+  tiho spodletelo in zid bi ostal brez prehoda.
+- Spodnja polovica vrat meta `3` = `FACING NORTH`: `BlockDoor.getStateFromMeta` (`:423`)
+  bere `EnumFacing.getHorizontal(meta & 3).rotateYCCW()`.
+- **`ReturnToStart` je v osnovnih fixture `1b`.** To požene `EntityAIReturn` in vleče NPC
+  nazaj domov; pri 32 blokov dolgi progi bi sámo po sebi ustavilo pohod in bi izgledalo kot
+  okvara jahanja. V vseh štirih R1 fixture je `0b`.
+- `setAttackTarget(null)` je varen (`EntityLivingWrapper:65-71`, `EntityLivingBaseWrapper:69-75`).
+- **Vrstni red zagona ni poljuben.** Krmilna skripta začne šteti ob spawnu, zato se
+  `R1_Control` spawna **šele po** `rwdiag chunks on` in ogrevanju. Sicer bi se scenarij po
+  300 tickih ustavil sredi faze A in bi izgledal kot okvara AI — natanko past M2.1d.
+- Ena sama datoteka `R1_Carrier` streže obema progama; skripta ju loči po `x < 10`. Tako
+  sta nosilca na obeh progah zagotovo identična, kar je pri kontrolni skupini bistvo.
+
+**Ni narejeno in zakaj:**
+
+- Scenarij ni bil pognan. `r1-run.ps1` ni sintaktično preverjen (v seji ni PowerShella) in
+  krmilna skripta ni tekla v Nashornu — preverjeno je le, da se izvorna in minificirana
+  različica razčlenita (`node --check`) in da se vsi klici API-ja ujemajo s podpisi v
+  `reference-src`.
+- Merilo E6 (zapis razlike M/S v `docs/meritve/`) nastane šele po zagonu.
+
+**Spremembe obnašanja:** v modu nobene. Vse novo je v testnem svetu in v skriptah.
+
+**Meritve:** nobene — reprodukcija še ni tekla.
+
+**Naslednja seja:** pognati `.\r1-run.ps1`, ovrednotiti E1–E6 in zapisati razliko M/S v
+`docs/meritve/`. Če E1 pade (mount ne uspe), je to samo po sebi ugotovitev o R1 in gre v
+zahtevo. Če E2 pade, je pokvarjena kontrola in scenarij, ne mod.
+
+---
 
 ### 2026-09-15 (17) — M2.1d: pogoj meritve (prisilno naloženi chunki)
 
@@ -147,18 +307,30 @@ Na obnašanje NPC-jev, shranjevanje in mrežo ne vpliva nič.
 proračuna pri 8 NPC-jih. **p99 = 81,789 ms in max = 269,019 ms se ne smeta navajati**,
 dokler prepad ni pojasnjen.
 
-**Novo odprto vprašanje — prepad med p95 in p99.** Med 61. in 12. najslabšim tickom je
-faktor 50. Približno 12 tickov od 1228 je čez 81 ms, in 12 je natanko toliko, kolikor je
-bilo v tej meritvi priklopljenih chunkov (9 + 3). Ujemanje je sumljivo dobro, a je zaenkrat
-samo ujemanje števil. Drugi kandidat je autosave (prej je dal 1–2 počasna ticka, ne 12),
-tretji je delo NPC-jev samo (a takrat bi pričakovali višji p95, ne prepada za njim). Prvi
-korak, ki je hkrati pravilna praksa in test prvega kandidata: `rwdiag-run.ps1` ima odslej
-**ogrevanje** (`-WarmupSeconds`, privzeto 10 s) med `chunks on` in `rwdiag on`.
+**Prepad med p95 in p99 — postavljen in isti dan zaprt.** Prva meritev je imela p95 = 1,6 ms
+in p99 = **81,8 ms**. Kandidat 1 (priklop ticketa sproži nalaganje chunka, to pa je delo na
+server niti) je bil potrjen s ponovitvijo ob 14:19 z **10 s ogrevanja** med `chunks on` in
+`rwdiag on` — edina sprememba:
 
-**Naslednja seja:** ponoviti `.\rwdiag-run.ps1` z ogrevanjem in primerjati p99. Če pade na
-nekaj ms, je bil vzrok nalaganje chunkov in vprašanje je zaprto; sicer je treba počasne
-ticke pripisati z indeksom in časom, kar je vsebina M2.5. Nato M2.2 (reprodukcija R1;
-uporabnik je potrdil, da sta oba NPC-ja CustomNPC).
+| | brez ogrevanja (14:07) | z ogrevanjem (14:19) | |
+|---|---|---|---|
+| `server.tick.ns` p50 | 0,557 ms | **0,410 ms** | −26 % |
+| `server.tick.ns` p95 | 1,638 ms | **1,016 ms** | −38 % |
+| `server.tick.ns` **p99** | **81,789 ms** | **4,325 ms** | **faktor 19** |
+| `server.tick.ns` max | 269,019 ms | 86,863 ms | autosave, en tick |
+| `npc.update.window` | 182,5 µs / NPC | **66,6 µs / NPC** | −64 % |
+
+Kandidata 2 (autosave) in 3 (delo NPC-jev) sta s tem izključena kot razlaga prepada.
+Presenečenje ob strani: napihnjen je bil tudi `npc.update.window` — ker se meri kot razmik
+do naslednje entitete, je tick z nalaganjem chunka ta razmik raztegnil. Vsaka meritev brez
+ogrevanja torej precenjuje tudi porabo na NPC. **Ogrevanje je odslej privzeto** in je pogoj
+vsake meritve, enako kot prisilno naloženi chunki.
+
+**Merodajni rezultat pri 8 NPC-jih, brez igralca, 61,3 s:** p50 = 0,410 ms in p95 = 1,016 ms
+od 50 ms proračuna; NPC-ji tikajo v vsakem ticku; zgornja meja porabe na NPC je 66,6 µs.
+Še vedno **ni baseline** — 8 NPC-jev je preverba naprave, ne scenarij.
+
+**Naslednja seja:** **M2.2** — reprodukcija R1 (8 jahačev na 8 nosilcih, oba CustomNPC).
 
 ---
 
@@ -1090,13 +1262,20 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
 - Bugi iz `PLAN_IMPLEMENTACIJE.md`: B1 in B2 sta v M1.5/M1.6, B5 v M6.5. B3, B4, B6, B7, B8
   še niso razporejeni v milestone.
 - Dedicated server je preverjen (M0.5). Igranje v svetu z igralcem, GUI in questi še ni (M0.6/M0.7).
-- **Seja ne more zaganjati ukazov na uporabnikovem računalniku.** Windows posodobitev z
-  8. 9. 2026 je pokvarila priklop map v delavniško lupino. Seja datoteke še vedno bere in
-  piše, gradle, teste, `verify-package.ps1` in git pa mora pognati uporabnik in rezultat
-  javiti nazaj. Do preklica velja: seja pripravi točen ukaz in merila, uporabnik izvede,
-  seja preveri log in datoteke.
-- Datotek, globljih od 7 map pod **priključeno** mapo, ni mogoče prenesti v sejo.
-  **Rešeno 15. 9.:** poleg korena projekta je zdaj priključena tudi mapa `dev`, s čimer sta
+- **Seja ima lupino na uporabnikovem računalniku, a linuxovo.** *(popravljeno 17. 9.;
+  prej je tu pisalo, da lupine sploh ni.)* Priključene mape so v njej pod
+  `$HOME/mnt/<mapa>`, na voljo so `git`, `python3`, `node`, `jq`, `sed`, `diff`. Kar v njej
+  **ne gre**, je vse, kar potrebuje Windows: `.\dev.ps1`, `.\*-run.ps1`, gradle build,
+  `verify-package.ps1` in zagon Minecrafta. Ti ostajajo na uporabniku. Delitev dela je
+  torej: seja bere, piše, ureja, preverja in commita; uporabnik poganja build in svet ter
+  javi log nazaj.
+- **PowerShell skripte se da sintaktično preveriti brez Windowsa.** V oblačnem okolju
+  PowerShell 7.4.6 (`Parser::ParseFile`) prebere `.ps1` in vrne napake razčlenjevanja.
+  Izvedbe ne nadomesti, tipkarske napake pa ujame; uporabljeno 17. 9. na `r1-run.ps1`.
+- ~~Datotek, globljih od 7 map pod **priključeno** mapo, ni mogoče prenesti v sejo.~~
+  **Ne velja več od 17. 9.:** lupina vidi celotno drevo priključene mape, ne glede na
+  globino, in prenos v sejo za branje ni potreben. Prejšnje besedilo ostaja kot zgodovina:
+  **rešeno 15. 9.:** poleg korena projekta je zdaj priključena tudi mapa `dev`, s čimer sta
   pod mejo `dev/src/patch/java/noppes/npcs/rework/…` (7 map) in dekompilirani Minecraft v
   `dev/build/tmp/recompileMc/sources/net/minecraft/…` (7 map). Če nova seja teh datotek ne
   vidi, mora uporabnik v namizni aplikaciji dodati mapo `CustomNPC_mod_rework\dev` —
@@ -1114,7 +1293,12 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
 - **Meritev brez prisilno naloženih chunkov ali brez igralca je neveljavna** po 300 tickih
   (`WorldServer.updateEntities():628-644`). Vsak posnetek ima zato `world.chunks.forced`;
   če je ta 0 in je `world.players` 0, posnetek meri prazen tek. Velja za vse meritve M2+.
-- **Rep porazdelitve `server.tick.ns` (p99, max) zaenkrat ni merodajen.** Prva veljavna
-  meritev ima p95 = 1,6 ms in p99 = 81,8 ms; prepad ni pojasnjen. p50 in p95 sta uporabna.
+- **Vsaka meritev potrebuje ogrevanje.** Priklop chunk ticketa sproži nalaganje chunka na
+  server niti in to se šteje v meritev: brez ogrevanja je bil p99 81,8 ms namesto 4,3 ms in
+  `npc.update.window` 182,5 µs namesto 66,6 µs. `rwdiag-run.ps1` čaka 10 s
+  (`-WarmupSeconds`); pri M2.4 s stotinami chunkov je treba to dolžino **izmeriti**
+  (dva zagona zapored, primerjava p99), ne ugibati.
+- `server.tick.ns` **max** je pri vsakem zagonu en sam tick, ki sovpada z autosave
+  (58 / 74 / 87 / 124 ms). M2.5 ga mora izločiti ali poročati posebej.
 - Že pokvarjenih datotek na disku nova koda ne popravlja; M1.4 je po navodilu uporabnika
   odložen, dokler ne obstaja konkreten primer.
