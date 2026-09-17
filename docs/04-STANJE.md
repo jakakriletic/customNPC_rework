@@ -10,11 +10,12 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-17** |
-| Trenutni milestone | **M2 — diagnostika** (M2.1, **M2.2** in **M2.3 faza A** zaključene; **M2.3 fazi B/C čakata na ponovni zagon**); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen. **M2.5a**, **M2.5b** in **M2.7a** so napisani, prevedeni in testirani v seji; vsi trije čakajo na zagon v svetu |
-| Naslednji paketi | **dva zagona čakata na uporabnika**: (1) `.\r2-run.ps1` z `dStarost` in `gib` — razloži naj zmrznitev letečih NPC-jev iz faz B in C (pojav P1, dnevnik 29); (2) **`.\nav-run.ps1`** — izhodiščna tabela šestih veličin M2.7, brez katere se M4.10–M4.13 in M5.6 ne smejo začeti. Ob prvem `.\rwdiag-run.ps1` se prebere še pripis počasnih tickov (S1–S4) in izločitev autosave ticka (S5–S7). Po tem **M2.4** (50/200/500 NPC-jev) ali **M2.5c** (protokol ponovitev) |
+| Trenutni milestone | **M2 — diagnostika** (M2.1, M2.2, M2.3 faza A in **M2.7 zaključeni**); **M0 in M1 zaključena**. M2.3 fazi B/C čakata na ponovni zagon (P1); M2.5a in M2.5b sta v kodi, merila S1–S7 še niso bila strojno ovrednotena |
+| Naslednji paketi | **M2.5c** (protokol ponovitev — meritev M2.7 je en sam zagon) ali **M2.4** (50/200/500 NPC-jev). Odprta zagona: `.\r2-run.ps1` (pojav P1) in `.\rwdiag-run.ps1` (merila S1–S7). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
 | Prevedljivih razredov | 35 — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **84 za instrumentacijo** (61 + 21 `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji 17. 9. (D-014). Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Odprti pojavi | **P1** — po `setPosition` se leteči NPC ne premakne več, čeprav navigator javlja celo pot (17. 9.); nereproduciran, hipoteza, blokira fazi B in C scenarija M2.3 |
+| Odprta vprašanja iz M2.7 | dva NPC-ja od osmih na progi z grlom ne prispeta niti ob osveženi poti (zamašek ali `canNavigate()`, loči M3.1); najpočasnejši tick meritve (232 ms) ni bil autosave, ampak tick s pathfindingom |
 | Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8, Q10 in Q12 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
 | Omejitev orodij | **spremenjeno 17. 9.**: seja ima lupino na uporabnikovem računalniku, a **linuxovo** in brez PowerShella, Gradla in Minecrafta. Bere, piše, ureja, `git`, `python3`, `node`, `jq` — da. `.\dev.ps1`, `.\*-run.ps1`, build in zagon sveta — **ne**, to poganja uporabnik. Podrobnosti v Znanih omejitvah. Seja **prevede in požene teste** `rework/**` v oblačnem okolju proti mapiranim razredom (D-014) in sintaktično preveri `.ps1` s prenesenim PowerShellom |
 
@@ -65,11 +66,61 @@
 | M2.5 | Merilni protokol kot skripta | **v teku** — M2.5a (pripis počasnih tickov) in M2.5b (izločitev autosave ticka) narejena; ostaja protokol ponovitev (M2.5c) |
 | M2.5b | Izločitev autosave ticka: `server.tick.ns.nosave` + merila S5–S7 | **koda in testi narejeni** (6 testov, prevedeno v seji); čaka na prvi zagon v svetu |
 | M2.6 | Baseline meritve originala | ni začeto |
-| M2.7 | **Merila kakovosti navigacije** (šest veličin, izmerjenih na originalu) | **koda, scenarij in merila N1–N12 narejeni 17. 9.**; čaka na `.\nav-run.ps1` v svetu. Podlaga za M4.10–M4.13 in M5.6; brez izmerjenih številk se navigacijski sklop ne začne. [scenarij](scenariji/M2.7-navigacija.md) |
+| M2.7 | **Merila kakovosti navigacije** (šest veličin, izmerjenih na originalu) | **zaključeno 17. 9. — N1–N12 zelena, tabela obstaja**; [meritev](meritve/2026-09-17-M2.7-navigacija-baseline.md), [scenarij](scenariji/M2.7-navigacija.md). Vhodni pogoj za M4.10 je dopolnjen: potrebno je prizorišče z razdaljo čez `NpcNavRange` |
 
 ---
 
 ## Dnevnik sej
+
+### 2026-09-17 (36) — M2.7 pognan: N1–N12 zelena, izhodiščna tabela obstaja
+
+**Paket:** M2.7 (zagon)
+**Stanje:** **zaključeno** — meritev je veljavna in zapisana
+
+**Izid:** `.\nav-run.ps1` po popravku dveh zagonov: zid 140 blokov, 16 NPC-jev,
+`chunki=35 zavrnjeni=0`, scenarij od `NAV-INIT` do `NAV-SUM`, **merila N1–N12 zelena**.
+Polni zapis: [meritev](meritve/2026-09-17-M2.7-navigacija-baseline.md).
+
+**Šest veličin (original):**
+
+| # | Veličina | G (grlo) | O (odprto) |
+|---|---|---|---|
+| 1 | delež celih poti | 1,000 | 1,000 |
+| 2 | razmerje dolžine p50 / p95 | 1,151 / 1,236 | 1,151 / 1,236 |
+| 3 | prispelo, faza A / faza B | 1/8 · 6/8 (mediana 240) | 8/8 · 8/8 (mediana 200) |
+| 4 | razpon pri grlu, A / B | 3,78 / 3,92 | 4,78 / 4,76 |
+| 5 | µs na iskanje p50, hladno / ogreto | 237,6 / 67,6 | 167,9 / 77,8 |
+| 6 | dodelitev poti na tick povp. / p95 / max | 0,313 / 0 / 16 (skupaj) | |
+
+**Ugotovitve:**
+
+- **Delna pot se v tem prizorišču ne pojavi** (32/32 celih). Pri 14 blokih in vratih na osi
+  cilja proračun 200 vozlišč in domet 32 nista omejitev. **M4.10 dobi s tem vhodni pogoj:
+  potrebuje prizorišče z razdaljo čez `NpcNavRange` ali s pravim obvozom**, sicer je delež
+  celih poti trivialno 1,000 in popravek ni merljiv.
+- **Grlo se pokaže v času, ne v geometriji.** Razmerje dolžine je na obeh progah enako;
+  razlika je 1/8 proti 8/8 (faza A) in 6/8 proti 8/8 (faza B).
+- **En klic `navigateTo` proti osveženemu: 1/8 proti 6/8.** Izhodiščna številka za M4.10 in
+  M4.13 in razlaga, zakaj neosvežena skripta izgleda kot okvarjen AI (past Q11).
+- **Iskanja so sunkovita:** p95 = 0 na tick, max 16. Najpočasnejši ticki (232 / 57 / 54 /
+  48 ms, brez chunkov in brez autosave) sovpadajo z vzorčnimi ticki skripte, ko dobi vseh
+  16 NPC-jev pot hkrati. To je primer, ki ga naslavlja M5.6; pripis je sočasnost, dokaz
+  pride z M3.1.
+- **Skupina je pri grlu ožja, ne širša** (3,8 proti 4,8) — stisne se pred vrati.
+- Ob tem zagonu sta prvič tekli tudi vrstici M2.5a/M2.5b: `RWDIAG-SAVE izlocenih=1 … maxVsi=232,031 maxBrez=232,031` — **najpočasnejši tick tokrat ni bil autosave**, ampak tick s pathfindingom. Merila S1–S7 so v `rwdiag-run.ps1` in še niso bila strojno ovrednotena.
+
+**Ni narejeno in zakaj:** meritev je **en zagon**; protokol zahteva tri (M2.5c še ni).
+Dva NPC-ja od osmih na progi G ne prispeta niti v fazi B — kandidata sta zamašek pred
+vrati in `canNavigate()`, loči ju šele M3.1.
+
+**Spremembe obnašanja:** nobene.
+
+**Meritve:** [`meritve/2026-09-17-M2.7-navigacija-baseline.md`](meritve/2026-09-17-M2.7-navigacija-baseline.md).
+
+**Naslednja seja:** **M2.5c** (protokol ponovitev, da bo tabela imela razpon) ali **M2.4**
+(50/200/500 NPC-jev). Pred M4.10 je treba dodati prizorišče z razdaljo čez 32 blokov.
+
+---
 
 ### 2026-09-17 (35) — Prvi zagon M2.7: prizorišče 750 blokov od spawna
 
