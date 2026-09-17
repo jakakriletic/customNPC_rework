@@ -10,8 +10,8 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-17** |
-| Trenutni milestone | **M2 — diagnostika** (M2.1 in **M2.2** zaključena); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen |
-| Naslednji paketi | **M0.7 je zaključen in pognan** (prehod 1 zelen 17. 9., dnevnik 27): nato **M2.3** (reprodukcija R2) ali **M2.4** (50/200/500 NPC-jev); **M2.7** je nov in je vhodni pogoj za navigacijski sklop M4/M5. Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
+| Trenutni milestone | **M2 — diagnostika** (M2.1 in **M2.2** zaključena, **M2.3 napisan in čaka na zagon**); **M0 zaključen 17. 9.** (M0.7 narejen, M0.8 zabeležen kot blokada), M1 je zaključen |
+| Naslednji paketi | **prvi korak je zagon `.\r2-run.ps1`** — scenarij M2.3 je napisan, preverjen brez sveta in čaka na uporabnika (dnevnik 28). Po zagonu gre izid v `docs/meritve/`, nato **M2.4** (50/200/500 NPC-jev) ali **M2.7** (merila navigacije, vhodni pogoj za M4/M5). Vzrok R1 (`canNavigate`/`onGround`) dokaže šele instrumentacija v M2.1b/M3.1 |
 | Prevedljivih razredov | 32 — prejšnjih 21 + 11 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **33 za instrumentacijo** (23 + 10 novih za `DiagChunkPlan`); zeleni. Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
 | Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8 in Q10 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
@@ -25,7 +25,7 @@
 |---|---|---|
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
-| M2 Diagnostika | **v teku** (≈60 %) | M2.1 in M2.2 zaključena in preverjena v svetu; **R1 je reproduciran in izmerjen** |
+| M2 Diagnostika | **v teku** (≈65 %) | M2.1 in M2.2 zaključena in preverjena v svetu; **R1 je reproduciran in izmerjen**; M2.3 napisan, zagon je na uporabniku |
 | M3 Jedro entitete | ni začeto | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
@@ -58,7 +58,7 @@
 | M2.1c | Števci za razčiščenje `npc.per.tick` = 0 | **zaključeno** — vzrok imenovan in dokazan, glej meritev |
 | M2.1d | Pogoj meritve: `ForgeChunkManager` ticket za chunke z merjenimi NPC-ji | **zaključeno** — C1–C6 zelena v svetu, prva veljavna meritev obstaja |
 | M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih + kontrolna skupina brez jahačev) | **zaključeno** — E1–E6 zelena, R1 reproduciran; [meritev](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
-| M2.3 | Reprodukcija R2 (leteči NPC in ovira) | ni začeto |
+| M2.3 | Reprodukcija R2 (leteči NPC in ovira) | **napisano 17. 9., ni še pognano** — tri proge, merila L1–L8, [scenarij](scenariji/M2.3-R2.md); `.\r2-run.ps1` |
 | M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
 | M2.5 | Merilni protokol kot skripta | ni začeto |
 | M2.6 | Baseline meritve originala | ni začeto |
@@ -67,6 +67,86 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-17 (28) — M2.3 napisan: reprodukcija R2 s tremi progami, brez zagona
+
+**Paket:** M2.3 (reprodukcija R2 — leteči NPC in ovira)
+**Stanje:** **delno.** Vse, kar se da narediti brez Windowsa, je narejeno in preverjeno.
+Zagon v svetu je na uporabniku: `.\r2-run.ps1`.
+
+**Narejeno:**
+
+- [`docs/scenariji/M2.3-R2.md`](scenariji/M2.3-R2.md) — scenarij s tremi progami, osmimi
+  vzorčenimi veličinami in merili L1–L8.
+- `dev/testworld/r2-control.js` — skripta krmilnika, tri faze.
+- Štirje fixture kloni: `R2_Flyer` (`MovementType 1`), `R2_Walker`, `R2_Target`, `R2_Control`;
+  skripta je v `R2_Control.json` vložena z `vstavi-skripto.py`, ne ročno.
+- `dev/testworld/r2-setup-commands.txt` — prizorišče in 21 NPC-jev, idempotentno.
+- `r2-run.ps1` — gonilnik po vzoru `r1-run.ps1`, s poročilom v `audit/m23-r2-<datum>.md`.
+- `matrika-run.ps1` ima novo stopnjo `r2`; vrstica IA4 matrike zabeležena kot „scenarij
+  obstaja, čaka na zagon".
+- `dev/testworld/preveri-markerje.js` — nova preverba pogodbe markerjev **brez Minecrafta**.
+- `dev/testworld/preveri-skladnost.py` — nova preverba, da si koordinate scenarija ne
+  nasprotujejo med `r2-control.js`, `r2-setup-commands.txt` in `r2-run.ps1`.
+
+**Zakaj tri proge in ne ena.** Zahteva govori samo o „letečem NPC-ju z oviro". Če taka
+skupina obstane, to samo po sebi ne pove, ali je kriva ovira, letenje ali navigacija
+nasploh — zadnje je natanko past Q11. Scenarij zato vodi hkrati: **F** leteči + zid,
+**W** kopenski + isti zid, **P** leteči brez ovire. F proti P izolira oviro, F proti W
+izolira letenje.
+
+**Ugotovitve iz kode (vse pred zagonom, iz dekompilacije in Forge-patchanega Minecrafta):**
+
+- `FlyingMoveHelper.java:50`: ob oviri se akcija postavi na `WAIT` in **nič drugega** —
+  obhoda ni. Smer se popravi le vsake 4 ticke (`:35`).
+- `FlyingMoveHelper` **nikoli ne prebere `this.speed`**, ki mu ga navigator nastavi
+  (`PathNavigateFlying.java:78`), ampak vedno `MOVEMENT_SPEED / 2.5`. Hitrost iz
+  `navigateTo(x,y,z,speed)` torej na letenje **ne vpliva**. To je novo in gre v R2.
+- `EntityNPCFlying.travel()` pri `canFly()` gravitacije sploh ne doda; ostane samo dušenje
+  0,91. Leteči NPC, ki obstane, torej **obvisi** in ne pade — simptom je mirovanje v zraku.
+- Vanilla `FlyingNodeProcessor` širi vozlišča v 3D, `PathFinder.findPath` pa se ustavi po
+  **200 vozliščih** in vrne **delno** pot. V 3D je 200 vozlišč bistveno manj napredka kot
+  v 2D, zato je delna pot pri letenju verjetnejša kot pri hoji.
+- Zaradi tega scenarij meri `cele=b/N`: koliko poti se res konča pri cilju.
+  `getNavigationPath()` (`EntityLivingWrapper.java:41-51`) vrne zadnjo točko poti in prav
+  ta številka loči „ni poti" od „pot do zidu". M2.2 tega še ni meril.
+
+**Zakaj so razdalje take, kot so.** Start → cilj je 16 blokov, zid je 4 bloke visok in
+75 blokov širok. Pot čez zid je dolga ≈ 24 blokov, torej **pod** `NpcNavRange` 32: če
+proga F ne pride, vzrok **ni** domet iskanja poti in izid je enoznačen. Obhod okoli konca
+zidu je dolg ≈ 40–52 blokov, torej zunaj dometa — zid je prava ovira, ne dekoracija.
+
+**Preverjeno brez sveta:**
+
+| Kaj | Kako | Izid |
+|---|---|---|
+| `r2-control.js` je veljaven ES5 | `node --check`, tudi po minifikaciji | zeleno |
+| skripta je pravilno vložena v klon | `vstavi-skripto.py` (primerja vir in vloženo) | zeleno, 6316 znakov |
+| `r2-run.ps1` in `matrika-run.ps1` se razčlenita | PowerShell 7.4.6 `Parser::ParseFile` | zeleno |
+| **markerji se ujemajo z razčlenjevalnikom** | `preveri-markerje.js` + funkcije iz `r2-run.ps1` nad izpisom | zeleno: 9 markerjev po enkrat, 22 vzorcev na fazo in progo (L6 zahteva 20) |
+| koordinate se ujemajo med tremi datotekami | `preveri-skladnost.py` | zeleno: 6/6/6 + 3 cilji, zid visok 4, pot čez zid ≈ 24 < 32, obhod 40–52 > 32 |
+
+Zadnja vrstica je pomembna: pri M0.7 je merilo padlo prav zato, ker se izpis in
+razčlenjevalnik nista ujemala. Zdaj se to preveri brez zagona sveta.
+
+**Ni narejeno in zakaj:**
+
+- **Scenarij ni pognan.** Seja ima na uporabnikovem računalniku linuxovo lupino brez
+  PowerShella, Gradla in Minecrafta. Zagon, meritev in vpis v `docs/meritve/` so naslednji
+  korak in so na uporabniku.
+- µs na iskanje poti in iskanj na tick (veličini 5 in 6 iz M2.7) nista merjeni — zahtevata
+  klicna mesta v `PathNavigate`, torej M2.1b, ki čaka na prenos razredov v M3.1.
+- Načina C (dragon/momentum) in nagiba ni kaj meriti; še ne obstajata.
+
+**Spremembe obnašanja:** nobene. Ta seja ni spremenila moda; dodala je scenarij, fixture in
+skripte.
+
+**Meritve:** nobene — scenarij še ni pognan.
+
+**Naslednja seja:** pognati `.\r2-run.ps1`, izid zapisati v `docs/meritve/2026-…-M2.3-R2-reprodukcija.md`
+in v tabelo Meritve, nato **M2.4** ali **M2.7**.
+
+---
 
 ### 2026-09-17 (27) — Prehod 1 integracijske matrike je zelen; M0.7 je s tem pognan
 
@@ -1591,7 +1671,7 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 | Q3 | Konkretna pokvarjena clone JSON datoteka | M1.4 | zaprto — ne obstaja; paket odložen |
 | Q4 | Katera nastavitev se vrne nazaj? | R9 | odgovorjeno — follower role, action `waiting` se po clone lahko vrne v `following`; minorno |
 | Q5 | Pri R1 — jahač in nosilec sta oba CustomNPC, ali je eden vanilla mob (konj)? | M2.2 | **odgovorjeno 15. 9.** — oba sta CustomNPC |
-| Q6 | Pri R2 — "letala" pomenijo NPC kot vozilo, ki ga igralec krmili, ali NPC, ki leti sam? | M4 obseg | odprto |
+| Q6 | Pri R2 — "letala" pomenijo NPC kot vozilo, ki ga igralec krmili, ali NPC, ki leti sam? | M4 obseg | **odprto, a ne blokira M2.3** — scenarij meri samostojno letenje, kar je podlaga za oba primera; odgovor je potreben šele za obseg M4 |
 | Q7 | Pri R3 — katerih 5–8 funkcij CustomNPC+ je najbolj pomembnih? | M8.2 | odprto — najprej katalog |
 | Q8 | Pri R8 — kateri provider (Anthropic / OpenAI / lokalni model)? | M9.3 | odprto |
 | Q9 | Koliko NPC-jev je "veliko" v tvojem primeru? 100? 500? 2000? | M2.4, cilj za M5 | **odgovorjeno 15. 9.** — cilj še ni določen; merimo 50/200/500 in se odločimo po podatkih |
@@ -1674,6 +1754,15 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
 - **PowerShell skripte se da sintaktično preveriti brez Windowsa.** V oblačnem okolju
   PowerShell 7.4.6 (`Parser::ParseFile`) prebere `.ps1` in vrne napake razčlenjevanja.
   Izvedbe ne nadomesti, tipkarske napake pa ujame; uporabljeno 17. 9. na `r1-run.ps1`.
+  PowerShell v oblačnem vsebniku **ni prednameščen** — seja ga vsakič potegne z GitHuba
+  (`powershell-7.4.6-linux-x64.tar.gz`); to je nekaj deset sekund in gre skozi posredniški
+  strežnik brez težav.
+- **Pogodbo med skripto v svetu in razčlenjevalnikom loga se da preveriti brez Minecrafta.**
+  `node dev/testworld/preveri-markerje.js` minificira `r2-control.js` enako kot
+  `vstavi-skripto.py`, jo požene nad ponarejenim svetom in prešteje markerje; funkcije
+  `Read-Samples`/`Read-Setup` iz `r2-run.ps1` se nato poženejo nad tem izpisom (iz AST-ja,
+  brez glavnega telesa skripte). Ujame natanko razred napake iz M0.7 (izpis in
+  razčlenjevalnik se nista ujemala). O obnašanju NPC-jev ne pove nič in zagona ne nadomesti.
 - ~~Datotek, globljih od 7 map pod **priključeno** mapo, ni mogoče prenesti v sejo.~~
   **Ne velja več od 17. 9.:** lupina vidi celotno drevo priključene mape, ne glede na
   globino, in prenos v sejo za branje ni potreben. Prejšnje besedilo ostaja kot zgodovina:
@@ -1687,6 +1776,16 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
   Nastane ob `setupDecompWorkspace`. Uporabljen v M2.1c za `WorldServer` in `World`.
 - Projekt teče na dveh delovnih postajah proti istemu `origin/main`. Seja začne z
   `git fetch origin` in preveri, ali je oddaljena veja pred lokalno.
+- **Seja lahko commita, ne more pa pushati.** *(ugotovljeno 17. 9.)* V sejini lupini
+  `git fetch` in `git ls-remote` delujeta, `git push` pa pade z
+  `could not read Username for 'https://github.com'`: poverilnice so na Windows strani
+  (Git Credential Manager), v linuxovi lupini jih ni. Seja ima tudi svojo identiteto
+  neznano, zato commita z `git -c user.name=… -c user.email=…`. **Push je vedno na
+  uporabniku**, in seja mu to na koncu pove.
+- **`.git/index.lock` zna ostati za sabo.** Brisanje datotek je v priključeni mapi privzeto
+  izklopljeno, zato prekinjen `git` ukaz pusti `index.lock` in vsak naslednji `git add` ali
+  `git commit` pade. Seja mora takrat zaprositi za dovoljenje za brisanje in datoteko
+  odstraniti; zgodilo se je 17. 9.
 - **Zapis iste datoteke dvakrat v isti seji lahko tiho ne uspe.** 15. 9. je drugi zapis
   `docs/04-STANJE.md` javil uspeh, na disku pa je ostala prejšnja verzija (45 479 B namesto
   46 946 B). Zapis pod novim imenom je uspel takoj. Pravilo: po vsakem zapisu preveri

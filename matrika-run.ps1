@@ -16,7 +16,7 @@
         .\matrika-run.ps1 -SkipBuild      # jar je ze svez, preskoci build
         .\matrika-run.ps1 -AcceptEula     # prvic, ce dev\run\eula.txt se ni sprejet
         .\matrika-run.ps1 -ContinueOnFail # pozeni vse stopnje kljub padcu
-        .\matrika-run.ps1 -Only r1        # samo ena stopnja (build,package,testworld,rwdiag,r1)
+        .\matrika-run.ps1 -Only r1        # samo ena stopnja (build,package,testworld,rwdiag,r1,r2)
 #>
 param(
     [switch]$SkipBuild,
@@ -65,12 +65,14 @@ $stages = @(
     @{ Key='rwdiag';    Naziv='M2.1 diagnostika D1-D7, C1-C6'; Vrstice='IL7';               Log='m21-rwdiag.log';
        Akcija={ if ($AcceptEula) { & (Join-Path $root 'rwdiag-run.ps1') -AcceptEula } else { & (Join-Path $root 'rwdiag-run.ps1') } } },
     @{ Key='r1';        Naziv='M2.2 reprodukcija R1 E1-E6'; Vrstice='IA7';                  Log='m22-r1.log';
-       Akcija={ if ($AcceptEula) { & (Join-Path $root 'r1-run.ps1') -AcceptEula } else { & (Join-Path $root 'r1-run.ps1') } } }
+       Akcija={ if ($AcceptEula) { & (Join-Path $root 'r1-run.ps1') -AcceptEula } else { & (Join-Path $root 'r1-run.ps1') } } },
+    @{ Key='r2';        Naziv='M2.3 reprodukcija R2 L1-L8'; Vrstice='IA4 (zid)';            Log='m23-r2.log';
+       Akcija={ if ($AcceptEula) { & (Join-Path $root 'r2-run.ps1') -AcceptEula } else { & (Join-Path $root 'r2-run.ps1') } } }
 )
 
 if ($SkipBuild) { $stages = $stages | Where-Object { $_.Key -ne 'build' } }
 if ($Only)      { $stages = $stages | Where-Object { $Only -contains $_.Key } }
-if (-not $stages) { throw "Nobena stopnja ni izbrana. Veljavni kljuci: build, package, testworld, rwdiag, r1." }
+if (-not $stages) { throw "Nobena stopnja ni izbrana. Veljavni kljuci: build, package, testworld, rwdiag, r1, r2." }
 
 # --- izvedba -----------------------------------------------------------------
 

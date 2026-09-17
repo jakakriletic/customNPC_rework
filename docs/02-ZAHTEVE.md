@@ -186,6 +186,27 @@ if (this.ais.movementType == 1) {        // leteči
 - vrstice 55–67: `isNotColliding()` vzorči po 1 blok naenkrat vzdolž ravne črte; za vse, kar
   ni ravna prosta linija, je neuporabno
 
+**[dokazano, 17. 9.] `FlyingMoveHelper` ignorira hitrost, ki mu jo da navigator.**
+`PathNavigateFlying.onUpdateNavigation` (`:78`) kliče `getMoveHelper().setMoveTo(x, y, z,
+this.speed)`, `FlyingMoveHelper.onUpdateMoveHelper` pa polja `this.speed` **nikoli ne
+prebere** — hitrost vedno izpelje iz `MOVEMENT_SPEED / 2.5` (`:41`). Parameter `speed` v
+`navigateTo(x, y, z, speed)` torej na letenje ne vpliva; na hojo, kjer vanilla
+`EntityMoveHelper` to polje uporablja, pa vpliva. Vsaka skripta, ki poskuša letečega NPC-ja
+upočasniti ali pospešiti prek `navigateTo`, tiho ne naredi ničesar.
+
+**[dokazano, 17. 9.] Leteči NPC, ki obstane, obvisi v zraku.** `EntityNPCFlying.travel()`
+pri `canFly()` gravitacije sploh ne doda; ostane samo dušenje 0,91 (`:67-78`). Ko se move
+helper postavi na `WAIT`, NPC torej ne pade nazaj na tla, ampak miruje tam, kjer je. To je
+opazni simptom, ki ga uporabnik opiše kot „obtiči".
+
+**[dokazano, 17. 9.] Delna pot je pri letenju verjetnejša kot pri hoji.**
+`PathNavigateFlying` uporablja vanilla `FlyingNodeProcessor`, ki širi vozlišča v treh
+dimenzijah, `PathFinder.findPath` (`:65`) pa se ustavi po **200 vozliščih** in vrne najboljše
+doseženo vozlišče, ne cilja. Isti proračun v 3D pokrije bistveno manj napredka kot v 2D.
+Skupaj z `maxDistance = FOLLOW_RANGE = NpcNavRange = 32` (`:94`, `EntityNPCInterface.java:334`)
+to pomeni, da leteči NPC pogosto dobi pot, ki se konča **pred** oviro — kar iz igre izgleda
+enako kot okvara AI. Meri se to z `getNavigationPath()`; scenarij M2.3 to poroča kot `cele=b/N`.
+
 **[dokazano] `EntityNPCFlying.travel()` (vrstice 45–90) je kopija vanilla `EntityFlying`
 fizike**, s posebnostjo, da pri `movementType == 2` sili `motionY = -0.15` izven vode
 (vrstici 50–52). Drsenje (`0.91f`, `0.16277136f`) je prevzeto iz hodne fizike, kar da

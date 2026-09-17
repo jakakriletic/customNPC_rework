@@ -1,0 +1,78 @@
+# M2.3 - postavitev prizorisca za reprodukcijo R2. Ukaze poslje .\r2-run.ps1 na
+# standardni vhod serverja; rocno lepljenje v konzolo je nezanesljivo (M0.6, past 1).
+#
+# Tri vzporedne proge, vsaka 6 NPC-jev, vse v istem svetu in istem ticku:
+#   proga F (x = -35..-25)  leteci   (MovementType 1), zid med startom in ciljem
+#   proga W (x = -15..-5)   kopenski (MovementType 0), isti zid
+#   proga P (x =  27..37)   leteci,  brez ovire
+# Brez obeh kontrol razlika ne pomeni nicesar; razlogi v docs/scenariji/M2.3-R2.md.
+#
+# Postavitev vzdolz -Z, superflat, povrsina y=3, entitete stojijo na y=4:
+#   z=-16 start   z=-24 zid (y 4..7)   z=-32 cilj
+# Razdalja start -> cilj je 16 blokov. Pot cez zid je dolga priblizno 24 blokov,
+# torej pod NpcNavRange (32): ce proga F ne pride, vzrok NI domet iskanja poti.
+#
+# Prizorisce je pri negativnem Z, da se ne dotika ne M0.6 fixtur (x 0..8, z 0..8)
+# ne prog M2.2 (x -8..32, z 12..44).
+#
+# Ukazi so idempotentni: 'noppes slay npcs' postavi isDead=true (CmdSlay.java:140),
+# medtem ko bi '/kill' CustomNPC-ja samo ubil in bi po restartu ozivel (M0.6, past 3).
+
+# --- determinizem ---
+gamerule doDaylightCycle false
+gamerule doWeatherCycle false
+gamerule doMobSpawning false
+gamerule doFireTick false
+gamerule mobGriefing false
+gamerule randomTickSpeed 0
+gamerule announceAdvancements false
+gamerule spectatorsGenerateChunks false
+time set 6000
+weather clear 1000000
+
+# --- ocisti prejsnji zagon ---
+noppes slay npcs
+
+# --- zid za progi F in W ---
+# Visok 4 bloke (y 4..7): pesec prestopi najvec 1 blok, letecemu so 4 bloke navpicno
+# trivialni. Sirok 75 blokov (x -60..14): obhod okoli konca zidu je za progo F dolg
+# priblizno 52 in za progo W priblizno 40 blokov, oboje cez maxDistance 32
+# (PathFinder.java:94). Brez te sirine bi NPC oviro obsel in 'uspeh' ne bi pomenil nic.
+# Zid se konca pri x=14, zato je proga P pri x=27..37 zares prosta.
+fill -60 4 -24 14 7 -24 minecraft:stone
+
+# --- proga F: 6 letecih ---
+noppes clone spawn R2_Flyer 1 -35,4,-16
+noppes clone spawn R2_Flyer 1 -33,4,-16
+noppes clone spawn R2_Flyer 1 -31,4,-16
+noppes clone spawn R2_Flyer 1 -29,4,-16
+noppes clone spawn R2_Flyer 1 -27,4,-16
+noppes clone spawn R2_Flyer 1 -25,4,-16
+
+# --- proga W: 6 kopenskih ---
+noppes clone spawn R2_Walker 1 -15,4,-16
+noppes clone spawn R2_Walker 1 -13,4,-16
+noppes clone spawn R2_Walker 1 -11,4,-16
+noppes clone spawn R2_Walker 1 -9,4,-16
+noppes clone spawn R2_Walker 1 -7,4,-16
+noppes clone spawn R2_Walker 1 -5,4,-16
+
+# --- proga P: 6 letecih, brez ovire ---
+noppes clone spawn R2_Flyer 1 27,4,-16
+noppes clone spawn R2_Flyer 1 29,4,-16
+noppes clone spawn R2_Flyer 1 31,4,-16
+noppes clone spawn R2_Flyer 1 33,4,-16
+noppes clone spawn R2_Flyer 1 35,4,-16
+noppes clone spawn R2_Flyer 1 37,4,-16
+
+# --- cilji, po eden na progo ---
+# Skripta jih razvrsti po x: < -20 je F, < 10 je W, ostalo je P.
+noppes clone spawn R2_Target 1 -30,4,-32
+noppes clone spawn R2_Target 1 -10,4,-32
+noppes clone spawn R2_Target 1 32,4,-32
+
+save-all flush
+
+# R2_Control tu NI. Skripta zacne steti takoj ob spawnu, zato ga .\r2-run.ps1 spawna
+# sele potem, ko sta pogoja meritve iz M2.1d izpolnjena: chunki prisilno nalozeni in
+# ogrevanje koncano. Sicer bi se scenarij zacel pod drugacnim pogojem, kot ga merimo.
