@@ -14,8 +14,8 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-09-17 |
-| Trenutna faza | **M2 — diagnostika**; zaključeni M2.1, M2.2 (R1 reproduciran) in **M2.7 (izhodiščna tabela navigacije izmerjena)**, M2.3 faza A pognana, **M0 in M1 zaključena**; merila S1–S7 (M2.5a/b) čakajo na `.\rwdiag-run.ps1` |
-| Naslednji korak | **M2.5c** (protokol ponovitev) ali **M2.4** (50/200/500 NPC-jev); odprta zagona sta `.\r2-run.ps1` (pojav P1) in `.\rwdiag-run.ps1`. Glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Trenutna faza | **M2 — diagnostika**; zaključeni M2.1, M2.2 (R1 reproduciran), **M2.7 (izhodiščna tabela navigacije izmerjena)** in **M2.5c (protokol ponovitev)**, M2.3 faza A pognana, **M0 in M1 zaključena**; merila S1–S7 (M2.5a/b) čakajo na `.\rwdiag-run.ps1` |
+| Naslednji korak | prva serija `.\ponovitve-run.ps1` (tabela M2.7 dobi razpon), nato **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline); odprta zagona sta `.\r2-run.ps1` (pojav P1) in `.\rwdiag-run.ps1`. Glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
 | Prevedljivih razredov | 35 (21 prenesenih + 14 novih v `rework/diag`); podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
@@ -128,6 +128,8 @@ Vse odločitve, ki jih sprejmeš med sejo, gredo v `docs/01-ARHITEKTURA.md` pod
 .\r1-run.ps1                               # M2.2 reprodukcija R1 (NPC jaha NPC), merila E1-E6
 .\r2-run.ps1                               # M2.3 reprodukcija R2 (leteci NPC in ovira), merila L1-L8
 .\nav-run.ps1                              # M2.7 merila kakovosti navigacije, merila N1-N12
+.\ponovitve-run.ps1                       # M2.5c tri ponovitve scenarija, sumni pas, merila T1-T6
+.\ponovitve-samotest.ps1                  # M2.5c preverba samega protokola, brez Minecrafta
 ```
 
 Instrumentacija (M2.1), v konzoli serverja ali kot ukaz v igri:

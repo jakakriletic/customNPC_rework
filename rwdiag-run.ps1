@@ -21,9 +21,12 @@
 #     .\rwdiag-run.ps1 -NoChunks       # namenoma brez pogoja, za primerjavo s starimi meritvami
 #     .\rwdiag-run.ps1 -WarmupSeconds 0 # brez ogrevanja, ce hoces meriti tudi nalaganje chunkov
 #     .\rwdiag-run.ps1 -AcceptEula     # prvic, ce dev\run\eula.txt se ni sprejet
+#     .\rwdiag-run.ps1 -JsonPath audit\m21-p1.json  # zapis zagona na izbrano pot (M2.5c)
+#
+# Ponovitve po protokolu (tri in vec) pozene .\ponovitve-run.ps1, ki -JsonPath poda sam.
 
 param([int]$Seconds = 60, [switch]$AcceptEula, [int]$ChunkRadius = 1, [switch]$NoChunks,
-      [int]$WarmupSeconds = 10)
+      [int]$WarmupSeconds = 10, [string]$JsonPath = '')
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -31,6 +34,9 @@ $run    = Join-Path $root 'dev\run'
 $audit  = Join-Path $root 'audit'
 $dumps  = Join-Path $run 'logs\rwdiag'
 New-Item -ItemType Directory -Force -Path $audit | Out-Null
+
+# Zapis zagona za protokol ponovitev (M2.5c).
+. (Join-Path $root 'meritve-lib.ps1')
 
 function Step($n, $t) { Write-Host ''; Write-Host "===== $n : $t =====" }
 
@@ -488,6 +494,52 @@ try {
         Write-Host ("--- {0} ---" -f $txt[0].Name)
         Get-Content $txt[0].FullName | ForEach-Object { Write-Host "  $_" }
     }
+
+    Step '8b' 'Zapis zagona za protokol ponovitev (M2.5c)'
+    # Odtis: pod kaksnimi pogoji je meritev nastala (dolzina merjenja, obroc chunkov,
+    # stevilo NPC-jev). Velicine: MSPT porazdelitev in pripis repa. Ponovitve zdruzi
+    # .\ponovitve-run.ps1; razpon velicine cez ponovitve je merilni sum.
+    $stampJ = Get-Date -Format 'yyyy-MM-dd-HHmm'
+    if ($JsonPath -eq '') { $JsonPath = Join-Path $audit ("m21-rwdiag-{0}.json" -f $stampJ) }
+
+    $odtis = @{
+        sekund      = $Seconds
+        ogrevanje   = $WarmupSeconds
+        obroc       = $(if ($NoChunks) { -1 } else { $ChunkRadius })
+        brezChunkov = $(if ($NoChunks) { 1 } else { 0 })
+        npc         = $first[1]
+    }
+
+    $vel = @{ ticki = $first[0] }
+    if ($null -ne $ms) {
+        $vel['mspt.n']    = $ms[0]
+        $vel['mspt.min']  = $ms[1]
+        $vel['mspt.povp'] = $ms[2]
+        $vel['mspt.p50']  = $ms[3]
+        $vel['mspt.p95']  = $ms[4]
+        $vel['mspt.p99']  = $ms[5]
+        $vel['mspt.max']  = $ms[6]
+    }
+    if ($null -ne $perTick) { $vel['npc.per.tick.p50'] = $perTick[3]; $vel['npc.per.tick.max'] = $perTick[6] }
+    if ($null -ne $gap)     { $vel['npc.tick.gap.max'] = $gap[6] }
+    if ($null -ne $forced)  { $vel['world.chunks.forced.p50'] = $forced[3] }
+    if ($null -ne $slow) {
+        $vel['slow.hranjenih']   = $slow.Kept
+        $vel['slow.zabelezenih'] = $slow.Recorded
+        if ($slow.Rows.Count -gt 0) { $vel['slow.maxMs'] = $slow.Rows[0].Ms }
+    }
+    if ($null -ne $save) {
+        $vel['save.izlocenih'] = $save.Excluded
+        $vel['save.ostalo']    = $save.Kept
+        if (-not [double]::IsNaN($save.P99All))   { $vel['save.p99vsi']  = $save.P99All }
+        if (-not [double]::IsNaN($save.P99Clean)) { $vel['save.p99brez'] = $save.P99Clean }
+        if (-not [double]::IsNaN($save.MaxAll))   { $vel['save.maxVsi']  = $save.MaxAll }
+        if (-not [double]::IsNaN($save.MaxClean)) { $vel['save.maxBrez'] = $save.MaxClean }
+    }
+
+    $zapisPot = Write-MeritevJson -Path $JsonPath -Paket 'M2.1' -Scenarij 'rwdiag' `
+                    -Odtis $odtis -Velicine $vel -Uspeh ($failures.Count -eq 0) -Padle $failures
+    Write-Host ("  zapis zagona: {0} ({1} velicin)" -f $zapisPot, $vel.Count)
 
     Step 9 'Izid'
     if ($failures.Count -eq 0) {

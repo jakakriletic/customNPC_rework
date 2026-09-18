@@ -9,11 +9,11 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-09-17** |
-| Trenutni milestone | **M2 — diagnostika** (M2.1, M2.2, M2.3 faza A in **M2.7 zaključeni**); **M0 in M1 zaključena**. M2.3 fazi B/C čakata na ponovni zagon (P1); M2.5a in M2.5b sta v kodi, merila S1–S7 še niso bila strojno ovrednotena |
-| Naslednji paketi | **M2.5c** (protokol ponovitev — meritev M2.7 je en sam zagon) ali **M2.4** (50/200/500 NPC-jev). Odprta zagona: `.\r2-run.ps1` (pojav P1) in `.\rwdiag-run.ps1` (merila S1–S7). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
+| Zadnja posodobitev | **2026-09-18** |
+| Trenutni milestone | **M2 — diagnostika** (M2.1, M2.2, M2.3 faza A, **M2.7 in M2.5c zaključeni**); **M0 in M1 zaključena**. M2.3 fazi B/C čakata na ponovni zagon (P1); M2.5a in M2.5b sta v kodi, merila S1–S7 še niso bila strojno ovrednotena |
+| Naslednji paketi | **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline). Odprti zagoni: `.\ponovitve-run.ps1` (prva serija ponovitev M2.7, da tabela dobi razpon), `.\r2-run.ps1` (pojav P1) in `.\rwdiag-run.ps1` (merila S1–S7). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
 | Prevedljivih razredov | 35 — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
-| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **84 za instrumentacijo** (61 + 21 `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji 17. 9. (D-014). Dodatno 13 preverb dedicated-server smoka (M0.5), zelene |
+| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **84 za instrumentacijo** (61 + 21 `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji 17. 9. (D-014). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **P1** — po `setPosition` se leteči NPC ne premakne več, čeprav navigator javlja celo pot (17. 9.); nereproduciran, hipoteza, blokira fazi B in C scenarija M2.3 |
 | Odprta vprašanja iz M2.7 | dva NPC-ja od osmih na progi z grlom ne prispeta niti ob osveženi poti (zamašek ali `canNavigate()`, loči M3.1); najpočasnejši tick meritve (232 ms) ni bil autosave, ampak tick s pathfindingom |
 | Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8, Q10 in Q12 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
@@ -27,7 +27,7 @@
 |---|---|---|
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
-| M2 Diagnostika | **v teku** (≈75 %) | M2.1, M2.2 in faza A M2.3 preverjene v svetu; **R1 in R2 sta reproducirana in izmerjena**; fazi B/C M2.3 čakata na ponovni zagon (P1) |
+| M2 Diagnostika | **v teku** (≈85 %) | M2.1, M2.2 in faza A M2.3 preverjene v svetu; **R1 in R2 sta reproducirana in izmerjena**; M2.5 (a/b/c) in M2.7 v kodi, M2.5c ima samotest; fazi B/C M2.3 čakata na ponovni zagon (P1), ostaneta M2.4 in M2.6 |
 | M3 Jedro entitete | ni začeto | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
@@ -63,14 +63,90 @@
 | M2.3 | Reprodukcija R2 (leteči NPC in ovira) | **pognano 17. 9. — faza A veljavna, R2 reproduciran**; fazi B in C neveljavni zaradi pojava P1. Dodani merili L9, L10 in veličini `dStarost`, `gib`; čaka na ponovni zagon. [meritev](meritve/2026-09-17-M2.3-R2-reprodukcija.md), [scenarij](scenariji/M2.3-R2.md) |
 | M2.5a | Pripis počasnih tickov: `SlowTicks` + merila S1–S4 v `rwdiag-run.ps1` | **koda in testi narejeni** (22 testov, prevedeno v seji 16. 9.); čaka na prvi zagon v svetu |
 | M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
-| M2.5 | Merilni protokol kot skripta | **v teku** — M2.5a (pripis počasnih tickov) in M2.5b (izločitev autosave ticka) narejena; ostaja protokol ponovitev (M2.5c) |
+| M2.5 | Merilni protokol kot skripta | **zaključeno** — M2.5a (pripis počasnih tickov), M2.5b (izločitev autosave ticka) in M2.5c (protokol ponovitev) narejeni; vsi trije čakajo na zagon v svetu |
 | M2.5b | Izločitev autosave ticka: `server.tick.ns.nosave` + merila S5–S7 | **koda in testi narejeni** (6 testov, prevedeno v seji); čaka na prvi zagon v svetu |
+| M2.5c | **Protokol ponovitev**: zapis zagona (`meritve-lib.ps1`), združevanje N zagonov v svežem svetu in šumni pas (`ponovitve-run.ps1`), merila T1–T6 | **koda in samotest narejena 18. 9.** (16 trditev zelenih); čaka na prvo serijo ponovitev v svetu; [scenarij](scenariji/M2.5c-ponovitve.md) |
 | M2.6 | Baseline meritve originala | ni začeto |
 | M2.7 | **Merila kakovosti navigacije** (šest veličin, izmerjenih na originalu) | **zaključeno 17. 9. — N1–N12 zelena, tabela obstaja**; [meritev](meritve/2026-09-17-M2.7-navigacija-baseline.md), [scenarij](scenariji/M2.7-navigacija.md). Vhodni pogoj za M4.10 je dopolnjen: potrebno je prizorišče z razdaljo čez `NpcNavRange` |
 
 ---
 
 ## Dnevnik sej
+
+### 2026-09-18 (37) — M2.5c: protokol ponovitev in zapis zagona
+
+**Paket:** M2.5c
+**Stanje:** **zaključeno** (koda in samotest); prva serija ponovitev v svetu je na uporabniku
+
+**Izhodišče:** tabela M2.7 je nastala iz **enega** zagona, zato nima razpona. Dokler ga
+nima, se o razliki med dvema zagonoma ne da reči, ali je izboljšava ali šum — in po
+`05-SEJA-PROTOKOL.md` je M4.10–M4.13 ni dovoljeno razglasiti za izboljšavo.
+
+**Narejeno:**
+
+- `meritve-lib.ps1` — strojno berljiv **zapis zagona** (`Write-MeritevJson` /
+  `Read-MeritevJson`, shema 1) z dvema ločenima deloma: **odtis** (pogoji, pod katerimi je
+  meritev nastala; med ponovitvami se ne sme razlikovati) in **veličine** (kar se meri;
+  razpon čez ponovitve *je* merilni šum). Plus `Get-Mediana` in `Get-Sum`.
+- `ponovitve-run.ps1` — N ponovitev, vsaka svež svet (`.\testworld.ps1`) in svoj proces;
+  združevanje po imenih veličin, izpis šumnega pasu (mediana, razpon, relativni razpon,
+  oznaka `enaka` / `stabilna` / `SUMNA`), poročilo v `audit\m25c-<scenarij>-<datum>.md`,
+  merila **T1–T6**.
+- `ponovitve-samotest.ps1` — 7 primerov, **16 trditev**, brez Minecrafta: ponarejeni
+  scenarij zapiše vnaprej znane številke. Pokriva zeleno pot, obe oznaki, spremenjen odtis,
+  premalo ponovitev, padel zagon in manjkajočo veličino.
+- `nav-run.ps1` in `rwdiag-run.ps1` dobita `-JsonPath` in po poročilu zapišeta zapis zagona.
+  Mapiranje imen je v `nav-run.ps1` izločeno v čisto funkcijo `New-NavZapis`, da se da
+  preveriti brez Minecrafta.
+- `docs/scenariji/M2.5c-ponovitve.md`.
+
+**Preverjeno v seji (brez Minecrafta):**
+
+- `.\ponovitve-samotest.ps1`: **16/16 zelenih** v oblačnem PowerShellu 7.4.6. Test je bil
+  najprej pokvarjen namerno (`Get-Sum` vrne razpon 0) — takrat pade na oznakah `stabilna`
+  in `SUMNA`, kar potrjuje, da trditvi nista prazni.
+- `New-NavZapis` pognan nad **pravim logom zagona z 17. 9.** (`audit\m27-nav.log`, funkcije
+  izluščene iz `nav-run.ps1` prek AST, brez podvajanja kode): 59 veličin in odtis
+  `npc=16 progaG=8 progaO=8 vrataX=-10 zidZ=72 ciljZ=78 zidBlokov=140 pometanj=4`. Številke
+  se ujemajo z objavljeno tabelo (1,151 / 1,236; 237,6 / 67,6 µs; 1/8 in 6/8; razpon 3,78 in
+  4,78; `naTick` 0,313, max 16). Zapis se tudi prebere nazaj.
+- Vseh pet skript sintaktično brez napak.
+
+**Ugotovitve:**
+
+- **Ponovitev brez reseta sveta ni ponovitev.** Svet v `dev\run\world` se med zagoni
+  ohrani z vsemi NPC-ji vred; drugi zagon `nav-run.ps1` bi meril 32 NPC-jev namesto 16.
+  Zato je reset del protokola, merilo T4 (enak odtis) pa ga ujame tudi, če odpove. Dobra
+  novica: N2 v `nav-run.ps1` bi tak zagon tako ali tako podrl — napaka je glasna, ne tiha.
+- **Odtis mora biti ločen od veličin.** Če sta v istem loncu, je mediana čez tri zagone
+  lahko povprečje treh različnih poskusov in izgleda enako verodostojno kot meritev.
+- **Prag 20 % je oznaka, ne pravilo.** Pravi prag za posamezno veličino je njen izmerjeni
+  razpon; zato T6 ničesar ne podre, samo izračuna.
+- Kjer je mediana 0 (npr. `ai.naTickP95`), relativni razpon ne obstaja; stolpec pove `n/a`
+  namesto izmišljenega nadomestka.
+
+**Ni narejeno in zakaj:**
+
+- **Serija ponovitev ni pognana** — potrebuje Windows, Javo 8 in Minecraft. Tabela M2.7
+  ostane enozagonska, dokler uporabnik ne požene `.\ponovitve-run.ps1`.
+- `r2-run.ps1` zapisa zagona še nima; dobi ga, ko bo pojav P1 razrešen in bo scenarij spet
+  dal veljavne številke (sicer bi zapisovali zapise neveljavnih zagonov).
+- Ocena trajanja serije: trije zagoni `nav-run.ps1` zaporedoma, vsak s svojim resetom sveta.
+
+**Spremembe obnašanja:** nobene v modu. Spremembe so samo v merilnih skriptah; `-JsonPath`
+je neobvezen in brez njega se vedenje obeh skript ne spremeni.
+
+**Odločitev:** **D-016** v [`01-ARHITEKTURA.md`](01-ARHITEKTURA.md) §9 — kaj je ponovitev,
+zakaj je reset sveta njen del in zakaj sta odtis in veličine ločena.
+
+**Meritve:** nobene nove (paket ne meri, ampak pove, kdaj je meritev veljavna).
+
+**Naslednja seja:** prva serija `.\ponovitve-run.ps1` (če jo je uporabnik pognal → tabela
+M2.7 dobi razpon in gre v `docs/meritve/`), sicer **M2.4** (50/200/500 NPC-jev) ali
+**M2.6** (baseline originala).
+
+---
+
 
 ### 2026-09-17 (36) — M2.7 pognan: N1–N12 zelena, izhodiščna tabela obstaja
 

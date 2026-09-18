@@ -21,9 +21,12 @@
 #     .\nav-run.ps1
 #     .\nav-run.ps1 -AcceptEula
 #     .\nav-run.ps1 -ChunkRadius 3
+#     .\nav-run.ps1 -JsonPath audit\m27-nav-p1.json   # zapis zagona na izbrano pot (M2.5c)
+#
+# Ponovitve po protokolu (tri in vec) pozene .\ponovitve-run.ps1, ki -JsonPath poda sam.
 
 param([switch]$AcceptEula, [int]$ChunkRadius = 2, [int]$WarmupSeconds = 10,
-      [int]$ScenarioTimeoutSec = 180, [int]$SweepRepeats = 3)
+      [int]$ScenarioTimeoutSec = 180, [int]$SweepRepeats = 3, [string]$JsonPath = '')
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -32,6 +35,10 @@ $audit  = Join-Path $root 'audit'
 $seed   = Join-Path $root 'dev\testworld'
 $dumps  = Join-Path $run 'logs\rwdiag'
 New-Item -ItemType Directory -Force -Path $audit | Out-Null
+
+# Zapis zagona za protokol ponovitev (M2.5c); brez njega je zdruzevanje ponovitev
+# branje lastne formatirane tabele z regexom.
+. (Join-Path $root 'meritve-lib.ps1')
 
 $lanes     = @('G', 'O')
 $laneOpis  = @{ G = 'zid z vrati'; O = 'odprto' }
@@ -359,6 +366,69 @@ function Format-Sonda($S) {
         $S.Cilj, $S.Npc, $S.NaTleh, $S.Iskanj, $S.Celih, $S.Delnih, $S.BrezPoti,
         $S.DelezCelih, $S.RazmerjeP50, $S.RazmerjeP95, $S.RazmerjeN,
         $S.DosegP50, $S.DosegP05, $S.UsP50, $S.UsP95, $S.UsMax)
+}
+
+# Zapis zagona za protokol ponovitev (M2.5c): iz prebranih objektov naredi odtis in
+# velicine. Locena funkcija namenoma: mapiranje imen je edini del, ki ga je mogoce
+# preveriti brez Minecrafta, nad ze zapisanim logom starega zagona.
+function New-NavZapis {
+    param($Pometi, $Cas, $NavAi, $Chunks, $Setup, [int]$Filled,
+          [int]$Obroc, [int]$Ogrevanje, [int]$PometanjPon)
+
+    $odtis = @{
+        npc         = $(if ($null -ne $Chunks) { $Chunks.Npc }    else { -1 })
+        progaG      = $(if ($null -ne $Setup)  { $Setup.G }       else { -1 })
+        progaO      = $(if ($null -ne $Setup)  { $Setup.O }       else { -1 })
+        vrataX      = $(if ($null -ne $Setup)  { $Setup.VrataX }  else { -999 })
+        zidZ        = $(if ($null -ne $Setup)  { $Setup.ZidZ }    else { -999 })
+        ciljZ       = $(if ($null -ne $Setup)  { $Setup.CiljZ }   else { -999 })
+        zidBlokov   = $Filled
+        pometanj    = @($Pometi).Count
+        obroc       = $Obroc
+        ogrevanje   = $Ogrevanje
+        pometanjPon = $PometanjPon
+    }
+
+    $vel  = @{}
+    $kdaj = @('start', 'poA')
+    foreach ($lane in @('G', 'O')) {
+        $arr = @($Pometi | Where-Object { $_.Predpona -eq ('NAV_Walk' + $lane) })
+        for ($i = 0; ($i -lt $arr.Count) -and ($i -lt $kdaj.Count); $i++) {
+            $p = $arr[$i]; $ko = $kdaj[$i]
+            $vel[('{0}.delezCelih.{1}'  -f $lane, $ko)] = $p.DelezCelih
+            $vel[('{0}.razmerjeP50.{1}' -f $lane, $ko)] = $p.RazmerjeP50
+            $vel[('{0}.razmerjeP95.{1}' -f $lane, $ko)] = $p.RazmerjeP95
+            $vel[('{0}.usP50.{1}'       -f $lane, $ko)] = $p.UsP50
+            $vel[('{0}.usP95.{1}'       -f $lane, $ko)] = $p.UsP95
+            $vel[('{0}.usMax.{1}'       -f $lane, $ko)] = $p.UsMax
+            $vel[('{0}.iskanj.{1}'      -f $lane, $ko)] = $p.Iskanj
+        }
+    }
+    foreach ($ph in @('A', 'B')) {
+        foreach ($lane in @('G', 'O')) {
+            $c = $Cas[($ph + $lane)]
+            if ($null -eq $c) { continue }
+            $vel[('{0}.{1}.prispelo'   -f $ph, $lane)] = $c.Prispelo
+            $vel[('{0}.{1}.prvi'       -f $ph, $lane)] = $c.Prvi
+            $vel[('{0}.{1}.mediana'    -f $ph, $lane)] = $c.Mediana
+            $vel[('{0}.{1}.zadnji'     -f $ph, $lane)] = $c.Zadnji
+            $vel[('{0}.{1}.razponGrlo' -f $ph, $lane)] = $c.RazponGrlo
+            $vel[('{0}.{1}.razponMax'  -f $ph, $lane)] = $c.RazponMax
+        }
+    }
+    if ($null -ne $NavAi) {
+        $vel['ai.novihPoti']     = $NavAi.NovihPoti
+        $vel['ai.naTick']        = $NavAi.NaTick
+        $vel['ai.naTickP95']     = $NavAi.NaTickP95
+        $vel['ai.naTickMax']     = $NavAi.NaTickMax
+        $vel['ai.navigirajoP50'] = $NavAi.NavigirajoP50
+    }
+    if ($null -ne $Chunks) {
+        $vel['chunki']    = $Chunks.Chunki
+        $vel['zavrnjeni'] = $Chunks.Zavrnjeni
+    }
+
+    return [pscustomobject]@{ Odtis = $odtis; Velicine = $vel }
 }
 
 function Invoke-Sweep($srv, [string]$Lane) {
@@ -697,6 +767,22 @@ try {
     }
     Set-Content -Path $report -Value $head -Encoding UTF8
     Write-Host ("  porocilo: {0}" -f $report)
+
+    Step '14b' 'Zapis zagona za protokol ponovitev (M2.5c)'
+    # Porocilo zgoraj je za cloveka, ta zapis za .\ponovitve-run.ps1. Odtis so pogoji,
+    # pod katerimi je meritev nastala in ki se med ponovitvami ne smejo razlikovati;
+    # velicine so tisto, kar se meri in cigar razpon cez ponovitve je merilni sum.
+    if ($JsonPath -eq '') { $JsonPath = Join-Path $audit ("m27-nav-{0}.json" -f $stamp) }
+
+    $zapis = New-NavZapis -Pometi $pometi -Cas $cas -NavAi $navAi -Chunks $chunks -Setup $setup `
+                          -Filled $filled -Obroc $ChunkRadius -Ogrevanje $WarmupSeconds `
+                          -PometanjPon $SweepRepeats
+    $odtis = $zapis.Odtis
+    $vel   = $zapis.Velicine
+
+    $zapisPot = Write-MeritevJson -Path $JsonPath -Paket 'M2.7' -Scenarij 'nav' `
+                    -Odtis $odtis -Velicine $vel -Uspeh ($failures.Count -eq 0) -Padle $failures
+    Write-Host ("  zapis zagona: {0} ({1} velicin)" -f $zapisPot, $vel.Count)
 
     Step 15 'Izid'
     if ($failures.Count -eq 0) {
