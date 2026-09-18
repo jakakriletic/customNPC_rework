@@ -18,6 +18,7 @@
 | Ugotovitev M2.3 (21. 9.) | **R2 v tem prizorišču ni okvara letenja, ampak zastarela delna pot.** En sam `navigateTo` da pot, ki se konča pred oviro (`cele = 0/6`) in je nič ne zamenja; osvežena pot (faza B) in vanilla AI (faza C) isto skupino spravita čez. Popravek v M4 mora osveževati pot, ne spreminjati move helperja |
 | Zagoni 23. 9. | **`nav-run` N1–N15 zelena** (z ogrevanjem: začetno pometanje G/O 2.903 / 4.343 µs, po fazi A 13.173 / 16.572 µs — razlika je ponovljiva, ne šum; A/B primerjati samo začetna pometanja). R2 ponovljen: faza A G 1/8, faza B 6/8. **`rwdiag-run` zelen, 0 padlih** (S1–S7 prvič ovrednotena v svetu): MSPT p50/p95/p99 = 0,54/1,15/2,36 ms, max 58,9 ms; brez autosave ticka max 52,7 ms, p99 2,16 ms; 8 NPC-jev tika vsak tick. Dodana oznaka `dev\run\world\rework-scenarij.txt`: nav-run jo zapiše, nav-run in rwdiag-run ob njej takoj padeta (dvakrat se je zgodilo, da je scenarij tekel na napačnem svetu). Vrstni red: testworld → testworld-run → rwdiag-run → nav-run zadnji |
 | Ogrevanje (M2.7b, 21. 9.) | **Peta veličina potrebuje ogrevanje iskalnika, tako kot meritev potrebuje ogrevanje chunkov.** Dva zagona pet minut narazen: `usSkupaj` zadnjih dveh pometanj 9.069 / 18.076 µs proti 4.579 / 2.939 µs. Več vzorcev tega ne reši — vseh 56 ogretih vzorcev enega pometanja si deli isto stanje JVM-a. [zapis](meritve/2026-09-21-M2.7b-ogrevanje.md) |
+| Formacije (M4.14a) | koda iz 18. 9. **integrirana 27. 9.** na M3.6 (odločitev **D-021**, prej lokalno D-017); +15 razredov v `rework/formation`, 21 testov; v svetu še ne pognana |
 | Šumni pas (M2.5c, 18. 9.) | **46 veličin od 59 ima razpon nič** čez tri ponovitve; vse, kar opisuje vedenje skupine in kakovost poti, je deterministično do enega ticka. Šumna je samo veličina 5 (µs na iskanje), do **114 %** — zato A/B na ceni iskanja (M4.11, M5.6) do M2.7b ni merljiv. [zapis](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
 | Odprta vprašanja iz M2.7 | dva NPC-ja od osmih na progi z grlom ne prispeta niti ob osveženi poti (zamašek ali `canNavigate()`, loči M3.1); najpočasnejši tick meritve (232 ms) ni bil autosave, ampak tick s pathfindingom |
 | Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8, Q10 in Q12 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
@@ -33,7 +34,7 @@
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | **v teku** (≈96 %, ostane zagon M2.6) | M2.1, M2.2, M2.3, M2.5 in M2.7 preverjeni v svetu (S1–S7 in N1–N15 zelena 23. 9.); **M2.4 v kodi, čaka na zagon**; ostaneta M2.6 (baseline) in M2.4r (render) |
 | M3 Jedro entitete | **v teku** — M3.1–M3.5 zaključeni (vzrok R1 potrjen, R1 popravljen pod stikalom, regresija zelena v načinih 0/1/2, hitbox po sestopu); M3.6 preusmerjen (D-020), v kodi, čaka na zagon | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
-| M4 Gibanje | ni začeto | analiza narejena, glej R2 |
+| M4 Gibanje | **M4.14a v kodi** (izven vrstnega reda, na zahtevo uporabnika) | R2 analiza narejena; formacije (M4.14) prevedene in testirane v simulaciji, v svetu še ne — [zasnova](06-FORMACIJE.md), [scenarij](scenariji/M4.14-formacije.md) |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
 | M7 Animacije | ni začeto | analiza narejena, glej R4 |
@@ -847,6 +848,74 @@ skozi `Read-Samples` (264 vzorcev, 4 faze × 3 proge po 22), `preveri-skladnost.
 
 **Naslednja seja:** pognati `.\r2-run.ps1`, prepisati razsodbo o P1 v meritev, nato **M2.4**
 ali **M2.7**.
+### 2026-09-18 (39a) — M4.14a: formacije v Javi (skupina NPC-jev kot ena enota)
+
+*Integrirano na `origin/main` (M3.6) 27. 9.: ta vnos je nastal na lokalni veji 18. 9. in ni bil pushan; odločitev preštevilčena D-017 → D-021.*
+
+**Paket:** M4.14a (nov, izven vrstnega reda faz — izrecna zahteva uporabnika)
+**Stanje:** **koda in testi narejeni; v svetu ni pognano** (M4.14b čaka na build in zagon)
+
+**Ozadje:** uporabnik vodi vojsko NPC-jev s chat skripto (`legija`, `obramba`, `march`), ki
+premik izvede s timerji na igralcu in `navigateTo` za vsakega NPC-ja posebej. Vprašal je,
+ali bi v Javi lahko marširali skupaj, in naročil zasnovo, vpis v načrt in prototip. Paket je
+pred M2 zaključkom, zato ga protokol (§2 "ne začenjaj paketa iz kasnejšega milestona")
+sicer ne bi dovolil; izjema je zapisana v D-021.
+
+**Narejeno:**
+
+- Zasnova [`06-FORMACIJE.md`](06-FORMACIJE.md): šest vzrokov, zakaj skripta razpade (z
+  mesti v kodi), model sidra in mest, zaprta zanka, ozko grlo, faze, parametri, kaj je in
+  kaj ni preverjeno.
+- Paket `rework/formation` (15 datotek). Jedro brez Minecrafta: `SquadPlanner`,
+  `FormationShape` (legija/obramba/kolona/march z razmiki iz skripte), `SlotAssigner`
+  (dodelitev brez križanja), `PathTrack`, `FormationMath`. Adapter: `Squad`,
+  `FormationMoveTask` (prioriteta −1, maska `PASSIVE|LOOK`), `SquadManager` (na event bus
+  samo, dokler obstaja enota), `WorldTerrain`, ukaz `/rwsquad`, `FormationApi` za skripte.
+- `CustomNpcs.java`: registracija `/rwsquad` in `SquadManager.clear()` ob ustavitvi.
+- `build.gradle`: nova testa izključena iz `testOriginal`.
+- Scenarij [`M4.14-formacije.md`](scenariji/M4.14-formacije.md): dimni test F1–F12 in A/B
+  proti skripti na prizorišču M2.7 (FA1–FA6).
+- Predelana uporabnikova chat skripta [`formacije/vojska-chat.js`](formacije/vojska-chat.js)
+  (preverjena z `node --check` in z nadomestnim svetom v Node).
+- `03-FAZE.md` (M4.14, M4.14a–c), `01-ARHITEKTURA.md` (D-021), `README.md`.
+
+**Preverjeno v seji (D-014):** celotno drevo `rework/**` in popravljen `CustomNpcs.java` se
+prevedeta z `javac --release 8` proti mapiranim razredom (za obstoječo kodo sta bila potrebna
+nadomestka `GameProfile` in `ImmutableSetMultimap` izven repozitorija). 21 novih testov
+zelenih. Simulacija pokaže: 20 članov prehodi 80 blokov, noben med pohodom ne zaostane več kot
+5,5 bloka; sidro se prilagodi najpočasnejšemu; obtičan član enoto najprej ustavi, po 80
+tickih je opravičen in enota gre naprej; pred vrati se formacija stisne in za njimi razpre;
+delna pot se nadaljuje; končna mesta so na sredini blokov in unikatna.
+
+**Ni narejeno in zakaj:**
+
+- Build, zagon in dimni test v svetu — seja nima Gradla ne Minecrafta; to je M4.14b.
+- `nav-control.js` še nima načina `FORMACIJA` za A/B (FA1–FA6); naslednja seja.
+- Leteči in plavajoči NPC-ji niso bili niti razmišljeni do konca: drug navigator in move
+  helper; zapisano kot omejitev.
+
+**Ugotovitve:**
+
+- **`setMovingType(0)` v skripti pusti `EntityAIReturn` aktiven.** Ko NPC nima poti in ni
+  na domu, gre domov (`EntityAIReturn.shouldExecute`, movingType 0 →
+  `!isVeryNearAssignedPlace()`, meja ±0,2 bloka). Uporabnikovi NPC-ji se zato po prihodu
+  vrnejo na staro mesto, razen če imajo izklopljen "return to start". Formacije to rešijo s
+  `setStartPos` ob koncu.
+- **`Walking` flag CustomNPCs je vezan na navigatorjevo pot** (`EntityNPCInterface:464`), od
+  njega pa sta odvisna `addVelocity` (knockback) in render pri standing type 3. Zato člani
+  hodijo prek poti z eno točko in ne prek golega `moveHelper.setMoveTo`.
+- **Hipoteza, nereproducirana:** `testOriginal` izključi `DiagTest` in sorodne, ne pa
+  `SlowTicksTest` in `NavProbeTest`, ki prav tako uporabljata razreda iz `rework/diag`. Če
+  gradle `testOriginal` ni bil pognan od M2.5a, lahko pade z `NoClassDefFoundError`. Ne
+  popravljam (ni moj paket); preveri naslednji `.\dev.ps1 testOriginal`.
+
+**Spremembe obnašanja:** nov ukaz `/rwsquad` in `FormationApi`; brez klica nobene (tabela).
+
+**Meritve:** nobene v svetu.
+
+**Naslednja seja:** uporabnik naj požene `.\dev.ps1 buildPatchedMod --offline`,
+`.\verify-package.ps1` (pričakovano: `CustomNpcs.class` spremenjen kot prej, novih 26 razredov
+v `rework/formation`) in dimni test F1–F12. Nato način `FORMACIJA` v `nav-control.js` in A/B.
 
 ---
 
@@ -3209,6 +3278,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 | 2026-09-24 | Jahač na nosilcu-NPC ne zažene sledenja/poti premikanja, ko krmili nosilec; `tpTo` jahača teleportira nosilca | R1, M3.4 | da — isti `RwMountSteering` | 0 = original |
 | 2026-09-24 | NPC po sestopu z nosilca dobi nazaj polno višino hitboxa (`updateHitbox` v `dismountRidingEntity`) | R1, M3.5 | da — isti `RwMountSteering` | 0 = original |
 | 2026-09-24 | NPC brez projektila, ki tava ali hodi po poti, napad začne takoj (napad dobi prioriteto pred gibalnim taskom); nov ukaz `/rwattack` | M3.6 | da — config `RwAttackPriority` 0/1, `/rwattack` | 0 = original |
+| 2026-09-18 | Nov ukaz `/rwsquad` in `FormationApi`: formacije; ob koncu nastavijo dom in orientacijo članov | M4.14, D-021 | da — sam ukaz; `brezsidra`; `-Drwformation=off` | brez ukaza nič |
 
 Vse zgornje so popravki tihe izgube podatkov, zato so brez stikala in privzeto vklopljene.
 Format datotek se ne spremeni, zato ni migracije. Izjema je zadnji stolpec pri praznem

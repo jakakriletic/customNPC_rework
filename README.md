@@ -14,7 +14,7 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-09-24 |
-| Trenutna faza | **M3 — jedro entitete**; M0, M1 zaključena, M2 razen zagona baselina M2.6 (odložen). M3.1–M3.5 zaključeni (R1 popravljen pod stikalom `RwMountSteering`, hitbox po sestopu). **M3.6 preusmerjen (D-020):** popravljena prioriteta napada pred tavanjem (`RwAttackPriority`); prvi zagon: napaka ponovljena, popravek zniža mediano s 30 na 10 tickov, A5 pade na enem vzorcu (hipoteza `aggroRange`, scenarij dopolnjen) |
+| Trenutna faza | **M3 — jedro entitete**; M0, M1 zaključena, M2 razen zagona baselina M2.6 (odložen). M3.1–M3.5 zaključeni (R1 popravljen pod stikalom `RwMountSteering`, hitbox po sestopu). **M3.6 preusmerjen (D-020):** popravljena prioriteta napada pred tavanjem (`RwAttackPriority`); prvi zagon: napaka ponovljena, popravek zniža mediano s 30 na 10 tickov, A5 pade na enem vzorcu (hipoteza `aggroRange`, scenarij dopolnjen). **M4.14a formacije** (izven vrstnega reda) integrirane 27. 9., v svetu še ne pognane |
 | Naslednji korak | **Ponovni zagon M3.6** (`.\m36-run.ps1` in `.\m36-run.ps1 -Nacin 1`, merila A1–A6; build ni potreben), nato M3.7. Glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
 | Prevedljivih razredov | 74 v `src/patch` (37 iz M3.1 + prejšnji), v runtime JAR-u 99 prevedenih razredov; podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
@@ -38,10 +38,11 @@ datotek za obnovo in ima mod pomembnejše težave, se dodatna forenzika R9, migr
 | [`docs/03-FAZE.md`](docs/03-FAZE.md) | milestoni M0–M10, delovni paketi, odvisnosti, izhodni kriteriji | ko načrtuješ sejo |
 | [`docs/04-STANJE.md`](docs/04-STANJE.md) | **živ dnevnik** — kaj je narejeno, kaj teče, kaj je blokirano | vedno drugo |
 | [`docs/05-SEJA-PROTOKOL.md`](docs/05-SEJA-PROTOKOL.md) | kako seja začne, dela in zaključi | vedno, tudi na koncu seje |
+| [`docs/06-FORMACIJE.md`](docs/06-FORMACIJE.md) | **formacije (M4.14)**: skupina NPC-jev kot ena enota, ukaz `/rwsquad`, `FormationApi` za skripte | ko delaš na gibanju skupin ali na uporabnikovi vojski |
 | [`OKOLJE.md`](OKOLJE.md) | razvojno okolje, verzije, gradle ukazi | ko nekaj ne zbuilda |
 | [`PLAN_IMPLEMENTACIJE.md`](PLAN_IMPLEMENTACIJE.md) | audit originala: bugi B1–B8 in performance kandidati | referenca; še vedno velja |
 | [`docs/scenariji/M0.7-integracijska-matrika.md`](docs/scenariji/M0.7-integracijska-matrika.md) | 47 preverb obnašanja v svetu, postopek in pokritost | pred predajo vsakega paketa |
-| [`docs/scenariji/`](docs/scenariji/) | ponovljivi scenariji: M0.5 smoke, M0.6 testni svet, M2.1 diagnostika, M2.2 R1, M2.3 R2, **M2.7 navigacija** | ko poganjaš ali spreminjaš scenarij |
+| [`docs/scenariji/`](docs/scenariji/) | ponovljivi scenariji: M0.5 smoke, M0.6 testni svet, M2.1 diagnostika, M2.2 R1, M2.3 R2, **M2.7 navigacija**, M4.14 formacije | ko poganjaš ali spreminjaš scenarij |
 
 ---
 

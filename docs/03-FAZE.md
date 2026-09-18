@@ -199,6 +199,10 @@ kakovosti navigacije) za pakete M4.10–M4.13.
 | M4.11 | **Lasten `NodeProcessor`** — realna cena diagonale (1,41 namesto manhattanskih 2) in pregledani malusi `PathNodeType`. Vanilla uporablja manhattansko ceno **in** hevristiko pri 8-smernem gibanju (`PathPoint.distanceManhattan:86`), zato poti sistematično bežijo od diagonal; od tod stopničasto cikcakanje. A/B proti merilom M2.7 | M |
 | M4.12 | **Odločitvena točka: lasten `PathNavigate` z lastnim A\***. Izvede se **samo**, če M4.10, M4.11 in M5.6 po merilih M2.7 ne zadostujejo. Obseg: lasten proračun vozlišč, hevristika in domet; `Path`, `PathPoint` in move helper ostanejo vanilla, da vsi obstoječi AI taski delujejo nespremenjeno. **Brez asinhronega iskanja** | L |
 | M4.13 | Mehkejše sledenje poti: toleranca do waypointa in „string pulling" v `pathFollow` (`PathNavigate:271-305`). Samo če M2.7 pokaže trzanje in striženje vogalov kot merljiv pojav, ne kot občutek | S |
+| M4.14 | **Formacije** (novo 18. 9., na zahtevo uporabnika, D-017): skupina NPC-jev se premika kot ena enota — ena pot za vse (vodja), zaprta zanka hitrosti, stiskanje skozi ozka grla, sidranje na koncu. Ukaz `/rwsquad` in `FormationApi` za skripte; brez ukaza paket ni prijavljen in ne doda taska. Zasnova: [`06-FORMACIJE.md`](06-FORMACIJE.md) | M |
+| M4.14a | Jedro (`SquadPlanner`, oblike, dodelitev mest, pot sidra) + adapter (`Squad`, `FormationMoveTask`, `SquadManager`, ukaz, API) + 21 testov v simulaciji | **narejeno 18. 9.** — prevedeno in zeleno v seji (D-014), v svetu ni pognano |
+| M4.14b | Preverjanje v svetu: dimni test F1–F12 in A/B proti skripti na prizorišču M2.7 (FA1–FA6). Za A/B mora `nav-control.js` dobiti način `FORMACIJA`. [Scenarij](scenariji/M4.14-formacije.md) | S |
+| M4.14c | Šele po M4.14b in M2.4: cena na tick pri 50/200 članih; parametri iz `06-FORMACIJE.md` §6 po meritvi | S |
 
 **Izhodni kriterij:**
 - leteči NPC pride od A do B skozi labirint z ovirami, brez obtičanja
@@ -206,6 +210,10 @@ kakovosti navigacije) za pakete M4.10–M4.13.
 - način Momentum: NPC zavija po krivulji, ne v pravem kotu; ima minimalno hitrost
 - pathfinding pri 200 letečih NPC-jih ne pojé več kot dogovorjen delež MSPT-ja
 - obstoječi leteči NPC-ji brez `RwFlightMode` se obnašajo **enako kot prej**
+
+**Izhodni kriterij za formacije (M4.14):** F1–F12 in FA1–FA6 iz scenarija M4.14b; brez
+tega paket ostane "v kodi", ne "narejen". M4.14 **ni** odvisen od M3.1: ne spreminja
+`EntityNPCInterface`, ampak AI task doda od zunaj (D-017).
 
 **Izhodni kriterij za kopenski del:** vsak od M4.10–M4.13 ima A/B meritev proti merilom
 M2.7, ki presega merilni šum; kandidat, ki ga ne, se **zavrže** in se ne obdrži „za vsak

@@ -118,6 +118,8 @@ import noppes.npcs.rework.diag.DiagChunkLoader;
 import noppes.npcs.rework.diag.DiagEventCollector;
 import noppes.npcs.rework.entity.CommandRwMount;
 import noppes.npcs.rework.entity.RiderState;
+import noppes.npcs.rework.formation.CommandRwSquad;
+import noppes.npcs.rework.formation.SquadManager;
 
 @Mod(modid="customnpcs", name="CustomNpcs", version="1.12", acceptedMinecraftVersions="1.12, 1.12.1, 1.12.2")
 public class CustomNpcs {
@@ -311,6 +313,7 @@ public class CustomNpcs {
         // M2.1d: merilni ticketi ne smejo prezivet zaustavitve serverja. Ce bi se zapisali
         // v forcedchunks.dat, bi naslednji zagon tiho tekel pod drugacnim pogojem meritve.
         DiagChunkLoader.disable();
+        SquadManager.clear();
         if (!WorldSaveSession.end(30L, TimeUnit.SECONDS)) {
             LogWriter.error("CustomNPCs world save queue did not drain cleanly before shutdown");
         }
@@ -333,6 +336,9 @@ public class CustomNpcs {
         // M3.6: prioriteta napada pred gibanjem; /rwattack jo med tekom preklopi.
         event.registerServerCommand((ICommand)new CommandRwAttack());
         AttackPriority.setMode(RwAttackPriority);
+        // M4.14: formacije. Brez ukaza (ali klica iz skripte) paket ni prijavljen na event
+        // bus in ne doda nobenega AI taska, zato je obnasanje brez ukaza enako originalu.
+        event.registerServerCommand((ICommand)new CommandRwSquad());
         EntityNPCInterface.ChatEventPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.ChatEventProfile);
         EntityNPCInterface.CommandPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.CommandProfile);
         EntityNPCInterface.GenericPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.GenericProfile);

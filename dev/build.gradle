@@ -105,6 +105,9 @@ task testOriginal(type: Test) {
     exclude '**/DistributionTest.class'
     exclude '**/DiagSnapshotTest.class'
     exclude '**/DiagChunkPlanTest.class'
+    // M4.14: formacije so nov paket, v originalu ga ni.
+    exclude '**/FormationGeometryTest.class'
+    exclude '**/SquadPlannerTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 
