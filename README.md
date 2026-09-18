@@ -15,7 +15,7 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 |---|---|
 | Datum zadnje posodobitve | 2026-09-17 |
 | Trenutna faza | **M2 — diagnostika**; zaključeni M2.1, M2.2 (R1 reproduciran), **M2.7 (izhodiščna tabela navigacije izmerjena)** in **M2.5c (protokol ponovitev)**, M2.3 faza A pognana, **M0 in M1 zaključena**; merila S1–S7 (M2.5a/b) čakajo na `.\rwdiag-run.ps1` |
-| Naslednji korak | prva serija `.\ponovitve-run.ps1` (tabela M2.7 dobi razpon), nato **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline); odprta zagona sta `.\r2-run.ps1` (pojav P1) in `.\rwdiag-run.ps1`. Glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Naslednji korak | **M2.7b** (veličina 5 je edina šumna, do 114 % razpona), nato **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline); odprta zagona sta `.\r2-run.ps1` (pojav P1) in `.\rwdiag-run.ps1`. Glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
 | Prevedljivih razredov | 35 (21 prenesenih + 14 novih v `rework/diag`); podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |

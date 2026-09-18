@@ -11,10 +11,11 @@
 |---|---|
 | Zadnja posodobitev | **2026-09-18** |
 | Trenutni milestone | **M2 — diagnostika** (M2.1, M2.2, M2.3 faza A, **M2.7 in M2.5c zaključeni**); **M0 in M1 zaključena**. M2.3 fazi B/C čakata na ponovni zagon (P1); M2.5a in M2.5b sta v kodi, merila S1–S7 še niso bila strojno ovrednotena |
-| Naslednji paketi | **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline). Odprti zagoni: `.\ponovitve-run.ps1` (prva serija ponovitev M2.7, da tabela dobi razpon), `.\r2-run.ps1` (pojav P1) in `.\rwdiag-run.ps1` (merila S1–S7). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
+| Naslednji paketi | **M2.7b** (več vzorcev za veličino 5 — edina šumna veličina), **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline). Odprta zagona: `.\r2-run.ps1` (pojav P1) in `.\rwdiag-run.ps1` (merila S1–S7, lahko kar prek `.\ponovitve-run.ps1 -Scenarij rwdiag`). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
 | Prevedljivih razredov | 35 — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **84 za instrumentacijo** (61 + 21 `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji 17. 9. (D-014). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **P1** — po `setPosition` se leteči NPC ne premakne več, čeprav navigator javlja celo pot (17. 9.); nereproduciran, hipoteza, blokira fazi B in C scenarija M2.3 |
+| Šumni pas (M2.5c, 18. 9.) | **46 veličin od 59 ima razpon nič** čez tri ponovitve; vse, kar opisuje vedenje skupine in kakovost poti, je deterministično do enega ticka. Šumna je samo veličina 5 (µs na iskanje), do **114 %** — zato A/B na ceni iskanja (M4.11, M5.6) do M2.7b ni merljiv. [zapis](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
 | Odprta vprašanja iz M2.7 | dva NPC-ja od osmih na progi z grlom ne prispeta niti ob osveženi poti (zamašek ali `canNavigate()`, loči M3.1); najpočasnejši tick meritve (232 ms) ni bil autosave, ampak tick s pathfindingom |
 | Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8, Q10 in Q12 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
 | Omejitev orodij | **spremenjeno 17. 9.**: seja ima lupino na uporabnikovem računalniku, a **linuxovo** in brez PowerShella, Gradla in Minecrafta. Bere, piše, ureja, `git`, `python3`, `node`, `jq` — da. `.\dev.ps1`, `.\*-run.ps1`, build in zagon sveta — **ne**, to poganja uporabnik. Podrobnosti v Znanih omejitvah. Seja **prevede in požene teste** `rework/**` v oblačnem okolju proti mapiranim razredom (D-014) in sintaktično preveri `.ps1` s prenesenim PowerShellom |
@@ -65,13 +66,65 @@
 | M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
 | M2.5 | Merilni protokol kot skripta | **zaključeno** — M2.5a (pripis počasnih tickov), M2.5b (izločitev autosave ticka) in M2.5c (protokol ponovitev) narejeni; vsi trije čakajo na zagon v svetu |
 | M2.5b | Izločitev autosave ticka: `server.tick.ns.nosave` + merila S5–S7 | **koda in testi narejeni** (6 testov, prevedeno v seji); čaka na prvi zagon v svetu |
-| M2.5c | **Protokol ponovitev**: zapis zagona (`meritve-lib.ps1`), združevanje N zagonov v svežem svetu in šumni pas (`ponovitve-run.ps1`), merila T1–T6 | **koda in samotest narejena 18. 9.** (16 trditev zelenih); čaka na prvo serijo ponovitev v svetu; [scenarij](scenariji/M2.5c-ponovitve.md) |
+| M2.5c | **Protokol ponovitev**: zapis zagona (`meritve-lib.ps1`), združevanje N zagonov v svežem svetu in šumni pas (`ponovitve-run.ps1`), merila T1–T6 | **zaključeno 18. 9. — serija pognana, T1–T6 zelena**; tabela M2.7 ima razpon; [scenarij](scenariji/M2.5c-ponovitve.md), [meritev](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
+| M2.7b | Več vzorcev za veličino 5 (µs na iskanje): osem iskanj na pometanje je premalo za p50/p95 | **novo 18. 9.** — vhodni pogoj za A/B v M4.11 in M5.6 |
 | M2.6 | Baseline meritve originala | ni začeto |
 | M2.7 | **Merila kakovosti navigacije** (šest veličin, izmerjenih na originalu) | **zaključeno 17. 9. — N1–N12 zelena, tabela obstaja**; [meritev](meritve/2026-09-17-M2.7-navigacija-baseline.md), [scenarij](scenariji/M2.7-navigacija.md). Vhodni pogoj za M4.10 je dopolnjen: potrebno je prizorišče z razdaljo čez `NpcNavRange` |
 
 ---
 
 ## Dnevnik sej
+
+### 2026-09-18 (38) — prva serija ponovitev: scenarij M2.7 je determinističen, šumen je samo čas
+
+**Paket:** M2.5c (zagon)
+**Stanje:** **zaključeno** — serija je veljavna in zapisana
+
+**Izid:** `.\ponovitve-run.ps1` (tri ponovitve, vsaka svež svet, 2,6 / 2,1 / 2,0 minute):
+**T1–T6 zelena**, vsaka ponovitev tudi N1–N12 zelena, odtis enak v vseh treh.
+Polni zapis: [meritev](meritve/2026-09-18-M2.5c-ponovitve-nav.md).
+
+**Glavna ugotovitev:** od 59 veličin jih ima **46 razpon nič**. Vse, kar opisuje vedenje
+skupine in kakovost poti (veličine 1, 2, 3, 4 in 6), je med zagoni **bitno enako** — kdo
+prispe, kdaj prispe, kako dolga je pot, kako se skupina stisne pred vrati. Za A/B v
+M4.10–M4.13 to pomeni, da statistika ni potrebna: en zagon pred in en po, in vsaka razlika
+je resnična.
+
+**Šumna je izključno veličina 5** (µs na eno iskanje), vseh osem njenih oblik, najslabša
+`O.usP95.start` z **114,3 %** razpona. Vzrok ni navigacija, ampak premalo vzorcev: eno
+pometanje naredi **8 iskanj**, p50 in p95 pa sta percentila nad temi osmimi.
+
+| | prag za A/B |
+|---|---|
+| veličine 1, 2, 3, 4 | vsaka sprememba je pomenljiva (razpon 0) |
+| veličina 6 (dodelitev poti na tick) | ≥ 3,4 % |
+| veličina 5, ogreto (p50) | ≥ 5 % na progi G, ≥ 47 % na progi O |
+| veličina 5, hladno (p50) | ≥ 25 % na progi G, ≥ 64 % na progi O |
+
+**Ugotovitve:**
+
+- **Determinizem drži tudi čez dan in čez sejo.** Zagon 17. 9. (druga seja, drug svet) ima
+  za iste veličine iste vrednosti: 1/8 ob 180/180/180, 6/8 ob 220/240/280, razpon 3,78 in
+  4,78, `novihPoti` 372. To je četrta neodvisna potrditev iste številke.
+- **Hladno pometanje meri JIT, ne algoritma** (`G.usMax`: 3 192 µs hladno proti 181 µs
+  ogreto). Za A/B se uporablja ogreto pometanje; hladno ostane ločen podatek o ceni prvega
+  iskanja.
+- **M4.11 in M5.6 sta blokirana na meritvi, ne na kodi.** Oba ciljata ceno iskanja, torej
+  edino veličino, ki v tej obliki ni merljiva. Zato nov paket **M2.7b**: več vzorcev na
+  pometanje (ali skupni čas namesto percentilov).
+- Protokol je v praksi poceni: cela serija traja 7 minut, ker `nav-run.ps1` sam traja dve.
+
+**Ni narejeno in zakaj:** serija za `rwdiag-run.ps1` (merila S1–S7) ni tekla; zapis zagona
+ima, požene pa se s `.\ponovitve-run.ps1 -Scenarij rwdiag`.
+
+**Spremembe obnašanja:** nobene.
+
+**Meritve:** [`meritve/2026-09-18-M2.5c-ponovitve-nav.md`](meritve/2026-09-18-M2.5c-ponovitve-nav.md).
+
+**Naslednja seja:** **M2.7b** (več vzorcev za veličino 5, da postane merljiva), nato
+**M2.4** ali **M2.6**.
+
+---
 
 ### 2026-09-18 (37) — M2.5c: protokol ponovitev in zapis zagona
 
@@ -2395,6 +2448,7 @@ prebrati.
 | 2026-09-17 | poraba pri 27 dejavnih NPC-jih (ni baseline) | `npc.update.window` 207,3 µs/NPC; MSPT p95 10,75 ms, p99 115,3 ms | [zapis](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
 | 2026-09-17 | M2.3 R2 faza A: 6 letečih + zid, 6 kopenskih + isti zid, 6 letečih prosto | leteči čez zid **0/6**, prevozeno 7,95 in `cele=0/6`; kopenski 6,93; leteči brez ovire 16,27 in `cele=6/6` | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
 | 2026-09-17 | M2.3 fazi B in C — **neveljavni** (pojav P1) | 12 letečih NPC-jev 0,00 bloka v 900 tickih pri `navig=6/6` | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
+| 2026-09-18 | M2.5c: tri ponovitve scenarija M2.7, vsaka svež svet (2,6 / 2,1 / 2,0 min) | T1–T6 zelena; **46 veličin od 59 z razponom nič**, šumna samo veličina 5 (do 114 %) | [zapis](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
 | 2026-09-17 | poraba pri 21 NPC-jih med M2.3 (ni baseline) | `npc.update.window` 162,5 µs/NPC; MSPT p50 0,84 ms, p95 8,91 ms, p99 102,8 ms | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
 | — | baseline MSPT še ni izmerjen (M2.6) | — | — |
 

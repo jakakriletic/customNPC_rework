@@ -10,3 +10,4 @@ audit/tools/
 *.log.gz
 dev/testworld/markerji-vzorec.txt
 dev/testworld/nav-markerji-vzorec.txt
+*.log.err

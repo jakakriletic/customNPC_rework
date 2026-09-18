@@ -135,6 +135,12 @@ try {
                            -RedirectStandardOutput $runLog -RedirectStandardError ($runLog + '.err')
         $trajanje = (Get-Date) - $zacetek
         $koda = $p.ExitCode
+        # Prazna .err datoteka je samo stranski ucinek preusmeritve; pusti jo samo, ce v
+        # njej kaj je, sicer se audit\ polni z nicelnimi datotekami.
+        $errPath = $runLog + '.err'
+        if ((Test-Path $errPath) -and ((Get-Item $errPath).Length -eq 0)) {
+            Remove-Item $errPath -Force -ErrorAction SilentlyContinue
+        }
         Write-Host ("  izhodna koda {0}, trajanje {1:N1} min, izpis {2}" -f $koda, $trajanje.TotalMinutes, $runLog)
 
         $zapis = $null
