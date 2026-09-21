@@ -292,20 +292,28 @@ function navigateAll() {
     driveNavigate(laneP, GOAL_X_P);
 }
 
-// reset je funkcija, ne zastavica: naslednja faza se zacne tocno tam, kamor jo postavi.
-function endPhase(npc, marker, reset) {
+// Konec faze samo vzorci in ustavi. Postavitve tu NI vec - zagon 13:49 je pokazal, zakaj:
+// med C_END in D_START mine 40 server tickov in v njih se je proga P premaknila 7,4 bloka
+// nazaj proti cilju, ceprav je endPhase pred tem poklical stopAll. Vhodni pogoj faze D je
+// bil s tem razveljavljen, preden je faza sploh zacela. Postavitev zdaj dela startPhase,
+// tik pred rememberStart, tako da med postavitvijo in meritvijo ne mine noben tick.
+function endPhase(npc, marker) {
     sampleAll(npc);
     say(npc, marker);
+    stopAll(laneF);
+    stopAll(laneW);
+    stopAll(laneP);
+    phase = '-';
+}
+
+// reset je funkcija, ne zastavica: faza se zacne tocno tam, kamor jo postavi.
+function startPhase(npc, name, marker, reset) {
     stopAll(laneF);
     stopAll(laneW);
     stopAll(laneP);
     reset(laneF);
     reset(laneW);
     reset(laneP);
-    phase = '-';
-}
-
-function startPhase(npc, name, marker) {
     phase = name;
     rememberStart(laneF);
     rememberStart(laneW);
@@ -336,29 +344,32 @@ function tick(e) {
         return;
     }
 
-    if (t === A_START) { startPhase(npc, 'A', 'R2-A-START navigateTo en sam klic'); navigateAll(); return; }
-    if (t === A_END)   { endPhase(npc, 'R2-A-END', resetToStart); return; }
+    if (t === A_START) { startPhase(npc, 'A', 'R2-A-START navigateTo en sam klic', resetToStart); navigateAll(); return; }
+    if (t === A_END)   { endPhase(npc, 'R2-A-END'); return; }
 
-    if (t === B_START) { startPhase(npc, 'B', 'R2-B-START navigateTo osvezen ob vsakem vzorcu'); navigateAll(); return; }
-    if (t === B_END)   { endPhase(npc, 'R2-B-END', resetToStart); return; }
+    if (t === B_START) { startPhase(npc, 'B', 'R2-B-START navigateTo osvezen ob vsakem vzorcu', resetToStart); navigateAll(); return; }
+    if (t === B_END)   { endPhase(npc, 'R2-B-END'); return; }
 
     if (t === C_START) {
-        startPhase(npc, 'C', 'R2-C-START setAttackTarget');
+        startPhase(npc, 'C', 'R2-C-START setAttackTarget', resetToStart);
         driveAttack(laneF, targetF);
         driveAttack(laneW, targetW);
         driveAttack(laneP, targetP);
         return;
     }
-    // Konec faze C postavi NPC-je izven mreze: to je vhodni pogoj faze D.
-    if (t === C_END) { endPhase(npc, 'R2-C-END', resetOffGrid); return; }
+    if (t === C_END) { endPhase(npc, 'R2-C-END'); return; }
 
+    // Vhodni pogoj faze D: postavitev izven mreze se zgodi tu, v istem ticku kot meritev.
     if (t === D_START) {
-        startPhase(npc, 'D', 'R2-D-START navigateTo osvezen, izhodisce pol bloka izven mreze');
+        startPhase(npc, 'D', 'R2-D-START navigateTo osvezen, izhodisce pol bloka izven mreze', resetOffGrid);
         navigateAll();
         return;
     }
     if (t === D_END) {
-        endPhase(npc, 'R2-D-END', resetToStart);
+        endPhase(npc, 'R2-D-END');
+        resetToStart(laneF);
+        resetToStart(laneW);
+        resetToStart(laneP);
         say(npc, 'R2-SUM progaF=' + laneF.length + ' progaW=' + laneW.length + ' progaP=' + laneP.length);
         return;
     }

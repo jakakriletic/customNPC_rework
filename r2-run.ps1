@@ -1,4 +1,4 @@
-﻿# M2.3 - skriptirana reprodukcija R2 (leteci NPC in ovira), merila L1-L8.
+﻿# M2.3 - skriptirana reprodukcija R2 (leteci NPC in ovira), merila L1-L12.
 #
 # Scenarij in razlaga: docs/scenariji/M2.3-R2.md
 #
@@ -362,7 +362,7 @@ try {
     if ($modErrors.Count -gt 0) { $modErrors | Select-Object -First 5 | ForEach-Object { Write-Host "      $_" } }
     Check 'brez "script errored"' (-not $log.Contains('script errored'))
 
-    Step 8 'L4-L11: izid po fazah in progah'
+    Step 8 'L4-L12: izid po fazah in progah'
     $result = @{}
     $lines  = @()
     foreach ($ph in $phases) {
@@ -437,14 +437,27 @@ try {
             }
         }
     }
-    $head += ''
-    $head += '## Razsodba o P1'
-    $head += ''
-    $head += $p1
     if ($mrtvi.Count -gt 0) {
         Write-Host ''
         Write-Host 'Diagnostika: proge, ki se niso premaknile'
         $mrtvi | ForEach-Object { Write-Host $_ }
+    }
+
+    # L12: faza pove nekaj o svojem vhodnem pogoju samo, ce se na njem res zacne. Zagon
+    # 13:49 je to zgresil: proga P je fazi C in D zacela 5-7 blokov pred izhodiscem, ker je
+    # med postavitvijo (konec prejsnje faze) in zacetkom faze minilo 40 server tickov.
+    # Merilo ni absolutna razdalja - ta je po 20 tickih ze manjsa - ampak vsota
+    # prevozeno + doCilja prvega vzorca. Ce je NPC startal na izhodiscu, je vsota dolzina
+    # proge (~16,4) ali vec, ker obvoz prevozeno samo podaljsa. V zagonu 13:49 so bile
+    # ciste proge med 16,39 in 17,34, obe onesnazeni pa 10,94 in 11,88.
+    foreach ($ph in $phases) {
+        foreach ($lane in $lanes) {
+            $key = "$ph$lane"
+            if ($result[$key].Count -eq 0) { continue }
+            $v0 = $result[$key][0].PrevozenoAvg + $result[$key][0].DoCiljaAvg
+            Check ("L12: faza/proga {0} se zacne na izhodiscu (prevozeno+doCilja prvega vzorca={1:N2})" -f $key, $v0) `
+                  ($v0 -ge 15)
+        }
     }
 
     # L11 in razsodba o P1. Faza D se od faze B razlikuje v eni sami stvari: NPC zacne pol
@@ -458,14 +471,23 @@ try {
     Check ("L11: kontrola P1 - kopenska proga W se v fazi D premika (prevozenoMax={0}, gibMax={1})" -f $dwW, $gdW) `
           (($dwW -gt 0.05) -and ($gdW -gt 0))
 
-    if ($bpP -ge 12 -and $dpP -lt 0.05) {
-        $p1 = "P1 POTRJEN: proga P na mrezi prevozi {0}, izven mreze {1}. Pol bloka odloci." -f $bpP, $dpP
-    } elseif ($bpP -ge 12 -and $dpP -ge 12) {
-        $p1 = "P1 OVRZEN: proga P se premika na mrezi ({0}) in izven nje ({1}); vzrok zmrznitve je bil nekaj drugega." -f $bpP, $dpP
+    # P1 je zmrznitev, ne pocasnost, zato je locnica ista kot v diagnostiki $mrtvi:
+    # prevozeno pod 0,05 IN gib tocno 0. Prejsnji prag 12 blokov je meril nekaj drugega -
+    # ali je proga prisla do cilja - in bi zagon 13:49 (D=11,61, a ziva) razglasil za
+    # neodlocen iz napacnega razloga.
+    $gdP  = Max-Gib $result['DP']
+    $v0DP = -1
+    if ($result['DP'].Count -gt 0) { $v0DP = $result['DP'][0].PrevozenoAvg + $result['DP'][0].DoCiljaAvg }
+    if ($v0DP -lt 15) {
+        $p1 = "P1 NEODLOCEN: faza D se ni zacela na izhodiscu (prevozeno+doCilja prvega vzorca={0:N2}, pricakovano >= 15). Poskus nima ene same spremenljivke." -f $v0DP
     } elseif ($bpP -lt 12) {
         $p1 = "P1 NEODLOCEN: proga P se ne premika niti v fazi B ({0}); popravek resetiranja ni zalegel." -f $bpP
+    } elseif ($dpP -lt 0.05 -and $gdP -le 0) {
+        $p1 = "P1 POTRJEN: proga P na mrezi prevozi {0}, izven mreze {1} pri gib={2}. Pol bloka odloci." -f $bpP, $dpP, $gdP
+    } elseif ($dpP -ge 0.05 -and $gdP -gt 0) {
+        $p1 = "P1 OVRZEN: proga P se premika na mrezi ({0}) in izven nje ({1}, gib={2}); vzrok zmrznitve je bil nekaj drugega." -f $bpP, $dpP, $gdP
     } else {
-        $p1 = "P1 NEODLOCEN: B={0} D={1}" -f $bpP, $dpP
+        $p1 = "P1 NEODLOCEN: B={0} D={1} gibD={2}" -f $bpP, $dpP, $gdP
     }
     Write-Host ''
     Write-Host $p1
@@ -483,11 +505,15 @@ try {
     $head += ''
     $head += 'Scenarij: `docs/scenariji/M2.3-R2.md`. Proge: F = leteci + zid, W = kopenski + zid, P = leteci brez ovire.'
     $head += ''
-    $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'L1-L11 zelena' } else { ("padlo {0}" -f $failures.Count) }))
+    $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'L1-L12 zelena' } else { ("padlo {0}" -f $failures.Count) }))
     $head += ''
     $head += '```'
     $head += $lines
     $head += '```'
+    $head += ''
+    $head += '## Razsodba o P1'
+    $head += ''
+    $head += $p1
     if ($mrtvi.Count -gt 0) {
         $head += ''
         $head += '## Proge, ki se niso premaknile'
@@ -508,7 +534,7 @@ try {
     Step 10 'Izid'
     if ($failures.Count -eq 0) {
         Write-Host ''
-        Write-Host 'M2.3 L1-L11 USPESNO: reprodukcija je veljavna. Stevilke zgoraj gredo v docs/meritve/.'
+        Write-Host 'M2.3 L1-L12 USPESNO: reprodukcija je veljavna. Stevilke zgoraj gredo v docs/meritve/.'
         Write-Host ("Izpis:    {0}" -f $s.Log)
         Write-Host ("Posnetek: {0}" -f $dumps)
         exit 0
