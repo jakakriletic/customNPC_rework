@@ -9,12 +9,12 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-09-21** |
-| Trenutni milestone | **M2 — diagnostika** (M2.1, M2.2, M2.3 faza A, **M2.7 in M2.5c zaključeni**); **M0 in M1 zaključena**. **M2.3 ima prvič veljavne faze A, B in C in R2 je izmerjen**, P1 ostaja neodločen; M2.5a in M2.5b sta v kodi, merila S1–S7 še niso bila strojno ovrednotena |
-| Naslednji paketi | **M2.7b** (več vzorcev za veličino 5 — edina šumna veličina), **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline). Odprta zagona: **četrti `.\r2-run.ps1`** (faza D z veljavnim vhodnim pogojem, merilo L12, razsodba o P1 zdaj pride v poročilo) in `.\rwdiag-run.ps1` (merila S1–S7, lahko kar prek `.\ponovitve-run.ps1 -Scenarij rwdiag`). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
+| Zadnja posodobitev | **2026-09-21 (drugi vpis)** |
+| Trenutni milestone | **M2 — diagnostika** (M2.1, M2.2, **M2.3, M2.7 in M2.5c zaključeni**); **M0 in M1 zaključena**. **M2.3 zaključen — L1–L12 zelena, R2 izmerjen, P1 ovržen**; M2.5a in M2.5b sta v kodi, merila S1–S7 še niso bila strojno ovrednotena |
+| Naslednji paketi | **M2.7b** (več vzorcev za veličino 5 — edina šumna veličina), **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline). Odprt zagon: `.\rwdiag-run.ps1` (merila S1–S7, lahko kar prek `.\ponovitve-run.ps1 -Scenarij rwdiag`). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
 | Prevedljivih razredov | 35 — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **84 za instrumentacijo** (61 + 21 `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji 17. 9. (D-014). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
-| Odprti pojavi | **P1 — neodločen, ne več blokiren** (21. 9.). Zmrznitve v zagonu 13:49 ni bilo nikjer: popravljeni `resetToStart` je fazi B in C oživil. Faza D, ki naj bi P1 razsodila, je pade na vhodnem pogoju — zato je razsodba odložena na četrti zagon. Hipoteza ostaja `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 |
+| Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
 | Ugotovitev M2.3 (21. 9.) | **R2 v tem prizorišču ni okvara letenja, ampak zastarela delna pot.** En sam `navigateTo` da pot, ki se konča pred oviro (`cele = 0/6`) in je nič ne zamenja; osvežena pot (faza B) in vanilla AI (faza C) isto skupino spravita čez. Popravek v M4 mora osveževati pot, ne spreminjati move helperja |
 | Šumni pas (M2.5c, 18. 9.) | **46 veličin od 59 ima razpon nič** čez tri ponovitve; vse, kar opisuje vedenje skupine in kakovost poti, je deterministično do enega ticka. Šumna je samo veličina 5 (µs na iskanje), do **114 %** — zato A/B na ceni iskanja (M4.11, M5.6) do M2.7b ni merljiv. [zapis](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
 | Odprta vprašanja iz M2.7 | dva NPC-ja od osmih na progi z grlom ne prispeta niti ob osveženi poti (zamašek ali `canNavigate()`, loči M3.1); najpočasnejši tick meritve (232 ms) ni bil autosave, ampak tick s pathfindingom |
@@ -29,7 +29,7 @@
 |---|---|---|
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
-| M2 Diagnostika | **v teku** (≈85 %) | M2.1, M2.2 in faza A M2.3 preverjene v svetu; **R1 in R2 sta reproducirana in izmerjena**; M2.5 (a/b/c) in M2.7 v kodi, M2.5c ima samotest; fazi B/C M2.3 čakata na ponovni zagon (P1), ostaneta M2.4 in M2.6 |
+| M2 Diagnostika | **v teku** (≈90 %) | M2.1, M2.2 in **M2.3 v celoti** preverjeni v svetu; **R1 in R2 sta reproducirana in izmerjena**; M2.5 (a/b/c) in M2.7 v kodi, M2.5c ima samotest; ostanejo M2.4, M2.6 in M2.7b ter zagon meril S1–S7 |
 | M3 Jedro entitete | ni začeto | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
@@ -62,7 +62,7 @@
 | M2.1c | Števci za razčiščenje `npc.per.tick` = 0 | **zaključeno** — vzrok imenovan in dokazan, glej meritev |
 | M2.1d | Pogoj meritve: `ForgeChunkManager` ticket za chunke z merjenimi NPC-ji | **zaključeno** — C1–C6 zelena v svetu, prva veljavna meritev obstaja |
 | M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih + kontrolna skupina brez jahačev) | **zaključeno** — E1–E6 zelena, R1 reproduciran; [meritev](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
-| M2.3 | Reprodukcija R2 (leteči NPC in ovira) | **pognano trikrat 17. 9. — faze A, B in C veljavne, R2 reproduciran in obhod izmerjen**; zmrznitve ni več. Faza D je padla na vhodnem pogoju, P1 neodločen; scenarij popravljen (postavitev na začetku faze, merilo **L12**), čaka na četrti zagon. [meritev](meritve/2026-09-17-M2.3-R2-reprodukcija.md), [scenarij](scenariji/M2.3-R2.md) |
+| M2.3 | Reprodukcija R2 (leteči NPC in ovira) | **zaključeno 21. 9. — L1–L12 zelena v štirih fazah, R2 reproduciran in obhod izmerjen, P1 ovržen**. Štirje zagoni; odprt ostane samo R-P1b. [meritev](meritve/2026-09-17-M2.3-R2-reprodukcija.md), [scenarij](scenariji/M2.3-R2.md) |
 | M2.5a | Pripis počasnih tickov: `SlowTicks` + merila S1–S4 v `rwdiag-run.ps1` | **koda in testi narejeni** (22 testov, prevedeno v seji 16. 9.); čaka na prvi zagon v svetu |
 | M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
 | M2.5 | Merilni protokol kot skripta | **zaključeno** — M2.5a (pripis počasnih tickov), M2.5b (izločitev autosave ticka) in M2.5c (protokol ponovitev) narejeni; vsi trije čakajo na zagon v svetu |
@@ -75,6 +75,55 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-21 (41) — M2.3 zaključen: L1–L12 zelena, P1 ovržen
+
+**Paket:** M2.3 (četrti zagon)
+**Stanje:** **zaključeno.** Scenarij je veljaven v vseh štirih fazah, R2 je izmerjen, P1 je
+razsojen z meritvijo in ne s sklepanjem.
+
+**Narejeno:**
+
+- Ovrednoten **četrti zagon** (21. 9. ob 07:45, `audit/m23-r2-2026-09-21-0745.md`).
+- V meritev dopisan razdelek „Četrti zagon 21. 9. ob 07:45".
+- V scenariju označeno, da je hipoteza faze D ovržena; M2.3 zaprt v tabelah stanja.
+
+**Ugotovitve:**
+
+- **L1–L12 zelena.** Vseh dvanajst prog ima `prevozeno + doCilja` prvega vzorca med 16,41 in
+  18,06 (v zagonu 13:49 sta bili dve pri 10,94 in 11,88). Premik postavitve iz `endPhase` v
+  `startPhase` je razhod odpravil, L12 ga nadzira.
+- **Razsodba je prvič prišla v poročilo:** `P1 OVRZEN: proga P se premika na mrezi (17,63)
+  in izven nje (17,67, gib=0,2734)`.
+- **Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je ovržena.** Faza D je začela
+  natanko na z = −16,0; leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`) in
+  fazo končali pri 15,93 prevoženih z `cele = 5/6`. Odmik pol bloka letečega NPC-ja ne ustavi.
+- **Faza C proge P je prvič veljavna** (`cele = 6/6`, prevozi 16,34); v zagonu 13:49 je bila
+  onesnažena in njenih številk ni bilo dovoljeno uporabljati.
+- **R2 potrjen dvakrat zapored.** Faze A, B in C se med zagonoma 13:49 in 07:45 ujemajo tam,
+  kjer sta oba veljavna: proga F čez zid 0/6 pri enem `navigateTo`, 6/6 ob osveženi poti,
+  `cele = 6/6` pri vanilla AI. Ugotovitev „R2 je zastarela delna pot" stoji na dveh zagonih.
+- **R-P1b — kaj je od P1 ostalo.** Stari `resetToStart` je postavljal na **iste koordinate**
+  kot današnji `resetOffGrid`; edina preostala razlika je bila, da se je postavitev zgodila
+  40 tickov pred fazo. Sama koordinata je oproščena (faza D 07:45) in sam razmik tudi
+  (zagon 13:49, z = −15,5) — zmrznitev je zahtevala **oboje hkrati**. Recept je zapisan v
+  meritvi; poskus (faza E) se požene šele, če ga M4 potrebuje.
+
+**Ni narejeno in zakaj:**
+
+- R-P1b ni razsojen. Ni blokade in M2.3 je dostavil, čemur je bil namenjen; dodajati peto
+  fazo v zdaj zelen diagnostični scenarij za nevtralno vprašanje bi bilo širjenje obsega.
+- Merila S1–S7 (M2.5a/b) še niso bila strojno ovrednotena — `.\rwdiag-run.ps1` ostaja odprt.
+- M2.4, M2.6 in M2.7b niso začeti.
+
+**Spremembe obnašanja:** nobene. Ta seja je samo brala in dokumentirala.
+
+**Meritve:** [`meritve/2026-09-17-M2.3-R2-reprodukcija.md`](meritve/2026-09-17-M2.3-R2-reprodukcija.md), razdelek „Četrti zagon ob 07:45"
+
+**Naslednja seja:** pognati `.\rwdiag-run.ps1` (merila S1–S7, odločitveno drevo je v razdelku
+M2.5a scenarija), nato **M2.7b** ali **M2.4**.
+
+---
 
 ### 2026-09-21 (40) — M2.3 tretji zagon ovrednoten: R2 je zastarela pot, P1 še ne odločen
 
@@ -2579,6 +2628,7 @@ prebrati.
 | 2026-09-17 | M2.3 fazi B in C — **neveljavni** (pojav P1) | 12 letečih NPC-jev 0,00 bloka v 900 tickih pri `navig=6/6` | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
 | 2026-09-17 | M2.3 ponovitev z `dStarost` in `gib` (12:37) | `dStarost` 20 povsod, `gib` točno 0 v zmrznjenih progah proti 0,2306 v fazi A — dve razlagi od treh ovrženi | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
 | 2026-09-17 | M2.3 tretji zagon (13:49), popravljen reset + faza D | zmrznitve ni nikjer; proga F čez zid 0/6 pri enem `navigateTo`, **6/6 ob osveženi poti** in `cele=6/6` pri vanilla AI; P1 neodločen (faza D padla na vhodnem pogoju) | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
+| 2026-09-21 | M2.3 četrti zagon (07:45), postavitev na začetku faze | **L1–L12 zelena**; faza D z z = −16,0 prevozi 15,93 pri `gib` 0,2734 → **P1 OVRŽEN**; faza C proge P prvič veljavna (16,34) | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
 | 2026-09-18 | M2.5c: tri ponovitve scenarija M2.7, vsaka svež svet (2,6 / 2,1 / 2,0 min) | T1–T6 zelena; **46 veličin od 59 z razponom nič**, šumna samo veličina 5 (do 114 %) | [zapis](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
 | 2026-09-17 | poraba pri 21 NPC-jih med M2.3 (ni baseline) | `npc.update.window` 162,5 µs/NPC; MSPT p50 0,84 ms, p95 8,91 ms, p99 102,8 ms | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
 | — | baseline MSPT še ni izmerjen (M2.6) | — | — |

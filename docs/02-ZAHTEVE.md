@@ -207,6 +207,33 @@ Skupaj z `maxDistance = FOLLOW_RANGE = NpcNavRange = 32` (`:94`, `EntityNPCInter
 to pomeni, da leteči NPC pogosto dobi pot, ki se konča **pred** oviro — kar iz igre izgleda
 enako kot okvara AI. Meri se to z `getNavigationPath()`; scenarij M2.3 to poroča kot `cele=b/N`.
 
+**[izmerjeno, 21. 9. — M2.3, dva zagona]** V prizorišču M2.3 (start 16 blokov od cilja, med
+njima zid 4 bloke visok in 75 širok, obhod čez `NpcNavRange`) je izmerjeno tole, za šest
+letečih NPC-jev na progo, s kopensko in prosto kontrolno progo v istem ticku:
+
+| Vodenje | Čez zid | `cele` | prevoženo |
+|---|---|---|---|
+| en sam `navigateTo(cilj)` | **0/6** | **0/6** | 7,95 |
+| `navigateTo(cilj)` osvežen vsakih 20 tickov | **6/6** | 3/6 | 16,36 |
+| `setAttackTarget` (pot osvežuje vanilla AI) | 5/6 | **6/6** | 14,86 |
+
+Kopenska kontrola ne pride čez zid v nobenem od treh vodenj (zid je torej res ovira), prosta
+lečeča kontrola pride čez v vseh treh (letenje torej samo po sebi dela). **Razlika med prvo
+in drugima dvema vrsticama je ena sama: ali se pot osvežuje.**
+
+Posledica za popravek: **v tem prizorišču ovire ne ustavi `WAIT` iz `isNotColliding()`, ampak
+zastarela delna pot.** `cele = 0/6` pri enem samem klicu pomeni, da se pot sploh ne konča pri
+cilju — NPC pot poslušno odleti do konca in tam obstane, ker mu je nihče ne zamenja. To je
+isti mehanizem kot Q11 pri M2.2, le da ga tam povzroči domet iskanja in tu ovira.
+Trditev velja za pot čez oviro, krajšo od `NpcNavRange` = 32; za daljše razdalje prizorišča
+še ni (M4.10). [meritev](meritve/2026-09-17-M2.3-R2-reprodukcija.md)
+
+**[ovrženo z meritvijo, 21. 9.]** Hipoteza, da letečega NPC-ja ustavi odmik **točno 0,5
+bloka** od sredine vozlišča (`PathNavigate.pathFollow:286` preštevilči pri < 0,45,
+`FlyingMoveHelper:39` doda gibanje pri > 0,5), **ne drži**: faza D scenarija M2.3 je začela
+natanko na taki koordinati in NPC-ji so se premikali že v prvem vzorcu. Obe številki iz kode
+sta pravilni, sklep iz njiju pa ni bil.
+
 **[dokazano] `EntityNPCFlying.travel()` (vrstice 45–90) je kopija vanilla `EntityFlying`
 fizike**, s posebnostjo, da pri `movementType == 2` sili `motionY = -0.15` izven vode
 (vrstici 50–52). Drsenje (`0.91f`, `0.16277136f`) je prevzeto iz hodne fizike, kar da
@@ -238,12 +265,18 @@ fizike**, s posebnostjo, da pri `movementType == 2` sili `motionY = -0.15` izven
    - preslikati pristop iz CustomNPC+ ("smart pathfinding in 3D space")
    - ali lasten `AStar3D` s cenovno funkcijo, ki kaznuje bližino blokov
    Odločitev pade po branju CustomNPC+ implementacije v M4.1.
-4. **Popravek `isNotColliding`**: vzorčenje po dejanskem hitboxu z več žarki, ne po eni črti,
-   in obhod namesto `WAIT`.
-5. **Render podpora za nagib.** Trenutno se NPC-ju nastavlja samo `rotationYaw`
+4. **Osveževanje poti — po meritvi prva stvar, ki jo je treba popraviti.** M2.3 je pokazal,
+   da isto skupino čez isto oviro spravi že to, da se pot osvežuje (6/6 proti 0/6). Vsak
+   `PathNavigateFlying`, ki dobi pot z `cele = false`, jo mora znova poiskati, namesto da NPC
+   odleti do konca delne poti in tam obstane. To je majhen popravek z izmerjenim učinkom in
+   gre pred 3D pathfinding.
+5. **Popravek `isNotColliding`**: vzorčenje po dejanskem hitboxu z več žarki, ne po eni črti,
+   in obhod namesto `WAIT`. **Po meritvi to ni bil vzrok obstanka v prizorišču M2.3**, zato
+   gre za izboljšavo in ne za popravek te napake.
+6. **Render podpora za nagib.** Trenutno se NPC-ju nastavlja samo `rotationYaw`
    (`FlyingMoveHelper.java:48`). Za način C je potreben pitch in po možnosti roll →
    sprememba na render strani, klient/server sinhronizacija.
-6. **Ločen paket "vozila"** (letala): NPC kot vozilo, ki ga igralec krmili. Odvisen od R1
+7. **Ločen paket "vozila"** (letala): NPC kot vozilo, ki ga igralec krmili. Odvisen od R1
    (passenger sloj) in od načina C. **Ne** del M4; predviden po M8.
 
 ---
