@@ -9,11 +9,11 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-09-21 (drugi vpis)** |
+| Zadnja posodobitev | **2026-09-21 (tretji vpis)** |
 | Trenutni milestone | **M2 — diagnostika** (M2.1, M2.2, **M2.3, M2.7 in M2.5c zaključeni**); **M0 in M1 zaključena**. **M2.3 zaključen — L1–L12 zelena, R2 izmerjen, P1 ovržen**; M2.5a in M2.5b sta v kodi, merila S1–S7 še niso bila strojno ovrednotena |
-| Naslednji paketi | **M2.7b** (več vzorcev za veličino 5 — edina šumna veličina), **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline). Odprt zagon: `.\rwdiag-run.ps1` (merila S1–S7, lahko kar prek `.\ponovitve-run.ps1 -Scenarij rwdiag`). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
-| Prevedljivih razredov | 35 — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
-| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **84 za instrumentacijo** (61 + 21 `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji 17. 9. (D-014). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
+| Naslednji paketi | **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline). **M2.7b je v kodi in čaka na zagon** (`.\nav-run.ps1`, merili N13/N14). Odprt zagon tudi `.\rwdiag-run.ps1` (merila S1–S7, lahko kar prek `.\ponovitve-run.ps1 -Scenarij rwdiag`). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
+| Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
+| Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
 | Ugotovitev M2.3 (21. 9.) | **R2 v tem prizorišču ni okvara letenja, ampak zastarela delna pot.** En sam `navigateTo` da pot, ki se konča pred oviro (`cele = 0/6`) in je nič ne zamenja; osvežena pot (faza B) in vanilla AI (faza C) isto skupino spravita čez. Popravek v M4 mora osveževati pot, ne spreminjati move helperja |
 | Šumni pas (M2.5c, 18. 9.) | **46 veličin od 59 ima razpon nič** čez tri ponovitve; vse, kar opisuje vedenje skupine in kakovost poti, je deterministično do enega ticka. Šumna je samo veličina 5 (µs na iskanje), do **114 %** — zato A/B na ceni iskanja (M4.11, M5.6) do M2.7b ni merljiv. [zapis](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
@@ -29,7 +29,7 @@
 |---|---|---|
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
-| M2 Diagnostika | **v teku** (≈90 %) | M2.1, M2.2 in **M2.3 v celoti** preverjeni v svetu; **R1 in R2 sta reproducirana in izmerjena**; M2.5 (a/b/c) in M2.7 v kodi, M2.5c ima samotest; ostanejo M2.4, M2.6 in M2.7b ter zagon meril S1–S7 |
+| M2 Diagnostika | **v teku** (≈90 %) | M2.1, M2.2 in **M2.3 v celoti** preverjeni v svetu; **R1 in R2 sta reproducirana in izmerjena**; M2.5 (a/b/c) in M2.7 v kodi, M2.5c ima samotest; M2.7b je v kodi; ostanejo M2.4, M2.6 ter zagona za S1–S7 in N13/N14 |
 | M3 Jedro entitete | ni začeto | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
@@ -68,13 +68,71 @@
 | M2.5 | Merilni protokol kot skripta | **zaključeno** — M2.5a (pripis počasnih tickov), M2.5b (izločitev autosave ticka) in M2.5c (protokol ponovitev) narejeni; vsi trije čakajo na zagon v svetu |
 | M2.5b | Izločitev autosave ticka: `server.tick.ns.nosave` + merila S5–S7 | **koda in testi narejeni** (6 testov, prevedeno v seji); čaka na prvi zagon v svetu |
 | M2.5c | **Protokol ponovitev**: zapis zagona (`meritve-lib.ps1`), združevanje N zagonov v svežem svetu in šumni pas (`ponovitve-run.ps1`), merila T1–T6 | **zaključeno 18. 9. — serija pognana, T1–T6 zelena**; tabela M2.7 ima razpon; [scenarij](scenariji/M2.5c-ponovitve.md), [meritev](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
-| M2.7b | Več vzorcev za veličino 5 (µs na iskanje): osem iskanj na pometanje je premalo za p50/p95 | **novo 18. 9.** — vhodni pogoj za A/B v M4.11 in M5.6 |
+| M2.7b | Več vzorcev za veličino 5 (µs na iskanje): osem iskanj na pometanje je premalo za p50/p95 | **koda in testi narejeni 21. 9.** — `NavProbe` loči hladno (`prvi*`) in ogreto (`pon*`) ter poroča `usSkupaj`; `NavSweep.DEFAULT_REPEATS` 3 → 8 (56 ogretih vzorcev); merili **N13/N14**. Čaka na zagon `.\nav-run.ps1`. [scenarij](scenariji/M2.7-navigacija.md) |
 | M2.6 | Baseline meritve originala | ni začeto |
 | M2.7 | **Merila kakovosti navigacije** (šest veličin, izmerjenih na originalu) | **zaključeno 17. 9. — N1–N12 zelena, tabela obstaja**; [meritev](meritve/2026-09-17-M2.7-navigacija-baseline.md), [scenarij](scenariji/M2.7-navigacija.md). Vhodni pogoj za M4.10 je dopolnjen: potrebno je prizorišče z razdaljo čez `NpcNavRange` |
 
 ---
 
 ## Dnevnik sej
+
+### 2026-09-21 (42) — M2.7b: peta veličina razdeljena na hladno in ogreto
+
+**Paket:** M2.7b (koda in testi)
+**Stanje:** **koda narejena, čaka na zagon.** Prevedeno in testirano v seji; v svetu še ne.
+
+**Narejeno:**
+
+- **`NavProbe` ima tri časovne porazdelitve namesto ene:** `firstNanos` (prvo iskanje na
+  NPC, hladno), `repeatNanos` (ponovitve, ogreto) in `searchNanos` (vsota obojega, ostane
+  zaradi že zapisanih meritev). Nova polja v vrstici sonde: `prviN`, `prviP50`, `prviP95`,
+  `ponN`, `ponP50`, `ponP95`, `ponMax`, `usSkupaj` — vsa **na koncu** vrstice, da stari del
+  regexa in že zapisane meritve berejo isto kot prej.
+- **`NavSweep.DEFAULT_REPEATS` 3 → 8.** Pri osmih NPC-jih to da 8 hladnih in **56** ogretih
+  vzorcev na pometanje namesto 8 in 16.
+- **`nav-run.ps1`:** `-SweepRepeats` privzeto 8, branje novih polj, merili **N13** (vsaj 40
+  ogretih vzorcev) in **N14** (ogreto ni počasnejše od hladnega), nove vrstice v izhodiščni
+  tabeli in nove veličine v strojnem zapisu za `ponovitve-run.ps1`.
+- Razdelek **M2.7b** v scenariju M2.7; 6 novih testov v `NavProbeTest` (21 → 27).
+
+**Ugotovitve:**
+
+- **Vzrok šuma ni bil samo premalo vzorcev, ampak dve populaciji v eni posodi.** Prvo
+  iskanje na NPC plača nalaganje razredov in hladen JIT, ponovitev meri algoritem. Pri 8
+  hladnih in 16 ogretih vzorcih je bil `usP95` praktično *drugo najpočasnejše hladno iskanje
+  od osmih* — zato razpon do 114 % med sicer determinisičnimi ponovitvami serije (M2.5c).
+- **To se vidi na enačbi, ne šele v svetu.** Na preverbeni vrstici, ki jo je izpisal
+  prevedeni `NavProbe`, je mešani `usP95` 327,7 µs, ogreti `ponP95` pa 72,0 µs: mešanica
+  poroča četrtkrat več, kot stane iskanje, ki ga A/B primerja.
+- **Višje od 8 ponovitev se ne splača.** Pometanje teče v enem samem server ticku, zato vsako
+  dodatno iskanje pokvari meritev MSPT v istem zagonu. `usSkupaj` ta vpliv naredi merljiv —
+  in s tem odpre odprto vprašanje iz M2.7, zakaj je bil najpočasnejši tick (232 ms) tick s
+  pathfindingom.
+- **Stare in nove serije se ne mešajo tiho.** Odtis nosi `pometanjPon`, zato mešana serija
+  pade na T4, nove veličine v starem zapisu pa na T5 (M2.5c). To je namen.
+
+**Ni narejeno in zakaj:**
+
+- Ni še pognano v svetu. Ali se šumni pas res zapre, pove šele serija
+  `.\ponovitve-run.ps1 -Scenarij nav` po enem zelenem `.\nav-run.ps1`.
+- Merila S1–S7 še vedno čakajo na `.\rwdiag-run.ps1`.
+
+**Spremembe obnašanja:** nobene v modu za igralca. Spremenjena je diagnostika (`rework/diag`),
+ki teče samo ob `rwdiag on`.
+
+**Preverjeno brez sveta:** vseh **14** razredov `rework/diag` prevedenih z `javac --release 8`
+proti mapiranim razredom in `customnpcs-mapped-01Oct19.jar` (manjkajoča `javax.annotation.Nullable`
+in `com.google.common.collect.ImmutableSetMultimap` nadomeščena z minimalnima nadomestkoma
+**izven** repozitorija); **27/27 `NavProbeTest` zelenih**; `Parser::ParseFile` na `nav-run.ps1`
+brez napak; **pogodba Java ↔ PowerShell preverjena nad resnično vrstico**, ki jo je izpisal
+prevedeni `NavProbe` — regex jo ujame, vseh osem novih polj pristane v pravi skupini,
+`Format-Sonda` jo izpiše in N13/N14 sta nad njo zelena.
+
+**Naslednja seja:** pognati `.\nav-run.ps1` (pričakovano N1–N14 zelena, `ponN = 56` na
+pometanje), nato serijo `.\ponovitve-run.ps1 -Scenarij nav` in preveriti, ali je razpon
+ogretih veličin padel pod 20 %. Vzporedno je še vedno odprt `.\rwdiag-run.ps1` (S1–S7).
+
+---
 
 ### 2026-09-21 (41) — M2.3 zaključen: L1–L12 zelena, P1 ovržen
 

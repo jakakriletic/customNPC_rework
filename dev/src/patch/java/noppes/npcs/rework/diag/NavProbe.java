@@ -24,7 +24,10 @@ import java.util.Locale;
  * </ol>
  *
  * <p>Cetrta velicina, <b>cas iskanja</b>, se meri ob istem klicu in je tu kot porazdelitev
- * v nanosekundah. Preostali dve (cas skupine do cilja in razpon skupine na ozkem grlu) sta
+ * v nanosekundah - od M2.7b v <b>treh</b> porazdelitvah: prva iskanja (eno na NPC, hladno),
+ * ponovitve (ogreto) in vsota obojega. Locitev je prisla iz M2.5c: percentil cez mesanico
+ * hladnih in ogretih iskanj je nihal do 114 % med sicer identicnimi ponovitvami serije,
+ * ker je merilo dve populaciji hkrati in nobene dovolj dolgo. Preostali dve (cas skupine do cilja in razpon skupine na ozkem grlu) sta
  * lastnosti scenarija, ne posamezne poizvedbe, in ju meri {@code nav-control.js}.
  *
  * <p>Razred je namenoma brez Minecraft tipov, da je enotsko testljiv; iskanja opravi
@@ -58,6 +61,14 @@ public final class NavProbe {
     // Porazdelitve niso final samo zato, ker jih {@link #copy()} zamenja s kopijami;
     // izven kopiranja se referenca ne spremeni.
     private Distribution searchNanos = new Distribution("nav.search.ns", "ns");
+    // M2.7b: prvo iskanje na NPC in ponovitve sta dve populaciji, ne ena. Prvo placa
+    // nalaganje razredov, hladen JIT in prazen predpomnilnik chunkov; ponovitev meri
+    // samo algoritem. Percentil nad njuno mesanico ni percentil nicesar - pri osmih
+    // NPC-jih in treh prehodih je bil p95 prakticno "drugo najpocasnejse hladno iskanje
+    // od osmih", od tod razpon do 114 % v M2.5c. Porazdelitvi sta zato loceni;
+    // searchNanos ostane vsota obeh, ker nanj stojijo ze zapisane meritve.
+    private Distribution firstNanos = new Distribution("nav.search.first.ns", "ns");
+    private Distribution repeatNanos = new Distribution("nav.search.repeat.ns", "ns");
     private Distribution ratioMilli = new Distribution("nav.path.ratio.milli", "1/1000");
     private Distribution reachMilli = new Distribution("nav.path.reach.milli", "1/1000");
 
@@ -103,7 +114,9 @@ public final class NavProbe {
     public synchronized void record(double straightBlocks, double pathBlocks,
             double endToGoalBlocks, boolean found, long nanos) {
         this.searches++;
-        this.searchNanos.record(nanos < 0L ? 0L : nanos);
+        long clamped = nanos < 0L ? 0L : nanos;
+        this.searchNanos.record(clamped);
+        this.firstNanos.record(clamped);
         if (!found) {
             this.notFound++;
             return;
@@ -140,7 +153,9 @@ public final class NavProbe {
      */
     public synchronized void recordTimeOnly(long nanos) {
         this.repeats++;
-        this.searchNanos.record(nanos < 0L ? 0L : nanos);
+        long clamped = nanos < 0L ? 0L : nanos;
+        this.searchNanos.record(clamped);
+        this.repeatNanos.record(clamped);
     }
 
     public synchronized long searches() {
@@ -192,6 +207,16 @@ public final class NavProbe {
         return this.searchNanos.copy();
     }
 
+    /** Samo prva iskanja (eno na NPC): cena hladnega iskanja. */
+    public synchronized Distribution firstNanos() {
+        return this.firstNanos.copy();
+    }
+
+    /** Samo ponovitve: cena ogretega iskanja - to je velicina, ki jo A/B v M4.11 in M5.6 primerja. */
+    public synchronized Distribution repeatNanos() {
+        return this.repeatNanos.copy();
+    }
+
     public synchronized Distribution ratioMilli() {
         return this.ratioMilli.copy();
     }
@@ -210,13 +235,41 @@ public final class NavProbe {
         return this.reachMilli.count() == 0L ? 0.0 : this.reachMilli.percentile(p) / MILLI;
     }
 
-    /** Percentil casa iskanja v mikrosekundah. */
+    /** Percentil casa iskanja v mikrosekundah, cez prva iskanja in ponovitve skupaj. */
     public synchronized double microsPercentile(double p) {
-        return this.searchNanos.count() == 0L ? 0.0 : this.searchNanos.percentile(p) / 1000.0;
+        return percentileMicros(this.searchNanos, p);
+    }
+
+    /** Percentil casa <b>prvega</b> iskanja na NPC (hladno) v mikrosekundah. */
+    public synchronized double firstMicrosPercentile(double p) {
+        return percentileMicros(this.firstNanos, p);
+    }
+
+    /** Percentil casa <b>ponovitve</b> (ogreto) v mikrosekundah. */
+    public synchronized double repeatMicrosPercentile(double p) {
+        return percentileMicros(this.repeatNanos, p);
+    }
+
+    /**
+     * Skupen cas vseh iskanj tega pometanja v mikrosekundah.
+     *
+     * <p>Vsota je stabilnejsa od percentila cez majhen vzorec in je hkrati tista stevilka,
+     * ki jo proracun ticka dejansko placa: percentil pove ceno <i>enega</i> iskanja, vsota
+     * pa ceno <i>vseh</i>. M2.5c je pokazal, da so percentili pri osmih vzorcih sumni;
+     * vsota to ni, ker sestevanje vzorcev ne izgublja.
+     */
+    public synchronized double totalMicros() {
+        return this.searchNanos.sum() / 1000.0;
+    }
+
+    private static double percentileMicros(Distribution d, double p) {
+        return d.count() == 0L ? 0.0 : d.percentile(p) / 1000.0;
     }
 
     public synchronized void reset() {
         this.searchNanos.reset();
+        this.firstNanos.reset();
+        this.repeatNanos.reset();
         this.ratioMilli.reset();
         this.reachMilli.reset();
         this.searches = 0L;
@@ -232,6 +285,8 @@ public final class NavProbe {
     public synchronized NavProbe copy() {
         NavProbe other = new NavProbe(this.tolerance);
         other.searchNanos = this.searchNanos.copy();
+        other.firstNanos = this.firstNanos.copy();
+        other.repeatNanos = this.repeatNanos.copy();
         other.ratioMilli = this.ratioMilli.copy();
         other.reachMilli = this.reachMilli.copy();
         other.searches = this.searches;
@@ -283,7 +338,17 @@ public final class NavProbe {
                 .append(" dosegP05=").append(number(this.reachPercentile(0.05)))
                 .append(" usP50=").append(number(this.microsPercentile(0.50)))
                 .append(" usP95=").append(number(this.microsPercentile(0.95)))
-                .append(" usMax=").append(number(this.searchNanos.max() / 1000.0));
+                .append(" usMax=").append(number(this.searchNanos.max() / 1000.0))
+                // M2.7b: od tu naprej so polja dodana na konec vrstice, ker regex v
+                // nav-run.ps1 in ze zapisane meritve berejo prejsnji del po zaporedju.
+                .append(" prviN=").append(this.firstNanos.count())
+                .append(" prviP50=").append(number(this.firstMicrosPercentile(0.50)))
+                .append(" prviP95=").append(number(this.firstMicrosPercentile(0.95)))
+                .append(" ponN=").append(this.repeatNanos.count())
+                .append(" ponP50=").append(number(this.repeatMicrosPercentile(0.50)))
+                .append(" ponP95=").append(number(this.repeatMicrosPercentile(0.95)))
+                .append(" ponMax=").append(number(this.repeatNanos.max() / 1000.0))
+                .append(" usSkupaj=").append(number(this.totalMicros()));
         return out.toString();
     }
 
@@ -313,6 +378,13 @@ public final class NavProbe {
         out.append("  cas iskanja (us, z ").append(this.repeats).append(" ponovitvami): p50 ").append(number(this.microsPercentile(0.50)))
                 .append("  p95 ").append(number(this.microsPercentile(0.95)))
                 .append("  max ").append(number(this.searchNanos.max() / 1000.0)).append('\n');
+        out.append("    od tega prvo iskanje (hladno): p50 ").append(number(this.firstMicrosPercentile(0.50)))
+                .append("  p95 ").append(number(this.firstMicrosPercentile(0.95)))
+                .append("  (n = ").append(this.firstNanos.count()).append(")\n");
+        out.append("    od tega ponovitve   (ogreto): p50 ").append(number(this.repeatMicrosPercentile(0.50)))
+                .append("  p95 ").append(number(this.repeatMicrosPercentile(0.95)))
+                .append("  (n = ").append(this.repeatNanos.count()).append(")\n");
+        out.append("  cas vseh iskanj skupaj      : ").append(number(this.totalMicros())).append(" us\n");
         return out.toString();
     }
 
@@ -338,7 +410,16 @@ public final class NavProbe {
         out.append(",\"searchNanos\":{\"n\":").append(this.searchNanos.count())
                 .append(",\"p50\":").append(this.searchNanos.percentile(0.50))
                 .append(",\"p95\":").append(this.searchNanos.percentile(0.95))
-                .append(",\"max\":").append(this.searchNanos.max()).append('}');
+                .append(",\"max\":").append(this.searchNanos.max())
+                .append(",\"sum\":").append(this.searchNanos.sum()).append('}');
+        out.append(",\"firstNanos\":{\"n\":").append(this.firstNanos.count())
+                .append(",\"p50\":").append(this.firstNanos.percentile(0.50))
+                .append(",\"p95\":").append(this.firstNanos.percentile(0.95))
+                .append(",\"max\":").append(this.firstNanos.max()).append('}');
+        out.append(",\"repeatNanos\":{\"n\":").append(this.repeatNanos.count())
+                .append(",\"p50\":").append(this.repeatNanos.percentile(0.50))
+                .append(",\"p95\":").append(this.repeatNanos.percentile(0.95))
+                .append(",\"max\":").append(this.repeatNanos.max()).append('}');
         out.append('}');
         return out.toString();
     }

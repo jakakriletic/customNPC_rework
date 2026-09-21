@@ -1,4 +1,4 @@
-﻿# M2.7 - merila kakovosti navigacije, merila N1-N12.
+﻿# M2.7 - merila kakovosti navigacije, merila N1-N14.
 #
 # Scenarij in razlaga: docs/scenariji/M2.7-navigacija.md
 #
@@ -26,7 +26,7 @@
 # Ponovitve po protokolu (tri in vec) pozene .\ponovitve-run.ps1, ki -JsonPath poda sam.
 
 param([switch]$AcceptEula, [int]$ChunkRadius = 2, [int]$WarmupSeconds = 10,
-      [int]$ScenarioTimeoutSec = 180, [int]$SweepRepeats = 3, [string]$JsonPath = '')
+      [int]$ScenarioTimeoutSec = 180, [int]$SweepRepeats = 8, [string]$JsonPath = '')
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -225,7 +225,11 @@ function Get-SondaVzorec {
     ' preblizu=(\d+) ponovitev=(\d+) delezCelih=([\d.]+)' +
     ' razmerjeN=(\d+) razmerjeP50=([\d.]+) razmerjeP95=([\d.]+)' +
     ' dosegN=(\d+) dosegP50=([\d.]+) dosegP05=([\d.]+)' +
-    ' usP50=([\d.]+) usP95=([\d.]+) usMax=([\d.]+)')
+    ' usP50=([\d.]+) usP95=([\d.]+) usMax=([\d.]+)' +
+    # M2.7b: prva iskanja in ponovitve loceno, plus vsota. Skupine 19-25.
+    ' prviN=(\d+) prviP50=([\d.]+) prviP95=([\d.]+)' +
+    ' ponN=(\d+) ponP50=([\d.]+) ponP95=([\d.]+) ponMax=([\d.]+)' +
+    ' usSkupaj=([\d.]+)')
 }
 
 function New-Sonda($m) {
@@ -248,6 +252,14 @@ function New-Sonda($m) {
         UsP50       = [double]$m.Groups[16].Value
         UsP95       = [double]$m.Groups[17].Value
         UsMax       = [double]$m.Groups[18].Value
+        PrviN       = [int]$m.Groups[19].Value
+        PrviP50     = [double]$m.Groups[20].Value
+        PrviP95     = [double]$m.Groups[21].Value
+        PonN        = [int]$m.Groups[22].Value
+        PonP50      = [double]$m.Groups[23].Value
+        PonP95      = [double]$m.Groups[24].Value
+        PonMax      = [double]$m.Groups[25].Value
+        UsSkupaj    = [double]$m.Groups[26].Value
         Npc         = -1
         Preskocenih = -1
         NaTleh      = -1
@@ -263,11 +275,11 @@ function Read-Pometi([string]$LogPath) {
     $out = @()
     foreach ($m in [regex]::Matches((Get-MarkerText $LogPath), $pattern)) {
         $s = New-Sonda $m
-        $s.Npc          = [int]$m.Groups[19].Value
-        $s.Preskocenih  = [int]$m.Groups[20].Value
-        $s.NaTleh       = [int]$m.Groups[21].Value
-        $s.Predpona     = $m.Groups[22].Value
-        $s.ChunkiForced = [int]$m.Groups[23].Value
+        $s.Npc          = [int]$m.Groups[27].Value
+        $s.Preskocenih  = [int]$m.Groups[28].Value
+        $s.NaTleh       = [int]$m.Groups[29].Value
+        $s.Predpona     = $m.Groups[30].Value
+        $s.ChunkiForced = [int]$m.Groups[31].Value
         $out += $s
     }
     return $out
@@ -365,7 +377,9 @@ function Format-Sonda($S) {
     return ("  cilj={0,-10} npc={1,2} naTleh={2,2} | iskanj={3,2} celih={4,2} delnih={5,2} brezPoti={6,2} delez={7:N3} | razmerje p50/p95={8:N3}/{9:N3} (n={10}) | doseg p50/p05={11:N3}/{12:N3} | us p50/p95/max={13:N1}/{14:N1}/{15:N1}" -f `
         $S.Cilj, $S.Npc, $S.NaTleh, $S.Iskanj, $S.Celih, $S.Delnih, $S.BrezPoti,
         $S.DelezCelih, $S.RazmerjeP50, $S.RazmerjeP95, $S.RazmerjeN,
-        $S.DosegP50, $S.DosegP05, $S.UsP50, $S.UsP95, $S.UsMax)
+        $S.DosegP50, $S.DosegP05, $S.UsP50, $S.UsP95, $S.UsMax) + "`n" +
+    ('    hladno (prvo iskanje) p50/p95={0:N1}/{1:N1} (n={2}) | ogreto (ponovitve) p50/p95/max={3:N1}/{4:N1}/{5:N1} (n={6}) | pometanje skupaj={7:N0} us' -f `
+        $S.PrviP50, $S.PrviP95, $S.PrviN, $S.PonP50, $S.PonP95, $S.PonMax, $S.PonN, $S.UsSkupaj)
 }
 
 # Zapis zagona za protokol ponovitev (M2.5c): iz prebranih objektov naredi odtis in
@@ -402,6 +416,15 @@ function New-NavZapis {
             $vel[('{0}.usP95.{1}'       -f $lane, $ko)] = $p.UsP95
             $vel[('{0}.usMax.{1}'       -f $lane, $ko)] = $p.UsMax
             $vel[('{0}.iskanj.{1}'      -f $lane, $ko)] = $p.Iskanj
+            # M2.7b: hladno in ogreto loceno. Prav ta razlika je tisto, kar je v M2.5c
+            # nihalo do 114 %; serija ponovitev jo zdaj meri loceno in vidi, ali se je
+            # sumni pas zaprl.
+            $vel[('{0}.prviP50.{1}'     -f $lane, $ko)] = $p.PrviP50
+            $vel[('{0}.prviP95.{1}'     -f $lane, $ko)] = $p.PrviP95
+            $vel[('{0}.ponP50.{1}'      -f $lane, $ko)] = $p.PonP50
+            $vel[('{0}.ponP95.{1}'      -f $lane, $ko)] = $p.PonP95
+            $vel[('{0}.ponN.{1}'        -f $lane, $ko)] = $p.PonN
+            $vel[('{0}.usSkupaj.{1}'    -f $lane, $ko)] = $p.UsSkupaj
         }
     }
     foreach ($ph in @('A', 'B')) {
@@ -656,7 +679,7 @@ try {
         }
     }
 
-    Step 12 'N8-N12: sonda in opazovalec'
+    Step 12 'N8-N14: sonda in opazovalec'
     $pometi = @(Read-Pometi $s.Log)
     $sonda  = Read-Sonda $s.Log
     $navAi  = Read-NavAi $s.Log
@@ -672,6 +695,20 @@ try {
             $p.Predpona, $p.Npc, $p.NaTleh, $p.ChunkiForced) `
             (($p.Npc -eq 8) -and ($p.NaTleh -eq 8) -and ($p.ChunkiForced -gt 0))
         Check ("N12: pometanje {0} ima izmerjen cas (usP50={1})" -f $p.Predpona, $p.UsP50) ($p.UsP50 -gt 0)
+
+        # N13 (M2.7b): ogretih vzorcev mora biti dovolj, da percentil sploh kaj pomeni.
+        # Pri 8 NPC-jih in -SweepRepeats 8 jih je 56; meja je 40, da manjsa nastavitev
+        # pade kot merilo in ne kot tiho sirsi sumni pas. To je tisto, zaradi cesar je
+        # M2.7b sploh obstajal: pri 16 vzorcih je p95 nihal do 114 % (M2.5c).
+        Check ("N13: pometanje {0} ima dovolj ogretih vzorcev (ponN={1}, meja 40)" -f $p.Predpona, $p.PonN) `
+              ($p.PonN -ge 40)
+
+        # N14: ogreto iskanje ne sme biti pocasnejse od hladnega. Ce je, sta porazdelitvi
+        # zamenjani ali pa ponovitve merijo nekaj drugega kot prvo iskanje - v obeh
+        # primerih stevilka ne govori o tem, o cemer mislimo, da govori.
+        Check ("N14: ogreto ni pocasnejse od hladnega za {0} (ponP50={1:N1} <= prviP50={2:N1})" -f `
+            $p.Predpona, $p.PonP50, $p.PrviP50) `
+            (($p.PonP50 -gt 0) -and ($p.PonP50 -le $p.PrviP50))
     }
 
     # N10: znan primer. Na odprtem, 14 blokov, znotraj NpcNavRange (32) mora skoraj vsako
@@ -713,6 +750,12 @@ try {
     $tabela += ('2 razmerje dolzine p95 (start)            {0,-21} {1}' -f (Val $pG 0 'RazmerjeP95' '{0:N3}'), (Val $pO 0 'RazmerjeP95' '{0:N3}'))
     $tabela += ('5 us na iskanje p50 (start)               {0,-21} {1}' -f (Val $pG 0 'UsP50' '{0:N1}'), (Val $pO 0 'UsP50' '{0:N1}'))
     $tabela += ('5 us na iskanje p95 (start)               {0,-21} {1}' -f (Val $pG 0 'UsP95' '{0:N1}'), (Val $pO 0 'UsP95' '{0:N1}'))
+    $tabela += ('5 us hladno (prvo iskanje) p50 (start)    {0,-21} {1}' -f (Val $pG 0 'PrviP50' '{0:N1}'), (Val $pO 0 'PrviP50' '{0:N1}'))
+    $tabela += ('5 us ogreto (ponovitve) p50 (start)       {0,-21} {1}' -f (Val $pG 0 'PonP50' '{0:N1}'), (Val $pO 0 'PonP50' '{0:N1}'))
+    $tabela += ('5 us ogreto (ponovitve) p95 (start)       {0,-21} {1}' -f (Val $pG 0 'PonP95' '{0:N1}'), (Val $pO 0 'PonP95' '{0:N1}'))
+    $tabela += ('5 us ogreto (ponovitve) p50 (po fazi A)   {0,-21} {1}' -f (Val $pG 1 'PonP50' '{0:N1}'), (Val $pO 1 'PonP50' '{0:N1}'))
+    $tabela += ('5 ogretih vzorcev n (start)               {0,-21} {1}' -f (Val $pG 0 'PonN' '{0}'), (Val $pO 0 'PonN' '{0}'))
+    $tabela += ('5 cena celega pometanja, us (start)       {0,-21} {1}' -f (Val $pG 0 'UsSkupaj' '{0:N0}'), (Val $pO 0 'UsSkupaj' '{0:N0}'))
     foreach ($ph in $phases) {
         $g = $cas["${ph}G"]; $o = $cas["${ph}O"]
         $gt = if ($null -eq $g) { '-' } else { ("{0}/{1} ob {2}/{3}/{4}" -f $g.Prispelo, $g.Skupaj, $g.Prvi, $g.Mediana, $g.Zadnji) }
@@ -739,7 +782,7 @@ try {
     $head += ''
     $head += 'Scenarij: `docs/scenariji/M2.7-navigacija.md`. Progi: G = zid z enimi vrati, O = odprto.'
     $head += ''
-    $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'N1-N12 zelena' } else { ("padlo {0}" -f $failures.Count) }))
+    $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'N1-N14 zelena' } else { ("padlo {0}" -f $failures.Count) }))
     $head += ''
     $head += '## Sest velicin'
     $head += ''
@@ -787,7 +830,7 @@ try {
     Step 15 'Izid'
     if ($failures.Count -eq 0) {
         Write-Host ''
-        Write-Host 'M2.7 N1-N12 USPESNO: izhodiscna tabela je veljavna. Stevilke gredo v docs/meritve/.'
+        Write-Host 'M2.7 N1-N14 USPESNO: izhodiscna tabela je veljavna. Stevilke gredo v docs/meritve/.'
         Write-Host ("Izpis:    {0}" -f $s.Log)
         Write-Host ("Posnetek: {0}" -f $dumps)
         exit 0

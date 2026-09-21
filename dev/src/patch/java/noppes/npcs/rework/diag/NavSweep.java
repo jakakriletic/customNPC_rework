@@ -42,8 +42,19 @@ import noppes.npcs.entity.EntityNPCInterface;
  * to stevilo majhno, AI teh poti sploh ni iskal, ceprav jih sonda najde.
  */
 public final class NavSweep {
-    /** Koliko iskanj na NPC; prvo je vedno vkljuceno v cas, ostala merijo ogret JIT. */
-    public static final int DEFAULT_REPEATS = 3;
+    /**
+     * Koliko iskanj na NPC; prvo je vedno vkljuceno v cas, ostala merijo ogret JIT.
+     *
+     * <p><b>Od M2.7b 8 in ne 3.</b> Pri osmih NPC-jih da to 8 hladnih in 56 ogretih
+     * vzorcev na pometanje namesto 8 in 16. M2.5c je izmeril, da je percentil cez 16
+     * ogretih vzorcev nihal do 114 % med identicnimi ponovitvami serije - pri takem
+     * razponu A/B na ceni iskanja (M4.11, M5.6) ni merljiv. Visje se ne splaca: pometanje
+     * tece v enem samem server ticku in vsako dodatno iskanje se pristeje temu ticku,
+     * zato je izbira kompromis med velikostjo vzorca in tem, koliko pometanje pokvari
+     * meritev MSPT v istem zagonu. Koliko je pometanje stalo, od M2.7b pove {@code usSkupaj}
+     * v vrstici sonde, tako da je ta vpliv viden in ne ugiban.
+     */
+    public static final int DEFAULT_REPEATS = 8;
 
     /** Zgornja meja merjenih NPC-jev na pometanje. */
     public static final int DEFAULT_MAX_NPCS = 64;

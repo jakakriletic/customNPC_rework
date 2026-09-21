@@ -297,4 +297,102 @@ public class NavProbeTest {
         assertTrue(after.contains("kakovost navigacije"));
         assertTrue(after.contains("RWNAV-SONDA"));
     }
+
+    // --- M2.7b: hladna in ogreta iskanja sta dve populaciji ------------------------------
+
+    /**
+     * Jedro M2.7b. Prvo iskanje na NPC placa nalaganje razredov in hladen JIT, ponovitev
+     * meri algoritem; percentil cez njuno mesanico ni percentil nicesar. Test to preveri s
+     * stevilkami, ki sta si tako narazen, da mesanica ne more dati pravilnega odgovora.
+     */
+    @Test
+    public void firstSearchesAndRepeatsLandInSeparateDistributions() {
+        NavProbe probe = new NavProbe();
+        for (int i = 0; i < 4; i++) {
+            whole(probe, 20.0, 20.0, 1000000L);   // 1000 us, hladno
+        }
+        for (int i = 0; i < 16; i++) {
+            probe.recordTimeOnly(50000L);         // 50 us, ogreto
+        }
+        assertEquals(1000.0, probe.firstMicrosPercentile(0.50), 0.5);
+        assertEquals(50.0, probe.repeatMicrosPercentile(0.50), 0.5);
+        // Skupna porazdelitev ostane in je mesanica obeh - prav zato ni merilo za A/B.
+        assertEquals(50.0, probe.microsPercentile(0.50), 0.5);
+        assertEquals(4L, probe.firstNanos().count());
+        assertEquals(16L, probe.repeatNanos().count());
+        assertEquals(20L, probe.searchNanos().count());
+    }
+
+    /** Ponovitev ne sme steti v hladno porazdelitev, tudi ce je edina meritev. */
+    @Test
+    public void aRepeatAloneLeavesTheFirstSearchDistributionEmpty() {
+        NavProbe probe = new NavProbe();
+        probe.recordTimeOnly(70000L);
+        assertEquals(0L, probe.firstNanos().count());
+        assertEquals(0.0, probe.firstMicrosPercentile(0.50), EPS);
+        assertEquals(70.0, probe.repeatMicrosPercentile(0.50), 0.5);
+        // Prazna porazdelitev vrne 0 in ne vrze; merilo mora dobiti stevilko.
+        assertEquals(1L, probe.searchNanos().count());
+    }
+
+    /** Prvo iskanje ne sme steti med ponovitve. */
+    @Test
+    public void aFirstSearchAloneLeavesTheRepeatDistributionEmpty() {
+        NavProbe probe = new NavProbe();
+        whole(probe, 20.0, 20.0, 250000L);
+        assertEquals(0L, probe.repeatNanos().count());
+        assertEquals(0.0, probe.repeatMicrosPercentile(0.95), EPS);
+        assertEquals(250.0, probe.firstMicrosPercentile(0.50), 0.5);
+    }
+
+    /**
+     * Vsota je tista stevilka, ki jo proracun ticka dejansko placa, in je za razliko od
+     * percentila cez majhen vzorec stabilna. Steti mora vse - tudi iskanja brez poti in
+     * tista s preblizu postavljenim ciljem, ki iz razmerja in dosega izpadejo.
+     */
+    @Test
+    public void totalMicrosSumsEverySearchIncludingTheOnesExcludedElsewhere() {
+        NavProbe probe = new NavProbe();
+        whole(probe, 20.0, 20.0, 100000L);                  // 100 us
+        probe.record(0.5, 0.0, 0.0, true, 30000L);          // preblizu: 30 us
+        probe.record(20.0, 0.0, 0.0, false, 20000L);        // brez poti: 20 us
+        probe.recordTimeOnly(50000L);                       // ponovitev: 50 us
+        assertEquals(200.0, probe.totalMicros(), 0.5);
+        assertEquals(1L, probe.tooClose());
+        assertEquals(1L, probe.notFound());
+    }
+
+    /** Nova polja morajo biti v vrstici sonde, sicer jih nav-run.ps1 ne more prebrati. */
+    @Test
+    public void markerLineCarriesTheNewFieldsAtTheEnd() {
+        NavProbe probe = new NavProbe();
+        probe.beginSweep("0,4,0");
+        whole(probe, 20.0, 20.0, 1000000L);
+        probe.recordTimeOnly(50000L);
+        String line = probe.markerLine();
+        assertTrue(line.contains(" prviN=1 "));
+        assertTrue(line.contains(" ponN=1 "));
+        assertTrue(line.contains(" usSkupaj="));
+        // Stara polja morajo ostati pred novimi: ze zapisane meritve in regex berejo po
+        // zaporedju, zato novo polje ne sme pristati sredi vrstice.
+        assertTrue(line.indexOf(" usMax=") < line.indexOf(" prviN="));
+        assertTrue(line.indexOf(" prviN=") < line.indexOf(" usSkupaj="));
+    }
+
+    /** Reset in kopija morata zajeti tudi novi porazdelitvi, sicer bi podatki pusceli naprej. */
+    @Test
+    public void resetAndCopyCoverTheNewDistributions() {
+        NavProbe probe = new NavProbe();
+        whole(probe, 20.0, 20.0, 1000000L);
+        probe.recordTimeOnly(50000L);
+        NavProbe copy = probe.copy();
+        probe.reset();
+        assertEquals(0L, probe.firstNanos().count());
+        assertEquals(0L, probe.repeatNanos().count());
+        assertEquals(0.0, probe.totalMicros(), EPS);
+        // Kopija je posnetek in je reset izvirnika ne sme prizadeti.
+        assertEquals(1L, copy.firstNanos().count());
+        assertEquals(1L, copy.repeatNanos().count());
+        assertEquals(1050.0, copy.totalMicros(), 0.5);
+    }
 }
