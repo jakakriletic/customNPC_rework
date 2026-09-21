@@ -1,0 +1,41 @@
+{
+    "shema":  1,
+    "paket":  "M2.1",
+    "scenarij":  "rwdiag",
+    "zagon":  "2026-09-21 12:55:13",
+    "uspeh":  false,
+    "padlih":  1,
+    "padle":  [
+                  "testni svet in scripting tecejo (TW-SCRIPT-OK)"
+              ],
+    "odtis":  {
+                  "brezChunkov":  0,
+                  "npc":  20910,
+                  "obroc":  1,
+                  "ogrevanje":  10,
+                  "sekund":  60
+              },
+    "velicine":  {
+                     "mspt.max":  133.039,
+                     "mspt.min":  0.07,
+                     "mspt.n":  1229,
+                     "mspt.p50":  0.803,
+                     "mspt.p95":  8.126,
+                     "mspt.p99":  102.76,
+                     "mspt.povp":  4.356,
+                     "npc.per.tick.max":  17,
+                     "npc.per.tick.p50":  17,
+                     "npc.tick.gap.max":  1,
+                     "save.izlocenih":  2,
+                     "save.maxBrez":  133.039,
+                     "save.maxVsi":  133.039,
+                     "save.ostalo":  1227,
+                     "save.p99brez":  102.76,
+                     "save.p99vsi":  102.76,
+                     "slow.hranjenih":  16,
+                     "slow.maxMs":  133.039,
+                     "slow.zabelezenih":  1229,
+                     "ticki":  1229,
+                     "world.chunks.forced.p50":  20
+                 }
+}

@@ -9,13 +9,14 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-09-21 (tretji vpis)** |
+| Zadnja posodobitev | **2026-09-21 (četrti vpis)** |
 | Trenutni milestone | **M2 — diagnostika** (M2.1, M2.2, **M2.3, M2.7 in M2.5c zaključeni**); **M0 in M1 zaključena**. **M2.3 zaključen — L1–L12 zelena, R2 izmerjen, P1 ovržen**; M2.5a in M2.5b sta v kodi, merila S1–S7 še niso bila strojno ovrednotena |
-| Naslednji paketi | **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline). **M2.7b je v kodi in čaka na zagon** (`.\nav-run.ps1`, merili N13/N14). Odprt zagon tudi `.\rwdiag-run.ps1` (merila S1–S7, lahko kar prek `.\ponovitve-run.ps1 -Scenarij rwdiag`). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
+| Naslednji paketi | **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline). **M2.7b pognan dvakrat; razdelitev dela, šumni pas pa se ni zaprl** — dodano ogrevanje iskalnika, čaka na ponovni zagon `.\nav-run.ps1` in serijo. Za `.\rwdiag-run.ps1` (S1–S7) je treba **najprej** `.\testworld.ps1` in `.\testworld-run.ps1`. Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
 | Ugotovitev M2.3 (21. 9.) | **R2 v tem prizorišču ni okvara letenja, ampak zastarela delna pot.** En sam `navigateTo` da pot, ki se konča pred oviro (`cele = 0/6`) in je nič ne zamenja; osvežena pot (faza B) in vanilla AI (faza C) isto skupino spravita čez. Popravek v M4 mora osveževati pot, ne spreminjati move helperja |
+| Ogrevanje (M2.7b, 21. 9.) | **Peta veličina potrebuje ogrevanje iskalnika, tako kot meritev potrebuje ogrevanje chunkov.** Dva zagona pet minut narazen: `usSkupaj` zadnjih dveh pometanj 9.069 / 18.076 µs proti 4.579 / 2.939 µs. Več vzorcev tega ne reši — vseh 56 ogretih vzorcev enega pometanja si deli isto stanje JVM-a. [zapis](meritve/2026-09-21-M2.7b-ogrevanje.md) |
 | Šumni pas (M2.5c, 18. 9.) | **46 veličin od 59 ima razpon nič** čez tri ponovitve; vse, kar opisuje vedenje skupine in kakovost poti, je deterministično do enega ticka. Šumna je samo veličina 5 (µs na iskanje), do **114 %** — zato A/B na ceni iskanja (M4.11, M5.6) do M2.7b ni merljiv. [zapis](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
 | Odprta vprašanja iz M2.7 | dva NPC-ja od osmih na progi z grlom ne prispeta niti ob osveženi poti (zamašek ali `canNavigate()`, loči M3.1); najpočasnejši tick meritve (232 ms) ni bil autosave, ampak tick s pathfindingom |
 | Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8, Q10 in Q12 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
@@ -68,13 +69,73 @@
 | M2.5 | Merilni protokol kot skripta | **zaključeno** — M2.5a (pripis počasnih tickov), M2.5b (izločitev autosave ticka) in M2.5c (protokol ponovitev) narejeni; vsi trije čakajo na zagon v svetu |
 | M2.5b | Izločitev autosave ticka: `server.tick.ns.nosave` + merila S5–S7 | **koda in testi narejeni** (6 testov, prevedeno v seji); čaka na prvi zagon v svetu |
 | M2.5c | **Protokol ponovitev**: zapis zagona (`meritve-lib.ps1`), združevanje N zagonov v svežem svetu in šumni pas (`ponovitve-run.ps1`), merila T1–T6 | **zaključeno 18. 9. — serija pognana, T1–T6 zelena**; tabela M2.7 ima razpon; [scenarij](scenariji/M2.5c-ponovitve.md), [meritev](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
-| M2.7b | Več vzorcev za veličino 5 (µs na iskanje): osem iskanj na pometanje je premalo za p50/p95 | **koda in testi narejeni 21. 9.** — `NavProbe` loči hladno (`prvi*`) in ogreto (`pon*`) ter poroča `usSkupaj`; `NavSweep.DEFAULT_REPEATS` 3 → 8 (56 ogretih vzorcev); merili **N13/N14**. Čaka na zagon `.\nav-run.ps1`. [scenarij](scenariji/M2.7-navigacija.md) |
+| M2.7b | Več vzorcev za veličino 5 (µs na iskanje) | **pognano dvakrat 21. 9.; razdelitev na `prvi*`/`pon*` in `usSkupaj` delujeta, več vzorcev pa šuma ni zaprlo** — vzrok je stanje JVM-a med pometanji. Dodano **ogrevanje iskalnika** (`-OgrevalnihPometanj 2` + `rwdiag reset`) in merilo **N15**; N14 prepisan iz časovnega praga v strukturno invarianto. Čaka na ponovni zagon in serijo. [meritev](meritve/2026-09-21-M2.7b-ogrevanje.md), [scenarij](scenariji/M2.7-navigacija.md) |
 | M2.6 | Baseline meritve originala | ni začeto |
 | M2.7 | **Merila kakovosti navigacije** (šest veličin, izmerjenih na originalu) | **zaključeno 17. 9. — N1–N12 zelena, tabela obstaja**; [meritev](meritve/2026-09-17-M2.7-navigacija-baseline.md), [scenarij](scenariji/M2.7-navigacija.md). Vhodni pogoj za M4.10 je dopolnjen: potrebno je prizorišče z razdaljo čez `NpcNavRange` |
 
 ---
 
 ## Dnevnik sej
+
+### 2026-09-21 (43) — M2.7b pognan: razdelitev dela, šum pa je drugje, kot sem mislil
+
+**Paket:** M2.7b (ovrednotenje dveh zagonov in popravek)
+**Stanje:** **delno.** Razdelitev na hladno in ogreto je pravilna in preverjena, hipoteza o
+vzroku šuma pa je bila napačna. Popravek (ogrevanje iskalnika) je narejen in čaka na zagon.
+
+**Narejeno:**
+
+- Ovrednotena zagona `.\nav-run.ps1` ob 12:23 (N1–N14 zelena) in 12:28 (padlo N14) ter zagon
+  `.\rwdiag-run.ps1` ob 12:55 (neveljaven).
+- **Ogrevanje iskalnika** v `nav-run.ps1`: `-OgrevalnihPometanj` (privzeto 2 na progo), izid
+  se zavrže, nato `rwdiag reset`. Novo merilo **N15**.
+- **N14 prepisan** iz časovnega praga v strukturno invarianto.
+- `rwdiag-run.ps1`: takojšen padec z navodilom, če v svetu ni `T_Scripted`; `odtis.npc` ne
+  nosi več kumulativnih NPC-tickov.
+- Meritev [`2026-09-21-M2.7b-ogrevanje.md`](meritve/2026-09-21-M2.7b-ogrevanje.md) in razdelek
+  M2.7b v scenariju.
+
+**Ugotovitve:**
+
+- **Razdelitev se sešteje povsod:** `prviN = iskanj = 8` in `ponN = ponovitev = 56` v vseh
+  osmih pometanjih obeh zagonov. Vse, kar ni čas, je med zagonoma identično — `delezCelih`
+  1,000, razmerje 1,151 / 1,236, prispelo `1/8 ob 180/180/180` in `6/8 ob 220/240/280`, razpon
+  pri grlu 3,78 / 3,92 / 4,78 / 4,76.
+- **Šumni pas se ni zaprl in se je pri eni veličini razširil:** `O.ponP50.poA` 254,0 proti
+  42,0 µs, torej 143 % proti 114 % pred M2.7b.
+- **Vzrok je stanje JVM-a med pometanji, ne število vzorcev.** `usSkupaj` zadnjih dveh
+  pometanj: 9.069 in 18.076 µs (12:23) proti 4.579 in 2.939 µs (12:28). V enem zagonu se je
+  JIT do konca ogrel, v drugem ne. Vseh 56 ogretih vzorcev enega pometanja si deli isto stanje
+  JVM-a, zato večji vzorec zmanjša šum znotraj pometanja, ves pomemben šum pa je med njimi.
+- **Razdelitev kljub temu ni bila odveč:** brez nje in brez `usSkupaj` bi bila ta razlaga
+  skrita v mešanici. Meritev je ovrgla hipotezo in hkrati dala orodje, ki pove, zakaj.
+- **Merilo N14 sem napisal napačno.** Časovni prag med dvema enako ogretima številkama ni
+  merilo: predznak razlike je naključen (73,7 proti 69,6 pade, 42,0 proti 44,0 ne). Merilo
+  veljavnosti mora biti invarianta, ki drži po konstrukciji.
+- **Zagon rwdiag je meril napačen svet.** `world.npc.loaded = 17` — NAV prizorišče, ki ga je
+  pustil `nav-run.ps1`, brez `T_Scripted`. Merila S1–S7 še vedno niso ovrednotena. To je tretji
+  primer te vrste napake ta teden.
+
+**Ni narejeno in zakaj:**
+
+- Ali ogrevanje šumni pas res zapre, pove šele serija po enem zelenem zagonu.
+- S1–S7 čakajo na pravilno zaporedje `.\testworld.ps1` → `.\testworld-run.ps1` → `.\rwdiag-run.ps1`.
+- M2.4 in M2.6 nista začeta.
+
+**Spremembe obnašanja:** nobene v modu. Spremenjeni sta merilni skripti; `rework/diag` je
+tokrat nedotaknjen.
+
+**Preverjeno brez sveta:** `Parser::ParseFile` na `nav-run.ps1` in `rwdiag-run.ps1` brez napak;
+**novi N14 pognan nad resničnim logom zagona 12:28** — zelen v vseh štirih pometanjih, medtem
+ko stara oblika pade v tretjem; ločitev ogrevalnih od merjenih pometanj preverjena nad
+sintetičnim nizom osmih pometanj (ogrevalna G#0, G#1, O#0, O#1; merjena G#2, G#3, O#2, O#3).
+
+**Naslednja seja:** `.\nav-run.ps1` (N1–N15, štiri merjena in štiri ogrevalna pometanja;
+prebrati `5 cena celega pometanja` za obe merjeni — če sta si blizu, je ogrevanje zadostovalo),
+nato `.\ponovitve-run.ps1 -Scenarij nav`. Ločeno: `.\testworld.ps1`, `.\testworld-run.ps1`,
+`.\rwdiag-run.ps1` za S1–S7.
+
+---
 
 ### 2026-09-21 (42) — M2.7b: peta veličina razdeljena na hladno in ogreto
 
@@ -2689,6 +2750,8 @@ prebrati.
 | 2026-09-21 | M2.3 četrti zagon (07:45), postavitev na začetku faze | **L1–L12 zelena**; faza D z z = −16,0 prevozi 15,93 pri `gib` 0,2734 → **P1 OVRŽEN**; faza C proge P prvič veljavna (16,34) | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
 | 2026-09-18 | M2.5c: tri ponovitve scenarija M2.7, vsaka svež svet (2,6 / 2,1 / 2,0 min) | T1–T6 zelena; **46 veličin od 59 z razponom nič**, šumna samo veličina 5 (do 114 %) | [zapis](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
 | 2026-09-17 | poraba pri 21 NPC-jih med M2.3 (ni baseline) | `npc.update.window` 162,5 µs/NPC; MSPT p50 0,84 ms, p95 8,91 ms, p99 102,8 ms | [zapis](meritve/2026-09-17-M2.3-R2-reprodukcija.md) |
+| 2026-09-21 | M2.7b, dva zagona nav (12:23 in 12:28) | razdelitev se sešteje (`prviN=8`, `ponN=56` povsod), vse razen časa identično; ogreta `O.ponP50.poA` pa 254,0 proti 42,0 µs — **šum je med pometanji, ne znotraj njih** | [zapis](meritve/2026-09-21-M2.7b-ogrevanje.md) |
+| 2026-09-21 | `rwdiag-run.ps1` 12:55 — **neveljaven** | `world.npc.loaded = 17` (NAV svet, brez `T_Scripted`); S1–S7 še vedno niso ovrednotena | [zapis](meritve/2026-09-21-M2.7b-ogrevanje.md) |
 | — | baseline MSPT še ni izmerjen (M2.6) | — | — |
 
 Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Javi 8 je odprta.
@@ -2793,6 +2856,28 @@ Meritve so tekle na OpenJDK 21 v oblačnem okolju, ne na Javi 8. Ponovitev na Ja
   postavi sama, v istem ticku kot začne, in vsak scenarij ima merilo, ki vhodni pogoj
   preveri iz loga** (M2.3 ima za to L12: `prevozeno + doCilja` prvega vzorca mora biti vsaj
   dolžina proge).
+- **Peta veličina (µs na iskanje) potrebuje ogrevanje iskalnika, ne več vzorcev.**
+  *(izmerjeno 21. 9., M2.7b)* Dva zagona istega scenarija na istem stroju, pet minut narazen:
+  `usSkupaj` zadnjih dveh pometanj 9.069 in 18.076 µs proti 4.579 in 2.939 µs — v enem se je
+  JIT do konca ogrel, v drugem ne. Več vzorcev na pometanje tega ne zapre, ker si vsi vzorci
+  enega pometanja delijo isto stanje JVM-a: večji vzorec zmanjša šum *znotraj* pometanja, ves
+  pomemben šum pa je *med* pometanji. Od M2.7b `nav-run.ps1` požene dve ogrevalni pometanji na
+  progo, ju zavrže in požene `rwdiag reset`. **Enako velja za vsako prihodnjo časovno meritev
+  kode, ki je JIT še ni videl.**
+- **Merilo veljavnosti mora biti invarianta, ne časovni prag.** *(21. 9.)* Prva oblika merila
+  N14 je zahtevala `ponP50 ≤ prviP50` („ogreto ni počasnejše od hladnega") in je ustavila
+  serijo na razliki **6 %** — ko je JVM ogret, sta obe številki enaki in predznak razlike je
+  naključen. Nadomestila jo je invarianta `prviN = iskanj` in `ponN = ponovitev`, ki mora
+  držati po konstrukciji. **Časovna opažanja gredo v tabelo, kjer jih človek prebere, ne v
+  `Check`, kjer šum ustavi serijo.** Isti prijem imata N9 in L12.
+- **Scenariji si podajajo `dev\run\world` in naslednji meri, kar je pustil prejšnji.**
+  *(21. 9., tretjič ta teden)* `.\rwdiag-run.ps1` je ob 12:55 meril svet, ki ga je pustil
+  `.\nav-run.ps1`: `world.npc.loaded = 17` namesto 21 in brez `T_Scripted`. Merilo je padlo
+  šele po dveh minutah in ni povedalo, zakaj, meritev pa je bila takrat ze posneta. Odtlej
+  scenarij takrat **ustavi server in pove, naj se požene `.\testworld.ps1` in
+  `.\testworld-run.ps1`**. Prvič se je isto zgodilo 17. 9. pri `r2-run.ps1` (server.properties
+  od smoke testa). **Pravilo: vsak scenarij, ki potrebuje določen svet, to preveri in pade
+  takoj.**
 - **Meritev brez prisilno naloženih chunkov ali brez igralca je neveljavna** po 300 tickih
   (`WorldServer.updateEntities():628-644`). Vsak posnetek ima zato `world.chunks.forced`;
   če je ta 0 in je `world.players` 0, posnetek meri prazen tek. Velja za vse meritve M2+.

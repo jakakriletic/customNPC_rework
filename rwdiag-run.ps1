@@ -33,6 +33,7 @@ $root   = $PSScriptRoot
 $run    = Join-Path $root 'dev\run'
 $audit  = Join-Path $root 'audit'
 $dumps  = Join-Path $run 'logs\rwdiag'
+$seed   = Join-Path $root 'dev\testworld'
 New-Item -ItemType Directory -Force -Path $audit | Out-Null
 
 # Zapis zagona za protokol ponovitev (M2.5c).
@@ -265,13 +266,53 @@ try {
     Write-Host ("  trajanje merjenja: {0} s" -f $Seconds)
 
     Step 3 'Zagon serverja'
+
+    # Pade takoj, ce dev\run ni od testnega sveta. Zagon 21. 9. ob 12:55 je to potreboval:
+    # pred njim je tekel .\nav-run.ps1 in v svetu je ostalo 17 NAV NPC-jev namesto 21
+    # fixture NPC-jev, brez T_Scripted. Merilo TW-SCRIPT-OK je zato padlo cele dve minuti
+    # pozneje in ni povedalo, zakaj - meritev pa je bila takrat ze posneta nad napacnim
+    # svetom. Isti prijem ima r2-run.ps1 od 17. 9.
+    function Get-Prop([string]$Path, [string]$Key) {
+        if (-not (Test-Path $Path)) { return "" }
+        $line = @(Get-Content $Path | Where-Object { $_ -match ("^" + [regex]::Escape($Key) + "\s*=") })
+        if ($line.Count -eq 0) { return "" }
+        return ($line[0] -replace ('^' + [regex]::Escape($Key) + '\s*=\s*'), '').Trim()
+    }
+    $propsFile = Join-Path $run 'server.properties'
+    $seedProps = Join-Path $seed 'server.properties'
+    if ((Test-Path $propsFile) -and (Test-Path $seedProps)) {
+        $mismatch = @()
+        foreach ($key in @('level-name', 'level-seed')) {
+            $want = Get-Prop $seedProps $key
+            $have = Get-Prop $propsFile $key
+            if ($want -ne $have) { $mismatch += ("{0} je '{1}', pricakovano '{2}'" -f $key, $have, $want) }
+        }
+        if ($mismatch.Count -eq 0) {
+            Check ("dev\run\server.properties je od testnega sveta (level-name={0})" -f (Get-Prop $propsFile 'level-name')) $true
+        } else {
+            Check ("dev\run\server.properties ni od testnega sveta - " + ($mismatch -join "; ")) $false
+            throw "server.properties je od drugega scenarija. Pozeni najprej .\testworld.ps1, nato ta scenarij."
+        }
+    }
+
     $s = Start-DevServer 'm21'
     Check 'server je dosegel "Done ("' (Wait-ForMarker $s 'Done (' 900)
     if ($failures.Count -gt 0) { throw "Server se ni zagnal. Glej $($s.Log)" }
 
     # D4: svet mora tecti kot prej. Testni svet ima skripto na T_Scripted, ki se
     # oglasi ob nalaganju - ce je z novim jarjem kaj narobe, se to pozna tu.
-    Check 'testni svet in scripting tecejo (TW-SCRIPT-OK)' (Wait-ForMarker $s 'TW-SCRIPT-OK' 120)
+    $twOk = Wait-ForMarker $s 'TW-SCRIPT-OK' 120
+    Check 'testni svet in scripting tecejo (TW-SCRIPT-OK)' $twOk
+    if (-not $twOk) {
+        # 21. 9. ob 12:55: pred tem je tekel .\nav-run.ps1 in v svetu je bilo 17 NAV
+        # NPC-jev namesto 21 fixture NPC-jev, torej brez T_Scripted. Brez tega izhoda bi
+        # scenarij se minuto meril naprej in posnel meritev nad napacnim svetom - ta bi
+        # izgledala povsem verodostojno. Ista vrsta napake kot 17. 9. pri r2-run.ps1.
+        Stop-DevServer $s
+        throw ("V svetu ni T_Scripted (marker TW-SCRIPT-OK ga ni). Najpogostejsi vzrok: " +
+               "dev\run\world je pustil drug scenarij (npr. .\nav-run.ps1 ali .\r2-run.ps1). " +
+               "Pozeni .\testworld.ps1 in nato .\testworld-run.ps1, sele potem ta scenarij.")
+    }
 
     Step 4 'D7a: pred vklopom mora biti izklopljeno'
     Send-Command $s 'rwdiag status'
@@ -507,10 +548,16 @@ try {
         ogrevanje   = $WarmupSeconds
         obroc       = $(if ($NoChunks) { -1 } else { $ChunkRadius })
         brezChunkov = $(if ($NoChunks) { 1 } else { 0 })
-        npc         = $first[1]
+        # NE $first[1]: "RWDIAG-OK ... npc=" so KUMULATIVNI NPC-ticki (20910 pri 17 NPC-jih
+        # cez 1229 tickov) in se med ponovitvami razlikujejo za nekaj tickov. V odtisu bi
+        # to pomenilo, da serija pade na merilu T4 (odtis mora biti enak), ceprav je bil
+        # svet isti. Stevilo NPC-jev pove vrstica RWDIAG-CHUNKS.
+        npc         = $(if ($null -ne $chunks) { $chunks[2] } else { -1 })
     }
 
-    $vel = @{ ticki = $first[0] }
+    # npcTickov je velicina in ne odtis: med ponovitvami se razlikuje za nekaj tickov,
+    # v odtisu pa bi to podrlo merilo T4 (odtis mora biti enak v vseh ponovitvah).
+    $vel = @{ ticki = $first[0]; npcTickov = $first[1] }
     if ($null -ne $ms) {
         $vel['mspt.n']    = $ms[0]
         $vel['mspt.min']  = $ms[1]

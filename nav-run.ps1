@@ -1,4 +1,4 @@
-﻿# M2.7 - merila kakovosti navigacije, merila N1-N14.
+﻿# M2.7 - merila kakovosti navigacije, merila N1-N15.
 #
 # Scenarij in razlaga: docs/scenariji/M2.7-navigacija.md
 #
@@ -26,7 +26,8 @@
 # Ponovitve po protokolu (tri in vec) pozene .\ponovitve-run.ps1, ki -JsonPath poda sam.
 
 param([switch]$AcceptEula, [int]$ChunkRadius = 2, [int]$WarmupSeconds = 10,
-      [int]$ScenarioTimeoutSec = 180, [int]$SweepRepeats = 8, [string]$JsonPath = '')
+      [int]$ScenarioTimeoutSec = 180, [int]$SweepRepeats = 8, [int]$OgrevalnihPometanj = 2,
+      [string]$JsonPath = '')
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -387,7 +388,7 @@ function Format-Sonda($S) {
 # preveriti brez Minecrafta, nad ze zapisanim logom starega zagona.
 function New-NavZapis {
     param($Pometi, $Cas, $NavAi, $Chunks, $Setup, [int]$Filled,
-          [int]$Obroc, [int]$Ogrevanje, [int]$PometanjPon)
+          [int]$Obroc, [int]$Ogrevanje, [int]$PometanjPon, [int]$OgrevalnaPometanja)
 
     $odtis = @{
         npc         = $(if ($null -ne $Chunks) { $Chunks.Npc }    else { -1 })
@@ -401,6 +402,7 @@ function New-NavZapis {
         obroc       = $Obroc
         ogrevanje   = $Ogrevanje
         pometanjPon = $PometanjPon
+        ogrevalnih  = $OgrevalnaPometanja
     }
 
     $vel  = @{}
@@ -586,11 +588,31 @@ try {
     Send-Command $s 'rwdiag on'
     Check 'merjenje vklopljeno' (Wait-ForMarker $s 'RWDIAG vklopljen' 30)
 
+    # Ogrevanje ISKALNIKA POTI, loceno od ogrevanja chunkov zgoraj. Zagona 21. 9. ob
+    # 12:23 in 12:28 sta to pokazala: isti scenarij, isti stroj, pet minut narazen, a
+    # `usSkupaj` zadnjih dveh pometanj 9.069 in 18.076 us proti 4.579 in 2.939 us. V
+    # enem zagonu se je JIT do konca ogrel, v drugem ne - in to je bilo vecje od vsake
+    # razlike, ki bi jo A/B lahko meril. Vec vzorcev tega ne resi, ker si vsi vzorci
+    # enega pometanja delijo isto stanje JVM-a. Zato se pred meritvijo pozene nekaj
+    # pometanj, katerih izid se ZAVRZE, nato pa `rwdiag reset` pocisti stevce. Ista
+    # lekcija kot pri chunkih (M2.1d), samo za drug del sistema.
+    if ($OgrevalnihPometanj -gt 0) {
+        Write-Host ("  ogrevanje iskalnika: {0} pometanj na progo" -f $OgrevalnihPometanj)
+        for ($w = 0; $w -lt $OgrevalnihPometanj; $w++) {
+            foreach ($lane in $lanes) { Invoke-Sweep $s $lane }
+        }
+        Check 'ogrevalna pometanja so se odzvala' `
+              (Wait-ForCount $s 'RWNAV-POMET ' ($OgrevalnihPometanj * $lanes.Count) 120)
+        Send-Command $s 'rwdiag reset'
+        Check 'stevci pocisceni po ogrevanju' (Wait-ForMarker $s 'RWDIAG stevci pocisceni' 30)
+    }
+
     Step 5 'Sonda na startni crti (velicine 1, 2, 5)'
     # Prvo pometanje mora biti PRED krmilnikom: takrat vsi NPC-ji stojijo na startu in
     # merjene poti so primerljive med sabo. Po zacetku scenarija vsak stoji drugje.
     foreach ($lane in $lanes) { Invoke-Sweep $s $lane }
-    Check 'sonda je odgovorila dvakrat' (Wait-ForCount $s 'RWNAV-POMET ' 2 60)
+    Check 'sonda je odgovorila dvakrat' `
+          (Wait-ForCount $s 'RWNAV-POMET ' (($OgrevalnihPometanj + 1) * $lanes.Count) 60)
 
     Step 6 'Scenarij, faza A'
     Send-Command $s 'noppes clone spawn NAV_Control 1 0,4,56'
@@ -608,7 +630,8 @@ try {
     # Drugo pometanje je najbolj poveden podatek za M4.10: NPC-ji stojijo na koncu delne
     # poti in vprasanje je, ali bi novo iskanje od tam naslo celo pot.
     foreach ($lane in $lanes) { Invoke-Sweep $s $lane }
-    Check 'sonda je odgovorila stirikrat' (Wait-ForCount $s 'RWNAV-POMET ' 4 60)
+    Check 'sonda je odgovorila stirikrat' `
+          (Wait-ForCount $s 'RWNAV-POMET ' (($OgrevalnihPometanj + 2) * $lanes.Count) 60)
 
     Step 8 'Scenarij, faza B'
     Check 'faza B se je zacela' (Wait-ForMarker $s 'NAV-B-START' $ScenarioTimeoutSec)
@@ -679,11 +702,38 @@ try {
         }
     }
 
-    Step 12 'N8-N14: sonda in opazovalec'
-    $pometi = @(Read-Pometi $s.Log)
+    Step 12 'N8-N15: sonda in opazovalec'
+    $vsaPometanja = @(Read-Pometi $s.Log)
+    # Prva $OgrevalnihPometanj pometanja na progo so ogrevalna in njihove stevilke niso
+    # meritev. Locitev je po vrstnem redu na progo, ker je to edini podatek, ki ga vrstica
+    # sonde nosi - zato tudi merilo N15, ki preveri, da jih je res toliko, kot jih mora biti.
+    $ogrevalna = @()
+    $pometi    = @()
+    foreach ($lane in @("G", "O")) {
+        $arr = @($vsaPometanja | Where-Object { $_.Predpona -eq ("NAV_Walk" + $lane) })
+        for ($i = 0; $i -lt $arr.Count; $i++) {
+            if ($i -lt $OgrevalnihPometanj) { $ogrevalna += $arr[$i] } else { $pometi += $arr[$i] }
+        }
+    }
     $sonda  = Read-Sonda $s.Log
     $navAi  = Read-NavAi $s.Log
-    Check ("N8: sonda je pometla stirikrat (najdenih {0})" -f $pometi.Count) ($pometi.Count -eq 4)
+    Check ("N8: sonda je pometla stirikrat (najdenih {0} merjenih, {1} ogrevalnih)" -f `
+        $pometi.Count, $ogrevalna.Count) ($pometi.Count -eq 4)
+
+    # N15: ogrevanje se je res zgodilo in je merilo cele proge. Namenoma je strukturno in
+    # ne casovno: "ogreto mora biti hitrejse od hladnega" je prag med dvema skoraj enakima
+    # stevilkama in pade na sumu, kar je 21. 9. tudi naredil (N14, razlika 6 %).
+    Check ("N15: ogrevalnih pometanj je {0}, pricakovano {1}" -f `
+        $ogrevalna.Count, ($OgrevalnihPometanj * 2)) `
+        ($ogrevalna.Count -eq ($OgrevalnihPometanj * 2))
+    foreach ($o in $ogrevalna) {
+        Check ("N15: ogrevalno pometanje {0} je merilo celo progo (npc={1})" -f $o.Predpona, $o.Npc) `
+              ($o.Npc -eq 8)
+    }
+    if ($ogrevalna.Count -gt 0) {
+        Write-Host ("  ogrevanje iskalnika (zavrzeno): {0}" -f `
+            (($ogrevalna | ForEach-Object { "{0}={1:N0} us" -f $_.Predpona, $_.UsSkupaj }) -join "  "))
+    }
     foreach ($p in $pometi) {
         Write-Host (Format-Sonda $p)
         # N9: navzkrizna preverba samega merilnika. Iskanje mora pasti v natanko eno
@@ -703,12 +753,14 @@ try {
         Check ("N13: pometanje {0} ima dovolj ogretih vzorcev (ponN={1}, meja 40)" -f $p.Predpona, $p.PonN) `
               ($p.PonN -ge 40)
 
-        # N14: ogreto iskanje ne sme biti pocasnejse od hladnega. Ce je, sta porazdelitvi
-        # zamenjani ali pa ponovitve merijo nekaj drugega kot prvo iskanje - v obeh
-        # primerih stevilka ne govori o tem, o cemer mislimo, da govori.
-        Check ("N14: ogreto ni pocasnejse od hladnega za {0} (ponP50={1:N1} <= prviP50={2:N1})" -f `
-            $p.Predpona, $p.PonP50, $p.PrviP50) `
-            (($p.PonP50 -gt 0) -and ($p.PonP50 -le $p.PrviP50))
+        # N14: vsako iskanje pristane v natanko eni od obeh porazdelitev - prva iskanja
+        # v hladno, ponovitve v ogreto. To je invarianta razdelitve in je preverljiva
+        # brez casa; prvi poskus tega merila je bil casovni prag (ogreto <= hladno) in je
+        # 21. 9. padel na razliki 6 % med dvema enako ogretima stevilkama. Prag med
+        # skoraj enakima stevilkama ni merilo - isti prijem kot N9 pri vedrih poti.
+        Check ("N14: razdelitev casa se sesteje za {0} (prviN {1} = iskanj {2}, ponN {3} = ponovitev {4})" -f `
+            $p.Predpona, $p.PrviN, $p.Iskanj, $p.PonN, $p.Ponovitev) `
+            (($p.PrviN -eq $p.Iskanj) -and ($p.PonN -eq $p.Ponovitev) -and ($p.PonP50 -gt 0))
     }
 
     # N10: znan primer. Na odprtem, 14 blokov, znotraj NpcNavRange (32) mora skoraj vsako
@@ -756,6 +808,7 @@ try {
     $tabela += ('5 us ogreto (ponovitve) p50 (po fazi A)   {0,-21} {1}' -f (Val $pG 1 'PonP50' '{0:N1}'), (Val $pO 1 'PonP50' '{0:N1}'))
     $tabela += ('5 ogretih vzorcev n (start)               {0,-21} {1}' -f (Val $pG 0 'PonN' '{0}'), (Val $pO 0 'PonN' '{0}'))
     $tabela += ('5 cena celega pometanja, us (start)       {0,-21} {1}' -f (Val $pG 0 'UsSkupaj' '{0:N0}'), (Val $pO 0 'UsSkupaj' '{0:N0}'))
+    $tabela += ('5 cena celega pometanja, us (po fazi A)    {0,-21} {1}' -f (Val $pG 1 'UsSkupaj' '{0:N0}'), (Val $pO 1 'UsSkupaj' '{0:N0}'))
     foreach ($ph in $phases) {
         $g = $cas["${ph}G"]; $o = $cas["${ph}O"]
         $gt = if ($null -eq $g) { '-' } else { ("{0}/{1} ob {2}/{3}/{4}" -f $g.Prispelo, $g.Skupaj, $g.Prvi, $g.Mediana, $g.Zadnji) }
@@ -782,7 +835,7 @@ try {
     $head += ''
     $head += 'Scenarij: `docs/scenariji/M2.7-navigacija.md`. Progi: G = zid z enimi vrati, O = odprto.'
     $head += ''
-    $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'N1-N14 zelena' } else { ("padlo {0}" -f $failures.Count) }))
+    $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'N1-N15 zelena' } else { ("padlo {0}" -f $failures.Count) }))
     $head += ''
     $head += '## Sest velicin'
     $head += ''
@@ -819,7 +872,7 @@ try {
 
     $zapis = New-NavZapis -Pometi $pometi -Cas $cas -NavAi $navAi -Chunks $chunks -Setup $setup `
                           -Filled $filled -Obroc $ChunkRadius -Ogrevanje $WarmupSeconds `
-                          -PometanjPon $SweepRepeats
+                          -PometanjPon $SweepRepeats -OgrevalnaPometanja $OgrevalnihPometanj
     $odtis = $zapis.Odtis
     $vel   = $zapis.Velicine
 
@@ -830,7 +883,7 @@ try {
     Step 15 'Izid'
     if ($failures.Count -eq 0) {
         Write-Host ''
-        Write-Host 'M2.7 N1-N14 USPESNO: izhodiscna tabela je veljavna. Stevilke gredo v docs/meritve/.'
+        Write-Host 'M2.7 N1-N15 USPESNO: izhodiscna tabela je veljavna. Stevilke gredo v docs/meritve/.'
         Write-Host ("Izpis:    {0}" -f $s.Log)
         Write-Host ("Posnetek: {0}" -f $dumps)
         exit 0
