@@ -105,7 +105,9 @@ razredov: 37 prenesenih + `RwWorldAccess`), `testworld-run`, `r1-run` in `nav-ru
 
 **Spremembe obnašanja:** nobene.
 
-**Naslednja seja:** po zelenem zagonu M3.2 (diagnoza R1).
+**Zagon v svetu (23. 9., 14:51–14:55):** build z novimi razredi (`customnpcs-patch-classes`: 99 razredov, med njimi 36 `ai/`, `EntityNPCInterface`, `RwWorldAccess`); `testworld-run` zelen (8× `TW-OK`, `TW-SCRIPT-OK`); `r1-run` prišel do `R1-SUM mount=8`, brez napak, in **ponovi izid 17. 9.**: proga M obtiči (razpon 7,00, do cilja 24,3), proga S se razleti (razpon 33). `verify-package.ps1` ni zapisal novega poročila (`audit/package-verification.txt` je od 11. 9.) — še ni preverjeno.
+
+**Naslednja seja:** `verify-package.ps1`, nato M3.2 (diagnoza R1).
 
 ### 2026-09-23 (48) — preverba spawna z `nogui`: hipoteza ovržena, D-017
 
