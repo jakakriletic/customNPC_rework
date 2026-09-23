@@ -70,3 +70,11 @@ prekopira v svet. **Nobene druge minifikacije ne uvajamo** — dve vzporedni imp
 
 V skriptah so dovoljeni **samo enojni narekovaji**, Nashorn na Javi 8 pa ne pozna `let`,
 puščičnih funkcij in šablonskih nizov.
+
+## Fixture M2.4 (merilne obremenitve)
+
+`PERF_Idle`, `PERF_BojA`, `PERF_BojB`, `PERF_Skripte` in `PERF_Kontrola` niso del testnega
+sveta; `.\perf-run.ps1` jih skopira v svet sam. Naredi jih `perf-fixture.py` iz `T_Stand` in
+`T_Scripted` (ročno urejanje ni dovoljeno). `PERF_Boj*` sta za razliko od predlog ranljiva
+(`Invulnerable 0b`, 100000 HP), sicer boj ne bi delil škode. Scenarij:
+[`../../docs/scenariji/M2.4-obremenitve.md`](../../docs/scenariji/M2.4-obremenitve.md).

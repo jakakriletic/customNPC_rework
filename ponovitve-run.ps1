@@ -19,6 +19,7 @@
 # Zagon:
 #     .\ponovitve-run.ps1                            # nav, tri ponovitve
 #     .\ponovitve-run.ps1 -Scenarij rwdiag
+#     .\ponovitve-run.ps1 -Scenarij perf -Dodatno @('-Variants','boj','-Counts','200')
 #     .\ponovitve-run.ps1 -Ponovitev 5 -PragSum 0.15
 #     .\ponovitve-run.ps1 -BrezResetaSveta           # namenoma brez reseta (za primerjavo)
 #     .\ponovitve-run.ps1 -Dodatno @('-Seconds','180')
@@ -26,7 +27,7 @@
 # Skripta sama NE zazene Minecrafta; to naredi merilna skripta, ki jo poklice.
 
 param(
-    [ValidateSet('nav', 'rwdiag')][string]$Scenarij = 'nav',
+    [ValidateSet('nav', 'rwdiag', 'perf')][string]$Scenarij = 'nav',
     [int]$Ponovitev = 3,
     [double]$PragSum = 0.20,
     [switch]$BrezResetaSveta,
@@ -51,6 +52,8 @@ New-Item -ItemType Directory -Force -Path $audit | Out-Null
 $znani = @{
     nav    = [pscustomobject]@{ Skripta = 'nav-run.ps1';    Paket = 'M2.7';  Predpona = 'm27-nav' }
     rwdiag = [pscustomobject]@{ Skripta = 'rwdiag-run.ps1'; Paket = 'M2.1';  Predpona = 'm21-rwdiag' }
+    # M2.4: ena celica na ponovitev, npr. -Dodatno @('-Variants','boj','-Counts','200')
+    perf   = [pscustomobject]@{ Skripta = 'perf-run.ps1';   Paket = 'M2.4';  Predpona = 'm24-perf' }
 }
 $izbrani = $znani[$Scenarij]
 if ($Skripta -ne '') {

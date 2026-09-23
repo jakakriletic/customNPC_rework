@@ -1,0 +1,39 @@
+# M2.4 - postavitev sveta za merilne obremenitve. Ukaze poslje .\perf-run.ps1 na standardni
+# vhod serverja (rocno lepljenje v konzolo je nezanesljivo, M0.6 past 1).
+# Scenarij: docs/scenariji/M2.4-obremenitve.md
+#
+# NPC-jev tu NI. Spawna jih .\perf-run.ps1 za vsako celico posebej z 'noppes clone grid',
+# ker je stevilo (50/200/500) parameter zagona. Prostor celic: x 48..72, z -12..12,
+# povrsina y=3. Ne dotika se ne M0.6 fixtur (x 0..8, z 0..8), ne zidu pri x=20, ne prog
+# M2.2 (x -8..32, z 12..44), M2.3 (z -16..-32, x <= 14) ali M2.7 (z >= 56).
+
+# --- determinizem ---
+gamerule doDaylightCycle false
+gamerule doWeatherCycle false
+gamerule doMobSpawning false
+gamerule doFireTick false
+gamerule mobGriefing false
+gamerule randomTickSpeed 0
+gamerule announceAdvancements false
+gamerule spectatorsGenerateChunks false
+time set 6000
+weather clear 1000000
+
+# --- boj v gnezdu ---
+# Celica 'boj' zbije do 500 NPC-jev na kup. Vanilla pri vec kot 24 entitetah na istem mestu
+# deli skodo 'cramming' (EntityLivingBase.collideWithNearbyEntities); NPC-ji bi umirali
+# zaradi gnece in ne zaradi boja, stevilo NPC-jev pa bi med meritvijo padalo.
+gamerule maxEntityCramming 0
+
+# --- spawn na (0,4,0) ---
+# Isti razlog kot v nav-setup-commands.txt: brez tega so chunki prizorisca izven obmocja
+# spawna in 'noppes clone grid' ne postavi nicesar. Zagon A v .\perf-run.ps1 ga pribije.
+setworldspawn 0 4 0
+
+# Ciscenja sveta ('noppes slay npcs') tu NI, ceprav bi fixture M0.6 (21 NPC-jev) sicer
+# bili del vsake meritve. Slay samo postavi isDead=true (CmdSlay.java:140); odstrani jih
+# sele WorldServer.updateEntities, ta pa na serverju brez igralca 300 tickov po nalaganju
+# neha teci (M2.1d). Mrtev, a neodstranjen NPC bi stel v 'rwdiag chunks on' in v merilo P2.
+# Zato .\perf-run.ps1 najprej prisilno nalozi chunke (svet se zbudi) in sele nato pobija.
+
+save-all flush

@@ -9,13 +9,14 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-09-21 (četrti vpis)** |
-| Trenutni milestone | **M2 — diagnostika** (M2.1, M2.2, **M2.3, M2.7 in M2.5c zaključeni**); **M0 in M1 zaključena**. **M2.3 zaključen — L1–L12 zelena, R2 izmerjen, P1 ovržen**; M2.5a in M2.5b sta v kodi, merila S1–S7 še niso bila strojno ovrednotena |
-| Naslednji paketi | **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline). **M2.7b pognan dvakrat; razdelitev dela, šumni pas pa se ni zaprl** — dodano ogrevanje iskalnika, čaka na ponovni zagon `.\nav-run.ps1` in serijo. Za `.\rwdiag-run.ps1` (S1–S7) je treba **najprej** `.\testworld.ps1` in `.\testworld-run.ps1`. Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
+| Zadnja posodobitev | **2026-09-23** |
+| Trenutni milestone | **M2 — diagnostika** (M2.1, M2.2, M2.3, M2.5, M2.7 zaključeni; **M2.4 v kodi, čaka na zagon**); **M0 in M1 zaključena**. 23. 9.: N1–N15 in S1–S7 zelena v svetu |
+| Naslednji paketi | **Zagon M2.4:** `.\testworld.ps1`, nato `.\perf-run.ps1 -Seconds 60 -WarmupSeconds 20` (preverba scenarija, ~20 min). Ko je zelen: **M2.6** (baseline po protokolu, ponovitve, dodati alokacije/GC). Odprto: **M2.4r** (render, potrebuje klient). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
 | Ugotovitev M2.3 (21. 9.) | **R2 v tem prizorišču ni okvara letenja, ampak zastarela delna pot.** En sam `navigateTo` da pot, ki se konča pred oviro (`cele = 0/6`) in je nič ne zamenja; osvežena pot (faza B) in vanilla AI (faza C) isto skupino spravita čez. Popravek v M4 mora osveževati pot, ne spreminjati move helperja |
+| Zagoni 23. 9. | **`nav-run` N1–N15 zelena** (z ogrevanjem: začetno pometanje G/O 2.903 / 4.343 µs, po fazi A 13.173 / 16.572 µs — razlika je ponovljiva, ne šum; A/B primerjati samo začetna pometanja). R2 ponovljen: faza A G 1/8, faza B 6/8. **`rwdiag-run` zelen, 0 padlih** (S1–S7 prvič ovrednotena v svetu): MSPT p50/p95/p99 = 0,54/1,15/2,36 ms, max 58,9 ms; brez autosave ticka max 52,7 ms, p99 2,16 ms; 8 NPC-jev tika vsak tick. Dodana oznaka `dev\run\world\rework-scenarij.txt`: nav-run jo zapiše, nav-run in rwdiag-run ob njej takoj padeta (dvakrat se je zgodilo, da je scenarij tekel na napačnem svetu). Vrstni red: testworld → testworld-run → rwdiag-run → nav-run zadnji |
 | Ogrevanje (M2.7b, 21. 9.) | **Peta veličina potrebuje ogrevanje iskalnika, tako kot meritev potrebuje ogrevanje chunkov.** Dva zagona pet minut narazen: `usSkupaj` zadnjih dveh pometanj 9.069 / 18.076 µs proti 4.579 / 2.939 µs. Več vzorcev tega ne reši — vseh 56 ogretih vzorcev enega pometanja si deli isto stanje JVM-a. [zapis](meritve/2026-09-21-M2.7b-ogrevanje.md) |
 | Šumni pas (M2.5c, 18. 9.) | **46 veličin od 59 ima razpon nič** čez tri ponovitve; vse, kar opisuje vedenje skupine in kakovost poti, je deterministično do enega ticka. Šumna je samo veličina 5 (µs na iskanje), do **114 %** — zato A/B na ceni iskanja (M4.11, M5.6) do M2.7b ni merljiv. [zapis](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
 | Odprta vprašanja iz M2.7 | dva NPC-ja od osmih na progi z grlom ne prispeta niti ob osveženi poti (zamašek ali `canNavigate()`, loči M3.1); najpočasnejši tick meritve (232 ms) ni bil autosave, ampak tick s pathfindingom |
@@ -30,7 +31,7 @@
 |---|---|---|
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
-| M2 Diagnostika | **v teku** (≈90 %) | M2.1, M2.2 in **M2.3 v celoti** preverjeni v svetu; **R1 in R2 sta reproducirana in izmerjena**; M2.5 (a/b/c) in M2.7 v kodi, M2.5c ima samotest; M2.7b je v kodi; ostanejo M2.4, M2.6 ter zagona za S1–S7 in N13/N14 |
+| M2 Diagnostika | **v teku** (≈93 %) | M2.1, M2.2, M2.3, M2.5 in M2.7 preverjeni v svetu (S1–S7 in N1–N15 zelena 23. 9.); **M2.4 v kodi, čaka na zagon**; ostaneta M2.6 (baseline) in M2.4r (render) |
 | M3 Jedro entitete | ni začeto | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
@@ -65,7 +66,7 @@
 | M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih + kontrolna skupina brez jahačev) | **zaključeno** — E1–E6 zelena, R1 reproduciran; [meritev](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
 | M2.3 | Reprodukcija R2 (leteči NPC in ovira) | **zaključeno 21. 9. — L1–L12 zelena v štirih fazah, R2 reproduciran in obhod izmerjen, P1 ovržen**. Štirje zagoni; odprt ostane samo R-P1b. [meritev](meritve/2026-09-17-M2.3-R2-reprodukcija.md), [scenarij](scenariji/M2.3-R2.md) |
 | M2.5a | Pripis počasnih tickov: `SlowTicks` + merila S1–S4 v `rwdiag-run.ps1` | **koda in testi narejeni** (22 testov, prevedeno v seji 16. 9.); čaka na prvi zagon v svetu |
-| M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | ni začeto |
+| M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | **koda narejena 23. 9.** — `perf-run.ps1`, 9 celic (idle/boj/skripte × 50/200/500), merila P1–P7; [scenarij](scenariji/M2.4-obremenitve.md). Čaka na prvi zagon v svetu. Render (M2.4r) odprt |
 | M2.5 | Merilni protokol kot skripta | **zaključeno** — M2.5a (pripis počasnih tickov), M2.5b (izločitev autosave ticka) in M2.5c (protokol ponovitev) narejeni; vsi trije čakajo na zagon v svetu |
 | M2.5b | Izločitev autosave ticka: `server.tick.ns.nosave` + merila S5–S7 | **koda in testi narejeni** (6 testov, prevedeno v seji); čaka na prvi zagon v svetu |
 | M2.5c | **Protokol ponovitev**: zapis zagona (`meritve-lib.ps1`), združevanje N zagonov v svežem svetu in šumni pas (`ponovitve-run.ps1`), merila T1–T6 | **zaključeno 18. 9. — serija pognana, T1–T6 zelena**; tabela M2.7 ima razpon; [scenarij](scenariji/M2.5c-ponovitve.md), [meritev](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
@@ -76,6 +77,63 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-23 (44) — M2.4: merilne obremenitve 50/200/500, brez zagona
+
+**Paket:** M2.4
+**Stanje:** koda, fixture in scenarij narejeni in preverjeni v seji; zagon v svetu čaka na uporabnika. Render (M2.4r) odprt.
+
+**Narejeno:**
+
+- **`perf-run.ps1`** — celice varianta × N v enem serverju (zagon A pribije spawn, zagon B
+  meri). Na celico: slay, `noppes clone grid`, `rwdiag chunks on`, krmilnik, ogrevanje,
+  merjenje, posnetek, krmilnik še enkrat, branje posnetka `.json`. Merila **P1–P7**, zapis
+  celice prek `meritve-lib.ps1`, poročilo `audit/m24-perf-<čas>.md`. Privzeto po protokolu
+  (120 s + 300 s), `-Seconds`/`-WarmupSeconds` za hitro preverbo.
+- **Fixture** `PERF_Idle`, `PERF_BojA`, `PERF_BojB` (frakciji 1/2, 100000 HP, udarec 1, ranljiva — predloge M0.6 so `Invulnerable`),
+  `PERF_Skripte`, `PERF_Kontrola` — naredi jih **`dev/testworld/perf-fixture.py`** iz
+  `T_Stand`/`T_Scripted`; vsaka zamenjava mora zadeti natanko enkrat.
+- **`perf-kontrola.js`** (frakciji sovražni, štetje po imenu, števec skript, `despawn`) in
+  **`perf-skripte.js`** (tipična lahka skripta na `tick`).
+- `perf-setup-commands.txt` (gamerule, `maxEntityCramming 0`, spawn).
+- `ponovitve-run.ps1 -Scenarij perf` za ponovitve ene celice.
+- Scenarij `docs/scenariji/M2.4-obremenitve.md`.
+- Isto sejo: oznaka `dev\run\world\rework-scenarij.txt` v `nav-run.ps1` in
+  `rwdiag-run.ps1` (tudi `perf-run.ps1` jo zapiše in preveri).
+
+**Preverjeno v seji:**
+
+- Vseh pet `.ps1` (perf, ponovitve, nav, rwdiag, meritve-lib) brez sintaktičnih napak
+  (PowerShell 7.4.6 `Parser::ParseFile`).
+- Ukazi za spawn vseh devetih celic izpisani in preverjeni proti prostoru (500 v boju do z = 11).
+- Bralniki `Read-Chunks`, `Read-Kontrola`, `Read-Frakcije`, `Read-DumpJsonPath`, `Get-Dist`
+  pognani nad ponarejenim logom z dvojno vrstico `[FINE/CustomNPCs]` (ta se ne šteje) in nad
+  posnetkom v obliki prave `.json` datoteke.
+- Obe skripti sta bili po vložitvi pognani v `node` nad lažnim API-jem: krmilnik nastavi
+  frakciji, prešteje po imenu, izpiše obe vrstici in se odstrani enkrat, ne ob vsakem ticku.
+
+**Ugotovitve:**
+
+- **Slay pred budnim svetom ne odstrani ničesar.** `noppes slay npcs` samo označi `isDead`;
+  brez igralca in brez prisilnih chunkov `updateEntities` po 300 tickih ne teče, mrtvi NPC-ji
+  ostanejo v `loadedEntityList` in `DiagChunkLoader.scan` jih šteje. Zato se chunki vklopijo
+  pred prvim slayem in ostanejo vklopljeni čez vse celice.
+- **Privzete frakcije se ne bojujejo med sabo** (`attackFactions` je prazen). Boj brez
+  nastavitve frakcij bi meril dve mirujoči skupini z drugim imenom.
+- **Posnetek `.json` že ima** `world.npc.loaded`, `world.npc.killed` in `npc.update.window`
+  (čas posodobitev NPC-jev); iz tega sta merilo P4 in veličina `npc.us` brez nove kode v `rework/diag`.
+
+**Ni narejeno in zakaj:**
+
+- **Render (M2.4r):** dedicated server nima izrisa; potrebuje klient z igralcem.
+- **Alokacije/GC:** `rwdiag` jih ne meri; spada v M2.6, preden se baseline zapiše.
+
+**Spremembe obnašanja:** nobene (samo scenarij in fixture).
+
+**Meritve:** nobene (zagon čaka).
+
+**Naslednja seja:** `.\testworld.ps1`, `.\perf-run.ps1 -Seconds 60 -WarmupSeconds 20`; ob
+zelenem zagonu M2.6.
 
 ### 2026-09-21 (43) — M2.7b pognan: razdelitev dela, šum pa je drugje, kot sem mislil
 
