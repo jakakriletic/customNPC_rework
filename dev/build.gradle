@@ -68,6 +68,11 @@ afterEvaluate {
 // niti cisto ustaviti z 'stop'. Deluje samo z --no-daemon, ker mora biti System.in
 // resnicni vhod procesa. Potrebno za M0.5 in za vsak skriptiran server scenarij.
 afterEvaluate { tasks.getByName('runServer').standardInput = System.in }
+// M2.6 (23. 9.): brez 'nogui' dedicated server odpre okno s statistiko, njegov
+// StatsComponent pa vsakih 500 ms poklice System.gc() (StatsComponent.java:30,43).
+// To sta dve polni zbirki na sekundo in pri 500 NPC-jih TPS 9 namesto 20 - meritev
+// bi merila okno, ne moda. Konzola (stdin) ostane, samo okna ni.
+afterEvaluate { tasks.getByName('runServer').args 'nogui' }
 
 // runServer in runClient nikoli nista "up to date". ForgeGradle jima prijavi
 // dev/run kot izhod, zato je Gradle 15. 9. med skriptiranim scenarijem M0.6 drugi

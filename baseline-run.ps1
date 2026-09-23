@@ -20,7 +20,7 @@
 #     docs\meritve\baseline-<datum>.md                     tabela za cloveka
 
 param([int]$Ponovitev = 3, [int]$Seconds = 300, [int]$WarmupSeconds = 120, [switch]$Razprseno,
-      [string[]]$Variants = @('idle', 'boj', 'skripte'), [string[]]$Counts = @('50', '200', '500'),
+      [string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][string[]]$CountsIn = @('50', '200', '500'),
       [switch]$Vztrajaj, [switch]$AcceptEula)
 
 $ErrorActionPreference = 'Stop'
@@ -61,7 +61,7 @@ try {
     Step 1 'Priprava'
     # '-Counts 50,500' iz ukazne vrstice (-File) pride kot en niz; brez tega bi bil 50500.
     $Variants = @($Variants | ForEach-Object { "$_" -split ',' } | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' })
-    $Counts   = @($Counts | ForEach-Object { "$_" -split ',' } | Where-Object { $_.Trim() -ne '' } | ForEach-Object { [int]$_.Trim() } | Sort-Object)
+    $Counts = [int[]]@($CountsIn | ForEach-Object { "$_" -split ',' } | Where-Object { $_.Trim() -ne '' } | ForEach-Object { [int]$_.Trim() } | Sort-Object)
     if ($Ponovitev -lt 1) { throw 'Ponovitev mora biti vsaj 1.' }
     if ($Ponovitev -lt 3) { Write-Host ("  OPOZORILO {0} ponovitev je manj od protokola (3); izid ni baseline, samo preverba." -f $Ponovitev) }
     $psExe = (Get-Process -Id $PID).Path

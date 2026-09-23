@@ -1,0 +1,48 @@
+{
+    "shema":  1,
+    "paket":  "M2.4",
+    "scenarij":  "perf-idle-500",
+    "zagon":  "2026-09-23 14:33:53",
+    "uspeh":  true,
+    "padlih":  0,
+    "padle":  [
+
+              ],
+    "odtis":  {
+                  "celic":  1,
+                  "celica":  1,
+                  "mrezaSirina":  25,
+                  "mrezaX":  48,
+                  "mrezaZ":  -12,
+                  "npc":  500,
+                  "obroc":  1,
+                  "ogrevanje":  20,
+                  "razprseno":  0,
+                  "sekund":  60,
+                  "varianta":  "idle"
+              },
+    "velicine":  {
+                     "alok.KBnaTick":  17599.9,
+                     "alok.MBnaS":  249,
+                     "gc.ms":  138,
+                     "gc.msNaS":  2.24,
+                     "gc.zbirk":  25,
+                     "heap.maxMB":  1820,
+                     "mspt.brezSave.max":  316.85,
+                     "mspt.brezSave.p99":  234.881,
+                     "mspt.max":  316.85,
+                     "mspt.p50":  14.156,
+                     "mspt.p95":  205.521,
+                     "mspt.p99":  234.881,
+                     "mspt.povp":  68.488,
+                     "nasiceno":  0,
+                     "npc.per.tick.p50":  500,
+                     "npc.us":  136.25,
+                     "ticki":  891,
+                     "ticki.nad100ms":  283,
+                     "ticki.nad10ms":  650,
+                     "ticki.nad25ms":  300,
+                     "ticki.nad50ms":  291,
+                     "tps":  14.48
+                 }
+}

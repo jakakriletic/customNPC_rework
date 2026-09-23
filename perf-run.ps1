@@ -31,7 +31,7 @@
 # Pred zagonom: .\testworld.ps1 (svez svet). Ta scenarij svet spremeni (pobije fixture M0.6)
 # in za seboj pusti oznako dev\run\world\rework-scenarij.txt.
 
-param([string[]]$Variants = @('idle', 'boj', 'skripte'), [string[]]$Counts = @('50', '200', '500'),
+param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][string[]]$CountsIn = @('50', '200', '500'),
       [int]$Seconds = 300, [int]$WarmupSeconds = 120, [int]$ChunkRadius = 1,
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '')
 
@@ -244,7 +244,7 @@ try {
     # kot en niz; razbijemo ga tu, da se obnasa enako kot seznam.
     $Variants = @($Variants | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' })
     # Isto za stevila: '-Counts 50,200' iz -File pride kot en niz.
-    $Counts   = @($Counts | ForEach-Object { "$_" -split ',' } | Where-Object { $_.Trim() -ne '' } | ForEach-Object { [int]$_.Trim() } | Sort-Object)
+    $Counts = [int[]]@($CountsIn | ForEach-Object { "$_" -split ',' } | Where-Object { $_.Trim() -ne '' } | ForEach-Object { [int]$_.Trim() } | Sort-Object)
     foreach ($v in $Variants) {
         if ($znaneVariante -notcontains $v) { throw ("Neznana varianta '{0}'. Znane: {1}" -f $v, ($znaneVariante -join ', ')) }
     }
