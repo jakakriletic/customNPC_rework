@@ -1,0 +1,51 @@
+razredov 37, metod 558: enakih 508, razlika v obliki 38, za PREGLED 12
+PREGLED noppes.npcs.ai.EntityAILook :: public void rotate(int)
+    samo original: {}
+    samo nov:      {'getfield      // Field npc:Lnoppes/npcs/entity/EntityNPCInterface;': 1, 'getfield      // Field noppes/npcs/entity/EntityNPCInterface.renderYawOffset:F': 1}
+PREGLED noppes.npcs.ai.EntityAILook :: public void updateTask()
+    samo original: {}
+    samo nov:      {'getfield      // Field npc:Lnoppes/npcs/entity/EntityNPCInterface;': 1, 'getfield      // Field noppes/npcs/entity/EntityNPCInterface.renderYawOffset:F': 1}
+PREGLED noppes.npcs.ai.EntityAIOpenAnyDoor :: public net.minecraft.block.Block getDoor(net.minecraft.util.math.BlockPos)
+    samo original: {'invokevirtual // InterfaceMethod java/util/Set.iterator:()Ljava/util/Iterator;': 1}
+    samo nov:      {'invokevirtual // Method com/google/common/collect/ImmutableSet.iterator:()Lcom/google/common/collect/UnmodifiableIterator;': 1}
+PREGLED noppes.npcs.ai.EntityAIOrbitTarget :: public boolean shouldExecute()
+    samo original: {'putfield      // Field distance:F': 1}
+    samo nov:      {}
+PREGLED noppes.npcs.ai.EntityAIReturn :: public boolean shouldExecute()
+    samo original: {'iconst_0': 1}
+    samo nov:      {}
+PREGLED noppes.npcs.ai.EntityAISprintToTarget :: public boolean shouldExecute()
+    samo original: {'iconst_0': 2, 'iconst_1': 2}
+    samo nov:      {}
+PREGLED noppes.npcs.entity.EntityNPCInterface :: private void clearTasks(net.minecraft.entity.ai.EntityAITasks)
+    samo original: {'invokevirtual // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;': 1}
+    samo nov:      {'invokevirtual // Method java/util/ArrayList.iterator:()Ljava/util/Iterator;': 1}
+PREGLED noppes.npcs.entity.EntityNPCInterface :: private void setResponse()
+    samo original: {}
+    samo nov:      {'aconst_null': 1, 'getfield      // Field aiAttackTarget:Lnet/minecraft/entity/ai/EntityAIBase;': 1, 'getfield      // Field aiRange:Lnoppes/npcs/ai/EntityAIRangedAttack;': 1}
+PREGLED noppes.npcs.entity.EntityNPCInterface :: private void updateTasks()
+    samo original: {'getfield      // Field net/minecraft/world/World.pathListener:Lnet/minecraft/pathfinding/PathWorldListener;': 2}
+    samo nov:      {'invokestatic  // Method net/minecraft/world/RwWorldAccess.pathListener:(Lnet/minecraft/world/World;)Lnet/minecraft/pathfinding/PathWorldListener;': 2}
+PREGLED noppes.npcs.entity.EntityNPCInterface :: public noppes.npcs.entity.EntityNPCInterface(net.minecraft.world.World)
+    samo original: {}
+    samo nov:      {'ldc // float 0.9375f': 2}
+PREGLED noppes.npcs.entity.EntityNPCInterface :: public void addRegularEntries()
+    samo original: {}
+    samo nov:      {'getfield      // Field lookAi:Lnoppes/npcs/ai/EntityAILook;': 1, 'getfield      // Field animateAi:Lnoppes/npcs/ai/EntityAIAnimation;': 1}
+PREGLED noppes.npcs.entity.EntityNPCInterface :: public void updateHitbox()
+    samo original: {'getfield      // Field world:Lnet/minecraft/world/World;': 2}
+    samo nov:      {}
+
+ROCNI PREGLED (23. 9.) - vseh 12 metod je enakovrednih originalu:
+  EntityAILook.rotate, updateTask    verizna dodelitev (a = b = x) prevedena kot dve dodelitvi; drugo polje prebere isto vrednost
+  EntityAIOpenAnyDoor.getDoor         iterator klican na ImmutableSet namesto Set (isti objekt, ista metoda); posledica tipiziranega seta
+  EntityAIOrbitTarget.shouldExecute   if/else z dvema putfield proti ternarnemu izrazu z enim
+  EntityAIReturn.shouldExecute        zdruzen 'return false' (en ireturn manj)
+  EntityAISprintToTarget.shouldExecute  'x ? onGround : false' namesto if-else z iconst; isti izid v vseh vejah (preverjeno po javap)
+  EntityNPCInterface.clearTasks       iterator na ArrayList namesto List (isti objekt)
+  EntityNPCInterface.setResponse      verizni dodelitvi aiRange/aiAttackTarget razpisani; isto zaporedje ucinkov
+  EntityNPCInterface.updateTasks      NAMERNO: world.pathListener prek RwWorldAccess (polje je v dev protected, v igri ga AT naredi public)
+  EntityNPCInterface.<init>           scaleX = scaleY = scaleZ = 0.9375f razpisano
+  EntityNPCInterface.addRegularEntries  addTask(n, this.lookAi = new ...) razpisano
+  EntityNPCInterface.updateHitbox     original ima dvakrat 'this.world; pop' (mrtva branja polja brez ucinka)
+Rekonstrukcijski popravki v viru: glej docs/04-STANJE.md, vnos 49.

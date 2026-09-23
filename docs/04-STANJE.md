@@ -10,8 +10,8 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-23** |
-| Trenutni milestone | **M2 — diagnostika**, zadnji paket **M2.6 (baseline) — koda narejena 23. 9., čaka na zagon**. M0, M1 zaključena; v M2 zaključeni M2.1, M2.2, M2.3, M2.4, M2.5, M2.7 |
-| Naslednji paketi | **1.** preverba spawna (2 × ~7 min, [scenarij](scenariji/M2.6-baseline.md)) → odločitev D-017; **2.** `.\baseline-run.ps1` (~3,5 ure, po potrebi še `-Razprseno`); nato **M3** (jedro entitete, R1). Odprto: M2.4r (render), M2.1b (klicna mesta, z M3.1) |
+| Trenutni milestone | **M3 — jedro entitete**: M3.1 (prenos `EntityNPCInterface` + `ai/`) prenesen in preveden, čaka na build in zagon v svetu. M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
+| Naslednji paketi | **M3.1 preverba v svetu** (build, `verify-package`, `testworld-run`, `r1-run`, `nav-run`), nato **M3.2** (diagnoza R1). Odloženo: zagon M2.6 |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -32,7 +32,7 @@
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | **v teku** (≈96 %, ostane zagon M2.6) | M2.1, M2.2, M2.3, M2.5 in M2.7 preverjeni v svetu (S1–S7 in N1–N15 zelena 23. 9.); **M2.4 v kodi, čaka na zagon**; ostaneta M2.6 (baseline) in M2.4r (render) |
-| M3 Jedro entitete | ni začeto | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
+| M3 Jedro entitete | **v teku** — M3.1 prenesen | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
@@ -78,6 +78,56 @@
 
 ## Dnevnik sej
 
+### 2026-09-23 (49) — M3.1: prenos `EntityNPCInterface` in `noppes/npcs/ai/**` brez funkcionalnih sprememb
+
+**Paket:** M3.1 · **Stanje:** preneseno in preverjeno na ravni bytecode; zagon v svetu čaka na uporabnika.
+M2.6 baseline po navodilu uporabnika odložen (koda je pripravljena).
+
+**Narejeno:** 37 razredov iz `reference-src` v `src/patch/java` (1 + 36 v `ai/`), plus
+`net/minecraft/world/RwWorldAccess.java`. Rekonstrukcijski popravki (samo ti):
+
+- `dataManager.register/set(X, (Object)v)` → brez `(Object)` (19× v `EntityNPCInterface`, 2× `CombatHandler`); `set(Walking, (!noPath() ? 1 : 0))` → `!noPath()` (CFR je boolean izpisal kot int)
+- surovi `List`/`ArrayList` pri for-each → tipizirani (4×); `Object event` → `NpcEvent.TargetEvent`
+- `EntityAIAvoidTarget`, `EntityAIStalkTarget`: CFR je spremenljivko dodelil samo v eni veji ternarnega izraza → rekonstruirano po `javap` (komentar v kodi)
+- `EntityAIOpenAnyDoor`: `ImmutableSet` → `ImmutableSet<IProperty<?>>`
+- `world.pathListener` je v dev `protected` (v igri ga naredi javnega `cnpcs_at.cfg`) → `RwWorldAccess.pathListener(world)` v istem paketu, brez refleksije
+
+**Preverjeno v seji:** vseh 74 razredov `src/patch` prevedenih z `javac --release 8` proti
+mapiranim MC razredom in pravim knjižnicam iz uporabnikovega gradle predpomnilnika (guava 21,
+netty 4.1.9, authlib, log4j; dostop odobren 23. 9., samo branje). **Bytecode primerjava z
+originalom** (`dev/tools/primerjaj-bytecode.py`, izid `audit/m31-bytecode-primerjava.txt`):
+37/37 razredov, 558 metod — 508 enakih, 38 razlik samo v obliki prevajalnika, 12 ročno
+pregledanih in enakovrednih (verizne dodelitve, združeni returni, tip iteratorja, namerni
+`RwWorldAccess`).
+
+**Ni preverjeno:** nalaganje v igri. Build, `verify-package.ps1` (pričakovan nov seznam
+razredov: 37 prenesenih + `RwWorldAccess`), `testworld-run`, `r1-run` in `nav-run` morajo ostati zeleni.
+
+**Spremembe obnašanja:** nobene.
+
+**Naslednja seja:** po zelenem zagonu M3.2 (diagnoza R1).
+
+### 2026-09-23 (48) — preverba spawna z `nogui`: hipoteza ovržena, D-017
+
+Idle 500, 20 + 60 s, `nogui` deluje: GC 2,2 / 2,0 ms na sekundo, brez polnih zbirk.
+Naenkrat: TPS 14,5, p50 14,2, p95 206 ms, 291 tickov > 50 ms. Razpršeno: TPS 13,7, p50 16,5,
+p95 218 ms, 275 tickov > 50 ms. **Razlike ni** in počasni ticki so enakomerno po fazah
+`tick % 10` → sinhroni `ticksExisted % 10` ni vzrok. **D-017: baseline samo s spawnom naenkrat.**
+Odprto: ~23 % tickov nad 100 ms brez GC, poti in autosava (µs/NPC 136–144). Pri prvem zagonu
+M2.4 (11:51) je bila ista celica µs/NPC 58 in TPS 20 — **razlika med zagoni je večja od
+razlike med načini**, zato baseline zahteva miren računalnik (brez IDE, brskalnika).
+
+### 2026-09-23 (47) — preverba spawna: meritev je merila okno serverja, ne moda
+
+Idle 500, 20 + 60 s. Naenkrat: TPS 9,4, p50 14,7 ms, p95 377 ms; razpršeno: TPS 8,5, p50 17,3 ms,
+p95 394 ms. **Obe neveljavni:** 118–121 polnih GC v 60 s (2/s, vsak s parom mlade zbirke),
+354 ms GC na sekundo, stara generacija po GC pa samo 119 MB od 1820. To je `System.gc()`:
+okno dedicated serverja (`StatsComponent`) ga kliče vsakih 500 ms (`StatsComponent.java:30,43`).
+Popravek: `runServer` dobi `nogui` (`dev/build.gradle`). JvmProbe je to ujel v prvem zagonu.
+**Posledica:** vse dosedanje meritve MSPT (M2.1, M2.7, M2.4) so tekle z oknom in vsebujejo
+dve polni zbirki na sekundo; pred baselinom jih ne primerjati. Odločitev o spawnu (D-017) ni
+mogoča iz teh dveh zagonov — preverba se ponovi z `nogui`.
+
 ### 2026-09-23 (46) — M2.6: GC/alokacije, baseline skripta, preverba sinhronega spawna
 
 **Paket:** M2.6 · **Stanje:** koda narejena in preverjena v seji; zagon čaka na uporabnika
@@ -100,6 +150,11 @@ razpon pravilna. Razpršen spawn da iste položaje kot spawn naenkrat (boj 500: 
 
 - **`-Counts 50,200` prek `-File` pride kot en niz** in se pretvori v `50200`. Obe skripti
   zdaj vhod razbijeta sami. Ujel ga je šele test `baseline-run.ps1` nad ponarejeno skripto.
+- **Popravek istega dne:** `[string[]]$Counts` ostane tipiziran tudi po prireditvi, zato je
+  bil `500` niz in `'500' -gt 1000` je v primerjavi nizov resničen: `perf-run.ps1 -Counts 500`
+  je padel z "Več kot 1000 NPC-jev". Parameter je zdaj `$CountsIn` (alias `-Counts`),
+  `$Counts` je `[int[]]` (obe skripti). Test nad ponarejenim `perf-run` tega ni ujel, ker je
+  ponaredek imel svoj param blok.
 - **`ticksExisted` se ne shranjuje v NBT**, zato so po restartu vsi ob zagonu naloženi NPC-ji
   v isti fazi `% 10`. Sinhroni spawn scenarija je torej realen za zagon serverja, razpršen za
   NPC-je, ki pridejo s chunki kasneje.
