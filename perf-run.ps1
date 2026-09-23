@@ -13,7 +13,7 @@
 #            3 'rwdiag chunks on' (pogoj meritve M2.1d), ogrevanje, 'rwdiag on'
 #            4 merjenje, 'rwdiag dump', 'rwdiag off'
 #            5 PERF_Kontrola se enkrat: dokaz, da je obremenitev tekla ves cas
-#            6 merila P1-P7 in zapis celice (meritve-lib.ps1)
+#            6 merila P1-P8 in zapis celice (meritve-lib.ps1)
 #
 # Celice tecejo v enem serverju, po vrsti: varianta za varianto, N narascajoce. Vrstni red
 # je del odtisa; ponovitve (ponovitve-run.ps1) so primerljive samo z enakim vrstnim redom.
@@ -25,13 +25,15 @@
 #     .\perf-run.ps1 -Seconds 60 -WarmupSeconds 20     # hitra preverba scenarija (~20 min)
 #     .\perf-run.ps1 -Variants boj -Counts 200         # ena celica
 #     .\ponovitve-run.ps1 -Scenarij perf -Dodatno @('-Variants','boj','-Counts','200')
+#     .\perf-run.ps1 -Razprseno                        # spawn po 5 NPC-jev, ~7 tickov narazen (M2.6)
+#     .\baseline-run.ps1                               # M2.6: tri ponovitve vseh celic in baseline
 #
 # Pred zagonom: .\testworld.ps1 (svez svet). Ta scenarij svet spremeni (pobije fixture M0.6)
 # in za seboj pusti oznako dev\run\world\rework-scenarij.txt.
 
-param([string[]]$Variants = @('idle', 'boj', 'skripte'), [int[]]$Counts = @(50, 200, 500),
+param([string[]]$Variants = @('idle', 'boj', 'skripte'), [string[]]$Counts = @('50', '200', '500'),
       [int]$Seconds = 300, [int]$WarmupSeconds = 120, [int]$ChunkRadius = 1,
-      [switch]$AcceptEula, [string]$JsonPath = '')
+      [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '')
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -49,6 +51,10 @@ $gridW     = 25      # NPC-jev v vrsti (os x); N mora biti veckratnik 2*gridW = 
 $bojGap    = 4       # prazne vrste med skupinama A in B (AggroRange 16 jih pokrije)
 $kontrolaAt = '60,4,30'
 $znaneVariante = @('idle', 'boj', 'skripte')
+# -Razprseno: skupina po 5 NPC-jev na ukaz, ukazi ~7 tickov narazen. 7 je tuje 10, zato
+# zaporedni ukazi padejo v vse faze 'ticksExisted % 10' (EntityNPCInterface.java:358).
+$razKos   = 5
+$razPavza = 50       # ms poleg 300 ms v Send-Command; skupaj ~350 ms = ~7 tickov
 
 function Step($n, $t) { Write-Host ''; Write-Host "===== $n : $t =====" }
 
@@ -196,6 +202,22 @@ function Get-Counter($Dump, [string]$Name) {
 
 function Ms([double]$ns) { return [math]::Round($ns / 1000000.0, 3) }
 
+# Ena skupina (ime, N NPC-jev od vrste z0 naprej) kot ukazi. Brez -Razprseno en sam
+# 'clone grid'; z -Razprseno kosi po $razKos NPC-jev, vsak na svojem mestu mreze.
+function Get-GroupCommands([string]$Ime, [int]$N, [int]$Z0) {
+    $rows = [int]($N / $gridW)
+    if (-not $Razprseno) {
+        return @('noppes clone grid {0} 1 {1} {2} {3},4,{4}' -f $Ime, $gridW, $rows, $gridX, $Z0)
+    }
+    $out = @()
+    for ($r = 0; $r -lt $rows; $r++) {
+        for ($c = 0; $c -lt ($gridW / $razKos); $c++) {
+            $out += ('noppes clone grid {0} 1 {1} 1 {2},4,{3}' -f $Ime, $razKos, ($gridX + $c * $razKos), ($Z0 + $r))
+        }
+    }
+    return $out
+}
+
 # Ukazi za spawn ene celice. 'noppes clone grid <ime> 1 <sirina x> <vrstic z> x,y,z'
 # (CmdClone.grid: zanka x < args[2], z < args[3]; NPC stoji na prvem polnem bloku).
 function Get-SpawnCommands([string]$Variant, [int]$N) {
@@ -203,12 +225,11 @@ function Get-SpawnCommands([string]$Variant, [int]$N) {
     if ($Variant -eq 'boj') {
         $rows = [int](($N / 2) / $gridW)
         $zB = $gridZ + $rows + $bojGap
-        $cmds += ('noppes clone grid PERF_BojA 1 {0} {1} {2},4,{3}' -f $gridW, $rows, $gridX, $gridZ)
-        $cmds += ('noppes clone grid PERF_BojB 1 {0} {1} {2},4,{3}' -f $gridW, $rows, $gridX, $zB)
+        $cmds += Get-GroupCommands 'PERF_BojA' ($N / 2) $gridZ
+        $cmds += Get-GroupCommands 'PERF_BojB' ($N / 2) $zB
     } else {
         $ime = if ($Variant -eq 'idle') { 'PERF_Idle' } else { 'PERF_Skripte' }
-        $rows = [int]($N / $gridW)
-        $cmds += ('noppes clone grid {0} 1 {1} {2} {3},4,{4}' -f $ime, $gridW, $rows, $gridX, $gridZ)
+        $cmds += Get-GroupCommands $ime $N $gridZ
     }
     return $cmds
 }
@@ -222,7 +243,8 @@ try {
     # PowerShell pri klicu iz drugega procesa (ponovitve-run.ps1) poda '-Variants boj,idle'
     # kot en niz; razbijemo ga tu, da se obnasa enako kot seznam.
     $Variants = @($Variants | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' })
-    $Counts   = @($Counts | Sort-Object)
+    # Isto za stevila: '-Counts 50,200' iz -File pride kot en niz.
+    $Counts   = @($Counts | ForEach-Object { "$_" -split ',' } | Where-Object { $_.Trim() -ne '' } | ForEach-Object { [int]$_.Trim() } | Sort-Object)
     foreach ($v in $Variants) {
         if ($znaneVariante -notcontains $v) { throw ("Neznana varianta '{0}'. Znane: {1}" -f $v, ($znaneVariante -join ', ')) }
     }
@@ -342,7 +364,13 @@ try {
 
         Send-Command $srv 'noppes slay npcs'
         Start-Sleep -Seconds 3
-        foreach ($c in (Get-SpawnCommands $v $N)) { Write-Host "  > $c"; Send-Command $srv $c }
+        $spawnCmds = @(Get-SpawnCommands $v $N)
+        if ($Razprseno) {
+            Write-Host ("  razprseni spawn: {0} ukazov po {1} NPC-jev, ~{2} s" -f $spawnCmds.Count, $razKos, [math]::Ceiling($spawnCmds.Count * 0.35))
+            foreach ($c in $spawnCmds) { Send-Command $srv $c; Start-Sleep -Milliseconds $razPavza }
+        } else {
+            foreach ($c in $spawnCmds) { Write-Host "  > $c"; Send-Command $srv $c }
+        }
         Start-Sleep -Seconds 3
 
         # P2: pogoj meritve (M2.1d) in hkrati neodvisno stetje NPC-jev. PRED krmilnikom:
@@ -434,6 +462,29 @@ try {
             if (($null -ne $upd) -and ($upd.count -gt 0)) {
                 $vel['npc.us'] = [math]::Round($upd.nanos / 1000.0 / $upd.count, 2)
             }
+            # M2.6: pomnilnik in GC (JvmProbe). Brez teh vrstic jar ne vsebuje M2.6.
+            $gc     = Get-Counter $dump 'jvm.gc'
+            $gcOld  = Get-Counter $dump 'jvm.gc.old'
+            $alloc  = Get-Counter $dump 'jvm.alloc.server'
+            $allocOk= Get-Counter $dump 'jvm.alloc.podprto'
+            $oldPo  = Get-Counter $dump 'jvm.heap.old.poGc'
+            $hMax   = Get-Counter $dump 'jvm.heap.max'
+            Check 'P8: posnetek ima meritve JVM (jvm.gc, jvm.alloc.server)' (($null -ne $gc) -and ($null -ne $alloc))
+            if (($null -ne $gc) -and ($dump.elapsedMillis -gt 0)) {
+                $sek = $dump.elapsedMillis / 1000.0
+                $vel['gc.zbirk'] = [long]$gc.count
+                $vel['gc.ms'] = [math]::Round($gc.nanos / 1000000.0, 0)
+                $vel['gc.msNaS'] = [math]::Round($gc.nanos / 1000000.0 / $sek, 2)
+                if ($null -ne $gcOld) { $vel['gc.old.zbirk'] = [long]$gcOld.count; $vel['gc.old.ms'] = [math]::Round($gcOld.nanos / 1000000.0, 0) }
+                if (($null -ne $alloc) -and ($null -ne $allocOk) -and ($allocOk.count -eq 1)) {
+                    $vel['alok.MBnaS'] = [math]::Round($alloc.count / 1048576.0 / $sek, 1)
+                    if ($dump.ticks -gt 0) { $vel['alok.KBnaTick'] = [math]::Round($alloc.count / 1024.0 / $dump.ticks, 1) }
+                } else {
+                    Write-Host '  OPOZORILO JVM ne podpira stetja alokacij po niti; alok.* manjka'
+                }
+                if (($null -ne $oldPo) -and ($oldPo.count -gt 0)) { $vel['heap.old.poGcMB'] = [math]::Round($oldPo.count / 1048576.0, 0) }
+                if ($null -ne $hMax) { $vel['heap.maxMB'] = [math]::Round($hMax.count / 1048576.0, 0) }
+            }
             foreach ($lv in $dump.slowTicks.levels) { $vel[('ticki.nad{0}ms' -f [int]($lv.ns / 1000000))] = [long]$lv.count }
             if ($null -ne $per) { $vel['npc.per.tick.p50'] = [long]$per.p50 }
 
@@ -471,12 +522,14 @@ try {
         Check 'P7: brez OutOfMemoryError' (-not $oom)
         if ($sat) { Write-Host ("  NASICENO   MSPT p50 = {0} ms > 50 ms: server ne dohaja 20 TPS pri {1} NPC-jih ({2})" -f $vel['mspt.p50'], $N, $v) }
 
-        $odtis = @{ varianta = $v; npc = $N; sekund = $Seconds; ogrevanje = $WarmupSeconds; obroc = $ChunkRadius
+        $odtis = @{ razprseno = $(if ($Razprseno) { 1 } else { 0 }); varianta = $v; npc = $N; sekund = $Seconds; ogrevanje = $WarmupSeconds; obroc = $ChunkRadius
                     celica = $idx; celic = $cells.Count; mrezaX = $gridX; mrezaZ = $gridZ; mrezaSirina = $gridW }
         $cellFails = @()
         if ($failures.Count -gt $cellFailStart) { $cellFails = @($failures[$cellFailStart..($failures.Count - 1)]) }
         $vel['nasiceno'] = $(if ($sat) { 1 } else { 0 })
-        $jp = if ($JsonPath -ne '') { $JsonPath } else { Join-Path $audit ("m24-perf-{0}-{1}-{2}.json" -f $v, $N, $stamp) }
+        $jp = if ($JsonPath -ne '') { $JsonPath }
+              elseif ($SerijaDir -ne '') { Join-Path $SerijaDir ("{0}-{1}.json" -f $v, $N) }
+              else { Join-Path $audit ("m24-perf-{0}-{1}-{2}.json" -f $v, $N, $stamp) }
         $null = Write-MeritevJson -Path $jp -Paket 'M2.4' -Scenarij ("perf-{0}-{1}" -f $v, $N) `
                     -Odtis $odtis -Velicine $vel -Uspeh ($cellFails.Count -eq 0) -Padle $cellFails
         Write-Host ("  zapis celice: {0}" -f $jp)
@@ -504,18 +557,19 @@ try {
     $L = @()
     $L += ("# M2.4 - merilne obremenitve, zagon {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm'))
     $L += ''
-    $L += 'Scenarij: `docs/scenariji/M2.4-obremenitve.md`. Ogrevanje {0} s, merjenje {1} s, obroc chunkov {2}.' -f $WarmupSeconds, $Seconds, $ChunkRadius
+    $L += 'Scenarij: `docs/scenariji/M2.4-obremenitve.md`. Ogrevanje {0} s, merjenje {1} s, obroc chunkov {2}, spawn {3}.' -f $WarmupSeconds, $Seconds, $ChunkRadius, $(if ($Razprseno) { 'razprsen' } else { 'naenkrat' })
     $L += ''
-    $L += ("Merila: " + $(if ($failures.Count -eq 0) { 'P1-P7 zelena' } else { 'PADLA: ' + ($failures -join '; ') }))
+    $L += ("Merila: " + $(if ($failures.Count -eq 0) { 'P1-P8 zelena' } else { 'PADLA: ' + ($failures -join '; ') }))
     $L += ''
-    $L += '| varianta | NPC | TPS | MSPT povp | p50 | p95 | p99 | max | p99 brez save | us/NPC update | ticki >50 ms | stanje |'
-    $L += '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|'
+    $L += '| varianta | NPC | TPS | MSPT povp | p50 | p95 | p99 | max | p99 brez save | us/NPC update | ticki >50 ms | GC ms/s | GC stare | alok. MB/s | stanje |'
+    $L += '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|'
     foreach ($r in $rows) {
         $x = $r.Vel
         $st = if (-not $r.Uspeh) { 'merila padla' } elseif ($r.Nasiceno) { 'nasiceno' } else { 'ok' }
-        $L += ('| {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} | {9} | {10} | {11} |' -f `
+        $L += ('| {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} | {9} | {10} | {11} | {12} | {13} | {14} |' -f `
             $r.Varianta, $r.N, $x['tps'], $x['mspt.povp'], $x['mspt.p50'], $x['mspt.p95'], $x['mspt.p99'],
-            $x['mspt.max'], $x['mspt.brezSave.p99'], $x['npc.us'], $x['ticki.nad50ms'], $st)
+            $x['mspt.max'], $x['mspt.brezSave.p99'], $x['npc.us'], $x['ticki.nad50ms'],
+            $x['gc.msNaS'], $x['gc.old.zbirk'], $x['alok.MBnaS'], $st)
     }
     $L += ''
     $L += 'MSPT v ms. Posnetki: `dev/run/logs/rwdiag/*m24-*`; zapisi celic: `audit/m24-perf-<varianta>-<N>-' + $stamp + '.json`.'

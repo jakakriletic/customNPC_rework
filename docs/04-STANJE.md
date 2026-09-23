@@ -10,8 +10,8 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-23** |
-| Trenutni milestone | **M2 — diagnostika** (M2.1, M2.2, M2.3, M2.5, M2.7 zaključeni; **M2.4 v kodi, čaka na zagon**); **M0 in M1 zaključena**. 23. 9.: N1–N15 in S1–S7 zelena v svetu |
-| Naslednji paketi | **Zagon M2.4:** `.\testworld.ps1`, nato `.\perf-run.ps1 -Seconds 60 -WarmupSeconds 20` (preverba scenarija, ~20 min). Ko je zelen: **M2.6** (baseline po protokolu, ponovitve, dodati alokacije/GC). Odprto: **M2.4r** (render, potrebuje klient). Pred M4.10 je treba dodati prizorišče z razdaljo čez `NpcNavRange` |
+| Trenutni milestone | **M2 — diagnostika**, zadnji paket **M2.6 (baseline) — koda narejena 23. 9., čaka na zagon**. M0, M1 zaključena; v M2 zaključeni M2.1, M2.2, M2.3, M2.4, M2.5, M2.7 |
+| Naslednji paketi | **1.** preverba spawna (2 × ~7 min, [scenarij](scenariji/M2.6-baseline.md)) → odločitev D-017; **2.** `.\baseline-run.ps1` (~3,5 ure, po potrebi še `-Razprseno`); nato **M3** (jedro entitete, R1). Odprto: M2.4r (render), M2.1b (klicna mesta, z M3.1) |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -31,7 +31,7 @@
 |---|---|---|
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
-| M2 Diagnostika | **v teku** (≈93 %) | M2.1, M2.2, M2.3, M2.5 in M2.7 preverjeni v svetu (S1–S7 in N1–N15 zelena 23. 9.); **M2.4 v kodi, čaka na zagon**; ostaneta M2.6 (baseline) in M2.4r (render) |
+| M2 Diagnostika | **v teku** (≈96 %, ostane zagon M2.6) | M2.1, M2.2, M2.3, M2.5 in M2.7 preverjeni v svetu (S1–S7 in N1–N15 zelena 23. 9.); **M2.4 v kodi, čaka na zagon**; ostaneta M2.6 (baseline) in M2.4r (render) |
 | M3 Jedro entitete | ni začeto | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
@@ -66,17 +66,59 @@
 | M2.2 | Reprodukcija R1 (8 jahačev na 8 nosilcih + kontrolna skupina brez jahačev) | **zaključeno** — E1–E6 zelena, R1 reproduciran; [meritev](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
 | M2.3 | Reprodukcija R2 (leteči NPC in ovira) | **zaključeno 21. 9. — L1–L12 zelena v štirih fazah, R2 reproduciran in obhod izmerjen, P1 ovržen**. Štirje zagoni; odprt ostane samo R-P1b. [meritev](meritve/2026-09-17-M2.3-R2-reprodukcija.md), [scenarij](scenariji/M2.3-R2.md) |
 | M2.5a | Pripis počasnih tickov: `SlowTicks` + merila S1–S4 v `rwdiag-run.ps1` | **koda in testi narejeni** (22 testov, prevedeno v seji 16. 9.); čaka na prvi zagon v svetu |
-| M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | **koda narejena 23. 9.** — `perf-run.ps1`, 9 celic (idle/boj/skripte × 50/200/500), merila P1–P7; [scenarij](scenariji/M2.4-obremenitve.md). Čaka na prvi zagon v svetu. Render (M2.4r) odprt |
+| M2.4 | Merilni scenariji 50 / 200 / 500 NPC-jev | **zaključeno 23. 9.** — P1–P7 zelena v vseh 9 celicah (preverba 20+60 s); [meritev](meritve/2026-09-23-M2.4-obremenitve-preverba.md), [scenarij](scenariji/M2.4-obremenitve.md). Render (M2.4r) odprt |
 | M2.5 | Merilni protokol kot skripta | **zaključeno** — M2.5a (pripis počasnih tickov), M2.5b (izločitev autosave ticka) in M2.5c (protokol ponovitev) narejeni; vsi trije čakajo na zagon v svetu |
 | M2.5b | Izločitev autosave ticka: `server.tick.ns.nosave` + merila S5–S7 | **koda in testi narejeni** (6 testov, prevedeno v seji); čaka na prvi zagon v svetu |
 | M2.5c | **Protokol ponovitev**: zapis zagona (`meritve-lib.ps1`), združevanje N zagonov v svežem svetu in šumni pas (`ponovitve-run.ps1`), merila T1–T6 | **zaključeno 18. 9. — serija pognana, T1–T6 zelena**; tabela M2.7 ima razpon; [scenarij](scenariji/M2.5c-ponovitve.md), [meritev](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
 | M2.7b | Več vzorcev za veličino 5 (µs na iskanje) | **pognano dvakrat 21. 9.; razdelitev na `prvi*`/`pon*` in `usSkupaj` delujeta, več vzorcev pa šuma ni zaprlo** — vzrok je stanje JVM-a med pometanji. Dodano **ogrevanje iskalnika** (`-OgrevalnihPometanj 2` + `rwdiag reset`) in merilo **N15**; N14 prepisan iz časovnega praga v strukturno invarianto. Čaka na ponovni zagon in serijo. [meritev](meritve/2026-09-21-M2.7b-ogrevanje.md), [scenarij](scenariji/M2.7-navigacija.md) |
-| M2.6 | Baseline meritve originala | ni začeto |
+| M2.6 | Baseline originala | **koda narejena 23. 9.** — `JvmProbe` (GC, alokacije), `baseline-run.ps1` (B1–B3), `perf-run.ps1 -Razprseno`, P8; [scenarij](scenariji/M2.6-baseline.md). Čaka na preverbo spawna in zagon |
 | M2.7 | **Merila kakovosti navigacije** (šest veličin, izmerjenih na originalu) | **zaključeno 17. 9. — N1–N12 zelena, tabela obstaja**; [meritev](meritve/2026-09-17-M2.7-navigacija-baseline.md), [scenarij](scenariji/M2.7-navigacija.md). Vhodni pogoj za M4.10 je dopolnjen: potrebno je prizorišče z razdaljo čez `NpcNavRange` |
 
 ---
 
 ## Dnevnik sej
+
+### 2026-09-23 (46) — M2.6: GC/alokacije, baseline skripta, preverba sinhronega spawna
+
+**Paket:** M2.6 · **Stanje:** koda narejena in preverjena v seji; zagon čaka na uporabnika
+
+**Narejeno:** `rework/diag/JvmProbe.java` (+6 ključev v `DiagKeys`, klic v `Diag.reset`/
+`snapshot`/`setEnabled(false)`), `JvmProbeTest` (5 testov); `perf-run.ps1`: P8, veličine GC
+in alokacij, `-Razprseno`, `-SerijaDir`, `-Counts 50,200` iz ukazne vrstice; `baseline-run.ps1`
+(B1–B3, mediana/razpon po celicah, `audit/m26-baseline-*.json`, `docs/meritve/baseline-*.md`);
+scenarij `docs/scenariji/M2.6-baseline.md`.
+
+**Preverjeno v seji:** 20 razredov `rework/**` prevedenih z `javac --release 8` proti
+mapiranim razredom (D-014); **95 testov instrumentacije zelenih** (`Diag`, `DiagSnapshot`,
+`DiagChunkPlan`, `Distribution`, `SlowTicks`, `NavProbe`, `JvmProbe`). `JvmProbe` na pravem
+JVM-u: 64 MB alokacij izmerjenih kot 67,3 MB, `System.gc()` viden v `jvm.gc` in `jvm.gc.old`.
+`perf-run.ps1` in `baseline-run.ps1` sintaktično čista (PowerShell 7.4.6); `baseline-run.ps1`
+pognan nad ponarejenim `perf-run.ps1` (3 ponovitve × 4 celice): B1–B3 zelena, mediana in
+razpon pravilna. Razpršen spawn da iste položaje kot spawn naenkrat (boj 500: 100 ukazov).
+
+**Ugotovitve:**
+
+- **`-Counts 50,200` prek `-File` pride kot en niz** in se pretvori v `50200`. Obe skripti
+  zdaj vhod razbijeta sami. Ujel ga je šele test `baseline-run.ps1` nad ponarejeno skripto.
+- **`ticksExisted` se ne shranjuje v NBT**, zato so po restartu vsi ob zagonu naloženi NPC-ji
+  v isti fazi `% 10`. Sinhroni spawn scenarija je torej realen za zagon serverja, razpršen za
+  NPC-je, ki pridejo s chunki kasneje.
+
+**Spremembe obnašanja:** nobene (instrumentacija je privzeto izklopljena, D-007).
+
+**Naslednja seja:** oceniti preverbo spawna, zapisati D-017, pognati baseline.
+
+### 2026-09-23 (45) — M2.4 pognan: P1–P7 zelena, idle ni prost
+
+**Paket:** M2.4 · **Stanje:** končano (brez M2.4r)
+
+Preverbeni zagon (20 s + 60 s, en zagon) je v vseh 9 celicah zelen. Številke niso baseline.
+Idle 500: MSPT p50 9,7 ms, p95 98,6 ms, 353 tickov nad 50 ms brez iskanja poti in brez
+autosava; µs/NPC raste z N (27 → 58). **Hipoteza:** vsi NPC-ji celice so spawnani v istem
+ticku, zato periodično delo (`ticksExisted % 10`) pade v isti tick — lahko artefakt
+scenarija. Odločiti pred M2.6. [Zapis](meritve/2026-09-23-M2.4-obremenitve-preverba.md).
+
+**Naslednja seja:** M2.6 — najprej preverba spawna z zamikom (ugotovitev 2), nato baseline po protokolu z GC.
 
 ### 2026-09-23 (44) — M2.4: merilne obremenitve 50/200/500, brez zagona
 

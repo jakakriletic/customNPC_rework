@@ -13,3 +13,4 @@ dev/testworld/nav-markerji-vzorec.txt
 *.log.err
 
 __pycache__/
+.rw-compile.zip

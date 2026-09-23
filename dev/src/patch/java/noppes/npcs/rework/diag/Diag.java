@@ -94,6 +94,11 @@ public final class Diag {
             reset();
             enabled = true;
         } else {
+            // Zadnja razlika JVM stevcev ob izklopu; po izklopu se ne spreminjajo vec,
+            // kot stevci moda (merilo D7b).
+            if (enabled) {
+                JvmProbe.apply();
+            }
             enabled = false;
         }
     }
@@ -239,6 +244,9 @@ public final class Diag {
     }
 
     public static DiagSnapshot snapshot() {
+        if (enabled) {
+            JvmProbe.apply();
+        }
         List<DiagKey> keys = new ArrayList<DiagKey>(KEYS.values());
         List<Distribution> distributions = new ArrayList<Distribution>();
         for (Distribution d : DISTRIBUTIONS.values()) {
@@ -263,5 +271,6 @@ public final class Diag {
         NAV.reset();
         startedNanos = System.nanoTime();
         startedMillis = System.currentTimeMillis();
+        JvmProbe.mark();
     }
 }

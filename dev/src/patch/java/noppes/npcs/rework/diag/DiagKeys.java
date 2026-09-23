@@ -161,6 +161,24 @@ public final class DiagKeys {
     /** Trajanje server ticka. Isti kljuc polni {@link Diag#tick(long)}. */
     public static final Distribution SERVER_TICK_NANOS = Diag.distribution("server.tick.ns", "ns");
 
+    /** Zbirke smeti v oknu meritve; nanos = cas zbiranja (M2.6, {@link JvmProbe}). */
+    public static final DiagKey JVM_GC = Diag.key("jvm.gc", "zbirka");
+
+    /** Samo zbirke stare generacije. */
+    public static final DiagKey JVM_GC_OLD = Diag.key("jvm.gc.old", "zbirka");
+
+    /** Bajti, ki jih je v oknu alocirala server nit. */
+    public static final DiagKey JVM_ALLOC_SERVER = Diag.key("jvm.alloc.server", "bajt");
+
+    /** 1, ce JVM podpira stetje alokacij po niti; sicer je jvm.alloc.server brez pomena. */
+    public static final DiagKey JVM_ALLOC_SUPPORTED = Diag.key("jvm.alloc.podprto", "da");
+
+    /** Zasedenost stare generacije ob zadnji zbirki v oknu; 0, ce je ni bilo. */
+    public static final DiagKey JVM_HEAP_OLD_AFTER_GC = Diag.key("jvm.heap.old.poGc", "bajt");
+
+    /** Najvecji heap (-Xmx). */
+    public static final DiagKey JVM_HEAP_MAX = Diag.key("jvm.heap.max", "bajt");
+
     private DiagKeys() {
     }
 

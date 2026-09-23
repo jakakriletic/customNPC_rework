@@ -1,0 +1,42 @@
+{
+    "shema":  1,
+    "paket":  "M2.4",
+    "scenarij":  "perf-skripte-200",
+    "zagon":  "2026-09-23 12:04:14",
+    "uspeh":  true,
+    "padlih":  0,
+    "padle":  [
+
+              ],
+    "odtis":  {
+                  "celic":  9,
+                  "celica":  8,
+                  "mrezaSirina":  25,
+                  "mrezaX":  48,
+                  "mrezaZ":  -12,
+                  "npc":  200,
+                  "obroc":  1,
+                  "ogrevanje":  20,
+                  "sekund":  60,
+                  "varianta":  "skripte"
+              },
+    "velicine":  {
+                     "mspt.brezSave.max":  105.423,
+                     "mspt.brezSave.p99":  94.372,
+                     "mspt.max":  105.423,
+                     "mspt.p50":  4.588,
+                     "mspt.p95":  20.972,
+                     "mspt.p99":  94.372,
+                     "mspt.povp":  9.209,
+                     "nasiceno":  0,
+                     "npc.per.tick.p50":  200,
+                     "npc.us":  45.49,
+                     "skripte.tickov":  34600,
+                     "ticki":  1207,
+                     "ticki.nad100ms":  3,
+                     "ticki.nad10ms":  328,
+                     "ticki.nad25ms":  27,
+                     "ticki.nad50ms":  21,
+                     "tps":  19.98
+                 }
+}

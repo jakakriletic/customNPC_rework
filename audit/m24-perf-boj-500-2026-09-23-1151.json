@@ -1,0 +1,43 @@
+{
+    "shema":  1,
+    "paket":  "M2.4",
+    "scenarij":  "perf-boj-500",
+    "zagon":  "2026-09-23 12:01:01",
+    "uspeh":  true,
+    "padlih":  0,
+    "padle":  [
+
+              ],
+    "odtis":  {
+                  "celic":  9,
+                  "celica":  6,
+                  "mrezaSirina":  25,
+                  "mrezaX":  48,
+                  "mrezaZ":  -12,
+                  "npc":  500,
+                  "obroc":  1,
+                  "ogrevanje":  20,
+                  "sekund":  60,
+                  "varianta":  "boj"
+              },
+    "velicine":  {
+                     "boj.ranjenih":  500,
+                     "boj.sCiljem":  500,
+                     "mspt.brezSave.max":  136.436,
+                     "mspt.brezSave.p99":  102.76,
+                     "mspt.max":  136.436,
+                     "mspt.p50":  23.069,
+                     "mspt.p95":  85.983,
+                     "mspt.p99":  102.76,
+                     "mspt.povp":  25.768,
+                     "nasiceno":  0,
+                     "npc.per.tick.p50":  500,
+                     "npc.us":  51.04,
+                     "ticki":  1226,
+                     "ticki.nad100ms":  18,
+                     "ticki.nad10ms":  1194,
+                     "ticki.nad25ms":  448,
+                     "ticki.nad50ms":  65,
+                     "tps":  19.96
+                 }
+}
