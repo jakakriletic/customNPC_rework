@@ -1,0 +1,42 @@
+{
+    "shema":  1,
+    "paket":  "M2.1",
+    "scenarij":  "rwdiag",
+    "zagon":  "2026-09-23 10:09:56",
+    "uspeh":  true,
+    "padlih":  0,
+    "padle":  [
+
+              ],
+    "odtis":  {
+                  "brezChunkov":  0,
+                  "npc":  8,
+                  "obroc":  1,
+                  "ogrevanje":  10,
+                  "sekund":  60
+              },
+    "velicine":  {
+                     "mspt.max":  58.922,
+                     "mspt.min":  0.116,
+                     "mspt.n":  1228,
+                     "mspt.p50":  0.541,
+                     "mspt.p95":  1.147,
+                     "mspt.p99":  2.359,
+                     "mspt.povp":  0.798,
+                     "npc.per.tick.max":  8,
+                     "npc.per.tick.p50":  8,
+                     "npc.tick.gap.max":  1,
+                     "npcTickov":  9832,
+                     "save.izlocenih":  1,
+                     "save.maxBrez":  52.658,
+                     "save.maxVsi":  58.922,
+                     "save.ostalo":  1227,
+                     "save.p99brez":  2.163,
+                     "save.p99vsi":  2.359,
+                     "slow.hranjenih":  16,
+                     "slow.maxMs":  58.922,
+                     "slow.zabelezenih":  1228,
+                     "ticki":  1228,
+                     "world.chunks.forced.p50":  16
+                 }
+}

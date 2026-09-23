@@ -541,6 +541,16 @@ try {
     # Isti postopek ima M0.6 (testworld-run.ps1, zagona A in B); tu je bil 17. 9. pozabljen
     # in je stal dva zagona (dnevnik 35).
     Step 2 'Zagon A: pribij world spawn na 0 4 0'
+    # 23. 9.: nav-run je tekel na svetu, ki ga je 21. 9. ze uporabil nav-run. Zid je ze
+    # stal, 'fill' je zapolnil 2 bloka in scenarij je padel sele pri N2, po dveh zagonih.
+    # Oznaka v svetu to ujame takoj. .\testworld.ps1 svet arhivira in z njim oznako.
+    $scenMark = Join-Path $run 'world\rework-scenarij.txt'
+    if (Test-Path $scenMark) {
+        $prej = (Get-Content $scenMark -Raw).Trim()
+        Check ("svet je svez (oznaka pravi: {0})" -f $prej) $false
+        throw ("dev\run\world je ze uporabil scenarij '{0}'. Pozeni najprej .\testworld.ps1, nato ta scenarij." -f $prej)
+    }
+    Check 'svet ni oznacen kot uporabljen' $true
     $a = Start-DevServer 'a'
     Check 'server A je dosegel "Done ("' (Wait-ForMarker $a 'Done (' 900)
     if ($failures.Count -eq 0) {
@@ -563,7 +573,12 @@ try {
     # Zid najprej: ce ga ni, sta ozko grlo in vse, kar iz njega sledi, izmisljena.
     $filled = Read-FillBlocks $s.Log
     Check ("N2: zid je postavljen ({0} blokov)" -f $filled) ($filled -ge 100)
+    if ($filled -ge 100) {
+        # Od tu naprej je svet spremenjen (zid, NAV NPC-ji) in ni vec testni svet.
+        Set-Content -Path (Join-Path $run 'world\rework-scenarij.txt') -Value ("nav-run {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm')) -Encoding ASCII
+    }
     if ($filled -lt 100) {
+        if ($filled -gt 0) { Write-Host '  ! zid je skoraj ves ze stal - svet je najbrz od prejsnjega nav-run; pozeni .\testworld.ps1' }
         throw "Zid ni bil postavljen. Ce log pravi 'Cannot place blocks outside of the world', obmocje ni nalozeno - preveri, da je v nav-setup-commands.txt ukaz 'setworldspawn 0 4 0'."
     }
     Send-Command $s ("rwdiag chunks on {0}" -f $ChunkRadius)

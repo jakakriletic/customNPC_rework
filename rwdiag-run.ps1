@@ -267,6 +267,15 @@ try {
 
     Step 3 'Zagon serverja'
 
+    # 23. 9.: rwdiag-run je tekel za nav-run in je dve minuti cakal na TW-SCRIPT-OK.
+    # nav-run pusti v svetu oznako; z njo scenarij pade takoj, brez zagona serverja.
+    $scenMark = Join-Path $run 'world\rework-scenarij.txt'
+    if (Test-Path $scenMark) {
+        $prej = (Get-Content $scenMark -Raw).Trim()
+        Check ("dev\run\world je testni svet (oznaka pravi: {0})" -f $prej) $false
+        throw ("dev\run\world je ze uporabil scenarij '{0}'. Pozeni .\testworld.ps1 in .\testworld-run.ps1, sele potem ta scenarij." -f $prej)
+    }
+
     # Pade takoj, ce dev\run ni od testnega sveta. Zagon 21. 9. ob 12:55 je to potreboval:
     # pred njim je tekel .\nav-run.ps1 in v svetu je ostalo 17 NAV NPC-jev namesto 21
     # fixture NPC-jev, brez T_Scripted. Merilo TW-SCRIPT-OK je zato padlo cele dve minuti
