@@ -11,7 +11,7 @@
 |---|---|
 | Zadnja posodobitev | **2026-09-24** |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1 zaključen (zagon 23. 9. zelen, runtime JAR preverjen 24. 9.). **M3.3 zaključen 24. 9.: R1 popravljen pod stikalom** `RwMountSteering=1` (v svetu: proga M v fazi A 22,7 bloka proti 1,19, E8 zeleno; način 0 ponovi original). **M3.2 zaključen: vzrok R1 potrjen v svetu 24. 9.** — vanilla `EntityLiving.updateEntityActionState` jahača nosilcu vsak tick izbriše pot in prepiše move helper; faza C: ko pot dobijo jahači, pridejo nosilci na cilj (E7 POTRJENO). M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
-| Naslednji paketi | **Zagon M3.4** (`.\dev.ps1 test --offline`, build, `.\r1-run.ps1 -Krmiljenje 1` in `-Krmiljenje 2` morata ostati E8 zelena, `.\r1-run.ps1` enak originalu), nato **M3.5**. Odprto: en jahač od osmih v fazi C ponovljivo ne dobi poti (ni R1). Za predajo: `.\dev.ps1 buildPatchedMod --offline` + `verify-package.ps1`. Odloženo: zagon M2.6 |
+| Naslednji paketi | **M3.5** (`updateHitbox()` ob začetku/koncu jahanja). Odprto: en jahač od osmih v fazi C ponovljivo ne dobi poti (ni R1); scenarij za `tpTo` jahača (M3.9). Za predajo: `.\dev.ps1 buildPatchedMod --offline` + `verify-package.ps1`. Odloženo: zagon M2.6 |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -32,7 +32,7 @@
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | **v teku** (≈96 %, ostane zagon M2.6) | M2.1, M2.2, M2.3, M2.5 in M2.7 preverjeni v svetu (S1–S7 in N1–N15 zelena 23. 9.); **M2.4 v kodi, čaka na zagon**; ostaneta M2.6 (baseline) in M2.4r (render) |
-| M3 Jedro entitete | **v teku** — M3.1 in M3.2 zaključena (vzrok R1 potrjen); M3.3 zaključen (R1 popravljen pod stikalom); M3.4 v kodi, čaka na zagon | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
+| M3 Jedro entitete | **v teku** — M3.1 in M3.2 zaključena (vzrok R1 potrjen); M3.3 zaključen (R1 popravljen pod stikalom); M3.4 zaključen (regresija zelena v načinih 0/1/2) | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
@@ -77,6 +77,18 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-24 (55) — M3.4 zaključen: regresija zelena v vseh treh načinih
+
+**Paket:** M3.4 · **Stanje:** zaključeno.
+
+159 testov zelenih; `r1-run` v načinih 0, 1 in 2 brez napak. Način 0 = original (A M 1,19). Način 1
+in 2: E8 zeleno (A M 22,8 bloka proti kontroli 19–20). **Način 2 v fazi C nosilcev ne premakne** —
+pričakovano, ker v načinu 2 jahačeva pot nikoli ne krmili; konjenica s poveljnikom ostaja v načinu 1.
+Faze B/C niso deterministične (tudi kontrola se premika med zagoni) — za A/B primerjati fazo A.
+`tpTo` in gating sledenja scenarij ne izvede — samo testi. [zapis](meritve/2026-09-24-M3.4-regresija.md)
+
+**Spremembe obnašanja:** nobene privzeto. **Naslednja seja:** M3.5.
 
 ### 2026-09-24 (54) — M3.4: gibalni AI jahača in `tpTo` pod istim stikalom
 
