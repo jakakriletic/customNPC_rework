@@ -10,8 +10,8 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-24** |
-| Trenutni milestone | **M3 — jedro entitete**: M3.1 zaključen (zagon 23. 9. zelen, runtime JAR preverjen 24. 9.). **M3.2: mehanizem R1 najden** — vanilla `EntityLiving.updateEntityActionState` jahača nosilcu vsak tick izbriše pot in prepiše move helper; potrditev v svetu čaka na `.\r1-run.ps1` (faza C, E7). M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
-| Naslednji paketi | **zagon `.\r1-run.ps1`** (faza C → E7 potrdi ali ovrže mehanizem), nato **M3.3** (`RiderState`: kdo krmili — nosilec ali jahač). Odloženo: zagon M2.6 |
+| Trenutni milestone | **M3 — jedro entitete**: M3.1 zaključen (zagon 23. 9. zelen, runtime JAR preverjen 24. 9.). **M3.2 zaključen: vzrok R1 potrjen v svetu 24. 9.** — vanilla `EntityLiving.updateEntityActionState` jahača nosilcu vsak tick izbriše pot in prepiše move helper; faza C: ko pot dobijo jahači, pridejo nosilci na cilj (E7 POTRJENO). M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
+| Naslednji paketi | **M3.3** (`RiderState`: kdo krmili — nosilec ali jahač) + popravek R1 pod stikalom; odprto: en jahač od osmih v fazi C ni dobil poti. Odloženo: zagon M2.6 |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -32,7 +32,7 @@
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | **v teku** (≈96 %, ostane zagon M2.6) | M2.1, M2.2, M2.3, M2.5 in M2.7 preverjeni v svetu (S1–S7 in N1–N15 zelena 23. 9.); **M2.4 v kodi, čaka na zagon**; ostaneta M2.6 (baseline) in M2.4r (render) |
-| M3 Jedro entitete | **v teku** — M3.1 zaključen, M3.2 mehanizem najden (čaka E7) | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
+| M3 Jedro entitete | **v teku** — M3.1 in M3.2 zaključena (vzrok R1 potrjen) | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
@@ -77,6 +77,29 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-24 (51) — M3.2 zaključen: faza C potrdi mehanizem
+
+**Paket:** M3.2 · **Stanje:** zaključeno.
+
+Uporabnik je pognal `.\r1-run.ps1` (09:07–09:10). Faze A in B ponovijo izid; v fazi C
+(`navigateTo` jahačem) imajo nosilci proge M pot **natanko takrat kot njihovi jahači**
+(`navig == navigJ` v 20/20 vzorcih: 7/7, 4/4, 0/0), prečkajo stopnico z = 20 in vrata
+z = 28 in pridejo na cilj (0,64) v ~180 tickih — 2,8× hitreje od proge S (napoved ≥ 2,1×
+iz hitrosti 1,5 proti 0,7). S tem je potrjen tudi del „ne znajo čez bloke“.
+[izid](meritve/2026-09-24-M3.2-R1-diagnoza.md#izid-faze-c-24-9)
+
+**Napaka v mojem merilu E7:** prva različica je gledala povprečni `navig` faze C ≥ 4/8; ker
+nosilci pridejo na cilj v tretjini faze in pot tam legitimno konča, je bilo povprečje 3,0 in
+skripta je izpisala `OVRZENO` na potrjenem izidu. Popravljeno na ujemanje `navig == navigJ`
++ premik ≥ 10; na tem izpisu preizkušeno s PowerShell 7.4 → `POTRJENO`.
+
+**Odprto (ne R1):** en jahač od osmih v fazi C ni dobil poti že od prvega vzorca; njegov
+nosilec je ostal na startu. Vzorec nima po-NPC izpisa. Pogledati v M3.3.
+
+**Spremembe obnašanja:** nobene.
+
+**Naslednja seja:** M3.3.
 
 ### 2026-09-24 (50) — M3.2: nosilcu pot izbriše jahač, v vanilla kodi
 
@@ -2946,6 +2969,7 @@ prebrati.
 | 2026-09-11 | NBT↔JSON round-trip, 4000 naključnih struktur | original 1598 napak (40 %), novi 0 | [zapis](meritve/2026-09-11-M1-nbtjson.md) |
 | 2026-09-11 | NBT↔JSON zapis, 1500 ključev (68 KB) | 235,3 ms → 2,9 ms (81×) | [zapis](meritve/2026-09-11-M1-nbtjson.md) |
 | 2026-09-11 | NBT↔JSON branje, 1500 ključev | 2386,3 ms → 6,5 ms (367×) | [zapis](meritve/2026-09-11-M1-nbtjson.md) |
+| 2026-09-24 | M3.2 faza C: `navigateTo` jahačem proge M | navig nosilca = navig jahača 20/20; M na cilju (0,64) v ~180 tickih, 2,8× hitreje od S | [zapis](meritve/2026-09-24-M3.2-R1-diagnoza.md) |
 | 2026-09-15 | M2.1 prvi posnetek: 8 NPC-jev, 61 s, brez igralca | MSPT p50 0,16 ms / p95 1,21 ms; `npc.per.tick` p50 = 0 | [zapis](meritve/2026-09-15-M2.1-prvi-posnetek.md) |
 | 2026-09-17 | M2.2 R1: 8 nosilcev z jahači proti 8 brez, dve fazi, 945 tickov | proga M `isNavigating` **0/8 ves čas**, prevozeno 0,06 bloka; kontrola 8/8 in 22,71 bloka | [zapis](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
 | 2026-09-17 | poraba pri 27 dejavnih NPC-jih (ni baseline) | `npc.update.window` 207,3 µs/NPC; MSPT p95 10,75 ms, p99 115,3 ms | [zapis](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |

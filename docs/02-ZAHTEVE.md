@@ -127,8 +127,9 @@ Teče vsak 4. tick za vsakega NPC-ja. Pri konjenici to podvoji strošek. Perform
    `EntityLiving.updateEntityActionState` (final) v ticku *jahača* naredi
    `nosilec.getNavigator().setPath(jahač.getPath(), 1.5)` in
    `nosilec.getMoveHelper().read(jahač.getMoveHelper())`; jahač brez poti nosilcu pot vsak
-   tick izbriše. Pojasni vseh šest izmerjenih številk. Potrditev v svetu: faza C / E7 v
-   `r1-run.ps1`. [diagnoza](meritve/2026-09-24-M3.2-R1-diagnoza.md)
+   tick izbriše. Pojasni vseh šest izmerjenih številk. **Potrjeno v svetu 24. 9.** (faza C,
+   E7): ko pot dobijo jahači, imajo nosilci pot natanko takrat kot jahači (20/20 vzorcev),
+   prečkajo stopnico in vrata in pridejo na cilj. [diagnoza](meritve/2026-09-24-M3.2-R1-diagnoza.md)
 2b. **Zgoščevanje v radiusu enega bloka ni reproducirano.** Izmerjeno je zgoščevanje na 7
    blokov pred oviro. Za radius enega bloka je treba preizkusiti pogoj
    `display.getHasHitbox() == false` (`minRange` v `EntityAIAttackTarget:98` postane ≈ 0).

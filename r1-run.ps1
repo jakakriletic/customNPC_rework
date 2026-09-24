@@ -326,25 +326,28 @@ try {
     }
 
     # E7 (M3.2) je diagnoza, ne preverba: oba izida sta veljavna rezultata poskusa.
-    # Napoved mehanizma "jahac brise pot nosilcu": ko pot dobijo jahaci, jo dobijo tudi
-    # nosilci (vanilla ji jo prepise s hitrostjo 1,5) in proga M se premakne.
+    # Napoved mehanizma "jahac brise pot nosilcu": nosilec ima pot natanko takrat, ko
+    # jo ima njegov jahac (vanilla mu jo prepise s hitrostjo 1,5), in proga M se premakne.
+    # Merilo je ujemanje navig == navigJ po vzorcih, ne povprecje navig: ko nosilci
+    # pridejo na cilj, pot legitimno konca in navig pade na 0 (prva razlicica E7 je
+    # 24. 9. zato na potrjenem izidu izpisala OVRZENO).
     Write-Host ''
     Write-Host 'E7 (M3.2): faza C - navigateTo dobijo jahaci, ne nosilci:'
-    $cm = $result['CM']; $am = $result['AM']
+    $cm = @($result['CM'] | Where-Object { $_.NavigJ -match '^\d+$' })
+    $am = $result['AM']
     if ($cm.Count -gt 0 -and $am.Count -gt 0) {
-        $navC = ($cm | Measure-Object -Property Navig -Average).Average
-        $navA = ($am | Measure-Object -Property Navig -Average).Average
-        $jah  = @($cm | Where-Object { $_.NavigJ -match '^\d+$' } | ForEach-Object { [int]$_.NavigJ })
-        $jahAvg = if ($jah.Count -gt 0) { ($jah | Measure-Object -Average).Average } else { -1 }
-        $lcm = $cm[$cm.Count - 1]; $lam = $am[$am.Count - 1]
-        Write-Host ("  navig nosilcev M povprecje: faza A {0:N2}/8, faza C {1:N2}/8 | jahacev s potjo v C: {2:N2}/8" -f $navA, $navC, $jahAvg)
-        Write-Host ("  prevozenoMax M: faza A {0}, faza C {1}" -f $lam.PrevozenoMax, $lcm.PrevozenoMax)
-        if ($navC -ge 4 -and $lcm.PrevozenoMax -ge 10) {
-            Write-Host '  E7 POTRJENO: nosilec vozi po poti jahaca; brez nje mu jo jahac brise.'
-        } elseif ($jahAvg -lt 1) {
+        $zPotjo  = @($cm | Where-Object { [int]$_.NavigJ -gt 0 })
+        $ujema   = @($cm | Where-Object { $_.Navig -eq [int]$_.NavigJ })
+        $maxC    = ($cm | Measure-Object -Property PrevozenoMax -Maximum).Maximum
+        $lam     = $am[$am.Count - 1]
+        Write-Host ("  vzorcev z jahaci s potjo: {0}/{1} | navig nosilcev == navigJ v {2}/{1} vzorcih" -f $zPotjo.Count, $cm.Count, $ujema.Count)
+        Write-Host ("  prevozenoMax M: faza A {0}, faza C {1}" -f $lam.PrevozenoMax, $maxC)
+        if ($zPotjo.Count -eq 0) {
             Write-Host '  E7 NEODLOCENO: jahaci sami niso dobili poti - poskus ni izveden.'
+        } elseif ($ujema.Count -eq $cm.Count -and $maxC -ge 10) {
+            Write-Host '  E7 POTRJENO: nosilec ima pot natanko takrat kot jahac in po njej vozi.'
         } else {
-            Write-Host '  E7 OVRZENO: jahaci imajo pot, nosilci pa ne - mehanizem je drug.'
+            Write-Host '  E7 OVRZENO: pot nosilca se ne ujema s potjo jahaca ali nosilec ne vozi.'
         }
     } else {
         Write-Host '  E7 NEODLOCENO: ni vzorcev faze A ali C.'
