@@ -13,11 +13,11 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 
 | | |
 |---|---|
-| Datum zadnje posodobitve | 2026-09-17 |
-| Trenutna faza | **M2 — diagnostika**; zaključeni M2.1, M2.2 (R1 reproduciran), **M2.7 (izhodiščna tabela navigacije izmerjena)** in **M2.5c (protokol ponovitev)**, M2.3 faza A pognana, **M0 in M1 zaključena**; merila S1–S7 (M2.5a/b) čakajo na `.\rwdiag-run.ps1` |
-| Naslednji korak | **M2.7b** (veličina 5 je edina šumna, do 114 % razpona), nato **M2.4** (50/200/500 NPC-jev) ali **M2.6** (baseline); odprta zagona sta `.\r2-run.ps1` (pojav P1) in `.\rwdiag-run.ps1`. Glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Datum zadnje posodobitve | 2026-09-24 |
+| Trenutna faza | **M3 — jedro entitete**; M0, M1 zaključena, M2 razen zagona baselina M2.6 (odložen). M3.1 (prenos `EntityNPCInterface` + `ai/`) zaključen; **M3.2: mehanizem R1 najden** — vanilla `EntityLiving.updateEntityActionState` jahača nosilcu vsak tick izbriše pot |
+| Naslednji korak | zagon `.\r1-run.ps1` (faza C, diagnoza E7 potrdi mehanizem v svetu), nato **M3.3** (`RiderState`). Glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 35 (21 prenesenih + 14 novih v `rework/diag`); podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Prevedljivih razredov | 74 v `src/patch` (37 iz M3.1 + prejšnji), v runtime JAR-u 99 prevedenih razredov; podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in

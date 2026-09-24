@@ -148,8 +148,8 @@ hitbox, kolizije in passenger logiko v `EntityNPCInterface`.
 
 | ID | Paket | Vel. |
 |---|---|---|
-| M3.1 | Prenos `EntityNPCInterface` in celotnega `noppes/npcs/ai/` v `src/patch/java`, brez funkcionalnih sprememb + baseline testi | **preneseno 23. 9.** — bytecode enakovreden (`audit/m31-bytecode-primerjava.txt`); čaka na zagon v svetu |
-| M3.2 | Diagnoza R1 na podlagi reprodukcije: kdo dejansko ne deluje, nosilec ali jahač; potrditev ali ovržba kandidatov iz `02-ZAHTEVE.md` | S |
+| M3.1 | Prenos `EntityNPCInterface` in celotnega `noppes/npcs/ai/` v `src/patch/java`, brez funkcionalnih sprememb + baseline testi | **zaključeno 23./24. 9.** — bytecode enakovreden (`audit/m31-bytecode-primerjava.txt`); testworld zelen, R1 ponovi izid; runtime JAR = mapiran original + natanko 99 prevedenih razredov |
+| M3.2 | Diagnoza R1 na podlagi reprodukcije: kdo dejansko ne deluje, nosilec ali jahač; potrditev ali ovržba kandidatov iz `02-ZAHTEVE.md` | **mehanizem najden 24. 9.** (vanilla `updateEntityActionState` jahača briše pot nosilcu); čaka na potrditev v svetu — faza C / E7 v `r1-run.ps1`. [diagnoza](meritve/2026-09-24-M3.2-R1-diagnoza.md) |
 | M3.3 | `rework/entity/RiderState` — enoten vir resnice o jahanju | S |
 | M3.4 | Gating AI taskov med jahanjem; prepoved `EntityAIFollow.tpTo` na jahaču | S |
 | M3.5 | `updateHitbox()` ob spremembi jahanja (Forge `EntityMountEvent`) | S |

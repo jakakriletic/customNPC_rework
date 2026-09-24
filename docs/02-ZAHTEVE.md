@@ -123,12 +123,19 @@ Teče vsak 4. tick za vsakega NPC-ja. Pri konjenici to podvoji strošek. Perform
    `PathNavigateGround.canNavigate()` (`:32-35`), ki zahteva `onGround`; `isRiding()` v istem
    izrazu velja za jahača, ne za nosilca. Dokaz zahteva števec `onGround` / `canNavigate()` /
    `noPath()` na tick (M2.1b/M3.1) in ga **še ni**.
+   **→ 24. 9. (M3.2) mehanizem najden v vanilla kodi, `canNavigate()` ni vzrok.**
+   `EntityLiving.updateEntityActionState` (final) v ticku *jahača* naredi
+   `nosilec.getNavigator().setPath(jahač.getPath(), 1.5)` in
+   `nosilec.getMoveHelper().read(jahač.getMoveHelper())`; jahač brez poti nosilcu pot vsak
+   tick izbriše. Pojasni vseh šest izmerjenih številk. Potrditev v svetu: faza C / E7 v
+   `r1-run.ps1`. [diagnoza](meritve/2026-09-24-M3.2-R1-diagnoza.md)
 2b. **Zgoščevanje v radiusu enega bloka ni reproducirano.** Izmerjeno je zgoščevanje na 7
    blokov pred oviro. Za radius enega bloka je treba preizkusiti pogoj
    `display.getHasHitbox() == false` (`minRange` v `EntityAIAttackTarget:98` postane ≈ 0).
    Ločen scenarij.
-3. **Vanilla `EntityLivingBase.travel` in `EntityLiving.updateEntityActionState`** za primer,
-   ko je entiteta hkrati `isBeingRidden()` in ima AI. Preveriti v `dev/reference-src/net/minecraft/`.
+3. ~~**Vanilla `EntityLivingBase.travel` in `EntityLiving.updateEntityActionState`**~~ —
+   **preverjeno 24. 9.** na mapiranem bytecode (`dev/build/tmp/recompileMc/compiled`, CFR):
+   glej točko 2. `travel` nosilca je v redu (kontrola vozi), pokvarjen je vhod vanj.
 4. Ali `ItemMounter` / `EnumPacketServer.SpawnRider` sploh gresta skozi `startRiding()` ali
    kaj drugega (`items/ItemMounter.java:31`).
 

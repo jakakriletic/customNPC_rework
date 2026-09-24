@@ -18,6 +18,16 @@
 // Zato se v fazi A navigateTo ponovi ob vsakem vzorcu; vsak klic tedaj isce samo se
 // preostanek poti. Vanilla AI taski delajo enako (EntityAIAttackTarget se prepathga sam,
 // zato je proga S v fazi B prisla do cilja, v fazi A pa ne).
+//
+// M3.2 - faza C (jahac vodi). Vanilla EntityLiving.updateEntityActionState (final) na
+// koncu AI ticka JAHACA naredi:
+//     nosilec.getNavigator().setPath(jahac.getNavigator().getPath(), 1.5);
+//     nosilec.getMoveHelper().read(jahac.getMoveHelper());
+// Jahac se posodobi takoj za nosilcem (World.updateEntityWithOptionalForce, potniki po
+// nosilcu), zato jahac brez poti nosilcu pot vsak tick izbrise. Faza C to preveri tako,
+// da navigateTo dobijo JAHACI, ne nosilci. Ce je mehanizem pravi, nosilci proge M v fazi C
+// dobijo pot (navig ~8/8) in vozijo s hitrostjo 1,5 namesto 0,7 - hitreje od proge S.
+// Ce ostanejo na mestu, mehanizem ni pravi. navigJ= je stevilo jahacev s potjo.
 
 var TICKS_PER_SCRIPT_TICK = 10;
 
@@ -26,6 +36,8 @@ var A_START = 6;
 var A_END = 46;        // 400 server tickov = 20 s vozne faze
 var B_START = 50;
 var B_END = 90;
+var C_START = 94;
+var C_END = 134;
 var SAMPLE_EVERY = 2;  // vsakih 20 server tickov -> 20 vzorcev na fazo
 
 var LANE_SPLIT_X = 10; // x < 10 -> proga M (mounted), sicer proga S (solo)
@@ -179,9 +191,11 @@ function sample(npc, lane, list, goalX, riderList) {
     }
     var mounted = 0;
     var offsetMax = 0;
+    var riderNavig = 0;
     if (riderList) {
         for (var j = 0; j < riderList.length; j++) {
             var r = riderList[j];
+            if (r.isNavigating()) { riderNavig++; }
             var m = r.getMount();
             if (m !== null) {
                 mounted++;
@@ -200,7 +214,8 @@ function sample(npc, lane, list, goalX, riderList) {
         + " doCiljaMin=" + goalMin.toFixed(2)
         + " doCiljaPovp=" + (goalSum / list.length).toFixed(2)
         + " jahacev=" + (riderList ? mounted : -1)
-        + " odstopMax=" + (riderList ? offsetMax.toFixed(2) : "-"));
+        + " odstopMax=" + (riderList ? offsetMax.toFixed(2) : "-")
+        + " navigJ=" + (riderList ? riderNavig : "-"));
 }
 
 function init(e) {
@@ -256,6 +271,29 @@ function tick(e) {
         say(npc, "R1-B-END");
         stopAll(carriersM);
         stopAll(carriersS);
+        resetToStart(carriersM, riders);
+        resetToStart(carriersS, null);
+        phase = "-";
+        return;
+    }
+
+    if (t === C_START) {
+        phase = "C";
+        rememberStart(carriersM);
+        rememberStart(carriersS);
+        say(npc, "R1-C-START navigateTo jahacem");
+        driveNavigate(riders, GOAL_X_M);
+        driveNavigate(carriersS, GOAL_X_S);
+        return;
+    }
+
+    if (t === C_END) {
+        sample(npc, "M", carriersM, GOAL_X_M, riders);
+        sample(npc, "S", carriersS, GOAL_X_S, null);
+        say(npc, "R1-C-END");
+        stopAll(riders);
+        stopAll(carriersM);
+        stopAll(carriersS);
         phase = "-";
         say(npc, "R1-SUM mount=" + mountedAtStart + " progaM=" + carriersM.length
             + " progaS=" + carriersS.length);
@@ -270,6 +308,10 @@ function tick(e) {
     // ne stanja takoj po svezem klicu.
     if (phase === "A") {
         driveNavigate(carriersM, GOAL_X_M);
+        driveNavigate(carriersS, GOAL_X_S);
+    }
+    if (phase === "C") {
+        driveNavigate(riders, GOAL_X_M);
         driveNavigate(carriersS, GOAL_X_S);
     }
 }

@@ -9,9 +9,9 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-09-23** |
-| Trenutni milestone | **M3 — jedro entitete**: M3.1 (prenos `EntityNPCInterface` + `ai/`) prenesen in preveden, čaka na build in zagon v svetu. M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
-| Naslednji paketi | **M3.1 preverba v svetu** (build, `verify-package`, `testworld-run`, `r1-run`, `nav-run`), nato **M3.2** (diagnoza R1). Odloženo: zagon M2.6 |
+| Zadnja posodobitev | **2026-09-24** |
+| Trenutni milestone | **M3 — jedro entitete**: M3.1 zaključen (zagon 23. 9. zelen, runtime JAR preverjen 24. 9.). **M3.2: mehanizem R1 najden** — vanilla `EntityLiving.updateEntityActionState` jahača nosilcu vsak tick izbriše pot in prepiše move helper; potrditev v svetu čaka na `.\r1-run.ps1` (faza C, E7). M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
+| Naslednji paketi | **zagon `.\r1-run.ps1`** (faza C → E7 potrdi ali ovrže mehanizem), nato **M3.3** (`RiderState`: kdo krmili — nosilec ali jahač). Odloženo: zagon M2.6 |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -32,7 +32,7 @@
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | **v teku** (≈96 %, ostane zagon M2.6) | M2.1, M2.2, M2.3, M2.5 in M2.7 preverjeni v svetu (S1–S7 in N1–N15 zelena 23. 9.); **M2.4 v kodi, čaka na zagon**; ostaneta M2.6 (baseline) in M2.4r (render) |
-| M3 Jedro entitete | **v teku** — M3.1 prenesen | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
+| M3 Jedro entitete | **v teku** — M3.1 zaključen, M3.2 mehanizem najden (čaka E7) | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
@@ -77,6 +77,55 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-24 (50) — M3.2: nosilcu pot izbriše jahač, v vanilla kodi
+
+**Paket:** M3.2 · **Stanje:** mehanizem najden in dokazan na bytecode; potrditev v svetu
+(faza C, E7) čaka na `.\r1-run.ps1`.
+
+**Najprej zaključek M3.1.** `verify-package.ps1` 23. 9. ni zapisal novega poročila, ker
+primerja `CustomNPCs_1.12.2-01Oct19-workspace.jar`, ki ga naredi samo `buildPatchedMod`
+(ta je od 15. 9.), ne `build`. Namesto tega je seja preverila tisto, kar je v zagonu
+dejansko teklo: `customnpcs-dev-runtime.jar` (23. 9. 14:51) proti
+`customnpcs-mapped-01Oct19.jar` — 1716 vnosov originala, **nobeden ne manjka**, spremenjenih
+62 in dodanih 37, **vsi v naboru 99 razredov** `customnpcs-patch-classes`; nič drugega ni
+spremenjeno. M3.1 je s tem zaključen. `verify-package.ps1` ostane za predajo (M10) in
+zahteva `.\dev.ps1 buildPatchedMod --offline`.
+
+**Mehanizem.** `EntityLiving.updateEntityActionState()` (vanilla, `final`) na koncu AI ticka
+vsake entitete, ki jaha živo entiteto, naredi `nosilec.getNavigator().setPath(jahač.getPath(), 1.5)`
+in `nosilec.getMoveHelper().read(jahač.getMoveHelper())` — vanilla spider jockey. Jahač se
+posodobi takoj za nosilcem (`World.updateEntityWithOptionalForce`, potniki po nosilcu). Jahač
+brez cilja nosilcu torej vsak tick izbriše pot (`setPath(null)` → `currentPath = null`) in
+ga postavi v `WAIT`. Preverjeno s CFR na mapiranih razredih iz
+`dev/build/tmp/recompileMc/compiled` (`EntityLiving`, `PathNavigate`, `PathNavigateGround`,
+`EntityMoveHelper`, `World`), ne po spominu.
+
+**Razloži vse izmerjeno:** `navig=0/8` v vseh vzorcih; faza A 23. 9. raste **natanko za
+0,06 bloka na osvežitev `navigateTo`** (en tick gibanja na klic — podpis mehanizma); faza B
+8,9 bloka, ker `EntityAIAttackTarget` prepotuje vsakih 4–10 tickov; zastoj pred stopnico
+(skok se ne dokonča, ker `read()` stanje `JUMPING` prepiše v `WAIT` — ta del je hipoteza).
+**`canNavigate()` ni vzrok** (nosilec je na tleh tako kot kontrola). Ostali kandidati §R1
+(mutex, `minRange`, `updateHitbox`, `tpTo`) R1 ne pojasnijo in ostanejo v svojih paketih.
+
+**Faza C** v `r1-control.js` (ticki 940–1340): `navigateTo` dobijo **jahači** proge M.
+Napoved: nosilci M dobijo pot in vozijo s hitrostjo 1,5 (proti 0,7 proge S). `r1-run.ps1`
+čaka še `R1-B-END` in `R1-C-START`, zahteva ≥ 20 vzorcev tudi za CM/CS (E5) in izpiše
+diagnozo **E7** (POTRJENO / OVRZENO / NEODLOCENO; ne podre zagona). Vzorec ima novo polje
+`navigJ=` na koncu, regex ga sprejme kot neobvezno. Skripta vstavljena v `R1_Control.json`
+z `vstavi-skripto.py` (ujemanje preverjeno); JS sintaksa preverjena z Node, `r1-run.ps1`
+razčlenjen s PowerShell 7.4 (0 napak) in `Read-Samples` preizkušen na sintetičnem izpisu.
+
+**Ni preverjeno:** zagon faze C v svetu.
+
+**Spremembe obnašanja:** nobene (samo scenarij).
+
+**Posledica za M3.3:** popravek ni v AI nosilca, ampak v odločitvi, kdo krmili. Predlog v
+[diagnozi](meritve/2026-09-24-M3.2-R1-diagnoza.md): jahač-NPC v `onLivingUpdate` pred
+`super` zajame pot in move helper nosilca in ju po njem vrne (pod stikalom); vanilla
+krmiljenje z jahačem ostane osnova za M3.10.
+
+**Naslednja seja:** ovrednotiti E7 iz `audit/m22-r1.log`, nato M3.3.
 
 ### 2026-09-23 (49) — M3.1: prenos `EntityNPCInterface` in `noppes/npcs/ai/**` brez funkcionalnih sprememb
 

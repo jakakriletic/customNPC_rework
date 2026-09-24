@@ -1,4 +1,6 @@
 # M2.2 - skriptirana reprodukcija R1 (NPC jaha NPC), merila E1-E6.
+# M3.2 - faza C (navigateTo jahacem) in diagnoza E7: ali nosilcu pot brise jahac
+#        (vanilla EntityLiving.updateEntityActionState, glej docs/meritve/2026-09-24-M3.2-R1-diagnoza.md).
 #
 # Scenarij in razlaga: docs/scenariji/M2.2-R1.md
 #
@@ -123,7 +125,7 @@ function Read-Samples([string]$LogPath, [string]$Phase, [string]$Lane) {
     $pattern = 'R1-S faza=' + $Phase + ' tick=(\d+) proga=' + $Lane +
                ' navig=(\d+)/(\d+) prevozenoPovp=([\d.]+) prevozenoMax=([\d.]+)' +
                ' razpon=([\d.]+) doCiljaMin=([\d.]+) doCiljaPovp=([\d.]+)' +
-               ' jahacev=(-?\d+) odstopMax=([\d.-]+)'
+               ' jahacev=(-?\d+) odstopMax=([\d.-]+)(?: navigJ=(-|\d+))?'
     $out = @()
     foreach ($m in [regex]::Matches((Get-LogText $LogPath), $pattern)) {
         $out += [pscustomobject]@{
@@ -137,6 +139,7 @@ function Read-Samples([string]$LogPath, [string]$Phase, [string]$Lane) {
             DoCiljaAvg   = [double]$m.Groups[8].Value
             Jahacev      = [int]$m.Groups[9].Value
             OdstopMax    = $m.Groups[10].Value
+            NavigJ       = $m.Groups[11].Value
         }
     }
     return $out
@@ -272,6 +275,8 @@ try {
     Check 'faza A se je zacela' (Wait-ForMarker $s 'R1-A-START' 60)
     Check 'faza A se je koncala' (Wait-ForMarker $s 'R1-A-END' $ScenarioTimeoutSec)
     Check 'faza B se je zacela' (Wait-ForMarker $s 'R1-B-START' 60)
+    Check 'faza B se je koncala' (Wait-ForMarker $s 'R1-B-END' $ScenarioTimeoutSec)
+    Check 'faza C se je zacela' (Wait-ForMarker $s 'R1-C-START' 60)
     Check 'E3: scenarij je prisel do konca (R1-SUM)' (Wait-ForMarker $s 'R1-SUM' $ScenarioTimeoutSec)
 
     Step 6 'Posnetek meritve in ustavitev'
@@ -291,14 +296,14 @@ try {
 
     Step 8 'E5 in E6: izid po fazah in progah'
     $result = @{}
-    foreach ($ph in @('A', 'B')) {
+    foreach ($ph in @('A', 'B', 'C')) {
         foreach ($lane in @('M', 'S')) {
             $sm = @(Read-Samples $s.Log $ph $lane)
             $result["$ph$lane"] = $sm
             Show-Lane $ph $lane $sm
         }
     }
-    foreach ($key in @('AM', 'AS', 'BM', 'BS')) {
+    foreach ($key in @('AM', 'AS', 'BM', 'BS', 'CM', 'CS')) {
         Check ("E5: faza/proga {0} ima vsaj 20 vzorcev (ima {1})" -f $key, $result[$key].Count) ($result[$key].Count -ge 20)
     }
     if ($result['AS'].Count -gt 0) {
@@ -310,7 +315,7 @@ try {
 
     Write-Host ''
     Write-Host 'E6: razlika M proti S (konec vsake faze) - to je ugotovitev, ne absolutne vrednosti:'
-    foreach ($ph in @('A', 'B')) {
+    foreach ($ph in @('A', 'B', 'C')) {
         $m = $result["${ph}M"]; $sS = $result["${ph}S"]
         if ($m.Count -eq 0 -or $sS.Count -eq 0) { continue }
         $lm = $m[$m.Count - 1]; $ls = $sS[$sS.Count - 1]
@@ -318,6 +323,31 @@ try {
             $ph, $lm.Navig, $lm.Skupaj, $ls.Navig, $ls.Skupaj,
             $lm.PrevozenoMax, $ls.PrevozenoMax, $lm.Razpon, $ls.Razpon,
             $lm.DoCiljaMin, $ls.DoCiljaMin)
+    }
+
+    # E7 (M3.2) je diagnoza, ne preverba: oba izida sta veljavna rezultata poskusa.
+    # Napoved mehanizma "jahac brise pot nosilcu": ko pot dobijo jahaci, jo dobijo tudi
+    # nosilci (vanilla ji jo prepise s hitrostjo 1,5) in proga M se premakne.
+    Write-Host ''
+    Write-Host 'E7 (M3.2): faza C - navigateTo dobijo jahaci, ne nosilci:'
+    $cm = $result['CM']; $am = $result['AM']
+    if ($cm.Count -gt 0 -and $am.Count -gt 0) {
+        $navC = ($cm | Measure-Object -Property Navig -Average).Average
+        $navA = ($am | Measure-Object -Property Navig -Average).Average
+        $jah  = @($cm | Where-Object { $_.NavigJ -match '^\d+$' } | ForEach-Object { [int]$_.NavigJ })
+        $jahAvg = if ($jah.Count -gt 0) { ($jah | Measure-Object -Average).Average } else { -1 }
+        $lcm = $cm[$cm.Count - 1]; $lam = $am[$am.Count - 1]
+        Write-Host ("  navig nosilcev M povprecje: faza A {0:N2}/8, faza C {1:N2}/8 | jahacev s potjo v C: {2:N2}/8" -f $navA, $navC, $jahAvg)
+        Write-Host ("  prevozenoMax M: faza A {0}, faza C {1}" -f $lam.PrevozenoMax, $lcm.PrevozenoMax)
+        if ($navC -ge 4 -and $lcm.PrevozenoMax -ge 10) {
+            Write-Host '  E7 POTRJENO: nosilec vozi po poti jahaca; brez nje mu jo jahac brise.'
+        } elseif ($jahAvg -lt 1) {
+            Write-Host '  E7 NEODLOCENO: jahaci sami niso dobili poti - poskus ni izveden.'
+        } else {
+            Write-Host '  E7 OVRZENO: jahaci imajo pot, nosilci pa ne - mehanizem je drug.'
+        }
+    } else {
+        Write-Host '  E7 NEODLOCENO: ni vzorcev faze A ali C.'
     }
 
     Step 9 'Izid'
