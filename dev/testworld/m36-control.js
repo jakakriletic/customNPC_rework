@@ -31,6 +31,12 @@ var LANE_SPLIT_X = 75;
 var START_Y = 4;
 var HIT_PATH = 2.5;
 var HIT_NEAR = 3.0;
+// Doseg napada fixture NPC-jev (AggroRange 16 v M36_Wander/M36_Stand.json). EntityAIAttackTarget
+// ima v shouldContinueExecuting preverbo isInRange(tarca, aggroRange) - Cebiseva razdalja, ne
+// evklidska - v shouldExecute pa je nima. NPC, ki je ob ukazu dlje, zato napad vsakih nekaj tickov
+// ustavi (resetTask pobrise pot) in znova zacne. To je obnasanje originala, ne napaka prioritete,
+// zato taki vzorci (oznaka "o") ne stejejo v A4/A5; porocani so posebej (M3.6, 24. 9.).
+var AGGRO = 16;
 
 var t = 0;
 var wanderers = [];
@@ -90,6 +96,10 @@ function navigating(list) {
     return n;
 }
 
+function cheb(e, target) {
+    return Math.max(Math.abs(e.getX() - target.getX()), Math.abs(e.getZ() - target.getZ()));
+}
+
 function attacks(e, target) {
     if (d2(e.getX(), e.getZ(), target.getX(), target.getZ()) <= HIT_NEAR) { return true; }
     var p = e.getNavigationPath();
@@ -101,7 +111,8 @@ function command(list, target) {
     for (var i = 0; i < list.length; i++) {
         var e = list[i];
         var tav = e.isNavigating() && !attacks(e, target);
-        state[e.getUUID()] = { tav: tav, lat: -1 };
+        var d = cheb(e, target);
+        state[e.getUUID()] = { tav: tav, lat: -1, d: Math.round(d), out: d > AGGRO };
         e.setAttackTarget(target);
     }
 }
@@ -125,15 +136,17 @@ function release(list) {
 
 function roundLine(npc, lane, list, acc) {
     var parts = [];
+    var dist = [];
     var tav = 0;
     for (var i = 0; i < list.length; i++) {
         var s = state[list[i].getUUID()];
         if (s.tav) { tav++; }
-        parts.push((s.tav ? "t" : "") + s.lat);
-        acc.push({ tav: s.tav, lat: s.lat });
+        parts.push((s.out ? "o" : "") + (s.tav ? "t" : "") + s.lat);
+        dist.push(s.d);
+        acc.push({ tav: s.tav, lat: s.lat, out: s.out });
     }
     say(npc, "M36-R krog=" + round + " proga=" + lane + " n=" + list.length
-        + " tavajocih=" + tav + " lat=" + parts.join(","));
+        + " tavajocih=" + tav + " lat=" + parts.join(",") + " d=" + dist.join(","));
 }
 
 function median(a) {
@@ -144,23 +157,33 @@ function median(a) {
 }
 
 function summary(npc, lane, acc) {
+    // Vse razen izven/izvenNikoli/latIzven* steje samo vzorce v dosegu napada (!out).
     var tavLat = [];
     var ostLat = [];
+    var outLat = [];
     var tav = 0;
     var never = 0;
+    var out = 0;
+    var outNever = 0;
     for (var i = 0; i < acc.length; i++) {
+        if (acc[i].out) {
+            out++;
+            if (acc[i].lat < 0) { outNever++; } else { outLat.push(acc[i].lat); }
+            continue;
+        }
+        if (acc[i].tav) { tav++; }
         if (acc[i].lat < 0) { never++; continue; }
         if (acc[i].tav) { tavLat.push(acc[i].lat); } else { ostLat.push(acc[i].lat); }
     }
-    for (var j = 0; j < acc.length; j++) {
-        if (acc[j].tav) { tav++; }
-    }
     var tavMax = tavLat.length > 0 ? Math.max.apply(null, tavLat) : -1;
     var ostMax = ostLat.length > 0 ? Math.max.apply(null, ostLat) : -1;
+    var outMax = outLat.length > 0 ? Math.max.apply(null, outLat) : -1;
     say(npc, "M36-LAT proga=" + lane + " vzorcev=" + acc.length + " tavajocih=" + tav
         + " nikoli=" + never
         + " latTavMed=" + median(tavLat) + " latTavMax=" + tavMax
-        + " latOstaliMed=" + median(ostLat) + " latOstaliMax=" + ostMax);
+        + " latOstaliMed=" + median(ostLat) + " latOstaliMax=" + ostMax
+        + " izven=" + out + " izvenNikoli=" + outNever
+        + " latIzvenMed=" + median(outLat) + " latIzvenMax=" + outMax);
 }
 
 function init(e) {

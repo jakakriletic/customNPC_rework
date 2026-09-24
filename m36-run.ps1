@@ -9,7 +9,9 @@
 # Trije krogi: ukaz setAttackTarget, 200 tickov opazovanja, vrnitev na start.
 #
 # A1  M36-FIND: 8 + 8 NPC-jev in oba cilja
-# A2  vsaj 8 vzorcev NPC-jev, ki ob ukazu tavajo (sicer poskus ni izveden)
+# A2  vsaj 8 vzorcev NPC-jev, ki ob ukazu tavajo v dosegu napada (sicer poskus ni izveden)
+#     A2-A5 stejejo samo vzorce, ki so ob ukazu v aggroRange (16, Cebiseva razdalja) od tarce;
+#     vzorci izven dosega (oznaka "o" v M36-R) so izpisani posebej - glej scenarij, 24. 9.
 # A3  kontrola: vsi napadejo, najvecja zakasnitev <= 20 tickov
 # A4  nacin 0: diagnoza - ali tavajoci zacnejo napad pozneje od kontrole (napaka ponovljena)
 # A5  nacin 1: preverba - vsi tavajoci zacnejo napad najvec 10 tickov za kontrolo
@@ -219,10 +221,17 @@ try {
     Start-Sleep -Seconds $WarmupSeconds
 
     Step 5 'Scenarij'
+    # Krmilnik iz prejsnjega zagona je shranjen v svetu in se oglasi ob nalaganju, preden ga
+    # postavitev pobije (n1, 24. 9.). Zato stejemo samo markerje po spawnu novega krmilnika.
+    $preLog  = Get-LogText $s.Log
+    $preInit = ([regex]::Matches($preLog, 'M36-INIT')).Count
+    $preFind = ([regex]::Matches($preLog, 'M36-FIND ')).Count
+    if ($preInit -gt 0) { Write-Host ("  opomba: {0} x M36-INIT pred spawnom (stari krmilnik iz shranjenega sveta), ne steje" -f $preInit) }
     Send-Command $s 'noppes clone spawn M36_Control 1 74,4,30'
-    Check 'krmilnik se je oglasil (M36-INIT)' (Wait-ForMarker $s 'M36-INIT' 60)
-    Check 'A1: krmilnik je nasel NPC-je (M36-FIND)' (Wait-ForMarker $s 'M36-FIND ' 60)
-    $find = [regex]::Match((Get-LogText $s.Log), 'M36-FIND tava=(\d+) stoji=(\d+) ciljT=(\w+) ciljS=(\w+)')
+    Check 'krmilnik se je oglasil (M36-INIT)' (Wait-ForCount $s 'M36-INIT' ($preInit + 1) 60)
+    Check 'A1: krmilnik je nasel NPC-je (M36-FIND)' (Wait-ForCount $s 'M36-FIND ' ($preFind + 1) 60)
+    $finds = [regex]::Matches((Get-LogText $s.Log), 'M36-FIND tava=(\d+) stoji=(\d+) ciljT=(\w+) ciljS=(\w+)')
+    $find = if ($finds.Count -gt 0) { $finds[$finds.Count - 1] } else { [regex]::Match('', 'x') }
     Check ("A1: 8 tavajocih, 8 stojecih, oba cilja ({0})" -f $find.Value) `
         ($find.Success -and [int]$find.Groups[1].Value -eq 8 -and [int]$find.Groups[2].Value -eq 8 -and
          $find.Groups[3].Value -eq 'da' -and $find.Groups[4].Value -eq 'da')
@@ -241,11 +250,14 @@ try {
     Check 'brez "script errored"' (-not $log.Contains('script errored'))
 
     Step 8 'Izid po krogih in A2-A5'
-    foreach ($m in [regex]::Matches($log, 'M36-NAPAD krog=\d+ navigT=\d+/\d+ navigS=\d+/\d+')) { Write-Host ("  {0}" -f $m.Value) }
-    foreach ($m in [regex]::Matches($log, 'M36-R krog=\d+ proga=\w n=\d+ tavajocih=\d+ lat=[-t\d,]+')) { Write-Host ("  {0}" -f $m.Value) }
+    # Samo izpis zadnjega (novega) krmilnika; glej opombo pri spawnu.
+    $ix = $log.LastIndexOf('M36-INIT')
+    $sc = if ($ix -ge 0) { $log.Substring($ix) } else { $log }
+    foreach ($m in [regex]::Matches($sc, 'M36-NAPAD krog=\d+ navigT=\d+/\d+ navigS=\d+/\d+')) { Write-Host ("  {0}" -f $m.Value) }
+    foreach ($m in [regex]::Matches($sc, 'M36-R krog=\d+ proga=\w n=\d+ tavajocih=\d+ lat=[-ot\d,]+(?: d=[\d,]+)?')) { Write-Host ("  {0}" -f $m.Value) }
     $pat = 'M36-LAT proga={0} vzorcev=(\d+) tavajocih=(\d+) nikoli=(\d+) latTavMed=(-?[\d.]+) latTavMax=(-?\d+) latOstaliMed=(-?[\d.]+) latOstaliMax=(-?\d+)'
-    $lt = [regex]::Match($log, ($pat -f 'T'))
-    $ls = [regex]::Match($log, ($pat -f 'S'))
+    $lt = [regex]::Match($sc, ($pat -f 'T'))
+    $ls = [regex]::Match($sc, ($pat -f 'S'))
     if (-not ($lt.Success -and $ls.Success)) {
         Check 'scenarij je izpisal M36-LAT za obe progi' $false
     } else {
@@ -255,11 +267,19 @@ try {
         $tTavMed = [double]$lt.Groups[4].Value; $tTavMax = [int]$lt.Groups[5].Value
         $sNikoli = [int]$ls.Groups[3].Value
         $sMax = [math]::Max([int]$ls.Groups[5].Value, [int]$ls.Groups[7].Value)
-        Check ("A2: vsaj 8 vzorcev NPC-jev, ki ob ukazu tavajo (ima {0})" -f $tTav) ($tTav -ge 8)
+        Check ("A2: vsaj 8 vzorcev NPC-jev, ki ob ukazu tavajo v dosegu napada (ima {0})" -f $tTav) ($tTav -ge 8)
         Check ("A3: kontrola - vsi napadejo (nikoli={0})" -f $sNikoli) ($sNikoli -eq 0)
         Check ("A3: kontrola - najvecja zakasnitev <= 20 tickov (je {0})" -f $sMax) (($sMax -ge 0) -and ($sMax -le 20))
+        $iz = [regex]::Match($sc, 'M36-LAT proga=T [^\r\n]*? izven=(\d+) izvenNikoli=(\d+) latIzvenMed=(-?[\d.]+) latIzvenMax=(-?\d+)')
         Write-Host ''
-        Write-Host ("  zakasnitev tavajocih: mediana {0}, max {1} tickov, brez napada {2} | kontrola max {3}" -f $tTavMed, $tTavMax, $tNikoli, $sMax)
+        if ($iz.Success) {
+            Write-Host ("  izven dosega napada ob ukazu (ne steje v A2-A5): {0} vzorcev, brez napada {1}, zakasnitev mediana {2}, max {3}" -f `
+                $iz.Groups[1].Value, $iz.Groups[2].Value, $iz.Groups[3].Value, $iz.Groups[4].Value)
+        } else {
+            Write-Host '  ! M36-LAT nima polj izven=... - skripta v M36_Control.json je starejsa od m36-control.js'
+            Check 'M36_Control.json ima trenutno skripto (polje izven v M36-LAT)' $false
+        }
+        Write-Host ("  zakasnitev tavajocih v dosegu: mediana {0}, max {1} tickov, brez napada {2} | kontrola max {3}" -f $tTavMed, $tTavMax, $tNikoli, $sMax)
         if ($Nacin -eq 0) {
             # Diagnoza, ne preverba: oba izida sta veljavna rezultata poskusa.
             if ($tTavMed -gt ($sMax + 10) -or $tNikoli -gt 0) {

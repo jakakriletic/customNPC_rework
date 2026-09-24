@@ -14,8 +14,8 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-09-24 |
-| Trenutna faza | **M3 — jedro entitete**; M0, M1 zaključena, M2 razen zagona baselina M2.6 (odložen). M3.1–M3.5 zaključeni (R1 popravljen pod stikalom `RwMountSteering`, hitbox po sestopu). **M3.6 preusmerjen (D-020):** mutex biti napada so pravilni; popravljena je prioriteta napada pred tavanjem (`RwAttackPriority`), v kodi |
-| Naslednji korak | **Zagon M3.6** (`.\m36-run.ps1` in `.\m36-run.ps1 -Nacin 1`, merila A1–A6), nato M3.7. Glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Trenutna faza | **M3 — jedro entitete**; M0, M1 zaključena, M2 razen zagona baselina M2.6 (odložen). M3.1–M3.5 zaključeni (R1 popravljen pod stikalom `RwMountSteering`, hitbox po sestopu). **M3.6 preusmerjen (D-020):** popravljena prioriteta napada pred tavanjem (`RwAttackPriority`); prvi zagon: napaka ponovljena, popravek zniža mediano s 30 na 10 tickov, A5 pade na enem vzorcu (hipoteza `aggroRange`, scenarij dopolnjen) |
+| Naslednji korak | **Ponovni zagon M3.6** (`.\m36-run.ps1` in `.\m36-run.ps1 -Nacin 1`, merila A1–A6; build ni potreben), nato M3.7. Glej [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
 | Prevedljivih razredov | 74 v `src/patch` (37 iz M3.1 + prejšnji), v runtime JAR-u 99 prevedenih razredov; podrobnosti v [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
