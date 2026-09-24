@@ -8,6 +8,8 @@
  */
 package noppes.npcs.ai;
 
+import noppes.npcs.rework.entity.MountGuard;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAIBase;
@@ -33,6 +35,10 @@ extends EntityAIBase {
     }
 
     public boolean canExcute() {
+        // M3.4: jahac ne isce poti, ko krmili nosilec (v ORIGINAL vedno false).
+        if (MountGuard.riderMovementBlocked(this.npc)) {
+            return false;
+        }
         return this.npc.isEntityAlive() && this.npc.isFollower() && !this.npc.isAttacking() && (this.owner = this.npc.getOwner()) != null && this.npc.ais.animationType != 1;
     }
 

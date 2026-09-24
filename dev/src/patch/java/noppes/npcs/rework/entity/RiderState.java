@@ -75,6 +75,50 @@ public final class RiderState {
         }
     }
 
+    /**
+     * M3.4: ali se jahacu ta tick ne sme zagnati gibalni AI task (sledenje lastniku,
+     * premikanje po poti). Pot jahaca bi v tem primeru nosilec itak zavrgel
+     * ({@link #decide}), zato je iskanje poti samo strosek; ce jo imata oba, vanilla
+     * {@code setPath} nosilcu ponastavi zaznavo zataknitve (meja M3.3).
+     *
+     * @param ridesNpcMount jahac sedi na nosilcu, ki je CustomNPCs NPC
+     * @param mountHasPath  nosilec ima svojo pot
+     */
+    public static boolean riderMovementBlocked(int m, boolean ridesNpcMount, boolean mountHasPath) {
+        if (!ridesNpcMount) {
+            return false;
+        }
+        switch (m) {
+            case MOUNT_ALWAYS:
+                return true;
+            case MOUNT_WHEN_OWN_PATH:
+                return mountHasPath;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * M3.4: kaj naredi {@code tpTo} (teleport k lastniku, {@code EntityAIFollow}) jahaca.
+     * V originalu se teleportira jahac sam, na nosilcu, ki ga vsak tick postavi nazaj
+     * ({@code updatePassenger}) — "cudno premikanje" iz R1.
+     */
+    public enum Teleport {
+        /** Original: teleportira se jahac. */
+        RIDER,
+        /** Teleportira se nosilec-NPC; jahac gre z njim. */
+        MOUNT,
+        /** Nic: nosilec ni NPC, jahaca ne premikamo mimo nosilca. */
+        NONE
+    }
+
+    public static Teleport teleport(int m, boolean riding, boolean mountIsNpc) {
+        if (m == ORIGINAL || !isValidMode(m) || !riding) {
+            return Teleport.RIDER;
+        }
+        return mountIsNpc ? Teleport.MOUNT : Teleport.NONE;
+    }
+
     public static Role role(boolean ridesSomething, boolean carriesSomething) {
         if (ridesSomething) {
             return carriesSomething ? Role.RIDER_AND_MOUNT : Role.RIDER;

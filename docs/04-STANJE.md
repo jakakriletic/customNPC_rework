@@ -11,7 +11,7 @@
 |---|---|
 | Zadnja posodobitev | **2026-09-24** |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1 zaključen (zagon 23. 9. zelen, runtime JAR preverjen 24. 9.). **M3.3 zaključen 24. 9.: R1 popravljen pod stikalom** `RwMountSteering=1` (v svetu: proga M v fazi A 22,7 bloka proti 1,19, E8 zeleno; način 0 ponovi original). **M3.2 zaključen: vzrok R1 potrjen v svetu 24. 9.** — vanilla `EntityLiving.updateEntityActionState` jahača nosilcu vsak tick izbriše pot in prepiše move helper; faza C: ko pot dobijo jahači, pridejo nosilci na cilj (E7 POTRJENO). M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
-| Naslednji paketi | **M3.4** (gating AI taskov med jahanjem, prepoved `tpTo` na jahaču). Odprto: en jahač od osmih v fazi C ponovljivo ne dobi poti (ni R1). Za predajo: `.\dev.ps1 buildPatchedMod --offline` + `verify-package.ps1`. Odloženo: zagon M2.6 |
+| Naslednji paketi | **Zagon M3.4** (`.\dev.ps1 test --offline`, build, `.\r1-run.ps1 -Krmiljenje 1` in `-Krmiljenje 2` morata ostati E8 zelena, `.\r1-run.ps1` enak originalu), nato **M3.5**. Odprto: en jahač od osmih v fazi C ponovljivo ne dobi poti (ni R1). Za predajo: `.\dev.ps1 buildPatchedMod --offline` + `verify-package.ps1`. Odloženo: zagon M2.6 |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -32,7 +32,7 @@
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | **v teku** (≈96 %, ostane zagon M2.6) | M2.1, M2.2, M2.3, M2.5 in M2.7 preverjeni v svetu (S1–S7 in N1–N15 zelena 23. 9.); **M2.4 v kodi, čaka na zagon**; ostaneta M2.6 (baseline) in M2.4r (render) |
-| M3 Jedro entitete | **v teku** — M3.1 in M3.2 zaključena (vzrok R1 potrjen); M3.3 zaključen (R1 popravljen pod stikalom) | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
+| M3 Jedro entitete | **v teku** — M3.1 in M3.2 zaključena (vzrok R1 potrjen); M3.3 zaključen (R1 popravljen pod stikalom); M3.4 v kodi, čaka na zagon | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
@@ -77,6 +77,40 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-24 (54) — M3.4: gibalni AI jahača in `tpTo` pod istim stikalom
+
+**Paket:** M3.4 · **Stanje:** v kodi, prevedeno in testirano v seji; **zagon v svetu čaka na uporabnika**.
+
+**Odločitev o obsegu.** Blokiranje prek mutex bitov ni izvedljivo: vsi gibalni in tudi bojni taski
+CustomNPCs uporabljajo `PASSIVE` (`EntityAIAttackTarget` `LOOK+PASSIVE`, M3.6), zato bi task z
+`PASSIVE` jahaču ugasnil tudi napad in `EntityAIWorldLines`. Namesto tega eksplicitna preverba v
+dveh gibalnih taskih, ki je še nista imela (`EntityAIWander` in `EntityAIReturn` že preverjata
+`isRiding()`). Bojni taski ostanejo: pot jahača v boju je v načinu 1 ukaz nosilcu (osnova M3.10).
+
+**Narejeno:**
+
+- `RiderState.riderMovementBlocked(način, jahaNpcNosilca, nosilecImaPot)`: 0 → nikoli; 1 → ko ima
+  nosilec-NPC svojo pot (takrat bi pot jahača itak zavrgli, `decide` = MOUNT — test to preveri za vse
+  kombinacije); 2 → vedno na nosilcu-NPC. Uporabljeno v `EntityAIFollow.canExcute` in
+  `EntityAIMovingPath.shouldExecute/shouldContinueExecuting` (ob prekinitvi se indeks poti vrne, kot
+  pri napadu).
+- `RiderState.teleport` + `EntityNPCInterface.tpTo`: v načinih 1/2 se jahač na nosilcu-NPC ne
+  teleportira sam (vanilla `updatePassenger` bi ga vsak tick vrnil), ampak se teleportira **nosilec**
+  in jahač gre z njim; na nosilcu, ki ni NPC, `tpTo` ne naredi nič. Način 0: original.
+- Brez novega stikala: vse je vezano na `RwMountSteering` (D-019).
+- Testi: `RiderStateTest` +4 (skupaj **17/17** z `MountGuardTest`).
+
+**Preverjeno v seji:** prevedeno z `javac --release 8` (spremenjeni `EntityAIFollow`,
+`EntityAIMovingPath`, `EntityNPCInterface`, `RiderState`, `MountGuard`); 17/17 testov zelenih.
+
+**Ni preverjeno:** v svetu. Scenarij R1 nima sledilcev ne poti premikanja, zato lahko v svetu
+preveri samo, da se nič ne podre (regresija). Neposreden scenarij za `tpTo` jahača (sledilec na
+nosilcu, lastnik daleč) ne obstaja — predlog za M3.9 ali ob M3.10.
+
+**Spremembe obnašanja:** nobene privzeto; z `RwMountSteering=1|2` (tabela).
+
+**Naslednja seja:** ovrednotiti zagone, nato M3.5.
 
 ### 2026-09-24 (53) — M3.3 zaključen: R1 popravljen v svetu
 
@@ -3031,6 +3065,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 | 2026-09-11 | Player save vrsta je vezana na world sejo in se izprazni pred resetom server globalov | B2 | ne | varen lifecycle |
 | 2026-09-15 | Nov ukaz `/rwdiag` in zbiralnik meritev `rework/diag` | M2.1 | da — `/rwdiag on\|off`, `-Drwdiag=on` | izklopljeno |
 | 2026-09-24 | Nosilec-NPC z jahačem-NPC obdrži svojo pot in move helper (jahač mu ju ne prepiše več vsak tick); nov ukaz `/rwmount` | R1, M3.3 | da — config `RwMountSteering` 0/1/2, `/rwmount` | 0 = original |
+| 2026-09-24 | Jahač na nosilcu-NPC ne zažene sledenja/poti premikanja, ko krmili nosilec; `tpTo` jahača teleportira nosilca | R1, M3.4 | da — isti `RwMountSteering` | 0 = original |
 
 Vse zgornje so popravki tihe izgube podatkov, zato so brez stikala in privzeto vklopljene.
 Format datotek se ne spremeni, zato ni migracije. Izjema je zadnji stolpec pri praznem

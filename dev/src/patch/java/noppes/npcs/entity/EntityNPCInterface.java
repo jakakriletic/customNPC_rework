@@ -149,6 +149,7 @@ import noppes.npcs.Server;
 import noppes.npcs.VersionCompatibility;
 import noppes.npcs.ai.CombatHandler;
 import noppes.npcs.rework.entity.MountGuard;
+import noppes.npcs.rework.entity.RiderState;
 import noppes.npcs.ai.EntityAIAmbushTarget;
 import noppes.npcs.ai.EntityAIAnimation;
 import noppes.npcs.ai.EntityAIAttackTarget;
@@ -1765,6 +1766,16 @@ IAnimals {
     public void tpTo(EntityLivingBase owner) {
         if (owner == null) {
             return;
+        }
+        // M3.4: jahac se ne teleportira mimo nosilca (RiderState.teleport, v ORIGINAL vedno RIDER).
+        switch (RiderState.teleport(RiderState.mode(), this.isRiding(), this.getRidingEntity() instanceof EntityNPCInterface)) {
+            case MOUNT:
+                ((EntityNPCInterface)this.getRidingEntity()).tpTo(owner);
+                return;
+            case NONE:
+                return;
+            default:
+                break;
         }
         EnumFacing facing = owner.getHorizontalFacing().getOpposite();
         BlockPos pos = new BlockPos(owner.posX, owner.getEntityBoundingBox().minY, owner.posZ);

@@ -76,6 +76,20 @@ public final class MountGuard {
         return capture(mount.getNavigator(), mount.getMoveHelper());
     }
 
+    /** M3.4: {@link RiderState#riderMovementBlocked} za dano entiteto. */
+    public static boolean riderMovementBlocked(EntityLiving rider) {
+        int m = RiderState.mode();
+        if (m == RiderState.ORIGINAL) {
+            return false;
+        }
+        Entity vehicle = rider.getRidingEntity();
+        if (!(vehicle instanceof EntityNPCInterface)) {
+            return false;
+        }
+        return RiderState.riderMovementBlocked(m, true,
+                !((EntityNPCInterface) vehicle).getNavigator().noPath());
+    }
+
     public void restore() {
         RwNavigatorAccess.restore(navigator, path, navSpeed);
         RwMoveHelperAccess.restore(helper, action, doubles, floats);

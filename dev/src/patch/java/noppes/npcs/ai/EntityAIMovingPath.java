@@ -6,6 +6,8 @@
  */
 package noppes.npcs.ai;
 
+import noppes.npcs.rework.entity.MountGuard;
+
 import java.util.List;
 import net.minecraft.entity.ai.EntityAIBase;
 import noppes.npcs.constants.AiMutex;
@@ -23,6 +25,10 @@ extends EntityAIBase {
     }
 
     public boolean shouldExecute() {
+        // M3.4: jahac ne isce poti, ko krmili nosilec (v ORIGINAL vedno false).
+        if (MountGuard.riderMovementBlocked(this.npc)) {
+            return false;
+        }
         if (this.npc.isAttacking() || this.npc.isInteracting() || this.npc.getRNG().nextInt(40) != 0 && this.npc.ais.movingPause || !this.npc.getNavigator().noPath()) {
             return false;
         }
@@ -37,7 +43,7 @@ extends EntityAIBase {
     }
 
     public boolean shouldContinueExecuting() {
-        if (this.npc.isAttacking() || this.npc.isInteracting()) {
+        if (this.npc.isAttacking() || this.npc.isInteracting() || MountGuard.riderMovementBlocked(this.npc)) {
             this.npc.ais.decreaseMovingPath();
             return false;
         }

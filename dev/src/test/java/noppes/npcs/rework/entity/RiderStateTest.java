@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import noppes.npcs.rework.entity.RiderState.Role;
 import noppes.npcs.rework.entity.RiderState.Steering;
+import noppes.npcs.rework.entity.RiderState.Teleport;
 
 import org.junit.After;
 import org.junit.Test;
@@ -85,5 +86,50 @@ public class RiderStateTest {
         assertEquals(Role.RIDER, RiderState.role(true, false));
         assertEquals(Role.MOUNT, RiderState.role(false, true));
         assertEquals(Role.RIDER_AND_MOUNT, RiderState.role(true, true));
+    }
+
+    // --- M3.4 ---
+
+    @Test
+    public void riderMovementNeverBlockedInOriginalOrOnNonNpcMount() {
+        for (int i = 0; i < 4; i++) {
+            assertFalse(RiderState.riderMovementBlocked(RiderState.ORIGINAL, (i & 1) != 0, (i & 2) != 0));
+        }
+        for (int m = 0; m <= 2; m++) {
+            assertFalse(RiderState.riderMovementBlocked(m, false, true));
+        }
+    }
+
+    @Test
+    public void riderMovementBlockedExactlyWhenMountSteers() {
+        assertTrue(RiderState.riderMovementBlocked(RiderState.MOUNT_WHEN_OWN_PATH, true, true));
+        assertFalse(RiderState.riderMovementBlocked(RiderState.MOUNT_WHEN_OWN_PATH, true, false));
+        assertTrue(RiderState.riderMovementBlocked(RiderState.MOUNT_ALWAYS, true, false));
+        assertTrue(RiderState.riderMovementBlocked(RiderState.MOUNT_ALWAYS, true, true));
+    }
+
+    /** Blokada gibanja se mora ujemati z decide: ko je blokirano, bi pot jahaca itak zavrgli. */
+    @Test
+    public void movementBlockConsistentWithSteering() {
+        for (int m = 0; m <= 2; m++) {
+            for (int i = 0; i < 4; i++) {
+                boolean npc = (i & 1) != 0, mountPath = (i & 2) != 0;
+                if (RiderState.riderMovementBlocked(m, npc, mountPath)) {
+                    assertEquals(Steering.MOUNT, RiderState.decide(m, npc, mountPath, true));
+                }
+            }
+        }
+    }
+
+    @Test
+    public void teleportTable() {
+        assertEquals(Teleport.RIDER, RiderState.teleport(RiderState.ORIGINAL, true, true));
+        assertEquals(Teleport.RIDER, RiderState.teleport(RiderState.ORIGINAL, true, false));
+        assertEquals(Teleport.RIDER, RiderState.teleport(9, true, true));
+        for (int m = 1; m <= 2; m++) {
+            assertEquals(Teleport.RIDER, RiderState.teleport(m, false, false));
+            assertEquals(Teleport.MOUNT, RiderState.teleport(m, true, true));
+            assertEquals(Teleport.NONE, RiderState.teleport(m, true, false));
+        }
     }
 }
