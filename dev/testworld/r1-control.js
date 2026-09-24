@@ -100,6 +100,19 @@ function collect(npc) {
     riders.sort(byX);
 }
 
+// M3.5: visina jahacev (hitbox). Pred mountom, takoj po njem in po sestopu na koncu.
+// Pricakovano: po mountu x 0,77 (EntityCustomNpc.startRiding); po sestopu v originalu
+// ostane x 0,77 (napaka), s popravkom (RwMountSteering 1/2) se vrne na zacetno.
+function heights(list) {
+    var lo = 999, hi = -1;
+    for (var i = 0; i < list.length; i++) {
+        var h = list[i].getHeight();
+        if (h < lo) { lo = h; }
+        if (h > hi) { hi = h; }
+    }
+    return lo.toFixed(3) + "-" + hi.toFixed(3);
+}
+
 function rememberStart(list) {
     for (var i = 0; i < list.length; i++) {
         startPos[list[i].getUUID()] = { x: list[i].getX(), z: list[i].getZ() };
@@ -231,7 +244,9 @@ function tick(e) {
         collect(npc);
         rememberStart(carriersM);
         rememberStart(carriersS);
+        var h0 = heights(riders);
         mountAll(npc);
+        say(npc, "R1-HB faza=mount prej=" + h0 + " potem=" + heights(riders));
         return;
     }
 
@@ -295,6 +310,11 @@ function tick(e) {
         stopAll(carriersM);
         stopAll(carriersS);
         phase = "-";
+        var hJ = heights(riders);
+        for (var d = 0; d < riders.length; d++) {
+            riders[d].setMount(null);
+        }
+        say(npc, "R1-HB faza=sestop prej=" + hJ + " potem=" + heights(riders));
         say(npc, "R1-SUM mount=" + mountedAtStart + " progaM=" + carriersM.length
             + " progaS=" + carriersS.length);
         return;

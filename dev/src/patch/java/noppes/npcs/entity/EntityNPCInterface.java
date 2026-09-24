@@ -1080,6 +1080,18 @@ IAnimals {
         compound.setString("LinkedNpcName", this.linkedName);
     }
 
+    // M3.5: hitbox sledi koncu jahanja. Ob mountu ga ze osvezi EntityCustomNpc.startRiding
+    // (original, brezpogojno); ob sestopu ga ne osvezi nihce, zato jahac obdrzi visino x 0,77.
+    // Po super klicu, ker vanilla stanje jahanja spremeni sele tam (Forge EntityMountEvent se
+    // sprozi PRED spremembo). Na obeh straneh: odjemalec sestopi prek SPacketSetPassengers.
+    public void dismountRidingEntity() {
+        boolean wasRiding = this.isRiding();
+        super.dismountRidingEntity();
+        if (wasRiding && RiderState.hitboxFollowsRiding(RiderState.mode())) {
+            this.updateHitbox();
+        }
+    }
+
     public void updateHitbox() {
         if (this.currentAnimation == 2 || this.currentAnimation == 7 || this.deathTime > 0) {
             this.width = 0.8f;

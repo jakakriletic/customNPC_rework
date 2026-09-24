@@ -132,4 +132,14 @@ public class RiderStateTest {
             assertEquals(Teleport.NONE, RiderState.teleport(m, true, false));
         }
     }
+
+    // --- M3.5 ---
+
+    @Test
+    public void hitboxFollowsRidingOnlyInFixModes() {
+        assertFalse(RiderState.hitboxFollowsRiding(RiderState.ORIGINAL));
+        assertTrue(RiderState.hitboxFollowsRiding(RiderState.MOUNT_WHEN_OWN_PATH));
+        assertTrue(RiderState.hitboxFollowsRiding(RiderState.MOUNT_ALWAYS));
+        assertFalse(RiderState.hitboxFollowsRiding(5));
+    }
 }

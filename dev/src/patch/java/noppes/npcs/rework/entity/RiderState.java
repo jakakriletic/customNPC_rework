@@ -119,6 +119,16 @@ public final class RiderState {
         return mountIsNpc ? Teleport.MOUNT : Teleport.NONE;
     }
 
+    /**
+     * M3.5: ali se hitbox osvezi ob koncu jahanja. {@code updateHitbox()} vejo
+     * {@code isRiding()} (visina x 0,77) ze ima in ob mountu jo {@code EntityCustomNpc}
+     * poklice, ob sestopu pa nihce: jahac po sestopu obdrzi skrceno visino, dokler ga nekaj
+     * drugega ne osvezi (animacija, smrt, reset). Vezano na {@code RwMountSteering} (D-019).
+     */
+    public static boolean hitboxFollowsRiding(int m) {
+        return m != ORIGINAL && isValidMode(m);
+    }
+
     public static Role role(boolean ridesSomething, boolean carriesSomething) {
         if (ridesSomething) {
             return carriesSomething ? Role.RIDER_AND_MOUNT : Role.RIDER;

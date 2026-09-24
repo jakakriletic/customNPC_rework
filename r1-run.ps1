@@ -3,6 +3,8 @@
 #        (vanilla EntityLiving.updateEntityActionState, glej docs/meritve/2026-09-24-M3.2-R1-diagnoza.md).
 # M3.3 - -Krmiljenje 1|2 pred scenarijem nastavi /rwmount (RiderState) in izpise E8:
 #        ali nosilci proge M v fazah A in B vozijo po svoji poti.
+# M3.5 - E9: visina jahacev ob mountu in po sestopu (R1-HB). V nacinu 0 diagnoza,
+#        z -Krmiljenje 1|2 preverba, da se po sestopu vrne na zacetno.
 #
 # Scenarij in razlaga: docs/scenariji/M2.2-R1.md
 #
@@ -385,6 +387,29 @@ try {
             Check ("E8: faza A - nosilci M imajo pot (vzorcev z navig>0: {0})" -f $zPotjoA.Count) ($zPotjoA.Count -gt 0)
             Check ("E8: faza A - proga M prevozi vsaj 20 blokov (prevozenoMax={0})" -f $maxA) ($maxA -ge 20)
         }
+    }
+
+    # E9 (M3.5): hitbox jahaca. Po mountu mora biti visina x 0,77 (to naredi ze original,
+    # EntityCustomNpc.startRiding). Po sestopu original visine ne osvezi; s popravkom se
+    # vrne na visino pred mountom.
+    Write-Host ''
+    Write-Host 'E9 (M3.5): visina jahacev (min-max):'
+    $hbText = Get-LogText $s.Log
+    $hbM = [regex]::Match($hbText, 'R1-HB faza=mount prej=([\d.]+)-([\d.]+) potem=([\d.]+)-([\d.]+)')
+    $hbS = [regex]::Match($hbText, 'R1-HB faza=sestop prej=([\d.]+)-([\d.]+) potem=([\d.]+)-([\d.]+)')
+    if ($hbM.Success -and $hbS.Success) {
+        $h0 = [double]$hbM.Groups[2].Value; $hMount = [double]$hbM.Groups[4].Value
+        $hPo = [double]$hbS.Groups[4].Value
+        Write-Host ("  pred mountom {0} | po mountu {1} (razmerje {2:N3}) | po sestopu {3}" -f $h0, $hMount, ($hMount / $h0), $hPo)
+        $vrnjena = [math]::Abs($hPo - $h0) -lt 0.01
+        if ($Krmiljenje -eq 0) {
+            if ($vrnjena) { Write-Host '  E9 (nacin 0): visina po sestopu se je vrnila - napaka se NI ponovila.' }
+            else { Write-Host '  E9 (nacin 0): visina po sestopu ostane skrcena - napaka originala ponovljena.' }
+        } else {
+            Check ("E9: po sestopu se visina vrne na zacetno ({0} proti {1})" -f $hPo, $h0) $vrnjena
+        }
+    } else {
+        Check 'E9: scenarij je izpisal R1-HB (mount in sestop)' $false
     }
 
     Step 9 'Izid'

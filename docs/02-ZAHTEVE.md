@@ -42,6 +42,9 @@ Iskanje po `dev/reference-src/noppes/npcs/entity/EntityNPCInterface.java` najde 
 **[dokazano] `updateHitbox()` (vrstica 1075) je odvisen od `isRiding()`, a se ob spremembi
 stanja jahanja ne pokliče.**
 
+> **Popravek 24. 9. (M3.5):** velja za `EntityNPCInterface`; `EntityCustomNpc.startRiding` ga v
+> originalu pokliče, zato je mount pravilen. Manjka samo sestop (`dismountRidingEntity`).
+
 ```java
 } else if (this.isRiding()) {            // vrstica 1079
     this.width = 0.6f;
