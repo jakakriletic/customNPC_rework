@@ -152,8 +152,8 @@ hitbox, kolizije in passenger logiko v `EntityNPCInterface`.
 | M3.2 | Diagnoza R1 na podlagi reprodukcije: kdo dejansko ne deluje, nosilec ali jahač; potrditev ali ovržba kandidatov iz `02-ZAHTEVE.md` | **zaključeno 24. 9.** — vanilla `updateEntityActionState` jahača briše pot nosilcu; potrjeno v svetu (faza C, E7: navig nosilca = navig jahača v 20/20, proga M na cilju). [diagnoza](meritve/2026-09-24-M3.2-R1-diagnoza.md) |
 | M3.3 | `rework/entity/RiderState` — enoten vir resnice o jahanju | **zaključeno 24. 9.** — `RiderState` + `MountGuard`, stikalo `RwMountSteering`/`/rwmount` (privzeto 0 = original); v svetu z načinom 1 proga M pride do cilja (E8 zeleno), način 0 ponovi original. [zapis](meritve/2026-09-24-M3.3-R1-popravek.md) |
 | M3.4 | Gating AI taskov med jahanjem; prepoved `EntityAIFollow.tpTo` na jahaču | **zaključeno 24. 9.** — `EntityAIFollow`/`EntityAIMovingPath` ne tečeta, ko krmili nosilec; `tpTo` jahača premakne nosilca; pod `RwMountSteering`; regresija R1 zelena v načinih 0/1/2 ([zapis](meritve/2026-09-24-M3.4-regresija.md)) |
-| M3.5 | `updateHitbox()` ob spremembi jahanja (Forge `EntityMountEvent`) | **v kodi 24. 9.** — mount že pravilen v originalu (`EntityCustomNpc.startRiding`); popravek samo za sestop, v `dismountRidingEntity` (ne `EntityMountEvent`, ker se sproži pred spremembo); pod `RwMountSteering`; E9 v `r1-run` |
-| M3.6 | Popravek mutex bitov `EntityAIAttackTarget` (pod stikalom, z A/B meritvijo) | S |
+| M3.5 | `updateHitbox()` ob spremembi jahanja (Forge `EntityMountEvent`) | **zaključeno 24. 9.** — mount že pravilen v originalu (`EntityCustomNpc.startRiding`); popravek samo za sestop, v `dismountRidingEntity` (ne `EntityMountEvent`, ker se sproži pred spremembo); pod `RwMountSteering`; E9 v svetu: način 0 po sestopu 1,463 (napaka), način 1 1,900 ([zapis](meritve/2026-09-24-M3.5-hitbox.md)) |
+| M3.6 | ~~Popravek mutex bitov `EntityAIAttackTarget`~~ → **prioriteta napada pred gibanjem** (pod stikalom `RwAttackPriority`, z A/B scenarijem `m36-run.ps1`). Preusmerjeno 24. 9. z odobritvijo uporabnika (D-020): mutex biti napada so enaki vanilla, napaka je v prioriteti | **v kodi 24. 9.**, zagon čaka ([zapis](meritve/2026-09-24-M3.6-prioriteta-napada.md)) |
 | M3.7 | Ločitev `minRange` od `npc.width`; spodnja meja napadalnega dosega | S |
 | M3.8 | **R6**: `RwHitboxMode` NONE / NORMAL / SOLID + GUI + NBT + testi interakcije | M |
 | M3.9 | Preverba solid × mount: solid nosilec pod jahačem, solid NPC na poti drugega NPC-ja, igralec ujet med dvema | S |
@@ -167,8 +167,8 @@ hitbox, kolizije in passenger logiko v `EntityNPCInterface`.
 - vse tri hitbox nastavitve preživijo save/load in clone
 
 **Tveganja:**
-- Sprememba mutex bitov spremeni obnašanje **vseh** NPC-jev, ne samo konjenice. Obvezno
-  stikalo in A/B meritev.
+- Sprememba prioritete napada (M3.6) spremeni obnašanje vseh NPC-jev brez projektila, ki tavajo
+  ali hodijo po poti, ne samo konjenice. Obvezno stikalo in A/B meritev.
 - `getCollisionBoundingBox()` ne-`null` na premikajočem se NPC-ju lahko potisne igralca
   v steno. Testirati posebej.
 

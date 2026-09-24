@@ -148,6 +148,7 @@ import noppes.npcs.NpcDamageSource;
 import noppes.npcs.Server;
 import noppes.npcs.VersionCompatibility;
 import noppes.npcs.ai.CombatHandler;
+import noppes.npcs.rework.ai.AttackPriority;
 import noppes.npcs.rework.entity.MountGuard;
 import noppes.npcs.rework.entity.RiderState;
 import noppes.npcs.ai.EntityAIAmbushTarget;
@@ -846,6 +847,7 @@ IAnimals {
                     }
                 }
             }
+            int attackPriority = this.taskCount;
             this.aiAttackTarget = new EntityAIAttackTarget(this);
             this.tasks.addTask(this.taskCount, this.aiAttackTarget);
             ((EntityAIAttackTarget)this.aiAttackTarget).navOverride(this.ais.tacticalVariant == 6);
@@ -854,6 +856,9 @@ IAnimals {
                 this.tasks.addTask(this.taskCount++, (EntityAIBase)this.aiRange);
                 this.aiRange.navOverride(this.ais.tacticalVariant == 6);
             }
+            // M3.6: original tu ne poveca taskCount, zato gibalni task iz setMoveType dobi
+            // isto prioriteto kot napad in ga napad ne more prekiniti (AttackPriority).
+            this.taskCount = AttackPriority.nextPriority(AttackPriority.mode(), this.taskCount, attackPriority);
         } else if (this.ais.onAttack == 3) {
             // empty if block
         }

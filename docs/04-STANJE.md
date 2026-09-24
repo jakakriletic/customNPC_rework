@@ -10,8 +10,8 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-24** |
-| Trenutni milestone | **M3 — jedro entitete**: M3.1 zaključen (zagon 23. 9. zelen, runtime JAR preverjen 24. 9.). **M3.3 zaključen 24. 9.: R1 popravljen pod stikalom** `RwMountSteering=1` (v svetu: proga M v fazi A 22,7 bloka proti 1,19, E8 zeleno; način 0 ponovi original). **M3.2 zaključen: vzrok R1 potrjen v svetu 24. 9.** — vanilla `EntityLiving.updateEntityActionState` jahača nosilcu vsak tick izbriše pot in prepiše move helper; faza C: ko pot dobijo jahači, pridejo nosilci na cilj (E7 POTRJENO). M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
-| Naslednji paketi | **Zagon M3.5** (`.\dev.ps1 test --offline`, build, `.\r1-run.ps1` → E9 diagnoza, `.\r1-run.ps1 -Krmiljenje 1` → E9 zeleno), nato **M3.6**. Odprto: en jahač od osmih v fazi C ponovljivo ne dobi poti (ni R1); scenarij za `tpTo` jahača (M3.9). Za predajo: `.\dev.ps1 buildPatchedMod --offline` + `verify-package.ps1`. Odloženo: zagon M2.6 |
+| Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`; zagon `m36-run.ps1` čaka. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
+| Naslednji paketi | **Zagon M3.6** (`.\dev.ps1 test --offline`, build, `.\m36-run.ps1` → A4 diagnoza, `.\m36-run.ps1 -Nacin 1` → A5 zeleno), nato **M3.7**. Odprto: en jahač od osmih v fazi C ponovljivo ne dobi poti (ni R1); scenarij za `tpTo` jahača (M3.9); iz M3.6 dve hipotezi (zavetje pred napadom, napad = strelski napad po prioriteti). Za predajo: `.\dev.ps1 buildPatchedMod --offline` + `verify-package.ps1`. Odloženo: zagon M2.6 |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -32,7 +32,7 @@
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | **v teku** (≈96 %, ostane zagon M2.6) | M2.1, M2.2, M2.3, M2.5 in M2.7 preverjeni v svetu (S1–S7 in N1–N15 zelena 23. 9.); **M2.4 v kodi, čaka na zagon**; ostaneta M2.6 (baseline) in M2.4r (render) |
-| M3 Jedro entitete | **v teku** — M3.1 in M3.2 zaključena (vzrok R1 potrjen); M3.3 zaključen (R1 popravljen pod stikalom); M3.4 zaključen (regresija zelena v načinih 0/1/2); M3.5 v kodi, čaka na zagon | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
+| M3 Jedro entitete | **v teku** — M3.1–M3.5 zaključeni (vzrok R1 potrjen, R1 popravljen pod stikalom, regresija zelena v načinih 0/1/2, hitbox po sestopu); M3.6 preusmerjen (D-020), v kodi, čaka na zagon | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
@@ -77,6 +77,59 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-24 (58) — M3.6 preusmerjen: mutex biti so pravilni, napaka je v prioriteti napada
+
+**Paket:** M3.6 · **Stanje:** v kodi, prevedeno in testirano v seji; **zagon v svetu čaka na uporabnika**.
+
+**Premisa ovržena (pred kodiranjem, z uporabnikom dogovorjena preusmeritev, D-020).** `AiMutex`
+`PASSIVE/LOOK/PATHING` = 1/2/4 so po vrednosti vanilla MOVE/LOOK/JUMP. `EntityAIAttackTarget` ima 3,
+enako kot vanilla `EntityAIAttackMelee`; vsi gibalni taski imajo bit 1, zato z napadom po
+`EntityAITasks.canUse` hkrati ne teče noben. „Dodaj `PATHING`“ bi spremenil samo razmerje do skoka.
+Popravljeno v `02-ZAHTEVE.md` (dve mesti), D-012, D-019, `03-FAZE.md`.
+
+**Resnična napaka (javap na originalu):** `setResponse` doda napad s `taskCount` brez `++`, zato
+`EntityAIWander`/`EntityAIMovingPath` dobi isto prioriteto; enake prioritete vanilla ne prekine.
+`Wander` se ob napadu ne umakne sam → NPC, ki tava, tarčo napade šele na koncu poti tavanja.
+`MovingPath` se umakne sam (`isAttacking()`), NPC s projektilom napake nima.
+
+**Narejeno:**
+
+- `rework/ai/AttackPriority` (čista funkcija `nextPriority`) in `CommandRwAttack` (`/rwattack 0|1`,
+  ob spremembi vsem naloženim NPC-jem `updateAI = true`, marker `RWATTACK`); config
+  `RwAttackPriority` (privzeto 0); klic v `EntityNPCInterface.setResponse` za bojnimi taski.
+- `AttackPriorityTest` (8) na **pravem** vanilla `EntityAITasks`: `originalWanderingBlocksAttack`
+  pokaže napako, `fixAttackPreemptsWandering` popravek; dva testa ovržeta staro premiso.
+- Scenarij `m36-run.ps1` + `m36-setup-commands.txt` + `m36-control.js` + štiri fixture `M36_*`
+  ([opis](scenariji/M3.6-napad-med-tavanjem.md)): proga T (tavajo) proti kontroli S (stojijo), trije
+  krogi, zakasnitev od `setAttackTarget` do poti k tarči; A4 diagnoza v načinu 0, A5 preverba v načinu 1.
+
+**Preverjeno v seji:** vseh 84 izvornih datotek `src/patch` + testi prevedeni z `javac --release 8` (JDK 11 na
+uporabnikovem računalniku, knjižnice iz gradle predpomnilnika, samo branje); **35/35 testov
+`rework/**` zelenih**; `m36-run.ps1` razčlenjen s PowerShell 7.4.6 (0 napak), regexi preizkušeni na
+sintetičnem logu; `m36-control.js` preverjen z Node in pognan na mock svetu; vstavitev v JSON preverjena.
+
+**Ni preverjeno:** gradle build, zagon v svetu (A1–A6). `verify-package.ps1` bo pokazal nova razreda `rework/ai/AttackPriority` in
+`CommandRwAttack` ter spremenjena `EntityNPCInterface` in `CustomNpcs`.
+
+**Stranske ugotovitve (hipoteze, niso popravljene):** `EntityAIMoveIndoors`/`EntityAIFindShade` imata
+prioriteto pred napadom in se ob napadu ne umakneta; napad in strelski napad imata isto prioriteto.
+[zapis](meritve/2026-09-24-M3.6-prioriteta-napada.md)
+
+**Spremembe obnašanja:** nobene privzeto; z `RwAttackPriority=1` (tabela).
+
+**Naslednja seja:** ovrednotiti `audit/m36-napad-n0.log` in `-n1.log`, nato M3.7.
+
+### 2026-09-24 (57) — M3.5 zaključen: E9 zeleno
+
+**Paket:** M3.5 · **Stanje:** zaključeno.
+
+`r1-run.ps1` v načinu 0 in 1 (`audit/m22-r1.log`, `m22-r1-k1.log`, oba `R1-SUM mount=8`): višina
+jahačev pred mountom 1,900, po mountu 1,463 v obeh; **po sestopu 1,463 v načinu 0 (napaka ponovljena)
+in 1,900 v načinu 1 (popravek)**. Faza A enaka kot v M3.4 (M 1,19 / 22,57). Odjemalec ni preverjen.
+[zapis](meritve/2026-09-24-M3.5-hitbox.md)
+
+**Spremembe obnašanja:** nobene privzeto. **Naslednja seja:** M3.6.
 
 ### 2026-09-24 (56) — M3.5: hitbox jahača po sestopu
 
@@ -1677,7 +1730,7 @@ A\* algoritem**.
 |---|---|---|
 | nosilec z jahačem nima poti (0/8) | predpogoj `PathNavigateGround.canNavigate()` | vanilla predpogoj |
 | obstanek pri 22,71 bloka | 200 vozlišč + `NpcNavRange` = 32, in en sam klic | konfiguracija in način uporabe |
-| `navig` niha 0–4/8 med napadom | mutex biti `EntityAIAttackTarget:38` | **CustomNPCs AI** |
+| `navig` niha 0–4/8 med napadom | mutex biti `EntityAIAttackTarget:38` — *24. 9. ovrženo (D-020); verjetno osvežitev poti vsakih 4–10 tickov* | **CustomNPCs AI** |
 | zgoščevanje na kup | `minRange` vezan na `npc.width` (`:98`) | **CustomNPCs AI** |
 
 Prepis A\* bi tri od štirih pustil nedotaknjene. Dva sta že pokrita z M3.6 in M3.7.
@@ -1918,7 +1971,7 @@ ostane `false`; premikajo se torej mimo navigatorja. `PathNavigateGround.canNavi
   pri vratih stisne na 2,87 — lijak). Zakaj druga stopnica ustavi skupino, prva pa ne, je novo
   odprto vprašanje. Na razliko M/S ne vpliva, ker velja za obe progi.
 - `navig` niha (0–4/8) tudi na kontrolni progi v fazi B, kar se ujema z dokazano napako mutex
-  bitov v `EntityAIAttackTarget:38`. To je neodvisno od jahanja.
+  bitov v `EntityAIAttackTarget:38`. To je neodvisno od jahanja. *(24. 9.: mutex biti niso napaka, D-020.)*
 
 **Meritve:** 27 NPC-jev, 945 tickov: `npc.update.window` 207,3 µs/NPC, `server.tick.ns`
 p50 = 1,93 ms, p95 = 10,75 ms, p99 = 115,3 ms. **Ni baseline** in se ne sme primerjati z M2.1d
@@ -3110,6 +3163,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 | 2026-09-24 | Nosilec-NPC z jahačem-NPC obdrži svojo pot in move helper (jahač mu ju ne prepiše več vsak tick); nov ukaz `/rwmount` | R1, M3.3 | da — config `RwMountSteering` 0/1/2, `/rwmount` | 0 = original |
 | 2026-09-24 | Jahač na nosilcu-NPC ne zažene sledenja/poti premikanja, ko krmili nosilec; `tpTo` jahača teleportira nosilca | R1, M3.4 | da — isti `RwMountSteering` | 0 = original |
 | 2026-09-24 | NPC po sestopu z nosilca dobi nazaj polno višino hitboxa (`updateHitbox` v `dismountRidingEntity`) | R1, M3.5 | da — isti `RwMountSteering` | 0 = original |
+| 2026-09-24 | NPC brez projektila, ki tava ali hodi po poti, napad začne takoj (napad dobi prioriteto pred gibalnim taskom); nov ukaz `/rwattack` | M3.6 | da — config `RwAttackPriority` 0/1, `/rwattack` | 0 = original |
 
 Vse zgornje so popravki tihe izgube podatkov, zato so brez stikala in privzeto vklopljene.
 Format datotek se ne spremeni, zato ni migracije. Izjema je zadnji stolpec pri praznem
@@ -3126,6 +3180,7 @@ prebrati.
 | 2026-09-11 | NBT↔JSON zapis, 1500 ključev (68 KB) | 235,3 ms → 2,9 ms (81×) | [zapis](meritve/2026-09-11-M1-nbtjson.md) |
 | 2026-09-11 | NBT↔JSON branje, 1500 ključev | 2386,3 ms → 6,5 ms (367×) | [zapis](meritve/2026-09-11-M1-nbtjson.md) |
 | 2026-09-24 | M3.2 faza C: `navigateTo` jahačem proge M | navig nosilca = navig jahača 20/20; M na cilju (0,64) v ~180 tickih, 2,8× hitreje od S | [zapis](meritve/2026-09-24-M3.2-R1-diagnoza.md) |
+| 2026-09-24 | M3.5 E9: višina jahačev po sestopu, `r1-run` način 0 in 1 | način 0: 1,463 (ostane × 0,77); način 1: 1,900 (vrne se) | [zapis](meritve/2026-09-24-M3.5-hitbox.md) |
 | 2026-09-15 | M2.1 prvi posnetek: 8 NPC-jev, 61 s, brez igralca | MSPT p50 0,16 ms / p95 1,21 ms; `npc.per.tick` p50 = 0 | [zapis](meritve/2026-09-15-M2.1-prvi-posnetek.md) |
 | 2026-09-17 | M2.2 R1: 8 nosilcev z jahači proti 8 brez, dve fazi, 945 tickov | proga M `isNavigating` **0/8 ves čas**, prevozeno 0,06 bloka; kontrola 8/8 in 22,71 bloka | [zapis](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |
 | 2026-09-17 | poraba pri 27 dejavnih NPC-jih (ni baseline) | `npc.update.window` 207,3 µs/NPC; MSPT p95 10,75 ms, p99 115,3 ms | [zapis](meritve/2026-09-17-M2.2-R1-reprodukcija.md) |

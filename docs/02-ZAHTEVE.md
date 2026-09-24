@@ -73,19 +73,17 @@ kandidat za "premikanje je čudno".
 
 `ai/EntityAIAttackTarget.java:75,90` prav tako brezpogojno vozita navigator.
 
-**[dokazano] `EntityAIAttackTarget` konstruktor nastavi napačne mutex bite.**
+**~~[dokazano] `EntityAIAttackTarget` konstruktor nastavi napačne mutex bite.~~ — ovrženo 24. 9. (M3.6).**
+Prvotni zapis je trdil, da napad ne rezervira `PATHING` in da zato z njim hkrati tečejo `Wander`,
+`Follow`, `Return` in `MovingPath`. **To ne drži:** `AiMutex` 1/2/4 so vanilla biti MOVE/LOOK/JUMP,
+napad ima 1 + 2 = 3 kot vanilla `EntityAIAttackMelee`, vsi gibalni taski imajo bit 1, zato z napadom
+hkrati ne teče noben (`EntityAITasks.canUse`). „Popravek“ s `PATHING` bi spremenil le razmerje do skoka
+(`EntityAIPounceTarget`).
 
-```java
-// EntityAIAttackTarget.java:38
-this.setMutexBits(this.navOverride ? AiMutex.PATHING : AiMutex.LOOK + AiMutex.PASSIVE);
-```
-
-`navOverride` je ob konstrukciji vedno `false` (deklariran `false` v vrstici 33), torej
-task **ne rezervira `PATHING`**, čeprav v `startExecuting()` in `updateTask()` piše v
-navigator. Rezultat: hkrati z njim lahko teče še `EntityAIWander`, `EntityAIFollow`,
-`EntityAIReturn`, `EntityAIMovingPath` — vsi pišejo isti navigator. Pri skupini NPC-jev z
-istim ciljem to daje trzanje in zgoščevanje.
-*(`navOverride(boolean)` na vrstici 110 to kasneje popravi, a le za `tacticalVariant == 6`.)*
+**[dokazano na bytecode, M3.6] Resnična napaka pri dodajanju napada: napad nima svoje prioritete.**
+`setResponse` doda napad s `taskCount` brez `++`, zato `EntityAIWander` (ali `EntityAIMovingPath`)
+dobi isto prioriteto; napad ga zato ne more prekiniti in NPC, ki tava, tarčo napade šele na koncu
+poti tavanja. [zapis](meritve/2026-09-24-M3.6-prioriteta-napada.md)
 
 **[dokazano] minimalni napadalni doseg je odvisen od širine NPC-ja.**
 
@@ -150,8 +148,8 @@ Teče vsak 4. tick za vsakega NPC-ja. Pri konjenici to podvoji strošek. Perform
 2. **Gating AI taskov.** Vsi taski, ki pišejo navigator, dobijo skupno preverbo
    `canPathfind()` → `false`, ko je NPC jahač. `EntityAIFollow.tpTo` se med jahanjem ne sme
    izvesti nikoli.
-3. **Popravek mutex bitov**: `EntityAIAttackTarget` mora rezervirati `PATHING`, kadar dejansko
-   vozi navigator. To je sprememba obnašanja → privzeto pod stikalom, z A/B testom.
+3. ~~**Popravek mutex bitov**~~ — premisa ovržena (M3.6). Namesto tega **prioriteta napada pred
+   gibanjem** (`RwAttackPriority`), pod stikalom, z A/B scenarijem `m36-run.ps1`.
 4. **`updateHitbox()` ob vsaki spremembi jahanja**, prek Forge `EntityMountEvent`.
 5. **Ločitev `minRange` od širine**: uvesti spodnjo mejo, neodvisno od `hasHitbox`.
 6. **Krmiljenje nosilca** (opcijsko, za konjenico): jahač lahko postane "commander" nosilca —
@@ -429,8 +427,9 @@ katerakoli druga koda, ki se sinhronizira na `"lock"`, se zaklene z njim.
 Dodatno: `Current` in `CurrentType` (vrstici 52–53) sta statična, torej je model
 "en script naenkrat" vgrajen v zasnovo.
 
-**[dokazano] Konflikt AI taskov okrog navigatorja** — glej R1, `EntityAIAttackTarget.java:38`.
-Več taskov hkrati vozi navigator → večkratno računanje poti na isti tick.
+**~~[dokazano] Konflikt AI taskov okrog navigatorja~~ — ovrženo 24. 9. (M3.6):** mutex biti
+napada so enaki vanilla `EntityAIAttackMelee`, gibalni taski z njim ne tečejo hkrati. Glej R1 in
+[zapis](meritve/2026-09-24-M3.6-prioriteta-napada.md).
 
 **[dokazano] Vsak `getFullCode()` sestavlja kodo z zaporedno konkatenacijo**
 (`ScriptContainer.java:106-120`), vsak `run()` ustvari nov `StringWriter` + `PrintWriter`

@@ -1,0 +1,53 @@
+# M3.6 - postavitev prizorisca: zakasnitev napada pri NPC-ju, ki tava. Ukaze poslje
+# .\m36-run.ps1 na standardni vhod serverja. Razlogi v docs/scenariji/M3.6-napad-med-tavanjem.md.
+#
+# Dve progi na odprtem ravnem terenu (superflat, povrsina y=3, entitete na y=4), dalec od
+# zgradb drugih scenarijev (R1 do x=32, NAV do x=19, R2 do x=37):
+#   proga T  x = 50..64, z = 44   8 NPC-jev, ki tavajo (WalkingRange 20)   cilj (57, 56)
+#   proga S  x = 84..98, z = 44   8 NPC-jev, ki stojijo (kontrola)         cilj (91, 56)
+# Cilj je 12 blokov pred progo, znotraj dometa iskanja poti (NpcNavRange 32).
+# Cilja se ne branita (OnAttack 3), da napad na cilj ne sprozi povracila.
+
+# --- determinizem ---
+gamerule doDaylightCycle false
+gamerule doWeatherCycle false
+gamerule doMobSpawning false
+gamerule doFireTick false
+gamerule mobGriefing false
+gamerule randomTickSpeed 0
+gamerule announceAdvancements false
+gamerule spectatorsGenerateChunks false
+time set 6000
+weather clear 1000000
+
+# --- ocisti prejsnji zagon ---
+noppes slay npcs
+
+# --- proga T: tavajo ---
+noppes clone spawn M36_Wander 1 50,4,44
+noppes clone spawn M36_Wander 1 52,4,44
+noppes clone spawn M36_Wander 1 54,4,44
+noppes clone spawn M36_Wander 1 56,4,44
+noppes clone spawn M36_Wander 1 58,4,44
+noppes clone spawn M36_Wander 1 60,4,44
+noppes clone spawn M36_Wander 1 62,4,44
+noppes clone spawn M36_Wander 1 64,4,44
+
+# --- proga S: stojijo (kontrola) ---
+noppes clone spawn M36_Stand 1 84,4,44
+noppes clone spawn M36_Stand 1 86,4,44
+noppes clone spawn M36_Stand 1 88,4,44
+noppes clone spawn M36_Stand 1 90,4,44
+noppes clone spawn M36_Stand 1 92,4,44
+noppes clone spawn M36_Stand 1 94,4,44
+noppes clone spawn M36_Stand 1 96,4,44
+noppes clone spawn M36_Stand 1 98,4,44
+
+# --- cilja napada ---
+noppes clone spawn M36_Target 1 57,4,56
+noppes clone spawn M36_Target 1 91,4,56
+
+save-all flush
+
+# M36_Control tu NI: .\m36-run.ps1 ga spawna po prisilni nalozitvi chunkov in ogrevanju
+# (x = 74, z = 30), ker njegova skripta zacne steti ob spawnu.

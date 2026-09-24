@@ -111,6 +111,8 @@ import noppes.npcs.controllers.data.PlayerData;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.items.ItemScripted;
 import noppes.npcs.rework.data.WorldSaveSession;
+import noppes.npcs.rework.ai.AttackPriority;
+import noppes.npcs.rework.ai.CommandRwAttack;
 import noppes.npcs.rework.diag.CommandRwDiag;
 import noppes.npcs.rework.diag.DiagChunkLoader;
 import noppes.npcs.rework.diag.DiagEventCollector;
@@ -142,6 +144,8 @@ public class CustomNpcs {
     public static boolean EnableDefaultEyes = true;
     @ConfigProp(info="Rework M3.3 (R1): who steers an NPC mount carrying an NPC rider. 0 = original (rider overwrites the mount's path every tick), 1 = the mount steers itself unless only the rider has a path, 2 = the mount always steers")
     public static int RwMountSteering = 0;
+    @ConfigProp(info="Rework M3.6: priority of the melee attack task against the movement task added after it (wander, moving path). 0 = original (same priority: a wandering NPC finishes its wander path before it starts attacking), 1 = attack before movement")
+    public static int RwAttackPriority = 0;
     public static long ticks;
     @SidedProxy(clientSide="noppes.npcs.client.ClientProxy", serverSide="noppes.npcs.CommonProxy")
     public static CommonProxy proxy;
@@ -326,6 +330,9 @@ public class CustomNpcs {
         // M3.3: nacin krmiljenja nosilca iz configa; /rwmount ga med tekom preklopi.
         event.registerServerCommand((ICommand)new CommandRwMount());
         RiderState.setMode(RwMountSteering);
+        // M3.6: prioriteta napada pred gibanjem; /rwattack jo med tekom preklopi.
+        event.registerServerCommand((ICommand)new CommandRwAttack());
+        AttackPriority.setMode(RwAttackPriority);
         EntityNPCInterface.ChatEventPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.ChatEventProfile);
         EntityNPCInterface.CommandPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.CommandProfile);
         EntityNPCInterface.GenericPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.GenericProfile);
