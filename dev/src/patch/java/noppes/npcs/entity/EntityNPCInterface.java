@@ -148,6 +148,7 @@ import noppes.npcs.NpcDamageSource;
 import noppes.npcs.Server;
 import noppes.npcs.VersionCompatibility;
 import noppes.npcs.ai.CombatHandler;
+import noppes.npcs.rework.entity.MountGuard;
 import noppes.npcs.ai.EntityAIAmbushTarget;
 import noppes.npcs.ai.EntityAIAnimation;
 import noppes.npcs.ai.EntityAIAttackTarget;
@@ -472,7 +473,13 @@ IAnimals {
         if (this.world.isDaytime() && !this.world.isRemote && this.stats.burnInSun && (f = this.getBrightness()) > 0.5f && this.rand.nextFloat() * 30.0f < (f - 0.4f) * 2.0f && this.world.canBlockSeeSky(new BlockPos((Entity)this))) {
             this.setFire(8);
         }
+        // M3.3: vanilla updateEntityActionState jahaca nosilcu prepise pot in move helper
+        // (R1). RiderState odloci, kdo krmili; v nacinu ORIGINAL (privzeto) je g vedno null.
+        MountGuard mountGuard = this.world.isRemote ? null : MountGuard.beforeRiderTick(this);
         super.onLivingUpdate();
+        if (mountGuard != null) {
+            mountGuard.restore();
+        }
         if (this.world.isRemote) {
             if (this.roleInterface != null) {
                 this.roleInterface.clientUpdate();

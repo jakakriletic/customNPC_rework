@@ -1,6 +1,8 @@
 # M2.2 - skriptirana reprodukcija R1 (NPC jaha NPC), merila E1-E6.
 # M3.2 - faza C (navigateTo jahacem) in diagnoza E7: ali nosilcu pot brise jahac
 #        (vanilla EntityLiving.updateEntityActionState, glej docs/meritve/2026-09-24-M3.2-R1-diagnoza.md).
+# M3.3 - -Krmiljenje 1|2 pred scenarijem nastavi /rwmount (RiderState) in izpise E8:
+#        ali nosilci proge M v fazah A in B vozijo po svoji poti.
 #
 # Scenarij in razlaga: docs/scenariji/M2.2-R1.md
 #
@@ -18,9 +20,11 @@
 #     .\r1-run.ps1
 #     .\r1-run.ps1 -AcceptEula
 #     .\r1-run.ps1 -ChunkRadius 3     # sirsi obroc, ce NPC-ji zaidejo s proge
+#     .\r1-run.ps1 -Krmiljenje 1      # M3.3: popravek R1 vklopljen (izpis m22-r1-k1.log)
 
 param([switch]$AcceptEula, [int]$ChunkRadius = 2, [int]$WarmupSeconds = 10,
-      [int]$ScenarioTimeoutSec = 180)
+      [int]$ScenarioTimeoutSec = 180,
+      [ValidateSet(0, 1, 2)][int]$Krmiljenje = 0)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -64,7 +68,7 @@ function Wait-ForMarker($Srv, [string]$Marker, [int]$TimeoutSec) {
 }
 
 function Start-DevServer {
-    $outLog = Join-Path $audit 'm22-r1.log'
+    $outLog = Join-Path $audit $(if ($Krmiljenje -eq 0) { 'm22-r1.log' } else { "m22-r1-k$Krmiljenje.log" })
     if (Test-Path $outLog) { Remove-Item $outLog -Force }
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName         = $env:ComSpec
@@ -262,6 +266,12 @@ try {
     Start-Sleep -Seconds $WarmupSeconds
     Send-Command $s 'rwdiag on'
     Check 'merjenje vklopljeno' (Wait-ForMarker $s 'RWDIAG vklopljen' 30)
+    # M3.3: nacin krmiljenja nosilca. 0 = original; ukaza ne posljemo, da je zagon
+    # enak kot pred M3.3 (nacin pride iz configa, privzeto 0).
+    if ($Krmiljenje -ne 0) {
+        Send-Command $s "rwmount $Krmiljenje"
+        Check ("M3.3: krmiljenje nastavljeno (RWMOUNT nacin={0})" -f $Krmiljenje) (Wait-ForMarker $s "RWMOUNT nacin=$Krmiljenje" 30)
+    }
 
     Step 5 'Scenarij'
     # Sele zdaj: skripta krmilnika zacne steti ob spawnu.
@@ -351,6 +361,30 @@ try {
         }
     } else {
         Write-Host '  E7 NEODLOCENO: ni vzorcev faze A ali C.'
+    }
+
+    # E8 (M3.3): s popravkom (nacin 1 ali 2) nosilci proge M v fazi A (navigateTo
+    # nosilcem) vozijo po svoji poti kot kontrola. Napoved: navig M > 0 in proga M
+    # prevozi vsaj 20 blokov (E2 za kontrolo). V nacinu 0 se E8 ne vrednoti.
+    if ($Krmiljenje -ne 0) {
+        Write-Host ''
+        Write-Host ("E8 (M3.3): krmiljenje {0} - nosilci M vozijo po svoji poti:" -f $Krmiljenje)
+        foreach ($ph in @('A', 'B')) {
+            $m = @($result["${ph}M"])
+            if ($m.Count -eq 0) { Check ("E8: faza {0} proga M ima vzorce" -f $ph) $false; continue }
+            $zPotjo = @($m | Where-Object { $_.Navig -gt 0 })
+            $maxM   = ($m | Measure-Object -Property PrevozenoMax -Maximum).Maximum
+            $lm     = $m[$m.Count - 1]
+            Write-Host ("  faza {0}: vzorcev z navig>0 {1}/{2} | prevozenoMax {3} | razpon {4} | doCiljaMin {5}" -f `
+                $ph, $zPotjo.Count, $m.Count, $maxM, $lm.Razpon, $lm.DoCiljaMin)
+        }
+        $am = @($result['AM'])
+        if ($am.Count -gt 0) {
+            $zPotjoA = @($am | Where-Object { $_.Navig -gt 0 })
+            $maxA    = ($am | Measure-Object -Property PrevozenoMax -Maximum).Maximum
+            Check ("E8: faza A - nosilci M imajo pot (vzorcev z navig>0: {0})" -f $zPotjoA.Count) ($zPotjoA.Count -gt 0)
+            Check ("E8: faza A - proga M prevozi vsaj 20 blokov (prevozenoMax={0})" -f $maxA) ($maxA -ge 20)
+        }
     }
 
     Step 9 'Izid'

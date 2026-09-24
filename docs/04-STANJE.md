@@ -10,8 +10,8 @@
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-09-24** |
-| Trenutni milestone | **M3 — jedro entitete**: M3.1 zaključen (zagon 23. 9. zelen, runtime JAR preverjen 24. 9.). **M3.2 zaključen: vzrok R1 potrjen v svetu 24. 9.** — vanilla `EntityLiving.updateEntityActionState` jahača nosilcu vsak tick izbriše pot in prepiše move helper; faza C: ko pot dobijo jahači, pridejo nosilci na cilj (E7 POTRJENO). M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
-| Naslednji paketi | **M3.3** (`RiderState`: kdo krmili — nosilec ali jahač) + popravek R1 pod stikalom; odprto: en jahač od osmih v fazi C ni dobil poti. Odloženo: zagon M2.6 |
+| Trenutni milestone | **M3 — jedro entitete**: M3.1 zaključen (zagon 23. 9. zelen, runtime JAR preverjen 24. 9.). **M3.3 v kodi 24. 9.** (`RiderState` + popravek R1 pod stikalom `RwMountSteering`/`/rwmount`, privzeto original) — čaka na `.\r1-run.ps1 -Krmiljenje 1`. **M3.2 zaključen: vzrok R1 potrjen v svetu 24. 9.** — vanilla `EntityLiving.updateEntityActionState` jahača nosilcu vsak tick izbriše pot in prepiše move helper; faza C: ko pot dobijo jahači, pridejo nosilci na cilj (E7 POTRJENO). M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
+| Naslednji paketi | **Zagon M3.3** (`.\dev.ps1 test --offline`, build, `.\r1-run.ps1` brez stikala mora ostati enak, `.\r1-run.ps1 -Krmiljenje 1` mora dati E8 zeleno), nato **M3.4**. Odprto: en jahač od osmih v fazi C ni dobil poti (ni R1, ni v M3.3). Odloženo: zagon M2.6 |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -32,7 +32,7 @@
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | **v teku** (≈96 %, ostane zagon M2.6) | M2.1, M2.2, M2.3, M2.5 in M2.7 preverjeni v svetu (S1–S7 in N1–N15 zelena 23. 9.); **M2.4 v kodi, čaka na zagon**; ostaneta M2.6 (baseline) in M2.4r (render) |
-| M3 Jedro entitete | **v teku** — M3.1 in M3.2 zaključena (vzrok R1 potrjen) | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
+| M3 Jedro entitete | **v teku** — M3.1 in M3.2 zaključena (vzrok R1 potrjen); M3.3 v kodi, čaka na zagon | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | ni začeto | analiza narejena, glej R2 |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
@@ -77,6 +77,60 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-24 (52) — M3.3: `RiderState` in popravek R1 pod stikalom
+
+**Paket:** M3.3 · **Stanje:** v kodi, prevedeno in testirano v seji; **zagon v svetu čaka na uporabnika**.
+
+**Narejeno:**
+
+- `rework/entity/RiderState` — enoten vir resnice o jahanju: vloga (`NONE`/`RIDER`/`MOUNT`/`RIDER_AND_MOUNT`)
+  in odločitev **kdo krmili** nosilca (`decide(način, nosilecJeNpc, nosilecImaPot, jahačImaPot)`), brez
+  Minecraft tipov. Načini: **0 original** (privzeto, D-007), **1** nosilec-NPC krmili sam, jahač prevzame
+  samo, ko ima pot on in nosilec ne (vanilla spider jockey ostane osnova za M3.10), **2** nosilec-NPC krmili
+  vedno. Nosilec, ki ni NPC, je v vseh načinih vanilla.
+- `rework/entity/MountGuard` — v `EntityNPCInterface.onLivingUpdate` jahača pred `super.onLivingUpdate()`
+  zajame pot, hitrost poti in move helper nosilca (natanko polja, ki jih prepiše `EntityMoveHelper.read`,
+  preverjeno z `javap -c`), po njem jih vrne. Pot se vrne z zapisom polja, ne s `setPath`, ker `setPath`
+  ponastavi zaznavo zataknitve. Dostop do zaščitenih polj: `net.minecraft.pathfinding.RwNavigatorAccess`
+  in `net.minecraft.entity.ai.RwMoveHelperAccess` (vzorec `RwWorldAccess`).
+- Stikalo: config `RwMountSteering` (0/1/2, privzeto 0) in ukaz `/rwmount [0|1|2]` (med tekom, ne zapiše
+  v config; odgovor v log z markerjem `RWMOUNT`).
+- `r1-run.ps1 -Krmiljenje 1|2`: pred scenarijem pošlje `rwmount`, izpis gre v `audit/m22-r1-k<N>.log`,
+  doda merilo **E8** (faza A: nosilci M imajo pot in proga M prevozi ≥ 20 blokov). Brez parametra je zagon
+  enak kot pred M3.3.
+- Testi: `RiderStateTest` (9, izčrpna tabela odločitev) in `MountGuardTest` (4): test
+  `withoutGuardRiderErasesMountPath` ponovi vanilla prepis in pokaže R1 (pot `null`, `WAIT`), test
+  `guardRestoresPathAndMoveHelper` pokaže, da ga varovalo razveljavi.
+
+**Preverjeno v seji:** nova razreda + spremenjena `EntityNPCInterface` in `CustomNpcs` prevedeni z
+`javac --release 8` proti mapiranim MC razredom in `customnpcs-dev-runtime.jar` (guava/netty/authlib
+nadomeščeni z minimalnimi nadomestki izven repozitorija, D-014); **13/13 testov zelenih**. `r1-run.ps1`
+razčlenjen s PowerShell 7.4 (0 napak).
+
+**Ni preverjeno:** build z gradlom, nalaganje v igri, E8 v svetu. `verify-package.ps1` bo pokazal nove
+razrede: `RiderState` (+ `$Role`, `$Steering`), `MountGuard`, `CommandRwMount`, `RwNavigatorAccess`,
+`RwMoveHelperAccess`, poleg spremenjenih `EntityNPCInterface` in `CustomNpcs`.
+
+**Znana meja (zapisana v kodi):** ko imata pot oba (nosilec in jahač), vanilla `setPath` nosilcu ponastavi
+zasebno stanje zaznave zataknitve; varovalo vrne pot, tega stanja ne. V fazah A/B se to ne zgodi.
+
+**Ni v tem paketu:** jahač od osmih brez poti v fazi C (odprto vprašanje, ni R1); gating AI taskov in
+`tpTo` (M3.4); `updateHitbox` ob mountu (M3.5).
+
+**Spremembe obnašanja:** nobene privzeto; z `RwMountSteering=1|2` nosilec-NPC obdrži svojo pot (tabela
+"Sprejete spremembe obnašanja").
+
+**Za uporabnika:**
+```
+.\dev.ps1 test --offline
+.\dev.ps1 build --offline
+.\r1-run.ps1                  # mora ponoviti izid 24. 9. (E7 POTRJENO, proga M v fazi A obtiči)
+.\r1-run.ps1 -Krmiljenje 1    # E8: proga M v fazi A pride do cilja
+```
+
+**Naslednja seja:** ovrednotiti oba zagona (`audit/m22-r1.log`, `audit/m22-r1-k1.log`), zapis v
+`docs/meritve/`, nato M3.4.
 
 ### 2026-09-24 (51) — M3.2 zaključen: faza C potrdi mehanizem
 
@@ -2954,6 +3008,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 | 2026-09-11 | World controllerji, klientovi preseti in schematiki uporabljajo validiran atomski zapis stisnjenega NBT | B1 | ne | varni zapis |
 | 2026-09-11 | Player save vrsta je vezana na world sejo in se izprazni pred resetom server globalov | B2 | ne | varen lifecycle |
 | 2026-09-15 | Nov ukaz `/rwdiag` in zbiralnik meritev `rework/diag` | M2.1 | da — `/rwdiag on\|off`, `-Drwdiag=on` | izklopljeno |
+| 2026-09-24 | Nosilec-NPC z jahačem-NPC obdrži svojo pot in move helper (jahač mu ju ne prepiše več vsak tick); nov ukaz `/rwmount` | R1, M3.3 | da — config `RwMountSteering` 0/1/2, `/rwmount` | 0 = original |
 
 Vse zgornje so popravki tihe izgube podatkov, zato so brez stikala in privzeto vklopljene.
 Format datotek se ne spremeni, zato ni migracije. Izjema je zadnji stolpec pri praznem
