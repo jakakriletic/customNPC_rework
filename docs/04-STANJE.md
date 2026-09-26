@@ -79,6 +79,38 @@
 
 ## Dnevnik sej
 
+### 2026-09-27 (60) — integracija lokalne veje (M4.14a); D-022 Baritone kot izbirno ozadje; revizija navigatorja
+
+**Paket:** vzdrževanje repozitorija + M7.1 knjižnice `npcbaritone` (izven vrstnega reda faz CNPC —
+izrecna potrditev uporabnika 2026-09-27)
+**Stanje:** koda CNPC ni funkcionalno spremenjena; formacije integrirane, dokumentacija D-022
+
+**Integracija:** mapa `Desktop\customNPC_rework` je bila na stanju 18. 9. z enim nepushanim
+commitom (M4.14a formacije, lokalni D-017). `git pull --rebase` je 27. 9. ustavil konflikt
+(D-017–D-020 so na `origin` že zasedeni) in je bil prekinjen brez izgube. Lokalna veja je
+shranjena v `backup/lokalni-main-20260927`; `main` je postavljen na `origin/main` (M3.6), M4.14a
+prenesen s cherry-pickom (`CustomNpcs`: obe registraciji ukazov; dokumenti: vse vrstice origin +
+formacije) in njegova odločitev preštevilčena **D-017 → D-021**. Preverjeno v seji: 99 virov
+`src/patch` prevedenih z `javac --release 8`, **189/189 testov**.
+
+**D-022** (`01-ARHITEKTURA.md` §9): stopnja D iz D-012 se odpre samo kot izbirno ozadje
+(`RwNavBackend`) prek zunanje knjižnice `npcbaritone`; vanilla privzeta; samo `movementType == 0`;
+sprejem po M2.7 s tremi ponovitvami. Knjižnica: 200 NPC-jev, glavna nit p95 1,64 ms/tick.
+
+**Revizija** [`07-BARITONE-OZADJE.md`](07-BARITONE-OZADJE.md): klici navigatorja v `ai/**` in
+`EntityNPCInterface` so po M3.1–M3.6 enaki izvirniku; ukrepi U1–U7. Najpomembnejši:
+**U2** — `updateTasks()` ob vsaki posodobitvi AI ustvari nov vanilla navigator; **U7** —
+formacije (`Squad`, `STEER`) vsak tick nastavijo pot z eno točko, zato člani enote ostanejo na
+vanilla navigatorju; **U1** — `EntityAIAttackTarget.shouldExecute` preverja pot z vanilla A*.
+V knjižnici popravljena napaka, ki bi jo sprožil CNPC skriptni `getNavigationPath` (NPE med
+iskanjem; knjižnica `2ee0df2`).
+
+**Naslednji korak:** knjižnica API 2 (U2 ponovna namestitev, U6 hitrost, U3/U4 vrata na
+instanco), nato M7.2 (`NpcBaritoneBridge`), M7.3 (stikalo), M7.4 (`updateTasks`, U2, U7).
+Formacije: dimni test F1–F12 v svetu še čaka (kot 18. 9.).
+
+---
+
 ### 2026-09-24 (59) — M3.6 prvi zagon ovrednoten; scenarij dopolnjen z dosegom napada
 
 **Paket:** M3.6 · **Stanje:** delno — popravek deluje, A5 strogo pade na enem vzorcu; **ponovni zagon čaka na uporabnika**.
