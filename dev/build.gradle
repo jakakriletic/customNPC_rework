@@ -84,6 +84,17 @@ afterEvaluate { tasks.getByName('runServer').standardInput = System.in }
 // bi merila okno, ne moda. Konzola (stdin) ostane, samo okna ni.
 afterEvaluate { tasks.getByName('runServer').args 'nogui' }
 
+// Dedicated streznik LWJGL natives ne rabi. extractNatives pa na Windowsu pade ("Could not
+// expand ZIP lwjgl-platform ... natives-windows.jar"), ko ima jar v Gradle cache odprt drug
+// Gradle/Java proces (27. 9.: nav-run M7.6 dvakrat, obakrat takoj po drugem gradle teku).
+// Enak popravek ima knjiznica npcbaritone (1996b7f). Kadar graf vsebuje runServer brez
+// runClient, se korak preskoci.
+gradle.taskGraph.whenReady { graph ->
+    if (graph.hasTask(':runServer') && !graph.hasTask(':runClient')) {
+        tasks.getByName('extractNatives').enabled = false
+    }
+}
+
 // runServer in runClient nikoli nista "up to date". ForgeGradle jima prijavi
 // dev/run kot izhod, zato je Gradle 15. 9. med skriptiranim scenarijem M0.6 drugi
 // zagon preskocil ('Task :runServer UP-TO-DATE') - med zagonoma se v dev/run ni
