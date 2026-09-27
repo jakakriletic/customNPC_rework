@@ -633,7 +633,17 @@ try {
     }
     Check 'svet ni oznacen kot uporabljen' $true
     $a = Start-DevServer 'a'
-    Check 'server A je dosegel "Done ("' (Wait-ForMarker $a 'Done (' 900)
+    $aDone = Wait-ForMarker $a 'Done (' 900
+    # 27. 9. (M7.6, ponovitev 2): gradle je padel v ':extractNatives' ("Could not expand ZIP
+    # lwjgl-platform ... natives-windows.jar"), ker je JVM prejsnje ponovitve se drzal DLL-je v
+    # dev\build\natives. To ni lastnost scenarija; pocakaj in poskusi enkrat znova.
+    if ((-not $aDone) -and ((Get-LogText $a.Log) -match ':extractNatives')) {
+        Write-Host '  ! gradle :extractNatives je padel (zaklenjeni natives prejsnjega JVM-a); cez 20 s se enkrat'
+        Start-Sleep -Seconds 20
+        $a = Start-DevServer 'a'
+        $aDone = Wait-ForMarker $a 'Done (' 900
+    }
+    Check 'server A je dosegel "Done ("' $aDone
     if ($failures.Count -eq 0) {
         Send-Command $a 'setworldspawn 0 4 0'
         Check 'world spawn nastavljen' (Wait-ForMarker $a 'Set the world spawn point' 60)

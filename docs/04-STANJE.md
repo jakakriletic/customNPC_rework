@@ -79,6 +79,18 @@
 
 ## Dnevnik sej
 
+### 2026-09-27 (62) — prvi A/B zagon M7.6 ovrednoten
+
+Baritone zagon zelen (N1–N15, B1–B5, 16/16 pripetih), vanilla prva ponovitev zelena.
+Baritone 8/8 pri 40 tickih na obeh progah, vanilla G 1/8 (A) in 6/8 (B). Večji del razlike v
+času je **hitrost**: knjižnica je v `own` ignorirala `speed × 0,7` iz `navigateTo` — popravljeno
+v knjižnici (D-042). [meritev](meritve/2026-09-27-M7.6-ab-prvi-zagon.md). Serija vanilla je
+padla v ponovitvi 2 na gradle `:extractNatives` (zaklenjeni natives); `nav-run.ps1` zdaj enkrat
+poskusi znova po 20 s.
+
+**Naslednji korak:** knjižnica `.\dev.ps1 build --offline`, nato `.\testworld.ps1` +
+`.\nav-run.ps1 -Ozadje baritone`; ko je `gib(max)` na progi O blizu vanilli, obe seriji po 3.
+
 ### 2026-09-27 (61) — M7.2–M7.4 commitani; M7.6 A/B scenarij (`nav-run -Ozadje baritone`)
 
 **Paket:** M7 knjižnice `npcbaritone` (izven vrstnega reda faz CNPC, D-022).
