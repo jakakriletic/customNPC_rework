@@ -14,7 +14,7 @@ sourceCompatibility = targetCompatibility = '1.8'
 minecraft {
     version = '1.12.2-14.23.5.2847'
     mappings = 'snapshot_20171003'
-    runDir = 'run'
+    runDir = project.findProperty('rwRunDir') ?: 'run'
     makeObfSourceJar = false
 }
 repositories {
@@ -24,6 +24,9 @@ repositories {
 dependencies {
     // Generated from the SHA-256-verified original by ForgeGradle's SRG -> MCP remapper.
     compile files('libs/customnpcs-mapped-01Oct19.jar')
+    // M7: compile against the sibling library's API only; the mod is optional at runtime.
+    compileOnly files('../../barittone_for_npc_rework/mod/build/libs/npcbaritone-0.0.1-m0-api.jar')
+    testCompile files('../../barittone_for_npc_rework/mod/build/libs/npcbaritone-0.0.1-m0-api.jar')
     testCompile files('libs/junit-4.13.2.jar', 'libs/hamcrest-core-1.3.jar')
 }
 // Only explicitly restored classes compile; MDK examples are excluded.
@@ -60,6 +63,13 @@ afterEvaluate {
             classpath = files(classpath.files.findAll {
                 !it.name.toLowerCase().startsWith('customnpcs')
             }) + files(devRuntimeMod.archivePath)
+            if (project.hasProperty('npcBaritoneDev')) {
+                classpath += files('../../barittone_for_npc_rework/mod/build/classes/java/main',
+                                   '../../barittone_for_npc_rework/mod/build/resources/main')
+            }
+        }
+        if (project.hasProperty('rwNavBackend')) {
+            tasks.getByName(taskName).systemProperty 'rwnavbackend', project.property('rwNavBackend')
         }
     }
 }
@@ -108,6 +118,14 @@ task testOriginal(type: Test) {
     // M4.14: formacije so nov paket, v originalu ga ni.
     exclude '**/FormationGeometryTest.class'
     exclude '**/SquadPlannerTest.class'
+    exclude '**/RwNavBackendTest.class'
+    // These tests exercise classes introduced after the original binary; they belong to :test.
+    exclude '**/JvmProbeTest.class'
+    exclude '**/NavProbeTest.class'
+    exclude '**/SlowTicksTest.class'
+    exclude '**/AttackPriorityTest.class'
+    exclude '**/MountGuardTest.class'
+    exclude '**/RiderStateTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

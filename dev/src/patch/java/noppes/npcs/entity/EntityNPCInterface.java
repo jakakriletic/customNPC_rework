@@ -151,6 +151,7 @@ import noppes.npcs.ai.CombatHandler;
 import noppes.npcs.rework.ai.AttackPriority;
 import noppes.npcs.rework.entity.MountGuard;
 import noppes.npcs.rework.entity.RiderState;
+import noppes.npcs.rework.nav.RwNavBackend;
 import noppes.npcs.ai.EntityAIAmbushTarget;
 import noppes.npcs.ai.EntityAIAnimation;
 import noppes.npcs.ai.EntityAIAttackTarget;
@@ -283,6 +284,8 @@ IAnimals {
     public IChatMessages messages;
     public boolean updateClient = false;
     public boolean updateAI = false;
+    /** M7: per-NPC opt-in, persisted only when enabled to preserve old NBT by default. */
+    private int rwNavBackend;
     public final BossInfoServer bossInfo = new BossInfoServer(this.getDisplayName(), BossInfo.Color.PURPLE, BossInfo.Overlay.PROGRESS);
     public double field_20066_r;
     public double field_20065_s;
@@ -310,6 +313,20 @@ IAnimals {
         this.setSize(1.0f, 1.0f);
         this.updateAI = true;
         this.bossInfo.setVisible(false);
+    }
+
+    public int getRwNavBackend() {
+        return rwNavBackend;
+    }
+
+    public void setRwNavBackend(int backend) {
+        int next = backend == 1 ? 1 : 0;
+        if (rwNavBackend != next) {
+            rwNavBackend = next;
+            if (world != null && !world.isRemote) {
+                RwNavBackend.changed(this);
+            }
+        }
     }
 
     public boolean canBreatheUnderwater() {
@@ -477,6 +494,9 @@ IAnimals {
         }
         // M3.3: vanilla updateEntityActionState jahaca nosilcu prepise pot in move helper
         // (R1). RiderState odloci, kdo krmili; v nacinu ORIGINAL (privzeto) je g vedno null.
+        if (!this.world.isRemote) {
+            RwNavBackend.beforeTick(this);
+        }
         MountGuard mountGuard = this.world.isRemote ? null : MountGuard.beforeRiderTick(this);
         super.onLivingUpdate();
         if (mountGuard != null) {
@@ -757,6 +777,7 @@ IAnimals {
         this.clearTasks(this.tasks);
         this.clearTasks(this.targetTasks);
         if (this.isKilled()) {
+            RwNavBackend.afterTasks(this);
             return;
         }
         NPCAttackSelector attackEntitySelector = new NPCAttackSelector(this);
@@ -784,6 +805,8 @@ IAnimals {
         this.seekShelter();
         this.setResponse();
         this.setMoveType();
+        // All task constructors have now captured the new vanilla navigator. API 2 rewires them.
+        RwNavBackend.afterTasks(this);
     }
 
     private void setResponse() {
@@ -1042,6 +1065,7 @@ IAnimals {
         this.display.readToNBT(compound);
         this.stats.readToNBT(compound);
         this.ais.readToNBT(compound);
+        this.rwNavBackend = compound.getInteger("RwNavBackend") == 1 ? 1 : 0;
         this.script.readFromNBT(compound);
         this.timers.readFromNBT(compound);
         this.advanced.readToNBT(compound);
@@ -1068,6 +1092,11 @@ IAnimals {
         this.display.writeToNBT(compound);
         this.stats.writeToNBT(compound);
         this.ais.writeToNBT(compound);
+        if (this.rwNavBackend == 1) {
+            compound.setInteger("RwNavBackend", 1);
+        } else {
+            compound.removeTag("RwNavBackend");
+        }
         this.script.writeToNBT(compound);
         this.timers.writeToNBT(compound);
         this.advanced.writeToNBT(compound);

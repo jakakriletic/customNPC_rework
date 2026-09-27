@@ -117,6 +117,7 @@ import noppes.npcs.rework.diag.CommandRwDiag;
 import noppes.npcs.rework.diag.DiagChunkLoader;
 import noppes.npcs.rework.diag.DiagEventCollector;
 import noppes.npcs.rework.entity.CommandRwMount;
+import noppes.npcs.rework.nav.CommandRwNav;
 import noppes.npcs.rework.entity.RiderState;
 import noppes.npcs.rework.formation.CommandRwSquad;
 import noppes.npcs.rework.formation.SquadManager;
@@ -148,6 +149,8 @@ public class CustomNpcs {
     public static int RwMountSteering = 0;
     @ConfigProp(info="Rework M3.6: priority of the melee attack task against the movement task added after it (wander, moving path). 0 = original (same priority: a wandering NPC finishes its wander path before it starts attacking), 1 = attack before movement")
     public static int RwAttackPriority = 0;
+    @ConfigProp(info="Rework M7: allow NPC Baritone as an optional navigation backend for NPCs with RwNavBackend=1 in NBT. 0 = original vanilla navigation, 1 = permit opt-in NPCs")
+    public static int RwNavBackend = 0;
     public static long ticks;
     @SidedProxy(clientSide="noppes.npcs.client.ClientProxy", serverSide="noppes.npcs.CommonProxy")
     public static CommonProxy proxy;
@@ -339,6 +342,7 @@ public class CustomNpcs {
         // M4.14: formacije. Brez ukaza (ali klica iz skripte) paket ni prijavljen na event
         // bus in ne doda nobenega AI taska, zato je obnasanje brez ukaza enako originalu.
         event.registerServerCommand((ICommand)new CommandRwSquad());
+        event.registerServerCommand((ICommand)new CommandRwNav());
         EntityNPCInterface.ChatEventPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.ChatEventProfile);
         EntityNPCInterface.CommandPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.CommandProfile);
         EntityNPCInterface.GenericPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.GenericProfile);
