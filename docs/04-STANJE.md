@@ -79,6 +79,30 @@
 
 ## Dnevnik sej
 
+### 2026-09-27 (61) — M7.2–M7.4 commitani; M7.6 A/B scenarij (`nav-run -Ozadje baritone`)
+
+**Paket:** M7 knjižnice `npcbaritone` (izven vrstnega reda faz CNPC, D-022).
+
+**Commitano delo seje (4) knjižnice** (`3e458aa`, prej necommitano na tej veji): most
+`NpcBaritoneBridge` (samo API 2, `compileOnly`), stikalo `RwNavBackend` (config 0 + NBT ključ,
+zapisan samo pri 1), izbira samo za kopenskega NPC-ja brez jahanja in formacije (U7), ponovna
+namestitev po `updateTasks()` (U2), `/rwnav`. Tam preverjeno: `buildPatchedMod` (192/192),
+`verify-package`, dedicated smoke. Prevod v oblaku na tem drevesu: 102 + 25 datotek, 192/192.
+
+**M7.6 (v tej seji, prevedeno, čaka na zagon):** `nav-run.ps1 -Ozadje baritone` —
+[scenarij](scenariji/M7.6-ab-baritone.md). Server z `-PnpcBaritoneDev -PrwNavBackend=1`,
+`/rwnav on NAV_Walk`, `/npcb perf` okoli faz A/B; merila B1–B5; odtis `ozadje=baritone`, da se
+serija ne pomeša z vanilla. `/rwnav status` zdaj izpiše tudi `pripetih=` (dejansko pripeti).
+Vanilla zagon je nespremenjen (brez `-P`, isti odtis). Preverjeno: PowerShell parser 0 napak,
+bralnika `RWNAV`/`NPCB-PERF` in `New-NavZapis` na sintetičnem logu (pwsh 7.4), JUnit 192/192.
+
+**Znano:** sonda (veličine 1, 2, 5) je vanilla `PathFinder` tudi pri Baritonu — za A/B štejejo
+`cele=` iz igre, `NAV-CAS` ter `bar.*` iz knjižnice; veličina 2 za Baritona še ni merjena.
+
+**Naslednji korak:** knjižnica `.\dev.ps1 build --offline`, nato `.\testworld.ps1` in
+`.\nav-run.ps1 -Ozadje baritone` (en zagon, B1–B5 + N1–N15); ko je zelen, obe seriji po tri
+ponovitve (`.\ponovitve-run.ps1 -Scenarij nav` in `... -Dodatno @('-Ozadje','baritone')`).
+
 ### 2026-09-27 (60) — integracija lokalne veje (M4.14a); D-022 Baritone kot izbirno ozadje; revizija navigatorja
 
 **Paket:** vzdrževanje repozitorija + M7.1 knjižnice `npcbaritone` (izven vrstnega reda faz CNPC —

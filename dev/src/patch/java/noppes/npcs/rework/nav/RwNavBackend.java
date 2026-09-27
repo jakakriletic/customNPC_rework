@@ -44,6 +44,18 @@ public final class RwNavBackend {
         apply(npc, false);
     }
 
+    /** M7.6: is the library navigator attached right now (false without the optional mod). */
+    public static boolean attached(EntityNPCInterface npc) {
+        if (!Loader.isModLoaded("npcbaritone")) {
+            return false;
+        }
+        try {
+            return NpcBaritoneBridge.attached(npc);
+        } catch (LinkageError incompatibleApi) {
+            return false;
+        }
+    }
+
     /** Called when the per-NPC switch changes. */
     public static void changed(EntityNPCInterface npc) {
         apply(npc, true);

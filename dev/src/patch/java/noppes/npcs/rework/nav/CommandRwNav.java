@@ -47,6 +47,8 @@ public final class CommandRwNav extends CommandBase {
         }
         int matched = 0;
         int selected = 0;
+        int attached = 0;
+        boolean modLoaded = Loader.isModLoaded("npcbaritone");
         World world = sender.getEntityWorld();
         for (Entity entity : world.loadedEntityList) {
             if (!(entity instanceof EntityNPCInterface)) {
@@ -63,10 +65,15 @@ public final class CommandRwNav extends CommandBase {
                 npc.setRwNavBackend(0);
             }
             selected += npc.getRwNavBackend();
+            // M7.6: scenarij (nav-run -Ozadje baritone) mora videti, da je knjiznica res pripeta,
+            // ne samo, da je NBT stikalo vklopljeno (globalno stikalo, movementType, jahanje).
+            if (modLoaded && RwNavBackend.attached(npc)) {
+                attached++;
+            }
         }
         String line = "RWNAV global=" + RwNavBackend.globalMode()
-                + " mod=" + Loader.isModLoaded("npcbaritone") + " ime=" + prefix
-                + " ujemanj=" + matched + " izbranih=" + selected;
+                + " mod=" + modLoaded + " ime=" + prefix
+                + " ujemanj=" + matched + " izbranih=" + selected + " pripetih=" + attached;
         sender.sendMessage(new TextComponentString(line));
         LogWriter.info(line);
     }

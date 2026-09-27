@@ -24,10 +24,20 @@
 #     .\nav-run.ps1 -JsonPath audit\m27-nav-p1.json   # zapis zagona na izbrano pot (M2.5c)
 #
 # Ponovitve po protokolu (tri in vec) pozene .\ponovitve-run.ps1, ki -JsonPath poda sam.
+#
+# M7.6 (CNPC D-022, knjiznica D-039-D-041): isti scenarij z Baritonom kot ozadjem navigacije
+#     .\nav-run.ps1 -Ozadje baritone
+#     .\ponovitve-run.ps1 -Scenarij nav -Dodatno @('-Ozadje','baritone')
+# Pogoj: v ..\barittone_for_npc_rework je bil pognan '.\dev.ps1 build --offline' (server nalozi
+# razrede knjiznice iz mod\build\classes, -PnpcBaritoneDev). Server tece z -PrwNavBackend=1,
+# vseh 16 hodecih NPC-jev dobi '/rwnav on NAV_Walk'; krmilnik NAV_Control ostane vanilla.
+# Sonda (velicine 1, 2, 5) meri VANILLA iskalnik tudi v tem nacinu - za Baritona sta velicini
+# 5 in 6 iz '/npcb perf' (NPCB-PERF: iskanja, us posnetka na glavni niti, us iskanja v ozadju).
 
 param([switch]$AcceptEula, [int]$ChunkRadius = 2, [int]$WarmupSeconds = 10,
       [int]$ScenarioTimeoutSec = 180, [int]$SweepRepeats = 8, [int]$OgrevalnihPometanj = 2,
-      [string]$JsonPath = '')
+      [string]$JsonPath = '',
+      [ValidateSet('vanilla', 'baritone')][string]$Ozadje = 'vanilla')
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -52,6 +62,12 @@ $goalZ  = 78
 $goalXG = -10
 $goalXO = 15
 $npcCount = 16
+
+# M7.6: Baritone kot ozadje. Vanilla zagon ostane bit za bitom enak prejsnjemu (brez -P).
+$baritone    = ($Ozadje -eq 'baritone')
+$libRoot     = Join-Path $root '..\barittone_for_npc_rework'
+$gradleExtra = if ($baritone) { ' -PnpcBaritoneDev -PrwNavBackend=1' } else { '' }
+$ozadjeTag   = if ($baritone) { '-baritone' } else { '' }
 
 function Step($n, $t) { Write-Host ''; Write-Host "===== $n : $t =====" }
 
@@ -97,12 +113,12 @@ function Wait-ForMarker($Srv, [string]$Marker, [int]$TimeoutSec) {
 }
 
 function Start-DevServer([string]$Tag = '') {
-    $name = if ($Tag -eq '') { 'm27-nav.log' } else { ('m27-nav-{0}.log' -f $Tag) }
+    $name = if ($Tag -eq '') { ('m27-nav{0}.log' -f $ozadjeTag) } else { ('m27-nav{0}-{1}.log' -f $ozadjeTag, $Tag) }
     $outLog = Join-Path $audit $name
     if (Test-Path $outLog) { Remove-Item $outLog -Force }
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName         = $env:ComSpec
-    $psi.Arguments        = "/c gradlew.bat runServer --offline --no-daemon --console=plain > `"$outLog`" 2>&1"
+    $psi.Arguments        = "/c gradlew.bat runServer --offline --no-daemon --console=plain$gradleExtra > `"$outLog`" 2>&1"
     $psi.WorkingDirectory = Join-Path $root 'dev'
     $psi.UseShellExecute  = $false
     $psi.RedirectStandardInput = $true
@@ -154,6 +170,41 @@ function Read-Setup([string]$LogPath) {
         G = [int]$m.Groups[1].Value; O = [int]$m.Groups[2].Value
         VrataX = [int]$m.Groups[3].Value; ZidZ = [int]$m.Groups[4].Value
         CiljZ = [int]$m.Groups[5].Value
+    }
+}
+
+# M7.6: "RWNAV global=1 mod=true ime=NAV_Walk ujemanj=16 izbranih=16 pripetih=16"
+function Read-RwNav([string]$LogPath) {
+    $ms = [regex]::Matches((Get-MarkerText $LogPath),
+        'RWNAV global=(\d) mod=(\w+) ime=(\S*) ujemanj=(\d+) izbranih=(\d+) pripetih=(\d+)')
+    if ($ms.Count -eq 0) { return $null }
+    $m = $ms[$ms.Count - 1]
+    return [pscustomobject]@{
+        Globalno = [int]$m.Groups[1].Value; Mod = ($m.Groups[2].Value -eq 'true')
+        Ujemanj = [int]$m.Groups[4].Value; Izbranih = [int]$m.Groups[5].Value
+        Pripetih = [int]$m.Groups[6].Value
+    }
+}
+
+# M7.6: zadnja vrstica "/npcb perf" knjiznice (SearchStats + PerfMeter). Enote 'µs' se v
+# logu lahko pokvarijo zaradi kodne strani, zato jih vzorec preskoci s \S+.
+#   NPCB-PERF iskanj=12 končanih=12 zavrnjenih=0 neuspelih=0 deljenih=0 | iskanje µs p50=.. p95=..
+#   | vrsta µs p50=.. p95=.. | posnetek µs p50=.. p95=.. (chunkov p50=..) | glavna nit µs/tick
+#   p50=.. p95=.. p99=.. max=.. (tickov N) | MSPT p50=.. p95=.. | ...
+function Read-NpcbPerf([string]$LogPath) {
+    $ms = [regex]::Matches((Get-LogText $LogPath),
+        'NPCB-PERF iskanj=(\d+) \S+=(\d+) \S+=(\d+) \S+=(\d+) \S+=\d+ \| iskanje \S+ p50=(\d+) p95=(\d+) \| vrsta \S+ p50=(\d+) p95=(\d+) \| posnetek \S+ p50=(\d+) p95=(\d+) \(chunkov p50=(\d+)\) \| glavna nit \S+ p50=(\d+) p95=(\d+) p99=(\d+) max=(\d+) \(tickov (\d+)\)')
+    if ($ms.Count -eq 0) { return $null }
+    $m = $ms[$ms.Count - 1]
+    $g = { param($i) [long]$m.Groups[$i].Value }
+    $tickov = & $g 16
+    return [pscustomobject]@{
+        Iskanj = & $g 1; Koncanih = & $g 2; Zavrnjenih = & $g 3; Neuspelih = & $g 4
+        IskanjeP50 = & $g 5; IskanjeP95 = & $g 6; VrstaP50 = & $g 7; VrstaP95 = & $g 8
+        PosnetekP50 = & $g 9; PosnetekP95 = & $g 10; ChunkovP50 = & $g 11
+        GlavnaP50 = & $g 12; GlavnaP95 = & $g 13; GlavnaP99 = & $g 14; GlavnaMax = & $g 15
+        Tickov = $tickov
+        NaTick = $(if ($tickov -gt 0) { (& $g 1) / [double]$tickov } else { 0.0 })
     }
 }
 
@@ -388,7 +439,8 @@ function Format-Sonda($S) {
 # preveriti brez Minecrafta, nad ze zapisanim logom starega zagona.
 function New-NavZapis {
     param($Pometi, $Cas, $NavAi, $Chunks, $Setup, [int]$Filled,
-          [int]$Obroc, [int]$Ogrevanje, [int]$PometanjPon, [int]$OgrevalnaPometanja)
+          [int]$Obroc, [int]$Ogrevanje, [int]$PometanjPon, [int]$OgrevalnaPometanja,
+          $Perf = $null, [string]$Ozadje = 'vanilla')
 
     $odtis = @{
         npc         = $(if ($null -ne $Chunks) { $Chunks.Npc }    else { -1 })
@@ -404,6 +456,9 @@ function New-NavZapis {
         pometanjPon = $PometanjPon
         ogrevalnih  = $OgrevalnaPometanja
     }
+    # M7.6: samo pri Baritonu, da ostane odtis vanilla zagona enak prejsnjim serijam; tako
+    # ponovitve-run nikoli ne zdruzi vanilla in Baritone zagona v isto serijo.
+    if ($Ozadje -ne 'vanilla') { $odtis['ozadje'] = $Ozadje }
 
     $vel  = @{}
     $kdaj = @('start', 'poA')
@@ -452,6 +507,20 @@ function New-NavZapis {
         $vel['chunki']    = $Chunks.Chunki
         $vel['zavrnjeni'] = $Chunks.Zavrnjeni
     }
+    if ($null -ne $Perf) {
+        # M7 A4: velicina 5 na GLAVNI niti (posnetek chunkov) in velicina 6 (iskanj/tick)
+        $vel['bar.iskanj']      = $Perf.Iskanj
+        $vel['bar.neuspelih']   = $Perf.Neuspelih
+        $vel['bar.zavrnjenih']  = $Perf.Zavrnjenih
+        $vel['bar.tickov']      = $Perf.Tickov
+        $vel['bar.naTick']      = $Perf.NaTick
+        $vel['bar.posnetekP50'] = $Perf.PosnetekP50
+        $vel['bar.posnetekP95'] = $Perf.PosnetekP95
+        $vel['bar.iskanjeP50']  = $Perf.IskanjeP50
+        $vel['bar.iskanjeP95']  = $Perf.IskanjeP95
+        $vel['bar.glavnaP50']   = $Perf.GlavnaP50
+        $vel['bar.glavnaP95']   = $Perf.GlavnaP95
+    }
 
     return [pscustomobject]@{ Odtis = $odtis; Velicine = $vel }
 }
@@ -467,6 +536,18 @@ try {
     $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 
     Step 1 'EULA in fixture'
+    Write-Host ("  ozadje navigacije: {0}" -f $Ozadje)
+    if ($baritone) {
+        # M7.6: server nalozi knjiznico iz njenih razredov (build.gradle -PnpcBaritoneDev).
+        # DoorMode obstaja sele od API 2 (D-039), npcWaterPenalty od D-040.
+        $libMain = Join-Path $libRoot 'mod\build\classes\java\main'
+        $need = @('si\ladja\npcbaritone\api\DoorMode.class', 'si\ladja\npcbaritone\forge\NpcBaritoneMod.class')
+        $missing = @($need | Where-Object { -not (Test-Path (Join-Path $libMain $_)) })
+        Check ("M7.6: razredi knjiznice API 2 so v {0}" -f $libMain) ($missing.Count -eq 0)
+        if ($missing.Count -gt 0) {
+            throw "Knjiznica ni zgrajena. V ..\barittone_for_npc_rework pozeni '.\dev.ps1 build --offline', nato ta scenarij."
+        }
+    }
     $eulaFile = Join-Path $run 'eula.txt'
     $eulaOk = (Test-Path $eulaFile) -and ((Get-Content $eulaFile -Raw) -match 'eula\s*=\s*true')
     if (-not $eulaOk) {
@@ -598,6 +679,23 @@ try {
     } else {
         Check 'N2: vrstica RWDIAG-CHUNKS je berljiva' $false
     }
+    if ($baritone) {
+        # M7.6: vseh 16 hodecih NPC-jev na Baritona (NBT kljuc RwNavBackend=1). Pripenjanje
+        # se zgodi takoj ob ukazu; 'pripetih' steje dejansko pripete, ne samo vklopljena stikala.
+        Send-Command $s 'rwnav on NAV_Walk'
+        Check 'M7.6: /rwnav odgovori' (Wait-ForMarker $s 'RWNAV global=' 30)
+        $rw = Read-RwNav $s.Log
+        if ($null -ne $rw) {
+            Write-Host ("  RWNAV global={0} mod={1} ujemanj={2} izbranih={3} pripetih={4}" -f `
+                $rw.Globalno, $rw.Mod, $rw.Ujemanj, $rw.Izbranih, $rw.Pripetih)
+            Check 'M7.6: globalno stikalo 1 in knjiznica nalozena' (($rw.Globalno -eq 1) -and $rw.Mod)
+            Check ("M7.6: vseh {0} hodecih NPC-jev je pripetih na Baritona (pripetih={1})" -f $npcCount, $rw.Pripetih) `
+                (($rw.Ujemanj -eq $npcCount) -and ($rw.Izbranih -eq $npcCount) -and ($rw.Pripetih -eq $npcCount))
+        } else {
+            Check 'M7.6: vrstica RWNAV je berljiva' $false
+        }
+        if ($failures.Count -gt 0) { throw "Baritone ni pripet; A/B zagon nima smisla. Glej $($s.Log)" }
+    }
     Write-Host ("  ogrevanje {0} s" -f $WarmupSeconds)
     Start-Sleep -Seconds $WarmupSeconds
     Send-Command $s 'rwdiag on'
@@ -630,6 +728,11 @@ try {
           (Wait-ForCount $s 'RWNAV-POMET ' (($OgrevalnihPometanj + 1) * $lanes.Count) 60)
 
     Step 6 'Scenarij, faza A'
+    if ($baritone) {
+        # M7.6: stevci knjiznice od tu naprej = samo fazi A in B (brez pometanj sonde)
+        Send-Command $s 'npcb perf reset'
+        Check 'M7.6: /npcb perf reset odgovori' (Wait-ForCount $s 'NPCB-PERF' 1 30)
+    }
     Send-Command $s 'noppes clone spawn NAV_Control 1 0,4,56'
     Check 'N1: krmilnik se je oglasil (NAV-INIT)' (Wait-ForMarker $s 'NAV-INIT' 60)
     Check 'N1: progi sta sestavljeni (NAV-SETUP)' (Wait-ForMarker $s 'NAV-SETUP ' 60)
@@ -654,6 +757,17 @@ try {
     Check 'N1: scenarij je prisel do konca (NAV-SUM)' (Wait-ForMarker $s 'NAV-SUM' 60)
 
     Step 9 'Posnetek meritve in ustavitev'
+    $perf = $null
+    if ($baritone) {
+        Send-Command $s 'npcb perf'
+        Check 'M7.6: /npcb perf odgovori' (Wait-ForCount $s 'NPCB-PERF' 2 30)
+        $perf = Read-NpcbPerf $s.Log
+        Check 'M7.6: vrstica NPCB-PERF je berljiva' ($null -ne $perf)
+        if ($null -ne $perf) {
+            Check ("M7.6: Baritone je iskal (iskanj={0}, zavrnjenih={1})" -f $perf.Iskanj, $perf.Zavrnjenih) `
+                (($perf.Iskanj -gt 0) -and ($perf.Zavrnjenih -eq 0))
+        }
+    }
     Send-Command $s 'rwdiag dump m27-nav'
     Check 'posnetek zapisan' (Wait-ForMarker $s 'RWDIAG-DUMP ' 60)
     Send-Command $s 'rwdiag off'
@@ -840,15 +954,30 @@ try {
         $tabela += ('6 iskanj na tick (obe progi skupaj)       {0:N3} (p95 {1}, max {2}), navigira p50 {3}' -f `
             $navAi.NaTick, $navAi.NaTickP95, $navAi.NaTickMax, $navAi.NavigirajoP50)
     }
+    if ($baritone) {
+        $tabela += ''
+        $tabela += 'Ozadje BARITONE: vrstice 1, 2 in 5 zgoraj so VANILLA iskalnik (sonda), ne Baritone.'
+        $tabela += 'Za A/B primerjaj 1 iz vzorcev igre (cele=), 3, 4 in spodnji vrstici Baritona.'
+        if ($null -ne $perf) {
+            $tabela += ('5b Baritone: glavna nit na iskanje (posnetek) us p50/p95  {0} / {1} (chunkov p50 {2})' -f `
+                $perf.PosnetekP50, $perf.PosnetekP95, $perf.ChunkovP50)
+            $tabela += ('5c Baritone: iskanje v ozadju us p50/p95                 {0} / {1}' -f $perf.IskanjeP50, $perf.IskanjeP95)
+            $tabela += ('6b Baritone: iskanj na tick (fazi A+B)                  {0:N3} ({1} iskanj / {2} tickov, neuspelih {3})' -f `
+                $perf.NaTick, $perf.Iskanj, $perf.Tickov, $perf.Neuspelih)
+            $tabela += ('   Baritone: glavna nit us/tick p50/p95                 {0} / {1}' -f $perf.GlavnaP50, $perf.GlavnaP95)
+        }
+    }
     $tabela | ForEach-Object { Write-Host $_ }
 
     Step 14 'Porocilo'
     $stamp  = Get-Date -Format 'yyyy-MM-dd-HHmm'
-    $report = Join-Path $audit ("m27-nav-{0}.md" -f $stamp)
+    $report = Join-Path $audit ("m27-nav{0}-{1}.md" -f $ozadjeTag, $stamp)
     $head = @()
     $head += ("# M2.7 - merila kakovosti navigacije, zagon {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm'))
     $head += ''
     $head += 'Scenarij: `docs/scenariji/M2.7-navigacija.md`. Progi: G = zid z enimi vrati, O = odprto.'
+    $head += ''
+    $head += ('Ozadje navigacije: **{0}**{1}' -f $Ozadje, $(if ($baritone) { ' (M7.6: `-PnpcBaritoneDev -PrwNavBackend=1`, `/rwnav on NAV_Walk`)' } else { '' }))
     $head += ''
     $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'N1-N15 zelena' } else { ("padlo {0}" -f $failures.Count) }))
     $head += ''
@@ -883,11 +1012,12 @@ try {
     # Porocilo zgoraj je za cloveka, ta zapis za .\ponovitve-run.ps1. Odtis so pogoji,
     # pod katerimi je meritev nastala in ki se med ponovitvami ne smejo razlikovati;
     # velicine so tisto, kar se meri in cigar razpon cez ponovitve je merilni sum.
-    if ($JsonPath -eq '') { $JsonPath = Join-Path $audit ("m27-nav-{0}.json" -f $stamp) }
+    if ($JsonPath -eq '') { $JsonPath = Join-Path $audit ("m27-nav{0}-{1}.json" -f $ozadjeTag, $stamp) }
 
     $zapis = New-NavZapis -Pometi $pometi -Cas $cas -NavAi $navAi -Chunks $chunks -Setup $setup `
                           -Filled $filled -Obroc $ChunkRadius -Ogrevanje $WarmupSeconds `
-                          -PometanjPon $SweepRepeats -OgrevalnaPometanja $OgrevalnihPometanj
+                          -PometanjPon $SweepRepeats -OgrevalnaPometanja $OgrevalnihPometanj `
+                          -Perf $perf -Ozadje $Ozadje
     $odtis = $zapis.Odtis
     $vel   = $zapis.Velicine
 
