@@ -9,9 +9,10 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-09-24** |
+| Zadnja posodobitev | **2026-09-28** (M7.9; prejšnja vsebina te tabele je iz 24. 9., razen spodnje vrstice »Baritone«) |
+| Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **Prvi zagon 24. 9.:** napaka ponovljena (način 0 mediana 30 tickov proti 10 pri kontroli), v načinu 1 mediana 10, a A5 pade na enem vzorcu (50 > 20) — hipoteza `aggroRange`; scenarij dopolnjen, ponovni zagon čaka. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
-| Naslednji paketi | **Ponovni zagon M3.6** z dopolnjenim scenarijem (`.\m36-run.ps1` in `.\m36-run.ps1 -Nacin 1`; build ni potreben, spremenjena sta samo skripta krmilnika in `m36-run.ps1`), nato **M3.7**. Odprto: en jahač od osmih v fazi C ponovljivo ne dobi poti (ni R1); scenarij za `tpTo` jahača (M3.9); iz M3.6 dve hipotezi (zavetje pred napadom, napad = strelski napad po prioriteti). Za predajo: `.\dev.ps1 buildPatchedMod --offline` + `verify-package.ps1`. Odloženo: zagon M2.6 |
+| Naslednji paketi | Commit + push obeh repozitorijev (M7.9–M7.10). Nato **ponovni zagon M3.6** z dopolnjenim scenarijem (`.\m36-run.ps1` in `.\m36-run.ps1 -Nacin 1`; build ni potreben, spremenjena sta samo skripta krmilnika in `m36-run.ps1`), nato **M3.7**. Odprto: en jahač od osmih v fazi C ponovljivo ne dobi poti (ni R1); scenarij za `tpTo` jahača (M3.9); iz M3.6 dve hipotezi (zavetje pred napadom, napad = strelski napad po prioriteti). Za predajo: `.\dev.ps1 buildPatchedMod --offline` + `verify-package.ps1`. Odloženo: zagon M2.6 |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -78,6 +79,39 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-09-28 — M7.9–M7.10: vzrok grla, čakanje v gneči, V4 sprejet
+
+M7.9 (10×, `-Sled`): grlo B je nestabilno zaradi gneče v vratih (~800 trkov, 12–15 preklicev
+`movement_timeout` v vsakem zagonu), zamik rezultata iskanja (0–1 tick) jo samo sproži. M7.10:
+knjižnica `crowdYield` — NPC počaka za entiteto pred sabo, ki se premika ali ima pot in manjši ID,
+čakanje ne šteje v časovno omejitev premika. Tri različice po 5×; M7.10c: 8/8 na obeh grlih in
+odprtem v vseh zagonih. `nav-run.ps1 -Umik` (→ `-PnpcbCrowdYield=true`, `dev/build.gradle`).
+V4 sprejet z znano omejitvijo (zadnji prihod na skupni cilj 2–6 s kasneje).
+[meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md). `audit/*.csv` (sledi, ~2 MB) v `.gitignore`.
+
+**Naslednji korak:** commit + push, nato ponovni zagon M3.6 (`.\m36-run.ps1`, `.\m36-run.ps1 -Nacin 1`).
+
+### 2026-09-28 — M7.9: sled nedeterminizma grla B; vrata V4 popravljena
+
+**Paket:** M7.9 (knjižnica `npcbaritone`, izven vrstnega reda faz CNPC; potrdil uporabnik).
+
+Po M7.8 je Baritone na grlu B edini nestabilen: 8, 8, 4 od 8, vanilla vedno 6. V slabem zagonu
+(`audit/m25c-nav-2026-09-28-1053`, p1) je 7/8 v zastoju in knjižnica je iskala 77-krat namesto 68.
+Sled loči dve hipotezi: rezultat asinhronega iskanja se uporabi v različnem ticku, ali pa se
+skupina zagozdi v vratih in izvajalec pot prekliče. Koda in zapis v knjižnici
+(`docs/04-STANJE.md` 28. 9., `PathTrace` stolpci 18–24, `tools/sled_grlo.py`).
+
+**Tukaj:** `nav-run.ps1 -Sled` (samo z `-Ozadje baritone`) vklopi `/npcb trace on` pred fazo A, po
+NAV-SUM sled izpiše (`NPCB-TRACE-DUMP`) in jo kopira ob zapis zagona kot `<zapis>-sled.csv`
+(merila »M7.9: …«). Vanilla zagon in zagon brez `-Sled` sta nespremenjena. PowerShell parser
+0 napak (pwsh 7.4), regex in ime ciljne datoteke preverjena na sintetičnem vnosu.
+
+**Vrata V4** (D-022, knjižnica D-043): veličina 1 »ni slabše«, 2–3 boljša mediana in najslabši
+Baritonov zagon ni slabši od vanille, Baritone ≥ 5 ponovitev. Izid M7.8 ostane »ni prestan«.
+
+**Naslednji korak:** v `..\npcbaritone-m7` `.\dev.ps1 build --offline`, nato tukaj
+`.\ponovitve-run.ps1 -Ponovitev 10 -Dodatno @('-Ozadje','baritone','-Sled','-BaritoneRoot','..\npcbaritone-m7')`.
 
 ### 2026-09-28 — M7.8: izmerjene poti, R1 in odločitev V4
 
