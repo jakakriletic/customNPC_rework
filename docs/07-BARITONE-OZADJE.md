@@ -1,7 +1,7 @@
 # 07 — Baritone kot izbirno ozadje navigacije (M7 knjižnice `npcbaritone`)
 
 Odločitev: **D-022** (`01-ARHITEKTURA.md` §9). Knjižnica: repozitorij
-`barittone_for_npc_rework`, milestone M7, javni API 1 (`npcbaritone-<ver>-api.jar`).
+`barittone_for_npc_rework`, milestone M7, javni API 2 (`npcbaritone-<ver>-api.jar`).
 Ta dokument je **M7.1**: vsak klic navigatorja v CNPC, kaj naredi pod Baritonovim
 adapterjem in ali je potreben ukrep. Stanje: 2026-09-27, na `main` po M3.6 in M4.14a. Klici so bili zbrani v `dev/reference-src`
 (01Oct19, številke vrstic od tam) in preverjeni v `dev/src/patch`: prenos M3.1 in popravki

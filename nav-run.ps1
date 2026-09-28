@@ -37,7 +37,8 @@
 param([switch]$AcceptEula, [int]$ChunkRadius = 2, [int]$WarmupSeconds = 10,
       [int]$ScenarioTimeoutSec = 180, [int]$SweepRepeats = 8, [int]$OgrevalnihPometanj = 2,
       [string]$JsonPath = '',
-      [ValidateSet('vanilla', 'baritone')][string]$Ozadje = 'vanilla')
+      [ValidateSet('vanilla', 'baritone')][string]$Ozadje = 'vanilla',
+      [string]$BaritoneRoot = '')
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -65,8 +66,15 @@ $npcCount = 16
 
 # M7.6: Baritone kot ozadje. Vanilla zagon ostane bit za bitom enak prejsnjemu (brez -P).
 $baritone    = ($Ozadje -eq 'baritone')
-$libRoot     = Join-Path $root '..\barittone_for_npc_rework'
+$libRoot     = if ($BaritoneRoot) {
+    $chosen = if ([System.IO.Path]::IsPathRooted($BaritoneRoot)) { $BaritoneRoot } else { Join-Path $root $BaritoneRoot }
+    [System.IO.Path]::GetFullPath($chosen)
+} else {
+    [System.IO.Path]::GetFullPath((Join-Path $root '..\barittone_for_npc_rework\barritone_converted_for_entities'))
+}
+$libMod      = Join-Path $libRoot 'mod'
 $gradleExtra = if ($baritone) { ' -PnpcBaritoneDev -PrwNavBackend=1' } else { '' }
+$env:NPCB_MOD_DIR = $libMod
 $ozadjeTag   = if ($baritone) { '-baritone' } else { '' }
 
 function Step($n, $t) { Write-Host ''; Write-Host "===== $n : $t =====" }
@@ -540,12 +548,12 @@ try {
     if ($baritone) {
         # M7.6: server nalozi knjiznico iz njenih razredov (build.gradle -PnpcBaritoneDev).
         # DoorMode obstaja sele od API 2 (D-039), npcWaterPenalty od D-040.
-        $libMain = Join-Path $libRoot 'mod\build\classes\java\main'
+        $libMain = Join-Path $libMod 'build\classes\java\main'
         $need = @('si\ladja\npcbaritone\api\DoorMode.class', 'si\ladja\npcbaritone\forge\NpcBaritoneMod.class')
         $missing = @($need | Where-Object { -not (Test-Path (Join-Path $libMain $_)) })
         Check ("M7.6: razredi knjiznice API 2 so v {0}" -f $libMain) ($missing.Count -eq 0)
         if ($missing.Count -gt 0) {
-            throw "Knjiznica ni zgrajena. V ..\barittone_for_npc_rework pozeni '.\dev.ps1 build --offline', nato ta scenarij."
+            throw "Knjiznica ni zgrajena. V $libRoot pozeni '.\dev.ps1 build', nato ta scenarij."
         }
     }
     $eulaFile = Join-Path $run 'eula.txt'

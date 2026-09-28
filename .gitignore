@@ -7,6 +7,9 @@ dev/run-m7/
 dev/libs/
 dev/baseline/
 audit/tools/
+# Merilni skripti zapiseta zacasna porocila v audit; potrjene meritve so v docs/meritve.
+audit/*.json
+audit/*.md
 *.log
 *.log.gz
 dev/testworld/markerji-vzorec.txt

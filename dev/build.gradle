@@ -21,12 +21,15 @@ repositories {
     flatDir { dirs 'libs' }
     mavenCentral()
 }
+// The optional library may live in a separate checkout or worktree.
+def npcBaritoneModDir = System.getenv('NPCB_MOD_DIR') ?: project.findProperty('npcBaritoneModDir')
+        ?: '../../barittone_for_npc_rework/barritone_converted_for_entities/mod'
 dependencies {
     // Generated from the SHA-256-verified original by ForgeGradle's SRG -> MCP remapper.
     compile files('libs/customnpcs-mapped-01Oct19.jar')
     // M7: compile against the sibling library's API only; the mod is optional at runtime.
-    compileOnly files('../../barittone_for_npc_rework/mod/build/libs/npcbaritone-0.0.1-m0-api.jar')
-    testCompile files('../../barittone_for_npc_rework/mod/build/libs/npcbaritone-0.0.1-m0-api.jar')
+    compileOnly files("${npcBaritoneModDir}/build/libs/npcbaritone-0.0.1-m0-api.jar")
+    testCompile files("${npcBaritoneModDir}/build/libs/npcbaritone-0.0.1-m0-api.jar")
     testCompile files('libs/junit-4.13.2.jar', 'libs/hamcrest-core-1.3.jar')
 }
 // Only explicitly restored classes compile; MDK examples are excluded.
@@ -64,8 +67,8 @@ afterEvaluate {
                 !it.name.toLowerCase().startsWith('customnpcs')
             }) + files(devRuntimeMod.archivePath)
             if (project.hasProperty('npcBaritoneDev')) {
-                classpath += files('../../barittone_for_npc_rework/mod/build/classes/java/main',
-                                   '../../barittone_for_npc_rework/mod/build/resources/main')
+                classpath += files("${npcBaritoneModDir}/build/classes/java/main",
+                                   "${npcBaritoneModDir}/build/resources/main")
             }
         }
         if (project.hasProperty('rwNavBackend')) {
