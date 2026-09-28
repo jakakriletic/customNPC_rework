@@ -194,6 +194,19 @@ function Read-RwNav([string]$LogPath) {
     }
 }
 
+function Read-NavPathSample([string]$LogPath, [string]$Prefix) {
+    $ms = [regex]::Matches((Get-MarkerText $LogPath),
+        'RWNAV-POT ime=' + [regex]::Escape($Prefix) + ' npc=(\d+) poti=(\d+) celih=(\d+) razmerjeN=(\d+) razmerjeP50=([\d.]+) razmerjeP95=([\d.]+)')
+    if ($ms.Count -eq 0) { return $null }
+    $m = $ms[$ms.Count - 1]
+    return [pscustomobject]@{
+        Npc = [int]$m.Groups[1].Value; Poti = [int]$m.Groups[2].Value
+        Celih = [int]$m.Groups[3].Value; RazmerjeN = [int]$m.Groups[4].Value
+        RazmerjeP50 = [double]::Parse($m.Groups[5].Value, [Globalization.CultureInfo]::InvariantCulture)
+        RazmerjeP95 = [double]::Parse($m.Groups[6].Value, [Globalization.CultureInfo]::InvariantCulture)
+    }
+}
+
 # M7.6: zadnja vrstica "/npcb perf" knjiznice (SearchStats + PerfMeter). Enote 'µs' se v
 # logu lahko pokvarijo zaradi kodne strani, zato jih vzorec preskoci s \S+.
 #   NPCB-PERF iskanj=12 končanih=12 zavrnjenih=0 neuspelih=0 deljenih=0 | iskanje µs p50=.. p95=..
@@ -448,7 +461,7 @@ function Format-Sonda($S) {
 function New-NavZapis {
     param($Pometi, $Cas, $NavAi, $Chunks, $Setup, [int]$Filled,
           [int]$Obroc, [int]$Ogrevanje, [int]$PometanjPon, [int]$OgrevalnaPometanja,
-          $Perf = $null, [string]$Ozadje = 'vanilla')
+          $Perf = $null, [string]$Ozadje = 'vanilla', $PathSamples = $null)
 
     $odtis = @{
         npc         = $(if ($null -ne $Chunks) { $Chunks.Npc }    else { -1 })
@@ -528,6 +541,18 @@ function New-NavZapis {
         $vel['bar.iskanjeP95']  = $Perf.IskanjeP95
         $vel['bar.glavnaP50']   = $Perf.GlavnaP50
         $vel['bar.glavnaP95']   = $Perf.GlavnaP95
+    }
+    if ($null -ne $PathSamples) {
+        foreach ($lane in @('G', 'O')) {
+            $p = $PathSamples[$lane]
+            if ($null -eq $p) { continue }
+            $vel[('pot.{0}.npc' -f $lane)] = $p.Npc
+            $vel[('pot.{0}.poti' -f $lane)] = $p.Poti
+            $vel[('pot.{0}.celih' -f $lane)] = $p.Celih
+            $vel[('pot.{0}.razmerjeN' -f $lane)] = $p.RazmerjeN
+            $vel[('pot.{0}.razmerjeP50' -f $lane)] = $p.RazmerjeP50
+            $vel[('pot.{0}.razmerjeP95' -f $lane)] = $p.RazmerjeP95
+        }
     }
 
     return [pscustomobject]@{ Odtis = $odtis; Velicine = $vel }
@@ -760,6 +785,19 @@ try {
     Check ("N3: prizorisce se ujema s skripto (vrataX={0} zidZ={1} ciljZ={2})" -f $setup.VrataX, $setup.ZidZ, $setup.CiljZ) `
         (($setup.VrataX -eq $goalXG) -and ($setup.CiljZ -eq $goalZ))
     Check 'faza A se je zacela' (Wait-ForMarker $s 'NAV-A-START' $ScenarioTimeoutSec)
+    # M7.7: dejanske poti obeh navigatorjev na istem mestu scenarija. Pocakaj, da
+    # asinhroni Baritone zakljuci prvo iskanje; pred prihodom NPC-jev je se dovolj casa.
+    Start-Sleep -Seconds 2
+    $pathSamples = @{}
+    foreach ($lane in $lanes) {
+        $prefix = "NAV_Walk$lane"
+        $gx = if ($lane -eq 'G') { $goalXG } else { $goalXO }
+        Send-Command $s ("rwnav paths {0} {1} {2} {3}" -f $prefix, $gx, $goalY, $goalZ)
+        Check ("M7.7: pot proge {0} je odgovorila" -f $lane) (Wait-ForMarker $s ("RWNAV-POT ime=$prefix") 30)
+        $pathSamples[$lane] = Read-NavPathSample $s.Log $prefix
+        Check ("M7.7: vzorec dejanske poti {0} ima 8 NPC-jev" -f $lane) `
+              (($null -ne $pathSamples[$lane]) -and ($pathSamples[$lane].Npc -eq 8))
+    }
     Check 'faza A se je koncala' (Wait-ForMarker $s 'NAV-A-END' $ScenarioTimeoutSec)
 
     Step 7 'Sonda tam, kjer je faza A obstala'
@@ -937,6 +975,11 @@ try {
     $tabela = @()
     $tabela += 'velicina                                  proga G (grlo)        proga O (odprto)'
     $tabela += '---------------------------------------------------------------------------------'
+    $tabela += ('M7 dejanska pot ob fazi A: poti/cele           {0}/{1}                 {2}/{3}' -f `
+        $pathSamples.G.Poti, $pathSamples.G.Celih, $pathSamples.O.Poti, $pathSamples.O.Celih)
+    $tabela += ('M7 dejanska pot: razmerje p50/p95            {0:N3}/{1:N3}           {2:N3}/{3:N3}' -f `
+        $pathSamples.G.RazmerjeP50, $pathSamples.G.RazmerjeP95,
+        $pathSamples.O.RazmerjeP50, $pathSamples.O.RazmerjeP95)
     $pG = @($pometi | Where-Object { $_.Predpona -eq 'NAV_WalkG' })
     $pO = @($pometi | Where-Object { $_.Predpona -eq 'NAV_WalkO' })
     function Val($arr, [int]$i, [string]$field, [string]$fmt) {
@@ -1035,7 +1078,7 @@ try {
     $zapis = New-NavZapis -Pometi $pometi -Cas $cas -NavAi $navAi -Chunks $chunks -Setup $setup `
                           -Filled $filled -Obroc $ChunkRadius -Ogrevanje $WarmupSeconds `
                           -PometanjPon $SweepRepeats -OgrevalnaPometanja $OgrevalnihPometanj `
-                          -Perf $perf -Ozadje $Ozadje
+                          -Perf $perf -Ozadje $Ozadje -PathSamples $pathSamples
     $odtis = $zapis.Odtis
     $vel   = $zapis.Velicine
 

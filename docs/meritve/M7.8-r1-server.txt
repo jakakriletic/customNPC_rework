@@ -1,0 +1,432 @@
+To honour the JVM settings for this build a new JVM will be forked. Please consider using the daemon: https://docs.gradle.org/4.9/userguide/gradle_daemon.html.
+Daemon will be stopped at the end of the build stopping after processing
+
+> Configure project :
+This mapping 'snapshot_20171003' was designed for MC 1.12! Use at your own peril.
+WARNING: You are using an unsupported version of ForgeGradle.
+Please consider upgrading to ForgeGradle 5 and helping in the efforts to get old versions working on the modern toolchain.
+See https://gist.github.com/TheCurle/fe7ad3ede188cbdd15c235cc75d52d4a for more info on contributing.
+#################################################
+         ForgeGradle 2.3.4-gfc67182
+  https://github.com/MinecraftForge/ForgeGradle
+#################################################
+                 Powered by MCP
+             http://modcoderpack.com
+     by: Searge, ProfMobius, R4wk, ZeuX
+     Fesh0r, IngisKahn, bspkrs, LexManos
+#################################################
+
+> Task :deobfCompileDummyTask
+> Task :deobfProvidedDummyTask
+> Task :sourceApiJava UP-TO-DATE
+> Task :compileApiJava NO-SOURCE
+> Task :processApiResources NO-SOURCE
+> Task :apiClasses UP-TO-DATE
+> Task :sourceMainJava UP-TO-DATE
+> Task :compileJava UP-TO-DATE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+> Task :devRuntimeMod
+> Task :jar
+> Task :getVersionJson
+> Task :extractNatives SKIPPED
+> Task :extractUserdev UP-TO-DATE
+> Task :getAssetIndex UP-TO-DATE
+> Task :getAssets SKIPPED
+> Task :makeStart
+
+> Task :runServer
+[11:08:02] [main/INFO] [GradleStart]: Extra: [nogui]
+[11:08:02] [main/INFO] [GradleStart]: Running with arguments: [--tweakClass, net.minecraftforge.fml.common.launcher.FMLServerTweaker, nogui, --tweakClass, net.minecraftforge.gradle.tweakers.CoremodTweaker]
+[11:08:02] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.fml.common.launcher.FMLServerTweaker
+[11:08:02] [main/INFO] [LaunchWrapper]: Using primary tweak class name net.minecraftforge.fml.common.launcher.FMLServerTweaker
+[11:08:02] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.gradle.tweakers.CoremodTweaker
+[11:08:02] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLServerTweaker
+2026-09-28 11:08:04,328 main WARN Disabling terminal, you're running in an unsupported environment.
+[11:08:04] [main/INFO] [FML]: Forge Mod Loader version 14.23.5.2847 for Minecraft 1.12.2 loading
+[11:08:04] [main/INFO] [FML]: Java is OpenJDK 64-Bit Server VM, version 1.8.0_492, running on Windows 11:amd64:10.0, installed at C:\Users\jaka.kriletic\Documents\mods_creation\barittone_for_npc_rework\cnpc-m7\.tools\jdk8\jre
+[11:08:04] [main/ERROR] [FML]: Apache Maven library folder was not in the format expected. Using default libraries directory.
+[11:08:04] [main/ERROR] [FML]: Full: C:\Users\jaka.kriletic\.gradle\caches\modules-2\files-2.1\org.apache.maven\maven-artifact\3.5.3\7dc72b6d6d8a6dced3d294ed54c2cc3515ade9f4\maven-artifact-3.5.3.jar
+[11:08:04] [main/ERROR] [FML]: Trimmed: c:/users/jaka.kriletic/.gradle/caches/modules-2/files-2.1/org.apache.maven/maven-artifact/3.5.3/
+[11:08:04] [main/INFO] [FML]: Managed to load a deobfuscated Minecraft name- we are in a deobfuscated environment. Skipping runtime deobfuscation
+[11:08:04] [main/INFO] [FML]: Ignoring missing certificate for coremod FMLCorePlugin (net.minecraftforge.fml.relauncher.FMLCorePlugin), we are in deobf and it's a forge core plugin
+[11:08:04] [main/INFO] [FML]: Ignoring missing certificate for coremod FMLForgePlugin (net.minecraftforge.classloading.FMLForgePlugin), we are in deobf and it's a forge core plugin
+[11:08:04] [main/INFO] [FML]: Searching C:\Users\jaka.kriletic\Documents\mods_creation\barittone_for_npc_rework\cnpc-m7\dev\run\.\mods for mods
+[11:08:04] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.gradle.tweakers.CoremodTweaker
+[11:08:04] [main/INFO] [GradleStart]: Injecting location in coremod net.minecraftforge.fml.relauncher.FMLCorePlugin
+[11:08:04] [main/INFO] [GradleStart]: Injecting location in coremod net.minecraftforge.classloading.FMLForgePlugin
+[11:08:04] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.fml.common.launcher.FMLInjectionAndSortingTweaker
+[11:08:04] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.fml.common.launcher.FMLDeobfTweaker
+[11:08:04] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.gradle.tweakers.AccessTransformerTweaker
+[11:08:04] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLInjectionAndSortingTweaker
+[11:08:04] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLInjectionAndSortingTweaker
+[11:08:04] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[11:08:05] [main/ERROR] [FML]: FML appears to be missing any signature data. This is not a good thing
+[11:08:05] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[11:08:05] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLDeobfTweaker
+[11:08:05] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.gradle.tweakers.AccessTransformerTweaker
+[11:08:05] [main/INFO] [GradleStart]: Remapping AccessTransformer rules...
+[11:08:05] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.fml.common.launcher.TerminalTweaker
+[11:08:05] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.TerminalTweaker
+[11:08:05] [main/INFO] [LaunchWrapper]: Launching wrapped minecraft {net.minecraft.server.MinecraftServer}
+[11:08:08] [Server thread/INFO] [minecraft/DedicatedServer]: Starting minecraft server version 1.12.2
+[11:08:08] [Server thread/INFO] [FML]: MinecraftForge v14.23.5.2847 Initialized
+[11:08:08] [Server thread/INFO] [FML]: Starts to replace vanilla recipe ingredients with ore ingredients.
+[11:08:08] [Server thread/INFO] [FML]: Invalid recipe found with multiple oredict ingredients in the same ingredient...
+[11:08:09] [Server thread/INFO] [FML]: Replaced 1227 ore ingredients
+[11:08:09] [Server thread/INFO] [FML]: Searching C:\Users\jaka.kriletic\Documents\mods_creation\barittone_for_npc_rework\cnpc-m7\dev\run\.\mods for mods
+[11:08:10] [Server thread/INFO] [FML]: Forge Mod Loader has identified 6 mods to load
+[11:08:10] [Server thread/WARN] [FML]: Missing English translation for FML: assets/fml/lang/en_us.lang
+[11:08:10] [Server thread/WARN] [FML]: Missing English translation for npcbaritone: /C:/Users/jaka.kriletic/Documents/mods_creation/barittone_for_npc_rework/npcbaritone-m7/mod/build/classes/java/main/assets/npcbaritone/lang/en_us.lang
+[11:08:11] [Server thread/INFO] [FML]: Attempting connection with missing mods [minecraft, mcp, FML, forge, customnpcs, npcbaritone] at CLIENT
+[11:08:11] [Server thread/INFO] [FML]: Attempting connection with missing mods [minecraft, mcp, FML, forge, customnpcs, npcbaritone] at SERVER
+[11:08:12] [Server thread/INFO] [FML]: Processing ObjectHolder annotations
+[11:08:12] [Server thread/INFO] [FML]: Found 1188 ObjectHolder annotations
+[11:08:12] [Server thread/INFO] [FML]: Identifying ItemStackHolder annotations
+[11:08:12] [Server thread/INFO] [FML]: Found 0 ItemStackHolder annotations
+[11:08:12] [Server thread/INFO] [FML]: Configured a dormant chunk cache size of 0
+[11:08:12] [Forge Version Check/INFO] [forge.VersionCheck]: [forge] Starting version check at http://files.minecraftforge.net/maven/net/minecraftforge/forge/promotions_slim.json
+[11:08:13] [Server thread/INFO] [npcbaritone]: NPC Baritone 0.0.1-m0 loaded (side=SERVER, upstream=cabaletta/baritone v1.2.19 (d9cb2d9)); config{threads=2, queueLimit=64, snapshotMargin=8, shareRadius=1, speedMode=player, maxTurn=30, syncPathsToOps=false, largeEntities=false, profiles=[default, walk, parkour, cautious, avoid_water]}
+[11:08:13] [Server thread/WARN] [FML]: Potentially Dangerous alternative prefix `minecraft` for name `tileredstoneblock`, expected `customnpcs`. This could be a intended override, but in most cases indicates a broken mod.
+[11:08:13] [Server thread/WARN] [FML]: Potentially Dangerous alternative prefix `minecraft` for name `tileblockanvil`, expected `customnpcs`. This could be a intended override, but in most cases indicates a broken mod.
+[11:08:13] [Server thread/WARN] [FML]: Potentially Dangerous alternative prefix `minecraft` for name `tilemailbox`, expected `customnpcs`. This could be a intended override, but in most cases indicates a broken mod.
+[11:08:13] [Server thread/WARN] [FML]: Potentially Dangerous alternative prefix `minecraft` for name `tilewaypoint`, expected `customnpcs`. This could be a intended override, but in most cases indicates a broken mod.
+[11:08:13] [Server thread/WARN] [FML]: Potentially Dangerous alternative prefix `minecraft` for name `tilenpcscripted`, expected `customnpcs`. This could be a intended override, but in most cases indicates a broken mod.
+[11:08:13] [Server thread/WARN] [FML]: Potentially Dangerous alternative prefix `minecraft` for name `tilenpcscripteddoor`, expected `customnpcs`. This could be a intended override, but in most cases indicates a broken mod.
+[11:08:13] [Server thread/WARN] [FML]: Potentially Dangerous alternative prefix `minecraft` for name `tilenpcbuilder`, expected `customnpcs`. This could be a intended override, but in most cases indicates a broken mod.
+[11:08:13] [Server thread/WARN] [FML]: Potentially Dangerous alternative prefix `minecraft` for name `tilenpccopy`, expected `customnpcs`. This could be a intended override, but in most cases indicates a broken mod.
+[11:08:13] [Server thread/WARN] [FML]: Potentially Dangerous alternative prefix `minecraft` for name `tilenpcborder`, expected `customnpcs`. This could be a intended override, but in most cases indicates a broken mod.
+[11:08:13] [Server thread/INFO] [FML]: Applying holder lookups
+[11:08:13] [Server thread/INFO] [FML]: Holder lookups applied
+[11:08:13] [Server thread/INFO] [FML]: Applying holder lookups
+[11:08:13] [Server thread/INFO] [FML]: Holder lookups applied
+[11:08:13] [Forge Version Check/INFO] [forge.VersionCheck]: [forge] Found status: OUTDATED Target: 14.23.5.2859
+[11:08:13] [Server thread/INFO] [FML]: Applying holder lookups
+[11:08:13] [Server thread/INFO] [FML]: Holder lookups applied
+[11:08:13] [Server thread/INFO] [FML]: Applying holder lookups
+[11:08:13] [Server thread/INFO] [FML]: Holder lookups applied
+[11:08:13] [Server thread/INFO] [FML]: Injecting itemstacks
+[11:08:13] [Server thread/INFO] [FML]: Itemstack injection complete
+[11:08:13] [Server thread/INFO] [minecraft/DedicatedServer]: Loading properties
+[11:08:13] [Server thread/INFO] [minecraft/DedicatedServer]: Default game type: CREATIVE
+[11:08:13] [Server thread/INFO] [minecraft/DedicatedServer]: Generating keypair
+[11:08:13] [Server thread/INFO] [minecraft/DedicatedServer]: Starting Minecraft server on *:25565
+[11:08:13] [Server thread/INFO] [minecraft/NetworkSystem]: Using default channel type
+[11:08:16] [Server thread/WARN] [minecraft/DedicatedServer]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[11:08:16] [Server thread/WARN] [minecraft/DedicatedServer]: The server will make no attempt to authenticate usernames. Beware.
+[11:08:16] [Server thread/WARN] [minecraft/DedicatedServer]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[11:08:16] [Server thread/WARN] [minecraft/DedicatedServer]: To change this, set "online-mode" to "true" in the server.properties file.
+[11:08:16] [Server thread/INFO] [FML]: Applying holder lookups
+[11:08:16] [Server thread/INFO] [FML]: Holder lookups applied
+[11:08:16][FINE/CustomNPCs][noppes.npcs.LogWriter:71] Mon Sep 28 11:08:16 CEST 2026
+[11:08:16][FINE/CustomNPCs][noppes.npcs.controllers.ScriptController:87] Script Engines Available:
+[11:08:17][FINE/CustomNPCs][noppes.npcs.controllers.ScriptController:96] ECMAScript: .js
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: CustomNPC Permissions available:
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.edit.blocks
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.edit.villager
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.global.bank
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.global.dialog
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.global.faction
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.global.linked
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.global.naturalspawn
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.global.playerdata
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.global.quest
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.global.recipe
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.global.transport
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.npc.advanced
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.npc.ai
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.npc.clone
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.npc.create
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.npc.delete
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.npc.display
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.npc.freeze
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.npc.gui
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.npc.inventory
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.npc.reset
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.npc.stats
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.scenes
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.soulstone.all
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.spawner.create
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.spawner.mob
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.tool.mounter
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.tool.nbtbook
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.tool.pather
+[11:08:18] [Server thread/INFO] [noppes.npcs.CustomNpcs]: customnpcs.tool.scripter
+[11:08:18] [Server thread/INFO] [FML]: Injecting itemstacks
+[11:08:18] [Server thread/INFO] [FML]: Itemstack injection complete
+[11:08:18] [Server thread/INFO] [FML]: Forge Mod Loader has successfully loaded 6 mods
+[11:08:18][FINE/CustomNPCs][noppes.npcs.controllers.LinkedNpcController:51] Loading Linked Npcs
+[11:08:18][FINE/CustomNPCs][noppes.npcs.controllers.LinkedNpcController:69] Done loading Linked Npcs
+[11:08:18] [Server thread/INFO] [minecraft/DedicatedServer]: Preparing level "world"
+[11:08:18] [Server thread/INFO] [FML]: Loading dimension 0 (world) (net.minecraft.server.dedicated.DedicatedServer@2305103a)
+[11:08:19] [Server thread/INFO] [minecraft/AdvancementList]: Loaded 488 advancements
+[11:08:20] [Server thread/INFO] [FML]: Loading dimension -1 (world) (net.minecraft.server.dedicated.DedicatedServer@2305103a)
+[11:08:20] [Server thread/INFO] [FML]: Loading dimension 1 (world) (net.minecraft.server.dedicated.DedicatedServer@2305103a)
+[11:08:20] [Server thread/INFO] [minecraft/MinecraftServer]: Preparing start region for level 0
+[11:08:20] [Server thread/INFO] [minecraft/DedicatedServer]: Done (2.558s)! For help, type "help" or "?"
+[11:08:21] [Server thread/INFO] [npcbaritone]: npcbaritone ready on server (dedicated=true, search threads=2, queue=64)
+[11:08:21][FINE/CustomNPCs][noppes.npcs.controllers.DialogController:49] Loading Dialogs
+[11:08:21][FINE/CustomNPCs][noppes.npcs.controllers.DialogController:51] Done loading Dialogs
+[11:08:22] [Server thread/INFO] [minecraft/DedicatedServer]: RWDIAG-CHUNKS stanje=on chunki=49 tiketi=2 obroc=3 zavrnjeni=0 npc=1
+[11:08:22][FINE/CustomNPCs][noppes.npcs.rework.diag.CommandRwDiag:180] RWDIAG-CHUNKS stanje=on chunki=49 tiketi=2 obroc=3 zavrnjeni=0 npc=1
+[11:08:23] [Server thread/INFO] [minecraft/DedicatedServer]: Game rule doDaylightCycle has been updated to false
+[11:08:23] [Server thread/INFO] [minecraft/DedicatedServer]: Game rule doWeatherCycle has been updated to false
+[11:08:23] [Server thread/INFO] [minecraft/DedicatedServer]: Game rule doMobSpawning has been updated to false
+[11:08:24] [Server thread/INFO] [minecraft/DedicatedServer]: Game rule doFireTick has been updated to false
+[11:08:24] [Server thread/INFO] [minecraft/DedicatedServer]: Game rule mobGriefing has been updated to false
+[11:08:24] [Server thread/INFO] [minecraft/DedicatedServer]: Game rule randomTickSpeed has been updated to 0
+[11:08:25] [Server thread/INFO] [minecraft/DedicatedServer]: Game rule announceAdvancements has been updated to false
+[11:08:25] [Server thread/INFO] [minecraft/DedicatedServer]: Game rule spectatorsGenerateChunks has been updated to false
+[11:08:25] [Server thread/INFO] [minecraft/DedicatedServer]: Set the time to 6000
+[11:08:26] [Server thread/INFO] [minecraft/DedicatedServer]: Changing to clear weather
+[11:08:26] [Server thread/INFO] [minecraft/DedicatedServer]: 1 entities deleted
+[11:08:26] [Server thread/INFO] [minecraft/DedicatedServer]: 17 blocks filled
+[11:08:27] [Server thread/INFO] [minecraft/DedicatedServer]: 17 blocks filled
+[11:08:27] [Server thread/INFO] [minecraft/DedicatedServer]: 51 blocks filled
+[11:08:27] [Server thread/INFO] [minecraft/DedicatedServer]: 3 blocks filled
+[11:08:27] [Server thread/INFO] [minecraft/DedicatedServer]: Block placed
+[11:08:28] [Server thread/INFO] [minecraft/DedicatedServer]: Block placed
+[11:08:28] [Server thread/INFO] [minecraft/DedicatedServer]: 17 blocks filled
+[11:08:28] [Server thread/INFO] [minecraft/DedicatedServer]: 17 blocks filled
+[11:08:29] [Server thread/INFO] [minecraft/DedicatedServer]: 51 blocks filled
+[11:08:29] [Server thread/INFO] [minecraft/DedicatedServer]: 3 blocks filled
+[11:08:29] [Server thread/INFO] [minecraft/DedicatedServer]: Block placed
+[11:08:30] [Server thread/INFO] [minecraft/DedicatedServer]: Block placed
+[11:08:39] [Server thread/INFO] [minecraft/DedicatedServer]: Saving...
+[11:08:39] [Server thread/INFO] [minecraft/DedicatedServer]: Flushing all saves...
+[11:08:39] [Server thread/INFO] [minecraft/AnvilChunkLoader]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[11:08:39] [Server thread/INFO] [minecraft/AnvilChunkLoader]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[11:08:39] [Server thread/INFO] [minecraft/AnvilChunkLoader]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[11:08:39] [Server thread/INFO] [minecraft/DedicatedServer]: Flushing completed
+[11:08:39] [Server thread/INFO] [minecraft/DedicatedServer]: Saved the world
+[11:08:42] [Server thread/INFO] [minecraft/DedicatedServer]: RWDIAG-CHUNKS stanje=on chunki=47 tiketi=2 obroc=2 zavrnjeni=0 npc=26
+[11:08:42][FINE/CustomNPCs][noppes.npcs.rework.diag.CommandRwDiag:180] RWDIAG-CHUNKS stanje=on chunki=47 tiketi=2 obroc=2 zavrnjeni=0 npc=26
+[11:08:53] [Server thread/INFO] [minecraft/DedicatedServer]: RWDIAG vklopljen, stevci pocisceni
+[11:08:53][FINE/CustomNPCs][noppes.npcs.rework.diag.CommandRwDiag:180] RWDIAG vklopljen, stevci pocisceni
+[11:08:54] [Server thread/INFO] [minecraft/DedicatedServer]: RWMOUNT nacin=1 (nosilec krmili, jahac samo ce ima pot le on)
+[11:08:54][FINE/CustomNPCs][noppes.npcs.rework.entity.CommandRwMount:49] RWMOUNT nacin=1 (nosilec krmili, jahac samo ce ima pot le on)
+[11:08:55] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-INIT skriptni tick = 10 server tickov
+[11:08:57] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-MOUNT n=8 od=8 progaM=8 progaS=8 jahacev=8 ciljM=da ciljS=da
+[11:08:57] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-HB faza=mount prej=1.900-1.900 potem=1.463-1.463
+[11:08:58] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-A-START navigateTo skupni cilj
+[11:08:59] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=80 proga=M navig=8/8 prevozenoPovp=1.24 prevozenoMax=1.24 razpon=13.57 doCiljaMin=30.27 doCiljaPovp=30.61 jahacev=8 odstopMax=0.00 navigJ=0
+[11:08:59] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=80 proga=S navig=8/8 prevozenoPovp=1.24 prevozenoMax=1.24 razpon=13.57 doCiljaMin=30.27 doCiljaPovp=30.61 jahacev=-1 odstopMax=- navigJ=-
+[11:08:59] [Server thread/INFO] [minecraft/DedicatedServer]: RWNAV global=1 mod=true ime=R1_Rider ujemanj=8 izbranih=8 pripetih=0
+[11:08:59][FINE/CustomNPCs][noppes.npcs.rework.nav.CommandRwNav:94] RWNAV global=1 mod=true ime=R1_Rider ujemanj=8 izbranih=8 pripetih=0
+[11:09:00] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=100 proga=M navig=8/8 prevozenoPovp=2.56 prevozenoMax=2.56 razpon=13.11 doCiljaMin=28.97 doCiljaPovp=29.32 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:00] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=100 proga=S navig=8/8 prevozenoPovp=2.56 prevozenoMax=2.56 razpon=13.11 doCiljaMin=28.97 doCiljaPovp=29.32 jahacev=-1 odstopMax=- navigJ=-
+[11:09:00] [Server thread/INFO] [minecraft/DedicatedServer]: RWNAV global=1 mod=true ime=R1_Carrier ujemanj=16 izbranih=16 pripetih=8
+[11:09:00][FINE/CustomNPCs][noppes.npcs.rework.nav.CommandRwNav:94] RWNAV global=1 mod=true ime=R1_Carrier ujemanj=16 izbranih=16 pripetih=8
+[11:09:01] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=120 proga=M navig=8/8 prevozenoPovp=3.85 prevozenoMax=3.89 razpon=12.15 doCiljaMin=27.67 doCiljaPovp=28.06 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:01] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=120 proga=S navig=0/8 prevozenoPovp=2.63 prevozenoMax=2.64 razpon=13.09 doCiljaMin=28.89 doCiljaPovp=29.25 jahacev=-1 odstopMax=- navigJ=-
+[11:09:02] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=140 proga=M navig=8/8 prevozenoPovp=5.14 prevozenoMax=5.21 razpon=11.63 doCiljaMin=26.37 doCiljaPovp=26.78 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:02] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=140 proga=S navig=8/8 prevozenoPovp=3.58 prevozenoMax=3.61 razpon=13.00 doCiljaMin=27.93 doCiljaPovp=28.29 jahacev=-1 odstopMax=- navigJ=-
+[11:09:03] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=160 proga=M navig=8/8 prevozenoPovp=6.31 prevozenoMax=6.48 razpon=11.46 doCiljaMin=25.09 doCiljaPovp=25.60 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:03] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=160 proga=S navig=8/8 prevozenoPovp=4.83 prevozenoMax=4.91 razpon=13.84 doCiljaMin=26.61 doCiljaPovp=27.04 jahacev=-1 odstopMax=- navigJ=-
+[11:09:04] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=180 proga=M navig=8/8 prevozenoPovp=7.33 prevozenoMax=7.58 razpon=9.79 doCiljaMin=23.99 doCiljaPovp=24.62 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:04] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=180 proga=S navig=8/8 prevozenoPovp=5.92 prevozenoMax=6.00 razpon=15.56 doCiljaMin=25.54 doCiljaPovp=26.03 jahacev=-1 odstopMax=- navigJ=-
+[11:09:05] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=200 proga=M navig=7/8 prevozenoPovp=8.22 prevozenoMax=8.89 razpon=8.48 doCiljaMin=22.67 doCiljaPovp=23.89 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:05] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=200 proga=S navig=8/8 prevozenoPovp=6.82 prevozenoMax=7.11 razpon=17.26 doCiljaMin=24.71 doCiljaPovp=25.24 jahacev=-1 odstopMax=- navigJ=-
+[11:09:06] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=220 proga=M navig=8/8 prevozenoPovp=9.25 prevozenoMax=10.10 razpon=7.41 doCiljaMin=21.46 doCiljaPovp=23.03 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:06] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=220 proga=S navig=8/8 prevozenoPovp=7.79 prevozenoMax=8.33 razpon=17.84 doCiljaMin=23.77 doCiljaPovp=24.33 jahacev=-1 odstopMax=- navigJ=-
+[11:09:07] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=240 proga=M navig=5/8 prevozenoPovp=10.01 prevozenoMax=11.41 razpon=5.87 doCiljaMin=20.14 doCiljaPovp=22.36 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:07] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=240 proga=S navig=8/8 prevozenoPovp=9.07 prevozenoMax=9.62 razpon=17.93 doCiljaMin=22.51 doCiljaPovp=23.06 jahacev=-1 odstopMax=- navigJ=-
+[11:09:08] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=260 proga=M navig=8/8 prevozenoPovp=11.19 prevozenoMax=12.73 razpon=5.13 doCiljaMin=18.81 doCiljaPovp=21.19 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:08] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=260 proga=S navig=8/8 prevozenoPovp=10.33 prevozenoMax=10.92 razpon=17.97 doCiljaMin=21.24 doCiljaPovp=21.83 jahacev=-1 odstopMax=- navigJ=-
+[11:09:09] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=280 proga=M navig=8/8 prevozenoPovp=12.40 prevozenoMax=14.05 razpon=5.14 doCiljaMin=17.49 doCiljaPovp=19.92 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:09] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=280 proga=S navig=8/8 prevozenoPovp=11.62 prevozenoMax=12.23 razpon=17.99 doCiljaMin=19.92 doCiljaPovp=20.56 jahacev=-1 odstopMax=- navigJ=-
+[11:09:10] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=300 proga=M navig=7/8 prevozenoPovp=13.53 prevozenoMax=15.37 razpon=6.29 doCiljaMin=16.17 doCiljaPovp=18.78 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:10] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=300 proga=S navig=8/8 prevozenoPovp=12.88 prevozenoMax=13.53 razpon=18.00 doCiljaMin=18.60 doCiljaPovp=19.33 jahacev=-1 odstopMax=- navigJ=-
+[11:09:11] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=320 proga=M navig=7/8 prevozenoPovp=14.56 prevozenoMax=16.43 razpon=6.10 doCiljaMin=15.11 doCiljaPovp=17.69 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:11] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=320 proga=S navig=8/8 prevozenoPovp=14.08 prevozenoMax=14.84 razpon=18.00 doCiljaMin=17.29 doCiljaPovp=18.19 jahacev=-1 odstopMax=- navigJ=-
+[11:09:12] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=340 proga=M navig=6/8 prevozenoPovp=15.67 prevozenoMax=17.75 razpon=6.10 doCiljaMin=13.79 doCiljaPovp=16.51 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:12] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=340 proga=S navig=8/8 prevozenoPovp=15.14 prevozenoMax=16.15 razpon=18.00 doCiljaMin=16.30 doCiljaPovp=17.21 jahacev=-1 odstopMax=- navigJ=-
+[11:09:13] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=360 proga=M navig=8/8 prevozenoPovp=16.85 prevozenoMax=19.07 razpon=6.10 doCiljaMin=12.47 doCiljaPovp=15.31 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:13] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=360 proga=S navig=8/8 prevozenoPovp=15.52 prevozenoMax=17.47 razpon=18.00 doCiljaMin=16.30 doCiljaPovp=16.88 jahacev=-1 odstopMax=- navigJ=-
+[11:09:14] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=380 proga=M navig=8/8 prevozenoPovp=18.06 prevozenoMax=20.39 razpon=6.10 doCiljaMin=11.15 doCiljaPovp=14.09 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:14] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=380 proga=S navig=8/8 prevozenoPovp=15.92 prevozenoMax=18.78 razpon=18.01 doCiljaMin=15.77 doCiljaPovp=16.53 jahacev=-1 odstopMax=- navigJ=-
+[11:09:15] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=400 proga=M navig=8/8 prevozenoPovp=19.34 prevozenoMax=21.71 razpon=6.10 doCiljaMin=9.83 doCiljaPovp=12.77 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:15] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=400 proga=S navig=8/8 prevozenoPovp=16.30 prevozenoMax=20.09 razpon=18.01 doCiljaMin=14.68 doCiljaPovp=16.20 jahacev=-1 odstopMax=- navigJ=-
+[11:09:16] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=420 proga=M navig=8/8 prevozenoPovp=20.61 prevozenoMax=23.03 razpon=6.21 doCiljaMin=8.51 doCiljaPovp=11.47 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:16] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=420 proga=S navig=8/8 prevozenoPovp=16.66 prevozenoMax=21.41 razpon=18.01 doCiljaMin=13.62 doCiljaPovp=15.92 jahacev=-1 odstopMax=- navigJ=-
+[11:09:17] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=440 proga=M navig=7/8 prevozenoPovp=21.68 prevozenoMax=24.13 razpon=6.00 doCiljaMin=7.41 doCiljaPovp=10.35 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:17] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=440 proga=S navig=8/8 prevozenoPovp=17.04 prevozenoMax=22.73 razpon=18.01 doCiljaMin=12.62 doCiljaPovp=15.62 jahacev=-1 odstopMax=- navigJ=-
+[11:09:18] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=460 proga=M navig=7/8 prevozenoPovp=22.83 prevozenoMax=25.35 razpon=5.89 doCiljaMin=6.19 doCiljaPovp=9.18 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:18] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=A tick=460 proga=S navig=8/8 prevozenoPovp=17.39 prevozenoMax=24.04 razpon=18.01 doCiljaMin=11.67 doCiljaPovp=15.38 jahacev=-1 odstopMax=- navigJ=-
+[11:09:18] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-A-END
+[11:09:20] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-B-START setAttackTarget
+[11:09:21] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=520 proga=M navig=2/8 prevozenoPovp=1.40 prevozenoMax=1.51 razpon=0.27 doCiljaMin=30.41 doCiljaPovp=30.54 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:21] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=520 proga=S navig=0/8 prevozenoPovp=0.77 prevozenoMax=1.88 razpon=18.00 doCiljaMin=30.05 doCiljaPovp=31.75 jahacev=-1 odstopMax=- navigJ=-
+[11:09:22] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=540 proga=M navig=2/8 prevozenoPovp=2.93 prevozenoMax=3.04 razpon=0.24 doCiljaMin=28.89 doCiljaPovp=29.01 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:22] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=540 proga=S navig=3/8 prevozenoPovp=1.52 prevozenoMax=3.54 razpon=18.00 doCiljaMin=28.40 doCiljaPovp=31.01 jahacev=-1 odstopMax=- navigJ=-
+[11:09:23] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=560 proga=M navig=4/8 prevozenoPovp=4.34 prevozenoMax=4.52 razpon=0.41 doCiljaMin=27.41 doCiljaPovp=27.60 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:23] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=560 proga=S navig=1/8 prevozenoPovp=2.23 prevozenoMax=5.01 razpon=18.00 doCiljaMin=26.93 doCiljaPovp=30.29 jahacev=-1 odstopMax=- navigJ=-
+[11:09:24] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=580 proga=M navig=2/8 prevozenoPovp=5.65 prevozenoMax=5.85 razpon=0.49 doCiljaMin=26.08 doCiljaPovp=26.29 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:24] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=580 proga=S navig=0/8 prevozenoPovp=3.00 prevozenoMax=6.50 razpon=18.00 doCiljaMin=25.43 doCiljaPovp=29.53 jahacev=-1 odstopMax=- navigJ=-
+[11:09:25] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=600 proga=M navig=2/8 prevozenoPovp=5.91 prevozenoMax=6.76 razpon=0.98 doCiljaMin=25.25 doCiljaPovp=26.03 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:25] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=600 proga=S navig=2/8 prevozenoPovp=3.53 prevozenoMax=7.51 razpon=18.00 doCiljaMin=24.42 doCiljaPovp=28.99 jahacev=-1 odstopMax=- navigJ=-
+[11:09:26] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=620 proga=M navig=3/8 prevozenoPovp=6.18 prevozenoMax=7.78 razpon=2.00 doCiljaMin=24.22 doCiljaPovp=25.76 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:26] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=620 proga=S navig=0/8 prevozenoPovp=3.91 prevozenoMax=8.29 razpon=18.00 doCiljaMin=23.65 doCiljaPovp=28.62 jahacev=-1 odstopMax=- navigJ=-
+[11:09:27] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=640 proga=M navig=2/8 prevozenoPovp=6.52 prevozenoMax=9.01 razpon=3.13 doCiljaMin=22.99 doCiljaPovp=25.42 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:27] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=640 proga=S navig=0/8 prevozenoPovp=4.22 prevozenoMax=9.72 razpon=18.00 doCiljaMin=22.22 doCiljaPovp=28.31 jahacev=-1 odstopMax=- navigJ=-
+[11:09:28] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=660 proga=M navig=2/8 prevozenoPovp=6.77 prevozenoMax=10.45 razpon=4.67 doCiljaMin=21.56 doCiljaPovp=25.17 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:28] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=660 proga=S navig=3/8 prevozenoPovp=4.41 prevozenoMax=11.25 razpon=18.00 doCiljaMin=20.68 doCiljaPovp=28.12 jahacev=-1 odstopMax=- navigJ=-
+[11:09:29] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=680 proga=M navig=4/8 prevozenoPovp=7.26 prevozenoMax=11.75 razpon=5.77 doCiljaMin=20.26 doCiljaPovp=24.69 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:29] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=680 proga=S navig=0/8 prevozenoPovp=4.59 prevozenoMax=12.72 razpon=18.00 doCiljaMin=19.21 doCiljaPovp=27.94 jahacev=-1 odstopMax=- navigJ=-
+[11:09:30] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=700 proga=M navig=2/8 prevozenoPovp=7.54 prevozenoMax=13.22 razpon=7.45 doCiljaMin=18.79 doCiljaPovp=24.40 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:30] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=700 proga=S navig=0/8 prevozenoPovp=4.79 prevozenoMax=14.28 razpon=18.00 doCiljaMin=17.65 doCiljaPovp=27.74 jahacev=-1 odstopMax=- navigJ=-
+[11:09:31] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=720 proga=M navig=2/8 prevozenoPovp=8.16 prevozenoMax=14.55 razpon=8.67 doCiljaMin=17.45 doCiljaPovp=23.78 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:31] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=720 proga=S navig=3/8 prevozenoPovp=4.95 prevozenoMax=15.58 razpon=18.00 doCiljaMin=16.35 doCiljaPovp=27.58 jahacev=-1 odstopMax=- navigJ=-
+[11:09:32] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=740 proga=M navig=3/8 prevozenoPovp=8.65 prevozenoMax=15.98 razpon=10.20 doCiljaMin=16.03 doCiljaPovp=23.29 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:32] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=740 proga=S navig=1/8 prevozenoPovp=5.27 prevozenoMax=18.19 razpon=20.29 doCiljaMin=13.74 doCiljaPovp=27.25 jahacev=-1 odstopMax=- navigJ=-
+[11:09:33] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=760 proga=M navig=2/8 prevozenoPovp=8.91 prevozenoMax=16.00 razpon=10.22 doCiljaMin=16.00 doCiljaPovp=23.03 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:33] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=760 proga=S navig=1/8 prevozenoPovp=5.82 prevozenoMax=22.55 razpon=24.28 doCiljaMin=9.39 doCiljaPovp=26.71 jahacev=-1 odstopMax=- navigJ=-
+[11:09:34] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=780 proga=M navig=4/8 prevozenoPovp=9.68 prevozenoMax=18.75 razpon=12.97 doCiljaMin=13.26 doCiljaPovp=22.27 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:34] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=780 proga=S navig=3/8 prevozenoPovp=6.01 prevozenoMax=24.08 razpon=25.71 doCiljaMin=7.85 doCiljaPovp=26.52 jahacev=-1 odstopMax=- navigJ=-
+[11:09:35] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=800 proga=M navig=5/8 prevozenoPovp=11.11 prevozenoMax=23.30 razpon=17.34 doCiljaMin=8.71 doCiljaPovp=20.83 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:35] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=800 proga=S navig=1/8 prevozenoPovp=6.52 prevozenoMax=28.12 razpon=29.53 doCiljaMin=3.83 doCiljaPovp=26.02 jahacev=-1 odstopMax=- navigJ=-
+[11:09:36] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=820 proga=M navig=3/8 prevozenoPovp=11.80 prevozenoMax=25.83 razpon=20.06 doCiljaMin=6.19 doCiljaPovp=20.15 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:36] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=820 proga=S navig=0/8 prevozenoPovp=6.92 prevozenoMax=31.35 razpon=32.62 doCiljaMin=0.76 doCiljaPovp=25.63 jahacev=-1 odstopMax=- navigJ=-
+[11:09:37] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=840 proga=M navig=4/8 prevozenoPovp=13.06 prevozenoMax=30.02 razpon=24.09 doCiljaMin=2.04 doCiljaPovp=18.89 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:37] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=840 proga=S navig=2/8 prevozenoPovp=6.92 prevozenoMax=31.35 razpon=32.62 doCiljaMin=0.76 doCiljaPovp=25.63 jahacev=-1 odstopMax=- navigJ=-
+[11:09:38] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=860 proga=M navig=4/8 prevozenoPovp=13.92 prevozenoMax=32.34 razpon=26.57 doCiljaMin=0.61 doCiljaPovp=18.26 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:38] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=860 proga=S navig=0/8 prevozenoPovp=6.92 prevozenoMax=31.35 razpon=32.62 doCiljaMin=0.76 doCiljaPovp=25.63 jahacev=-1 odstopMax=- navigJ=-
+[11:09:39] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=880 proga=M navig=1/8 prevozenoPovp=14.51 prevozenoMax=32.34 razpon=26.57 doCiljaMin=0.61 doCiljaPovp=17.67 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:39] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=880 proga=S navig=0/8 prevozenoPovp=6.92 prevozenoMax=31.35 razpon=32.62 doCiljaMin=0.76 doCiljaPovp=25.63 jahacev=-1 odstopMax=- navigJ=-
+[11:09:40] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=900 proga=M navig=3/8 prevozenoPovp=15.14 prevozenoMax=32.34 razpon=26.52 doCiljaMin=0.61 doCiljaPovp=17.04 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:40] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=B tick=900 proga=S navig=2/8 prevozenoPovp=6.92 prevozenoMax=31.35 razpon=32.62 doCiljaMin=0.76 doCiljaPovp=25.63 jahacev=-1 odstopMax=- navigJ=-
+[11:09:40] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-B-END
+[11:09:42] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-C-START navigateTo jahacem
+[11:09:43] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=960 proga=M navig=6/8 prevozenoPovp=4.05 prevozenoMax=5.40 razpon=5.55 doCiljaMin=26.52 doCiljaPovp=27.95 jahacev=8 odstopMax=0.00 navigJ=6
+[11:09:43] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=960 proga=S navig=8/8 prevozenoPovp=1.16 prevozenoMax=1.18 razpon=18.00 doCiljaMin=30.83 doCiljaPovp=31.19 jahacev=-1 odstopMax=- navigJ=-
+[11:09:44] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=980 proga=M navig=6/8 prevozenoPovp=6.60 prevozenoMax=8.83 razpon=8.89 doCiljaMin=23.18 doCiljaPovp=25.40 jahacev=8 odstopMax=0.00 navigJ=6
+[11:09:44] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=980 proga=S navig=8/8 prevozenoPovp=2.46 prevozenoMax=2.50 razpon=18.00 doCiljaMin=29.51 doCiljaPovp=29.91 jahacev=-1 odstopMax=- navigJ=-
+[11:09:45] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1000 proga=M navig=6/8 prevozenoPovp=10.66 prevozenoMax=14.24 razpon=14.30 doCiljaMin=17.77 doCiljaPovp=21.35 jahacev=8 odstopMax=0.00 navigJ=6
+[11:09:45] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1000 proga=S navig=8/8 prevozenoPovp=3.76 prevozenoMax=3.97 razpon=18.00 doCiljaMin=28.04 doCiljaPovp=28.62 jahacev=-1 odstopMax=- navigJ=-
+[11:09:46] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1020 proga=M navig=6/8 prevozenoPovp=11.73 prevozenoMax=15.68 razpon=15.75 doCiljaMin=16.52 doCiljaPovp=20.40 jahacev=8 odstopMax=0.00 navigJ=6
+[11:09:46] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1020 proga=S navig=8/8 prevozenoPovp=5.08 prevozenoMax=5.26 razpon=18.00 doCiljaMin=26.75 doCiljaPovp=27.32 jahacev=-1 odstopMax=- navigJ=-
+[11:09:47] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1040 proga=M navig=6/8 prevozenoPovp=13.08 prevozenoMax=17.53 razpon=17.59 doCiljaMin=18.11 doCiljaPovp=21.60 jahacev=8 odstopMax=0.00 navigJ=6
+[11:09:47] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1040 proga=S navig=8/8 prevozenoPovp=6.32 prevozenoMax=6.55 razpon=18.00 doCiljaMin=25.45 doCiljaPovp=26.10 jahacev=-1 odstopMax=- navigJ=-
+[11:09:48] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1060 proga=M navig=6/8 prevozenoPovp=15.08 prevozenoMax=20.17 razpon=20.24 doCiljaMin=14.29 doCiljaPovp=18.73 jahacev=8 odstopMax=0.00 navigJ=6
+[11:09:48] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1060 proga=S navig=8/8 prevozenoPovp=7.30 prevozenoMax=7.79 razpon=18.00 doCiljaMin=24.45 doCiljaPovp=25.14 jahacev=-1 odstopMax=- navigJ=-
+[11:09:49] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1080 proga=M navig=6/8 prevozenoPovp=16.87 prevozenoMax=22.53 razpon=22.60 doCiljaMin=9.58 doCiljaPovp=15.20 jahacev=8 odstopMax=0.00 navigJ=6
+[11:09:49] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1080 proga=S navig=8/8 prevozenoPovp=8.29 prevozenoMax=9.11 razpon=18.00 doCiljaMin=23.27 doCiljaPovp=24.17 jahacev=-1 odstopMax=- navigJ=-
+[11:09:50] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1100 proga=M navig=6/8 prevozenoPovp=17.68 prevozenoMax=23.60 razpon=23.66 doCiljaMin=8.41 doCiljaPovp=14.32 jahacev=8 odstopMax=0.00 navigJ=6
+[11:09:50] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1100 proga=S navig=8/8 prevozenoPovp=9.57 prevozenoMax=10.43 razpon=18.00 doCiljaMin=22.05 doCiljaPovp=22.91 jahacev=-1 odstopMax=- navigJ=-
+[11:09:51] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1120 proga=M navig=6/8 prevozenoPovp=19.49 prevozenoMax=26.01 razpon=26.07 doCiljaMin=6.04 doCiljaPovp=12.55 jahacev=8 odstopMax=0.00 navigJ=6
+[11:09:51] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1120 proga=S navig=8/8 prevozenoPovp=10.83 prevozenoMax=11.75 razpon=18.00 doCiljaMin=20.73 doCiljaPovp=21.69 jahacev=-1 odstopMax=- navigJ=-
+[11:09:52] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1140 proga=M navig=6/8 prevozenoPovp=23.74 prevozenoMax=31.69 razpon=31.75 doCiljaMin=0.63 doCiljaPovp=8.49 jahacev=8 odstopMax=0.00 navigJ=6
+[11:09:52] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1140 proga=S navig=8/8 prevozenoPovp=12.15 prevozenoMax=13.08 razpon=18.00 doCiljaMin=19.41 doCiljaPovp=20.40 jahacev=-1 odstopMax=- navigJ=-
+[11:09:53] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1160 proga=M navig=0/8 prevozenoPovp=24.70 prevozenoMax=32.96 razpon=33.02 doCiljaMin=1.07 doCiljaPovp=8.82 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:53] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1160 proga=S navig=8/8 prevozenoPovp=13.47 prevozenoMax=14.40 razpon=18.00 doCiljaMin=18.09 doCiljaPovp=19.11 jahacev=-1 odstopMax=- navigJ=-
+[11:09:54] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1180 proga=M navig=0/8 prevozenoPovp=24.70 prevozenoMax=32.96 razpon=33.02 doCiljaMin=1.07 doCiljaPovp=8.82 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:54] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1180 proga=S navig=8/8 prevozenoPovp=14.71 prevozenoMax=15.72 razpon=18.00 doCiljaMin=16.82 doCiljaPovp=17.90 jahacev=-1 odstopMax=- navigJ=-
+[11:09:55] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1200 proga=M navig=0/8 prevozenoPovp=24.70 prevozenoMax=32.96 razpon=33.02 doCiljaMin=1.07 doCiljaPovp=8.82 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:55] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1200 proga=S navig=8/8 prevozenoPovp=15.89 prevozenoMax=17.04 razpon=18.00 doCiljaMin=15.43 doCiljaPovp=16.76 jahacev=-1 odstopMax=- navigJ=-
+[11:09:56] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1220 proga=M navig=0/8 prevozenoPovp=24.70 prevozenoMax=32.96 razpon=33.02 doCiljaMin=1.07 doCiljaPovp=8.82 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:56] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1220 proga=S navig=8/8 prevozenoPovp=16.42 prevozenoMax=18.36 razpon=18.00 doCiljaMin=14.11 doCiljaPovp=16.28 jahacev=-1 odstopMax=- navigJ=-
+[11:09:57] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1240 proga=M navig=0/8 prevozenoPovp=24.70 prevozenoMax=32.96 razpon=33.02 doCiljaMin=1.07 doCiljaPovp=8.82 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:57] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1240 proga=S navig=8/8 prevozenoPovp=16.94 prevozenoMax=19.69 razpon=18.00 doCiljaMin=12.79 doCiljaPovp=15.82 jahacev=-1 odstopMax=- navigJ=-
+[11:09:58] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1260 proga=M navig=0/8 prevozenoPovp=24.70 prevozenoMax=32.96 razpon=33.02 doCiljaMin=1.07 doCiljaPovp=8.82 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:58] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1260 proga=S navig=8/8 prevozenoPovp=17.44 prevozenoMax=21.01 razpon=18.00 doCiljaMin=11.47 doCiljaPovp=15.39 jahacev=-1 odstopMax=- navigJ=-
+[11:09:59] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1280 proga=M navig=0/8 prevozenoPovp=24.70 prevozenoMax=32.96 razpon=33.02 doCiljaMin=1.07 doCiljaPovp=8.82 jahacev=8 odstopMax=0.00 navigJ=0
+[11:09:59] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1280 proga=S navig=8/8 prevozenoPovp=17.95 prevozenoMax=22.33 razpon=18.00 doCiljaMin=10.15 doCiljaPovp=14.96 jahacev=-1 odstopMax=- navigJ=-
+[11:10:00] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1300 proga=M navig=0/8 prevozenoPovp=24.70 prevozenoMax=32.96 razpon=33.02 doCiljaMin=1.07 doCiljaPovp=8.82 jahacev=8 odstopMax=0.00 navigJ=0
+[11:10:00] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1300 proga=S navig=8/8 prevozenoPovp=18.58 prevozenoMax=23.65 razpon=18.00 doCiljaMin=9.23 doCiljaPovp=14.43 jahacev=-1 odstopMax=- navigJ=-
+[11:10:01] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1320 proga=M navig=0/8 prevozenoPovp=24.70 prevozenoMax=32.96 razpon=33.02 doCiljaMin=1.07 doCiljaPovp=8.82 jahacev=8 odstopMax=0.00 navigJ=0
+[11:10:01] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1320 proga=S navig=8/8 prevozenoPovp=19.23 prevozenoMax=24.97 razpon=18.00 doCiljaMin=8.41 doCiljaPovp=13.89 jahacev=-1 odstopMax=- navigJ=-
+[11:10:02] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1340 proga=M navig=0/8 prevozenoPovp=24.70 prevozenoMax=32.96 razpon=33.02 doCiljaMin=1.07 doCiljaPovp=8.82 jahacev=8 odstopMax=0.00 navigJ=0
+[11:10:02] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-S faza=C tick=1340 proga=S navig=8/8 prevozenoPovp=19.87 prevozenoMax=25.44 razpon=16.32 doCiljaMin=7.31 doCiljaPovp=13.14 jahacev=-1 odstopMax=- navigJ=-
+[11:10:02] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-C-END
+[11:10:02] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-HB faza=sestop prej=1.463-1.463 potem=1.900-1.900
+[11:10:02] [Server thread/INFO] [minecraft/DedicatedServer]: [@CustomNPCs-R1_Control] R1-SUM mount=8 progaM=8 progaS=8
+[11:10:03][FINE/CustomNPCs][noppes.npcs.rework.diag.CommandRwDiag:149]
+RWDIAG posnetek
+[11:10:03] [Server thread/INFO] [minecraft/DedicatedServer]: RWDIAG-DUMP logs\rwdiag\rwdiag-20260928-111003-m22-r1.txt
+  stanje      : vklopljeno
+  zacetek     : 2026-09-28 11:08:53
+  trajanje    : 70445 ms
+  server ticki: 1408
+
+stevec                            skupaj        na tick     ms/tick   povp. us
+[11:10:03] [Server thread/INFO] [minecraft/DedicatedServer]: RWDIAG-OK ticki=1408 npc=38002
+--------------------------------------------------------------------------------
+chunk.load                        15            0.011       -         -
+chunk.unload                      32            0.023       -         -
+diag.chunks.added                 9             0.006       -         -
+jvm.alloc.podprto                 1             0.001       -         -
+jvm.alloc.server                  744007336     528414.301  -         -
+jvm.gc                            1             0.001       0.007     10000.000
+jvm.heap.max                      1908932608    1355776.000 -         -
+nav.ai.path.new                   1327          0.942       -         -
+npc.update                        38002         26.990      -         -
+npc.update.window                 38001         26.989      3.654     135.383
+server.tick                       1408          1.000       -         -
+server.tick.save                  2             0.001       -         -
+world.save                        6             0.004       -         -
+world.tick                        1409          1.001       -         -
+
+porazdelitev                      n         min       povp.     p50       p95       p99       max
+--------------------------------------------------------------------------------------------------------
+nav.ai.navigating                 1409      0         11        14        20        20        20
+nav.ai.paths.per.tick             1409      0         0         0         4         8         16
+npc.per.tick                      1409      0         26        27        27        27        27
+npc.tick.gap                      1407      1         1         1         1         1         1
+server.tick.ns (ms)               1408      0.199     3.843     2.359     8.651     21.496    226.449
+server.tick.ns.nosave (ms)        1406      0.199     3.798     2.359     8.389     18.874    226.449
+world.chunks.forced               71        47        53        55        56        56        56
+world.entities.loaded             71        26        26        27        27        27        27
+world.npc.killed                  71        0         0         0         0         0         0
+world.npc.loaded                  71        26        26        27        27        27        27
+world.players                     71        0         0         0         0         0         0
+
+najpocasnejsi ticki (16 od 1408)
+#   tick      ob (s)    ms          npc   chunk+  chunk-  save
+----------------------------------------------------------------
+1   51        2.8       226.449     27    0       0       0
+2   141       7.3       219.639     27    0       0       0
+3   41        2.1       71.889      26    0       0       0
+4   81        4.1       69.818      27    0       0       0
+5   121       6.1       64.881      27    0       0       0
+6   162       8.2       61.685      27    0       0       0
+7   101       5.1       57.873      27    0       0       0
+8   142       7.4       52.991      27    0       0       0
+9   263       13.2      49.376      27    0       0       3
+10  1382      69.2      48.806      27    0       0       0
+11  161       8.1       34.209      27    0       0       0
+12  163       8.2       24.510      27    0       0       0
+13  301       15.1      23.763      27    1       0       0
+14  1163      58.2      21.230      27    0       0       3
+15  595       29.8      21.180      27    0       0       0
+16  355       17.8      18.759      27    1       0       0
+ticki nad ravnijo: 10ms=49 25ms=11 50ms=8 100ms=2
+
+  MSPT p95 = 8.651 ms od 50.000 ms proracuna (17.302 %)
+RWDIAG-SAVE izlocenih=2 brezKonteksta=0 ostalo=1406 p99vsi=21.496 p99brez=18.874 maxVsi=226.449 maxBrez=226.449
+RWNAV-AI novihPoti=1327 tickov=1409 naTick=0.942 naTickP95=4 naTickMax=16 navigirajoP50=14 navigirajoMax=20
+
+[11:10:03][FINE/CustomNPCs][noppes.npcs.rework.diag.CommandRwDiag:180] RWDIAG-DUMP logs\rwdiag\rwdiag-20260928-111003-m22-r1.txt
+[11:10:03][FINE/CustomNPCs][noppes.npcs.rework.diag.CommandRwDiag:180] RWDIAG-OK ticki=1408 npc=38002
+[11:10:04] [Server thread/INFO] [minecraft/DedicatedServer]: RWDIAG izklopljen
+[11:10:04][FINE/CustomNPCs][noppes.npcs.rework.diag.CommandRwDiag:180] RWDIAG izklopljen
+[11:10:04] [Server thread/INFO] [minecraft/DedicatedServer]: RWDIAG-CHUNKS stanje=off chunki=0 tiketi=0 obroc=2 zavrnjeni=0
+[11:10:04][FINE/CustomNPCs][noppes.npcs.rework.diag.CommandRwDiag:180] RWDIAG-CHUNKS stanje=off chunki=0 tiketi=0 obroc=2 zavrnjeni=0
+[11:10:06] [Server thread/INFO] [minecraft/DedicatedServer]: Stopping the server
+[11:10:06] [Server thread/INFO] [npcbaritone]: npcbaritone search pool stopped (0 queued searches dropped)
+[11:10:06] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping server
+[11:10:06] [Server thread/INFO] [minecraft/MinecraftServer]: Saving players
+[11:10:06] [Server thread/INFO] [minecraft/MinecraftServer]: Saving worlds
+[11:10:06] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'world'/overworld
+[11:10:06] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'world'/the_nether
+[11:10:06] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'world'/the_end
+[11:10:06] [Server thread/INFO] [FML]: Unloading dimension 0
+[11:10:06] [Server thread/INFO] [FML]: Unloading dimension -1
+[11:10:06] [Server thread/INFO] [FML]: Unloading dimension 1
+[11:10:06] [Server Shutdown Thread/INFO] [minecraft/MinecraftServer]: Stopping server
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 5.0.
+Use '--warning-mode all' to show the individual deprecation warnings.
+See https://docs.gradle.org/4.9/userguide/command_line_interface.html#sec:command_line_warnings
+
+BUILD SUCCESSFUL in 2m 19s
+12 actionable tasks: 7 executed, 5 up-to-date
