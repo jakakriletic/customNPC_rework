@@ -38,6 +38,19 @@ public final class SquadManager {
         return !"off".equalsIgnoreCase(System.getProperty(PROPERTY, "on"));
     }
 
+    /** M7 U7: a squad member uses vanilla navigation while the formation steers it. */
+    public static boolean contains(EntityNPCInterface npc) {
+        if (registered == null) {
+            return false;
+        }
+        for (Squad squad : registered.squads.values()) {
+            if (!squad.isFinished() && squad.contains(npc)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Nova enota. Clani, ki so ze v drugi enoti, se iz nje izpustijo: en NPC je lahko samo
      * v eni enoti.

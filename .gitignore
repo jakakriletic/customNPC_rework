@@ -3,6 +3,7 @@ downloads/
 dev/.gradle/
 dev/build/
 dev/run/
+dev/run-m7/
 dev/libs/
 dev/baseline/
 audit/tools/
