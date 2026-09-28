@@ -14,9 +14,9 @@ public final class RwNavBackend {
     }
 
     public static boolean selected(int global, int npc, int movementType,
-                                   boolean riding, boolean inSquad, boolean killed) {
+                                   boolean riding, boolean carrying, boolean inSquad, boolean killed) {
         return global == 1 && npc == 1 && movementType == 0
-                && !riding && !inSquad && !killed;
+                && !riding && !carrying && !inSquad && !killed;
     }
 
     /** The system property is an explicit test override for scripted A/B runs. */
@@ -67,7 +67,8 @@ public final class RwNavBackend {
         }
         try {
             boolean use = selected(globalMode(), npc.getRwNavBackend(),
-                    npc.ais.movementType, npc.isRiding(), SquadManager.contains(npc), npc.isKilled());
+                    npc.ais.movementType, npc.isRiding(), npc.isBeingRidden(),
+                    SquadManager.contains(npc), npc.isKilled());
             if (use) {
                 if (afterRebuild || !NpcBaritoneBridge.attached(npc)) {
                     NpcBaritoneBridge.attach(npc);

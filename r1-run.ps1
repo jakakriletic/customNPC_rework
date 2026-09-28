@@ -26,7 +26,8 @@
 
 param([switch]$AcceptEula, [int]$ChunkRadius = 2, [int]$WarmupSeconds = 10,
       [int]$ScenarioTimeoutSec = 180,
-      [ValidateSet(0, 1, 2)][int]$Krmiljenje = 0)
+      [ValidateSet(0, 1, 2)][int]$Krmiljenje = 0,
+      [switch]$BaritoneRiders, [string]$BaritoneRoot = '')
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -34,6 +35,13 @@ $run    = Join-Path $root 'dev\run'
 $audit  = Join-Path $root 'audit'
 $seed   = Join-Path $root 'dev\testworld'
 $dumps  = Join-Path $run 'logs\rwdiag'
+$libRoot = if ($BaritoneRoot) {
+    $chosen = if ([System.IO.Path]::IsPathRooted($BaritoneRoot)) { $BaritoneRoot } else { Join-Path $root $BaritoneRoot }
+    [System.IO.Path]::GetFullPath($chosen)
+} else {
+    [System.IO.Path]::GetFullPath((Join-Path $root '..\barittone_for_npc_rework\barritone_converted_for_entities'))
+}
+if ($BaritoneRiders) { $env:NPCB_MOD_DIR = Join-Path $libRoot 'mod' }
 New-Item -ItemType Directory -Force -Path $audit | Out-Null
 
 function Step($n, $t) { Write-Host ''; Write-Host "===== $n : $t =====" }
@@ -70,11 +78,14 @@ function Wait-ForMarker($Srv, [string]$Marker, [int]$TimeoutSec) {
 }
 
 function Start-DevServer {
-    $outLog = Join-Path $audit $(if ($Krmiljenje -eq 0) { 'm22-r1.log' } else { "m22-r1-k$Krmiljenje.log" })
+    $tag = if ($Krmiljenje -eq 0) { 'm22-r1' } else { "m22-r1-k$Krmiljenje" }
+    if ($BaritoneRiders) { $tag += '-baritone' }
+    $outLog = Join-Path $audit "$tag.log"
     if (Test-Path $outLog) { Remove-Item $outLog -Force }
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName         = $env:ComSpec
-    $psi.Arguments        = "/c gradlew.bat runServer --offline --no-daemon --console=plain > `"$outLog`" 2>&1"
+    $extra = if ($BaritoneRiders) { ' -PnpcBaritoneDev -PrwNavBackend=1' } else { '' }
+    $psi.Arguments        = "/c gradlew.bat runServer --offline --no-daemon --console=plain$extra > `"$outLog`" 2>&1"
     $psi.WorkingDirectory = Join-Path $root 'dev'
     $psi.UseShellExecute  = $false
     $psi.RedirectStandardInput = $true
@@ -248,14 +259,22 @@ try {
     if ($failures.Count -gt 0) { throw "Server se ni zagnal. Glej $($s.Log)" }
 
     Step 3 'Prizorisce in fixture NPC-ji'
+    if ($BaritoneRiders) {
+        # Brez igralca oddaljeni R1 chunki med spawnom niso nalozeni. Zacasni NPC
+        # odpre ticket pred postavitvijo; setup ga z /noppes slay npcs odstrani.
+        Send-Command $s 'noppes clone spawn R1_Carrier 1 0,4,12'
+        Send-Command $s 'rwdiag chunks on 3'
+        Check 'M7.8: chunki prizorisca so nalozeni pred fixture' (Wait-ForMarker $s 'RWDIAG-CHUNKS stanje=on' 30)
+    }
     $null = Send-File $s (Join-Path $seed 'r1-setup-commands.txt')
     Start-Sleep -Seconds 3
 
     Step 4 'E4: pogoj meritve (M2.1d)'
     Send-Command $s ("rwdiag chunks on {0}" -f $ChunkRadius)
-    Check 'ukaz chunks odgovori' (Wait-ForMarker $s 'RWDIAG-CHUNKS' 30)
-    $chunks = [regex]::Match((Get-LogText $s.Log),
+    Check 'ukaz chunks odgovori' (Wait-ForCount $s 'RWDIAG-CHUNKS stanje=on' $(if ($BaritoneRiders) { 2 } else { 1 }) 30)
+    $chunkMatches = [regex]::Matches((Get-LogText $s.Log),
         'RWDIAG-CHUNKS stanje=on chunki=(\d+) tiketi=(\d+) obroc=\d+ zavrnjeni=(\d+) npc=(\d+)')
+    $chunks = if ($chunkMatches.Count -gt 0) { $chunkMatches[$chunkMatches.Count - 1] } else { [regex]::Match('', 'never') }
     Check 'E4: chunki so prisilno nalozeni' ($chunks.Success -and ([int]$chunks.Groups[1].Value -gt 0))
     if ($chunks.Success) {
         Write-Host ("  chunki={0} tiketi={1} zavrnjeni={2} npc={3}" -f `
@@ -283,6 +302,20 @@ try {
     $mount = Read-Mount $s.Log
     Check ("E1: vseh 8 jahacev je na nosilcu (n={0} od={1})" -f $mount[0], $mount[1]) ($mount[0] -eq 8)
     Check ("E1: progi sta polni (M={0} S={1})" -f $mount[2], $mount[3]) (($mount[2] -eq 8) -and ($mount[3] -eq 8))
+    if ($BaritoneRiders) {
+        Send-Command $s 'rwnav on R1_Rider'
+        Check 'M7.8: status jahačev je odgovoril' (Wait-ForMarker $s 'RWNAV global=1 mod=true ime=R1_Rider' 30)
+        $riderStatus = [regex]::Match((Get-LogText $s.Log), 'RWNAV global=1 mod=true ime=R1_Rider ujemanj=(\d+) izbranih=(\d+) pripetih=(\d+)')
+        Check 'M7.8: 8 jahačev z izbranim Baritonom ostane brez pripete navigacije' `
+            ($riderStatus.Success -and [int]$riderStatus.Groups[1].Value -eq 8 -and `
+             [int]$riderStatus.Groups[2].Value -eq 8 -and [int]$riderStatus.Groups[3].Value -eq 0)
+        Send-Command $s 'rwnav on R1_Carrier'
+        Check 'M7.8: status nosilcev je odgovoril' (Wait-ForMarker $s 'RWNAV global=1 mod=true ime=R1_Carrier' 30)
+        $carrierStatus = [regex]::Match((Get-LogText $s.Log), 'RWNAV global=1 mod=true ime=R1_Carrier ujemanj=(\d+) izbranih=(\d+) pripetih=(\d+)')
+        Check 'M7.8: 8 prostih nosilcev se pripne, 8 z jahačem ostane vanilla' `
+            ($carrierStatus.Success -and [int]$carrierStatus.Groups[1].Value -eq 16 -and `
+             [int]$carrierStatus.Groups[2].Value -eq 16 -and [int]$carrierStatus.Groups[3].Value -eq 8)
+    }
 
     Check 'faza A se je zacela' (Wait-ForMarker $s 'R1-A-START' 60)
     Check 'faza A se je koncala' (Wait-ForMarker $s 'R1-A-END' $ScenarioTimeoutSec)

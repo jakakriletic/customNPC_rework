@@ -8,19 +8,20 @@ import static org.junit.Assert.assertTrue;
 public class RwNavBackendTest {
     @Test
     public void bothSwitchesAreRequiredAndVanillaIsDefault() {
-        assertFalse(RwNavBackend.selected(0, 0, 0, false, false, false));
-        assertFalse(RwNavBackend.selected(1, 0, 0, false, false, false));
-        assertFalse(RwNavBackend.selected(0, 1, 0, false, false, false));
-        assertTrue(RwNavBackend.selected(1, 1, 0, false, false, false));
+        assertFalse(RwNavBackend.selected(0, 0, 0, false, false, false, false));
+        assertFalse(RwNavBackend.selected(1, 0, 0, false, false, false, false));
+        assertFalse(RwNavBackend.selected(0, 1, 0, false, false, false, false));
+        assertTrue(RwNavBackend.selected(1, 1, 0, false, false, false, false));
     }
 
     @Test
-    public void unsupportedMovementRiderSquadAndDeadNpcStayVanilla() {
-        assertFalse(RwNavBackend.selected(1, 1, 1, false, false, false));
-        assertFalse(RwNavBackend.selected(1, 1, 2, false, false, false));
-        assertFalse(RwNavBackend.selected(1, 1, 0, true, false, false));
-        assertFalse(RwNavBackend.selected(1, 1, 0, false, true, false));
-        assertFalse(RwNavBackend.selected(1, 1, 0, false, false, true));
+    public void unsupportedMovementRiderCarrierSquadAndDeadNpcStayVanilla() {
+        assertFalse(RwNavBackend.selected(1, 1, 1, false, false, false, false));
+        assertFalse(RwNavBackend.selected(1, 1, 2, false, false, false, false));
+        assertFalse(RwNavBackend.selected(1, 1, 0, true, false, false, false));
+        assertFalse(RwNavBackend.selected(1, 1, 0, false, true, false, false));
+        assertFalse(RwNavBackend.selected(1, 1, 0, false, false, true, false));
+        assertFalse(RwNavBackend.selected(1, 1, 0, false, false, false, true));
     }
 
     @Test

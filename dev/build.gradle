@@ -133,6 +133,7 @@ task testOriginal(type: Test) {
     exclude '**/FormationGeometryTest.class'
     exclude '**/SquadPlannerTest.class'
     exclude '**/RwNavBackendTest.class'
+    exclude '**/NavPathSampleTest.class'
     // These tests exercise classes introduced after the original binary; they belong to :test.
     exclude '**/JvmProbeTest.class'
     exclude '**/NavProbeTest.class'

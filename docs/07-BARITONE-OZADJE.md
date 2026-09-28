@@ -82,8 +82,8 @@ Oznake: **OK** — deluje enako ali bolje; **razlika** — dokumentirano drugač
 
 | Razred | Klic | Pod Baritonom | Ocena |
 |---|---|---|---|
-| `rework/entity/MountGuard` (M3.3) | zajame in obnovi `currentPath` in hitrost navigatorja nosilca (`RwNavigatorAccess`) | adapter vanilla polja `currentPath` ne uporablja; obnova nima učinka | M7.8 (jahanje izključeno) |
-| `rework/entity/RiderState` (M3.3–M3.5) | kdo krmili nosilca | Baritone se za jahača ne uporablja | M7.8 |
+| `rework/entity/MountGuard` (M3.3) | zajame in obnovi `currentPath` in hitrost navigatorja nosilca (`RwNavigatorAccess`) | adapter vanilla polja `currentPath` ne uporablja; obnova nima učinka | M7.8: Baritone je izključen tudi za nosilca s potnikom |
+| `rework/entity/RiderState` (M3.3–M3.5) | kdo krmili nosilca | Baritone se za jahača in zasedenega nosilca ne uporablja | M7.8 |
 | `rework/formation/Squad` (M4.14a) `drive`, način `STEER` | **vsak tick** `setPath` z eno točko malo pred mestom člana | pod adapterjem vsaka točka, premaknjena za > 1 blok, pomeni nov Baritonov cilj in iskanje — nepotrebna obremenitev in sunkovitost | **ukrep U7** |
 | `rework/formation/Squad:148,314` | `getPathToXYZ` (vanilla) za vodjo | pot vodje ostane vanilla | OK (hibrid) |
 | `rework/formation/Squad` `HOLD`, konec | `noPath`, `clearPath` | | OK |
@@ -96,7 +96,7 @@ Oznake: **OK** — deluje enako ali bolje; **razlika** — dokumentirano drugač
 | hitrost NPC-ja (`getSpeed()`, atribut) | `speedMode` je v knjižnici globalen; `player` = 4,3 m/s ne glede na nastavitev NPC-ja | **ukrep U6** |
 | domet iskanja (`NpcNavRange`, `FOLLOW_RANGE`) | Baritone ga ne bere | M7.5 |
 | `movementType` 1 (let) in 2 (plavanje) | `PathNavigateFlying`/`Swimmer` — Baritone se ne uporablja | izključeno (D-022) |
-| NPC na nosilcu (D-018/D-019 jahanje) | jahač nima lastne navigacije | M7.8 |
+| NPC na nosilcu ali NPC, ki nosi potnika (D-018/D-019 jahanje) | oba uporabljata vanilla navigator; R1 je pokazal zastoj zasedenega nosilca pod Baritonom | M7.8 |
 
 ---
 

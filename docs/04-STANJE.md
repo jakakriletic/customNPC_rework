@@ -79,6 +79,21 @@
 
 ## Dnevnik sej
 
+### 2026-09-28 — M7.8: izmerjene poti, R1 in odločitev V4
+
+[Zaključna meritev](meritve/2026-09-28-M7.8-zakljucek.md): 3/3 vanilla in 3/3
+Baritone N1–N15/T1–T6 zelena. Dejanske poti so pri obeh 8/8 cele; razmerje
+dolžine p50 je Baritone 1,049 proti vanilla 1,131. Na grlu A prispe 6/8
+proti 1/8; na grlu B ena Baritonova ponovitev zaostane (4/8 proti 6/8).
+Strežniški tick brez shranjevanja je pri Baritonu nižji čez razpon, števca
+iskanj pa nista primerljiva. **V4 ni prestan**, ker veličina 1 ni boljša
+in B ni stabilno boljši; globalni `RwNavBackend` ostane privzeto 0.
+
+R1 je razkril zastoj nosilca z jahačem pod Baritonom (1,37 bloka v fazi A).
+`RwNavBackend` zdaj izključi tudi nosilca s potnikom. Po popravku R1 v svetu
+zelen: 26/26 NPC-jev, 8/8 jahačev odklopljenih, 8 prostih nosilcev pripetih,
+nosilci z jahači prevozijo 25,35 bloka. Build in `verify-package.ps1` zelena.
+
 ### 2026-09-28 — M7.6: hitrost in ponovljena kontrola
 
 Ločeni worktree knjižnice in CNPC. `buildPatchedMod` in `verify-package` zelena;
