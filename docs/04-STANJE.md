@@ -79,6 +79,21 @@
 
 ## Dnevnik sej
 
+### 2026-09-28 — M7.6: hitrost in ponovljena kontrola
+
+Ločeni worktree knjižnice in CNPC. `buildPatchedMod` in `verify-package` zelena;
+knjižnica `build` zeleni testi. Popravljena pot do API jarja in razredov knjižnice pri
+zagonu iz druge delovne kopije (`NPCB_MOD_DIR`, `-BaritoneRoot`). Vanilla in Baritone
+scenarij M2.7 sta oba prestala N1–N15; Baritone tudi B1–B5, 16/16 pripetih.
+
+Meritev [hitrosti in A/B](meritve/2026-09-28-M7.6-hitrost-in-ab.md): po popravku
+`moveForward` v knjižnici je hitrost odprte proge A 0,1566 proti vanilli 0,1482
+bloka/tick. Prvi posamezni zagon na grlu B je dal 4/8 proti vanilli 6/8.
+Nato sta bili opravljeni [obe seriji po tri ponovitve](meritve/2026-09-28-M7.7-ab-tri-ponovitve.md):
+grlo A Baritone 4–6/8 proti vanilla 1/8, grlo B 6–8/8 proti 6/8. Dolžina
+Baritonove poti in primerljiv strošek iskanj ostajata odprta; V4 ni potrjen.
+
+
 ### 2026-09-28 — veja `m7-cnpc-oblak` (rekonstrukcija za push)
 
 Zapisa (61) in (62) ter commiti `3e458aa`, `325a745`, `8b37eec`, `98c3d62` so bili 27. 9. narejeni
