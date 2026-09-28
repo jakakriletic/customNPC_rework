@@ -74,6 +74,10 @@ afterEvaluate {
         if (project.hasProperty('rwNavBackend')) {
             tasks.getByName(taskName).systemProperty 'rwnavbackend', project.property('rwNavBackend')
         }
+        // M7.10 (knjiznica npcbaritone): -PnpcbCrowdYield=true vklopi cakanje v gneci (movement.crowdYield)
+        if (project.hasProperty('npcbCrowdYield')) {
+            tasks.getByName(taskName).systemProperty 'npcbcrowdyield', project.property('npcbCrowdYield')
+        }
     }
 }
 // Dev server mora brati ukaze s standardnega vhoda. Gradlov JavaExec privzeto

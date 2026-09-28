@@ -33,12 +33,23 @@
 # vseh 16 hodecih NPC-jev dobi '/rwnav on NAV_Walk'; krmilnik NAV_Control ostane vanilla.
 # Sonda (velicine 1, 2, 5) meri VANILLA iskalnik tudi v tem nacinu - za Baritona sta velicini
 # 5 in 6 iz '/npcb perf' (NPCB-PERF: iskanja, us posnetka na glavni niti, us iskanja v ozadju).
+#
+# M7.9 (nedeterminizem grla B): -Sled vklopi sled knjiznice ('/npcb trace') od faze A do konca
+# faze B in jo shrani ob zapis zagona kot <zapis>-sled.csv (brez -JsonPath audit\m79-sled-<cas>.csv).
+# Samo z -Ozadje baritone. Serija za primerjavo dobrih in slabih zagonov:
+#     .\ponovitve-run.ps1 -Ponovitev 10 -Dodatno @('-Ozadje','baritone','-Sled','-BaritoneRoot','..\npcbaritone-m7')
+# Analiza (Linux/oblak ali Windows s Pythonom 3):
+#     python3 ..\npcbaritone-m7\tools\sled_grlo.py audit\m27-nav-<cas>-p*-sled.csv
+#
+# M7.10 (korak 3): -Umik vklopi v knjiznici cakanje v gneci (-PnpcbCrowdYield=true,
+# config movement.crowdYield). Samo z -Ozadje baritone; odtis dobi ozadje=baritone-umik.
 
 param([switch]$AcceptEula, [int]$ChunkRadius = 2, [int]$WarmupSeconds = 10,
       [int]$ScenarioTimeoutSec = 180, [int]$SweepRepeats = 8, [int]$OgrevalnihPometanj = 2,
       [string]$JsonPath = '',
       [ValidateSet('vanilla', 'baritone')][string]$Ozadje = 'vanilla',
-      [string]$BaritoneRoot = '')
+      [string]$BaritoneRoot = '',
+      [switch]$Sled, [switch]$Umik)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -76,6 +87,10 @@ $libMod      = Join-Path $libRoot 'mod'
 $gradleExtra = if ($baritone) { ' -PnpcBaritoneDev -PrwNavBackend=1' } else { '' }
 $env:NPCB_MOD_DIR = $libMod
 $ozadjeTag   = if ($baritone) { '-baritone' } else { '' }
+if ($Sled -and -not $baritone) { throw '-Sled zahteva -Ozadje baritone (sled je iz knjiznice npcbaritone).' }
+if ($Umik -and -not $baritone) { throw '-Umik zahteva -Ozadje baritone.' }
+if ($Umik) { $gradleExtra += ' -PnpcbCrowdYield=true' }
+$ozadjeOdtis = if ($Umik) { 'baritone-umik' } else { $Ozadje }
 
 function Step($n, $t) { Write-Host ''; Write-Host "===== $n : $t =====" }
 
@@ -727,6 +742,9 @@ try {
         # se zgodi takoj ob ukazu; 'pripetih' steje dejansko pripete, ne samo vklopljena stikala.
         Send-Command $s 'rwnav on NAV_Walk'
         Check 'M7.6: /rwnav odgovori' (Wait-ForMarker $s 'RWNAV global=' 30)
+        if ($Umik) {
+            Check 'M7.10: knjiznica je nalozila crowdYield=true' ((Get-LogText $s.Log).Contains('crowdYield=true'))
+        }
         $rw = Read-RwNav $s.Log
         if ($null -ne $rw) {
             Write-Host ("  RWNAV global={0} mod={1} ujemanj={2} izbranih={3} pripetih={4}" -f `
@@ -775,6 +793,11 @@ try {
         # M7.6: stevci knjiznice od tu naprej = samo fazi A in B (brez pometanj sonde)
         Send-Command $s 'npcb perf reset'
         Check 'M7.6: /npcb perf reset odgovori' (Wait-ForCount $s 'NPCB-PERF' 1 30)
+        if ($Sled) {
+            # M7.9: vse pripete entitete, vsak tick ena vrstica (16 NPC-jev x ~1.200 tickov)
+            Send-Command $s 'npcb trace on'
+            Check 'M7.9: sled snema' (Wait-ForMarker $s 'trace snema' 30)
+        }
     }
     Send-Command $s 'noppes clone spawn NAV_Control 1 0,4,56'
     Check 'N1: krmilnik se je oglasil (NAV-INIT)' (Wait-ForMarker $s 'NAV-INIT' 60)
@@ -822,6 +845,32 @@ try {
         if ($null -ne $perf) {
             Check ("M7.6: Baritone je iskal (iskanj={0}, zavrnjenih={1})" -f $perf.Iskanj, $perf.Zavrnjenih) `
                 (($perf.Iskanj -gt 0) -and ($perf.Zavrnjenih -eq 0))
+        }
+        if ($Sled) {
+            Send-Command $s 'npcb trace off'
+            Send-Command $s 'npcb trace dump'
+            $sledOk = Wait-ForMarker $s 'NPCB-TRACE-DUMP' 60
+            Check 'M7.9: sled izpisana (NPCB-TRACE-DUMP)' $sledOk
+            $mSled = [regex]::Match((Get-LogText $s.Log), 'NPCB-TRACE-DUMP rows=(\d+) csv=([^\r\n]+)')
+            if ($mSled.Success) {
+                $sledVrstic = [int]$mSled.Groups[1].Value
+                $sledVir = $mSled.Groups[2].Value.Trim()
+                $sledCilj = if ($JsonPath -ne '') {
+                    [System.IO.Path]::ChangeExtension($JsonPath, $null).TrimEnd('.') + '-sled.csv'
+                } else {
+                    Join-Path $audit ('m79-sled-{0}.csv' -f (Get-Date -Format 'yyyy-MM-dd-HHmm'))
+                }
+                Check ("M7.9: sled ima vrstice (vrstic={0})" -f $sledVrstic) ($sledVrstic -gt 0)
+                if (Test-Path $sledVir) {
+                    Copy-Item -Path $sledVir -Destination $sledCilj -Force
+                    Write-Host ("  sled: {0}" -f $sledCilj)
+                    Check 'M7.9: sled kopirana ob zapis zagona' (Test-Path $sledCilj)
+                } else {
+                    Check ("M7.9: datoteka sledi obstaja ({0})" -f $sledVir) $false
+                }
+            } else {
+                Check 'M7.9: vrstica NPCB-TRACE-DUMP je berljiva' $false
+            }
         }
     }
     Send-Command $s 'rwdiag dump m27-nav'
@@ -1078,7 +1127,7 @@ try {
     $zapis = New-NavZapis -Pometi $pometi -Cas $cas -NavAi $navAi -Chunks $chunks -Setup $setup `
                           -Filled $filled -Obroc $ChunkRadius -Ogrevanje $WarmupSeconds `
                           -PometanjPon $SweepRepeats -OgrevalnaPometanja $OgrevalnihPometanj `
-                          -Perf $perf -Ozadje $Ozadje -PathSamples $pathSamples
+                          -Perf $perf -Ozadje $ozadjeOdtis -PathSamples $pathSamples
     $odtis = $zapis.Odtis
     $vel   = $zapis.Velicine
 
