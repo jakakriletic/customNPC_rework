@@ -38,6 +38,7 @@ datotek za obnovo in ima mod pomembnejše težave, se dodatna forenzika R9, migr
 | [`docs/03-FAZE.md`](docs/03-FAZE.md) | milestoni M0–M10, delovni paketi, odvisnosti, izhodni kriteriji | ko načrtuješ sejo |
 | [`docs/04-STANJE.md`](docs/04-STANJE.md) | **živ dnevnik** — kaj je narejeno, kaj teče, kaj je blokirano | vedno drugo |
 | [`docs/05-SEJA-PROTOKOL.md`](docs/05-SEJA-PROTOKOL.md) | kako seja začne, dela in zaključi | vedno, tudi na koncu seje |
+| [`docs/08-PREGLED-IN-PLAN.md`](docs/08-PREGLED-IN-PLAN.md) | **ocena projekta (3. 10.)**: kaj je narejeno, kaj ostane, priporočen vrstni red | ko načrtuješ naslednje korake |
 | [`docs/06-FORMACIJE.md`](docs/06-FORMACIJE.md) | **formacije (M4.14)**: skupina NPC-jev kot ena enota, ukaz `/rwsquad`, `FormationApi` za skripte | ko delaš na gibanju skupin ali na uporabnikovi vojski |
 | [`OKOLJE.md`](OKOLJE.md) | razvojno okolje, verzije, gradle ukazi | ko nekaj ne zbuilda |
 | [`PLAN_IMPLEMENTACIJE.md`](PLAN_IMPLEMENTACIJE.md) | audit originala: bugi B1–B8 in performance kandidati | referenca; še vedno velja |
@@ -52,7 +53,7 @@ datotek za obnovo in ima mod pomembnejše težave, se dodatna forenzika R9, migr
 |---|---|---|---|
 | **R1** | NPC mount — jahanje NPC na NPC uniči AI in premikanje nosilca | M3 | velika |
 | **R2** | Letenje — creative-style in ender-dragon-style, osnova za letala | M4 | velika |
-| **R3** | Migracija funkcij iz CustomNPC+ (1.7.10) na 1.12.2 | M8 (+ raztreseno) | zelo velika |
+| ~~**R3**~~ | ~~Migracija funkcij iz CustomNPC+ (1.7.10) na 1.12.2~~ — **izločeno iz plana** (D-023) | ~~M8~~ | — |
 | **R4** | AI-prijazno okolje za izdelavo NPC animacij in integracijo v skripte | M7 | zelo velika |
 | **R5** | Performance optimizacija NPC AI — čim več NPC-jev v svetu | M5 | velika |
 | **R6** | Solid hitbox — NPC-ja se ne da odriniti (kot v 1.16.5) | M3 | majhna |
@@ -75,7 +76,7 @@ M4  Gibanje in navigacija       R2 letenje, 3D pathfinding, kopenska navigacija
 M5  Performance AI              R5, odstranitev globalnega script locka
 M6  Scripting platforma         R7 Java scripting, hook registry
 M7  Animacije + AI okolje       R4 animacijski sistem in avtorsko okolje
-M8  Migracija CustomNPC+        R3 preostale funkcije
+M8  (izločeno, D-023)           migracija CustomNPC+ ni več v planu
 M9  Chatbot                     R8
 M10 Release kandidat            soak, rollback vaja, dokumentacija
 ```

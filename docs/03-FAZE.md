@@ -21,7 +21,7 @@ Ocene so grobe in se popravljajo v `docs/04-STANJE.md`.
 | **M5** | Performance AI | R5 | L |
 | **M6** | Scripting platforma v Javi | R7 | XL |
 | **M7** | Animacijski sistem in AI avtorsko okolje | R4 | XL |
-| **M8** | Migracija funkcij iz CustomNPC+ | R3 | XL |
+| ~~**M8**~~ | ~~Migracija funkcij iz CustomNPC+~~ — **izločeno iz plana** (D-023) | R3 | — |
 | **M9** | Chatbot | R8 | M |
 | **M10** | Release kandidat | — | M |
 
@@ -336,7 +336,12 @@ lahko uporabi.
 
 ---
 
-## M8 — Migracija funkcij iz CustomNPC+
+## M8 — Migracija funkcij iz CustomNPC+ (izločeno, D-023)
+
+> **2026-10-03: izločeno iz plana na zahtevo uporabnika** (D-023). Paketi spodaj ostanejo kot
+> zapis za morebitno kasnejšo vrnitev; nobena druga faza nanje ne čaka. CustomNPC+ ostane
+> **referenca** za M4 (letenje), M6 (Janino) in M7 (animacije). Pregled in plan:
+> [`08-PREGLED-IN-PLAN.md`](08-PREGLED-IN-PLAN.md).
 
 **Cilj:** **R3** — prenos izbranih funkcij iz 1.7.10 CustomNPC+ na 1.12.2.
 

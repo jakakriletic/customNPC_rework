@@ -38,7 +38,7 @@
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
 | M7 Animacije | ni začeto | analiza narejena, glej R4 |
-| M8 CustomNPC+ | ni začeto | katalog še ne obstaja |
+| ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
 | M10 Release | ni začeto | |
 
@@ -78,6 +78,16 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-10-03 (63) — pregled projekta; M8 izločen iz plana (D-023)
+
+Ocena stanja in plan preostalega dela: [`08-PREGLED-IN-PLAN.md`](08-PREGLED-IN-PLAN.md). Na
+zahtevo uporabnika je **M8 (migracija CustomNPC+, R3) izločen** (D-023). Ugotovljeno: baseline
+M2.6 (27. 9.) je padel pri prehodu idle-500 → boj-50, ker je v svetu ostalo 500 NPC-jev
+prejšnje celice — napaka čiščenja v merilni skripti, ne v modu.
+
+**Naslednji korak:** Faza 0 iz plana — PR veje v `main`, popravek čiščenja med celicami in
+zagon M2.6, ponovni zagon M3.6, serija A/B za Baritona in odločitev D-022, formacije M4.14b.
 
 ### 2026-09-27 (62) — prvi A/B zagon M7.6 ovrednoten
 
@@ -3292,7 +3302,7 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 | Q4 | Katera nastavitev se vrne nazaj? | R9 | odgovorjeno — follower role, action `waiting` se po clone lahko vrne v `following`; minorno |
 | Q5 | Pri R1 — jahač in nosilec sta oba CustomNPC, ali je eden vanilla mob (konj)? | M2.2 | **odgovorjeno 15. 9.** — oba sta CustomNPC |
 | Q6 | Pri R2 — "letala" pomenijo NPC kot vozilo, ki ga igralec krmili, ali NPC, ki leti sam? | M4 obseg | **odprto, a ne blokira M2.3** — scenarij meri samostojno letenje, kar je podlaga za oba primera; odgovor je potreben šele za obseg M4 |
-| Q7 | Pri R3 — katerih 5–8 funkcij CustomNPC+ je najbolj pomembnih? | M8.2 | odprto — najprej katalog |
+| Q7 | Pri R3 — katerih 5–8 funkcij CustomNPC+ je najbolj pomembnih? | M8.2 | **zaprto 3. 10.** — M8 izločen iz plana (D-023) |
 | Q8 | Pri R8 — kateri provider (Anthropic / OpenAI / lokalni model)? | M9.3 | odprto |
 | Q9 | Koliko NPC-jev je "veliko" v tvojem primeru? 100? 500? 2000? | M2.4, cilj za M5 | **odgovorjeno 15. 9.** — cilj še ni določen; merimo 50/200/500 in se odločimo po podatkih |
 | Q10 | Ali strežnik, kjer to teče, sploh ima izhodni internetni dostop? | M9.1 | odprto |

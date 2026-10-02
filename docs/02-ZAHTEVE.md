@@ -294,7 +294,10 @@ fizike**, s posebnostjo, da pri `movementType == 2` sili `motionY = -0.15` izven
 
 > *"V CustomNPC 1.7.10+ je ful ful več funkcij ki bi jih rad migriral na 1.12.2."*
 
-**Faza:** M8, deloma raztreseno · **Velikost:** zelo velika · **Tveganje:** visoko
+> **2026-10-03: izločeno iz plana** (D-023). Deli, ki so že v drugih fazah (Java scripting M6,
+> animacije M7, letenje M4), ostanejo tam; vrstice "M8" spodaj niso v planu.
+
+**Faza:** ~~M8~~ (izločeno), deloma raztreseno · **Velikost:** zelo velika · **Tveganje:** visoko
 
 Gre za [`KAMKEEL/CustomNPC-Plus`](https://github.com/KAMKEEL/CustomNPC-Plus). Po opisu
 projekta ima nad originalom:
