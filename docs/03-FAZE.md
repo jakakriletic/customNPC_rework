@@ -20,7 +20,7 @@ Ocene so grobe in se popravljajo v `docs/04-STANJE.md`.
 | **M4** | Gibanje: navigacija po tleh in letenje | R2 | L |
 | **M5** | Performance AI | R5 | L |
 | **M6** | Scripting platforma v Javi | R7 | XL |
-| **M7** | Animacijski sistem in AI avtorsko okolje | R4 | XL |
+| **M7** | Animacijski sistem in AI avtorsko okolje — jedro v `customNPC_entities_mod` (D-024) | R4 | M |
 | ~~**M8**~~ | ~~Migracija funkcij iz CustomNPC+~~ — **izločeno iz plana** (D-023) | R3 | — |
 | **M9** | Chatbot | R8 | M |
 | **M10** | Release kandidat | — | M |
@@ -302,6 +302,12 @@ lahko uporabi.
 ## M7 — Animacijski sistem in AI avtorsko okolje
 
 **Cilj:** **R4** — AI piše animacije v tekstovnem formatu, jih validira in uporabi iz skript.
+
+> **2026-10-03 (D-024):** jedro (M7.1–M7.3, M7.4 za lastne modele, M7.6, M7.7, M7.10) je že
+> narejeno v ločenem modu `customNPC_entities_mod` (v0.7.0). Ostanejo script API/hooki,
+> uskladitev verzije CNPC (05Jul20 proti 01Oct19), reload in po želji animacije za navadne
+> CNPC NPC-je. Ocena **M namesto XL**; stanje po paketih v
+> [`08-PREGLED-IN-PLAN.md`](08-PREGLED-IN-PLAN.md) Faza 5.
 
 **Vhodni pogoj:** M6 (API shema, validator, hook registry, hitra povratna zanka).
 

@@ -23,7 +23,8 @@ iz plana izločen** (D-023); vse ostale faze ostanejo. Podrobnosti posameznih pa
 ### Kaj je narobe ali tvegano
 
 1. **Hitrost glede na obseg.** 62 sej, smo v M3. Od devetih zahtev je popravljena ena (R1) in
-   ena majhna (R9). Letenje (R2), solid hitbox (R6), Java scripting (R7), animacije (R4),
+   ena majhna (R9); animacije (R4) so v veliki meri narejene v ločenem modu
+   `customNPC_entities_mod`. Letenje (R2), solid hitbox (R6), Java scripting (R7),
    performance (R5) in chatbot (R8) **še niso začeti v kodi**. Proces (scenariji, merila, zapisi)
    je kakovosten, a pri trenutnem tempu je pred nami še veliko več kot za nami.
 2. **Ozko grlo so zagoni v svetu.** Seja ne more poganjati Minecrafta; vsak paket čaka na
@@ -59,7 +60,7 @@ iz plana izločen** (D-023); vse ostale faze ostanejo. Podrobnosti posameznih pa
 | **Baritone ozadje (D-022)** | 🟡 integracija v kodi | most, stikalo `RwNavBackend`, reinstall po `updateTasks`, A/B scenarij; prvi A/B zagon: Baritone 8/8 v 40 tickih, vanilla 1/8 in 6/8. Manjkata dve seriji po tri ponovitve in odločitev |
 | M5 Performance | ⬜ ni začeto | blokirano z M2.6 |
 | M6 Java scripting | ⬜ ni začeto | analiza narejena |
-| M7 Animacije | ⬜ ni začeto | analiza narejena |
+| M7 Animacije | 🟢 jedro narejeno **v ločenem modu** `customNPC_entities_mod` (v0.7.0) | ostane integracija s CNPC skriptami in verzijo; glej Fazo 5 |
 | ~~M8 CustomNPC+~~ | ❌ **izločeno** (D-023) | |
 | M9 Chatbot | ⬜ ni začeto | analiza narejena |
 | M10 Release | ⬜ ni začeto | |
@@ -138,11 +139,45 @@ M6.12 združljivost JS. CustomNPC+ ostane **referenca** za Janino pristop.
 Ker je M8 izločen, M8.4 (razširjeni hooki do ~154) ni več v planu; M6.11 pokrije, kar
 potrebujejo M7 in M9.
 
-### Faza 5 — M7 animacije (R4) — **XL**, po M6
+### Faza 5 — M7 animacije (R4) — **M** (ne XL): jedro že obstaja v `customNPC_entities_mod`
 
-M7.1–M7.10 iz `03-FAZE.md` (model, runtime + sync, render, hooki, tekstovni format + shema +
-`ANIMATION-GUIDE.md`, validator, `/npcanim reload`, script API, blending); M7.11 urejevalnik
-opcijsko. Q12 (uvoz zunanjih modelov) se odloči tu.
+Popravek 3. 10. (D-024): animacijsko jedro je narejeno v ločenem modu
+`C:\Users\jakak\Desktop\customNPC_entities_mod` (v0.7.0, 5 mobov: ice golem, troll, warg,
+giant spider, cave bear). Brez GeckoLib: Bedrock `.geo.json` modeli, klipi v YAML →
+`animation.json`, Python preview z isto matematiko kot igra, JUnit test enakosti Java/Python,
+dogodki v klipu (udarec, zvok, tresenje, projektil, summon), `mob.yaml` (statistika, tabela
+napadov, enrage), `new_entity.py` (nov mob iz predloge), `check.py` (validator),
+`/cne list|play`, `/cnedebug`, samotest v klientu. Entitete so podrazredi `EntityCustomNpc`.
+
+| Paket iz `03-FAZE.md` | Stanje v `customNPC_entities_mod` |
+|---|---|
+| M7.1 port ali novo | ✅ novo, brez GeckoLib |
+| M7.2 podatkovni model | ✅ `AnimClip`, `Pose`, `Easing`, `AnimLibrary`, `MobDef` |
+| M7.3 runtime + sync | ✅ server izbere akcijo (`DataParameter` ACTION), klient vzorči; dogodki na tick |
+| M7.4 render | ✅ za lastne modele (`GeoMesh`, display liste) · ❌ **ne za navadne CNPC NPC-je** (`ModelData`/`ModelPartData`) |
+| M7.5 hooki za skripte | ❌ dogodki so v klipu, CNPC skripte jih ne vidijo |
+| M7.6 format + vodnik | ✅ YAML + `tools/anim/README.md` (slovensko); JSON Schema ni |
+| M7.7 validator | ✅ `tools/anim/check.py` |
+| M7.8 reload v igri | 🟡 `/cne play` obstaja, ponovnega nalaganja brez restarta ni |
+| M7.9 script API (`play/queue/stop`) | ❌ |
+| M7.10 blending | ✅ idle↔walk, crossfade akcije, hurt flinch |
+| M7.11 urejevalnik | ❌ (opcijsko; nadomešča ga Python preview) |
+
+**Kaj ostane (skupaj M):**
+
+1. **Združljivost verzij:** entities mod je preveden proti `CustomNPCs (05Jul20)`, rework pa
+   gradi na `(01Oct19)`. Odločiti, na kateri osnovi tečeta skupaj, in preveriti, da podrazredi
+   `EntityCustomNpc` delujejo s popravljenim `EntityNPCInterface` (M3.x stikala). **S–M, najprej.**
+2. Odločitev: entities mod ostane **ločen mod** (priporočeno — že deluje, rework ostane
+   bitno enak originalu brez njega) ali se vključi v `rework/anim`.
+3. Script API in hooki (M7.5, M7.9) — po M6.3, ali takoj prek obstoječega Nashorn API-ja
+   (npr. `/cne play` kot metoda na wrapperju).
+4. *Opcijsko:* animacije za navadne humanoidne CNPC NPC-je (M7.4 za `ModelData`) — samo, če
+   jih rabiš; sicer so animacije omejene na lastne mobe.
+5. Reload klipov brez restarta (M7.8), JSON Schema (M7.6).
+
+Q12 (uvoz zunanjih modelov) je s tem delno odgovorjen: Bedrock `.geo.json` in OBJ (ice golem)
+že delujeta.
 
 ### Faza 6 — M9 chatbot (R8) — **M**, po M6
 
@@ -163,7 +198,7 @@ Faza 0 (pospravljanje, odločitev Baritone)   ← zdaj
        └─ Faza 2  M4 kopenski (po odločitvi) + letenje R2
 Faza 3  M5 performance        (lahko vzporedno s Fazo 2, ko obstaja M2.6)
 Faza 4  M6 Java scripting     (veja A, neodvisna od M3/M4 — lahko začne takoj vzporedno)
-  ├─ Faza 5  M7 animacije
+  ├─ Faza 5  M7 script API za animacije (jedro že obstaja; uskladitev verzij CNPC lahko takoj)
   └─ Faza 6  M9 chatbot
 Faza 7  M10 release
 ```
@@ -179,6 +214,7 @@ M5.1/M6.6). Ker veja B (M3/M4) čaka na zagone v svetu, lahko seje med čakanjem
 | Q6 | Letala: vozilo za igralca ali NPC, ki leti sam? | obseg M4 |
 | Q8 | Chatbot provider (Anthropic / OpenAI / lokalni)? | M9.3 |
 | Q10 | Ima strežnik izhodni internet? | M9 |
-| Q12 | Uvoz zunanjih 3D modelov — v obsegu? | M7 |
+| Q12 | Uvoz zunanjih 3D modelov — delno rešeno v `customNPC_entities_mod` (`.geo.json`, OBJ); ali rabiš še animacije za navadne CNPC NPC-je? | M7.4 |
+| — | Entities mod: ločen mod ali del reworka? Na kateri CNPC verziji (01Oct19 / 05Jul20)? | M7 |
 | — | Popravimo P2 (utripajoč napad izven `aggroRange`)? | M3.6/M3.7 |
 | Q1 | Modpack / pravi svet | M10.3 (trajna blokada) |
