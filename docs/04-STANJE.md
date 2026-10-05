@@ -9,10 +9,10 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-05** (seja 65: M3.6 zaključen; M3.8b GUI v kodi) |
+| Zadnja posodobitev | **2026-10-05** (seja 66: M5-S S1 v kodi, A/B čaka; seja 65: M3.6 zaključen, M3.8b GUI v kodi) |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **M3.6 zaključen 5. 10.:** način 1 zelen (tavajoči v dosegu 10/10 vzorcev z zakasnitvijo 10 = kontrola), način 0 napako ponovi (združeno 6/8 nad kontrolo, mediana 25), hipoteza P2 (`aggroRange`) potrjena. M3.7 in M3.8 zaključena 5. 10. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | M3.6 in M3.8 zaključena (5. 10.). Naslednje: **M3.8b preverba** (`hb-run.ps1`, ko ne teče drug Minecraft; GUI v klientu), M3.9 (solid × jahanje, igralec v klientu) in M5-S S1 (`NPCAttackSelector`: frakcija pred raytraceom, A/B proti baselinu). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
+| Naslednji paketi | **M5-S S1 A/B** (koda in test 5. 10., stikalo `RwTargetPrefilter`; zagon glej dnevnik seje 66 — zahteva, da ne teče noben drug Minecraft/gradle). M3.6 in M3.8 zaključena (5. 10.). Naslednje: **M3.8b preverba** (`hb-run.ps1`, ko ne teče drug Minecraft; GUI v klientu), M3.9 (solid × jahanje, igralec v klientu) in M5-S S1 (`NPCAttackSelector`: frakcija pred raytraceom, A/B proti baselinu). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -36,7 +36,7 @@
 | M2 Diagnostika | **zaključeno 5. 10.** (razen M2.4r render, prestavljen v M5-K kot klientski harness) | M2.1–M2.7 preverjeni v svetu; **baseline M2.6 zelen 5. 10.** (3 ponovitve × 9 celic, B1–B3 in P0–P9) — [baseline](meritve/baseline-2026-10-05.md) |
 | M3 Jedro entitete | **v teku** — M3.1–M3.5 zaključeni (vzrok R1 potrjen, R1 popravljen pod stikalom, regresija zelena v načinih 0/1/2, hitbox po sestopu); M3.6 zaključen 5. 10. (D-020, `RwAttackPriority`), M3.7 zaključen brez spremembe, M3.8 zaključen (`RwHitbox`) | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | **M4.14a v kodi** (izven vrstnega reda, na zahtevo uporabnika) | R2 analiza narejena; formacije (M4.14) prevedene in testirane v simulaciji, v svetu še ne — [zasnova](06-FORMACIJE.md), [scenarij](scenariji/M4.14-formacije.md) |
-| M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
+| M5 Performance | **S1 v kodi** (5. 10., `RwTargetPrefilter`, A/B čaka) | del že pokrit z M1.3, glej meritve; razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
@@ -79,6 +79,52 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-10-05 (66) — M5-S S1: predzavrnitev v iskalniku tarč pred raytraceom
+
+**Paket:** M5-S S1 ([09](09-PERFORMANCE-RAZISKAVA.md)) · **Stanje:** delno — koda in testi zeleni, A/B v svetu ni pognan
+
+**Narejeno:**
+- `rework/ai/TargetPrefilter` + en klic v `NPCAttackSelector.isEntityApplicable` (za preverjanjem
+  dosega in zdravja, pred `canSee`). Kandidata zavrne pred raytraceom **samo, ko je gotovo**, da bi
+  original vrnil `false`: ni stražarjeve tarče, ni tarče spremljevalca-stražarja, kandidat ni igralec
+  (oz. je igralec v kreativnem načinu / z `disableDamage`), NPC kandidat je ubit ali ga frakcija ne
+  napada. Sicer teče original nespremenjen. `NPCAttackSelector` je bil že prenesen (identičen
+  reference-src), zato ločen commit prenosa ni bil potreben.
+- Stikalo `RwTargetPrefilter` (privzeto 0 = original), ukaz `/rwtarget [0|1|reset]` s števcem
+  predzavrnitev (marker `RWTARGET`), `perf-run.ps1 -RwTarget N` (odtis `rwtarget`, veličina
+  `rwtarget.predzavrnjenih`).
+- `TargetPrefilterTest` (6): izčrpno čez 1.296 kombinacij pogojev × vse razrešitve neznank ×
+  vidnost/nevidnost/dom — kadar predzavrnitev zavrne, model originala vedno vrne `false` in nikoli
+  ne vrže izjeme. Build 214/214 + 31/31, `verify-package` PASS (64).
+
+**Ugotovitve (iz kode, pomembno za S1):**
+- Premisa iz [09](09-PERFORMANCE-RAZISKAVA.md) (»preverjanja so brez stranskih učinkov razen
+  `PlayerData.get`«) je **premalo stroga**: `Faction.isAggressiveToPlayer` →
+  `PlayerFactionData.getFactionPoints` ob prvem stiku igralca s frakcijo sproži skriptni dogodek
+  `FactionUpdateEvent` in zapiše točke. Original to naredi samo za **vidnega** igralca. Zato igralec,
+  ki ga NPC lahko napade, ostane v originalnem vrstnem redu (raytrace pred frakcijo). Za idle-500 to ni
+  pomembno (igralca ni).
+- Neskladno stanje (`job == 3` brez `JobGuard`, vloga 6 brez `RoleCompanion`, frakcija `null`) v
+  originalu vrže izjemo samo za vidnega kandidata; predzavrnitev o njem ne odloča.
+- Edina razlika je vsebina predpomnilnika `EntitySenses` (briše se vsak tick).
+
+**Ni narejeno in zakaj:**
+- **A/B v svetu:** ves čas seje sta tekla uporabnikov `ladja_mod` (gradle + Minecraft) in Minecraft
+  iz CurseForge; P9 bi zagon zavrnil, meritev bi bila tudi neveljavna. Prav tako `hb-run.ps1` (M3.8b).
+
+**Spremembe obnašanja:** nobene privzeto. Z `RwTargetPrefilter=1` se izbrane tarče ne spremenijo
+(test); spremeni se samo, za katere kandidate se izvede raytrace.
+
+**Meritve:** nobene.
+
+**Naslednja seja (ko ne teče noben drug Minecraft/gradle):**
+1. `.\testworld.ps1`, nato A in B z isto serijo celic (po 3 ponovitve, ~80 min vsaka):
+   `.\ponovitve-run.ps1 -Scenarij perf -Dodatno @('-Variants','idle','-RwTarget','0')` in
+   `... '-RwTarget','1'`. Pričakovano po modelu iz 09: idle-500 alokacija s 344 MB/s proti ravni
+   idle-50/boj, ticki >25 ms skoraj nič; `rwtarget.predzavrnjenih` > 0. Če alokacija ne pade, je
+   model napačen → profil (JFR). Kandidat pod šumom se zavrže (M5.5).
+2. M3.8b preverba (`hb-run.ps1` + GUI v klientu).
 
 ### 2026-10-05 (65c) — klientske optimizacije: ideje iz UEBS2 dopisane v seznam K
 
@@ -3534,6 +3580,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 | 2026-09-24 | Jahač na nosilcu-NPC ne zažene sledenja/poti premikanja, ko krmili nosilec; `tpTo` jahača teleportira nosilca | R1, M3.4 | da — isti `RwMountSteering` | 0 = original |
 | 2026-09-24 | NPC po sestopu z nosilca dobi nazaj polno višino hitboxa (`updateHitbox` v `dismountRidingEntity`) | R1, M3.5 | da — isti `RwMountSteering` | 0 = original |
 | 2026-09-24 | NPC brez projektila, ki tava ali hodi po poti, napad začne takoj (napad dobi prioriteto pred gibalnim taskom); nov ukaz `/rwattack` | M3.6 | da — config `RwAttackPriority` 0/1, `/rwattack` | 0 = original |
+| 2026-10-05 | Iskalnik tarč zavrne kandidata, do katerega NPC gotovo ni sovražen, pred raytraceom vidnosti (izbrane tarče enake); nov ukaz `/rwtarget` | M5-S S1 | da — config `RwTargetPrefilter` 0/1, `/rwtarget` | 0 = original |
 | 2026-09-18 | Nov ukaz `/rwsquad` in `FormationApi`: formacije; ob koncu nastavijo dom in orientacijo članov | M4.14, D-021 | da — sam ukaz; `brezsidra`; `-Drwformation=off` | brez ukaza nič |
 
 Vse zgornje so popravki tihe izgube podatkov, zato so brez stikala in privzeto vklopljene.

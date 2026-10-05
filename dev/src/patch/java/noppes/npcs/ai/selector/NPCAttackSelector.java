@@ -19,6 +19,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.MobEffects;
 import noppes.npcs.constants.EnumCompanionJobs;
 import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.rework.ai.TargetPrefilter;
 import noppes.npcs.roles.JobGuard;
 import noppes.npcs.roles.RoleCompanion;
 import noppes.npcs.roles.companion.CompanionGuard;
@@ -33,6 +34,11 @@ implements Predicate<EntityLivingBase> {
 
     public boolean isEntityApplicable(EntityLivingBase entity) {
         if (!entity.isEntityAlive() || entity == this.npc || !this.npc.isInRange((Entity)entity, this.npc.stats.aggroRange) || entity.getHealth() < 1.0f) {
+            return false;
+        }
+        // M5-S S1: kandidata, do katerega NPC gotovo ni sovrazen, zavrne pred raytraceom.
+        // V nacinu 0 (privzeto) vrne false in predikat tece kot v originalu.
+        if (TargetPrefilter.rejectsEarly(this.npc, entity)) {
             return false;
         }
         if (this.npc.ais.directLOS && !this.npc.getEntitySenses().canSee((Entity)entity)) {

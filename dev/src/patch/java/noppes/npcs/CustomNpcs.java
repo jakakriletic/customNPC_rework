@@ -113,6 +113,8 @@ import noppes.npcs.items.ItemScripted;
 import noppes.npcs.rework.data.WorldSaveSession;
 import noppes.npcs.rework.ai.AttackPriority;
 import noppes.npcs.rework.ai.CommandRwAttack;
+import noppes.npcs.rework.ai.CommandRwTarget;
+import noppes.npcs.rework.ai.TargetPrefilter;
 import noppes.npcs.rework.diag.CommandRwDiag;
 import noppes.npcs.rework.diag.DiagChunkLoader;
 import noppes.npcs.rework.diag.DiagEventCollector;
@@ -150,6 +152,8 @@ public class CustomNpcs {
     public static int RwMountSteering = 0;
     @ConfigProp(info="Rework M3.6: priority of the melee attack task against the movement task added after it (wander, moving path). 0 = original (same priority: a wandering NPC finishes its wander path before it starts attacking), 1 = attack before movement")
     public static int RwAttackPriority = 0;
+    @ConfigProp(info="Rework M5-S S1: target search rejects candidates the NPC is certainly not hostile to (no guard target, faction not aggressive) before the line-of-sight raytrace. 0 = original order (raytrace first), 1 = hostility first. Same targets are chosen; players that may be attacked keep the original order")
+    public static int RwTargetPrefilter = 0;
     @ConfigProp(info="Rework M7: allow NPC Baritone as an optional navigation backend for NPCs with RwNavBackend=1 in NBT. 0 = original vanilla navigation, 1 = permit opt-in NPCs")
     public static int RwNavBackend = 0;
     @ConfigProp(info="Rework M3.8 (R6): honour per-NPC hitbox modes (NBT RwHitboxMode: 1 = solid, cannot be moved by entity pushing; 2 = smart, push strength by hitbox size and shield). 0 = original vanilla pushing for every NPC, 1 = honour the modes")
@@ -346,6 +350,9 @@ public class CustomNpcs {
         // M3.6: prioriteta napada pred gibanjem; /rwattack jo med tekom preklopi.
         event.registerServerCommand((ICommand)new CommandRwAttack());
         AttackPriority.setMode(RwAttackPriority);
+        // M5-S S1: predzavrnitev v iskalniku tarc; /rwtarget jo med tekom preklopi.
+        event.registerServerCommand((ICommand)new CommandRwTarget());
+        TargetPrefilter.setMode(RwTargetPrefilter);
         // M4.14: formacije. Brez ukaza (ali klica iz skripte) paket ni prijavljen na event
         // bus in ne doda nobenega AI taska, zato je obnasanje brez ukaza enako originalu.
         event.registerServerCommand((ICommand)new CommandRwSquad());

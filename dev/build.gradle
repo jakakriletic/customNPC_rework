@@ -160,6 +160,7 @@ task testOriginal(type: Test) {
     exclude '**/NavProbeTest.class'
     exclude '**/SlowTicksTest.class'
     exclude '**/AttackPriorityTest.class'
+    exclude '**/TargetPrefilterTest.class'
     exclude '**/MountGuardTest.class'
     exclude '**/RiderStateTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }

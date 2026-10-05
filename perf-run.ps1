@@ -28,6 +28,11 @@
 #     .\perf-run.ps1 -Razprseno                        # spawn po 5 NPC-jev, ~7 tickov narazen (M2.6)
 #     .\baseline-run.ps1                               # M2.6: tri ponovitve vseh celic in baseline
 #     .\perf-run.ps1 -DovoliTuje                       # P9 samo opozori (hitra preverba ob buildu)
+#     .\perf-run.ps1 -Variants idle -Counts 500 -RwTarget 1   # M5-S S1: A/B predzavrnitve tarc
+#
+# -RwTarget N (M5-S S1): po postavitvi sveta poslje '/rwtarget N'; odtis dobi kljuc rwtarget,
+# celica velicino rwtarget.predzavrnjenih. Brez parametra (-1) se stikala ne dotakne in odtis
+# ostane enak baselinu M2.6.
 #
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
 # pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
@@ -39,7 +44,7 @@
 param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][string[]]$CountsIn = @('50', '200', '500'),
       [int]$Seconds = 300, [int]$WarmupSeconds = 120, [int]$ChunkRadius = 1,
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
-      [switch]$DovoliTuje)
+      [switch]$DovoliTuje, [int]$RwTarget = -1)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -100,6 +105,19 @@ function Wait-ForCount($Srv, [string]$Marker, [int]$Count, [int]$TimeoutSec) {
 
 function Wait-ForMarker($Srv, [string]$Marker, [int]$TimeoutSec) {
     return (Wait-ForCount $Srv $Marker 1 $TimeoutSec)
+}
+
+# M5-S S1: poslje ukaz rwtarget in vrne stevec predzavrnitev iz novega odgovora (-1 ob napaki).
+# Steje odgovore pred ukazom, ker ni znano, ali LogWriter vrstico podvoji.
+function Send-RwTarget($Srv, [string]$Cmd) {
+    $pred = ([regex]::Matches((Get-MarkerText $Srv.Log), 'RWTARGET nacin=')).Count
+    Send-Command $Srv $Cmd
+    $ok = Wait-ForCount $Srv 'RWTARGET nacin=' ($pred + 1) 60
+    Check ("ukaz '{0}' odgovori" -f $Cmd) $ok
+    if (-not $ok) { return -1 }
+    $m = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWTARGET nacin=\d+ \([^)]*\) predzavrnjenih=(\d+)')
+    if ($m.Count -eq 0) { return -1 }
+    return [long]$m[$m.Count - 1].Groups[1].Value
 }
 
 function Start-DevServer([string]$Tag = '') {
@@ -384,6 +402,10 @@ try {
     $script:nasiPid = Get-DrevoProcesov @($srv.Proc.Id)
     Send-File $srv (Join-Path $seed 'perf-setup-commands.txt')
     Check 'svet shranjen po postavitvi' (Wait-ForMarker $srv 'Saved the world' 120)
+    if ($RwTarget -ge 0) {
+        $null = Send-RwTarget $srv ("rwtarget {0}" -f $RwTarget)
+        Check ("stikalo RwTarget je {0}" -f $RwTarget) ((Get-MarkerText $srv.Log) -match ("RWTARGET nacin={0} " -f $RwTarget))
+    }
 
     # Pobijanje fixtur M0.6. Vrstni red je bistven: 'noppes slay npcs' samo oznaci isDead,
     # odstrani pa jih sele updateEntities - ta pa brez igralca in brez prisilno nalozenih
@@ -475,6 +497,7 @@ try {
             Wait-SPreverbo $WarmupSeconds
         }
 
+        if ($RwTarget -ge 0) { $null = Send-RwTarget $srv 'rwtarget reset' }
         Send-Command $srv 'rwdiag on'
         $nOn++
         Check 'merjenje vklopljeno' (Wait-ForCount $srv 'RWDIAG vklopljen' $nOn 60)
@@ -484,6 +507,11 @@ try {
         Send-Command $srv ("rwdiag dump {0}" -f $tag)
         $nDump++
         Check 'posnetek zapisan' (Wait-ForCount $srv 'RWDIAG-DUMP ' $nDump 120)
+        $predzavrnjenih = -1
+        if ($RwTarget -ge 0) {
+            $predzavrnjenih = Send-RwTarget $srv 'rwtarget'
+            Write-Host ("  RwTarget={0}: predzavrnjenih kandidatov med merjenjem {1}" -f $RwTarget, $predzavrnjenih)
+        }
         Send-Command $srv 'rwdiag off'
         $nOff++
         Check 'merjenje izklopljeno' (Wait-ForCount $srv 'RWDIAG izklopljen' $nOff 60)
@@ -607,6 +635,10 @@ try {
 
         $odtis = @{ razprseno = $(if ($Razprseno) { 1 } else { 0 }); varianta = $v; npc = $N; sekund = $Seconds; ogrevanje = $WarmupSeconds; obroc = $ChunkRadius
                     celica = $idx; celic = $cells.Count; mrezaX = $gridX; mrezaZ = $gridZ; mrezaSirina = $gridW }
+        if ($RwTarget -ge 0) {
+            $odtis['rwtarget'] = $RwTarget
+            $vel['rwtarget.predzavrnjenih'] = $predzavrnjenih
+        }
         $cellFails = @()
         if ($failures.Count -gt $cellFailStart) { $cellFails = @($failures[$cellFailStart..($failures.Count - 1)]) }
         $vel['nasiceno'] = $(if ($sat) { 1 } else { 0 })
