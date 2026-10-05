@@ -21,9 +21,12 @@ repositories {
     flatDir { dirs 'libs' }
     mavenCentral()
 }
-// The optional library may live in a separate checkout or worktree.
-def npcBaritoneModDir = System.getenv('NPCB_MOD_DIR') ?: project.findProperty('npcBaritoneModDir')
-        ?: '../../barittone_for_npc_rework/barritone_converted_for_entities/mod'
+// The optional library may live in a separate checkout or worktree. Without an override the
+// first existing of the two known layouts of the sibling repository is used.
+def npcBaritoneModDir = System.getenv('NPCB_MOD_DIR') ?: project.findProperty('npcBaritoneModDir') ?:
+        ['../../barittone_for_npc_rework/barritone_converted_for_entities/mod',
+         '../../barittone_for_npc_rework/mod'].find { file(it).isDirectory() } ?:
+        '../../barittone_for_npc_rework/mod'
 dependencies {
     // Generated from the SHA-256-verified original by ForgeGradle's SRG -> MCP remapper.
     compile files('libs/customnpcs-mapped-01Oct19.jar')

@@ -39,7 +39,12 @@ $libRoot = if ($BaritoneRoot) {
     $chosen = if ([System.IO.Path]::IsPathRooted($BaritoneRoot)) { $BaritoneRoot } else { Join-Path $root $BaritoneRoot }
     [System.IO.Path]::GetFullPath($chosen)
 } else {
-    [System.IO.Path]::GetFullPath((Join-Path $root '..\barittone_for_npc_rework\barritone_converted_for_entities'))
+    # Brez -BaritoneRoot: prva obstojeca od znanih postavitev sosednjega repozitorija
+    # (podmapa barritone_converted_for_entities ali koren z mod/ neposredno).
+    $npcbKand = @('..\barittone_for_npc_rework\barritone_converted_for_entities', '..\barittone_for_npc_rework') |
+        ForEach-Object { [System.IO.Path]::GetFullPath((Join-Path $root $_)) }
+    $npcbNajden = @($npcbKand | Where-Object { Test-Path (Join-Path $_ 'mod') })
+    if ($npcbNajden.Count -gt 0) { $npcbNajden[0] } else { $npcbKand[-1] }
 }
 if ($BaritoneRiders) { $env:NPCB_MOD_DIR = Join-Path $libRoot 'mod' }
 New-Item -ItemType Directory -Force -Path $audit | Out-Null
