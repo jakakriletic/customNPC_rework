@@ -80,6 +80,15 @@
 
 ## Dnevnik sej
 
+### 2026-10-05 (65c) — klientske optimizacije: ideje iz UEBS2 dopisane v seznam K
+
+Na vprašanje uporabnika (kako UEBS2 zmore milijone enot, učinkovita klientska optimizacija): v
+[09](09-PERFORMANCE-RAZISKAVA.md) dodani **K10** (instanced renderer), **K11** (tanjši klientski tick
+oddaljenih), **K12** (okluzija, najprej Entity Culling), **K13** (skini v teksturnem nizu), impostor kot
+zadnja stopnja **K5**; predlagan vrstni red M5-K: K0 → K5 → K12 → K13 → K10. Zniževanje ločljivosti
+tekstur po gostoti ocenjeno kot neučinkovito za FPS (ozko grlo so klici na NPC, ne tekstura) — zapisano z
+razlogom. Brez kode, brez meritev; vse čaka na harness K0 (M2.4r).
+
 ### 2026-10-05 (65b) — M3.8b: GUI za hitbox način
 
 **Paket:** M3.8b · **Stanje:** delno — koda in testi zeleni, preverba v svetu in klientu ni narejena

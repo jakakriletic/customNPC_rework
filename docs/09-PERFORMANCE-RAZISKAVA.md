@@ -80,11 +80,36 @@ Privzeti humanoidni NPC **ni** upodobljen v immediate mode. `ModelScaleRenderer`
 | **K2** | Mikropopravki brez vidne spremembe: zgodnji izhod v `getMessages`, odstranitev zavrženega `canSee`, predpomnjen `"<title>"`, preskok praznih ovojev slojev, fiksen niz namesto `keySet()` v `setRotationAngles`, barva frakcije na tick | nizko-srednji | zelo nizko | ne | ni |
 | **K3** | Oči v cenejši poti: display list po (tip, barve, vzorec) ali izris v prehodu glave; odstranitev dveh `setupFogColor`, če je videz enak; utrip ostane | srednji pri stotinah NPC-jev | nizko | ne (preveriti piksle) | ni |
 | **K4** | Imena in oblački: display-list predpomnilnik niza imena/naslova (invalidacija ob spremembi), en draw za pravokotnike oblačka; ločeni stikali za razdaljo imen in dvojni prosojni prehod | srednji v gneči | nizko-srednje (Unicode pisave, oblikovne kode, OptiFine) | ne (predpomnilnik) / **da** (razdalja, dvojni prehod) | ni |
-| **K5** | Klientski LOD in proračun upodobitve: stopnje po razdalji (brez oči, delov, predmetov, glinta, prekrivnega prehoda, imen), največje število upodobljenih NPC-jev po razdalji | **največji potencial** pri 300+ vidnih | srednje | **da**, privzeto izključeno | dovoljeno; to ni znižanje frekvence ticka |
+| **K5** | Klientski LOD in proračun upodobitve: stopnje po razdalji (brez oči, delov, predmetov, glinta, prekrivnega prehoda, imen), največje število upodobljenih NPC-jev po razdalji; **zadnja stopnja impostor** (5. 10.): daleč stran NPC kot ploskev z vnaprej upodobljeno sliko (po skinu in smeri), en quad namesto ~18 listov | **največji potencial** pri 300+ vidnih | srednje | **da**, privzeto izključeno | dovoljeno; to ni znižanje frekvence ticka |
 | **K6** | Utrditev skinov: omejen izvajalec + časovne omejitve (že v načrtu), diskovni predpomnilnik, omejitev velikosti slike, sprostitev `BufferedImage`, ≤N GL nalaganj na sličico, oznaka ponovnega poskusa za skinType 1 | stabilnost in odprava zatikanj | nizko | ne | ni |
 | **K7** | Omrežna kozmetika: prejemniki po sledilcih (S7), meritev velikosti spawn NBT in GZIP izbruha ob vstopu v vas; klientsko gnani utripi samo kot izklopljena opcija | nizko-srednji | nizko | ne / **da** (utripi) | ID-ji in NBT nespremenjeni |
 | K8 | Morph NPC-ji: ne tickati morph entitete, ko ni upodobljena | nišni | srednje | da | ni |
 | K9 | Kombinacija s `customNPC_entities_mod`: ponovna uporaba `Pose` map v `AnimatedModel.buildPose`, `ModelIceGolem` na display liste | srednji pri animiranih NPC-jih | nizko | ne | ni |
+| **K10** | **Instanced renderer** (5. 10., ideja iz UEBS2, glej spodaj): vsi vidni NPC-ji istega modela v en medpomnilnik (pozicija, rotacija, koti 6 delov bipeda, indeks skina) in en `glDrawArraysInstanced` na model; poze še vedno računa CPU (`setRotationAngles`), skinning delov na GPU. Brez GL 3.3 originalna pot. Pogoj: K13 | **največji** pri tisočih vidnih (klicev na NPC ≈ 0) | **visoko** (OptiFine senčilniki in senčni prehod, MorePlayerModels deli, `customNPC_entities_mod` animacije, sloji, oklep) | ne, če je slika enaka (preveriti piksle); do dokaza za stikalom | ni |
+| K11 | Tanjši klientski tick oddaljenih NPC-jev: posodobitev animacije, oči in delcev na klientu redkeje z razdaljo (interpolacija ostane) | srednji pri tisočih naloženih | nizko-srednje | **da** (gladkost animacije daleč), privzeto izključeno | dovoljeno: samo klientski videz, strežniški tick nespremenjen |
+| K12 | Okluzija: najprej preveriti združljivost z meldexun Entity Culling (pravilen render bounding box velikih NPC-jev, `isInRangeToRenderDist`), lastna izvedba samo, če ta ne zadošča | visok v vaseh in zgradbah | nizko (zunanji mod) | ne | ni |
+| K13 | Skini v teksturnem nizu/atlasu (`GL_TEXTURE_2D_ARRAY` ali atlas 64×64 celic): ena vezava teksture za vse NPC-je namesto menjave na vsakega z drugačnim skinom; pogoj za K10 | srednji sam, nujen za K10 | srednje (HD in URL skini, skinType 1/2, prekrivne teksture) | ne | ni |
+
+### Dopolnitev 5. 10. 2026: ideje iz Ultimate Epic Battle Simulator 2 in zniževanje teksture po gostoti
+
+UEBS2 navaja ~7 milijonov animiranih enot, ker enota ni objekt na CPU-ju: upodabljanje, culling, animacija,
+transformacije in AI tečejo na GPU-ju, z GPU instancingom, GPU skinningom in lastnim programskim
+rasterizatorjem na GPU-ju ([Steam](https://steamcommunity.com/app/1468720),
+[Steam razprava](https://steamcommunity.com/app/1468720/discussions/0/3110267314129208740),
+[Wikipedia](https://en.wikipedia.org/wiki/Ultimate_Epic_Battle_Simulator)). Za 1.12 se ne preslika 1:1:
+NPC je Java objekt s strežniškim tickom in omrežnimi paketi, zato klient pomaga le FPS-ju, ne TPS-ju.
+Prenosljiva ideja je **»nič klicev na entiteto«** → K10 (instancing), K13 (skupna tekstura), zadnja stopnja K5
+(impostor). Da GPU instancing na 1.12 deluje, kaže Brute force Rendering Culling (GL 3.3)
+([CurseForge](https://www.curseforge.com/minecraft/mc-mods/brute-force-rendering-culling)).
+Predlagan vrstni red M5-K: **K0 → K5 → K12 → K13 → K10**; K10 je največji vzvod in največje tveganje.
+
+**Zniževanje ločljivosti tekstur pri veliki gostoti NPC-jev — ocenjeno in zavrženo kot ukrep za FPS [H, iz
+kode in arhitekture].** Skin je 64×64 (≈16 KB), oddaljen NPC zavzame malo pikslov, zato vzorčenje teksture in
+fill-rate nista ozko grlo; strošek je v CPU klicih na NPC (zgoraj). Manjša tekstura ne zmanjša števila klicev
+ne menjav vezave teksture — te reši K13. Učinek ima le na pomnilnik pri HD/URL skinih, kar je že v K6
+(omejitev velikosti slike). Gostota naj zato zmanjšuje **geometrijo in število klicev** (K5 stopnje, impostor,
+proračun), ne ločljivosti teksture. Če harness K0 pokaže drugače (npr. HD skini 512+ na šibki GPU), se
+vprašanje odpre znova.
 
 Zunanji modi pokrijejo del klienta brez spremembe CNPC: meldexun Entity Culling (GL 4.3 occlusion queries, kompatibilen z OptiFine G5, „ogromne izboljšave“ pri ~200 entitetah, brez številk) ([CurseForge](https://www.curseforge.com/minecraft/mc-mods/entity-culling)) in Entity Distance za razdaljo po tipu ([CurseForge](https://www.curseforge.com/minecraft/mc-mods/entity-distance-1-12-2)). Za pravilno okluzijo morajo veliki NPC-ji imeti pravilno velik render bounding box **[H]**. Z OptiFine senčilniki se entitete lahko rišejo še v senčni prehod, kar podvoji strošek ([shaders.properties](https://shaders.properties/current/reference/shadersproperties/ordering/)).
 
