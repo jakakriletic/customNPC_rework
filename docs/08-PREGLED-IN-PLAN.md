@@ -93,7 +93,7 @@ Velikosti: **S** = ena seja · **M** = 2–4 seje · **L** = 5–10 · **XL** = 
 | 0.3 | ⏵ ponovni zagon M3.6 (`m36-run.ps1`, načina 0 in 1) → zaključiti M3.6 | S | koda čaka od 24. 9. |
 | 0.4 | ~~Baritone A/B, odločitev D-022~~ | S | ✅ 28. 9. (`m7-next`): V4 sprejet, Baritone ostane izbirno ozadje. Odprto za uporabnika: ali M4.11/M4.12 (izboljšava privzetega vanilla ozadja) še rabimo |
 | 0.5 | ⏵ formacije M4.14b (F1–F12, FA1–FA6) | S | koda čaka od 18. 9. |
-| 0.6 | Preimenovati Baritone pakete v CNPC (M7.x → NB.x), posodobiti README in "Trenutno stanje" | S | kolizija z M7 animacijami |
+| 0.6 | Preimenovati Baritone pakete v CNPC (M7.x → NB.x), posodobiti README in "Trenutno stanje" | S | ✅ 5. 10.: preslikava NB.x = M7.x v `07-BARITONE-OZADJE.md` (datoteke in zgodovina ostanejo), README posodobljen |
 
 ### Faza 1 — zaključiti M3 (entiteta)
 

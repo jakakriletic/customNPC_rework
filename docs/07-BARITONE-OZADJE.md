@@ -1,5 +1,11 @@
 # 07 — Baritone kot izbirno ozadje navigacije (M7 knjižnice `npcbaritone`)
 
+> **Oznake (5. 10.):** v CNPC se to delo odslej imenuje **NB.x** (NB = navigacija Baritone).
+> **NB.x = M7.x** iz zapisov in commitov 27.–28. 9. (npr. NB.6 = M7.6 A/B scenarij, NB.10c =
+> M7.10c `crowdYield`). Stare oznake ostanejo v imenih datotek `docs/meritve/*M7.*` in v
+> zgodovini; **M7 v `03-FAZE.md` je animacijski sistem (R4)**. Knjižnica `npcbaritone` ima
+> svoje milestone (M7 = integracija s CNPC) in jih ne preimenuje.
+
 Odločitev: **D-022** (`01-ARHITEKTURA.md` §9). Knjižnica: repozitorij
 `barittone_for_npc_rework`, milestone M7, javni API 2 (`npcbaritone-<ver>-api.jar`).
 Ta dokument je **M7.1**: vsak klic navigatorja v CNPC, kaj naredi pod Baritonovim
