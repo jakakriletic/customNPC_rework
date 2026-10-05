@@ -9,10 +9,10 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-05** (seja 65: M3.6 zaključen) |
+| Zadnja posodobitev | **2026-10-05** (seja 65: M3.6 zaključen; M3.8b GUI v kodi) |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **M3.6 zaključen 5. 10.:** način 1 zelen (tavajoči v dosegu 10/10 vzorcev z zakasnitvijo 10 = kontrola), način 0 napako ponovi (združeno 6/8 nad kontrolo, mediana 25), hipoteza P2 (`aggroRange`) potrjena. M3.7 in M3.8 zaključena 5. 10. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | M3.6 in M3.8 zaključena (5. 10.). Naslednje: M3.8b GUI za hitbox način, M3.9 (solid × jahanje, igralec v klientu) in M5-S S1 (`NPCAttackSelector`: frakcija pred raytraceom, A/B proti baselinu). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
+| Naslednji paketi | M3.6 in M3.8 zaključena (5. 10.). Naslednje: **M3.8b preverba** (`hb-run.ps1`, ko ne teče drug Minecraft; GUI v klientu), M3.9 (solid × jahanje, igralec v klientu) in M5-S S1 (`NPCAttackSelector`: frakcija pred raytraceom, A/B proti baselinu). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -79,6 +79,29 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-10-05 (65b) — M3.8b: GUI za hitbox način
+
+**Paket:** M3.8b · **Stanje:** delno — koda in testi zeleni, preverba v svetu in klientu ni narejena
+
+**Narejeno:**
+- Prenos `DataDisplay` in `GuiNpcDisplay` brez funkcionalnih sprememb (ločen commit): 63 metod, 58
+  enakih, 3 razlika v obliki, 2 ročno pregledani (`audit/m38b-bytecode-primerjava.txt`). Orodje
+  `primerjaj-bytecode` prepisano v node (`dev/tools/primerjaj-bytecode.js`), ker tu ni Pythona;
+  primerjati je treba z reobfusciranim `dev/build/libs/CustomNPCs_1.12.2-01Oct19-workspace.jar`.
+- Vrstica **Hitbox** (Original / Solid / Smart) na zavihku Display; pot podatkov brez novih paketov
+  (`rework/entity/HitboxGui`, 7 testov). [zapis](meritve/2026-10-05-M3.8-hitbox-nacini.md)
+- Build 208/208 + 31/31 (`HitboxGuiTest` izključen iz `testOriginal`), `verify-package` PASS (64).
+
+**Ni narejeno in zakaj:**
+- `hb-run.ps1` je zavrnil zagon po P9: tekel je uporabnikov drug projekt (`ladja_mod`, gradle +
+  Minecraft). Varovala nisem obšla. Spawn podatki so se spremenili samo za NPC-je z načinom.
+- GUI v klientu z igralcem ni preverjen (tudi M3.9 potrebuje klienta).
+
+**Spremembe obnašanja:** nobene privzeto. NPC z načinom ima v spawn podatkih ključ `RwHitboxStored`.
+
+**Naslednja seja:** `.\hb-run.ps1` (svet je postavljen s `testworld-run`), nato v klientu: urejevalnik
+NPC-ja → Display → Hitbox → Solid, zapri, `/rwhitbox status` mora pokazati solid; ponovno odpri GUI.
 
 ### 2026-10-05 (65) — M3.6 zaključen: ponovni zagon v obeh načinih
 

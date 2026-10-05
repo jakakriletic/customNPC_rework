@@ -149,6 +149,7 @@ import noppes.npcs.Server;
 import noppes.npcs.VersionCompatibility;
 import noppes.npcs.ai.CombatHandler;
 import noppes.npcs.rework.ai.AttackPriority;
+import noppes.npcs.rework.entity.HitboxGui;
 import noppes.npcs.rework.entity.HitboxWeights;
 import noppes.npcs.rework.entity.MountGuard;
 import noppes.npcs.rework.entity.RiderState;
@@ -290,6 +291,8 @@ IAnimals {
     private int rwNavBackend;
     /** M3.8 (R6): nacin hitboxa (HitboxWeights); na klientu ze ucinkovit nacin iz spawn podatkov. */
     private int rwHitboxMode;
+    /** M3.8b: na klientu shranjeni nacin iz spawn podatkov (za GUI Display); na serverju se ne rabi. */
+    private int rwHitboxStored;
     public final BossInfoServer bossInfo = new BossInfoServer(this.getDisplayName(), BossInfo.Color.PURPLE, BossInfo.Overlay.PROGRESS);
     public double field_20066_r;
     public double field_20065_s;
@@ -1575,6 +1578,7 @@ IAnimals {
         if (hitbox != HitboxWeights.ORIGINAL) {
             compound.setInteger("RwHitboxMode", hitbox);
         }
+        HitboxGui.writeSpawn(compound, this.rwHitboxMode);
         return compound;
     }
 
@@ -1590,6 +1594,7 @@ IAnimals {
     public void readSpawnData(NBTTagCompound compound) {
         NBTTagCompound puppet;
         this.rwHitboxMode = HitboxWeights.sanitize(compound.getInteger("RwHitboxMode"));
+        this.rwHitboxStored = HitboxGui.readStored(compound);
         this.stats.setMaxHealth(compound.getInteger("MaxHealth"));
         this.ais.setWalkingSpeed(compound.getInteger("Speed"));
         this.stats.hideKilledBody = compound.getBoolean("DeadBody");
@@ -1670,6 +1675,11 @@ IAnimals {
 
     public int getRwHitboxMode() {
         return this.rwHitboxMode;
+    }
+
+    /** M3.8b: shranjeni nacin za GUI - na klientu iz spawn podatkov, ne ucinkovit nacin. */
+    public int getRwHitboxModeForGui() {
+        return this.world != null && this.world.isRemote ? this.rwHitboxStored : this.rwHitboxMode;
     }
 
     public void setRwHitboxMode(int mode) {

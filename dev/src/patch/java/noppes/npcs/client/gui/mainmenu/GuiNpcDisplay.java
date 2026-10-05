@@ -30,16 +30,20 @@ import noppes.npcs.constants.EnumPacketServer;
 import noppes.npcs.entity.EntityCustomNpc;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.entity.data.DataDisplay;
+import noppes.npcs.rework.entity.HitboxGui;
 
 public class GuiNpcDisplay
 extends GuiNPCInterface2
 implements ITextfieldListener,
 IGuiData {
     private DataDisplay display;
+    /** M3.8b: izbrani nacin hitboxa (shranjeni, ne ucinkovit); na server gre ob save(). */
+    private int rwHitboxMode;
 
     public GuiNpcDisplay(EntityNPCInterface npc) {
         super(npc, 1);
         this.display = npc.display;
+        this.rwHitboxMode = npc.getRwHitboxModeForGui();
         Client.sendData(EnumPacketServer.MainmenuDisplayGet, new Object[0]);
     }
 
@@ -90,6 +94,10 @@ IGuiData {
         this.addButton(new GuiNpcButton(10, this.guiLeft + 60, y, 110, 20, new String[]{"display.hide", "display.show", "display.showAttacking"}, this.display.getBossbar()));
         this.addLabel(new GuiNpcLabel(12, "gui.color", this.guiLeft + 180, y + 5));
         this.addButton(new GuiNpcButton(12, this.guiLeft + 220, y, 110, 20, this.display.getBossColor(), "color.pink", "color.blue", "color.red", "color.green", "color.yellow", "color.purple", "color.white"));
+        // M3.8b (R6): nacin hitboxa; velja samo z RwHitbox=1 v CustomNpcs.cfg.
+        this.addLabel(new GuiNpcLabel(14, "Hitbox", this.guiLeft + 5, (y += 23) + 5));
+        this.addButton(new GuiNpcButton(14, this.guiLeft + 60, y, 110, 20, HitboxGui.labels(), this.rwHitboxMode));
+        this.addLabel(new GuiNpcLabel(15, HitboxGui.HINT, this.guiLeft + 180, y + 5));
     }
 
     @Override
@@ -159,6 +167,8 @@ IGuiData {
             this.display.setBossColor(button.getValue());
         } else if (button.id == 13) {
             this.display.setHasHitbox(((GuiNpcButtonYesNo)button).getBoolean());
+        } else if (button.id == 14) {
+            this.rwHitboxMode = button.getValue();
         }
     }
 
@@ -170,7 +180,9 @@ IGuiData {
         this.npc.textureLocation = null;
         this.mc.renderGlobal.onEntityRemoved((Entity)this.npc);
         this.mc.renderGlobal.onEntityAdded((Entity)this.npc);
-        Client.sendData(EnumPacketServer.MainmenuDisplaySave, this.display.writeToNBT(new NBTTagCompound()));
+        NBTTagCompound compound = this.display.writeToNBT(new NBTTagCompound());
+        HitboxGui.writeRequest(compound, this.rwHitboxMode);
+        Client.sendData(EnumPacketServer.MainmenuDisplaySave, compound);
     }
 
     @Override

@@ -43,6 +43,7 @@ import noppes.npcs.api.entity.data.INPCDisplay;
 import noppes.npcs.constants.EnumParts;
 import noppes.npcs.entity.EntityCustomNpc;
 import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.rework.entity.HitboxGui;
 import noppes.npcs.util.ValueUtil;
 
 public class DataDisplay
@@ -124,6 +125,11 @@ implements INPCDisplay {
         this.visible = nbttagcompound.getInteger("NpcVisible");
         this.disableLivingAnimation = nbttagcompound.getBoolean("NoLivingAnimation");
         this.noHitbox = nbttagcompound.getBoolean("IsStatue");
+        // M3.8b: nacin hitboxa samo iz GUI-ja Display (kljuc ima le paket MainmenuDisplaySave), samo na serverju.
+        int rwHitbox = HitboxGui.readRequest(nbttagcompound);
+        if (rwHitbox >= 0 && !this.npc.world.isRemote) {
+            this.npc.setRwHitboxMode(rwHitbox);
+        }
         this.setBossbar(nbttagcompound.getByte("BossBar"));
         this.setBossColor(nbttagcompound.getInteger("BossColor"));
         if (!(prevSkinType == this.skinType && this.texture.equals(prevTexture) && this.url.equals(prevUrl) && this.getSkinPlayer().equals(prevPlayer))) {
