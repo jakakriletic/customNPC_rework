@@ -1,0 +1,1977 @@
+{
+    "shema":  1,
+    "paket":  "M2.6",
+    "zagon":  "2026-10-05 17:45:45",
+    "ponovitev":  3,
+    "sekund":  300,
+    "ogrevanje":  120,
+    "razprseno":  0,
+    "uspeh":  true,
+    "padle":  [
+
+              ],
+    "celice":  {
+                   "idle-50":  {
+                                   "odtis":  {
+                                                 "celic":  9,
+                                                 "celica":  1,
+                                                 "mrezaSirina":  25,
+                                                 "mrezaX":  48,
+                                                 "mrezaZ":  -12,
+                                                 "npc":  50,
+                                                 "obroc":  1,
+                                                 "ogrevanje":  120,
+                                                 "razprseno":  0,
+                                                 "sekund":  300,
+                                                 "varianta":  "idle"
+                                             },
+                                   "velicine":  {
+                                                    "alok.KBnaTick":  {
+                                                                          "n":  3,
+                                                                          "mediana":  211.4,
+                                                                          "min":  211.3,
+                                                                          "max":  235.8,
+                                                                          "razpon":  24.5,
+                                                                          "rel":  0.1159
+                                                                      },
+                                                    "alok.MBnaS":  {
+                                                                       "n":  3,
+                                                                       "mediana":  4.1,
+                                                                       "min":  4.1,
+                                                                       "max":  4.6,
+                                                                       "razpon":  0.5,
+                                                                       "rel":  0.122
+                                                                   },
+                                                    "gc.ms":  {
+                                                                  "n":  3,
+                                                                  "mediana":  5,
+                                                                  "min":  4,
+                                                                  "max":  5,
+                                                                  "razpon":  1,
+                                                                  "rel":  0.2
+                                                              },
+                                                    "gc.msNaS":  {
+                                                                     "n":  3,
+                                                                     "mediana":  0.02,
+                                                                     "min":  0.01,
+                                                                     "max":  0.02,
+                                                                     "razpon":  0.01,
+                                                                     "rel":  0.5
+                                                                 },
+                                                    "gc.old.ms":  {
+                                                                      "n":  3,
+                                                                      "mediana":  0,
+                                                                      "min":  0,
+                                                                      "max":  0,
+                                                                      "razpon":  0,
+                                                                      "rel":  null
+                                                                  },
+                                                    "gc.old.zbirk":  {
+                                                                         "n":  3,
+                                                                         "mediana":  0,
+                                                                         "min":  0,
+                                                                         "max":  0,
+                                                                         "razpon":  0,
+                                                                         "rel":  null
+                                                                     },
+                                                    "gc.zbirk":  {
+                                                                     "n":  3,
+                                                                     "mediana":  2,
+                                                                     "min":  2,
+                                                                     "max":  2,
+                                                                     "razpon":  0,
+                                                                     "rel":  0
+                                                                 },
+                                                    "heap.maxMB":  {
+                                                                       "n":  3,
+                                                                       "mediana":  1820,
+                                                                       "min":  1820,
+                                                                       "max":  1820,
+                                                                       "razpon":  0,
+                                                                       "rel":  0
+                                                                   },
+                                                    "mspt.brezSave.max":  {
+                                                                              "n":  3,
+                                                                              "mediana":  2.834,
+                                                                              "min":  2.765,
+                                                                              "max":  2.938,
+                                                                              "razpon":  0.17300000000000004,
+                                                                              "rel":  0.061
+                                                                          },
+                                                    "mspt.brezSave.p99":  {
+                                                                              "n":  3,
+                                                                              "mediana":  0.721,
+                                                                              "min":  0.688,
+                                                                              "max":  0.737,
+                                                                              "razpon":  0.049000000000000044,
+                                                                              "rel":  0.068
+                                                                          },
+                                                    "mspt.max":  {
+                                                                     "n":  3,
+                                                                     "mediana":  21.015,
+                                                                     "min":  20.822,
+                                                                     "max":  21.192,
+                                                                     "razpon":  0.370000000000001,
+                                                                     "rel":  0.0176
+                                                                 },
+                                                    "mspt.p50":  {
+                                                                     "n":  3,
+                                                                     "mediana":  0.254,
+                                                                     "min":  0.246,
+                                                                     "max":  0.258,
+                                                                     "razpon":  0.012000000000000011,
+                                                                     "rel":  0.0472
+                                                                 },
+                                                    "mspt.p95":  {
+                                                                     "n":  3,
+                                                                     "mediana":  0.606,
+                                                                     "min":  0.59,
+                                                                     "max":  0.623,
+                                                                     "razpon":  0.033000000000000029,
+                                                                     "rel":  0.0545
+                                                                 },
+                                                    "mspt.p99":  {
+                                                                     "n":  3,
+                                                                     "mediana":  0.737,
+                                                                     "min":  0.705,
+                                                                     "max":  0.754,
+                                                                     "razpon":  0.049000000000000044,
+                                                                     "rel":  0.0665
+                                                                 },
+                                                    "mspt.povp":  {
+                                                                      "n":  3,
+                                                                      "mediana":  0.335,
+                                                                      "min":  0.334,
+                                                                      "max":  0.349,
+                                                                      "razpon":  0.014999999999999958,
+                                                                      "rel":  0.0448
+                                                                  },
+                                                    "nasiceno":  {
+                                                                     "n":  3,
+                                                                     "mediana":  0,
+                                                                     "min":  0,
+                                                                     "max":  0,
+                                                                     "razpon":  0,
+                                                                     "rel":  null
+                                                                 },
+                                                    "npc.per.tick.p50":  {
+                                                                             "n":  3,
+                                                                             "mediana":  50,
+                                                                             "min":  50,
+                                                                             "max":  50,
+                                                                             "razpon":  0,
+                                                                             "rel":  0
+                                                                         },
+                                                    "npc.us":  {
+                                                                   "n":  3,
+                                                                   "mediana":  6.38,
+                                                                   "min":  6.37,
+                                                                   "max":  6.67,
+                                                                   "razpon":  0.29999999999999982,
+                                                                   "rel":  0.047
+                                                               },
+                                                    "ticki":  {
+                                                                  "n":  3,
+                                                                  "mediana":  6026,
+                                                                  "min":  6024,
+                                                                  "max":  6045,
+                                                                  "razpon":  21,
+                                                                  "rel":  0.0035
+                                                              },
+                                                    "ticki.nad100ms":  {
+                                                                           "n":  3,
+                                                                           "mediana":  0,
+                                                                           "min":  0,
+                                                                           "max":  0,
+                                                                           "razpon":  0,
+                                                                           "rel":  null
+                                                                       },
+                                                    "ticki.nad10ms":  {
+                                                                          "n":  3,
+                                                                          "mediana":  6,
+                                                                          "min":  6,
+                                                                          "max":  6,
+                                                                          "razpon":  0,
+                                                                          "rel":  0
+                                                                      },
+                                                    "ticki.nad25ms":  {
+                                                                          "n":  3,
+                                                                          "mediana":  0,
+                                                                          "min":  0,
+                                                                          "max":  0,
+                                                                          "razpon":  0,
+                                                                          "rel":  null
+                                                                      },
+                                                    "ticki.nad50ms":  {
+                                                                          "n":  3,
+                                                                          "mediana":  0,
+                                                                          "min":  0,
+                                                                          "max":  0,
+                                                                          "razpon":  0,
+                                                                          "rel":  null
+                                                                      },
+                                                    "tps":  {
+                                                                "n":  3,
+                                                                "mediana":  20,
+                                                                "min":  20,
+                                                                "max":  20,
+                                                                "razpon":  0,
+                                                                "rel":  0
+                                                            }
+                                                },
+                                   "nasiceno":  0
+                               },
+                   "idle-200":  {
+                                    "odtis":  {
+                                                  "celic":  9,
+                                                  "celica":  2,
+                                                  "mrezaSirina":  25,
+                                                  "mrezaX":  48,
+                                                  "mrezaZ":  -12,
+                                                  "npc":  200,
+                                                  "obroc":  1,
+                                                  "ogrevanje":  120,
+                                                  "razprseno":  0,
+                                                  "sekund":  300,
+                                                  "varianta":  "idle"
+                                              },
+                                    "velicine":  {
+                                                     "alok.KBnaTick":  {
+                                                                           "n":  3,
+                                                                           "mediana":  2472.8,
+                                                                           "min":  2471.3,
+                                                                           "max":  2554,
+                                                                           "razpon":  82.699999999999818,
+                                                                           "rel":  0.0334
+                                                                       },
+                                                     "alok.MBnaS":  {
+                                                                        "n":  3,
+                                                                        "mediana":  48.3,
+                                                                        "min":  48.3,
+                                                                        "max":  49.9,
+                                                                        "razpon":  1.6000000000000014,
+                                                                        "rel":  0.0331
+                                                                    },
+                                                     "gc.ms":  {
+                                                                   "n":  3,
+                                                                   "mediana":  85,
+                                                                   "min":  84,
+                                                                   "max":  89,
+                                                                   "razpon":  5,
+                                                                   "rel":  0.0588
+                                                               },
+                                                     "gc.msNaS":  {
+                                                                      "n":  3,
+                                                                      "mediana":  0.28,
+                                                                      "min":  0.28,
+                                                                      "max":  0.3,
+                                                                      "razpon":  0.019999999999999962,
+                                                                      "rel":  0.0714
+                                                                  },
+                                                     "gc.old.ms":  {
+                                                                       "n":  3,
+                                                                       "mediana":  0,
+                                                                       "min":  0,
+                                                                       "max":  0,
+                                                                       "razpon":  0,
+                                                                       "rel":  null
+                                                                   },
+                                                     "gc.old.zbirk":  {
+                                                                          "n":  3,
+                                                                          "mediana":  0,
+                                                                          "min":  0,
+                                                                          "max":  0,
+                                                                          "razpon":  0,
+                                                                          "rel":  null
+                                                                      },
+                                                     "gc.zbirk":  {
+                                                                      "n":  3,
+                                                                      "mediana":  41,
+                                                                      "min":  41,
+                                                                      "max":  44,
+                                                                      "razpon":  3,
+                                                                      "rel":  0.0732
+                                                                  },
+                                                     "heap.maxMB":  {
+                                                                        "n":  3,
+                                                                        "mediana":  1820,
+                                                                        "min":  1820,
+                                                                        "max":  1820,
+                                                                        "razpon":  0,
+                                                                        "rel":  0
+                                                                    },
+                                                     "mspt.brezSave.max":  {
+                                                                               "n":  3,
+                                                                               "mediana":  9.262,
+                                                                               "min":  9.178,
+                                                                               "max":  9.741,
+                                                                               "razpon":  0.56299999999999883,
+                                                                               "rel":  0.0608
+                                                                           },
+                                                     "mspt.brezSave.p99":  {
+                                                                               "n":  3,
+                                                                               "mediana":  6.947,
+                                                                               "min":  6.947,
+                                                                               "max":  6.947,
+                                                                               "razpon":  0,
+                                                                               "rel":  0
+                                                                           },
+                                                     "mspt.max":  {
+                                                                      "n":  3,
+                                                                      "mediana":  23.457,
+                                                                      "min":  20.949,
+                                                                      "max":  28.51,
+                                                                      "razpon":  7.561,
+                                                                      "rel":  0.3223
+                                                                  },
+                                                     "mspt.p50":  {
+                                                                      "n":  3,
+                                                                      "mediana":  1.114,
+                                                                      "min":  1.114,
+                                                                      "max":  1.147,
+                                                                      "razpon":  0.032999999999999918,
+                                                                      "rel":  0.0296
+                                                                  },
+                                                     "mspt.p95":  {
+                                                                      "n":  3,
+                                                                      "mediana":  6.16,
+                                                                      "min":  6.029,
+                                                                      "max":  6.291,
+                                                                      "razpon":  0.26200000000000045,
+                                                                      "rel":  0.0425
+                                                                  },
+                                                     "mspt.p99":  {
+                                                                      "n":  3,
+                                                                      "mediana":  7.078,
+                                                                      "min":  6.947,
+                                                                      "max":  7.078,
+                                                                      "razpon":  0.13100000000000023,
+                                                                      "rel":  0.0185
+                                                                  },
+                                                     "mspt.povp":  {
+                                                                       "n":  3,
+                                                                       "mediana":  2.46,
+                                                                       "min":  2.434,
+                                                                       "max":  2.508,
+                                                                       "razpon":  0.073999999999999844,
+                                                                       "rel":  0.0301
+                                                                   },
+                                                     "nasiceno":  {
+                                                                      "n":  3,
+                                                                      "mediana":  0,
+                                                                      "min":  0,
+                                                                      "max":  0,
+                                                                      "razpon":  0,
+                                                                      "rel":  null
+                                                                  },
+                                                     "npc.per.tick.p50":  {
+                                                                              "n":  3,
+                                                                              "mediana":  200,
+                                                                              "min":  200,
+                                                                              "max":  200,
+                                                                              "razpon":  0,
+                                                                              "rel":  0
+                                                                          },
+                                                     "npc.us":  {
+                                                                    "n":  3,
+                                                                    "mediana":  12.2,
+                                                                    "min":  12.07,
+                                                                    "max":  12.44,
+                                                                    "razpon":  0.36999999999999922,
+                                                                    "rel":  0.0303
+                                                                },
+                                                     "ticki":  {
+                                                                   "n":  3,
+                                                                   "mediana":  6025,
+                                                                   "min":  6025,
+                                                                   "max":  6044,
+                                                                   "razpon":  19,
+                                                                   "rel":  0.0032
+                                                               },
+                                                     "ticki.nad100ms":  {
+                                                                            "n":  3,
+                                                                            "mediana":  0,
+                                                                            "min":  0,
+                                                                            "max":  0,
+                                                                            "razpon":  0,
+                                                                            "rel":  null
+                                                                        },
+                                                     "ticki.nad10ms":  {
+                                                                           "n":  3,
+                                                                           "mediana":  7,
+                                                                           "min":  6,
+                                                                           "max":  7,
+                                                                           "razpon":  1,
+                                                                           "rel":  0.1429
+                                                                       },
+                                                     "ticki.nad25ms":  {
+                                                                           "n":  3,
+                                                                           "mediana":  0,
+                                                                           "min":  0,
+                                                                           "max":  5,
+                                                                           "razpon":  5,
+                                                                           "rel":  null
+                                                                       },
+                                                     "ticki.nad50ms":  {
+                                                                           "n":  3,
+                                                                           "mediana":  0,
+                                                                           "min":  0,
+                                                                           "max":  0,
+                                                                           "razpon":  0,
+                                                                           "rel":  null
+                                                                       },
+                                                     "tps":  {
+                                                                 "n":  3,
+                                                                 "mediana":  20,
+                                                                 "min":  20,
+                                                                 "max":  20,
+                                                                 "razpon":  0,
+                                                                 "rel":  0
+                                                             }
+                                                 },
+                                    "nasiceno":  0
+                                },
+                   "idle-500":  {
+                                    "odtis":  {
+                                                  "celic":  9,
+                                                  "celica":  3,
+                                                  "mrezaSirina":  25,
+                                                  "mrezaX":  48,
+                                                  "mrezaZ":  -12,
+                                                  "npc":  500,
+                                                  "obroc":  1,
+                                                  "ogrevanje":  120,
+                                                  "razprseno":  0,
+                                                  "sekund":  300,
+                                                  "varianta":  "idle"
+                                              },
+                                    "velicine":  {
+                                                     "alok.KBnaTick":  {
+                                                                           "n":  3,
+                                                                           "mediana":  17587.7,
+                                                                           "min":  17544.6,
+                                                                           "max":  17824.4,
+                                                                           "razpon":  279.80000000000291,
+                                                                           "rel":  0.0159
+                                                                       },
+                                                     "alok.MBnaS":  {
+                                                                        "n":  3,
+                                                                        "mediana":  343.5,
+                                                                        "min":  342.6,
+                                                                        "max":  348.1,
+                                                                        "razpon":  5.5,
+                                                                        "rel":  0.016
+                                                                    },
+                                                     "gc.ms":  {
+                                                                   "n":  3,
+                                                                   "mediana":  1601,
+                                                                   "min":  1591,
+                                                                   "max":  1679,
+                                                                   "razpon":  88,
+                                                                   "rel":  0.055
+                                                               },
+                                                     "gc.msNaS":  {
+                                                                      "n":  3,
+                                                                      "mediana":  5.31,
+                                                                      "min":  5.28,
+                                                                      "max":  5.57,
+                                                                      "razpon":  0.29000000000000004,
+                                                                      "rel":  0.0546
+                                                                  },
+                                                     "gc.old.ms":  {
+                                                                       "n":  3,
+                                                                       "mediana":  0,
+                                                                       "min":  0,
+                                                                       "max":  0,
+                                                                       "razpon":  0,
+                                                                       "rel":  null
+                                                                   },
+                                                     "gc.old.zbirk":  {
+                                                                          "n":  3,
+                                                                          "mediana":  0,
+                                                                          "min":  0,
+                                                                          "max":  0,
+                                                                          "razpon":  0,
+                                                                          "rel":  null
+                                                                      },
+                                                     "gc.zbirk":  {
+                                                                      "n":  3,
+                                                                      "mediana":  941,
+                                                                      "min":  926,
+                                                                      "max":  967,
+                                                                      "razpon":  41,
+                                                                      "rel":  0.0436
+                                                                  },
+                                                     "heap.maxMB":  {
+                                                                        "n":  3,
+                                                                        "mediana":  1820,
+                                                                        "min":  1820,
+                                                                        "max":  1820,
+                                                                        "razpon":  0,
+                                                                        "rel":  0
+                                                                    },
+                                                     "mspt.brezSave.max":  {
+                                                                               "n":  3,
+                                                                               "mediana":  59.754,
+                                                                               "min":  56.352,
+                                                                               "max":  74.505,
+                                                                               "razpon":  18.153,
+                                                                               "rel":  0.3038
+                                                                           },
+                                                     "mspt.brezSave.p99":  {
+                                                                               "n":  3,
+                                                                               "mediana":  47.186,
+                                                                               "min":  46.137,
+                                                                               "max":  48.234,
+                                                                               "razpon":  2.0970000000000013,
+                                                                               "rel":  0.0444
+                                                                           },
+                                                     "mspt.max":  {
+                                                                      "n":  3,
+                                                                      "mediana":  65.736,
+                                                                      "min":  56.352,
+                                                                      "max":  74.505,
+                                                                      "razpon":  18.153,
+                                                                      "rel":  0.2762
+                                                                  },
+                                                     "mspt.p50":  {
+                                                                      "n":  3,
+                                                                      "mediana":  3.473,
+                                                                      "min":  3.408,
+                                                                      "max":  3.473,
+                                                                      "razpon":  0.064999999999999947,
+                                                                      "rel":  0.0187
+                                                                  },
+                                                     "mspt.p95":  {
+                                                                      "n":  3,
+                                                                      "mediana":  44.04,
+                                                                      "min":  42.992,
+                                                                      "max":  45.089,
+                                                                      "razpon":  2.0970000000000013,
+                                                                      "rel":  0.0476
+                                                                  },
+                                                     "mspt.p99":  {
+                                                                      "n":  3,
+                                                                      "mediana":  47.186,
+                                                                      "min":  46.137,
+                                                                      "max":  48.234,
+                                                                      "razpon":  2.0970000000000013,
+                                                                      "rel":  0.0444
+                                                                  },
+                                                     "mspt.povp":  {
+                                                                       "n":  3,
+                                                                       "mediana":  14.986,
+                                                                       "min":  14.939,
+                                                                       "max":  15.484,
+                                                                       "razpon":  0.54499999999999993,
+                                                                       "rel":  0.0364
+                                                                   },
+                                                     "nasiceno":  {
+                                                                      "n":  3,
+                                                                      "mediana":  0,
+                                                                      "min":  0,
+                                                                      "max":  0,
+                                                                      "razpon":  0,
+                                                                      "rel":  null
+                                                                  },
+                                                     "npc.per.tick.p50":  {
+                                                                              "n":  3,
+                                                                              "mediana":  500,
+                                                                              "min":  500,
+                                                                              "max":  500,
+                                                                              "razpon":  0,
+                                                                              "rel":  0
+                                                                          },
+                                                     "npc.us":  {
+                                                                    "n":  3,
+                                                                    "mediana":  29.88,
+                                                                    "min":  29.8,
+                                                                    "max":  30.89,
+                                                                    "razpon":  1.0899999999999999,
+                                                                    "rel":  0.0365
+                                                                },
+                                                     "ticki":  {
+                                                                   "n":  3,
+                                                                   "mediana":  6024,
+                                                                   "min":  6024,
+                                                                   "max":  6026,
+                                                                   "razpon":  2,
+                                                                   "rel":  0.0003
+                                                               },
+                                                     "ticki.nad100ms":  {
+                                                                            "n":  3,
+                                                                            "mediana":  0,
+                                                                            "min":  0,
+                                                                            "max":  0,
+                                                                            "razpon":  0,
+                                                                            "rel":  null
+                                                                        },
+                                                     "ticki.nad10ms":  {
+                                                                           "n":  3,
+                                                                           "mediana":  2015,
+                                                                           "min":  2008,
+                                                                           "max":  2015,
+                                                                           "razpon":  7,
+                                                                           "rel":  0.0035
+                                                                       },
+                                                     "ticki.nad25ms":  {
+                                                                           "n":  3,
+                                                                           "mediana":  2009,
+                                                                           "min":  2008,
+                                                                           "max":  2013,
+                                                                           "razpon":  5,
+                                                                           "rel":  0.0025
+                                                                       },
+                                                     "ticki.nad50ms":  {
+                                                                           "n":  3,
+                                                                           "mediana":  15,
+                                                                           "min":  3,
+                                                                           "max":  26,
+                                                                           "razpon":  23,
+                                                                           "rel":  1.5333
+                                                                       },
+                                                     "tps":  {
+                                                                 "n":  3,
+                                                                 "mediana":  20,
+                                                                 "min":  20,
+                                                                 "max":  20,
+                                                                 "razpon":  0,
+                                                                 "rel":  0
+                                                             }
+                                                 },
+                                    "nasiceno":  0
+                                },
+                   "boj-50":  {
+                                  "odtis":  {
+                                                "celic":  9,
+                                                "celica":  4,
+                                                "mrezaSirina":  25,
+                                                "mrezaX":  48,
+                                                "mrezaZ":  -12,
+                                                "npc":  50,
+                                                "obroc":  1,
+                                                "ogrevanje":  120,
+                                                "razprseno":  0,
+                                                "sekund":  300,
+                                                "varianta":  "boj"
+                                            },
+                                  "velicine":  {
+                                                   "alok.KBnaTick":  {
+                                                                         "n":  3,
+                                                                         "mediana":  455.6,
+                                                                         "min":  453.6,
+                                                                         "max":  487.4,
+                                                                         "razpon":  33.799999999999955,
+                                                                         "rel":  0.0742
+                                                                     },
+                                                   "alok.MBnaS":  {
+                                                                      "n":  3,
+                                                                      "mediana":  8.9,
+                                                                      "min":  8.9,
+                                                                      "max":  9.5,
+                                                                      "razpon":  0.59999999999999964,
+                                                                      "rel":  0.0674
+                                                                  },
+                                                   "boj.ranjenih":  {
+                                                                        "n":  3,
+                                                                        "mediana":  50,
+                                                                        "min":  50,
+                                                                        "max":  50,
+                                                                        "razpon":  0,
+                                                                        "rel":  0
+                                                                    },
+                                                   "boj.sCiljem":  {
+                                                                       "n":  3,
+                                                                       "mediana":  50,
+                                                                       "min":  50,
+                                                                       "max":  50,
+                                                                       "razpon":  0,
+                                                                       "rel":  0
+                                                                   },
+                                                   "gc.ms":  {
+                                                                 "n":  3,
+                                                                 "mediana":  49,
+                                                                 "min":  48,
+                                                                 "max":  51,
+                                                                 "razpon":  3,
+                                                                 "rel":  0.0612
+                                                             },
+                                                   "gc.msNaS":  {
+                                                                    "n":  3,
+                                                                    "mediana":  0.16,
+                                                                    "min":  0.16,
+                                                                    "max":  0.17,
+                                                                    "razpon":  0.010000000000000009,
+                                                                    "rel":  0.0625
+                                                                },
+                                                   "gc.old.ms":  {
+                                                                     "n":  3,
+                                                                     "mediana":  0,
+                                                                     "min":  0,
+                                                                     "max":  0,
+                                                                     "razpon":  0,
+                                                                     "rel":  null
+                                                                 },
+                                                   "gc.old.zbirk":  {
+                                                                        "n":  3,
+                                                                        "mediana":  0,
+                                                                        "min":  0,
+                                                                        "max":  0,
+                                                                        "razpon":  0,
+                                                                        "rel":  null
+                                                                    },
+                                                   "gc.zbirk":  {
+                                                                    "n":  3,
+                                                                    "mediana":  25,
+                                                                    "min":  25,
+                                                                    "max":  27,
+                                                                    "razpon":  2,
+                                                                    "rel":  0.08
+                                                                },
+                                                   "heap.maxMB":  {
+                                                                      "n":  3,
+                                                                      "mediana":  1820,
+                                                                      "min":  1820,
+                                                                      "max":  1820,
+                                                                      "razpon":  0,
+                                                                      "rel":  0
+                                                                  },
+                                                   "mspt.brezSave.max":  {
+                                                                             "n":  3,
+                                                                             "mediana":  3.24,
+                                                                             "min":  3.143,
+                                                                             "max":  3.463,
+                                                                             "razpon":  0.32000000000000028,
+                                                                             "rel":  0.0988
+                                                                         },
+                                                   "mspt.brezSave.p99":  {
+                                                                             "n":  3,
+                                                                             "mediana":  1.245,
+                                                                             "min":  1.212,
+                                                                             "max":  1.475,
+                                                                             "razpon":  0.26300000000000012,
+                                                                             "rel":  0.2112
+                                                                         },
+                                                   "mspt.max":  {
+                                                                    "n":  3,
+                                                                    "mediana":  21.485,
+                                                                    "min":  14.109,
+                                                                    "max":  22.829,
+                                                                    "razpon":  8.72,
+                                                                    "rel":  0.4059
+                                                                },
+                                                   "mspt.p50":  {
+                                                                    "n":  3,
+                                                                    "mediana":  0.836,
+                                                                    "min":  0.819,
+                                                                    "max":  1.049,
+                                                                    "razpon":  0.22999999999999998,
+                                                                    "rel":  0.2751
+                                                                },
+                                                   "mspt.p95":  {
+                                                                    "n":  3,
+                                                                    "mediana":  1.049,
+                                                                    "min":  1.032,
+                                                                    "max":  1.278,
+                                                                    "razpon":  0.246,
+                                                                    "rel":  0.2345
+                                                                },
+                                                   "mspt.p99":  {
+                                                                    "n":  3,
+                                                                    "mediana":  1.278,
+                                                                    "min":  1.245,
+                                                                    "max":  1.507,
+                                                                    "razpon":  0.26199999999999979,
+                                                                    "rel":  0.205
+                                                                },
+                                                   "mspt.povp":  {
+                                                                     "n":  3,
+                                                                     "mediana":  0.857,
+                                                                     "min":  0.851,
+                                                                     "max":  1.074,
+                                                                     "razpon":  0.22300000000000009,
+                                                                     "rel":  0.2602
+                                                                 },
+                                                   "nasiceno":  {
+                                                                    "n":  3,
+                                                                    "mediana":  0,
+                                                                    "min":  0,
+                                                                    "max":  0,
+                                                                    "razpon":  0,
+                                                                    "rel":  null
+                                                                },
+                                                   "npc.per.tick.p50":  {
+                                                                            "n":  3,
+                                                                            "mediana":  50,
+                                                                            "min":  50,
+                                                                            "max":  50,
+                                                                            "razpon":  0,
+                                                                            "rel":  0
+                                                                        },
+                                                   "npc.us":  {
+                                                                  "n":  3,
+                                                                  "mediana":  16.8,
+                                                                  "min":  16.7,
+                                                                  "max":  21.13,
+                                                                  "razpon":  4.43,
+                                                                  "rel":  0.2637
+                                                              },
+                                                   "ticki":  {
+                                                                 "n":  3,
+                                                                 "mediana":  6046,
+                                                                 "min":  6026,
+                                                                 "max":  6046,
+                                                                 "razpon":  20,
+                                                                 "rel":  0.0033
+                                                             },
+                                                   "ticki.nad100ms":  {
+                                                                          "n":  3,
+                                                                          "mediana":  0,
+                                                                          "min":  0,
+                                                                          "max":  0,
+                                                                          "razpon":  0,
+                                                                          "rel":  null
+                                                                      },
+                                                   "ticki.nad10ms":  {
+                                                                         "n":  3,
+                                                                         "mediana":  7,
+                                                                         "min":  7,
+                                                                         "max":  7,
+                                                                         "razpon":  0,
+                                                                         "rel":  0
+                                                                     },
+                                                   "ticki.nad25ms":  {
+                                                                         "n":  3,
+                                                                         "mediana":  0,
+                                                                         "min":  0,
+                                                                         "max":  0,
+                                                                         "razpon":  0,
+                                                                         "rel":  null
+                                                                     },
+                                                   "ticki.nad50ms":  {
+                                                                         "n":  3,
+                                                                         "mediana":  0,
+                                                                         "min":  0,
+                                                                         "max":  0,
+                                                                         "razpon":  0,
+                                                                         "rel":  null
+                                                                     },
+                                                   "tps":  {
+                                                               "n":  3,
+                                                               "mediana":  20,
+                                                               "min":  20,
+                                                               "max":  20,
+                                                               "razpon":  0,
+                                                               "rel":  0
+                                                           }
+                                               },
+                                  "nasiceno":  0
+                              },
+                   "boj-200":  {
+                                   "odtis":  {
+                                                 "celic":  9,
+                                                 "celica":  5,
+                                                 "mrezaSirina":  25,
+                                                 "mrezaX":  48,
+                                                 "mrezaZ":  -12,
+                                                 "npc":  200,
+                                                 "obroc":  1,
+                                                 "ogrevanje":  120,
+                                                 "razprseno":  0,
+                                                 "sekund":  300,
+                                                 "varianta":  "boj"
+                                             },
+                                   "velicine":  {
+                                                    "alok.KBnaTick":  {
+                                                                          "n":  3,
+                                                                          "mediana":  1807.4,
+                                                                          "min":  1801.5,
+                                                                          "max":  1909.8,
+                                                                          "razpon":  108.29999999999995,
+                                                                          "rel":  0.0599
+                                                                      },
+                                                    "alok.MBnaS":  {
+                                                                       "n":  3,
+                                                                       "mediana":  35.3,
+                                                                       "min":  35.2,
+                                                                       "max":  37.3,
+                                                                       "razpon":  2.0999999999999943,
+                                                                       "rel":  0.0595
+                                                                   },
+                                                    "boj.ranjenih":  {
+                                                                         "n":  3,
+                                                                         "mediana":  200,
+                                                                         "min":  200,
+                                                                         "max":  200,
+                                                                         "razpon":  0,
+                                                                         "rel":  0
+                                                                     },
+                                                    "boj.sCiljem":  {
+                                                                        "n":  3,
+                                                                        "mediana":  200,
+                                                                        "min":  200,
+                                                                        "max":  200,
+                                                                        "razpon":  0,
+                                                                        "rel":  0
+                                                                    },
+                                                    "gc.ms":  {
+                                                                  "n":  3,
+                                                                  "mediana":  205,
+                                                                  "min":  204,
+                                                                  "max":  210,
+                                                                  "razpon":  6,
+                                                                  "rel":  0.0293
+                                                              },
+                                                    "gc.msNaS":  {
+                                                                     "n":  3,
+                                                                     "mediana":  0.68,
+                                                                     "min":  0.68,
+                                                                     "max":  0.7,
+                                                                     "razpon":  0.019999999999999907,
+                                                                     "rel":  0.0294
+                                                                 },
+                                                    "gc.old.ms":  {
+                                                                      "n":  3,
+                                                                      "mediana":  0,
+                                                                      "min":  0,
+                                                                      "max":  0,
+                                                                      "razpon":  0,
+                                                                      "rel":  null
+                                                                  },
+                                                    "gc.old.zbirk":  {
+                                                                         "n":  3,
+                                                                         "mediana":  0,
+                                                                         "min":  0,
+                                                                         "max":  0,
+                                                                         "razpon":  0,
+                                                                         "rel":  null
+                                                                     },
+                                                    "gc.zbirk":  {
+                                                                     "n":  3,
+                                                                     "mediana":  99,
+                                                                     "min":  99,
+                                                                     "max":  103,
+                                                                     "razpon":  4,
+                                                                     "rel":  0.0404
+                                                                 },
+                                                    "heap.maxMB":  {
+                                                                       "n":  3,
+                                                                       "mediana":  1820,
+                                                                       "min":  1820,
+                                                                       "max":  1820,
+                                                                       "razpon":  0,
+                                                                       "rel":  0
+                                                                   },
+                                                    "mspt.brezSave.max":  {
+                                                                              "n":  3,
+                                                                              "mediana":  7.737,
+                                                                              "min":  6.017,
+                                                                              "max":  7.914,
+                                                                              "razpon":  1.8969999999999994,
+                                                                              "rel":  0.2452
+                                                                          },
+                                                    "mspt.brezSave.p99":  {
+                                                                              "n":  3,
+                                                                              "mediana":  5.243,
+                                                                              "min":  5.243,
+                                                                              "max":  5.898,
+                                                                              "razpon":  0.65499999999999936,
+                                                                              "rel":  0.1249
+                                                                          },
+                                                    "mspt.max":  {
+                                                                     "n":  3,
+                                                                     "mediana":  25.935,
+                                                                     "min":  25.805,
+                                                                     "max":  26.042,
+                                                                     "razpon":  0.23700000000000188,
+                                                                     "rel":  0.0091
+                                                                 },
+                                                    "mspt.p50":  {
+                                                                     "n":  3,
+                                                                     "mediana":  3.146,
+                                                                     "min":  2.949,
+                                                                     "max":  3.67,
+                                                                     "razpon":  0.72100000000000009,
+                                                                     "rel":  0.2292
+                                                                 },
+                                                    "mspt.p95":  {
+                                                                     "n":  3,
+                                                                     "mediana":  3.932,
+                                                                     "min":  3.473,
+                                                                     "max":  4.325,
+                                                                     "razpon":  0.85200000000000031,
+                                                                     "rel":  0.2167
+                                                                 },
+                                                    "mspt.p99":  {
+                                                                     "n":  3,
+                                                                     "mediana":  5.374,
+                                                                     "min":  5.243,
+                                                                     "max":  6.029,
+                                                                     "razpon":  0.78599999999999959,
+                                                                     "rel":  0.1463
+                                                                 },
+                                                    "mspt.povp":  {
+                                                                      "n":  3,
+                                                                      "mediana":  3.227,
+                                                                      "min":  2.976,
+                                                                      "max":  3.691,
+                                                                      "razpon":  0.71499999999999986,
+                                                                      "rel":  0.2216
+                                                                  },
+                                                    "nasiceno":  {
+                                                                     "n":  3,
+                                                                     "mediana":  0,
+                                                                     "min":  0,
+                                                                     "max":  0,
+                                                                     "razpon":  0,
+                                                                     "rel":  null
+                                                                 },
+                                                    "npc.per.tick.p50":  {
+                                                                             "n":  3,
+                                                                             "mediana":  200,
+                                                                             "min":  200,
+                                                                             "max":  200,
+                                                                             "razpon":  0,
+                                                                             "rel":  0
+                                                                         },
+                                                    "npc.us":  {
+                                                                   "n":  3,
+                                                                   "mediana":  15.87,
+                                                                   "min":  14.72,
+                                                                   "max":  18.29,
+                                                                   "razpon":  3.5699999999999985,
+                                                                   "rel":  0.225
+                                                               },
+                                                    "ticki":  {
+                                                                  "n":  3,
+                                                                  "mediana":  6025,
+                                                                  "min":  6025,
+                                                                  "max":  6029,
+                                                                  "razpon":  4,
+                                                                  "rel":  0.0007
+                                                              },
+                                                    "ticki.nad100ms":  {
+                                                                           "n":  3,
+                                                                           "mediana":  0,
+                                                                           "min":  0,
+                                                                           "max":  0,
+                                                                           "razpon":  0,
+                                                                           "rel":  null
+                                                                       },
+                                                    "ticki.nad10ms":  {
+                                                                          "n":  3,
+                                                                          "mediana":  6,
+                                                                          "min":  6,
+                                                                          "max":  6,
+                                                                          "razpon":  0,
+                                                                          "rel":  0
+                                                                      },
+                                                    "ticki.nad25ms":  {
+                                                                          "n":  3,
+                                                                          "mediana":  1,
+                                                                          "min":  1,
+                                                                          "max":  3,
+                                                                          "razpon":  2,
+                                                                          "rel":  2
+                                                                      },
+                                                    "ticki.nad50ms":  {
+                                                                          "n":  3,
+                                                                          "mediana":  0,
+                                                                          "min":  0,
+                                                                          "max":  0,
+                                                                          "razpon":  0,
+                                                                          "rel":  null
+                                                                      },
+                                                    "tps":  {
+                                                                "n":  3,
+                                                                "mediana":  20,
+                                                                "min":  20,
+                                                                "max":  20,
+                                                                "razpon":  0,
+                                                                "rel":  0
+                                                            }
+                                                },
+                                   "nasiceno":  0
+                               },
+                   "boj-500":  {
+                                   "odtis":  {
+                                                 "celic":  9,
+                                                 "celica":  6,
+                                                 "mrezaSirina":  25,
+                                                 "mrezaX":  48,
+                                                 "mrezaZ":  -12,
+                                                 "npc":  500,
+                                                 "obroc":  1,
+                                                 "ogrevanje":  120,
+                                                 "razprseno":  0,
+                                                 "sekund":  300,
+                                                 "varianta":  "boj"
+                                             },
+                                   "velicine":  {
+                                                    "alok.KBnaTick":  {
+                                                                          "n":  3,
+                                                                          "mediana":  4595.8,
+                                                                          "min":  4590.7,
+                                                                          "max":  4860.7,
+                                                                          "razpon":  270,
+                                                                          "rel":  0.0587
+                                                                      },
+                                                    "alok.MBnaS":  {
+                                                                       "n":  3,
+                                                                       "mediana":  89.7,
+                                                                       "min":  89.6,
+                                                                       "max":  94.9,
+                                                                       "razpon":  5.3000000000000114,
+                                                                       "rel":  0.0591
+                                                                   },
+                                                    "boj.ranjenih":  {
+                                                                         "n":  3,
+                                                                         "mediana":  500,
+                                                                         "min":  500,
+                                                                         "max":  500,
+                                                                         "razpon":  0,
+                                                                         "rel":  0
+                                                                     },
+                                                    "boj.sCiljem":  {
+                                                                        "n":  3,
+                                                                        "mediana":  500,
+                                                                        "min":  500,
+                                                                        "max":  500,
+                                                                        "razpon":  0,
+                                                                        "rel":  0
+                                                                    },
+                                                    "gc.ms":  {
+                                                                  "n":  3,
+                                                                  "mediana":  661,
+                                                                  "min":  635,
+                                                                  "max":  703,
+                                                                  "razpon":  68,
+                                                                  "rel":  0.1029
+                                                              },
+                                                    "gc.msNaS":  {
+                                                                     "n":  3,
+                                                                     "mediana":  2.19,
+                                                                     "min":  2.1,
+                                                                     "max":  2.33,
+                                                                     "razpon":  0.22999999999999998,
+                                                                     "rel":  0.105
+                                                                 },
+                                                    "gc.old.ms":  {
+                                                                      "n":  3,
+                                                                      "mediana":  0,
+                                                                      "min":  0,
+                                                                      "max":  0,
+                                                                      "razpon":  0,
+                                                                      "rel":  null
+                                                                  },
+                                                    "gc.old.zbirk":  {
+                                                                         "n":  3,
+                                                                         "mediana":  0,
+                                                                         "min":  0,
+                                                                         "max":  0,
+                                                                         "razpon":  0,
+                                                                         "rel":  null
+                                                                     },
+                                                    "gc.zbirk":  {
+                                                                     "n":  3,
+                                                                     "mediana":  268,
+                                                                     "min":  255,
+                                                                     "max":  291,
+                                                                     "razpon":  36,
+                                                                     "rel":  0.1343
+                                                                 },
+                                                    "heap.maxMB":  {
+                                                                       "n":  3,
+                                                                       "mediana":  1820,
+                                                                       "min":  1820,
+                                                                       "max":  1820,
+                                                                       "razpon":  0,
+                                                                       "rel":  0
+                                                                   },
+                                                    "mspt.brezSave.max":  {
+                                                                              "n":  3,
+                                                                              "mediana":  14.728,
+                                                                              "min":  12.938,
+                                                                              "max":  18.349,
+                                                                              "razpon":  5.411,
+                                                                              "rel":  0.3674
+                                                                          },
+                                                    "mspt.brezSave.p99":  {
+                                                                              "n":  3,
+                                                                              "mediana":  11.272,
+                                                                              "min":  11.01,
+                                                                              "max":  12.321,
+                                                                              "razpon":  1.311,
+                                                                              "rel":  0.1163
+                                                                          },
+                                                    "mspt.max":  {
+                                                                     "n":  3,
+                                                                     "mediana":  34.162,
+                                                                     "min":  33.266,
+                                                                     "max":  36.468,
+                                                                     "razpon":  3.2020000000000053,
+                                                                     "rel":  0.0937
+                                                                 },
+                                                    "mspt.p50":  {
+                                                                     "n":  3,
+                                                                     "mediana":  7.34,
+                                                                     "min":  7.34,
+                                                                     "max":  8.913,
+                                                                     "razpon":  1.5730000000000004,
+                                                                     "rel":  0.2143
+                                                                 },
+                                                    "mspt.p95":  {
+                                                                     "n":  3,
+                                                                     "mediana":  9.699,
+                                                                     "min":  9.699,
+                                                                     "max":  11.272,
+                                                                     "razpon":  1.5730000000000004,
+                                                                     "rel":  0.1622
+                                                                 },
+                                                    "mspt.p99":  {
+                                                                     "n":  3,
+                                                                     "mediana":  11.272,
+                                                                     "min":  11.01,
+                                                                     "max":  12.583,
+                                                                     "razpon":  1.5730000000000004,
+                                                                     "rel":  0.1395
+                                                                 },
+                                                    "mspt.povp":  {
+                                                                      "n":  3,
+                                                                      "mediana":  7.604,
+                                                                      "min":  7.578,
+                                                                      "max":  8.941,
+                                                                      "razpon":  1.3630000000000004,
+                                                                      "rel":  0.1792
+                                                                  },
+                                                    "nasiceno":  {
+                                                                     "n":  3,
+                                                                     "mediana":  0,
+                                                                     "min":  0,
+                                                                     "max":  0,
+                                                                     "razpon":  0,
+                                                                     "rel":  null
+                                                                 },
+                                                    "npc.per.tick.p50":  {
+                                                                             "n":  3,
+                                                                             "mediana":  500,
+                                                                             "min":  500,
+                                                                             "max":  500,
+                                                                             "razpon":  0,
+                                                                             "rel":  0
+                                                                         },
+                                                    "npc.us":  {
+                                                                   "n":  3,
+                                                                   "mediana":  15.06,
+                                                                   "min":  15.02,
+                                                                   "max":  17.73,
+                                                                   "razpon":  2.7100000000000009,
+                                                                   "rel":  0.1799
+                                                               },
+                                                    "ticki":  {
+                                                                  "n":  3,
+                                                                  "mediana":  6043,
+                                                                  "min":  6025,
+                                                                  "max":  6046,
+                                                                  "razpon":  21,
+                                                                  "rel":  0.0035
+                                                              },
+                                                    "ticki.nad100ms":  {
+                                                                           "n":  3,
+                                                                           "mediana":  0,
+                                                                           "min":  0,
+                                                                           "max":  0,
+                                                                           "razpon":  0,
+                                                                           "rel":  null
+                                                                       },
+                                                    "ticki.nad10ms":  {
+                                                                          "n":  3,
+                                                                          "mediana":  235,
+                                                                          "min":  199,
+                                                                          "max":  496,
+                                                                          "razpon":  297,
+                                                                          "rel":  1.2638
+                                                                      },
+                                                    "ticki.nad25ms":  {
+                                                                          "n":  3,
+                                                                          "mediana":  6,
+                                                                          "min":  6,
+                                                                          "max":  7,
+                                                                          "razpon":  1,
+                                                                          "rel":  0.1667
+                                                                      },
+                                                    "ticki.nad50ms":  {
+                                                                          "n":  3,
+                                                                          "mediana":  0,
+                                                                          "min":  0,
+                                                                          "max":  0,
+                                                                          "razpon":  0,
+                                                                          "rel":  null
+                                                                      },
+                                                    "tps":  {
+                                                                "n":  3,
+                                                                "mediana":  20,
+                                                                "min":  20,
+                                                                "max":  20,
+                                                                "razpon":  0,
+                                                                "rel":  0
+                                                            }
+                                                },
+                                   "nasiceno":  0
+                               },
+                   "skripte-50":  {
+                                      "odtis":  {
+                                                    "celic":  9,
+                                                    "celica":  7,
+                                                    "mrezaSirina":  25,
+                                                    "mrezaX":  48,
+                                                    "mrezaZ":  -12,
+                                                    "npc":  50,
+                                                    "obroc":  1,
+                                                    "ogrevanje":  120,
+                                                    "razprseno":  0,
+                                                    "sekund":  300,
+                                                    "varianta":  "skripte"
+                                                },
+                                      "velicine":  {
+                                                       "alok.KBnaTick":  {
+                                                                             "n":  3,
+                                                                             "mediana":  222.7,
+                                                                             "min":  221.7,
+                                                                             "max":  245.3,
+                                                                             "razpon":  23.600000000000023,
+                                                                             "rel":  0.106
+                                                                         },
+                                                       "alok.MBnaS":  {
+                                                                          "n":  3,
+                                                                          "mediana":  4.3,
+                                                                          "min":  4.3,
+                                                                          "max":  4.8,
+                                                                          "razpon":  0.5,
+                                                                          "rel":  0.1163
+                                                                      },
+                                                       "gc.ms":  {
+                                                                     "n":  3,
+                                                                     "mediana":  37,
+                                                                     "min":  36,
+                                                                     "max":  38,
+                                                                     "razpon":  2,
+                                                                     "rel":  0.0541
+                                                                 },
+                                                       "gc.msNaS":  {
+                                                                        "n":  3,
+                                                                        "mediana":  0.12,
+                                                                        "min":  0.12,
+                                                                        "max":  0.13,
+                                                                        "razpon":  0.010000000000000009,
+                                                                        "rel":  0.0833
+                                                                    },
+                                                       "gc.old.ms":  {
+                                                                         "n":  3,
+                                                                         "mediana":  0,
+                                                                         "min":  0,
+                                                                         "max":  0,
+                                                                         "razpon":  0,
+                                                                         "rel":  null
+                                                                     },
+                                                       "gc.old.zbirk":  {
+                                                                            "n":  3,
+                                                                            "mediana":  0,
+                                                                            "min":  0,
+                                                                            "max":  0,
+                                                                            "razpon":  0,
+                                                                            "rel":  null
+                                                                        },
+                                                       "gc.zbirk":  {
+                                                                        "n":  3,
+                                                                        "mediana":  14,
+                                                                        "min":  13,
+                                                                        "max":  16,
+                                                                        "razpon":  3,
+                                                                        "rel":  0.2143
+                                                                    },
+                                                       "heap.maxMB":  {
+                                                                          "n":  3,
+                                                                          "mediana":  1820,
+                                                                          "min":  1820,
+                                                                          "max":  1820,
+                                                                          "razpon":  0,
+                                                                          "rel":  0
+                                                                      },
+                                                       "mspt.brezSave.max":  {
+                                                                                 "n":  3,
+                                                                                 "mediana":  4.271,
+                                                                                 "min":  3.648,
+                                                                                 "max":  4.778,
+                                                                                 "razpon":  1.1299999999999994,
+                                                                                 "rel":  0.2646
+                                                                             },
+                                                       "mspt.brezSave.p99":  {
+                                                                                 "n":  3,
+                                                                                 "mediana":  1.376,
+                                                                                 "min":  1.311,
+                                                                                 "max":  1.573,
+                                                                                 "razpon":  0.262,
+                                                                                 "rel":  0.1904
+                                                                             },
+                                                       "mspt.max":  {
+                                                                        "n":  3,
+                                                                        "mediana":  19.217,
+                                                                        "min":  12.352,
+                                                                        "max":  22.824,
+                                                                        "razpon":  10.472000000000001,
+                                                                        "rel":  0.5449
+                                                                    },
+                                                       "mspt.p50":  {
+                                                                        "n":  3,
+                                                                        "mediana":  0.287,
+                                                                        "min":  0.287,
+                                                                        "max":  0.508,
+                                                                        "razpon":  0.22100000000000003,
+                                                                        "rel":  0.77
+                                                                    },
+                                                       "mspt.p95":  {
+                                                                        "n":  3,
+                                                                        "mediana":  0.999,
+                                                                        "min":  0.934,
+                                                                        "max":  1.212,
+                                                                        "razpon":  0.27799999999999991,
+                                                                        "rel":  0.2783
+                                                                    },
+                                                       "mspt.p99":  {
+                                                                        "n":  3,
+                                                                        "mediana":  1.409,
+                                                                        "min":  1.343,
+                                                                        "max":  1.573,
+                                                                        "razpon":  0.22999999999999998,
+                                                                        "rel":  0.1632
+                                                                    },
+                                                       "mspt.povp":  {
+                                                                         "n":  3,
+                                                                         "mediana":  0.417,
+                                                                         "min":  0.414,
+                                                                         "max":  0.573,
+                                                                         "razpon":  0.15899999999999997,
+                                                                         "rel":  0.3813
+                                                                     },
+                                                       "nasiceno":  {
+                                                                        "n":  3,
+                                                                        "mediana":  0,
+                                                                        "min":  0,
+                                                                        "max":  0,
+                                                                        "razpon":  0,
+                                                                        "rel":  null
+                                                                    },
+                                                       "npc.per.tick.p50":  {
+                                                                                "n":  3,
+                                                                                "mediana":  50,
+                                                                                "min":  50,
+                                                                                "max":  50,
+                                                                                "razpon":  0,
+                                                                                "rel":  0
+                                                                            },
+                                                       "npc.us":  {
+                                                                      "n":  3,
+                                                                      "mediana":  8.12,
+                                                                      "min":  8.06,
+                                                                      "max":  10.85,
+                                                                      "razpon":  2.7899999999999991,
+                                                                      "rel":  0.3436
+                                                                  },
+                                                       "skripte.tickov":  {
+                                                                              "n":  3,
+                                                                              "mediana":  42750,
+                                                                              "min":  42650,
+                                                                              "max":  42750,
+                                                                              "razpon":  100,
+                                                                              "rel":  0.0023
+                                                                          },
+                                                       "ticki":  {
+                                                                     "n":  3,
+                                                                     "mediana":  6037,
+                                                                     "min":  6025,
+                                                                     "max":  6046,
+                                                                     "razpon":  21,
+                                                                     "rel":  0.0035
+                                                                 },
+                                                       "ticki.nad100ms":  {
+                                                                              "n":  3,
+                                                                              "mediana":  0,
+                                                                              "min":  0,
+                                                                              "max":  0,
+                                                                              "razpon":  0,
+                                                                              "rel":  null
+                                                                          },
+                                                       "ticki.nad10ms":  {
+                                                                             "n":  3,
+                                                                             "mediana":  7,
+                                                                             "min":  7,
+                                                                             "max":  7,
+                                                                             "razpon":  0,
+                                                                             "rel":  0
+                                                                         },
+                                                       "ticki.nad25ms":  {
+                                                                             "n":  3,
+                                                                             "mediana":  0,
+                                                                             "min":  0,
+                                                                             "max":  0,
+                                                                             "razpon":  0,
+                                                                             "rel":  null
+                                                                         },
+                                                       "ticki.nad50ms":  {
+                                                                             "n":  3,
+                                                                             "mediana":  0,
+                                                                             "min":  0,
+                                                                             "max":  0,
+                                                                             "razpon":  0,
+                                                                             "rel":  null
+                                                                         },
+                                                       "tps":  {
+                                                                   "n":  3,
+                                                                   "mediana":  20,
+                                                                   "min":  20,
+                                                                   "max":  20,
+                                                                   "razpon":  0,
+                                                                   "rel":  0
+                                                               }
+                                                   },
+                                      "nasiceno":  0
+                                  },
+                   "skripte-200":  {
+                                       "odtis":  {
+                                                     "celic":  9,
+                                                     "celica":  8,
+                                                     "mrezaSirina":  25,
+                                                     "mrezaX":  48,
+                                                     "mrezaZ":  -12,
+                                                     "npc":  200,
+                                                     "obroc":  1,
+                                                     "ogrevanje":  120,
+                                                     "razprseno":  0,
+                                                     "sekund":  300,
+                                                     "varianta":  "skripte"
+                                                 },
+                                       "velicine":  {
+                                                        "alok.KBnaTick":  {
+                                                                              "n":  3,
+                                                                              "mediana":  2525.7,
+                                                                              "min":  2511.8,
+                                                                              "max":  2613.9,
+                                                                              "razpon":  102.09999999999991,
+                                                                              "rel":  0.0404
+                                                                          },
+                                                        "alok.MBnaS":  {
+                                                                           "n":  3,
+                                                                           "mediana":  49.3,
+                                                                           "min":  49.1,
+                                                                           "max":  51,
+                                                                           "razpon":  1.8999999999999986,
+                                                                           "rel":  0.0385
+                                                                       },
+                                                        "gc.ms":  {
+                                                                      "n":  3,
+                                                                      "mediana":  405,
+                                                                      "min":  350,
+                                                                      "max":  412,
+                                                                      "razpon":  62,
+                                                                      "rel":  0.1531
+                                                                  },
+                                                        "gc.msNaS":  {
+                                                                         "n":  3,
+                                                                         "mediana":  1.34,
+                                                                         "min":  1.16,
+                                                                         "max":  1.37,
+                                                                         "razpon":  0.21000000000000019,
+                                                                         "rel":  0.1567
+                                                                     },
+                                                        "gc.old.ms":  {
+                                                                          "n":  3,
+                                                                          "mediana":  0,
+                                                                          "min":  0,
+                                                                          "max":  0,
+                                                                          "razpon":  0,
+                                                                          "rel":  null
+                                                                      },
+                                                        "gc.old.zbirk":  {
+                                                                             "n":  3,
+                                                                             "mediana":  0,
+                                                                             "min":  0,
+                                                                             "max":  0,
+                                                                             "razpon":  0,
+                                                                             "rel":  null
+                                                                         },
+                                                        "gc.zbirk":  {
+                                                                         "n":  3,
+                                                                         "mediana":  198,
+                                                                         "min":  171,
+                                                                         "max":  198,
+                                                                         "razpon":  27,
+                                                                         "rel":  0.1364
+                                                                     },
+                                                        "heap.maxMB":  {
+                                                                           "n":  3,
+                                                                           "mediana":  1820,
+                                                                           "min":  1820,
+                                                                           "max":  1820,
+                                                                           "razpon":  0,
+                                                                           "rel":  0
+                                                                       },
+                                                        "mspt.brezSave.max":  {
+                                                                                  "n":  3,
+                                                                                  "mediana":  11.586,
+                                                                                  "min":  11.235,
+                                                                                  "max":  11.946,
+                                                                                  "razpon":  0.7110000000000003,
+                                                                                  "rel":  0.0614
+                                                                              },
+                                                        "mspt.brezSave.p99":  {
+                                                                                  "n":  3,
+                                                                                  "mediana":  9.175,
+                                                                                  "min":  9.175,
+                                                                                  "max":  9.437,
+                                                                                  "razpon":  0.26199999999999868,
+                                                                                  "rel":  0.0286
+                                                                              },
+                                                        "mspt.max":  {
+                                                                         "n":  3,
+                                                                         "mediana":  26.365,
+                                                                         "min":  14.66,
+                                                                         "max":  27.178,
+                                                                         "razpon":  12.518,
+                                                                         "rel":  0.4748
+                                                                     },
+                                                        "mspt.p50":  {
+                                                                         "n":  3,
+                                                                         "mediana":  1.245,
+                                                                         "min":  1.245,
+                                                                         "max":  1.573,
+                                                                         "razpon":  0.32799999999999985,
+                                                                         "rel":  0.2635
+                                                                     },
+                                                        "mspt.p95":  {
+                                                                         "n":  3,
+                                                                         "mediana":  7.602,
+                                                                         "min":  7.471,
+                                                                         "max":  7.995,
+                                                                         "razpon":  0.524,
+                                                                         "rel":  0.0689
+                                                                     },
+                                                        "mspt.p99":  {
+                                                                         "n":  3,
+                                                                         "mediana":  9.175,
+                                                                         "min":  9.175,
+                                                                         "max":  9.437,
+                                                                         "razpon":  0.26199999999999868,
+                                                                         "rel":  0.0286
+                                                                     },
+                                                        "mspt.povp":  {
+                                                                          "n":  3,
+                                                                          "mediana":  2.85,
+                                                                          "min":  2.832,
+                                                                          "max":  3.218,
+                                                                          "razpon":  0.38600000000000012,
+                                                                          "rel":  0.1354
+                                                                      },
+                                                        "nasiceno":  {
+                                                                         "n":  3,
+                                                                         "mediana":  0,
+                                                                         "min":  0,
+                                                                         "max":  0,
+                                                                         "razpon":  0,
+                                                                         "rel":  null
+                                                                     },
+                                                        "npc.per.tick.p50":  {
+                                                                                 "n":  3,
+                                                                                 "mediana":  200,
+                                                                                 "min":  200,
+                                                                                 "max":  200,
+                                                                                 "razpon":  0,
+                                                                                 "rel":  0
+                                                                             },
+                                                        "npc.us":  {
+                                                                       "n":  3,
+                                                                       "mediana":  14.16,
+                                                                       "min":  14.06,
+                                                                       "max":  15.85,
+                                                                       "razpon":  1.7899999999999991,
+                                                                       "rel":  0.1264
+                                                                   },
+                                                        "skripte.tickov":  {
+                                                                               "n":  3,
+                                                                               "mediana":  170600,
+                                                                               "min":  170600,
+                                                                               "max":  171000,
+                                                                               "razpon":  400,
+                                                                               "rel":  0.0023
+                                                                           },
+                                                        "ticki":  {
+                                                                      "n":  3,
+                                                                      "mediana":  6026,
+                                                                      "min":  6025,
+                                                                      "max":  6036,
+                                                                      "razpon":  11,
+                                                                      "rel":  0.0018
+                                                                  },
+                                                        "ticki.nad100ms":  {
+                                                                               "n":  3,
+                                                                               "mediana":  0,
+                                                                               "min":  0,
+                                                                               "max":  0,
+                                                                               "razpon":  0,
+                                                                               "rel":  null
+                                                                           },
+                                                        "ticki.nad10ms":  {
+                                                                              "n":  3,
+                                                                              "mediana":  29,
+                                                                              "min":  26,
+                                                                              "max":  32,
+                                                                              "razpon":  6,
+                                                                              "rel":  0.2069
+                                                                          },
+                                                        "ticki.nad25ms":  {
+                                                                              "n":  3,
+                                                                              "mediana":  4,
+                                                                              "min":  0,
+                                                                              "max":  6,
+                                                                              "razpon":  6,
+                                                                              "rel":  1.5
+                                                                          },
+                                                        "ticki.nad50ms":  {
+                                                                              "n":  3,
+                                                                              "mediana":  0,
+                                                                              "min":  0,
+                                                                              "max":  0,
+                                                                              "razpon":  0,
+                                                                              "rel":  null
+                                                                          },
+                                                        "tps":  {
+                                                                    "n":  3,
+                                                                    "mediana":  20,
+                                                                    "min":  20,
+                                                                    "max":  20,
+                                                                    "razpon":  0,
+                                                                    "rel":  0
+                                                                }
+                                                    },
+                                       "nasiceno":  0
+                                   },
+                   "skripte-500":  {
+                                       "odtis":  {
+                                                     "celic":  9,
+                                                     "celica":  9,
+                                                     "mrezaSirina":  25,
+                                                     "mrezaX":  48,
+                                                     "mrezaZ":  -12,
+                                                     "npc":  500,
+                                                     "obroc":  1,
+                                                     "ogrevanje":  120,
+                                                     "razprseno":  0,
+                                                     "sekund":  300,
+                                                     "varianta":  "skripte"
+                                                 },
+                                       "velicine":  {
+                                                        "alok.KBnaTick":  {
+                                                                              "n":  3,
+                                                                              "mediana":  17627,
+                                                                              "min":  17626,
+                                                                              "max":  17884.1,
+                                                                              "razpon":  258.09999999999854,
+                                                                              "rel":  0.0146
+                                                                          },
+                                                        "alok.MBnaS":  {
+                                                                           "n":  3,
+                                                                           "mediana":  344.2,
+                                                                           "min":  344.2,
+                                                                           "max":  349.2,
+                                                                           "razpon":  5,
+                                                                           "rel":  0.0145
+                                                                       },
+                                                        "gc.ms":  {
+                                                                      "n":  3,
+                                                                      "mediana":  2323,
+                                                                      "min":  2251,
+                                                                      "max":  2415,
+                                                                      "razpon":  164,
+                                                                      "rel":  0.0706
+                                                                  },
+                                                        "gc.msNaS":  {
+                                                                         "n":  3,
+                                                                         "mediana":  7.68,
+                                                                         "min":  7.47,
+                                                                         "max":  8.01,
+                                                                         "razpon":  0.54,
+                                                                         "rel":  0.0703
+                                                                     },
+                                                        "gc.old.ms":  {
+                                                                          "n":  3,
+                                                                          "mediana":  0,
+                                                                          "min":  0,
+                                                                          "max":  0,
+                                                                          "razpon":  0,
+                                                                          "rel":  null
+                                                                      },
+                                                        "gc.old.zbirk":  {
+                                                                             "n":  3,
+                                                                             "mediana":  0,
+                                                                             "min":  0,
+                                                                             "max":  0,
+                                                                             "razpon":  0,
+                                                                             "rel":  null
+                                                                         },
+                                                        "gc.zbirk":  {
+                                                                         "n":  3,
+                                                                         "mediana":  953,
+                                                                         "min":  930,
+                                                                         "max":  974,
+                                                                         "razpon":  44,
+                                                                         "rel":  0.0462
+                                                                     },
+                                                        "heap.maxMB":  {
+                                                                           "n":  3,
+                                                                           "mediana":  1820,
+                                                                           "min":  1820,
+                                                                           "max":  1820,
+                                                                           "razpon":  0,
+                                                                           "rel":  0
+                                                                       },
+                                                        "mspt.brezSave.max":  {
+                                                                                  "n":  3,
+                                                                                  "mediana":  59.936,
+                                                                                  "min":  57.542,
+                                                                                  "max":  61.64,
+                                                                                  "razpon":  4.097999999999999,
+                                                                                  "rel":  0.0684
+                                                                              },
+                                                        "mspt.brezSave.p99":  {
+                                                                                  "n":  3,
+                                                                                  "mediana":  51.38,
+                                                                                  "min":  50.332,
+                                                                                  "max":  53.477,
+                                                                                  "razpon":  3.144999999999996,
+                                                                                  "rel":  0.0612
+                                                                              },
+                                                        "mspt.max":  {
+                                                                         "n":  3,
+                                                                         "mediana":  61.64,
+                                                                         "min":  57.542,
+                                                                         "max":  68.292,
+                                                                         "razpon":  10.75,
+                                                                         "rel":  0.1744
+                                                                     },
+                                                        "mspt.p50":  {
+                                                                         "n":  3,
+                                                                         "mediana":  3.932,
+                                                                         "min":  3.801,
+                                                                         "max":  3.932,
+                                                                         "razpon":  0.13099999999999978,
+                                                                         "rel":  0.0333
+                                                                     },
+                                                        "mspt.p95":  {
+                                                                         "n":  3,
+                                                                         "mediana":  47.186,
+                                                                         "min":  46.137,
+                                                                         "max":  48.234,
+                                                                         "razpon":  2.0970000000000013,
+                                                                         "rel":  0.0444
+                                                                     },
+                                                        "mspt.p99":  {
+                                                                         "n":  3,
+                                                                         "mediana":  51.38,
+                                                                         "min":  50.332,
+                                                                         "max":  53.477,
+                                                                         "razpon":  3.144999999999996,
+                                                                         "rel":  0.0612
+                                                                     },
+                                                        "mspt.povp":  {
+                                                                          "n":  3,
+                                                                          "mediana":  16.501,
+                                                                          "min":  16.141,
+                                                                          "max":  16.624,
+                                                                          "razpon":  0.48300000000000054,
+                                                                          "rel":  0.0293
+                                                                      },
+                                                        "nasiceno":  {
+                                                                         "n":  3,
+                                                                         "mediana":  0,
+                                                                         "min":  0,
+                                                                         "max":  0,
+                                                                         "razpon":  0,
+                                                                         "rel":  null
+                                                                     },
+                                                        "npc.per.tick.p50":  {
+                                                                                 "n":  3,
+                                                                                 "mediana":  500,
+                                                                                 "min":  500,
+                                                                                 "max":  500,
+                                                                                 "razpon":  0,
+                                                                                 "rel":  0
+                                                                             },
+                                                        "npc.us":  {
+                                                                       "n":  3,
+                                                                       "mediana":  32.91,
+                                                                       "min":  32.2,
+                                                                       "max":  33.18,
+                                                                       "razpon":  0.97999999999999687,
+                                                                       "rel":  0.0298
+                                                                   },
+                                                        "skripte.tickov":  {
+                                                                               "n":  3,
+                                                                               "mediana":  427000,
+                                                                               "min":  426500,
+                                                                               "max":  428000,
+                                                                               "razpon":  1500,
+                                                                               "rel":  0.0035
+                                                                           },
+                                                        "ticki":  {
+                                                                      "n":  3,
+                                                                      "mediana":  6025,
+                                                                      "min":  6023,
+                                                                      "max":  6045,
+                                                                      "razpon":  22,
+                                                                      "rel":  0.0037
+                                                                  },
+                                                        "ticki.nad100ms":  {
+                                                                               "n":  3,
+                                                                               "mediana":  0,
+                                                                               "min":  0,
+                                                                               "max":  0,
+                                                                               "razpon":  0,
+                                                                               "rel":  null
+                                                                           },
+                                                        "ticki.nad10ms":  {
+                                                                              "n":  3,
+                                                                              "mediana":  2036,
+                                                                              "min":  2032,
+                                                                              "max":  2049,
+                                                                              "razpon":  17,
+                                                                              "rel":  0.0083
+                                                                          },
+                                                        "ticki.nad25ms":  {
+                                                                              "n":  3,
+                                                                              "mediana":  2011,
+                                                                              "min":  2008,
+                                                                              "max":  2015,
+                                                                              "razpon":  7,
+                                                                              "rel":  0.0035
+                                                                          },
+                                                        "ticki.nad50ms":  {
+                                                                              "n":  3,
+                                                                              "mediana":  93,
+                                                                              "min":  52,
+                                                                              "max":  137,
+                                                                              "razpon":  85,
+                                                                              "rel":  0.914
+                                                                          },
+                                                        "tps":  {
+                                                                    "n":  3,
+                                                                    "mediana":  19.99,
+                                                                    "min":  19.99,
+                                                                    "max":  20,
+                                                                    "razpon":  0.010000000000001563,
+                                                                    "rel":  0.0005
+                                                                }
+                                                    },
+                                       "nasiceno":  0
+                                   }
+               }
+}
