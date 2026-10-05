@@ -399,7 +399,7 @@ try {
     Check 'ukaz chunks odgovori (ciscenje)' $okCh
     $ch = if ($okCh) { Read-Chunks $srv.Log } else { $null }
     Write-Host ("  pred ciscenjem: stanje={0} npc={1}" -f $ch.Stanje, $ch.Npc)
-    Send-Command $srv 'noppes slay npcs'
+    Send-Command $srv 'noppes slay npcs 2000'
     Start-Sleep -Seconds 5
     Set-Content -Path $scenMark -Value ("perf-run {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm')) -Encoding ASCII
     $rows = @()
@@ -413,8 +413,22 @@ try {
         $script:tujiVCelici = @()
         Step ('4.{0}' -f $idx) ("celica {0}/{1}: {2}, {3} NPC-jev" -f $idx, $cells.Count, $v, $N)
 
-        Send-Command $srv 'noppes slay npcs'
-        Start-Sleep -Seconds 3
+        # M2.6b (5. 10.): 'noppes slay npcs' brez stevila pobije samo NPC-je v radiju 120 blokov
+        # od konzole (0,4,0; CmdSlay). V boj-500 se jih je nekaj razbezalo dlje (82 prisilnih
+        # chunkov) in 4 so ostali v celici skripte-50. Zato velik radij in preverba, da je svet
+        # pred spawnom res prazen (rwdiag chunks steje nalozene NPC-je).
+        $prazno = $false
+        for ($poskus = 1; ($poskus -le 3) -and (-not $prazno); $poskus++) {
+            Send-Command $srv 'noppes slay npcs 2000'
+            Start-Sleep -Seconds 3
+            Send-Command $srv ("rwdiag chunks on {0}" -f $ChunkRadius)
+            $nChunks++
+            $okP = Wait-ForCount $srv 'RWDIAG-CHUNKS stanje=' $nChunks 60
+            $chP = if ($okP) { Read-Chunks $srv.Log } else { $null }
+            $prazno = ($null -ne $chP) -and ($chP.Npc -eq 0)
+            if (-not $prazno) { Write-Host ("  ciscenje: po poskusu {0} ostalo npc={1}" -f $poskus, $chP.Npc) }
+        }
+        Check ("P0: svet je pred spawnom prazen (npc=0)") $prazno
         $spawnCmds = @(Get-SpawnCommands $v $N)
         if ($Razprseno) {
             Write-Host ("  razprseni spawn: {0} ukazov po {1} NPC-jev, ~{2} s" -f $spawnCmds.Count, $razKos, [math]::Ceiling($spawnCmds.Count * 0.35))
