@@ -1,0 +1,16 @@
+razredov 2, metod 63: enakih 58, razlika v obliki 3, za PREGLED 2
+PREGLED noppes.npcs.entity.data.DataDisplay :: public void setSkinUrl(java.lang.String)
+    samo original: {"putfield      // Field skinType:B":1}
+    samo nov:      {}
+PREGLED noppes.npcs.client.gui.mainmenu.GuiNpcDisplay :: public void unFocused(noppes.npcs.client.gui.util.GuiNpcTextField)
+    samo original: {"getfield      // Field noppes/npcs/client/gui/util/GuiNpcTextField.field_175208_g:I":7}
+    samo nov:      {"invokevirtual // Method noppes/npcs/client/gui/util/GuiNpcTextField.func_175206_d:()I":7}
+
+Rocni pregled (M3.8b, 5. 10. 2026; node dev/tools/primerjaj-bytecode.js <original jar> dev/build/libs/CustomNPCs_1.12.2-01Oct19-workspace.jar ...):
+- DataDisplay.setSkinUrl: original ima putfield skinType v vsaki veji (iconst_0 / iconst_2), prenos
+  enega za ternarnim izrazom (url.isEmpty() ? 0 : 2). Enak pomen, razlika prevajalnika.
+- GuiNpcDisplay.unFocused: original bere polje GuiTextField.id (field_175208_g, javno prek access
+  transformerja CustomNPCs), prenos klice GuiTextField.getId() (func_175206_d), ki vrne isto polje.
+  Razvojni build AT za patch razrede ne uporabi. Enak pomen.
+- DataDisplay.loadProfile: odstranjen CFR cast (Object) pri PropertyMap.get - bytecode enak.
+Izid: brez spremembe obnasanja.
