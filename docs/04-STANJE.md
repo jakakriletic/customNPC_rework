@@ -109,6 +109,13 @@ testOriginal 31/31), `verify-package` PASS (62 razredov), samotest 18/18, trije 
 
 **Naslednja seja:** zagon baselina M2.6, ponovni zagon M3.6, PR v `main`.
 
+**Dopolnitev med zagonom baselina (brez builda):** naloga **0.6** (README, oznake NB.x = M7.x v
+`07-BARITONE-OZADJE.md`) in **M3.7 zaključen brez spremembe obnašanja** — premisa ovržena iz kode
+(`minRange` doseg kvečjemu poveča, izklop hitboxa ga ne zmanjša); nov kandidat za zgoščevanje v
+radiusu enega bloka: NPC brez hitboxa ima `canBePushed() == false` in ga vanilla
+`collideWithNearbyEntities` (`getTeamCollisionPredicate`) ne odriva — *nereproducirano, hipoteza*;
+scenarij in morebiten popravek v M3.8. [analiza](meritve/2026-10-05-M3.7-analiza-minrange.md)
+
 ### 2026-10-03 (63) — pregled projekta; M8 izločen iz plana (D-023)
 
 Ocena stanja in plan preostalega dela: [`08-PREGLED-IN-PLAN.md`](08-PREGLED-IN-PLAN.md). Na

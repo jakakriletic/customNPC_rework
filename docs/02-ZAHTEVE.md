@@ -85,7 +85,11 @@ hkrati ne teče noben (`EntityAITasks.canUse`). „Popravek“ s `PATHING` bi sp
 dobi isto prioriteto; napad ga zato ne more prekiniti in NPC, ki tava, tarčo napade šele na koncu
 poti tavanja. [zapis](meritve/2026-09-24-M3.6-prioriteta-napada.md)
 
-**[dokazano] minimalni napadalni doseg je odvisen od širine NPC-ja.**
+**[ovrženo 5. 10., M3.7] ~~minimalni napadalni doseg je odvisen od širine NPC-ja~~** — `minRange` je
+spodnja meja, ki doseg kvečjemu poveča: doseg = max(r² + wt, (2w)² + wt), pri privzetem r = 2 je
+to 4,6 tudi pri širini 1.0E-5. Izklop hitboxa dosega ne zmanjša. Nov kandidat za zgoščevanje: NPC
+brez hitboxa ima `canBePushed() == false` in se z drugimi ne odriva. [analiza](meritve/2026-10-05-M3.7-analiza-minrange.md)
+Spodnji odstavek je prvotna (napačna) ugotovitev.
 
 ```java
 // EntityAIAttackTarget.java:98
@@ -151,7 +155,8 @@ Teče vsak 4. tick za vsakega NPC-ja. Pri konjenici to podvoji strošek. Perform
 3. ~~**Popravek mutex bitov**~~ — premisa ovržena (M3.6). Namesto tega **prioriteta napada pred
    gibanjem** (`RwAttackPriority`), pod stikalom, z A/B scenarijem `m36-run.ps1`.
 4. **`updateHitbox()` ob vsaki spremembi jahanja**, prek Forge `EntityMountEvent`.
-5. **Ločitev `minRange` od širine**: uvesti spodnjo mejo, neodvisno od `hasHitbox`.
+5. ~~**Ločitev `minRange` od širine**~~ — ni potrebna (M3.7, 5. 10.): spodnja meja že obstaja in je
+   izklop hitboxa ne zniža. Zgoščevanje brez hitboxa (če se reproducira) rešuje R6/M3.8.
 6. **Krmiljenje nosilca** (opcijsko, za konjenico): jahač lahko postane "commander" nosilca —
    nosilec podeduje cilj jahača in se premika, jahač samo napada. To je nova funkcija, ne
    bugfix, in gre v ločen paket.
