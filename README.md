@@ -14,8 +14,8 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-10-05 |
-| Trenutna faza | **M3 — jedro entitete** (milestoni M0–M10, M8 izločen). M0, M1 zaključena; M2 razen baselina M2.6 (**zagon teče 5. 10.**, prejšnji 27. 9. je padel zaradi prepisanega runtime jarja — zaščita M2.6b). M3.1–M3.5 zaključeni (R1 popravljen pod `RwMountSteering`), M3.6 (`RwAttackPriority`) čaka ponovni zagon. Izven vrstnega reda: **M4.14a formacije** (v svetu še ne pognane) in **Baritone ozadje NB** (D-022, V4 sprejet 28. 9., izbirno, privzeto izklopljeno). Animacije (M7) — jedro v ločenem modu `customNPC_entities_mod` (D-024) |
-| Naslednji korak | Ovrednotiti baseline M2.6, nato **ponovni zagon M3.6** (`.\m36-run.ps1`, `.\m36-run.ps1 -Nacin 1`), nato M3.7. Plan: [`docs/08-PREGLED-IN-PLAN.md`](docs/08-PREGLED-IN-PLAN.md), dnevnik: [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Trenutna faza | **M3 — jedro entitete** (milestoni M0–M10, M8 izločen). M0, M1 zaključena; M2 (baseline M2.6 zelen 5. 10.). M3.1–M3.8 zaključeni (R1 pod `RwMountSteering`, prioriteta napada pod `RwAttackPriority`, hitbox načini pod `RwHitbox`). Izven vrstnega reda: **M4.14a formacije** (v svetu še ne pognane) in **Baritone ozadje NB** (D-022, V4 sprejet 28. 9., izbirno, privzeto izklopljeno). Animacije (M7) — jedro v ločenem modu `customNPC_entities_mod` (D-024) |
+| Naslednji korak | **M3.8b** (GUI za hitbox način), M3.9 (solid × jahanje), M5-S S1; odločitev o P2 (napad izven `aggroRange`). Plan: [`docs/08-PREGLED-IN-PLAN.md`](docs/08-PREGLED-IN-PLAN.md), dnevnik: [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
 | Prevedljivih razredov | 103 v `src/patch`, 26 testnih datotek (193 JUnit + 31 primerjalnih testov originala zelenih 5. 10.); `verify-package`: 62 spremenjenih razredov originala |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |

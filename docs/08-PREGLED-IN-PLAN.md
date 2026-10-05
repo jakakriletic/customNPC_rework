@@ -90,7 +90,7 @@ Velikosti: **S** = ena seja · **M** = 2–4 seje · **L** = 5–10 · **XL** = 
 |---|---|---|---|
 | 0.1 | PR `codex/m7-cnpc-integration` → `main` | S | 🟡 5. 10.: `codex/m7-next` prenesena (cherry-pick), build/testi/`verify-package` zeleni, veja pushana; PR odpre uporabnik (na računalniku ni `gh`) |
 | 0.2 | ~~Popraviti čiščenje med celicami~~ → **M2.6b zaščita zagona** (kopija runtime jarja na zagon, zaklep, P9, zaznava sesutja) in ⏵ pognati M2.6 (~3,5 h) | S | 🟡 5. 10.: M2.6b narejen in preverjen v svetu; zagon baselina čaka |
-| 0.3 | ⏵ ponovni zagon M3.6 (`m36-run.ps1`, načina 0 in 1) → zaključiti M3.6 | S | koda čaka od 24. 9. |
+| 0.3 | ✅ ponovni zagon M3.6 (`m36-run.ps1`, načina 0 in 1) → M3.6 zaključen 5. 10. | S | P2 potrjen, odločitev o popravku pri uporabniku |
 | 0.4 | ~~Baritone A/B, odločitev D-022~~ | S | ✅ 28. 9. (`m7-next`): V4 sprejet, Baritone ostane izbirno ozadje. Odprto za uporabnika: ali M4.11/M4.12 (izboljšava privzetega vanilla ozadja) še rabimo |
 | 0.5 | ⏵ formacije M4.14b (F1–F12, FA1–FA6) | S | koda čaka od 18. 9. |
 | 0.6 | Preimenovati Baritone pakete v CNPC (M7.x → NB.x), posodobiti README in "Trenutno stanje" | S | ✅ 5. 10.: preslikava NB.x = M7.x v `07-BARITONE-OZADJE.md` (datoteke in zgodovina ostanejo), README posodobljen |

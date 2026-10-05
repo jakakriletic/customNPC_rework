@@ -17,7 +17,8 @@
 # A5  nacin 1: preverba - vsi tavajoci zacnejo napad najvec 10 tickov za kontrolo
 # A6  brez ERROR iz noppes.* in brez "script errored"; scenarij pride do M36-SUM
 #
-# Zagon (najprej .\testworld.ps1, ce je svet od drugega scenarija):
+# Zagon (najprej .\testworld-run.ps1, ce je svet od drugega scenarija; sam testworld.ps1
+# ne zadosca - ne nastavi spawna in chunki prog niso nalozeni):
 #     .\m36-run.ps1              # nacin 0 = original, izpis audit\m36-napad-n0.log
 #     .\m36-run.ps1 -Nacin 1     # popravek M3.6,       izpis audit\m36-napad-n1.log
 
@@ -213,6 +214,12 @@ try {
         # 8 tavajocih + 8 stojecih + 2 cilja = 18. Krmilnik se ni spawnan.
         Check ("v svetu je 18 M36 NPC-jev (najdenih {0})" -f $chunks.Groups[4].Value) ([int]$chunks.Groups[4].Value -eq 18)
     }
+    # 5. 10.: svet iz samega testworld.ps1 ima vanilla spawn (743, -231), chunki prog niso
+    # nalozeni in 'noppes clone spawn' tiho ne naredi nic (npc=0). Brez NPC-jev ni scenarija -
+    # pademo takoj, namesto da cakamo 5 minut na markerje, ki jih ne bo.
+    if ($failures.Count -gt 0) {
+        throw "Prizorisce ni postavljeno (ni M36 NPC-jev v nalozenih chunkih). Pozeni najprej .\testworld-run.ps1 (nastavi setworldspawn 0 4 0), nato ta scenarij."
+    }
     # Nacin se poslje vedno, tudi 0: prioritete so del AI, ki se sestavi ob spawnu, in
     # ukaz ob spremembi AI vseh NPC-jev sestavi znova (CommandRwAttack). Izpis potrdi nacin.
     Send-Command $s "rwattack $Nacin"
@@ -310,6 +317,7 @@ try {
 catch {
     Write-Host ''
     Write-Host "NAPAKA: $_"
+    if ($s -and $s.Proc -and -not $s.Proc.HasExited) { $null = Stop-DevServer $s }
     Write-Host ("M3.6 NEUSPESNO. Izpis je v audit\m36-napad-n{0}.log" -f $Nacin)
     exit 1
 }

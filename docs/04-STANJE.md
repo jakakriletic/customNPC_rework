@@ -9,10 +9,10 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-05** (seja 64: integracija `m7-next`, M2.6b; vrstica »Trenutni milestone« je iz 24. 9.) |
+| Zadnja posodobitev | **2026-10-05** (seja 65: M3.6 zaključen) |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **Prvi zagon 24. 9.:** napaka ponovljena (način 0 mediana 30 tickov proti 10 pri kontroli), v načinu 1 mediana 10, a A5 pade na enem vzorcu (50 > 20) — hipoteza `aggroRange`; scenarij dopolnjen, ponovni zagon čaka. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
-| Naslednji paketi | M3.8 zaključen (5. 10.). Naslednje: M3.8b GUI za hitbox način, M3.9 (solid × jahanje, igralec v klientu),  ponovni zagon M3.6 in M5-S S1 (`NPCAttackSelector`: frakcija pred raytraceom, A/B proti baselinu). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
+| Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **M3.6 zaključen 5. 10.:** način 1 zelen (tavajoči v dosegu 10/10 vzorcev z zakasnitvijo 10 = kontrola), način 0 napako ponovi (združeno 6/8 nad kontrolo, mediana 25), hipoteza P2 (`aggroRange`) potrjena. M3.7 in M3.8 zaključena 5. 10. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2 zaključen (baseline M2.6 zelen 5. 10.) |
+| Naslednji paketi | M3.6 in M3.8 zaključena (5. 10.). Naslednje: M3.8b GUI za hitbox način, M3.9 (solid × jahanje, igralec v klientu) in M5-S S1 (`NPCAttackSelector`: frakcija pred raytraceom, A/B proti baselinu). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -34,7 +34,7 @@
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | **zaključeno 5. 10.** (razen M2.4r render, prestavljen v M5-K kot klientski harness) | M2.1–M2.7 preverjeni v svetu; **baseline M2.6 zelen 5. 10.** (3 ponovitve × 9 celic, B1–B3 in P0–P9) — [baseline](meritve/baseline-2026-10-05.md) |
-| M3 Jedro entitete | **v teku** — M3.1–M3.5 zaključeni (vzrok R1 potrjen, R1 popravljen pod stikalom, regresija zelena v načinih 0/1/2, hitbox po sestopu); M3.6 preusmerjen (D-020), v kodi, čaka na zagon | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
+| M3 Jedro entitete | **v teku** — M3.1–M3.5 zaključeni (vzrok R1 potrjen, R1 popravljen pod stikalom, regresija zelena v načinih 0/1/2, hitbox po sestopu); M3.6 zaključen 5. 10. (D-020, `RwAttackPriority`), M3.7 zaključen brez spremembe, M3.8 zaključen (`RwHitbox`) | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | **M4.14a v kodi** (izven vrstnega reda, na zahtevo uporabnika) | R2 analiza narejena; formacije (M4.14) prevedene in testirane v simulaciji, v svetu še ne — [zasnova](06-FORMACIJE.md), [scenarij](scenariji/M4.14-formacije.md) |
 | M5 Performance | ni začeto | del že pokrit z M1.3, glej meritve |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
@@ -79,6 +79,35 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-10-05 (65) — M3.6 zaključen: ponovni zagon v obeh načinih
+
+**Paket:** M3.6 (naloga 0.3 iz [08](08-PREGLED-IN-PLAN.md)) · **Stanje:** končano
+
+**Narejeno:**
+- Ponovni zagon `m36-run.ps1` po dopolnitvi scenarija 24. 9. (ločen doseg napada). Način 1 **zelen**
+  (A1–A6): 10 tavajočih v dosegu, vsi z zakasnitvijo 10 tickov = kontrola. Način 0 dvakrat: vsak
+  zagon posebej pade na A2 (1 oz. 7 vzorcev v dosegu, potrebnih 8 — NPC-ji so odtavali dlje);
+  združeno 8 vzorcev, mediana 25 > 20, 6/8 nad kontrolo → napaka originala ponovljena.
+  [zapis §6](meritve/2026-09-24-M3.6-prioriteta-napada.md)
+- **P2 potrjen:** v načinu 1 so vse zakasnitve nad 20 izven `aggroRange` ob ukazu.
+- Najdena past v postopku: sam `testworld.ps1` ustvari svet z vanilla spawnom (743, −231), chunki
+  prog niso naloženi in `noppes clone spawn` tiho ne naredi nič. Prvi par zagonov je zato padel.
+  `m36-run.ps1` zdaj takoj pade z navodilom (`testworld-run.ps1`) in ob izjemi ustavi server
+  (preverjeno: 28 s, server čisto ustavljen). Navodila v scenariju popravljena.
+
+**Ugotovitve:** čisti učinek napake prioritete pri NPC-ju v dosegu je 10–20 tickov; velike zakasnitve
+prvega zagona (do 120) so bile večinoma vzorci izven dosega (P2).
+
+**Spremembe obnašanja:** nobene nove (`RwAttackPriority` iz 24. 9.). Skripta `m36-run.ps1`: hitrejši padec.
+
+**Meritve:** M3.6 ponovni zagon (tabela Meritve). Opomba: med zagonom b je uporabnik zagnal drug
+Minecraft (`ladja_mod`); M3.6 meri v tickih, zato to na izid ne vpliva.
+
+**Odprto za uporabnika:** popraviti P2 (utripajoč napad izven `aggroRange`)?
+
+**Naslednja seja:** M3.8b (GUI hitbox), M3.9, M5-S S1. Svet v `dev/run` je trenutno prazen (po
+preverbi padca) — pred naslednjim scenarijem `.\testworld-run.ps1`.
 
 ### 2026-10-05 (64b) — M3.8: hitbox načini SOLID in SMART (R6)
 
@@ -3434,7 +3463,7 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 |---|---|---|---|
 | P1 | Leteči NPC, ki obstane **natanko 0,5 bloka od sredine svojega vozlišča**, se ne premakne več: `gib = 0`, pot ostane cela, entiteta se normalno tika. Kopenski v istem svetu se premika | M2.3 fazi B in C, oba zagona 17. 9.; 12 NPC-jev, 0,00 bloka v 900 tickih, `dStarost = 20`, `gib = 0` | **zožen** — dve razlagi ovrženi z meritvijo. Ostane `FlyingMoveHelper`: `pathFollow` prestevilči pri < 0,45, `FlyingMoveHelper:39` premakne pri > 0,5. Potrdi ali ovrže ga **faza D** ob naslednjem zagonu |
 
-| P2 | NPC z napadalno tarčo izven `aggroRange` (Čebiševa razdalja) ima napad, ki utripa: `shouldContinueExecuting` ga ustavi, `shouldExecute` brez preverbe dosega spet začne, `resetTask` vsakič pobriše pot | M3.6 način 1: en vzorec 50 tickov, en 30, pri mediani 10 | **hipoteza** — scenarij od 24. 9. zapiše razdaljo ob ukazu; potrdi/ovrže jo ponovni zagon M3.6. Obnašanje originala; ali ga popraviti, odloči uporabnik |
+| P2 | NPC z napadalno tarčo izven `aggroRange` (Čebiševa razdalja) ima napad, ki utripa: `shouldContinueExecuting` ga ustavi, `shouldExecute` brez preverbe dosega spet začne, `resetTask` vsakič pobriše pot | M3.6 5. 10.: v načinu 1 so **vse** zakasnitve nad 20 tickov (7 vzorcev, do 100) izven dosega ob ukazu; v načinu 0 izven dosega do 160 | **potrjeno 5. 10. (korelacija v scenariju M3.6)** — obnašanje originala v obeh načinih; ali ga popraviti, odloči uporabnik |
 
 Pravilo iz `05-SEJA-PROTOKOL.md`: bug brez reprodukcije je hipoteza. P1 ima meritev, nima
 pa še razlage in ni ločen od možne napake scenarija, zato je tu in ne med bugi.
@@ -3490,6 +3519,7 @@ prebrati.
 | 2026-09-11 | NBT↔JSON zapis, 1500 ključev (68 KB) | 235,3 ms → 2,9 ms (81×) | [zapis](meritve/2026-09-11-M1-nbtjson.md) |
 | 2026-09-11 | NBT↔JSON branje, 1500 ključev | 2386,3 ms → 6,5 ms (367×) | [zapis](meritve/2026-09-11-M1-nbtjson.md) |
 | 2026-09-24 | M3.2 faza C: `navigateTo` jahačem proge M | navig nosilca = navig jahača 20/20; M na cilju (0,64) v ~180 tickih, 2,8× hitreje od S | [zapis](meritve/2026-09-24-M3.2-R1-diagnoza.md) |
+| 2026-10-05 | M3.6 ponovni zagon (doseg ločen), način 0 ×2 in 1 | tavajoči v dosegu: način 0 združeno 8 vzorcev, mediana **25**, max 30, 6/8 nad kontrolo; način 1 10 vzorcev, vsi **10**; kontrola 10; A5 zelen, P2 potrjen | [zapis](meritve/2026-09-24-M3.6-prioriteta-napada.md) §6 |
 | 2026-09-24 | M3.6 napad med tavanjem, `m36-run` način 0 in 1 | tavajoči mediana/max: način 0 **30/120** tickov (2 brez napada), način 1 **10/50**; kontrola 10/10; A5 pade na 1 vzorcu (hipoteza `aggroRange`) | [zapis](meritve/2026-09-24-M3.6-prioriteta-napada.md) |
 | 2026-09-24 | M3.5 E9: višina jahačev po sestopu, `r1-run` način 0 in 1 | način 0: 1,463 (ostane × 0,77); način 1: 1,900 (vrne se) | [zapis](meritve/2026-09-24-M3.5-hitbox.md) |
 | 2026-09-15 | M2.1 prvi posnetek: 8 NPC-jev, 61 s, brez igralca | MSPT p50 0,16 ms / p95 1,21 ms; `npc.per.tick` p50 = 0 | [zapis](meritve/2026-09-15-M2.1-prvi-posnetek.md) |
