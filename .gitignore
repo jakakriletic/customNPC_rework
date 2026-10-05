@@ -20,3 +20,6 @@ __pycache__/
 .rw-compile.zip
 .rw-src.zip
 audit/*.csv
+# M2.6b: zaklepa scenarija in baselina (odprta samo med zagonom)
+.scenarij.lock
+.baseline.lock

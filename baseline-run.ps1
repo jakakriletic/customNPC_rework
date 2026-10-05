@@ -59,6 +59,13 @@ function F([double]$v) {
 
 try {
     Step 1 'Priprava'
+    # M2.6b: 27. 9. je drug baseline (zapis -1231) stekel med prvim (-1230). Lasten zaklep,
+    # ker perf-run.ps1 med ponovitvami svoj zaklep sprosti (vmes tece testworld.ps1).
+    $zaklep = Enter-ScenarijZaklep -Pot (Join-Path $root '.baseline.lock') -Kdo 'baseline-run'
+    Check 'zaklep baselina (.baseline.lock)' $true
+    $tuji0 = @(Get-TujiJava)
+    Check ("P9: pred zagonom ne tece tuj gradle build ali Minecraft" + $(if ($tuji0.Count) { ' - ' + ($tuji0 -join '; ') } else { '' })) ($tuji0.Count -eq 0)
+    if ($failures.Count) { throw 'Baseline se ne zacne ob tujem java procesu (meril bi ga skupaj s serverjem).' }
     # '-Counts 50,500' iz ukazne vrstice (-File) pride kot en niz; brez tega bi bil 50500.
     $Variants = @($Variants | ForEach-Object { "$_" -split ',' } | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' })
     $Counts = [int[]]@($CountsIn | ForEach-Object { "$_" -split ',' } | Where-Object { $_.Trim() -ne '' } | ForEach-Object { [int]$_.Trim() } | Sort-Object)
@@ -157,7 +164,7 @@ try {
     $L += ('{0} ponovitev, ogrevanje {1} s, merjenje {2} s, spawn {3}. Vsaka ponovitev je cel `.\perf-run.ps1` v svezem svetu. Strojni zapis: `audit/m26-baseline-{4}.json`.' -f `
         $zagoni.Count, $WarmupSeconds, $Seconds, $(if ($Razprseno) { 'razprsen' } else { 'naenkrat' }), $stamp)
     $L += ''
-    $L += ('Merila B1-B3 in P1-P8 v vseh ponovitvah: ' + $(if ($failures.Count -eq 0) { '**zelena**' } else { '**PADLA**: ' + ($failures -join '; ') }))
+    $L += ('Merila B1-B3 in P1-P9 v vseh ponovitvah: ' + $(if ($failures.Count -eq 0) { '**zelena**' } else { '**PADLA**: ' + ($failures -join '; ') }))
     $L += ''
     $L += 'Celica je `mediana` (razpon min-max). **Razpon je merilni sum:** A/B sme trditi izboljsavo samo, ce je razlika vecja od njega (05-SEJA-PROTOKOL.md).'
     $L += ''

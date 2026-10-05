@@ -120,3 +120,84 @@ function Get-Sum {
         Rel     = $rel
     }
 }
+
+# --- Zascita zagona (M2.6b, 5. 10.) ---------------------------------------------------
+#
+# 27. 9. je baseline M2.6 padel sredi meritve: server je ob prvem udarcu v celici boj-50
+# vrgel NoClassDefFoundError za razred iz originalnega jarja, ob ustavitvi se za
+# SquadManager. Ob 12:31 je v isti mapi stekel se drugi baseline zagon; skripte tega niso
+# preprecile. Spodnje funkcije poskrbijo, da (1) v isti mapi tece samo en scenarij,
+# (2) meritev pade, ce med njo tece tuj gradle build ali Minecraft, in (3) sesut server
+# takoj ustavi cakanje z vzrokom, namesto da preverbe berejo star odgovor.
+
+# Izkljucen zaklep za vec ur trajajoc scenarij. Vrne odprt FileStream; dokler je odprt, ga
+# drug proces ne more odpreti. Ob koncu procesa (tudi ob padcu ali kill) ga sprosti OS.
+function Enter-ScenarijZaklep {
+    param([Parameter(Mandatory = $true)][string]$Pot, [Parameter(Mandatory = $true)][string]$Kdo)
+    $dir = Split-Path -Parent $Pot
+    if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
+    try {
+        $fs = [System.IO.File]::Open($Pot, 'OpenOrCreate', 'ReadWrite', 'None')
+    } catch {
+        throw ("V tej mapi ze tece drug scenarij (zaklep {0} je zaseden). Pocakaj, da se konca, ali ga ustavi; dva zagona hkrati si delita dev\run in jar." -f $Pot)
+    }
+    $txt = [System.Text.Encoding]::ASCII.GetBytes(("{0} pid={1} {2}`r`n" -f $Kdo, $PID, (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')))
+    $fs.SetLength(0); $fs.Write($txt, 0, $txt.Length); $fs.Flush()
+    return $fs
+}
+
+# $true, ce zaklep trenutno drzi drug proces (za skripte, ki zaklepa ne vzamejo, a ne smejo
+# teci med scenarijem, npr. testworld.ps1).
+function Test-ScenarijZaklep {
+    param([Parameter(Mandatory = $true)][string]$Pot)
+    if (-not (Test-Path $Pot)) { return $false }
+    try { $fs = [System.IO.File]::Open($Pot, 'Open', 'ReadWrite', 'None'); $fs.Close(); return $false }
+    catch { return $true }
+}
+
+# Ukazna vrstica, po kateri je java proces gradle build ali Minecraft (server, klient, dev).
+$script:TujiJavaVzorec = 'GradleDaemon|GradleWrapperMain|GradleMain|GradleStart|launchwrapper|net\.minecraft'
+
+# PID-i procesa $Koren in vseh njegovih potomcev.
+function Get-DrevoProcesov {
+    param([int[]]$Koren)
+    $vsi = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Select-Object ProcessId, ParentProcessId)
+    $drevo = @{}
+    $vrsta = New-Object System.Collections.Queue
+    foreach ($k in $Koren) { if (-not $drevo.ContainsKey($k)) { $drevo[$k] = $true; $vrsta.Enqueue($k) } }
+    while ($vrsta.Count -gt 0) {
+        $x = $vrsta.Dequeue()
+        foreach ($p in $vsi) {
+            $id = [int]$p.ProcessId
+            if (([int]$p.ParentProcessId -eq $x) -and -not $drevo.ContainsKey($id)) { $drevo[$id] = $true; $vrsta.Enqueue($id) }
+        }
+    }
+    return $drevo
+}
+
+# Tuji java procesi (gradle build ali Minecraft), ki niso v $Nasi (slovar PID -> $true).
+# Vrne seznam nizov 'pid: zacetek ukazne vrstice'.
+function Get-TujiJava {
+    param([hashtable]$Nasi = @{})
+    $out = @()
+    foreach ($p in @(Get-CimInstance Win32_Process -Filter "Name='java.exe' OR Name='javaw.exe'" -ErrorAction SilentlyContinue)) {
+        if ($Nasi.ContainsKey([int]$p.ProcessId)) { continue }
+        $cmd = "$($p.CommandLine)"
+        if ($cmd -notmatch $script:TujiJavaVzorec) { continue }
+        $out += ('{0}: {1}' -f $p.ProcessId, $cmd.Substring(0, [Math]::Min(160, $cmd.Length)))
+    }
+    return $out
+}
+
+# Opis sesutja serverja iz loga ('' ce ga ni): vrstica s crash reportom in prvi vzrok.
+function Get-ServerSesutje {
+    param([string]$LogText)
+    if ([string]::IsNullOrEmpty($LogText)) { return '' }
+    $m = [regex]::Match($LogText, 'Encountered an unexpected exception|---- Minecraft Crash Report ----|This crash report has been saved to:')
+    if (-not $m.Success) { return '' }
+    $rep = [regex]::Match($LogText, 'This crash report has been saved to: (\S+)')
+    $vzrok = [regex]::Match($LogText.Substring($m.Index), 'Caused by: ([^\r\n]+)')
+    $opis = if ($vzrok.Success) { $vzrok.Groups[1].Value.Trim() } else { $m.Value }
+    if ($rep.Success) { $opis += (' (crash report: {0})' -f $rep.Groups[1].Value) }
+    return $opis
+}

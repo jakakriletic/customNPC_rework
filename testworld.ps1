@@ -31,6 +31,18 @@ if (Test-Path $lock) {
     }
 }
 
+# M2.6b: med dvema serverjema istega scenarija session.lock ni zaklenjen, scenarij pa se
+# tece (27. 9. je drug baseline zagon stekel med prvim). Zaklep scenarija velja ves cas.
+$scenLock = Join-Path $root '.scenarij.lock'
+if (Test-Path $scenLock) {
+    try {
+        $fs = [System.IO.File]::Open($scenLock, 'Open', 'ReadWrite', 'None')
+        $fs.Close()
+    } catch {
+        throw "Scenarij tece (zaklep $scenLock). Pocakaj, da se konca."
+    }
+}
+
 if (-not $KeepWorld -and (Test-Path $world)) {
     $stamp   = Get-Date -Format 'yyyyMMdd-HHmmss'
     $archive = Join-Path $run '_worlds'

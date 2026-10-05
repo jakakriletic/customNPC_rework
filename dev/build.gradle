@@ -66,9 +66,21 @@ afterEvaluate {
         tasks.getByName(taskName).dependsOn devRuntimeMod
         tasks.getByName(taskName).maxHeapSize = '2G'
         tasks.getByName(taskName).doFirst {
+            // Vsak zagon dobi svojo kopijo runtime jarja. build/libs/customnpcs-dev-runtime.jar
+            // prepise vsak runServer/runClient iz te mape, kadar se je koda spremenila; JVM, ki
+            // jar ze ima odprtega, nato razredov, ki jih se ni nalozil, ne najde vec
+            // (NoClassDefFoundError). Baseline M2.6 je 27. 9. tako padel sredi meritve.
+            // Stare kopije se brisejo; kopija serverja, ki se tece, je zaklenjena in ostane.
+            def snapRoot = file("$buildDir/run-snapshots")
+            snapRoot.mkdirs()
+            snapRoot.listFiles().each { it.deleteDir() }
+            def snapDir = new File(snapRoot, "${taskName}-${new Date().format('yyyyMMdd-HHmmss-SSS')}")
+            snapDir.mkdirs()
+            def snap = new File(snapDir, devRuntimeMod.archiveName)
+            java.nio.file.Files.copy(devRuntimeMod.archivePath.toPath(), snap.toPath())
             classpath = files(classpath.files.findAll {
                 !it.name.toLowerCase().startsWith('customnpcs')
-            }) + files(devRuntimeMod.archivePath)
+            }) + files(snap)
             if (project.hasProperty('npcBaritoneDev')) {
                 classpath += files("${npcBaritoneModDir}/build/classes/java/main",
                                    "${npcBaritoneModDir}/build/resources/main")

@@ -56,6 +56,10 @@ Stari ForgeGradle uporablja neustrezen HTTP naslov za assets. Njegov `getAssets`
 
 Razvojni klient in server uporabljata posebej sestavljen `dev/build/libs/customnpcs-dev-runtime.jar`: preslikani original z vključenimi razredi iz `src/patch/java`. Run task iz classpatha odstrani ostale CustomNPCs JAR-e, da FML najde samo eno instanco moda in se popravki dejansko naložijo. Zato originala ne kopiraj še enkrat v `dev/run/mods` ali `dev/libs`. Testne svetove hrani v `dev/run`; obstoječi uporabniški svetovi niso del tega okolja. Zagon ima omejitev heap-a 2 GB.
 
+Od M2.6b (5. 10.) vsak `runServer`/`runClient` naloži **svojo kopijo** tega jarja iz `dev/build/run-snapshots/<task>-<čas>/`: drug zagon iz iste mape jar v `build/libs` prepiše, kadar se je koda spremenila, JVM pa razredov, ki jih še ni naložil, iz prepisanega jarja ne najde (`NoClassDefFoundError`). Stare kopije se ob naslednjem zagonu pobrišejo; kopija serverja, ki še teče, je zaklenjena in ostane. Merilni scenariji (`perf-run.ps1`, `baseline-run.ps1`) držijo zaklep `.scenarij.lock`/`.baseline.lock` v korenu repozitorija in med meritvijo zavrnejo tuj gradle build ali Minecraft (merilo P9).
+
+Seja Claude Code nastavi `NoDefaultCurrentDirectoryInExePath=1`; skripte, ki server zaženejo s `cmd /c gradlew.bat`, takrat wrapperja ne najdejo. Pred zagonom scenarija iz take seje spremenljivko odstrani (`Remove-Item Env:NoDefaultCurrentDirectoryInExePath`).
+
 ## Pomen baseline testov
 
 Test `preservesKnownOriginalIntervalBugUntilExplicitlyFixed` trenutno namerno pričakuje originalni napačni zapis ID-ja v `TimerTicks`. S tem preverjamo, da obnova kode še ni spremenila obnašanja. Pri dejanskem bugfixu spremenimo pričakovanje za popravljeno kodo; test originala ostane ločena referenca oziroma pričakovana reprodukcija buga.

@@ -4,6 +4,15 @@ Ocena stanja reworka in plan preostalega dela. **M8 (migracija funkcij iz Custom
 iz plana izločen** (D-023); vse ostale faze ostanejo. Podrobnosti posameznih paketov so v
 [`03-FAZE.md`](03-FAZE.md), dnevnik v [`04-STANJE.md`](04-STANJE.md).
 
+> **Popravek 5. 10. (seja 64).** Pregled 3. 10. ni poznal veje `origin/codex/m7-next`
+> (28. 9.): A/B serije za Baritona so bile že opravljene in **vrata V4 sprejeta** (D-022,
+> `crowdYield`, izbirno ozadje, privzeto izklopljeno) — naloga 0.4 je bila torej že narejena.
+> Veja je zdaj prenesena v `codex/m7-cnpc-integration`. Diagnoza padca baselina (točka 4) je
+> bila napačna: čiščenje med celicami je delovalo, server se je sesul z `NoClassDefFoundError`,
+> v isti mapi pa je tekel drug baseline zagon. Popravek je paket **M2.6b** (zaščita zagona).
+> Seja zdaj teče na uporabnikovem računalniku in **lahko sama poganja build in scenarije v
+> svetu** — ozko grlo iz točke 2 je s tem večinoma odpravljeno.
+
 ---
 
 ## 1. Ocena
@@ -57,7 +66,7 @@ iz plana izločen** (D-023); vse ostale faze ostanejo. Podrobnosti posameznih pa
 | **M2 Diagnostika** | 🟡 ~95 % | `/rwdiag`, reprodukcije R1 in R2, obremenitve 50/200/500, protokol ponovitev, merila navigacije — vse zeleno v svetu. **Manjka:** baseline M2.6 (zagon padel), M2.4r (render), M2.1b (klicna mesta — zdaj izvedljivo, ker je M3.1 narejen) |
 | **M3 Jedro entitete** | 🟡 5/10 | M3.1–M3.5 zaključeni (prenos `EntityNPCInterface` + `ai/**`, diagnoza in popravek R1, gating AI med jahanjem, hitbox po sestopu). M3.6 v kodi, čaka ponovni zagon |
 | **M4 Gibanje** | 🟡 začet izven vrstnega reda | M4.14a formacije v kodi (21 testov), v svetu ne pognane. Letenje (R2) ni začeto; diagnoza R2 = zastarela delna pot |
-| **Baritone ozadje (D-022)** | 🟡 integracija v kodi | most, stikalo `RwNavBackend`, reinstall po `updateTasks`, A/B scenarij; prvi A/B zagon: Baritone 8/8 v 40 tickih, vanilla 1/8 in 6/8. Manjkata dve seriji po tri ponovitve in odločitev |
+| **Baritone ozadje (D-022)** | ✅ V4 sprejet 28. 9. | most, stikalo `RwNavBackend`, reinstall po `updateTasks`, A/B scenarij; M7.8–M7.10c (veja `m7-next`, prenesena 5. 10.): z `crowdYield` 8/8 na obeh grlih in odprtem v 5 zagonih (vanilla 1/8, 6/8); izbirno, privzeto izklopljeno |
 | M5 Performance | ⬜ ni začeto | blokirano z M2.6 |
 | M6 Java scripting | ⬜ ni začeto | analiza narejena |
 | M7 Animacije | 🟢 jedro narejeno **v ločenem modu** `customNPC_entities_mod` (v0.7.0) | ostane integracija s CNPC skriptami in verzijo; glej Fazo 5 |
@@ -79,10 +88,10 @@ Velikosti: **S** = ena seja · **M** = 2–4 seje · **L** = 5–10 · **XL** = 
 
 | # | Naloga | Vel. | Zakaj zdaj |
 |---|---|---|---|
-| 0.1 | PR `codex/m7-cnpc-integration` → `main` | S | 4 commiti visijo izven `main` |
-| 0.2 | Popraviti čiščenje med celicami v `perf-run.ps1` (pred novo celico preveriti `npc=0` ali svet resetirati) in ⏵ pognati M2.6 (~3,5 h) | S | brez baselina ni M5 |
+| 0.1 | PR `codex/m7-cnpc-integration` → `main` | S | 🟡 5. 10.: `codex/m7-next` prenesena (cherry-pick), build/testi/`verify-package` zeleni; PR odprt |
+| 0.2 | ~~Popraviti čiščenje med celicami~~ → **M2.6b zaščita zagona** (kopija runtime jarja na zagon, zaklep, P9, zaznava sesutja) in ⏵ pognati M2.6 (~3,5 h) | S | 🟡 5. 10.: M2.6b narejen in preverjen v svetu; zagon baselina čaka |
 | 0.3 | ⏵ ponovni zagon M3.6 (`m36-run.ps1`, načina 0 in 1) → zaključiti M3.6 | S | koda čaka od 24. 9. |
-| 0.4 | ⏵ Baritone A/B: rebuild knjižnice (popravek hitrosti D-042), dve seriji po 3 ponovitve → **odločitev D-022: ostane ali gre ven** | S | odloči obseg M4.10–M4.12 |
+| 0.4 | ~~Baritone A/B, odločitev D-022~~ | S | ✅ 28. 9. (`m7-next`): V4 sprejet, Baritone ostane izbirno ozadje. Odprto za uporabnika: ali M4.11/M4.12 (izboljšava privzetega vanilla ozadja) še rabimo |
 | 0.5 | ⏵ formacije M4.14b (F1–F12, FA1–FA6) | S | koda čaka od 18. 9. |
 | 0.6 | Preimenovati Baritone pakete v CNPC (M7.x → NB.x), posodobiti README in "Trenutno stanje" | S | kolizija z M7 animacijami |
 

@@ -27,13 +27,19 @@
 #     .\ponovitve-run.ps1 -Scenarij perf -Dodatno @('-Variants','boj','-Counts','200')
 #     .\perf-run.ps1 -Razprseno                        # spawn po 5 NPC-jev, ~7 tickov narazen (M2.6)
 #     .\baseline-run.ps1                               # M2.6: tri ponovitve vseh celic in baseline
+#     .\perf-run.ps1 -DovoliTuje                       # P9 samo opozori (hitra preverba ob buildu)
+#
+# M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
+# pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
+# (merilo P9), in ob sesutju serverja takoj konca z vzrokom iz loga.
 #
 # Pred zagonom: .\testworld.ps1 (svez svet). Ta scenarij svet spremeni (pobije fixture M0.6)
 # in za seboj pusti oznako dev\run\world\rework-scenarij.txt.
 
 param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][string[]]$CountsIn = @('50', '200', '500'),
       [int]$Seconds = 300, [int]$WarmupSeconds = 120, [int]$ChunkRadius = 1,
-      [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '')
+      [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
+      [switch]$DovoliTuje)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -77,6 +83,9 @@ function Wait-ForCount($Srv, [string]$Marker, [int]$Count, [int]$TimeoutSec) {
     while ($true) {
         $n = ([regex]::Matches((Get-MarkerText $Srv.Log), [regex]::Escape($Marker))).Count
         if ($n -ge $Count) { return $true }
+        # M2.6b: sesut server ne odgovori nikoli vec; cakanje do timeouta bi le skrilo vzrok.
+        $sesutje = Get-ServerSesutje (Get-LogText $Srv.Log)
+        if ($sesutje -ne '') { throw ("Server se je sesul (cakal na '{0}'): {1}" -f $Marker, $sesutje) }
         if ($Srv.Proc.HasExited) {
             Write-Host ("  ! proces se je koncal, preden se je pojavil marker '{0}' (#{1})" -f $Marker, $Count)
             return $false
@@ -129,8 +138,11 @@ function Stop-DevServer($srv, [int]$TimeoutSec = 180) {
     if ($srv.Proc.HasExited) { return $false }
     Send-Command $srv 'stop'
     if (-not $srv.Proc.WaitForExit($TimeoutSec * 1000)) {
-        Write-Host '  ! server se ni ustavil sam; ubijam proces'
-        try { $srv.Proc.Kill() } catch { }
+        Write-Host '  ! server se ni ustavil sam; ubijam proces in njegove potomce'
+        # cmd.exe -> gradle -> java serverja: Kill() bi ubil samo cmd, java bi ostala
+        # (zaseden svet, port in CPU v naslednji ponovitvi).
+        try { & taskkill.exe /PID $srv.Proc.Id /T /F 2>&1 | Out-Null } catch { }
+        try { if (-not $srv.Proc.HasExited) { $srv.Proc.Kill() } } catch { }
         return $false
     }
     return $true
@@ -202,6 +214,30 @@ function Get-Counter($Dump, [string]$Name) {
 
 function Ms([double]$ns) { return [math]::Round($ns / 1000000.0, 3) }
 
+# M2.6b (P9): cakanje, med katerim se vsakih 5 s preveri, ali je stekel tuj java proces
+# (gradle build ali Minecraft). Get-Process je poceni; ukazno vrstico (CIM) beremo samo
+# za PID, ki ga v tej celici se nismo videli. $script:nasiPid je drevo nasega serverja.
+$script:nasiPid = @{}
+$script:znaniPid = @{}
+$script:tujiVCelici = @()
+function Wait-SPreverbo([int]$Sekund) {
+    $konec = (Get-Date).AddSeconds($Sekund)
+    while ($true) {
+        foreach ($p in @(Get-Process -Name java, javaw -ErrorAction SilentlyContinue)) {
+            if ($script:nasiPid.ContainsKey($p.Id) -or $script:znaniPid.ContainsKey($p.Id)) { continue }
+            $script:znaniPid[$p.Id] = $true
+            $tuj = @(Get-TujiJava -Nasi $script:nasiPid | Where-Object { $_ -like ('{0}:*' -f $p.Id) })
+            if ($tuj.Count -gt 0) {
+                $script:tujiVCelici += $tuj
+                Write-Host ("  ! tuj java proces med celico: {0}" -f $tuj[0])
+            }
+        }
+        $ostane = ($konec - (Get-Date)).TotalSeconds
+        if ($ostane -le 0) { break }
+        Start-Sleep -Seconds ([int][Math]::Min(5, [Math]::Ceiling($ostane)))
+    }
+}
+
 # Ena skupina (ime, N NPC-jev od vrste z0 naprej) kot ukazi. Brez -Razprseno en sam
 # 'clone grid'; z -Razprseno kosi po $razKos NPC-jev, vsak na svojem mestu mreze.
 function Get-GroupCommands([string]$Ime, [int]$N, [int]$Z0) {
@@ -240,6 +276,17 @@ try {
     $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 
     Step 1 'Parametri in priprava'
+    # M2.6b: en scenarij na mapo. Zaklep ostane odprt do konca procesa. Ne v dev\run:
+    # ForgeGradle prijavi dev\run kot izhod runServer in Gradle bi zaklenjeno datoteko hashiral.
+    $zaklep = Enter-ScenarijZaklep -Pot (Join-Path $root '.scenarij.lock') -Kdo 'perf-run'
+    Check 'zaklep scenarija (.scenarij.lock)' $true
+    $tuji0 = @(Get-TujiJava)
+    if ($tuji0.Count -gt 0 -and $DovoliTuje) {
+        Write-Host ("  OPOZORILO P9: tece tuj gradle build ali Minecraft (-DovoliTuje): {0}" -f ($tuji0 -join '; '))
+    } else {
+        Check ("P9: pred zagonom ne tece tuj gradle build ali Minecraft" + $(if ($tuji0.Count) { ' - ' + ($tuji0 -join '; ') } else { '' })) ($tuji0.Count -eq 0)
+        if ($tuji0.Count -gt 0) { throw 'Tuj java proces bi meril skupaj s serverjem ali prepisal jar. Ustavi ga ali pozeni z -DovoliTuje (ni baseline).' }
+    }
     # PowerShell pri klicu iz drugega procesa (ponovitve-run.ps1) poda '-Variants boj,idle'
     # kot en niz; razbijemo ga tu, da se obnasa enako kot seznam.
     $Variants = @($Variants | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' })
@@ -334,6 +381,7 @@ try {
     $srv = Start-DevServer
     Check 'server B je dosegel "Done ("' (Wait-ForMarker $srv 'Done (' 900)
     if ($failures.Count -gt 0) { throw "Server se ni zagnal. Glej $($srv.Log)" }
+    $script:nasiPid = Get-DrevoProcesov @($srv.Proc.Id)
     Send-File $srv (Join-Path $seed 'perf-setup-commands.txt')
     Check 'svet shranjen po postavitvi' (Wait-ForMarker $srv 'Saved the world' 120)
 
@@ -347,8 +395,9 @@ try {
     $nKontrola = 0; $nChunks = 0; $nOn = 0; $nOff = 0; $nDump = 0
     Send-Command $srv ("rwdiag chunks on {0}" -f $ChunkRadius)
     $nChunks++
-    Check 'ukaz chunks odgovori (ciscenje)' (Wait-ForCount $srv 'RWDIAG-CHUNKS stanje=' $nChunks 60)
-    $ch = Read-Chunks $srv.Log
+    $okCh = Wait-ForCount $srv 'RWDIAG-CHUNKS stanje=' $nChunks 60
+    Check 'ukaz chunks odgovori (ciscenje)' $okCh
+    $ch = if ($okCh) { Read-Chunks $srv.Log } else { $null }
     Write-Host ("  pred ciscenjem: stanje={0} npc={1}" -f $ch.Stanje, $ch.Npc)
     Send-Command $srv 'noppes slay npcs'
     Start-Sleep -Seconds 5
@@ -360,6 +409,8 @@ try {
         $idx++
         $v = $cell.Varianta; $N = $cell.N
         $cellFailStart = $failures.Count
+        $script:znaniPid = @{}
+        $script:tujiVCelici = @()
         Step ('4.{0}' -f $idx) ("celica {0}/{1}: {2}, {3} NPC-jev" -f $idx, $cells.Count, $v, $N)
 
         Send-Command $srv 'noppes slay npcs'
@@ -377,8 +428,11 @@ try {
         # ce je svet ustavljen (prva celica), PERF_Kontrola brez tega ne bi nikoli tiknil.
         Send-Command $srv ("rwdiag chunks on {0}" -f $ChunkRadius)
         $nChunks++
-        Check 'ukaz chunks odgovori' (Wait-ForCount $srv 'RWDIAG-CHUNKS stanje=' $nChunks 60)
-        $ch = Read-Chunks $srv.Log
+        # Brez odgovora se ne bere zadnja vrstica: ta je od prejsnje celice (27. 9. je tako
+        # 'npc=500' iz idle-500 izgledal kot neociscen svet, v resnici je server ze padel).
+        $okCh = Wait-ForCount $srv 'RWDIAG-CHUNKS stanje=' $nChunks 60
+        Check 'ukaz chunks odgovori' $okCh
+        $ch = if ($okCh) { Read-Chunks $srv.Log } else { $null }
         $chOk = ($null -ne $ch) -and ($ch.Stanje -eq 'on') -and ($ch.Npc -eq $N) -and ($ch.Zavrnjeni -eq 0)
         Check ("P2: chunki prisilno nalozeni, npc={0} (pricakovano {1}), chunki={2}, zavrnjeni={3}" -f `
             $ch.Npc, $N, $ch.Chunki, $ch.Zavrnjeni) $chOk
@@ -404,14 +458,14 @@ try {
 
         if ($WarmupSeconds -gt 0) {
             Write-Host ("  ogrevanje {0} s" -f $WarmupSeconds)
-            Start-Sleep -Seconds $WarmupSeconds
+            Wait-SPreverbo $WarmupSeconds
         }
 
         Send-Command $srv 'rwdiag on'
         $nOn++
         Check 'merjenje vklopljeno' (Wait-ForCount $srv 'RWDIAG vklopljen' $nOn 60)
         Write-Host ("  merjenje {0} s" -f $Seconds)
-        Start-Sleep -Seconds $Seconds
+        Wait-SPreverbo $Seconds
         $tag = 'm24-{0}-{1}' -f $v, $N
         Send-Command $srv ("rwdiag dump {0}" -f $tag)
         $nDump++
@@ -469,13 +523,19 @@ try {
             $allocOk= Get-Counter $dump 'jvm.alloc.podprto'
             $oldPo  = Get-Counter $dump 'jvm.heap.old.poGc'
             $hMax   = Get-Counter $dump 'jvm.heap.max'
-            Check 'P8: posnetek ima meritve JVM (jvm.gc, jvm.alloc.server)' (($null -ne $gc) -and ($null -ne $alloc))
-            if (($null -ne $gc) -and ($dump.elapsedMillis -gt 0)) {
+            # Posnetek izpusti stevce z niclo (DiagSnapshot). jvm.heap.max in jvm.alloc.server sta
+            # pri M2.6 jarju vedno vecja od nic; jvm.gc in jvm.gc.old manjkata, ce v meritvi ni
+            # bilo zbirke (5. 10.: 30-sekundna preverba), kar pomeni 0, ne manjkajoce meritve.
+            Check 'P8: posnetek ima meritve JVM (jvm.heap.max, jvm.alloc.server)' (($null -ne $hMax) -and ($null -ne $alloc))
+            if (($null -ne $hMax) -and ($dump.elapsedMillis -gt 0)) {
                 $sek = $dump.elapsedMillis / 1000.0
-                $vel['gc.zbirk'] = [long]$gc.count
-                $vel['gc.ms'] = [math]::Round($gc.nanos / 1000000.0, 0)
-                $vel['gc.msNaS'] = [math]::Round($gc.nanos / 1000000.0 / $sek, 2)
-                if ($null -ne $gcOld) { $vel['gc.old.zbirk'] = [long]$gcOld.count; $vel['gc.old.ms'] = [math]::Round($gcOld.nanos / 1000000.0, 0) }
+                $gcN = if ($null -ne $gc) { [long]$gc.count } else { 0L }
+                $gcNs = if ($null -ne $gc) { [double]$gc.nanos } else { 0.0 }
+                $vel['gc.zbirk'] = $gcN
+                $vel['gc.ms'] = [math]::Round($gcNs / 1000000.0, 0)
+                $vel['gc.msNaS'] = [math]::Round($gcNs / 1000000.0 / $sek, 2)
+                $vel['gc.old.zbirk'] = $(if ($null -ne $gcOld) { [long]$gcOld.count } else { 0L })
+                $vel['gc.old.ms'] = $(if ($null -ne $gcOld) { [math]::Round($gcOld.nanos / 1000000.0, 0) } else { 0 })
                 if (($null -ne $alloc) -and ($null -ne $allocOk) -and ($allocOk.count -eq 1)) {
                     $vel['alok.MBnaS'] = [math]::Round($alloc.count / 1048576.0 / $sek, 1)
                     if ($dump.ticks -gt 0) { $vel['alok.KBnaTick'] = [math]::Round($alloc.count / 1024.0 / $dump.ticks, 1) }
@@ -514,6 +574,15 @@ try {
                 Check ("P5: skripte so tekle ves cas (skriptnih tickov {0}, pricakovano vsaj {1})" -f $delta, $wanted) ($delta -ge $wanted)
                 $vel['skripte.tickov'] = $delta
             }
+        }
+
+        # P9: med ogrevanjem in merjenjem ni tekel tuj gradle build ali Minecraft.
+        Wait-SPreverbo 0
+        $tujiC = @($script:tujiVCelici | Select-Object -Unique)
+        if ($tujiC.Count -gt 0 -and $DovoliTuje) {
+            Write-Host ("  OPOZORILO P9: med celico je tekel tuj java proces (-DovoliTuje): {0}" -f ($tujiC -join '; '))
+        } else {
+            Check ("P9: med celico ni tekel tuj gradle build ali Minecraft" + $(if ($tujiC.Count) { ' - ' + ($tujiC -join '; ') } else { '' })) ($tujiC.Count -eq 0)
         }
 
         # P6: nobene napake iz moda ali skript v tej celici; P7 pomnilnik.
@@ -559,7 +628,7 @@ try {
     $L += ''
     $L += 'Scenarij: `docs/scenariji/M2.4-obremenitve.md`. Ogrevanje {0} s, merjenje {1} s, obroc chunkov {2}, spawn {3}.' -f $WarmupSeconds, $Seconds, $ChunkRadius, $(if ($Razprseno) { 'razprsen' } else { 'naenkrat' })
     $L += ''
-    $L += ("Merila: " + $(if ($failures.Count -eq 0) { 'P1-P8 zelena' } else { 'PADLA: ' + ($failures -join '; ') }))
+    $L += ("Merila: " + $(if ($failures.Count -eq 0) { 'P1-P9 zelena' } else { 'PADLA: ' + ($failures -join '; ') }))
     $L += ''
     $L += '| varianta | NPC | TPS | MSPT povp | p50 | p95 | p99 | max | p99 brez save | us/NPC update | ticki >50 ms | GC ms/s | GC stare | alok. MB/s | stanje |'
     $L += '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|'

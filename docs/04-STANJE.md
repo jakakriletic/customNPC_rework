@@ -9,10 +9,10 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-09-28** (M7.9; prejšnja vsebina te tabele je iz 24. 9., razen spodnje vrstice »Baritone«) |
+| Zadnja posodobitev | **2026-10-05** (seja 64: integracija `m7-next`, M2.6b; vrstica »Trenutni milestone« je iz 24. 9.) |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **Prvi zagon 24. 9.:** napaka ponovljena (način 0 mediana 30 tickov proti 10 pri kontroli), v načinu 1 mediana 10, a A5 pade na enem vzorcu (50 > 20) — hipoteza `aggroRange`; scenarij dopolnjen, ponovni zagon čaka. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
-| Naslednji paketi | Commit + push obeh repozitorijev (M7.9–M7.10). Nato **ponovni zagon M3.6** z dopolnjenim scenarijem (`.\m36-run.ps1` in `.\m36-run.ps1 -Nacin 1`; build ni potreben, spremenjena sta samo skripta krmilnika in `m36-run.ps1`), nato **M3.7**. Odprto: en jahač od osmih v fazi C ponovljivo ne dobi poti (ni R1); scenarij za `tpTo` jahača (M3.9); iz M3.6 dve hipotezi (zavetje pred napadom, napad = strelski napad po prioriteti). Za predajo: `.\dev.ps1 buildPatchedMod --offline` + `verify-package.ps1`. Odloženo: zagon M2.6 |
+| Naslednji paketi | **Zagon baselina M2.6** (`.\baseline-run.ps1 -AcceptEula`, ~3,5 h; od M2.6b varen pred vzporednimi zagoni, P1–P9). Nato **ponovni zagon M3.6** (`.\m36-run.ps1` in `.\m36-run.ps1 -Nacin 1`), nato **M3.7**. Odprto: PR `codex/m7-cnpc-integration` → `main`; en jahač od osmih v fazi C ponovljivo ne dobi poti (ni R1); scenarij za `tpTo` jahača (M3.9); iz M3.6 dve hipotezi. Za predajo: `.\dev.ps1 buildPatchedMod --offline` + `verify-package.ps1` |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -23,7 +23,7 @@
 | Šumni pas (M2.5c, 18. 9.) | **46 veličin od 59 ima razpon nič** čez tri ponovitve; vse, kar opisuje vedenje skupine in kakovost poti, je deterministično do enega ticka. Šumna je samo veličina 5 (µs na iskanje), do **114 %** — zato A/B na ceni iskanja (M4.11, M5.6) do M2.7b ni merljiv. [zapis](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
 | Odprta vprašanja iz M2.7 | dva NPC-ja od osmih na progi z grlom ne prispeta niti ob osveženi poti (zamašek ali `canNavigate()`, loči M3.1); najpočasnejši tick meritve (232 ms) ni bil autosave, ampak tick s pathfindingom |
 | Blokade | Q1 je 17. 9. zabeležena kot **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6–Q8, Q10 in Q12 odprta; specifična R9 forenzika je po navodilu uporabnika odložena, ne blokirana |
-| Omejitev orodij | **spremenjeno 17. 9.**: seja ima lupino na uporabnikovem računalniku, a **linuxovo** in brez PowerShella, Gradla in Minecrafta. Bere, piše, ureja, `git`, `python3`, `node`, `jq` — da. `.\dev.ps1`, `.\*-run.ps1`, build in zagon sveta — **ne**, to poganja uporabnik. Podrobnosti v Znanih omejitvah. Seja **prevede in požene teste** `rework/**` v oblačnem okolju proti mapiranim razredom (D-014) in sintaktično preveri `.ps1` s prenesenim PowerShellom |
+| Omejitev orodij | **spremenjeno 5. 10.**: seja teče na uporabnikovem Windows računalniku (DESKTOP-SN494C0) s PowerShellom, Gradlom in JDK 8 — **sama poganja build, `verify-package` in scenarije v svetu**. Pred zagonom scenarija odstrani `NoDefaultCurrentDirectoryInExePath` (glej `OKOLJE.md`). Python ni nameščen (node je). Starejši opis (linuxova lupina brez Gradla, 17. 9.) velja za oblačne seje |
 
 ---
 
@@ -73,12 +73,41 @@
 | M2.5b | Izločitev autosave ticka: `server.tick.ns.nosave` + merila S5–S7 | **koda in testi narejeni** (6 testov, prevedeno v seji); čaka na prvi zagon v svetu |
 | M2.5c | **Protokol ponovitev**: zapis zagona (`meritve-lib.ps1`), združevanje N zagonov v svežem svetu in šumni pas (`ponovitve-run.ps1`), merila T1–T6 | **zaključeno 18. 9. — serija pognana, T1–T6 zelena**; tabela M2.7 ima razpon; [scenarij](scenariji/M2.5c-ponovitve.md), [meritev](meritve/2026-09-18-M2.5c-ponovitve-nav.md) |
 | M2.7b | Več vzorcev za veličino 5 (µs na iskanje) | **pognano dvakrat 21. 9.; razdelitev na `prvi*`/`pon*` in `usSkupaj` delujeta, več vzorcev pa šuma ni zaprlo** — vzrok je stanje JVM-a med pometanji. Dodano **ogrevanje iskalnika** (`-OgrevalnihPometanj 2` + `rwdiag reset`) in merilo **N15**; N14 prepisan iz časovnega praga v strukturno invarianto. Čaka na ponovni zagon in serijo. [meritev](meritve/2026-09-21-M2.7b-ogrevanje.md), [scenarij](scenariji/M2.7-navigacija.md) |
-| M2.6 | Baseline originala | **koda narejena 23. 9.** — `JvmProbe` (GC, alokacije), `baseline-run.ps1` (B1–B3), `perf-run.ps1 -Razprseno`, P8; [scenarij](scenariji/M2.6-baseline.md). Čaka na preverbo spawna in zagon |
+| M2.6 | Baseline originala | **koda narejena 23. 9.** — `JvmProbe` (GC, alokacije), `baseline-run.ps1` (B1–B3), `perf-run.ps1 -Razprseno`, P8; [scenarij](scenariji/M2.6-baseline.md). Zagon 27. 9. padel (sesutje serverja, ne čiščenje). **M2.6b 5. 10.:** zaščita zagona, P9, popravek P8 — [zapis](meritve/2026-10-05-M2.6b-zascita-zagona.md). Čaka na zagon |
 | M2.7 | **Merila kakovosti navigacije** (šest veličin, izmerjenih na originalu) | **zaključeno 17. 9. — N1–N12 zelena, tabela obstaja**; [meritev](meritve/2026-09-17-M2.7-navigacija-baseline.md), [scenarij](scenariji/M2.7-navigacija.md). Vhodni pogoj za M4.10 je dopolnjen: potrebno je prizorišče z razdaljo čez `NpcNavRange` |
 
 ---
 
 ## Dnevnik sej
+
+### 2026-10-05 (64) — integracija `m7-next`; M2.6b zaščita merilnega zagona
+
+**Paket:** Faza 0, naloge 0.1 in 0.2 iz [`08-PREGLED-IN-PLAN.md`](08-PREGLED-IN-PLAN.md)
+**Stanje:** končano (zagon baselina M2.6 ostane)
+
+**Narejeno:**
+- **0.1:** veja `origin/codex/m7-next` (28. 9.: M7.6 hitrost, M7.7 serije, M7.8 zaključek, M7.9 sled,
+  M7.10c `crowdYield`, V4 sprejet) je prenesena v `codex/m7-cnpc-integration` s cherry-pickom treh
+  commitov; njen prvi commit (`6ee402b`) je bil rekonstrukcija lokalnih commitov in ima isto kodo
+  kot `98c3d62`. Konflikti samo v dnevniku (oba vnosa ohranjena). Pregled 3. 10. te veje ni poznal —
+  naloga 0.4 (A/B in odločitev D-022) je bila že narejena. Privzeta pot knjižnice popravljena za obe
+  postavitvi repozitorija (`c102c50`).
+- **0.2 → M2.6b:** diagnoza iz pregleda (čiščenje celic) je bila napačna. Server se je 27. 9. sesul z
+  `NoClassDefFoundError`, ker je bil runtime jar, ki ga je imel odprtega, prepisan; v isti mapi je
+  tekel drug baseline zagon. **Reproducirano 5. 10.** (enak podpis, tudi `SquadManager` ob ustavitvi).
+  Popravek: kopija runtime jarja na zagon (`build.gradle`), zaklepa `.scenarij.lock`/`.baseline.lock`,
+  merilo **P9** (tuj gradle/Minecraft pred in med celico), takojšnja zaznava sesutja, P2 brez stare
+  vrstice, `taskkill /T` ob prisilni ustavitvi. [zapis](meritve/2026-10-05-M2.6b-zascita-zagona.md)
+- Najden in popravljen **P8**: manjkajoč `jvm.gc` (brez GC zbirke v kratki meritvi) je štel kot napaka
+  in skril `alok.*`.
+
+**Preverjeno v seji (prvič na uporabnikovem računalniku):** `buildPatchedMod` (test 193/193,
+testOriginal 31/31), `verify-package` PASS (62 razredov), samotest 18/18, trije zagoni v svetu
+(sabotaža skupnega jarja + tuj gradle; sabotaža odprte kopije = reprodukcija; čist zagon P1–P9 zelen).
+
+**Spremembe obnašanja:** nobene v modu. Build: dev server in klient tečeta s kopijo runtime jarja.
+
+**Naslednja seja:** zagon baselina M2.6, ponovni zagon M3.6, PR v `main`.
 
 ### 2026-10-03 (63) — pregled projekta; M8 izločen iz plana (D-023)
 
