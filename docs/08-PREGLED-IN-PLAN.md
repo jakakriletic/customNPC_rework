@@ -227,3 +227,15 @@ M5.1/M6.6). Ker veja B (M3/M4) čaka na zagone v svetu, lahko seje med čakanjem
 | — | Entities mod: ločen mod ali del reworka? Na kateri CNPC verziji (01Oct19 / 05Jul20)? | M7 |
 | — | Popravimo P2 (utripajoč napad izven `aggroRange`)? | M3.6/M3.7 |
 | Q1 | Modpack / pravi svet | M10.3 (trajna blokada) |
+
+---
+
+## Dopolnitev 5. 10.: raziskava performance
+
+[`09-PERFORMANCE-RAZISKAVA.md`](09-PERFORMANCE-RAZISKAVA.md) (zapiski v `raziskave/performance/`):
+plan M5 je skoraj ves strežniški; predlog razdelitve v **M5-S** (strežnik) in **M5-K** (klient,
+vhodni pogoj M2.4r = klientski harness). Glavni kandidat S1: `NPCAttackSelector` naredi raytrace
+vidnosti pred preverbo frakcije (preverjeno v kodi 5. 10.) — model napove izmerjene alokacije pri
+idle-50/200/500. Popravki M5: M5.1 brez MSPT dobitka (lock ni tekmovan), M5.3 pri privzetih
+nastavitvah ne zadene, „startY“ iz PLAN §5 črtati. Paketi še niso vpisani v `03-FAZE.md` — čaka
+na potrditev uporabnika.
