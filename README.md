@@ -131,6 +131,7 @@ Vse odločitve, ki jih sprejmeš med sejo, gredo v `docs/01-ARHITEKTURA.md` pod
 .\r1-run.ps1                               # M2.2 reprodukcija R1 (NPC jaha NPC), merila E1-E6
 .\r2-run.ps1                               # M2.3 reprodukcija R2 (leteci NPC in ovira), merila L1-L8
 .\nav-run.ps1                              # M2.7 merila kakovosti navigacije, merila N1-N12
+.\hb-run.ps1                               # M3.8 hitbox nacini original/solid/smart, merila H0-H8
 .\ponovitve-run.ps1                       # M2.5c tri ponovitve scenarija, sumni pas, merila T1-T6
 .\ponovitve-samotest.ps1                  # M2.5c preverba samega protokola, brez Minecrafta
 ```

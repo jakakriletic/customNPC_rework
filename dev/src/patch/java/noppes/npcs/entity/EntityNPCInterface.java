@@ -149,8 +149,10 @@ import noppes.npcs.Server;
 import noppes.npcs.VersionCompatibility;
 import noppes.npcs.ai.CombatHandler;
 import noppes.npcs.rework.ai.AttackPriority;
+import noppes.npcs.rework.entity.HitboxWeights;
 import noppes.npcs.rework.entity.MountGuard;
 import noppes.npcs.rework.entity.RiderState;
+import noppes.npcs.rework.entity.RwHitbox;
 import noppes.npcs.rework.nav.RwNavBackend;
 import noppes.npcs.ai.EntityAIAmbushTarget;
 import noppes.npcs.ai.EntityAIAnimation;
@@ -286,6 +288,8 @@ IAnimals {
     public boolean updateAI = false;
     /** M7: per-NPC opt-in, persisted only when enabled to preserve old NBT by default. */
     private int rwNavBackend;
+    /** M3.8 (R6): nacin hitboxa (HitboxWeights); na klientu ze ucinkovit nacin iz spawn podatkov. */
+    private int rwHitboxMode;
     public final BossInfoServer bossInfo = new BossInfoServer(this.getDisplayName(), BossInfo.Color.PURPLE, BossInfo.Overlay.PROGRESS);
     public double field_20066_r;
     public double field_20065_s;
@@ -1066,6 +1070,7 @@ IAnimals {
         this.stats.readToNBT(compound);
         this.ais.readToNBT(compound);
         this.rwNavBackend = compound.getInteger("RwNavBackend") == 1 ? 1 : 0;
+        this.rwHitboxMode = HitboxWeights.sanitize(compound.getInteger("RwHitboxMode"));
         this.script.readFromNBT(compound);
         this.timers.readFromNBT(compound);
         this.advanced.readToNBT(compound);
@@ -1096,6 +1101,11 @@ IAnimals {
             compound.setInteger("RwNavBackend", 1);
         } else {
             compound.removeTag("RwNavBackend");
+        }
+        if (this.rwHitboxMode != HitboxWeights.ORIGINAL) {
+            compound.setInteger("RwHitboxMode", this.rwHitboxMode);
+        } else {
+            compound.removeTag("RwHitboxMode");
         }
         this.script.writeToNBT(compound);
         this.timers.writeToNBT(compound);
@@ -1561,6 +1571,10 @@ IAnimals {
         if (this instanceof EntityCustomNpc) {
             compound.setTag("ModelData", (NBTBase)((EntityCustomNpc)this).modelData.writeToNBT());
         }
+        int hitbox = this.getRwHitboxEffective();
+        if (hitbox != HitboxWeights.ORIGINAL) {
+            compound.setInteger("RwHitboxMode", hitbox);
+        }
         return compound;
     }
 
@@ -1575,6 +1589,7 @@ IAnimals {
 
     public void readSpawnData(NBTTagCompound compound) {
         NBTTagCompound puppet;
+        this.rwHitboxMode = HitboxWeights.sanitize(compound.getInteger("RwHitboxMode"));
         this.stats.setMaxHealth(compound.getInteger("MaxHealth"));
         this.ais.setWalkingSpeed(compound.getInteger("Speed"));
         this.stats.hideKilledBody = compound.getBoolean("DeadBody");
@@ -1651,6 +1666,50 @@ IAnimals {
 
     public boolean canBeCollidedWith() {
         return !this.isKilled() && this.display.getHasHitbox();
+    }
+
+    public int getRwHitboxMode() {
+        return this.rwHitboxMode;
+    }
+
+    public void setRwHitboxMode(int mode) {
+        int next = HitboxWeights.sanitize(mode);
+        if (this.rwHitboxMode != next) {
+            this.rwHitboxMode = next;
+            this.updateClient = true;
+        }
+    }
+
+    /**
+     * Nacin, ki velja za trk: ORIGINAL brez hitboxa (isStatue ostane, kot je) ali ko je globalno
+     * stikalo RwHitbox izklopljeno. Klient dobi ze ucinkovit nacin (writeSpawnData).
+     */
+    public int getRwHitboxEffective() {
+        if (!this.display.getHasHitbox()) {
+            return HitboxWeights.ORIGINAL;
+        }
+        if (this.world != null && this.world.isRemote) {
+            return this.rwHitboxMode;
+        }
+        return CustomNpcs.RwHitbox == 1 ? this.rwHitboxMode : HitboxWeights.ORIGINAL;
+    }
+
+    public void applyEntityCollision(Entity entityIn) {
+        // Tudi originalni NPC gre v RwHitbox, ce ima nasprotnik nacin (5. 10., scenarij H1):
+        // sicer bi trk, ki ga sprozi on, solid NPC-ja vseeno odrinil.
+        if (this.getRwHitboxEffective() == HitboxWeights.ORIGINAL && RwHitbox.modeOf(entityIn) == HitboxWeights.ORIGINAL) {
+            super.applyEntityCollision(entityIn);
+            return;
+        }
+        RwHitbox.collide(this, entityIn);
+    }
+
+    protected void collideWithEntity(Entity entityIn) {
+        if (this.getRwHitboxEffective() == HitboxWeights.ORIGINAL) {
+            super.collideWithEntity(entityIn);
+            return;
+        }
+        RwHitbox.collide(this, entityIn);
     }
 
     public boolean canBePushed() {

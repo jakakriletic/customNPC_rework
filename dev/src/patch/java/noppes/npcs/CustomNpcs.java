@@ -116,6 +116,7 @@ import noppes.npcs.rework.ai.CommandRwAttack;
 import noppes.npcs.rework.diag.CommandRwDiag;
 import noppes.npcs.rework.diag.DiagChunkLoader;
 import noppes.npcs.rework.diag.DiagEventCollector;
+import noppes.npcs.rework.entity.CommandRwHitbox;
 import noppes.npcs.rework.entity.CommandRwMount;
 import noppes.npcs.rework.nav.CommandRwNav;
 import noppes.npcs.rework.entity.RiderState;
@@ -151,6 +152,12 @@ public class CustomNpcs {
     public static int RwAttackPriority = 0;
     @ConfigProp(info="Rework M7: allow NPC Baritone as an optional navigation backend for NPCs with RwNavBackend=1 in NBT. 0 = original vanilla navigation, 1 = permit opt-in NPCs")
     public static int RwNavBackend = 0;
+    @ConfigProp(info="Rework M3.8 (R6): honour per-NPC hitbox modes (NBT RwHitboxMode: 1 = solid, cannot be moved by entity pushing; 2 = smart, push strength by hitbox size and shield). 0 = original vanilla pushing for every NPC, 1 = honour the modes")
+    public static int RwHitbox = 0;
+    @ConfigProp(info="Rework M3.8: in smart mode an entity holding a shield counts as this percent of its mass (200 = twice as hard to push)")
+    public static int RwHitboxShieldWeight = 200;
+    @ConfigProp(info="Rework M3.8: extra shield items for smart hitbox, comma separated registry names (mod:item). Items extending ItemShield or named *shield*, *buckler*, *pavise* are detected automatically")
+    public static String RwHitboxShieldItems = "";
     public static long ticks;
     @SidedProxy(clientSide="noppes.npcs.client.ClientProxy", serverSide="noppes.npcs.CommonProxy")
     public static CommonProxy proxy;
@@ -343,6 +350,7 @@ public class CustomNpcs {
         // bus in ne doda nobenega AI taska, zato je obnasanje brez ukaza enako originalu.
         event.registerServerCommand((ICommand)new CommandRwSquad());
         event.registerServerCommand((ICommand)new CommandRwNav());
+        event.registerServerCommand((ICommand)new CommandRwHitbox());
         EntityNPCInterface.ChatEventPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.ChatEventProfile);
         EntityNPCInterface.CommandPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.CommandProfile);
         EntityNPCInterface.GenericPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.GenericProfile);

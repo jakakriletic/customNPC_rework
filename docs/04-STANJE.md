@@ -12,7 +12,7 @@
 | Zadnja posodobitev | **2026-10-05** (seja 64: integracija `m7-next`, M2.6b; vrstica »Trenutni milestone« je iz 24. 9.) |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **Prvi zagon 24. 9.:** napaka ponovljena (način 0 mediana 30 tickov proti 10 pri kontroli), v načinu 1 mediana 10, a A5 pade na enem vzorcu (50 > 20) — hipoteza `aggroRange`; scenarij dopolnjen, ponovni zagon čaka. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2: vse razen zagona baselina M2.6 (`.\baseline-run.ps1`, ~3,4 h, po navodilu uporabnika odloženo) |
-| Naslednji paketi | **M3.8 (R6 hitbox načini)** v kodi — prevod, testi, scenarij v svetu. Nato ponovni zagon M3.6 in M5-S S1 (`NPCAttackSelector`: frakcija pred raytraceom, A/B proti baselinu). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
+| Naslednji paketi | M3.8 zaključen (5. 10.). Naslednje: M3.8b GUI za hitbox način, M3.9 (solid × jahanje, igralec v klientu),  ponovni zagon M3.6 in M5-S S1 (`NPCAttackSelector`: frakcija pred raytraceom, A/B proti baselinu). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -79,6 +79,18 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-10-05 (64b) — M3.8: hitbox načini SOLID in SMART (R6)
+
+**Paket:** M3.8 · **Stanje:** končano (GUI v M3.8b)
+
+Uporabnik je R6 dopolnil: poleg obstoječega odrivanja (ORIGINAL) **SOLID** (NPC-ja odrivanje ne premakne) in **SMART** (moč odrivanja po velikosti hitboxa, ščit v roki ga oteži; kompatibilnost s ščiti modov). Zasnova **D-025**: krmili se delež vanilla potiska v `applyEntityCollision`/`collideWithEntity`, ne trdi collision box. Stikalo `RwHitbox` (privzeto 0), per-NPC NBT `RwHitboxMode`, ukaz `/rwhitbox`.
+
+**Preverjeno:** 201/201 + 31/31 testov, `verify-package` PASS, scenarij `hb-run.ps1` H0–H8 zelen (smart 5 proti 15: 1,93 v0 / 0,07 v0; ščit 4/3 / 2/3; solid 0). Scenarij je našel in popravljen je bil hrošč: trk, ki ga sproži originalni NPC, je solid NPC-ja odrinil. [zapis](meritve/2026-10-05-M3.8-hitbox-nacini.md)
+
+**Spremembe obnašanja:** samo pod `RwHitbox=1` in na NPC-jih z `RwHitboxMode`; privzeto nespremenjeno.
+
+**Naslednja seja:** M3.8b (GUI), M3.9 (solid × jahanje, igralec v klientu), M5-S S1.
 
 ### 2026-10-05 (64) — integracija `m7-next`; M2.6b zaščita merilnega zagona
 

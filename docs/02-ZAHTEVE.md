@@ -506,7 +506,29 @@ entitete po vanilla pravilih.
 **[dokazano] `getCollisionBoundingBox()` ni override-an** → NPC ni trdna ovira; entitete
 gredo skozi njegov prostor in ga samo potiskajo.
 
-### Predlagana rešitev
+### Dopolnjena zahteva uporabnika (2026-10-05)
+
+> *"full hitbox ... je narjen tko da se entitete rinejo med seboj, zdj jst hocm met se extra
+> opcije: naslednja nej bo cist solid hitbox, da se ga ne da nikamor premakniti s rinjenjem,
+> nato pa se smart hitbox ... da gleda velikost npcja in glede na to oznaci jakost prerivanja
+> ... potem recmo se lhka gleda ce ma shield ... (kompatibilnost za use tipe scitov od spartan
+> weaponary, mediva crafta, varied commodisa, vanille)"*
+
+Obstoječi hitbox (odrivanje po vanilla) ostane kot **ORIGINAL**; dodana sta:
+
+| Način | Kaj | Izvedba (M3.8, D-025) |
+|---|---|---|
+| **SOLID** | NPC-ja odrivanje ne premakne nikamor; drugo entiteto odrine kot vanilla | delež potiska NPC-ja 0, drugega 1; dva SOLID se razdelita po masi |
+| **SMART** | moč odrivanja po velikosti: NPC velikosti 1 ne odrine NPC-ja velikosti 10; s ščitom se ga odriva manj | delež je obratno sorazmeren masi = širina² × višina hitboxa (× `RwHitboxShieldWeight`, privzeto 200 %, s ščitom v kateri koli roki); enako veliki se odrivata kot vanilla |
+
+Ščit: Forge `Item.isShield`, podrazred `ItemShield`, ime predmeta s *shield*/*buckler*/*pavise*
+ali seznam `RwHitboxShieldItems` v configu. Kompatibilnost z modi Spartan (Shields/Weaponry),
+Medieval Craft in Varied Commodities je s tem pokrita **načeloma**; ker modov v okolju ni,
+konkretni ID-ji niso preverjeni (preverba v uporabnikovem modpacku, po potrebi config seznam).
+
+Spodnji predlog (trdi `getCollisionBoundingBox`, »kot shulker«) je **nadomeščen** — glej D-025.
+
+### Prvotni predlog (2026-09)
 
 Nov način prikaza hitboxa — trojno stanje namesto dvojnega, shranjeno v novem NBT ključu
 `RwHitboxMode` (obstoječi `HasHitbox` ostane nedotaknjen):
