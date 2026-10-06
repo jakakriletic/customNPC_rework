@@ -24,6 +24,7 @@ Ocene so grobe in se popravljajo v `docs/04-STANJE.md`.
 | ~~**M8**~~ | ~~Migracija funkcij iz CustomNPC+~~ — **izločeno iz plana** (D-023) | R3 | — |
 | **M9** | Chatbot | R8 | M |
 | **M10** | Release kandidat | — | M |
+| **M11** | Poveljevanje skupinam prek zemljevida — **zadnja faza**, ko je vse ostalo večinoma narejeno (D-026) | R10 | L |
 
 ---
 
@@ -428,6 +429,37 @@ CustomNPC+ repozitorija se ne prenesejo.
 
 **Izhodni kriterij:** `PLAN_IMPLEMENTACIJE.md` §6 "Sprejem" v celoti izpolnjen, plus
 uspešna rollback vaja.
+
+---
+
+## M11 — Poveljevanje skupinam prek zemljevida
+
+**Cilj:** skupina NPC-jev (npr. 200 istoimenskih) je na zemljevidu ena oznaka; igralec jo izbere,
+klikne cilj in skupina gre tja v formaciji. Zahteva R10.
+
+**Vhodni pogoj:** M4.14b in M4.10 zaključena; M5 dovolj, da 200+ NPC-jev v pohodu ne preseže
+proračuna ticka; odgovor na Q14 (kateri zemljevid). Po odločitvi uporabnika (D-026) se faza
+začne šele, ko je vse ostalo večinoma narejeno.
+
+### Paketi
+
+| ID | Paket | Vel. |
+|---|---|---|
+| M11.1 | Določitev skupine: po imenu ali oznaki (`RwSquadId` NBT, privzeto brez); povezava z `Squad` iz M4.14a | S |
+| M11.2 | Strežnik → klient: periodičen povzetek skupine (ime, središče, število, stanje) prek **ločenega kanala** `rework` | S |
+| M11.3 | Adapter zemljevida (glej Q14): ena ikona na skupino, izbira | S–M |
+| M11.4 | Klient → strežnik: ukaz »pohod na (x, z)«; preverba pravic (lastnik / op) | S |
+| M11.5 | Dolg pohod: razrez poti sidra na vmesne točke (gradi na M4.10) | M |
+| M11.6 | Odločitev in izvedba za neaktivne chunke: potujoč chunk ticket ali abstraktni pohod (nova odločitev D-0NN, ker se dotika »uspavanja oddaljenih NPC-jev«) | M–L |
+| M11.7 | Robni primeri: voda, prepadi, grla, obtičali člani, obnašanje na cilju | M |
+| M11.8 | Meritev: pohod 200 NPC-jev proti baselinu M2.6 (MSPT, alokacija) | S |
+
+**Izhodni kriterij:** 200 NPC-jev doseže cilj, izbran na zemljevidu, na prizorišču z grlom in na
+razdalji čez `NpcNavRange`; brez stikala je obnašanje enako originalu; MSPT p95 med pohodom
+izmerjen in v dogovorjenem pasu.
+
+**Tveganja:** neaktivni chunki (M11.6) so največja neznanka; abstraktni pohod potrebuje varno
+shranjevanje stanja ob izklopu strežnika.
 
 ---
 

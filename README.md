@@ -61,6 +61,7 @@ datotek za obnovo in ima mod pomembnejše težave, se dodatna forenzika R9, migr
 | **R7** | Scripting v Javi namesto Nashorn JavaScripta, optimiziran za AI | M6 | zelo velika |
 | **R8** | Chatbot v NPC-jih, API ključ v GUI | M9 | srednja |
 | **R9** | Clone follower: `waiting` se lahko po kloniranju vrne v `following` | M1 | majhna; jedro popravljeno, dodatno delo odloženo |
+| **R10** | Poveljevanje skupinam prek zemljevida: vojska kot ena oznaka, klik na cilj → pohod v formaciji | M11 (zadnja, D-026) | velika |
 
 Podrobnosti, dokazi iz kode in kaj je še treba preveriti: [`docs/02-ZAHTEVE.md`](docs/02-ZAHTEVE.md).
 
@@ -80,6 +81,7 @@ M7  Animacije + AI okolje       R4 animacijski sistem in avtorsko okolje
 M8  (izločeno, D-023)           migracija CustomNPC+ ni več v planu
 M9  Chatbot                     R8
 M10 Release kandidat            soak, rollback vaja, dokumentacija
+M11 Poveljevanje prek zemljevida R10, skupina = ena oznaka, klik → pohod (zadnja faza, D-026)
 ```
 
 Zakaj ta vrstni red:

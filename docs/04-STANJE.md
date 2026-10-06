@@ -9,7 +9,7 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-06** (seja 67: M5-S S1 A/B v svetu — idle-500 alokacija −94 %, p95 −76 %, boj nevtralen) |
+| Zadnja posodobitev | **2026-10-06** (seja 68: nova zahteva R10 — poveljevanje skupinam prek zemljevida — kot zadnja faza M11, D-026; samo plan) |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **M3.6 zaključen 5. 10.:** način 1 zelen (tavajoči v dosegu 10/10 vzorcev z zakasnitvijo 10 = kontrola), način 0 napako ponovi (združeno 6/8 nad kontrolo, mediana 25), hipoteza P2 (`aggroRange`) potrjena. M3.7 in M3.8 zaključena 5. 10. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2 zaključen (baseline M2.6 zelen 5. 10.) |
 | Naslednji paketi | **M5-S S1 zaključen 6. 10.** (A/B zelen, [meritev](meritve/2026-10-06-M5-S1-predzavrnitev-tarc.md); odprto Q13: privzeto vklopiti?). Naslednje: **M3.8b preverba** (`hb-run.ps1`, ko ne teče drug Minecraft; GUI v klientu), M3.9 (solid × jahanje, igralec v klientu) in M5-S S1 (`NPCAttackSelector`: frakcija pred raytraceom, A/B proti baselinu). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
@@ -42,6 +42,7 @@
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
 | M10 Release | ni začeto | |
+| M11 Poveljevanje prek zemljevida | ni začeto — **zadnja faza** (D-026, 6. 10.) | R10; vhodni pogoj M4.14b, M4.10, M5; Q14 |
 
 ### M1 po paketih
 
@@ -79,6 +80,23 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-10-06 (68) — Nova zahteva R10 kot zadnja faza M11 (samo plan)
+
+**Paket:** plan · **Stanje:** končano
+
+**Narejeno:**
+- Uporabnik je teoretično vprašal, ali bi se dalo vojsko (npr. 200 istoimenskih NPC-jev) prikazati
+  na zemljevidu kot eno oznako in jo s klikom poslati na točko, kot pri ladjah. Ocena: izvedljivo,
+  osnova 3–5 sej po M4.14b, polna verzija (dolg pohod, neaktivni chunki) še 5–10.
+- Na željo uporabnika zapisano kot **zadnja faza M11** (D-026): R10 v `02-ZAHTEVE.md`, M11.1–M11.8
+  v `03-FAZE.md`, README, Q14 (kateri zemljevid). Q12 kandidat preimenovan v R11.
+
+**Ni narejeno in zakaj:** koda — uporabnik je izrecno rekel, da zdaj še ne dodajamo.
+
+**Spremembe obnašanja:** nobene. **Meritve:** nobene.
+
+**Naslednja seja:** nespremenjeno od seje 67 (M3.8b preverba, M3.9 ali naslednji M5-S paket).
 
 ### 2026-10-06 (67) — M5-S S1: A/B predzavrnitve tarč v svetu
 
@@ -3562,8 +3580,9 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 | Q9 | Koliko NPC-jev je "veliko" v tvojem primeru? 100? 500? 2000? | M2.4, cilj za M5 | **odgovorjeno 15. 9.** — cilj še ni določen; merimo 50/200/500 in se odločimo po podatkih |
 | Q10 | Ali strežnik, kjer to teče, sploh ima izhodni internetni dostop? | M9.1 | odprto |
 | Q11 | Zakaj skupina obstane pred **drugo** stopnico (z = 36), prvo (z = 20) pa prestopi? | M2.3/M2.4, kakovost scenarijev | **zaprto 17. 9.** — ni bila ovira, ampak domet iskanja poti; glej Znane omejitve |
-| Q12 | Uvoz zunanjih 3D modelov (npr. prenesen model zmaja) kot model NPC-ja — je to v obsegu? Če da: kateri format (`.bbmodel` / OBJ / JSON), in kako model pride do igralcev (resource pack / lokalna mapa / prenos z URL-ja / push s strežnika)? | nova zahteva (R10?); odvisna od M7, ker zunanji model prinese svoj skelet | **odprto, odprto 17. 9.** — danes mod zna samo (a) teksture prek URL-ja (`skinUrl`, `capeTexture`, `overlayTexture`) in (b) prevzem modela **registrirane entitete** (`setModel(id)` → `ModelData.entityClass`, `DataDisplay:405`), torej model iz že nameščenega moda. Geometrija iz datoteke ne obstaja: vsi modeli so hardcoded `ModelBase` razredi (`client/model/`). V M8 katalogu tega ni, ker tega nima niti CustomNPC+. Ocena XL; odločitev šele ko je M7 (animacijski skelet) jasen |
+| Q12 | Uvoz zunanjih 3D modelov (npr. prenesen model zmaja) kot model NPC-ja — je to v obsegu? Če da: kateri format (`.bbmodel` / OBJ / JSON), in kako model pride do igralcev (resource pack / lokalna mapa / prenos z URL-ja / push s strežnika)? | nova zahteva (R11?; R10 je od 6. 10. poveljevanje prek zemljevida); odvisna od M7, ker zunanji model prinese svoj skelet | **odprto, odprto 17. 9.** — danes mod zna samo (a) teksture prek URL-ja (`skinUrl`, `capeTexture`, `overlayTexture`) in (b) prevzem modela **registrirane entitete** (`setModel(id)` → `ModelData.entityClass`, `DataDisplay:405`), torej model iz že nameščenega moda. Geometrija iz datoteke ne obstaja: vsi modeli so hardcoded `ModelBase` razredi (`client/model/`). V M8 katalogu tega ni, ker tega nima niti CustomNPC+. Ocena XL; odločitev šele ko je M7 (animacijski skelet) jasen |
 | Q13 | Naj bo predzavrnitev tarč (`RwTargetPrefilter`, M5-S S1) privzeto vklopljena? Izbrane tarče so po testu enake, idle-500 je 3× cenejši | M5, D-007 | **odprto 6. 10.** |
+| Q14 | Pri R10 — kateri zemljevid: lasten iz `ladja_mod` (izbira kot pri ladjah), JourneyMap, Xaero ali nov v CNPC? | M11.3 | **odprto 6. 10.**, ne blokira do M11 |
 
 ---
 

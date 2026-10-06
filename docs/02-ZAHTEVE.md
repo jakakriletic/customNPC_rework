@@ -1,4 +1,4 @@
-# 02 — Zahteve R1–R9, analiza in dokazi iz kode
+# 02 — Zahteve R1–R10, analiza in dokazi iz kode
 
 Za vsako zahtevo: kaj uporabnik hoče, kaj **dokazano** piše v kodi, kandidati za vzrok,
 kaj je treba še preveriti, in kaj je predlagana rešitev.
@@ -910,6 +910,42 @@ ubežnih narekovajev v ključu.
   v NBT-ju predmetov in v podatkih drugih modov, shranjenih na NPC-ju.
 - Če se prioriteta kdaj spremeni, je treba najprej identificirati konkreten ključ v
   `RoleFollower` / `JobFollower`, ne širiti splošnega migracijskega sistema.
+
+---
+
+## R10 — Poveljevanje skupinam NPC-jev prek zemljevida
+
+> Uporabnik 2026-10-06 (povzeto): vojska npr. 200 istoimenskih NPC-jev (ali NPC-jev z isto
+> oznako) se na zemljevidu prikaže kot **ena oznaka**; kot pri ladjah jo izbereš, klikneš
+> točko na zemljevidu in NPC-ji začnejo pohod tja.
+
+**Faza:** M11 (zadnja faza, po M10 — na izrecno željo uporabnika, D-026) · **Velikost:** L ·
+**Tveganje:** srednje · **Prioriteta:** nizka do zaključka ostalih faz
+
+### Kaj že obstaja (stanje 6. 10.)
+
+- **Skupina kot enota:** M4.14a (`rework/formation`: `Squad`, `SquadPlanner`, dodelitev mest,
+  pot sidra) — ena pot za vso skupino namesto ene na člana. V svetu še ni pognano (M4.14b).
+- **Cena pri 200–500 NPC-jih:** baseline M2.6 (50/200/500) in M5-S S1.
+- **Držanje chunkov:** `rework/diag/DiagChunkLoader` (M2.1d) s ForgeChunkManager ticketom.
+
+### Kaj manjka (ocena, ne analiza kode)
+
+1. **Oznaka na zemljevidu:** strežnik periodično pošlje povzetek skupine (ime, središče, število,
+   stanje); klient nariše eno ikono. Kateri zemljevid — odprto (Q14).
+2. **Ukaz s klikom:** paket klient → strežnik »skupina X → (x, z)« s preverbo pravic.
+   **Nov kanal** (`rework`), obstoječi packet ID-ji ostanejo nespremenjeni (05 §4).
+3. **Dolg pohod:** razrez poti sidra na vmesne točke; vanilla A* vrne delno pot po ~200 vozliščih,
+   `NpcNavRange` omejuje doseg. Odvisno od M4.10.
+4. **Neaktivni chunki:** NPC-ji izven dosega igralcev zamrznejo. Dve možnosti: (a) chunk ticket,
+   ki potuje s skupino; (b) **abstraktni pohod** — skupina izven dosega se premika samo kot točka,
+   ob približanju igralca se člani postavijo v formacijo. (b) se dotika točke »uspavanje
+   oddaljenih NPC-jev« iz »izven obsega« v `03-FAZE.md`, zato potrebuje lastno odločitev.
+5. **Robni primeri:** voda, prepadi, grla (M2.7, M7.10), obtičali člani, obnašanje na cilju.
+
+### Odvisnosti
+
+M4.14b (formacije preverjene v svetu), M4.10 (nadaljevanje delne poti), M5 (cena pri 200+).
 
 ---
 
