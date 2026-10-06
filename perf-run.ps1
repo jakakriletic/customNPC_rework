@@ -115,7 +115,7 @@ function Send-RwTarget($Srv, [string]$Cmd) {
     $ok = Wait-ForCount $Srv 'RWTARGET nacin=' ($pred + 1) 60
     Check ("ukaz '{0}' odgovori" -f $Cmd) $ok
     if (-not $ok) { return -1 }
-    $m = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWTARGET nacin=\d+ \([^)]*\) predzavrnjenih=(\d+)')
+    $m = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWTARGET nacin=\d+ .*? predzavrnjenih=(\d+)')
     if ($m.Count -eq 0) { return -1 }
     return [long]$m[$m.Count - 1].Groups[1].Value
 }

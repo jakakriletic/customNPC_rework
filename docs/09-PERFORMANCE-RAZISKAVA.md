@@ -121,6 +121,8 @@ Za strežnik sta potrebna dva manjkajoča merilna koraka. Prvi je **pripis poča
 
 Prvi A/B, ki ga podatki upravičujejo, je **S1 na idle-500**. Če hipoteza drži, mora `alok.KBnaTick` pasti s ~17,5 MB proti ravni boj/idle-50, število tickov >25 ms pa se mora skoraj izničiti. Če se to ne zgodi, je model napačen in razvrstitev strežniških paketov je treba ponoviti s profilom.
 
+**Izid 6. 10.:** hipoteza drži. idle-500 z `RwTargetPrefilter=1`: alokacija 342 → 21 MB/s (17,5 → 1,07 MB/tick), ticki >25 ms 2.016 → 6 (v originalu natanko vsak tretji tick), MSPT p95 41,9 → 9,96 ms; boj-500 nevtralen. [meritev](meritve/2026-10-06-M5-S1-predzavrnitev-tarc.md)
+
 ## Zaključek
 
 Ključni premik je v tem, kje iskati. R5 je kot glavno ozko grlo predpostavil globalni skriptni lock, M5.6 pa deljenje poti. Koda in meritve pa kažejo, da pri mirujočih stotinah NPC-jev prevladuje drag in nepotreben raytrace v iskalniku tarč, ki ga je mogoče odpraviti brez vsake spremembe obnašanja in skoraj brez tveganja. Če bo A/B to potrdil, bo M5 začel z najcenejšim in najvarnejšim posegom, ne z najdražjim. Ostali strežniški paketi (poti do nedosegljivih tarč, Forge most, faza mod 3) postanejo pomembni šele v boju, s skriptami ali na pravih strežnikih z igralci, torej v celicah, ki jih nova baseline M2.6 šele zapolnjuje.
