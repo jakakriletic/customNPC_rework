@@ -9,10 +9,10 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-06** (seja 68: nova zahteva R10 — poveljevanje skupinam prek zemljevida — kot zadnja faza M11, D-026; samo plan) |
+| Zadnja posodobitev | **2026-10-07** (seja 69: M3.8b — `hb-run.ps1` na kodi z GUI-jem zelen H0–H8; GUI v klientu še ni preverjen) |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **M3.6 zaključen 5. 10.:** način 1 zelen (tavajoči v dosegu 10/10 vzorcev z zakasnitvijo 10 = kontrola), način 0 napako ponovi (združeno 6/8 nad kontrolo, mediana 25), hipoteza P2 (`aggroRange`) potrjena. M3.7 in M3.8 zaključena 5. 10. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | **M5-S S1 zaključen 6. 10.** (A/B zelen, [meritev](meritve/2026-10-06-M5-S1-predzavrnitev-tarc.md); odprto Q13: privzeto vklopiti?). Naslednje: **M3.8b preverba** (`hb-run.ps1`, ko ne teče drug Minecraft; GUI v klientu), M3.9 (solid × jahanje, igralec v klientu) in M5-S S1 (`NPCAttackSelector`: frakcija pred raytraceom, A/B proti baselinu). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
+| Naslednji paketi | **M5-S S1 zaključen 6. 10.** (A/B zelen, [meritev](meritve/2026-10-06-M5-S1-predzavrnitev-tarc.md); odprto Q13: privzeto vklopiti?). Naslednje: **M3.8b GUI v klientu** (`hb-run.ps1` zelen 7. 10.), M3.9 (solid × jahanje, igralec v klientu) in M5-S S1 (`NPCAttackSelector`: frakcija pred raytraceom, A/B proti baselinu). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -34,7 +34,7 @@
 | M0 Temelj | **zaključeno** | M0.1–M0.7 narejeno (+ M0.2r obnova okolja); M0.8 zabeležen kot blokada z opisanim vplivom |
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | **zaključeno 5. 10.** (razen M2.4r render, prestavljen v M5-K kot klientski harness) | M2.1–M2.7 preverjeni v svetu; **baseline M2.6 zelen 5. 10.** (3 ponovitve × 9 celic, B1–B3 in P0–P9) — [baseline](meritve/baseline-2026-10-05.md) |
-| M3 Jedro entitete | **v teku** — M3.1–M3.5 zaključeni (vzrok R1 potrjen, R1 popravljen pod stikalom, regresija zelena v načinih 0/1/2, hitbox po sestopu); M3.6 zaključen 5. 10. (D-020, `RwAttackPriority`), M3.7 zaključen brez spremembe, M3.8 zaključen (`RwHitbox`) | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
+| M3 Jedro entitete | **v teku** — M3.1–M3.5 zaključeni (vzrok R1 potrjen, R1 popravljen pod stikalom, regresija zelena v načinih 0/1/2, hitbox po sestopu); M3.6 zaključen 5. 10. (D-020, `RwAttackPriority`), M3.7 zaključen brez spremembe, M3.8 zaključen (`RwHitbox`), M3.8b strežniško zelen 7. 10. (GUI v klientu odprt) | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | **M4.14a v kodi** (izven vrstnega reda, na zahtevo uporabnika) | R2 analiza narejena; formacije (M4.14) prevedene in testirane v simulaciji, v svetu še ne — [zasnova](06-FORMACIJE.md), [scenarij](scenariji/M4.14-formacije.md) |
 | M5 Performance | **S1 zaključen 6. 10.** (`RwTargetPrefilter`: idle-500 alokacija 342 → 21 MB/s, MSPT p95 41,9 → 9,96 ms, boj-500 nevtralen) | del že pokrit z M1.3, glej meritve; razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
@@ -80,6 +80,24 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-10-07 (69) — M3.8b: regresija `hb-run` na kodi z GUI-jem
+
+**Paket:** M3.8b · **Stanje:** delno — strežniški del zelen, GUI v klientu ni preverjen
+
+**Narejeno:**
+- Ob začetku seje je tekel uporabnikov build `ladja_mod` (gradle); počakano, da je končal (~1 min), nato
+  `.	estworld.ps1` in `.hb-run.ps1`: **H0–H8 zelena**, vse hitrosti enake zagonu 5. 10.; po restartu
+  original=1 solid=1 smart=2, brez ERROR iz `noppes.*`. [zapis](meritve/2026-10-05-M3.8-hitbox-nacini.md)
+
+**Ni narejeno in zakaj:**
+- GUI v klientu (Display → Hitbox → Solid, `/rwhitbox status`, ponovno odpri GUI) potrebuje igralca v
+  klientu; ostane za uporabnika ali sejo z računalniškim upravljanjem, skupaj z M3.9.
+
+**Spremembe obnašanja:** nobene. **Meritve:** nobene nove (regresija).
+
+**Naslednja seja:** GUI M3.8b + M3.9 v klientu, ali naslednji strežniški paket M5-S (S2 kratki stik
+»ni možne tarče« ali profil JFR za boj, [09](09-PERFORMANCE-RAZISKAVA.md)).
 
 ### 2026-10-06 (68) — Nova zahteva R10 kot zadnja faza M11 (samo plan)
 
