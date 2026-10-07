@@ -188,7 +188,7 @@
     "NoFallDamage": 0b,
     "AbsorptionAmount": 0.0f,
     "TransformHasRole": 0b,
-    "Name": "M39_S8",
+    "Name": "M39_S20",
     "FallDistance": 0.0f,
     "SkinColor": 16777215,
     "NpcIdleSound": "",

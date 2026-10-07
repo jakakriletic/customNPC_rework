@@ -9,10 +9,10 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-07** (seja 71: **M5-S S2 zaključen** — poizvedba iskalnika tarč samo po igralcih, `RwTargetPrefilter=2`: idle-500 p95 10,2 → 5,2 ms, boj nevtralen) |
+| Zadnja posodobitev | **2026-10-07** (seja 72: odločitvi Q13 → D-027, `RwTargetPrefilter` privzeto 2; Q15 → D-028, nosilec z NPC posadko sprejme potisk. Prej seja 71: **M5-S S2 zaključen** — poizvedba iskalnika tarč samo po igralcih, `RwTargetPrefilter=2`: idle-500 p95 10,2 → 5,2 ms, boj nevtralen) |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **M3.6 zaključen 5. 10.:** način 1 zelen (tavajoči v dosegu 10/10 vzorcev z zakasnitvijo 10 = kontrola), način 0 napako ponovi (združeno 6/8 nad kontrolo, mediana 25), hipoteza P2 (`aggroRange`) potrjena. M3.7 in M3.8 zaključena 5. 10. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | **M5-S S1 zaključen 6. 10.**, **S2 zaključen 7. 10.** ([meritev](meritve/2026-10-07-M5-S2-poizvedba-igralci.md); odprto Q13: privzeto vklopiti način 2?). Naslednje: **M3.8b GUI v klientu** (`hb-run.ps1` zelen 7. 10.; z igralcem preveriti še potisk med dvema solid NPC-jema iz M3.9), odločitev Q15 (jahanje × solid), M3.10 (opcijsko) ali naslednji M5-S paket (S3/S4 ali profil JFR preostale alokacije ~1 MB/tick pri idle-500). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
+| Naslednji paketi | **M5-S S1 zaključen 6. 10.**, **S2 zaključen 7. 10.** ([meritev](meritve/2026-10-07-M5-S2-poizvedba-igralci.md); Q13 odločen 7. 10.: privzeto način 2, D-027). Naslednje: **M3.8b GUI v klientu** (`hb-run.ps1` zelen 7. 10.; z igralcem preveriti še potisk med dvema solid NPC-jema iz M3.9), M3.10 (opcijsko) ali naslednji M5-S paket (S3/S4 ali profil JFR preostale alokacije ~1 MB/tick pri idle-500). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -80,6 +80,27 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-10-07 (72) — Odločitvi Q13 in Q15
+
+**Paket:** odločitvi uporabnika (Q13 → D-027, Q15 → D-028) · **Stanje:** končano
+
+**Narejeno:**
+- **D-027:** `RwTargetPrefilter` privzeto 2 (`CustomNpcs`). `dev/run/config` (ni v gitu) ima izrecno 0,
+  zato scenariji in baseline še vedno merijo original; A/B jih nastavi z `-RwTarget`.
+- **D-028:** `RwHitbox.acceptsPush` / `npcCrewOnly` / masa s posadko. Nosilec z igralcem in trk dveh
+  originalnih NPC-jev ostaneta vanilla.
+- `m39-run.ps1`: J4 in J5 z novimi pričakovanji (J4: nosilec v0, solid 0; J5: delež po masi nosilec +
+  jahač iz izpisa probe — jahač med jahanjem ima manjši hitbox, masa 0,527 namesto 0,684). Tavajočih prog
+  10 + 10 namesto 3 + 3: zagon s 3 + 3 je enkrat ostal brez stika (P2), ker NPC na poti tava.
+- Regresija: `hb-run` H0–H8 zelen; `m39-run` **J1–J6 in P1–P4 zelena** (22 hodečih na cilju brez teleporta,
+  stik tavajočih original 100 / solid 299 tickov, premik ob stiku na tick solid 0,0004 proti original 0,0158).
+
+**Spremembe obnašanja:** D-027 (privzeto 2, iste tarče), D-028 (pod `RwHitbox=1`).
+
+**Meritve:** nobene nove (regresija).
+
+**Naslednja seja:** GUI M3.8b v klientu, nato S3/S4 ali profil JFR preostale alokacije.
 
 ### 2026-10-07 (71) — M5-S S2: poizvedba iskalnika tarč samo po igralcih
 
@@ -3656,8 +3677,8 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 | Q10 | Ali strežnik, kjer to teče, sploh ima izhodni internetni dostop? | M9.1 | odprto |
 | Q11 | Zakaj skupina obstane pred **drugo** stopnico (z = 36), prvo (z = 20) pa prestopi? | M2.3/M2.4, kakovost scenarijev | **zaprto 17. 9.** — ni bila ovira, ampak domet iskanja poti; glej Znane omejitve |
 | Q12 | Uvoz zunanjih 3D modelov (npr. prenesen model zmaja) kot model NPC-ja — je to v obsegu? Če da: kateri format (`.bbmodel` / OBJ / JSON), in kako model pride do igralcev (resource pack / lokalna mapa / prenos z URL-ja / push s strežnika)? | nova zahteva (R11?; R10 je od 6. 10. poveljevanje prek zemljevida); odvisna od M7, ker zunanji model prinese svoj skelet | **odprto, odprto 17. 9.** — danes mod zna samo (a) teksture prek URL-ja (`skinUrl`, `capeTexture`, `overlayTexture`) in (b) prevzem modela **registrirane entitete** (`setModel(id)` → `ModelData.entityClass`, `DataDisplay:405`), torej model iz že nameščenega moda. Geometrija iz datoteke ne obstaja: vsi modeli so hardcoded `ModelBase` razredi (`client/model/`). V M8 katalogu tega ni, ker tega nima niti CustomNPC+. Ocena XL; odločitev šele ko je M7 (animacijski skelet) jasen |
-| Q13 | Naj bo predzavrnitev tarč (`RwTargetPrefilter`, M5-S S1, od 7. 10. tudi način 2 = S1 + S2) privzeto vklopljena? Izbrane tarče so po testu enake; idle-500 µs/NPC 32 → 6,6, p95 46 → 5,2 ms | M5, D-007 | **odprto 6. 10.** |
-| Q15 | Jahan nosilec dobi potisk 0 že v vanilli (`isBeingRidden`). Ob solid NPC-ju se zato ne razmakne nihče (konjenica se prekriva s solid pehoto). Naj nosilec z NPC jahačem pod `RwHitbox=1` sprejme potisk z maso nosilec + jahač (predlog), ali ostane kot vanilla? | M3.9, R6 × R1 | **odprto 7. 10.** ([zapis](meritve/2026-10-07-M3.9-solid-jahanje.md)) |
+| Q13 | Naj bo predzavrnitev tarč (`RwTargetPrefilter`) privzeto vklopljena? | M5, D-007 | **odločeno 7. 10.: da, način 2 (S1 + S2)** → D-027 |
+| Q15 | Naj nosilec z NPC jahačem pod `RwHitbox=1` sprejme potisk (masa nosilec + jahač)? | M3.9, R6 × R1 | **odločeno 7. 10.: da** → D-028 |
 | Q14 | Pri R10 — kateri zemljevid: lasten iz `ladja_mod` (izbira kot pri ladjah), JourneyMap, Xaero ali nov v CNPC? | M11.3 | **odprto 6. 10.**, ne blokira do M11 |
 
 ---
@@ -3689,6 +3710,8 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
+| 2026-10-07 | Iskalnik tarč: predzavrnitev pred raytraceom (S1) in poizvedba samo po igralcih (S2); iste tarče | M5-S, D-027 | `RwTargetPrefilter` | **2** (izjema od D-007, Q13) |
+| 2026-10-07 | NPC nosilec z NPC posadko sprejme potisk z maso nosilec + jahači | R6 × R1, D-028 | `RwHitbox` | 0 (vanilla) |
 | 2026-09-11 | Long array vrednosti se berejo z `getLong()` namesto `getByte()` | R9-a | ne | popravljeno |
 | 2026-09-11 | Prazen `[B;]`/`[I;]`/`[L;]` obdrži svoj tip namesto da postane prazen seznam | R9-b2 | ne | popravljeno |
 | 2026-09-11 | `NBTTagList` bytov/intov/longov se ne pretvori več v array tip | R9-b | ne | popravljeno |

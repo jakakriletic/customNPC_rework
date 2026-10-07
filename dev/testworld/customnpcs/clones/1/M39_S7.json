@@ -306,7 +306,7 @@
             ]
         }
     },
-    "MovingState": 0,
+    "MovingState": 1,
     "MovingPos": 0,
     "PotionAmp": 0,
     "OnAttack": 0,

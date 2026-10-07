@@ -8,9 +8,9 @@
 //   HB_Scit      velikost 5, scit v levi roki (Weapons slot 2)
 // M3.9 (m39-run.ps1):
 //   M39_Nos, M39_Jah   nosilec in jahac (velikost 5)
-//   M39_S1..S6         NPC-ji na poti, ki tavajo (kot HB_A)
-//   M39_S7, M39_S8     NPC-ja na poti, ki stojita (MovingState 0: potisk zavrneta ze v originalu)
-//   M39_H1..H8         hodeci (kot HB_A): spawn na cilju, tp na start, EntityAIReturn jih vrne skozi M39_S*
+//   M39_S1..S20        NPC-ji na poti, ki tavajo (kot HB_A)
+//   M39_S21, M39_S22   NPC-ja na poti, ki stojita (MovingState 0: potisk zavrneta ze v originalu)
+//   M39_H1..H22        hodeci (kot HB_A): spawn na cilju, tp na start, EntityAIReturn jih vrne skozi M39_S*
 //
 // Zagon: node dev/testworld/hb-fixture.js   (napise HB_*.json v customnpcs/clones/1)
 
@@ -48,7 +48,7 @@ fixture('HB_Scit', 5, true);
 
 fixture('M39_Nos', 5, false);
 fixture('M39_Jah', 5, false);
-for (var i = 1; i <= 8; i++) {
-    fixture('M39_S' + i, 5, false, i >= 7);
+for (var i = 1; i <= 22; i++) {
+    fixture('M39_S' + i, 5, false, i >= 21);
     fixture('M39_H' + i, 5, false);
 }

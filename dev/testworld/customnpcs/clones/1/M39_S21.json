@@ -188,7 +188,7 @@
     "NoFallDamage": 0b,
     "AbsorptionAmount": 0.0f,
     "TransformHasRole": 0b,
-    "Name": "M39_S8",
+    "Name": "M39_S21",
     "FallDistance": 0.0f,
     "SkinColor": 16777215,
     "NpcIdleSound": "",
@@ -306,7 +306,7 @@
             ]
         }
     },
-    "MovingState": 1,
+    "MovingState": 0,
     "MovingPos": 0,
     "PotionAmp": 0,
     "OnAttack": 0,

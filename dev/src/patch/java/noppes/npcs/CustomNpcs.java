@@ -153,11 +153,11 @@ public class CustomNpcs {
     public static int RwMountSteering = 0;
     @ConfigProp(info="Rework M3.6: priority of the melee attack task against the movement task added after it (wander, moving path). 0 = original (same priority: a wandering NPC finishes its wander path before it starts attacking), 1 = attack before movement")
     public static int RwAttackPriority = 0;
-    @ConfigProp(info="Rework M5-S S1: target search rejects candidates the NPC is certainly not hostile to (no guard target, faction not aggressive) before the line-of-sight raytrace. 0 = original order (raytrace first), 1 = hostility first, 2 = hostility first and (M5-S S2) the area query asks only for players when the NPC can target nothing else (no guard job, no companion guard, no AttackOtherFactions). Same targets are chosen; players that may be attacked keep the original order")
-    public static int RwTargetPrefilter = 0;
+    @ConfigProp(info="Rework M5-S S1: target search rejects candidates the NPC is certainly not hostile to (no guard target, faction not aggressive) before the line-of-sight raytrace. 0 = original order (raytrace first), 1 = hostility first, 2 = hostility first and (M5-S S2) the area query asks only for players when the NPC can target nothing else (no guard job, no companion guard, no AttackOtherFactions). Same targets are chosen; players that may be attacked keep the original order. Default 2 since 2026-10-07 (D-027)")
+    public static int RwTargetPrefilter = 2;
     @ConfigProp(info="Rework M7: allow NPC Baritone as an optional navigation backend for NPCs with RwNavBackend=1 in NBT. 0 = original vanilla navigation, 1 = permit opt-in NPCs")
     public static int RwNavBackend = 0;
-    @ConfigProp(info="Rework M3.8 (R6): honour per-NPC hitbox modes (NBT RwHitboxMode: 1 = solid, cannot be moved by entity pushing; 2 = smart, push strength by hitbox size and shield). 0 = original vanilla pushing for every NPC, 1 = honour the modes")
+    @ConfigProp(info="Rework M3.8 (R6): honour per-NPC hitbox modes (NBT RwHitboxMode: 1 = solid, cannot be moved by entity pushing; 2 = smart, push strength by hitbox size and shield). With 1, an NPC carrier ridden only by NPCs is pushed too, with the mass of carrier and riders (D-028). 0 = original vanilla pushing for every NPC, 1 = honour the modes")
     public static int RwHitbox = 0;
     @ConfigProp(info="Rework M3.8: in smart mode an entity holding a shield counts as this percent of its mass (200 = twice as hard to push)")
     public static int RwHitboxShieldWeight = 200;

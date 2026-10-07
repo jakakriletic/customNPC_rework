@@ -6,8 +6,9 @@
 #   s potnikom potiska ne doda (isBeingRidden) - RwHitbox to ohrani.
 # Faza P (pot): hodeci se spawna na cilju (x 16,5), tp ga postavi na start (x 2,5), CNPC-jev
 #   EntityAIReturn ga po lastni poti vrne na cilj - 14 blokov naravnost skozi NPC-ja na x 8,5.
-#   Proge 1-3 original, 4-6 solid: NPC na poti tava (+-1 blok, zato je stik nakljucen).
-#   Progi 7, 8 (original, solid): NPC na poti stoji (MovingState 0) - stik od spredaj zagotovljen,
+#   Proge 1-10 original, 11-20 solid: NPC na poti tava (+-1 blok, zato je stik na posamezni progi
+#   nakljucen - 7. 10. je zagon s 3 + 3 progami enkrat ostal brez stika, zato 10 + 10).
+#   Progi 21, 22 (original, solid): NPC na poti stoji (MovingState 0) - stik od spredaj zagotovljen,
 #   najslabsi primer za zatik; potisk zavrne ze original (addVelocity samo pri isWalking).
 #   '/rwhitbox track' 800 tickov sledi vsak tick: skok > 1 blok v ticku
 #   pomeni, da je EntityAIReturn obupal in NPC-ja teleportiral (zataknjen); stik = hitboxa se prekrivata (trk tece). P3 primerja premik samo ob stiku.
@@ -18,12 +19,14 @@
 #   J1  global 1, nosilec original z jahacem proti HB_B original: nosilec 0, HB_B v0 (vanilla)
 #   J2  nosilec solid z jahacem: nosilec 0, HB_B v0
 #   J3  jahac proti lastnemu nosilcu: 0 / 0 (isRidingSameEntity)
-#   J4  nosilec original z jahacem proti solid HB_A: napoved kode 0 / 0 - nihce se ne odrine
-#   J5  nosilec smart z jahacem proti smart HB_Velik: napoved 0 / 2/28 v0
+#   J4  nosilec original z jahacem proti solid HB_A: nosilec v0, HB_A 0 (D-028: NPC posadka sprejme
+#       potisk; do 7. 10. je bilo 0 / 0 in se nista razmaknila nikoli - Q15)
+#   J5  nosilec smart z jahacem proti smart HB_Velik: delez po masi nosilec + jahac (D-028),
+#       vA/v0 = 2 mB / (mA + mB), vB/v0 = 2 mA / (mA + mB) iz mas v izpisu probe
 #   J6  po sestopu: nosilec solid proti HB_B: 0 / v0 (navaden solid), jahac brez nosilca
-#   P1  vseh osem hodecih na cilju (< 1,5 bloka; EntityAIReturn se ustavi v dosegu 1) po 40 s,
+#   P1  vseh 22 hodecih na cilju (< 1,5 bloka; EntityAIReturn se ustavi v dosegu 1) po 40 s,
 #       brez teleporta (skok <= 1 na tick)
-#   P2  stik je bil: na progah 7, 8 in vsaj na eni tavajoci progi vsakega nacina
+#   P2  stik je bil: na progah 21, 22 in vsaj na eni tavajoci progi vsakega nacina
 #   P3  tavajoci solid NPC se ob stiku premakne manj na tick stika kot tavajoci original;
 #       stojeca (7, 8) ob stiku 0
 #   P4  brez ERROR iz noppes.* in brez sesutja
@@ -88,9 +91,9 @@ function Probe($srv, [string]$A, [string]$B) {
     Send-Command $srv ("rwhitbox probe {0} {1} 0.3" -f $A, $B)
     $script:nProbe++
     if (-not (Wait-ForCount $srv 'RWHITBOX-PROBE ' $script:nProbe 30)) { return $null }
-    $m = [regex]::Matches((Get-MarkerText $srv.Log), 'RWHITBOX-PROBE a=(\S+) b=(\S+) nacinA=(\w+) nacinB=(\w+) .*? vA=([\d.]+) vB=([\d.]+)')
+    $m = [regex]::Matches((Get-MarkerText $srv.Log), 'RWHITBOX-PROBE a=(\S+) b=(\S+) nacinA=(\w+) nacinB=(\w+) .*? masaA=([\d.]+) masaB=([\d.]+) .*? vA=([\d.]+) vB=([\d.]+)')
     $g = $m[$m.Count - 1].Groups
-    $r = [pscustomobject]@{ A = $g[1].Value; B = $g[2].Value; NacinA = $g[3].Value; NacinB = $g[4].Value; VA = [double]$g[5].Value; VB = [double]$g[6].Value }
+    $r = [pscustomobject]@{ A = $g[1].Value; B = $g[2].Value; NacinA = $g[3].Value; NacinB = $g[4].Value; MasaA = [double]$g[5].Value; MasaB = [double]$g[6].Value; VA = [double]$g[7].Value; VB = [double]$g[8].Value }
     Write-Host ("  probe {0}({1}) / {2}({3}): vA={4:N6} vB={5:N6}" -f $r.A, $r.NacinA, $r.B, $r.NacinB, $r.VA, $r.VB)
     return $r
 }
@@ -118,9 +121,10 @@ function Get-Polozaji($srv, [int]$Stevilo) {
 function Razdalja($p, $q) { if ($null -eq $p -or $null -eq $q) { return [double]::NaN }; [math]::Sqrt(($p.X - $q.X) * ($p.X - $q.X) + ($p.Z - $q.Z) * ($p.Z - $q.Z)) }
 function Blizu([double]$x, [double]$want, [double]$rel) { if ($want -eq 0) { return [math]::Abs($x) -lt 1e-9 }; return [math]::Abs($x - $want) -le [math]::Abs($want) * $rel }
 
-$proge = @(1..8 | ForEach-Object {
-    [pscustomobject]@{ N = $_; Z = 34 + 6 * $_; Nacin = $(if ($_ -le 3 -or $_ -eq 7) { 'original' } else { 'solid' }); Stoji = ($_ -ge 7) } })
-$vseM39 = 18
+# Razmik prog 4 bloke: NPC na poti tava najvec +-1, hodeci gre po sredini; vse proge so v spawn chunkih.
+$proge = @(1..22 | ForEach-Object {
+    [pscustomobject]@{ N = $_; Z = 36 + 4 * $_; Nacin = $(if ($_ -le 10 -or $_ -eq 21) { 'original' } else { 'solid' }); Stoji = ($_ -ge 21) } })
+$vseM39 = 2 + 2 * $proge.Count
 
 $srv = $null
 try {
@@ -196,12 +200,14 @@ try {
     Send-Command $srv 'rwhitbox original M39_Jah'
     Send-Command $srv 'rwhitbox solid HB_A'
     $j4 = Probe $srv 'M39_Nos' 'HB_A'
-    Check 'J4: nosilec original z jahacem proti solid HB_A: 0 / 0 (nihce se ne odrine - ugotovitev)' (($null -ne $j4) -and $j4.VA -eq 0 -and $j4.VB -eq 0)
+    Check 'J4: nosilec original z jahacem proti solid HB_A: nosilec v0, HB_A 0 (D-028)' (($null -ne $j4) -and (Blizu $j4.VA $v0 1e-6) -and $j4.VB -eq 0)
     Send-Command $srv 'rwhitbox smart M39_Nos'
     Send-Command $srv 'rwhitbox smart HB_Velik'
     $j5 = Probe $srv 'M39_Nos' 'HB_Velik'
-    Check ("J5: nosilec smart z jahacem proti smart HB_Velik: 0 / {0:N4} v0 (napoved 0,0714)" -f $(if ($null -ne $j5) { $j5.VB / $v0 } else { 0 })) `
-        (($null -ne $j5) -and $j5.VA -eq 0 -and (Blizu $j5.VB ($v0 * 2.0 / 28.0) 0.01))
+    $j5a = 0; $j5b = 0
+    if ($null -ne $j5) { $vsota = $j5.MasaA + $j5.MasaB; $j5a = 2.0 * $j5.MasaB / $vsota; $j5b = 2.0 * $j5.MasaA / $vsota }
+    Check ("J5: nosilec smart z jahacem (masa {0:N4}) proti smart HB_Velik: {1:N4} / {2:N4} v0 (napoved {3:N4} / {4:N4})" -f $j5.MasaA, ($j5.VA / $v0), ($j5.VB / $v0), $j5a, $j5b) `
+        (($null -ne $j5) -and $j5.MasaA -gt 0.684 -and (Blizu $j5.VA ($v0 * $j5a) 0.01) -and (Blizu $j5.VB ($v0 * $j5b) 0.01))
     Check 'jahac sestopi' (Move-Npc $srv 'dismount M39_Jah')
     Send-Command $srv 'rwhitbox solid M39_Nos'
     $j6 = Probe $srv 'M39_Nos' 'HB_B'
@@ -230,15 +236,15 @@ try {
             $p.N, $p.Nacin, $vrsta, $doCilja, $h.Skok, $h.Stik, $h.Razdalja, $s.Premik, $s.PremikObStiku)
         if ($doCilja -ge 1.5 -or $h.Skok -gt 1.0) { $okPrihod = $false }
     }
-    Check 'P1: vseh osem hodecih na cilju (< 1,5) brez teleporta (skok <= 1,0 na tick)' $okPrihod
+    Check 'P1: vseh 22 hodecih na cilju (< 1,5) brez teleporta (skok <= 1,0 na tick)' $okPrihod
     function Stik([int[]]$N) {
         $t = 0; $m = 0.0
         foreach ($i in $N) { $x = $sled[("M39_S{0}" -f $i)]; if ($null -ne $x) { $t += $x.Stik; $m += $x.PremikObStiku } }
         return [pscustomobject]@{ Tickov = $t; Premik = $m; NaTick = $(if ($t -gt 0) { $m / $t } else { [double]::NaN }) }
     }
-    $tOrg = Stik @(1, 2, 3); $tSol = Stik @(4, 5, 6); $s7 = $sled['M39_S7']; $s8 = $sled['M39_S8']
+    $tOrg = Stik @(1..10); $tSol = Stik @(11..20); $s7 = $sled['M39_S21']; $s8 = $sled['M39_S22']
     $okStik = ($null -ne $s7) -and ($null -ne $s8) -and $s7.Stik -gt 0 -and $s8.Stik -gt 0 -and $tOrg.Tickov -gt 0 -and $tSol.Tickov -gt 0
-    Check ("P2: stik na progah 7 in 8 ter na tavajocih (original {0}, solid {1} tickov)" -f $tOrg.Tickov, $tSol.Tickov) $okStik
+    Check ("P2: stik na progah 21 in 22 ter na tavajocih (original {0}, solid {1} tickov)" -f $tOrg.Tickov, $tSol.Tickov) $okStik
     $okPremik = $okStik -and ($tSol.NaTick -lt $tOrg.NaTick) -and $s7.PremikObStiku -eq 0 -and $s8.PremikObStiku -eq 0
     Check ("P3: tavajoci ob stiku na tick: solid {0:N4} < original {1:N4}; stojeca 0" -f $tSol.NaTick, $tOrg.NaTick) $okPremik
 
