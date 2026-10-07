@@ -63,6 +63,21 @@ public class HitboxWeightsTest {
         assertEquals(2.0, s[0] + s[1], EPS);
     }
 
+    /**
+     * M3.9: igralec je vedno ORIGINAL (ni NPC). Ob SOLID NPC-ju dobi tocno vanilla potisk, ob
+     * SMART najvec 2x vanilla - nikoli trdnega trka, zato ga NPC ne more ujeti ali stisniti v blok.
+     */
+    @Test
+    public void igralecDobiNajvecDvakratVanilla() {
+        double igralec = m(0.6, 1.8);
+        assertArrayEquals(new double[] {1, 0}, HitboxWeights.shares(O, igralec, S, m(0.6, 1.8)), EPS);
+        assertArrayEquals(new double[] {0, 1}, HitboxWeights.shares(S, m(6, 18), O, igralec), EPS);
+        for (double sirina = 0.1; sirina <= 10; sirina *= 1.7) {
+            double[] s = HitboxWeights.shares(O, igralec, M, m(sirina, 3 * sirina));
+            assertTrue("igralec dobi najvec 2x vanilla", s[0] > 0 && s[0] <= 2.0);
+        }
+    }
+
     @Test
     public void imenaInNeznaniNacini() {
         assertEquals(S, HitboxWeights.parse("solid"));

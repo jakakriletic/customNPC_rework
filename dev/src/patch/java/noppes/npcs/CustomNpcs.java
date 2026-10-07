@@ -119,6 +119,7 @@ import noppes.npcs.rework.diag.CommandRwDiag;
 import noppes.npcs.rework.diag.DiagChunkLoader;
 import noppes.npcs.rework.diag.DiagEventCollector;
 import noppes.npcs.rework.entity.CommandRwHitbox;
+import noppes.npcs.rework.entity.HitboxTrack;
 import noppes.npcs.rework.entity.CommandRwMount;
 import noppes.npcs.rework.nav.CommandRwNav;
 import noppes.npcs.rework.entity.RiderState;
@@ -328,6 +329,7 @@ public class CustomNpcs {
         // v forcedchunks.dat, bi naslednji zagon tiho tekel pod drugacnim pogojem meritve.
         DiagChunkLoader.disable();
         SquadManager.clear();
+        HitboxTrack.stop();
         if (!WorldSaveSession.end(30L, TimeUnit.SECONDS)) {
             LogWriter.error("CustomNPCs world save queue did not drain cleanly before shutdown");
         }

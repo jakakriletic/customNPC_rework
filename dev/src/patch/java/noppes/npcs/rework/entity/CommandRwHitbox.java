@@ -26,7 +26,8 @@ public class CommandRwHitbox extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/rwhitbox <original|solid|smart|status> [name-prefix] | global <0|1> | where <name-prefix> | probe|nearby <name-a> <name-b> <dx>";
+        return "/rwhitbox <original|solid|smart|status> [name-prefix] | global <0|1> | where <name-prefix> | probe|nearby <name-a> <name-b> <dx>"
+                + " | mount <rider> <carrier> | dismount <rider> | track <name-prefix> <ticks>";
     }
 
     @Override
@@ -39,6 +40,25 @@ public class CommandRwHitbox extends CommandBase {
         String action = args.length == 0 ? "status" : args[0].toLowerCase(Locale.ROOT);
         if (action.equals("probe") || action.equals("nearby")) {
             probe(sender, args);
+            return;
+        }
+        if (action.equals("track")) {
+            int ticks;
+            try {
+                ticks = args.length == 3 ? Integer.parseInt(args[2]) : -1;
+            } catch (NumberFormatException e) {
+                ticks = -1;
+            }
+            if (ticks <= 0) {
+                throw new WrongUsageException(getUsage(sender));
+            }
+            String line = "RWHITBOX-TRACK-ZACETEK n=" + HitboxTrack.start(sender.getEntityWorld(), args[1], ticks) + " tickov=" + ticks;
+            sender.sendMessage(new TextComponentString(line));
+            LogWriter.info(line);
+            return;
+        }
+        if (action.equals("mount") || action.equals("dismount")) {
+            mount(sender, action, args);
             return;
         }
         if (action.equals("where")) {
@@ -85,6 +105,35 @@ public class CommandRwHitbox extends CommandBase {
         }
         String line = "RWHITBOX global=" + CustomNpcs.RwHitbox + " ujemanj=" + matched + " original=" + counts[0]
                 + " solid=" + counts[1] + " smart=" + counts[2] + " scit=" + CustomNpcs.RwHitboxShieldWeight + "%";
+        sender.sendMessage(new TextComponentString(line));
+        LogWriter.info(line);
+    }
+
+    /**
+     * Diagnostika (scenarij M3.9): {@code mount} posadi jahaca na nosilca (vanilla
+     * {@code startRiding}, ista pot kot skriptni {@code setMount}), {@code dismount} ga spusti.
+     */
+    private void mount(ICommandSender sender, String action, String[] args) throws WrongUsageException {
+        int want = action.equals("mount") ? 3 : 2;
+        if (args.length != want) {
+            throw new WrongUsageException(getUsage(sender));
+        }
+        EntityNPCInterface npc = find(sender, args[1]);
+        if (npc == null) {
+            throw new WrongUsageException("/rwhitbox " + action + ": NPC '" + args[1] + "' ni nalozen");
+        }
+        boolean ok;
+        if (action.equals("mount")) {
+            EntityNPCInterface carrier = find(sender, args[2]);
+            if (carrier == null || carrier == npc) {
+                throw new WrongUsageException("/rwhitbox mount: NPC '" + args[2] + "' ni nalozen");
+            }
+            ok = npc.startRiding(carrier, true) && npc.getRidingEntity() == carrier;
+        } else {
+            npc.dismountRidingEntity();
+            ok = npc.getRidingEntity() == null;
+        }
+        String line = "RWHITBOX-" + action.toUpperCase(Locale.ROOT) + " ime=" + npc.getName() + " ok=" + ok;
         sender.sendMessage(new TextComponentString(line));
         LogWriter.info(line);
     }
