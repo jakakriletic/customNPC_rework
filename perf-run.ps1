@@ -28,10 +28,10 @@
 #     .\perf-run.ps1 -Razprseno                        # spawn po 5 NPC-jev, ~7 tickov narazen (M2.6)
 #     .\baseline-run.ps1                               # M2.6: tri ponovitve vseh celic in baseline
 #     .\perf-run.ps1 -DovoliTuje                       # P9 samo opozori (hitra preverba ob buildu)
-#     .\perf-run.ps1 -Variants idle -Counts 500 -RwTarget 1   # M5-S S1: A/B predzavrnitve tarc
+#     .\perf-run.ps1 -Variants idle -Counts 500 -RwTarget 1   # M5-S S1: A/B predzavrnitve tarc (2 = S1 + S2)
 #
 # -RwTarget N (M5-S S1): po postavitvi sveta poslje '/rwtarget N'; odtis dobi kljuc rwtarget,
-# celica velicino rwtarget.predzavrnjenih. Brez parametra (-1) se stikala ne dotakne in odtis
+# celica velicini rwtarget.predzavrnjenih in rwtarget.zozenih (S2, nacin 2). Brez parametra (-1) se stikala ne dotakne in odtis
 # ostane enak baselinu M2.6.
 #
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
@@ -117,6 +117,9 @@ function Send-RwTarget($Srv, [string]$Cmd) {
     if (-not $ok) { return -1 }
     $m = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWTARGET nacin=\d+ .*? predzavrnjenih=(\d+)')
     if ($m.Count -eq 0) { return -1 }
+    # M5-S S2: stevec poizvedb samo po igralcih (nacin 2); starejsi build ga ne izpise.
+    $z = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWTARGET nacin=\d+ .*? zozenih=(\d+)')
+    $script:rwZozenih = if ($z.Count -gt 0) { [long]$z[$z.Count - 1].Groups[1].Value } else { -1 }
     return [long]$m[$m.Count - 1].Groups[1].Value
 }
 
@@ -510,7 +513,7 @@ try {
         $predzavrnjenih = -1
         if ($RwTarget -ge 0) {
             $predzavrnjenih = Send-RwTarget $srv 'rwtarget'
-            Write-Host ("  RwTarget={0}: predzavrnjenih kandidatov med merjenjem {1}" -f $RwTarget, $predzavrnjenih)
+            Write-Host ("  RwTarget={0}: predzavrnjenih kandidatov med merjenjem {1}, zozenih poizvedb {2}" -f $RwTarget, $predzavrnjenih, $script:rwZozenih)
         }
         Send-Command $srv 'rwdiag off'
         $nOff++
@@ -638,6 +641,7 @@ try {
         if ($RwTarget -ge 0) {
             $odtis['rwtarget'] = $RwTarget
             $vel['rwtarget.predzavrnjenih'] = $predzavrnjenih
+            $vel['rwtarget.zozenih'] = $script:rwZozenih
         }
         $cellFails = @()
         if ($failures.Count -gt $cellFailStart) { $cellFails = @($failures[$cellFailStart..($failures.Count - 1)]) }

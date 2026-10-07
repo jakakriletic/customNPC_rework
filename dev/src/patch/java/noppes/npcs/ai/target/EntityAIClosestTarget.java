@@ -24,6 +24,7 @@ import net.minecraft.entity.ai.EntityAITarget;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.util.math.MathHelper;
 import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.rework.ai.TargetPrefilter;
 
 public class EntityAIClosestTarget
 extends EntityAITarget {
@@ -49,7 +50,8 @@ extends EntityAITarget {
             return false;
         }
         double d0 = this.getTargetDistance();
-        List list = this.taskOwner.world.getEntitiesWithinAABB(this.targetClass, this.taskOwner.getEntityBoundingBox().grow(d0, (double)MathHelper.ceil((double)(d0 / 2.0)), d0), this.targetEntitySelector);
+        // M5-S S2: v nacinu 2 samo igralci, ce drugih tarc po predikatu ne more biti; sicer original.
+        List list = this.taskOwner.world.getEntitiesWithinAABB(TargetPrefilter.scanClass(this.npc, this.targetClass), this.taskOwner.getEntityBoundingBox().grow(d0, (double)MathHelper.ceil((double)(d0 / 2.0)), d0), this.targetEntitySelector);
         Collections.sort(list, this.theNearestAttackableTargetSorter);
         if (list.isEmpty()) {
             return false;

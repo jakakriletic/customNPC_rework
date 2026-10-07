@@ -170,6 +170,70 @@ public class TargetPrefilterTest {
         assertEquals(TargetPrefilter.HOSTILITY_FIRST, TargetPrefilter.setMode(1));
         assertEquals(TargetPrefilter.ORIGINAL, TargetPrefilter.setMode(7));
         assertEquals(TargetPrefilter.ORIGINAL, TargetPrefilter.setMode(-1));
-        assertFalse(TargetPrefilter.isValidMode(2));
+        assertEquals(TargetPrefilter.PLAYERS_ONLY_SCAN, TargetPrefilter.setMode(2));
+        assertFalse(TargetPrefilter.isValidMode(3));
+    }
+
+    /**
+     * M5-S S2: ko {@link TargetPrefilter#onlyPlayers} rece "samo igralci", original za vsakega
+     * kandidata, ki ni igralec (KIND_OTHER, KIND_NPC), vrne {@code false} brez izjeme - v vseh
+     * kombinacijah, ki jih nastavitve NPC-ja dopuscajo. Poizvedba samo po igralcih zato da isti
+     * seznam po predikatu.
+     */
+    @Test
+    public void playersOnlyScanDropsOnlyCandidatesOriginalRejects() {
+        int narrowedCombos = 0;
+        for (boolean guardJob : BOOL) {
+            for (int compJob : TRI) {
+                for (boolean attackOther : BOOL) {
+                    if (!TargetPrefilter.onlyPlayers(guardJob, compJob, attackOther)) {
+                        continue;
+                    }
+                    narrowedCombos++;
+                    // Brez strazarja je guard vedno NO; brez spremljevalca-strazarja tudi companionGuard.
+                    int[] guards = guardJob ? TRI : new int[] {TargetPrefilter.NO};
+                    int[] comps = compJob == TargetPrefilter.NO ? new int[] {TargetPrefilter.NO} : TRI;
+                    for (int guard : guards) {
+                        for (int comp : comps) {
+                            for (int kind : new int[] {TargetPrefilter.KIND_OTHER, TargetPrefilter.KIND_NPC}) {
+                                for (boolean killed : BOOL) {
+                                    for (int aggrNpc : TRI) {
+                                        for (boolean vis : BOOL) {
+                                            for (boolean inv : BOOL) {
+                                                for (boolean home : BOOL) {
+                                                    assertEquals(Boolean.FALSE, original(vis, inv, home, guard, comp,
+                                                            kind, false, false, true, killed, attackOther, aggrNpc));
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        assertEquals("samo NPC brez strazarja, spremljevalca-strazarja in AttackOtherFactions", 1, narrowedCombos);
+    }
+
+    @Test
+    public void playersOnlyScanKeepsEveryNpcThatMayTargetOthers() {
+        assertFalse(TargetPrefilter.onlyPlayers(true, TargetPrefilter.NO, false));
+        assertFalse(TargetPrefilter.onlyPlayers(false, TargetPrefilter.YES, false));
+        assertFalse(TargetPrefilter.onlyPlayers(false, TargetPrefilter.UNKNOWN, false));
+        assertFalse(TargetPrefilter.onlyPlayers(false, TargetPrefilter.NO, true));
+        assertTrue(TargetPrefilter.onlyPlayers(false, TargetPrefilter.NO, false));
+    }
+
+    @Test
+    public void scanClassIsUnchangedOutsideMode2() {
+        // V nacinih 0 in 1 se metoda vrne pred dostopom do NPC-ja.
+        assertEquals(net.minecraft.entity.EntityLivingBase.class,
+                TargetPrefilter.scanClass(null, net.minecraft.entity.EntityLivingBase.class));
+        TargetPrefilter.setMode(TargetPrefilter.HOSTILITY_FIRST);
+        assertEquals(net.minecraft.entity.EntityLivingBase.class,
+                TargetPrefilter.scanClass(null, net.minecraft.entity.EntityLivingBase.class));
+        assertEquals(0L, TargetPrefilter.narrowed());
     }
 }

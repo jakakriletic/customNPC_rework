@@ -8,7 +8,7 @@ import net.minecraft.util.text.TextComponentString;
 import noppes.npcs.LogWriter;
 
 /**
- * Ukaz {@code /rwtarget [0|1|reset]}: pokaze ali med tekom preklopi nacin
+ * Ukaz {@code /rwtarget [0|1|2|reset]}: pokaze ali med tekom preklopi nacin
  * {@link TargetPrefilter} in izpise stevec predzavrnitev. Ne zapise v config — trajna
  * nastavitev je {@code RwTargetPrefilter}.
  *
@@ -23,7 +23,7 @@ public class CommandRwTarget extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/rwtarget [0|1|reset]";
+        return "/rwtarget [0|1|2|reset]";
     }
 
     @Override
@@ -52,7 +52,7 @@ public class CommandRwTarget extends CommandBase {
         }
         int m = TargetPrefilter.mode();
         String msg = "RWTARGET nacin=" + m + " (" + TargetPrefilter.describe(m) + ") predzavrnjenih="
-                + TargetPrefilter.rejected();
+                + TargetPrefilter.rejected() + " zozenih=" + TargetPrefilter.narrowed();
         sender.sendMessage(new TextComponentString(msg));
         LogWriter.info(msg);
     }

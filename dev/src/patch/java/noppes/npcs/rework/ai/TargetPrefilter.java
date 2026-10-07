@@ -35,6 +35,13 @@ import noppes.npcs.roles.companion.CompanionGuard;
  * Edina razlika je vsebina predpomnilnika {@code EntitySenses}, ki se brise vsak tick; poznejsi
  * {@code canSee} istega kandidata v istem ticku izracuna enak rezultat sam.
  *
+ * <p><b>M5-S S2 — ozja poizvedba</b> (nacin {@link #PLAYERS_ONLY_SCAN}, vkljuci tudi S1): NPC, ki ni
+ * strazar, ni spremljevalec-strazar in nima {@code attackOtherFactions}, lahko po predikatu
+ * izbere samo igralca (vse ostale vrste original zavrne brez izjeme, glej {@link #onlyPlayers}).
+ * Iskalnik zato namesto vseh {@code EntityLivingBase} v kvadru vprasa samo za
+ * {@code EntityPlayerMP}: seznam kandidatov po predikatu je isti, v istem vrstnem redu, poizvedba
+ * pa ne gre cez stotine NPC-jev. Met RNG ({@code targetChance}) ostane pred poizvedbo nespremenjen.
+ *
  * <p>Privzeto je nacin {@link #ORIGINAL} (D-007), takrat se predzavrnitev ne izvede.
  */
 public final class TargetPrefilter {
@@ -42,6 +49,8 @@ public final class TargetPrefilter {
     public static final int ORIGINAL = 0;
     /** Predzavrnitev nesovraznih kandidatov pred raytraceom. */
     public static final int HOSTILITY_FIRST = 1;
+    /** S1 in S2: predzavrnitev in poizvedba samo po igralcih, kadar drugih tarc ne more biti. */
+    public static final int PLAYERS_ONLY_SCAN = 2;
 
     /** Tristanje za pogoj, ki ga ni mogoce oceniti brez stranskih ucinkov ali izjeme. */
     public static final int NO = 0;
@@ -55,6 +64,8 @@ public final class TargetPrefilter {
     private static volatile int mode = ORIGINAL;
     /** Stevec predzavrnitev; pise samo strezniska nit, bere ukaz. */
     private static long rejected;
+    /** Stevec iskanj, ki so vprasala samo za igralce (S2). */
+    private static long narrowed;
 
     private TargetPrefilter() {
     }
@@ -70,7 +81,7 @@ public final class TargetPrefilter {
     }
 
     public static boolean isValidMode(int m) {
-        return m == ORIGINAL || m == HOSTILITY_FIRST;
+        return m == ORIGINAL || m == HOSTILITY_FIRST || m == PLAYERS_ONLY_SCAN;
     }
 
     public static String describe(int m) {
@@ -79,6 +90,8 @@ public final class TargetPrefilter {
                 return "original (raytrace pred preverjanjem sovraznosti)";
             case HOSTILITY_FIRST:
                 return "sovraznost pred raytraceom";
+            case PLAYERS_ONLY_SCAN:
+                return "sovraznost pred raytraceom, poizvedba samo po igralcih";
             default:
                 return "neveljaven";
         }
@@ -88,8 +101,52 @@ public final class TargetPrefilter {
         return rejected;
     }
 
+    public static long narrowed() {
+        return narrowed;
+    }
+
     public static void resetRejected() {
         rejected = 0L;
+        narrowed = 0L;
+    }
+
+    /**
+     * Cista odlocitev S2: ali je igralec edina mozna tarca predikata. Velja, ko NPC ni strazar
+     * ({@code job != 3}, ne glede na stanje {@code JobGuard}), spremljevalec-strazar ni
+     * ({@code companionGuard == NO}) in nima {@code attackOtherFactions}. Prazen seznam
+     * sovraznih frakcij namenoma ne zadosca: original bi pri NPC-ju brez frakcije vrgel izjemo.
+     *
+     * @param guardJob       {@code job == 3}
+     * @param companionGuard vloga 6 z nalogo GUARD: NO, YES ali UNKNOWN (neskladno stanje)
+     */
+    public static boolean onlyPlayers(boolean guardJob, int companionGuard, boolean attackOtherFactions) {
+        return !guardJob && companionGuard == NO && !attackOtherFactions;
+    }
+
+    /**
+     * Klice ga {@code EntityAIClosestTarget} po metu RNG: razred za poizvedbo kvadra. V nacinih
+     * 0 in 1 vedno {@code targetClass}.
+     */
+    @SuppressWarnings("rawtypes")
+    public static Class scanClass(EntityNPCInterface npc, Class targetClass) {
+        if (mode != PLAYERS_ONLY_SCAN || !targetClass.isAssignableFrom(EntityPlayerMP.class)) {
+            return targetClass;
+        }
+        if (!onlyPlayers(npc.advanced.job == 3, companionGuardJob(npc), npc.advanced.attackOtherFactions)) {
+            return targetClass;
+        }
+        narrowed++;
+        return EntityPlayerMP.class;
+    }
+
+    private static int companionGuardJob(EntityNPCInterface npc) {
+        if (npc.advanced.role != 6) {
+            return NO;
+        }
+        if (!(npc.roleInterface instanceof RoleCompanion)) {
+            return UNKNOWN;
+        }
+        return ((RoleCompanion) npc.roleInterface).job == EnumCompanionJobs.GUARD ? YES : NO;
     }
 
     /**

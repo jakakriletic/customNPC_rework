@@ -153,7 +153,7 @@ public class CustomNpcs {
     public static int RwMountSteering = 0;
     @ConfigProp(info="Rework M3.6: priority of the melee attack task against the movement task added after it (wander, moving path). 0 = original (same priority: a wandering NPC finishes its wander path before it starts attacking), 1 = attack before movement")
     public static int RwAttackPriority = 0;
-    @ConfigProp(info="Rework M5-S S1: target search rejects candidates the NPC is certainly not hostile to (no guard target, faction not aggressive) before the line-of-sight raytrace. 0 = original order (raytrace first), 1 = hostility first. Same targets are chosen; players that may be attacked keep the original order")
+    @ConfigProp(info="Rework M5-S S1: target search rejects candidates the NPC is certainly not hostile to (no guard target, faction not aggressive) before the line-of-sight raytrace. 0 = original order (raytrace first), 1 = hostility first, 2 = hostility first and (M5-S S2) the area query asks only for players when the NPC can target nothing else (no guard job, no companion guard, no AttackOtherFactions). Same targets are chosen; players that may be attacked keep the original order")
     public static int RwTargetPrefilter = 0;
     @ConfigProp(info="Rework M7: allow NPC Baritone as an optional navigation backend for NPCs with RwNavBackend=1 in NBT. 0 = original vanilla navigation, 1 = permit opt-in NPCs")
     public static int RwNavBackend = 0;
