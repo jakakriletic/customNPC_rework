@@ -9,10 +9,10 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-07** (seja 70: **M3.9 zaključen** — `m39-run.ps1` J1–J6, P1–P4 zelena; ugotovitev Q15: jahan nosilec in solid NPC se ne razmakneta) |
+| Zadnja posodobitev | **2026-10-07** (seja 71: **M5-S S2 zaključen** — poizvedba iskalnika tarč samo po igralcih, `RwTargetPrefilter=2`: idle-500 p95 10,2 → 5,2 ms, boj nevtralen) |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **M3.6 zaključen 5. 10.:** način 1 zelen (tavajoči v dosegu 10/10 vzorcev z zakasnitvijo 10 = kontrola), način 0 napako ponovi (združeno 6/8 nad kontrolo, mediana 25), hipoteza P2 (`aggroRange`) potrjena. M3.7 in M3.8 zaključena 5. 10. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | **M5-S S1 zaključen 6. 10.** (A/B zelen, [meritev](meritve/2026-10-06-M5-S1-predzavrnitev-tarc.md); odprto Q13: privzeto vklopiti?). Naslednje: **M3.8b GUI v klientu** (`hb-run.ps1` zelen 7. 10.; z igralcem preveriti še potisk med dvema solid NPC-jema iz M3.9), odločitev Q15 (jahanje × solid), M3.10 (opcijsko) ali naslednji M5-S paket (S2). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
+| Naslednji paketi | **M5-S S1 zaključen 6. 10.**, **S2 zaključen 7. 10.** ([meritev](meritve/2026-10-07-M5-S2-poizvedba-igralci.md); odprto Q13: privzeto vklopiti način 2?). Naslednje: **M3.8b GUI v klientu** (`hb-run.ps1` zelen 7. 10.; z igralcem preveriti še potisk med dvema solid NPC-jema iz M3.9), odločitev Q15 (jahanje × solid), M3.10 (opcijsko) ali naslednji M5-S paket (S3/S4 ali profil JFR preostale alokacije ~1 MB/tick pri idle-500). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -36,7 +36,7 @@
 | M2 Diagnostika | **zaključeno 5. 10.** (razen M2.4r render, prestavljen v M5-K kot klientski harness) | M2.1–M2.7 preverjeni v svetu; **baseline M2.6 zelen 5. 10.** (3 ponovitve × 9 celic, B1–B3 in P0–P9) — [baseline](meritve/baseline-2026-10-05.md) |
 | M3 Jedro entitete | **v teku** — M3.1–M3.5 zaključeni (vzrok R1 potrjen, R1 popravljen pod stikalom, regresija zelena v načinih 0/1/2, hitbox po sestopu); M3.6 zaključen 5. 10. (D-020, `RwAttackPriority`), M3.7 zaključen brez spremembe, M3.8 zaključen (`RwHitbox`), M3.8b strežniško zelen 7. 10. (GUI v klientu odprt), **M3.9 zaključen 7. 10.** (Q15 odprto) | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | **M4.14a v kodi** (izven vrstnega reda, na zahtevo uporabnika) | R2 analiza narejena; formacije (M4.14) prevedene in testirane v simulaciji, v svetu še ne — [zasnova](06-FORMACIJE.md), [scenarij](scenariji/M4.14-formacije.md) |
-| M5 Performance | **S1 zaključen 6. 10.** (`RwTargetPrefilter`: idle-500 alokacija 342 → 21 MB/s, MSPT p95 41,9 → 9,96 ms, boj-500 nevtralen) | del že pokrit z M1.3, glej meritve; razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
+| M5 Performance | **S1 zaključen 6. 10.** (`RwTargetPrefilter`: idle-500 alokacija 342 → 21 MB/s, MSPT p95 41,9 → 9,96 ms, boj-500 nevtralen); **S2 zaključen 7. 10.** (način 2: p95 → 5,24 ms, µs/NPC 9,7 → 6,6, ticki >10 ms 370 → 6, boj nevtralen) | del že pokrit z M1.3, glej meritve; razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
@@ -80,6 +80,33 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-10-07 (71) — M5-S S2: poizvedba iskalnika tarč samo po igralcih
+
+**Paket:** M5-S S2 ([09](09-PERFORMANCE-RAZISKAVA.md)) · **Stanje:** končano
+
+**Narejeno:**
+- `TargetPrefilter.scanClass` + `onlyPlayers`, klic v `EntityAIClosestTarget.shouldExecute` po metu RNG;
+  nov način `RwTargetPrefilter=2` (S1 + S2), `/rwtarget 2`, števec `zozenih`. Izčrpen test ekvivalence
+  (3 testi), build zelen, `verify-package` PASS (64). Commit `3b712a8`.
+- A/B v svetu (način 1 proti 2, idle-500 in boj-500, po 3 ponovitve, T1–T6 in P1–P9 zelena).
+  [meritev](meritve/2026-10-07-M5-S2-poizvedba-igralci.md)
+- **idle-500:** p95 10,22 → 5,24 ms, p99 11,27 → 5,51, povp 4,94 → 3,41, µs/NPC 9,74 → 6,60, ticki >10 ms
+  370 → 6; alokacija nespremenjena (21 MB/s). **boj-500:** `zozenih = 0` (bojni NPC-ji imajo
+  `AttackOtherFactions`), vse v šumu.
+
+**Ugotovitve:**
+- Pogoj je strožji od predloga v 09: prazen seznam sovražnih frakcij ne zadošča, ker bi original pri NPC-ju
+  brez frakcije vrgel izjemo; S2 velja samo brez `AttackOtherFactions` (privzeto).
+- Preostala alokacija idle-500 (~1 MB/tick) ni iz iskalnika tarč.
+- Serija je čakala ~4 ure na uporabnikov `ladja_mod`; na zahtevo uporabnika je bil njegov Minecraft ustavljen.
+  Prvi poskus idle A je P9 zavrnil (uporabnikov gradle build med celico), ponovljen.
+
+**Spremembe obnašanja:** nobene (privzeto 0; način 2 izbere iste tarče). **Meritve:** M5-S S2 (tabela Meritve).
+
+**Odprto za uporabnika:** Q13 (zdaj: privzeto način 2?), Q15.
+
+**Naslednja seja:** GUI M3.8b v klientu, odločitev Q13/Q15, nato S3/S4 ali profil JFR.
 
 ### 2026-10-07 (70) — M3.9: preverba solid × jahanje
 
@@ -3629,7 +3656,7 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 | Q10 | Ali strežnik, kjer to teče, sploh ima izhodni internetni dostop? | M9.1 | odprto |
 | Q11 | Zakaj skupina obstane pred **drugo** stopnico (z = 36), prvo (z = 20) pa prestopi? | M2.3/M2.4, kakovost scenarijev | **zaprto 17. 9.** — ni bila ovira, ampak domet iskanja poti; glej Znane omejitve |
 | Q12 | Uvoz zunanjih 3D modelov (npr. prenesen model zmaja) kot model NPC-ja — je to v obsegu? Če da: kateri format (`.bbmodel` / OBJ / JSON), in kako model pride do igralcev (resource pack / lokalna mapa / prenos z URL-ja / push s strežnika)? | nova zahteva (R11?; R10 je od 6. 10. poveljevanje prek zemljevida); odvisna od M7, ker zunanji model prinese svoj skelet | **odprto, odprto 17. 9.** — danes mod zna samo (a) teksture prek URL-ja (`skinUrl`, `capeTexture`, `overlayTexture`) in (b) prevzem modela **registrirane entitete** (`setModel(id)` → `ModelData.entityClass`, `DataDisplay:405`), torej model iz že nameščenega moda. Geometrija iz datoteke ne obstaja: vsi modeli so hardcoded `ModelBase` razredi (`client/model/`). V M8 katalogu tega ni, ker tega nima niti CustomNPC+. Ocena XL; odločitev šele ko je M7 (animacijski skelet) jasen |
-| Q13 | Naj bo predzavrnitev tarč (`RwTargetPrefilter`, M5-S S1) privzeto vklopljena? Izbrane tarče so po testu enake, idle-500 je 3× cenejši | M5, D-007 | **odprto 6. 10.** |
+| Q13 | Naj bo predzavrnitev tarč (`RwTargetPrefilter`, M5-S S1, od 7. 10. tudi način 2 = S1 + S2) privzeto vklopljena? Izbrane tarče so po testu enake; idle-500 µs/NPC 32 → 6,6, p95 46 → 5,2 ms | M5, D-007 | **odprto 6. 10.** |
 | Q15 | Jahan nosilec dobi potisk 0 že v vanilli (`isBeingRidden`). Ob solid NPC-ju se zato ne razmakne nihče (konjenica se prekriva s solid pehoto). Naj nosilec z NPC jahačem pod `RwHitbox=1` sprejme potisk z maso nosilec + jahač (predlog), ali ostane kot vanilla? | M3.9, R6 × R1 | **odprto 7. 10.** ([zapis](meritve/2026-10-07-M3.9-solid-jahanje.md)) |
 | Q14 | Pri R10 — kateri zemljevid: lasten iz `ladja_mod` (izbira kot pri ladjah), JourneyMap, Xaero ali nov v CNPC? | M11.3 | **odprto 6. 10.**, ne blokira do M11 |
 
@@ -3694,6 +3721,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-10-07 | M5-S S2 A/B `RwTargetPrefilter` 1/2, idle-500 in boj-500, 3 ponovitve | idle-500: MSPT p95 10,22 → **5,24** ms, p99 11,27 → **5,51**, µs/NPC 9,74 → **6,60**, ticki >10 ms 370 → **6**, alokacija nespremenjena; boj-500 nevtralen (`zozenih = 0`) | [zapis](meritve/2026-10-07-M5-S2-poizvedba-igralci.md) |
 | 2026-10-07 | M3.9 solid × jahanje, `m39-run.ps1` | J1–J6, P1–P4 zelena: jahan nosilec 0 v vseh načinih (J4 solid proti jahanemu 0/0 → Q15); 8/8 hodečih mimo NPC-ja na poti brez teleporta; solid ob stiku 0 proti 0,0219 bloka/tick | [zapis](meritve/2026-10-07-M3.9-solid-jahanje.md) |
 | 2026-10-06 | M5-S S1 A/B `RwTargetPrefilter` 0/1, idle-500 in boj-500, 3 ponovitve | idle-500: alokacija 342,4 → **21** MB/s, MSPT p95 41,9 → **9,96** ms, µs/NPC 29,0 → **9,31**, ticki >25 ms 2.016 → **6**; boj-500 nevtralen | [zapis](meritve/2026-10-06-M5-S1-predzavrnitev-tarc.md) |
 | 2026-09-11 | NBT↔JSON round-trip, 4000 naključnih struktur | original 1598 napak (40 %), novi 0 | [zapis](meritve/2026-09-11-M1-nbtjson.md) |
