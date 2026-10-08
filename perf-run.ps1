@@ -34,6 +34,12 @@
 # celica velicini rwtarget.predzavrnjenih in rwtarget.zozenih (S2, nacin 2). Brez parametra (-1) se stikala ne dotakne in odtis
 # ostane enak baselinu M2.6.
 #
+# -Jfr (M5-S P1, 8. 10.): v merilnem oknu vsake celice snema JFR (jcmd JFR.start, nastavitve
+# 'profile') v audit\jfr\<stamp>-<varianta>-<N>.jfr; po ustavitvi serverja za vsak posnetek
+# napise povzetek (dev\tools\jfr-povzetek.js, .md poleg .jfr). Profiler stane CPU in alokacije,
+# zato celica dobi v odtis jfr=1 in ni primerljiva z baselinom ali A/B brez profila.
+#     .\perf-run.ps1 -Variants idle,boj -Counts 500 -RwTarget 2 -Jfr
+#
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
 # pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
 # (merilo P9), in ob sesutju serverja takoj konca z vzrokom iz loga.
@@ -44,7 +50,7 @@
 param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][string[]]$CountsIn = @('50', '200', '500'),
       [int]$Seconds = 300, [int]$WarmupSeconds = 120, [int]$ChunkRadius = 1,
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
-      [switch]$DovoliTuje, [int]$RwTarget = -1)
+      [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -121,6 +127,23 @@ function Send-RwTarget($Srv, [string]$Cmd) {
     $z = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWTARGET nacin=\d+ .*? zozenih=(\d+)')
     $script:rwZozenih = if ($z.Count -gt 0) { [long]$z[$z.Count - 1].Groups[1].Value } else { -1 }
     return [long]$m[$m.Count - 1].Groups[1].Value
+}
+
+# M5-S P1: PID java procesa serverja (GradleStartServer) v drevesu nasega zagona.
+function Get-ServerJavaPid {
+    $drevo = Get-DrevoProcesov @($srv.Proc.Id)
+    foreach ($p in @(Get-CimInstance Win32_Process -Filter "Name='java.exe'" -ErrorAction SilentlyContinue)) {
+        if ($drevo.ContainsKey([int]$p.ProcessId) -and ("$($p.CommandLine)" -match 'GradleStartServer')) { return [int]$p.ProcessId }
+    }
+    return -1
+}
+
+# M5-S P1: jcmd ukaz serverju; vrne izpis kot en niz.
+function Invoke-Jcmd([int]$JavaPid, [string[]]$JcmdArgs) {
+    $jcmd = Join-Path $env:JAVA_HOME 'bin\jcmd.exe'
+    # Stderr nativnega ukaza bi pod 'Stop' postal koncna napaka; izpis preverimo sami.
+    $ErrorActionPreference = 'Continue'
+    return ((& $jcmd $JavaPid @JcmdArgs 2>&1 | Out-String))
 }
 
 function Start-DevServer([string]$Tag = '') {
@@ -428,6 +451,7 @@ try {
     Start-Sleep -Seconds 5
     Set-Content -Path $scenMark -Value ("perf-run {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm')) -Encoding ASCII
     $rows = @()
+    $jfrPosnetki = @()
     $stamp = Get-Date -Format 'yyyy-MM-dd-HHmm'
     $idx = 0
     foreach ($cell in $cells) {
@@ -504,8 +528,25 @@ try {
         Send-Command $srv 'rwdiag on'
         $nOn++
         Check 'merjenje vklopljeno' (Wait-ForCount $srv 'RWDIAG vklopljen' $nOn 60)
+        $jfrPot = ''
+        if ($Jfr) {
+            $javaPid = Get-ServerJavaPid
+            Check ("J1: najden java proces serverja (PID {0})" -f $javaPid) ($javaPid -gt 0)
+            $jfrDir = Join-Path $audit 'jfr'
+            New-Item -ItemType Directory -Force -Path $jfrDir | Out-Null
+            $jfrPot = Join-Path $jfrDir ("{0}-{1}-{2}.jfr" -f $stamp, $v, $N)
+            $izJ = Invoke-Jcmd $javaPid @('JFR.start', ("name=rw{0}" -f $idx), 'settings=profile', ("filename={0}" -f $jfrPot))
+            Check 'J1: JFR snemanje se je zacelo' ($izJ -match 'Started recording')
+            if ($izJ -notmatch 'Started recording') { Write-Host ("      {0}" -f $izJ.Trim()) }
+        }
         Write-Host ("  merjenje {0} s" -f $Seconds)
         Wait-SPreverbo $Seconds
+        if ($Jfr -and $javaPid -gt 0) {
+            $izJ = Invoke-Jcmd $javaPid @('JFR.stop', ("name=rw{0}" -f $idx))
+            $jfrOk = ($izJ -match 'Stopped recording') -and (Test-Path $jfrPot) -and ((Get-Item $jfrPot).Length -gt 0)
+            Check ("J2: JFR posnetek zapisan ({0})" -f $jfrPot) $jfrOk
+            if ($jfrOk) { $jfrPosnetki += $jfrPot }
+        }
         $tag = 'm24-{0}-{1}' -f $v, $N
         Send-Command $srv ("rwdiag dump {0}" -f $tag)
         $nDump++
@@ -643,6 +684,7 @@ try {
             $vel['rwtarget.predzavrnjenih'] = $predzavrnjenih
             $vel['rwtarget.zozenih'] = $script:rwZozenih
         }
+        if ($Jfr) { $odtis['jfr'] = 1 }
         $cellFails = @()
         if ($failures.Count -gt $cellFailStart) { $cellFails = @($failures[$cellFailStart..($failures.Count - 1)]) }
         $vel['nasiceno'] = $(if ($sat) { 1 } else { 0 })
@@ -670,6 +712,15 @@ try {
     if ($modErrors.Count -gt 0) { $modErrors | Select-Object -First 5 | ForEach-Object { Write-Host "      $_" } }
     Check 'P6: brez "script errored"' (-not $log.Contains('script errored'))
     Check 'server se je cisto ustavil' (Stop-DevServer $srv)
+
+    # M5-S P1: povzetki JFR sele zdaj, da 'jfr print' ne tece med merjenjem naslednje celice.
+    foreach ($jp in $jfrPosnetki) {
+        $md = [System.IO.Path]::ChangeExtension($jp, '.md')
+        $ErrorActionPreference = 'Continue'
+        & node (Join-Path $root 'dev\tools\jfr-povzetek.js') $jp --md $md > $null 2>&1
+        $ErrorActionPreference = 'Stop'
+        Check ("J3: povzetek JFR {0}" -f $md) (($LASTEXITCODE -eq 0) -and (Test-Path $md))
+    }
 
     Step 6 'Porocilo'
     $report = Join-Path $audit ("m24-perf-{0}.md" -f $stamp)

@@ -23,3 +23,6 @@ audit/*.csv
 # M2.6b: zaklepa scenarija in baselina (odprta samo med zagonom)
 .scenarij.lock
 .baseline.lock
+
+# M5-S P1: JFR posnetki profila (veliki, lokalni)
+audit/jfr/
