@@ -110,7 +110,10 @@
 
 **Spremembe obnašanja:** nobene. **Meritve:** nobene nove (model je izračun, ne meritev).
 
-**Odprto za uporabnika:** Q16.
+**Odločitev uporabnika v isti seji:** Q16 → **D-031** — vanilla/Forge posegi so dovoljeni, če so zapakirani v CNPC
+jar (lasten coremod z ASM; MixinBooter kot zunanji mod in vgrajen Mixin zavrnjena zaradi odvisnosti oz. trkov v
+modpackih). Dodana paketa M5.15 (infrastruktura coremoda) in M5.16 (`Entity.move` poizvedba entitet za trke).
+Pričakovan dobitek M5.16 je zmeren (idle do ~12 % CPU strežniške niti, ki je že ~3 ms/tick), zato je za S14b, S4, S7.
 
 **Naslednja seja:** M5.10 (meritev sledenja poti v boju), ali M4.0 (raziskava M4).
 
@@ -3773,7 +3776,7 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 | Q12 | Uvoz zunanjih 3D modelov (npr. prenesen model zmaja) kot model NPC-ja — je to v obsegu? Če da: kateri format (`.bbmodel` / OBJ / JSON), in kako model pride do igralcev (resource pack / lokalna mapa / prenos z URL-ja / push s strežnika)? | nova zahteva (R11?; R10 je od 6. 10. poveljevanje prek zemljevida); odvisna od M7, ker zunanji model prinese svoj skelet | **odprto, odprto 17. 9.** — danes mod zna samo (a) teksture prek URL-ja (`skinUrl`, `capeTexture`, `overlayTexture`) in (b) prevzem modela **registrirane entitete** (`setModel(id)` → `ModelData.entityClass`, `DataDisplay:405`), torej model iz že nameščenega moda. Geometrija iz datoteke ne obstaja: vsi modeli so hardcoded `ModelBase` razredi (`client/model/`). V M8 katalogu tega ni, ker tega nima niti CustomNPC+. Ocena XL; odločitev šele ko je M7 (animacijski skelet) jasen |
 | Q13 | Naj bo predzavrnitev tarč (`RwTargetPrefilter`) privzeto vklopljena? | M5, D-007 | **odločeno 7. 10.: da, način 2 (S1 + S2)** → D-027 |
 | Q15 | Naj nosilec z NPC jahačem pod `RwHitbox=1` sprejme potisk (masa nosilec + jahač)? | M3.9, R6 × R1 | **odločeno 7. 10.: da** → D-028 |
-| Q16 | Ali sme projekt za vanilla vroče točke dobiti **izbirne vanilla mixine** (npr. prek MixinBooterja)? Največji preostali strošek idle je vanilla `Entity.move` (26–29 % CPU, od tega poizvedba entitet za trke 11,8 %), ki ga CNPC prek lastnih razredov ne doseže; Lithium to v novejših verzijah reši brez spremembe obnašanja, za 1.12 porta ni. Pomeni novo odvisnost in poseg izven CNPC razredov (D-006) | M5, D-006 | **odprto 8. 10.**, ne blokira (M5.10–M5.14 so v CNPC razredih) |
+| Q16 | Ali sme projekt za vanilla vroče točke dobiti **vanilla posege** (npr. prek MixinBooterja)? Največji preostali strošek idle je vanilla `Entity.move` (26–29 % CPU, od tega poizvedba entitet za trke 11,8 %), ki ga CNPC prek lastnih razredov ne doseže; Lithium to v novejših verzijah reši brez spremembe obnašanja, za 1.12 porta ni. Pomeni novo odvisnost in poseg izven CNPC razredov (D-006) | M5, D-006 | **odločeno 8. 10.: da, zapakirano v CNPC jar (lasten coremod, brez zunanjega moda)** → D-031, paketa M5.15/M5.16 |
 | Q14 | Pri R10 — kateri zemljevid: lasten iz `ladja_mod` (izbira kot pri ladjah), JourneyMap, Xaero ali nov v CNPC? | M11.3 | **odprto 6. 10.**, ne blokira do M11 |
 
 ---

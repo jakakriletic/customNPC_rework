@@ -258,6 +258,8 @@ NPC-jev. Odprejo se šele, če po M4.10, M4.11 in M5.6 merila M2.7 še vedno pad
 | M5.2 | *Pogojno na M5.9:* AI budget / scheduler novih izračunov poti na tick, poštena vrsta. **Brez** zmanjšanja tick frekvence NPC-jev; sprememba obnašanja → stikalo | M |
 | M5.6 | *Pogojno na M5.9:* deljenje in predpomnjenje poti ter negativni predpomnilnik (S5). Premisa »največji dobitek v navigacijskem sklopu« je za boj ovržena (P1: 2 %) | M |
 | M5.14 | **S16 — senčna polja `EntityDataManager`** za CNPC-jeve ključe (`Attacking`, `IsDead`, `Walking`), osvežena v `notifyDataManagerChange`. Idle ≤ ~5–8 % | S |
+| M5.15 | **Infrastruktura vanilla posegov (D-031):** lasten coremod v CNPC jarju (`rework/core`: `IFMLLoadingPlugin`, `IClassTransformer`), manifest `FMLCorePlugin` + `FMLCorePluginContainsFMLMod` v `devRuntimeMod` in `buildPatchedMod`, imena SRG v produkciji in MCP v dev okolju, `verify-package` pozna nove vnose. Brez posega v obnašanje (prazen transformer z dnevnikom), dimni test dev server + zapakiran jar | S |
+| M5.16 | **`Entity.move` brez odvečne poizvedbe entitet za trke:** `World.getCollisionBoxes(Entity, AABB)` za vsak premik poišče entitete v kvadru, čeprav prispevajo škatlo samo razredi, ki prepišejo `getCollisionBoundingBox`/`getCollisionBox(Entity)` (čoln, minecart, shulker, NPC pod `RwHitbox`, modni). Števec takih entitet po svetu (`IWorldEventListener.onEntityAdded/Removed`, razred preverjen z refleksijo enkrat) — poizvedba se preskoči samo, ko je števec 0 **in** razred premikajoče se entitete ne prepiše `getCollisionBox(Entity)`; `GetCollisionBoxesEvent` ostane. Prepisan razred se šteje konzervativno (tudi če včasih vrne `null`). Idle 11,8 % CPU v gosti mreži [M], v redkem razporedu manj [H]. Velja za vse entitete, ne le NPC-je | S |
 | M5.8 | **Kapaciteta proti baselineu** (izhodni kriterij): največji N pri MSPT p95 ≤ 25 in ≤ 50 ms, original proti vsem sprejetim stikalom, idle in boj, gosta mreža in redek razpored (razmik ≥ 3 bloke) | S |
 | ~~M5.1~~ | Globalni script lock → **preseljen v M6.6** (D-030): `ScriptContainer` je v skripte-500 1,8 % CPU, lock je nesporen; ostane zaradi pravilnosti, brez cilja MSPT | — |
 | ~~M5.3~~ | Deduplikacija po chunku → **zavrženo** (D-030), nadomesti M5.12 (S4) | — |
@@ -265,10 +267,10 @@ NPC-jev. Odprejo se šele, če po M4.10, M4.11 in M5.6 merila M2.7 še vedno pad
 | ~~M5.5~~ | Meritev po vsakem → ni paket, je pravilo (D-016) | — |
 | ~~M5.7~~ | Prostorski indeks → **zavrženo** (D-030, chunk sekcije so že indeks; drag je gostota mreže); render LOD → K5 v M5-K | — |
 
-Vrstni red M5-S: **M5.10 → M5.11 → M5.12 → M5.13 → M5.9 → (M5.2 / M5.6 po izidu) → M5.14 → M5.8.**
+Vrstni red M5-S: **M5.10 → M5.11 → M5.12 → M5.13 → M5.9 → (M5.2 / M5.6 po izidu) → M5.14 → M5.15 → M5.16 → M5.8.**
 Sledenje poti brez branja blokov po vzoru 1.21.1 (S15, sprememba gibanja) ni v M5, ampak vhod za M4.13.
 M5-K (klient, K0–K13 v [09](09-PERFORMANCE-RAZISKAVA.md)) je ločena veja z vhodnim pogojem M2.4r.
-Vanilla `Entity.move` (idle 26–29 %) je brez vanilla mixinov nedosegljiv → **Q16**.
+Vanilla `Entity.move` (idle 26–29 %): Q16 odločeno → D-031 (lasten coremod v CNPC jarju), paketa M5.15 in M5.16.
 
 **Izhodni kriterij:**
 - vsak sprejet paket ima A/B meritev, ki presega šum
