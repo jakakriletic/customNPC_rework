@@ -114,6 +114,8 @@ import noppes.npcs.rework.data.WorldSaveSession;
 import noppes.npcs.rework.ai.AttackPriority;
 import noppes.npcs.rework.ai.CommandRwAttack;
 import noppes.npcs.rework.ai.CommandRwTarget;
+import noppes.npcs.rework.nav.CommandRwPath;
+import noppes.npcs.rework.nav.PathFollowCache;
 import noppes.npcs.rework.ai.TargetPrefilter;
 import noppes.npcs.rework.diag.CommandRwDiag;
 import noppes.npcs.rework.diag.DiagChunkLoader;
@@ -155,6 +157,8 @@ public class CustomNpcs {
     public static int RwAttackPriority = 0;
     @ConfigProp(info="Rework M5-S S1: target search rejects candidates the NPC is certainly not hostile to (no guard target, faction not aggressive) before the line-of-sight raytrace. 0 = original order (raytrace first), 1 = hostility first, 2 = hostility first and (M5-S S2) the area query asks only for players when the NPC can target nothing else (no guard job, no companion guard, no AttackOtherFactions). Same targets are chosen; players that may be attacked keep the original order. Default 2 since 2026-10-07 (D-027)")
     public static int RwTargetPrefilter = 2;
+    @ConfigProp(info="Rework M5-S S14: ground NPC path following (PathNavigateGround.isDirectPathBetweenPoints, called every tick while an NPC follows a path) reads blocks through a per-call chunk cache instead of a chunk-map lookup per block. Same blocks in the same order, same result. 0 = original, 1 = chunk cache, 2 = verify (runs both, returns the original, counts mismatches; double cost, for test scenarios only)")
+    public static int RwPathFollowCache = 0;
     @ConfigProp(info="Rework M7: allow NPC Baritone as an optional navigation backend for NPCs with RwNavBackend=1 in NBT. 0 = original vanilla navigation, 1 = permit opt-in NPCs")
     public static int RwNavBackend = 0;
     @ConfigProp(info="Rework M3.8 (R6): honour per-NPC hitbox modes (NBT RwHitboxMode: 1 = solid, cannot be moved by entity pushing; 2 = smart, push strength by hitbox size and shield). With 1, an NPC carrier ridden only by NPCs is pushed too, with the mass of carrier and riders (D-028). 0 = original vanilla pushing for every NPC, 1 = honour the modes")
@@ -355,6 +359,9 @@ public class CustomNpcs {
         // M5-S S1: predzavrnitev v iskalniku tarc; /rwtarget jo med tekom preklopi.
         event.registerServerCommand((ICommand)new CommandRwTarget());
         TargetPrefilter.setMode(RwTargetPrefilter);
+        // M5-S S14: sledenje poti prek predpomnilnika chunkov; /rwpath ga med tekom preklopi.
+        event.registerServerCommand((ICommand)new CommandRwPath());
+        PathFollowCache.setMode(RwPathFollowCache);
         // M4.14: formacije. Brez ukaza (ali klica iz skripte) paket ni prijavljen na event
         // bus in ne doda nobenega AI taska, zato je obnasanje brez ukaza enako originalu.
         event.registerServerCommand((ICommand)new CommandRwSquad());

@@ -40,6 +40,13 @@
 # zato celica dobi v odtis jfr=1 in ni primerljiva z baselinom ali A/B brez profila.
 #     .\perf-run.ps1 -Variants idle,boj -Counts 500 -RwTarget 2 -Jfr
 #
+# -RwPath N (M5-S S14, 8. 10.): po postavitvi sveta poslje '/rwpath N' (sledenje poti prek
+# predpomnilnika chunkov). Odtis dobi kljuc rwpath, celica velicine rwpath.* (klici, branja
+# blokov, iskanja chunka, primerjave, neujemanja). Nacin 2 = preverba: merilo R1 (vsaj ena
+# primerjava) in R2 (nic neujemanj); nacin 2 stane dvojno, zato ni za A/B. Brez parametra (-1)
+# se stikala ne dotakne.
+#     .\perf-run.ps1 -Variants boj -Counts 500 -RwTarget 2 -RwPath 2   # dokaz enakosti v svetu
+#
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
 # pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
 # (merilo P9), in ob sesutju serverja takoj konca z vzrokom iz loga.
@@ -50,7 +57,7 @@
 param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][string[]]$CountsIn = @('50', '200', '500'),
       [int]$Seconds = 300, [int]$WarmupSeconds = 120, [int]$ChunkRadius = 1,
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
-      [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr)
+      [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -127,6 +134,20 @@ function Send-RwTarget($Srv, [string]$Cmd) {
     $z = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWTARGET nacin=\d+ .*? zozenih=(\d+)')
     $script:rwZozenih = if ($z.Count -gt 0) { [long]$z[$z.Count - 1].Groups[1].Value } else { -1 }
     return [long]$m[$m.Count - 1].Groups[1].Value
+}
+
+# M5-S S14: ukaz /rwpath; vrne slovar stevcev iz zadnjega odgovora ($null, ce ni odgovora).
+function Send-RwPath($Srv, [string]$Cmd) {
+    $pred = ([regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=')).Count
+    Send-Command $Srv $Cmd
+    $ok = Wait-ForCount $Srv 'RWPATH nacin=' ($pred + 1) 60
+    Check ("ukaz '{0}' odgovori" -f $Cmd) $ok
+    if (-not $ok) { return $null }
+    $m = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=(\d+) .*? klicev=(\d+) branj=(\d+) iskanjChunka=(\d+) primerjav=(\d+) neujemanj=(\d+)')
+    if ($m.Count -eq 0) { return $null }
+    $g = $m[$m.Count - 1].Groups
+    return @{ nacin = [int]$g[1].Value; klicev = [long]$g[2].Value; branj = [long]$g[3].Value
+              iskanjChunka = [long]$g[4].Value; primerjav = [long]$g[5].Value; neujemanj = [long]$g[6].Value }
 }
 
 # M5-S P1: PID java procesa serverja (GradleStartServer) v drevesu nasega zagona.
@@ -432,6 +453,10 @@ try {
         $null = Send-RwTarget $srv ("rwtarget {0}" -f $RwTarget)
         Check ("stikalo RwTarget je {0}" -f $RwTarget) ((Get-MarkerText $srv.Log) -match ("RWTARGET nacin={0} " -f $RwTarget))
     }
+    if ($RwPath -ge 0) {
+        $rp = Send-RwPath $srv ("rwpath {0}" -f $RwPath)
+        Check ("stikalo RwPath je {0}" -f $RwPath) (($null -ne $rp) -and ($rp.nacin -eq $RwPath))
+    }
 
     # Pobijanje fixtur M0.6. Vrstni red je bistven: 'noppes slay npcs' samo oznaci isDead,
     # odstrani pa jih sele updateEntities - ta pa brez igralca in brez prisilno nalozenih
@@ -525,6 +550,7 @@ try {
         }
 
         if ($RwTarget -ge 0) { $null = Send-RwTarget $srv 'rwtarget reset' }
+        if ($RwPath -ge 0) { $null = Send-RwPath $srv 'rwpath reset' }
         Send-Command $srv 'rwdiag on'
         $nOn++
         Check 'merjenje vklopljeno' (Wait-ForCount $srv 'RWDIAG vklopljen' $nOn 60)
@@ -555,6 +581,18 @@ try {
         if ($RwTarget -ge 0) {
             $predzavrnjenih = Send-RwTarget $srv 'rwtarget'
             Write-Host ("  RwTarget={0}: predzavrnjenih kandidatov med merjenjem {1}, zozenih poizvedb {2}" -f $RwTarget, $predzavrnjenih, $script:rwZozenih)
+        }
+        $rwPathStevci = $null
+        if ($RwPath -ge 0) {
+            $rwPathStevci = Send-RwPath $srv 'rwpath'
+            if ($null -ne $rwPathStevci) {
+                Write-Host ("  RwPath={0}: klicev {1}, branj blokov {2}, iskanj chunka {3}, primerjav {4}, neujemanj {5}" -f `
+                    $RwPath, $rwPathStevci.klicev, $rwPathStevci.branj, $rwPathStevci.iskanjChunka, $rwPathStevci.primerjav, $rwPathStevci.neujemanj)
+                if ($RwPath -eq 2) {
+                    Check ("R1: preverba je primerjala original in predpomnilnik ({0} primerjav)" -f $rwPathStevci.primerjav) ($rwPathStevci.primerjav -gt 0)
+                    Check ("R2: nobenega neujemanja ({0})" -f $rwPathStevci.neujemanj) ($rwPathStevci.neujemanj -eq 0)
+                }
+            }
         }
         Send-Command $srv 'rwdiag off'
         $nOff++
@@ -685,6 +723,12 @@ try {
             $vel['rwtarget.zozenih'] = $script:rwZozenih
         }
         if ($Jfr) { $odtis['jfr'] = 1 }
+        if ($RwPath -ge 0) {
+            $odtis['rwpath'] = $RwPath
+            if ($null -ne $rwPathStevci) {
+                foreach ($k in @('klicev', 'branj', 'iskanjChunka', 'primerjav', 'neujemanj')) { $vel['rwpath.' + $k] = $rwPathStevci[$k] }
+            }
+        }
         $cellFails = @()
         if ($failures.Count -gt $cellFailStart) { $cellFails = @($failures[$cellFailStart..($failures.Count - 1)]) }
         $vel['nasiceno'] = $(if ($sat) { 1 } else { 0 })

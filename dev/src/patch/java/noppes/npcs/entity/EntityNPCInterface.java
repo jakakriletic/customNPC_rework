@@ -802,7 +802,8 @@ IAnimals {
             this.navigator = new PathNavigateSwimmer((EntityLiving)this, this.world);
         } else {
             this.moveHelper = new EntityMoveHelper((EntityLiving)this);
-            this.navigator = new PathNavigateGround((EntityLiving)this, this.world);
+            // M5-S S14: podrazred PathNavigateGround; pri RwPathFollowCache=0 se obnasa kot original.
+            this.navigator = new noppes.npcs.rework.nav.RwPathNavigateGround((EntityLiving)this, this.world);
             this.tasks.addTask(0, (EntityAIBase)new EntityAIWaterNav(this));
         }
         net.minecraft.world.RwWorldAccess.pathListener(this.world).onEntityAdded((Entity)this);
