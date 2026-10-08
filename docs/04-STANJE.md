@@ -9,10 +9,10 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-08** (seja 74: **D-029** — vsak milestone se začne z raziskavo izvedbe M?.0, plan ni dogma; M5-S S14 v kodi, enakost dokazana 0/616.276, A/B nedokazan. Prej seja 73: **M5-S P1 profil JFR** — boj-500: 48 % CPU strežniške niti v vanilla `pathFollow` → `isDirectPathBetweenPoints` (27 % hash iskanje chunka), iskanje poti 2 %; idle: `Entity.move` 29 %, `onCollide` 12 %, utrip oči 6 %; nov kandidat S14, vrstni red S14 → S4 → S7. Prej seja 72: odločitvi Q13 → D-027, `RwTargetPrefilter` privzeto 2; Q15 → D-028, nosilec z NPC posadko sprejme potisk. Prej seja 71: **M5-S S2 zaključen** — poizvedba iskalnika tarč samo po igralcih, `RwTargetPrefilter=2`: idle-500 p95 10,2 → 5,2 ms, boj nevtralen) |
+| Zadnja posodobitev | **2026-10-08** (seja 75: **M5.0 zaključen** — raziskava preostanka M5: boj je edina celica brez napredka, njegov strošek je ocena tipa vozlišča v vanilla sledenju poti (~1.110 branj na klic, model se ujema), lock in iskanje poti nista ozko grlo; plan M5 prepisan (D-030), Q16. Prej seja 74: **D-029** — vsak milestone se začne z raziskavo izvedbe M?.0, plan ni dogma; M5-S S14 v kodi, enakost dokazana 0/616.276, A/B nedokazan. Prej seja 73: **M5-S P1 profil JFR** — boj-500: 48 % CPU strežniške niti v vanilla `pathFollow` → `isDirectPathBetweenPoints` (27 % hash iskanje chunka), iskanje poti 2 %; idle: `Entity.move` 29 %, `onCollide` 12 %, utrip oči 6 %; nov kandidat S14, vrstni red S14 → S4 → S7. Prej seja 72: odločitvi Q13 → D-027, `RwTargetPrefilter` privzeto 2; Q15 → D-028, nosilec z NPC posadko sprejme potisk. Prej seja 71: **M5-S S2 zaključen** — poizvedba iskalnika tarč samo po igralcih, `RwTargetPrefilter=2`: idle-500 p95 10,2 → 5,2 ms, boj nevtralen) |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **M3.6 zaključen 5. 10.:** način 1 zelen (tavajoči v dosegu 10/10 vzorcev z zakasnitvijo 10 = kontrola), način 0 napako ponovi (združeno 6/8 nad kontrolo, mediana 25), hipoteza P2 (`aggroRange`) potrjena. M3.7 in M3.8 zaključena 5. 10. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | **M5.0 — raziskava preostanka M5** (D-029), nato **M4.0**. Vhod za M5.0: profil JFR ([P1](meritve/2026-10-08-M5-S-P1-profil-jfr.md)), S14 nedokazan ([zapis](meritve/2026-10-08-M5-S14-sledenje-poti.md)), kandidat S14b (tip vozlišča na pozicijo; ~1.110 branj blokov na klic). Vzporedno: M3.8b GUI v klientu (z igralcem). Odprto: PR `codex/m7-cnpc-integration` → `main` |
+| Naslednji paketi | **M5.10** — neposredna meritev sledenja poti v boju (ns, klici, kandidati) in pogoj veljavnosti A/B boja, nato **M5.11** (S14b), M5.12 (S4), M5.13 (S7); vrstni red v `03-FAZE.md` (D-030), [raziskava M5.0](raziskave/M5.0-preostanek-performance.md). **M4.0** je lahko vmes (raziskava, brez merjenja). Vzporedno: M3.8b GUI v klientu (z igralcem). Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -36,7 +36,7 @@
 | M2 Diagnostika | **zaključeno 5. 10.** (razen M2.4r render, prestavljen v M5-K kot klientski harness) | M2.1–M2.7 preverjeni v svetu; **baseline M2.6 zelen 5. 10.** (3 ponovitve × 9 celic, B1–B3 in P0–P9) — [baseline](meritve/baseline-2026-10-05.md) |
 | M3 Jedro entitete | **v teku** — M3.1–M3.5 zaključeni (vzrok R1 potrjen, R1 popravljen pod stikalom, regresija zelena v načinih 0/1/2, hitbox po sestopu); M3.6 zaključen 5. 10. (D-020, `RwAttackPriority`), M3.7 zaključen brez spremembe, M3.8 zaključen (`RwHitbox`), M3.8b strežniško zelen 7. 10. (GUI v klientu odprt), **M3.9 zaključen 7. 10.** (Q15 odprto) | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | **M4.14a v kodi** (izven vrstnega reda, na zahtevo uporabnika) | R2 analiza narejena; formacije (M4.14) prevedene in testirane v simulaciji, v svetu še ne — [zasnova](06-FORMACIJE.md), [scenarij](scenariji/M4.14-formacije.md) |
-| M5 Performance | **S1 zaključen 6. 10.** (`RwTargetPrefilter`: idle-500 alokacija 342 → 21 MB/s, MSPT p95 41,9 → 9,96 ms, boj-500 nevtralen); **S2 zaključen 7. 10.** (način 2: p95 → 5,24 ms, µs/NPC 9,7 → 6,6, ticki >10 ms 370 → 6, boj nevtralen); **profil JFR 8. 10.** (nov vrstni red S14 → S4 → S7; S3 in S8 umaknjena) | del že pokrit z M1.3, glej meritve; razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
+| M5 Performance | **M5.0 zaključen 8. 10.** (plan prepisan, D-030); **S1 zaključen 6. 10.** (`RwTargetPrefilter`: idle-500 alokacija 342 → 21 MB/s, MSPT p95 41,9 → 9,96 ms, boj-500 nevtralen); **S2 zaključen 7. 10.** (način 2: p95 → 5,24 ms, µs/NPC 9,7 → 6,6, ticki >10 ms 370 → 6, boj nevtralen); **profil JFR 8. 10.** (nov vrstni red S14 → S4 → S7; S3 in S8 umaknjena) | del že pokrit z M1.3, glej meritve; razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
@@ -80,6 +80,39 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-10-08 (75) — M5.0: raziskava preostanka M5
+
+**Paket:** M5.0 (D-029) · **Stanje:** končano
+
+**Narejeno:**
+- [Zapis raziskave](raziskave/M5.0-preostanek-performance.md) z oznakami [K]/[M]/[H]/[W]: primerjava z
+  baselineom, analiza vanilla sledenja poti, idle/skripte po profilu, kritika M5.1–M5.7 in S-seznama.
+- `dev/tools/model-sledenje-poti.js`: model zank vanilla `isDirectPathBetweenPoints` (ravna tla,
+  NPC 0,6 × 1,9) — ~1.100–1.140 branj blokov na klic, izmerjeno 1.110 (S14).
+- Plan M5 prepisan (`03-FAZE.md`, D-030), R5 v `02-ZAHTEVE.md` dopolnjen s stanjem po meritvah, M4.13 dobi
+  vhod S15, M6.6 prevzame M5.1. Q16.
+
+**Ugotovitve:**
+- Idle-500 p95 44,0 → 5,1 ms proti baselineu; **boj-500 je v razponu baselinea** (p50 7,3–8,9 proti 8,9 ms),
+  torej edina celica brez napredka.
+- ~90 % branj v `isDirectPathBetweenPoints` je prvo okno (3 × 3 stolpcev s kvadrom 3 × 2 × 3, ker vanilla
+  podaljšano širino poda tudi v oceno kvadra). Isto mesto se oceni ~3× na klic in 5–8× na `pathFollow` z več
+  kandidati → S14b. ~56 % alokacij boja (`BlockPos` v `getPathNodeTypeRaw`/`getPathNodeType`) je tu.
+- Vanilla 1.21.1 (lokalni viri Forge 52.1.14) kopenskim mobom med sledenjem poti ne bere blokov
+  (`followThePath` po razdalji in smeri, `canMoveDirectly` = false) in ima `PathTypeCache` (4.096 mest,
+  invalidacija ob spremembi bloka). Pri nas bi bilo prvo sprememba gibanja → M4.13.
+- Boj A/B je šumen zaradi poteka boja (baseline razpon p50 20 %, S14 B2 alokacija 36,7 proti 90 MB/s); nov
+  pogoj veljavnosti: klici sledenja poti v obeh vejah ±10 %.
+- `onCollide` v idle je skoraj samo poizvedba (dogodki ~2 % alokacij) → premisa S4 drži. Vanilla
+  `Entity.move` (26–29 %) brez vanilla mixinov ni dosegljiv (Q16); Lithium ga za novejše verzije pospeši,
+  za 1.12 portov ni.
+
+**Spremembe obnašanja:** nobene. **Meritve:** nobene nove (model je izračun, ne meritev).
+
+**Odprto za uporabnika:** Q16.
+
+**Naslednja seja:** M5.10 (meritev sledenja poti v boju), ali M4.0 (raziskava M4).
 
 ### 2026-10-08 (74) — M5-S S14 (delno) in D-029: raziskava pred vsakim milestonom
 
@@ -3740,6 +3773,7 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 | Q12 | Uvoz zunanjih 3D modelov (npr. prenesen model zmaja) kot model NPC-ja — je to v obsegu? Če da: kateri format (`.bbmodel` / OBJ / JSON), in kako model pride do igralcev (resource pack / lokalna mapa / prenos z URL-ja / push s strežnika)? | nova zahteva (R11?; R10 je od 6. 10. poveljevanje prek zemljevida); odvisna od M7, ker zunanji model prinese svoj skelet | **odprto, odprto 17. 9.** — danes mod zna samo (a) teksture prek URL-ja (`skinUrl`, `capeTexture`, `overlayTexture`) in (b) prevzem modela **registrirane entitete** (`setModel(id)` → `ModelData.entityClass`, `DataDisplay:405`), torej model iz že nameščenega moda. Geometrija iz datoteke ne obstaja: vsi modeli so hardcoded `ModelBase` razredi (`client/model/`). V M8 katalogu tega ni, ker tega nima niti CustomNPC+. Ocena XL; odločitev šele ko je M7 (animacijski skelet) jasen |
 | Q13 | Naj bo predzavrnitev tarč (`RwTargetPrefilter`) privzeto vklopljena? | M5, D-007 | **odločeno 7. 10.: da, način 2 (S1 + S2)** → D-027 |
 | Q15 | Naj nosilec z NPC jahačem pod `RwHitbox=1` sprejme potisk (masa nosilec + jahač)? | M3.9, R6 × R1 | **odločeno 7. 10.: da** → D-028 |
+| Q16 | Ali sme projekt za vanilla vroče točke dobiti **izbirne vanilla mixine** (npr. prek MixinBooterja)? Največji preostali strošek idle je vanilla `Entity.move` (26–29 % CPU, od tega poizvedba entitet za trke 11,8 %), ki ga CNPC prek lastnih razredov ne doseže; Lithium to v novejših verzijah reši brez spremembe obnašanja, za 1.12 porta ni. Pomeni novo odvisnost in poseg izven CNPC razredov (D-006) | M5, D-006 | **odprto 8. 10.**, ne blokira (M5.10–M5.14 so v CNPC razredih) |
 | Q14 | Pri R10 — kateri zemljevid: lasten iz `ladja_mod` (izbira kot pri ladjah), JourneyMap, Xaero ali nov v CNPC? | M11.3 | **odprto 6. 10.**, ne blokira do M11 |
 
 ---

@@ -430,7 +430,9 @@ synchronized (lock) { ... }
 To je `static`, torej ga **vsi `ScriptContainer` na strežniku delijo**. Vsak script dogodek
 vsakega NPC-ja se serializira skozi en monitor. Poleg tega je to internirani string literal —
 katerakoli druga koda, ki se sinhronizira na `"lock"`, se zaklene z njim.
-**To je najverjetneje največje posamezno ozko grlo pri velikem številu skriptanih NPC-jev.**
+~~**To je najverjetneje največje posamezno ozko grlo pri velikem številu skriptanih NPC-jev.**~~
+**Ovrženo z meritvijo (M5.0, 8. 10.):** vse NPC skripte tečejo na strežniški niti, lock je nesporen;
+v profilu skripte-500 je `ScriptContainer` 1,8 % CPU. Odstranitev ostane zaradi pravilnosti (M6.6, D-030).
 
 Dodatno: `Current` in `CurrentType` (vrstici 52–53) sta statična, torej je model
 "en script naenkrat" vgrajen v zasnovo.
@@ -455,7 +457,15 @@ box.grow(16,16,16))`** za vse NPC-je s `faction.getsAttacked` (vrstice 435–441
 
 Ostali kandidati so že katalogizirani v `PLAN_IMPLEMENTACIJE.md` §5 — ta tabela ostane v veljavi.
 
-### Predlagana rešitev, po vrsti
+### Stanje po meritvah (M5.0, 8. 10. 2026)
+
+Profil JFR in A/B serije so plan spodaj večinoma ovrgli; veljaven vrstni red je v `03-FAZE.md` (M5,
+D-030), utemeljitev v [`raziskave/M5.0-preostanek-performance.md`](raziskave/M5.0-preostanek-performance.md).
+Idle-500: p95 44 → 5,2 ms z `RwTargetPrefilter` (D-027). Boj-500 je nespremenjen; največji strošek je vanilla
+sledenje poti (`pathFollow` → `isDirectPathBetweenPoints`, ~1.110 branj blokov na klic), ne iskanje poti
+(2 %) in ne lock. Seznam spodaj ostane kot zgodovina prvotne ocene.
+
+### Predlagana rešitev, po vrsti (prvotna ocena, pred meritvami)
 
 1. **Izmeri prvo.** M2 postavi baseline: 50/200/500 NPC-jev, ločeno idle / combat /
    scripts / render. Brez tega se ne dela nič.
@@ -641,7 +651,7 @@ delujejo naprej. To ni pogajanje — obstoječi svetovi bi drugače nehali delov
 3. M6.3 hot reload + cache + izolacija ClassLoaderjev
 4. M6.4 diagnostika napak + `compileScripts` CLI
 5. M6.5 generator API dokumentacije + projektna predloga
-6. M6.6 popravek B5 + odstranitev globalnega locka (skupaj z M5.1)
+6. M6.6 popravek B5 + odstranitev globalnega locka (prej M5.1, D-030)
 7. M6.7 širjenje API-ja na player, world, item, block, quest, dialog
 
 ---

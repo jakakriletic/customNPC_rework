@@ -122,7 +122,7 @@ spremenimo.
 |---|---|---|
 | M2.1 | `rework/diag/` — instrumentacija: koliko NPC-jev tika, koliko izračunov poti, koliko script klicev, koliko časa v katerem AI tasku | M |
 | M2.1a | jedro `rework/diag`, zbiralnik na Forge dogodkih, ukaz `/rwdiag`, 23 testov | **narejeno** — `docs/scenariji/M2.1-diag.md` |
-| M2.1b | klicna mesta za pot (M3.1), AI taske (M3.1) in skripte (M5.1) | odprto — vezano na prenos teh razredov |
+| M2.1b | klicna mesta za pot (M3.1), AI taske (M3.1) in skripte (M6.6, prej M5.1) | odprto — vezano na prenos teh razredov |
 | M2.2 | Reprodukcija **R1**: 8 jahačev na 8 nosilcih, skupen cilj, log pozicij po ticku | S |
 | M2.3 | Reprodukcija **R2**: leteči NPC z oviro med seboj in ciljem; izmeriti, ali sploh pride | S |
 | M2.3a | scenarij, fixture (`R2_Flyer/Walker/Target/Control`), `r2-control.js` in `r2-run.ps1`: tri proge (leteči+zid, kopenski+zid, leteči prosto), merila L1–L8 | **narejeno** 17. 9. — `docs/scenariji/M2.3-R2.md`; čaka na prvi zagon v svetu |
@@ -206,7 +206,7 @@ kakovosti navigacije) za pakete M4.10–M4.13.
 | M4.10 | **Nadaljevanje delne poti.** Vanilla A* se prekine po 200 vozliščih in vrne **delno** pot (`PathFinder.findPath:65`), dolžino pa omeji na `getPathSearchRange()` = `FOLLOW_RANGE` = `NpcNavRange` = 32 (`EntityNPCInterface.java:334`). NPC obstane na koncu delne poti in to izgleda kot ovira. Popravek: ob prihodu na konec delne poti se pot obnovi, dokler cilj ni dosežen ali dokazano nedosegljiv, z omejitvijo števila obnov. Pod stikalom, privzeto original | S |
 | M4.11 | **Lasten `NodeProcessor`** — realna cena diagonale (1,41 namesto manhattanskih 2) in pregledani malusi `PathNodeType`. Vanilla uporablja manhattansko ceno **in** hevristiko pri 8-smernem gibanju (`PathPoint.distanceManhattan:86`), zato poti sistematično bežijo od diagonal; od tod stopničasto cikcakanje. A/B proti merilom M2.7 | M |
 | M4.12 | **Odločitvena točka: lasten `PathNavigate` z lastnim A\***. Izvede se **samo**, če M4.10, M4.11 in M5.6 po merilih M2.7 ne zadostujejo. Obseg: lasten proračun vozlišč, hevristika in domet; `Path`, `PathPoint` in move helper ostanejo vanilla, da vsi obstoječi AI taski delujejo nespremenjeno. **Brez asinhronega iskanja** | L |
-| M4.13 | Mehkejše sledenje poti: toleranca do waypointa in „string pulling" v `pathFollow` (`PathNavigate:271-305`). Samo če M2.7 pokaže trzanje in striženje vogalov kot merljiv pojav, ne kot občutek | S |
+| M4.13 | Mehkejše sledenje poti: toleranca do waypointa in „string pulling" v `pathFollow` (`PathNavigate:271-305`). Samo če M2.7 pokaže trzanje in striženje vogalov kot merljiv pojav, ne kot občutek. **Vhod iz M5.0 (S15):** to isto zanko (`isDirectPathBetweenPoints` za vsako točko nazaj) Mojang v 1.21.1 za kopenske mobe ne izvaja več — napredovanje po razdalji in geometrijskem testu smeri, brez branja blokov; v boju-500 je ta zanka največji strošek CPU. Sprememba gibanja, zato tu in ne v M5; skupaj z M4.11 (stopničaste poti se brez rezanja vidijo) | S |
 | M4.14 | **Formacije** (novo 18. 9., na zahtevo uporabnika, D-017): skupina NPC-jev se premika kot ena enota — ena pot za vse (vodja), zaprta zanka hitrosti, stiskanje skozi ozka grla, sidranje na koncu. Ukaz `/rwsquad` in `FormationApi` za skripte; brez ukaza paket ni prijavljen in ne doda taska. Zasnova: [`06-FORMACIJE.md`](06-FORMACIJE.md) | M |
 | M4.14a | Jedro (`SquadPlanner`, oblike, dodelitev mest, pot sidra) + adapter (`Squad`, `FormationMoveTask`, `SquadManager`, ukaz, API) + 21 testov v simulaciji | **narejeno 18. 9.** — prevedeno in zeleno v seji (D-014), v svetu ni pognano |
 | M4.14b | Preverjanje v svetu: dimni test F1–F12 in A/B proti skripti na prizorišču M2.7 (FA1–FA6). Za A/B mora `nav-control.js` dobiti način `FORMACIJA`. [Scenarij](scenariji/M4.14-formacije.md) | S |
@@ -247,23 +247,38 @@ NPC-jev. Odprejo se šele, če po M4.10, M4.11 in M5.6 merila M2.7 še vedno pad
 
 | ID | Paket | Vel. |
 |---|---|---|
-| **M5.0** | **Raziskava preostanka M5 (D-029), pred naslednjim paketom M5.** Izhodišče je profil JFR (M5-S P1, 8. 10.): kje gre CPU v idle/boj/skripte in kaj od M5.1–M5.7 ter S-paketov v [09](09-PERFORMANCE-RAZISKAVA.md) to sploh naslavlja. Zunanji viri: Paper/Spigot/Sponge optimizacije poti in entitet, Lithium/Canary za 1.12, drugi NPC modi. Vključi odprt A/B S14 (koda v kodi, enakost dokazana, učinek nedokazan) in kandidata S14b (tip vozlišča na pozicijo). Paketi M5.1–M5.7 in S-seznam se po potrebi prepišejo | S |
-| M5.1 | **Odstranitev globalnega script locka** (`ScriptContainer.java:51,142`); lock na instanco; `Current`/`CurrentType` iz statike v kontekst. Skupaj z M6.6. | M |
-| M5.2 | AI budget / scheduler: globalna omejitev novih izračunov poti na tick, poštena vrsta. **Brez** zmanjšanja tick frekvence NPC-jev. | M |
-| M5.3 | Deduplikacija poizvedb po svetu: faction check (`EntityNPCInterface.java:435-441`) in `onCollide` enkrat na chunk, ne na NPC-ja | M |
-| M5.4 | Alokacijska higiena: `StringBuilder` v `getFullCode` in `ConvertList`, lazy writerji v `run()`, zgodnji izhod v `DataTimers.update()` | S |
-| M5.5 | Meritev po vsakem od zgornjih; kandidat, ki ne preseže merilnega šuma, se **zavrže** | S |
-| M5.6 | **Deljenje in predpomnjenje poti** (povišano iz „šele če" 17. 9., D-012). Osem NPC-jev proti istemu cilju danes izvede osem neodvisnih iskanj, vsako z novim `ChunkCache` čez ~6×6 chunkov in `getChunkFromChunkCoords` na vsak chunk (`PathNavigate:126-129`), kar na strežniku zna sprožiti tudi nalaganje chunka. Skupen ali bližnji cilj → eno iskanje in deljen rezultat, z invalidacijo ob spremembi blokov. **Največji pričakovani dobitek v celotnem navigacijskem sklopu** — večji od kakovosti samega A\* | M |
-| M5.7 | Šele če po zgornjem ostane ozko grlo: prostorski indeks, render LOD | L |
+| **M5.0** | **Raziskava preostanka M5 (D-029)** | **zaključeno 8. 10.** — [zapis](raziskave/M5.0-preostanek-performance.md); plan spodaj je prepisan po njem (D-030) |
+| M5-S S1, S2 | Predzavrnitev tarč in poizvedba samo po igralcih (`RwTargetPrefilter`, D-027) | **zaključeno 6./7. 10.** — idle-500 p95 44 → 5,2 ms |
+| M5-S P1 | Profil JFR strežniške niti (idle/boj/skripte × 500) | **zaključeno 8. 10.** |
+| **M5.10** | **Odločilni poskus za boj:** števec ns okoli `isDirectPathBetweenPoints` in celega `pathFollow` v načinu 0 ter štetje klicev in kandidatov v vseh načinih `RwPathFollowCache`. Če neposredno izmerjen delež sledenja poti v boju-500 ni vsaj ~25 % ticka, se M5.11 ne izvede. Ob tem nov pogoj veljavnosti A/B boja: klici sledenja poti na tick med ponovitvami in vejama v ±10 %, sicer primerjava časa na klic | S |
+| **M5.11** | **S14b — pomnjenje tipa vozlišča za čas enega `pathFollow`** v `RwPathNavigateGround` (ključ = pozicija; entiteta in svet med klicem enaka; `currentEntity` nastaviti kot vanilla). Model: 3× manj ocen na klic, 5–8× na `pathFollow` z več kandidati; ~56 % alokacij boja je v teh ocenah. Enakost z obstoječim načinom preverbe; A/B 0 / S14 / S14b — kandidat pod šumom gre iz kode (tudi S14) | S |
+| M5.12 | **S4 — `onCollide` brez opazovalca:** brez skripte `collide` in brez poslušalca `CollideEvent` na `WrapperNpcAPI.EVENT_BUS` preskočiti poizvedbo (idle 12 %, skripte 15 % CPU). Nadomesti M5.3 | S |
+| M5.13 | **S7 — prejemniki utripa oči** po `world.playerEntities` z istim testom presečišča namesto AABB 160 blokov (idle 6,5 %) | S |
+| M5.9 | **Scenarij nedosegljive tarče** (`perf-run` varianta): NPC-ji s tarčo, do katere ni poti (stolp/zid). Edina podlaga za M5.2, M5.6 in S5 — v obstoječih celicah je iskanje poti 2 % | S |
+| M5.2 | *Pogojno na M5.9:* AI budget / scheduler novih izračunov poti na tick, poštena vrsta. **Brez** zmanjšanja tick frekvence NPC-jev; sprememba obnašanja → stikalo | M |
+| M5.6 | *Pogojno na M5.9:* deljenje in predpomnjenje poti ter negativni predpomnilnik (S5). Premisa »največji dobitek v navigacijskem sklopu« je za boj ovržena (P1: 2 %) | M |
+| M5.14 | **S16 — senčna polja `EntityDataManager`** za CNPC-jeve ključe (`Attacking`, `IsDead`, `Walking`), osvežena v `notifyDataManagerChange`. Idle ≤ ~5–8 % | S |
+| M5.8 | **Kapaciteta proti baselineu** (izhodni kriterij): največji N pri MSPT p95 ≤ 25 in ≤ 50 ms, original proti vsem sprejetim stikalom, idle in boj, gosta mreža in redek razpored (razmik ≥ 3 bloke) | S |
+| ~~M5.1~~ | Globalni script lock → **preseljen v M6.6** (D-030): `ScriptContainer` je v skripte-500 1,8 % CPU, lock je nesporen; ostane zaradi pravilnosti, brez cilja MSPT | — |
+| ~~M5.3~~ | Deduplikacija po chunku → **zavrženo** (D-030), nadomesti M5.12 (S4) | — |
+| ~~M5.4~~ | Alokacijska higiena → **zavrženo kot samostojen paket** (D-030): `DataTimers` ~0,8 MB/s, ostalo le pri skriptah — pod šumom | — |
+| ~~M5.5~~ | Meritev po vsakem → ni paket, je pravilo (D-016) | — |
+| ~~M5.7~~ | Prostorski indeks → **zavrženo** (D-030, chunk sekcije so že indeks; drag je gostota mreže); render LOD → K5 v M5-K | — |
+
+Vrstni red M5-S: **M5.10 → M5.11 → M5.12 → M5.13 → M5.9 → (M5.2 / M5.6 po izidu) → M5.14 → M5.8.**
+Sledenje poti brez branja blokov po vzoru 1.21.1 (S15, sprememba gibanja) ni v M5, ampak vhod za M4.13.
+M5-K (klient, K0–K13 v [09](09-PERFORMANCE-RAZISKAVA.md)) je ločena veja z vhodnim pogojem M2.4r.
+Vanilla `Entity.move` (idle 26–29 %) je brez vanilla mixinov nedosegljiv → **Q16**.
 
 **Izhodni kriterij:**
 - vsak sprejet paket ima A/B meritev, ki presega šum
 - nobena funkcionalna regresija v matriki iz `PLAN_IMPLEMENTACIJE.md` §6
 - timerji in script trace se ujemajo z referenco
-- zapisano, koliko NPC-jev zdaj zmore isti stroj proti baselineu
+- zapisano, koliko NPC-jev zdaj zmore isti stroj proti baselineu (M5.8)
 
-**Tveganja:** odstranitev globalnega locka lahko razkrije skrite race conditione v obstoječih
-skriptah. Zato stikalo, privzeto staro obnašanje, in eksplicitno opozorilo v changelogu.
+**Tveganja:** S4 mora zanesljivo zaznati poslušalce na vodilu CNPC API-ja (tudi registrirane kasneje),
+sicer tiho izgine dogodek; A/B boja je šumen zaradi poteka boja (M5.10). Tveganje odstranitve globalnega
+locka je od D-030 v M6.6.
 
 ---
 
@@ -283,7 +298,7 @@ lahko uporabi.
 | M6.3 | `rework/script/api/` — tipiziran API za NPC (najmanjši uporaben nabor) | M |
 | M6.4 | Izolacija: `ClassLoader` na skripto, hot reload, cache prevedenih razredov | M |
 | M6.5 | **Diagnostika napak**: prevajalne napake z datoteko/vrstico/stolpcem; runtime izjeme s stack traceom skripte; skripta se po popravku spet zažene (popravek **B5**) | M |
-| M6.6 | Odstranitev globalnega locka (skupaj z M5.1) | — |
+| M6.6 | Odstranitev globalnega locka (prej M5.1, preseljen z D-030: v M5 ni dobitka MSPT, ostane zaradi pravilnosti statičnih `Current`/`CurrentType`) | — |
 | M6.7 | `.\dev.ps1 compileScripts` — prevajanje vseh skript **brez Minecrafta** | S |
 | M6.8 | Varnostna omejitev: whitelist paketov, prepoved refleksije / `java.io` / `java.net` / `System.exit`; bytecode verifikacija | M |
 | M6.9 | Generator API dokumentacije: `docs/api/API.json`, `API.md`, `HOOKS.md` | M |
@@ -497,4 +512,4 @@ veja B (entiteta in gibanje):    M2 → M3 → M4 → M5
 ```
 
 Stikališče je `EntityNPCInterface` (veja B) proti `ScriptContainer` (veja A) — prekrivata se
-samo pri M5.1/M6.6. Če se dela vzporedno, gre ta paket v vejo A in veja B ga ne dotika.
+samo pri M6.6 (prej M5.1). Če se dela vzporedno, gre ta paket v vejo A in veja B ga ne dotika.

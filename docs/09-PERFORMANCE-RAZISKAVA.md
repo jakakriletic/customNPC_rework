@@ -84,6 +84,11 @@ razlikujejo:
 **Vrstni red M5-S od 8. 10.:** S14 → S4 → S7 → (S6 samo s Forge skriptami, M5.4 drobno) — vsak z A/B po
 protokolu D-016, kandidat pod šumom se zavrže.
 
+**Nadomeščeno z M5.0 (8. 10., D-030):** pravi strošek sledenja poti je ocena tipa vozlišča (~1.110 branj na klic,
+model se ujema z meritvijo), ne iskanje chunka → nov **S14b**; dodana **S15** (sledenje poti po vzoru 1.21.1, v M4.13)
+in **S16** (senčna polja `EntityDataManager`); S9 zavržen, S5/S6 pogojna. Veljaven vrstni red je v `03-FAZE.md`,
+utemeljitev v [raziskavi M5.0](raziskave/M5.0-preostanek-performance.md).
+
 Zunaj CNPC-jevega dosega ostaja vanilla gneča: `collideWithNearbyEntities` in trki pri premiku sta O(k²) v kupih **[K]**. Spigot, Sponge in Paper to omejijo s kapo trkov, kar je sprememba obnašanja ([Spigot wiki](https://www.spigotmc.org/wiki/spigot-configuration/)). Ostali največji splošni dobitki iz spleta (activation range, Pufferfish DAB, Tick Dynamic, večnitnost) kupijo TPS s spremembo tega, kdaj in ali entitete tečejo. Pod pravili projekta so prepovedani in imajo dokumentirane napake, npr. DAB „utopi“ oddaljene entitete ([Pufferfish #58](https://github.com/pufferfish-gg/Pufferfish/issues/58)), CNPC+ pa je večnitno pošiljanje paketov umaknil zaradi sinhronizacijskih težav ([CustomNPC+ releases](https://github.com/KAMKEEL/CustomNPC-Plus/releases)). Deljen Nashorn motor bi odpravil prevajanje in pomnilnik po NPC-ju, saj ločeni motorji onemogočijo predpomnjenje prevedenih skript ([cometd #737](https://github.com/cometd/cometd/issues/737); [nashorn-dev](https://mail.openjdk.org/pipermail/nashorn-dev/2014-October/003760.html)), vendar je izrecno prepovedan in zahteva ločen projekt.
 
 ## Klient: display listi že obstajajo, strošek je v klicih na entiteto

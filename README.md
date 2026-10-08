@@ -15,7 +15,7 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 |---|---|
 | Datum zadnje posodobitve | 2026-10-08 |
 | Trenutna faza | **M3 — jedro entitete** (milestoni M0–M10, M8 izločen). M0, M1 zaključena; M2 (baseline M2.6 zelen 5. 10.). M3.1–M3.8 zaključeni (R1 pod `RwMountSteering`, prioriteta napada pod `RwAttackPriority`, hitbox načini pod `RwHitbox`). Izven vrstnega reda: **M4.14a formacije** (v svetu še ne pognane) in **Baritone ozadje NB** (D-022, V4 sprejet 28. 9., izbirno, privzeto izklopljeno). Animacije (M7) — jedro v ločenem modu `customNPC_entities_mod` (D-024) |
-| Naslednji korak | **M5.0 — raziskava preostanka M5**, nato **M4.0 — raziskava M4** (D-029: vsak milestone se začne z raziskavo izvedbe, plan ni dogma, ker je delno nastal s šibkejšimi AI modeli; postopek v [`05-SEJA-PROTOKOL.md`](docs/05-SEJA-PROTOKOL.md) §1a). M5-S: S1, S2 in profil JFR narejeni, S14 v kodi (A/B odprt). Dnevnik: [`docs/04-STANJE.md`](docs/04-STANJE.md) |
+| Naslednji korak | **M5.10** — neposredna meritev sledenja poti v boju, nato **M5.11** (S14b, pomnjenje tipa vozlišča), S4, S7 (plan M5 prepisan po raziskavi [M5.0](docs/raziskave/M5.0-preostanek-performance.md), D-030); **M4.0 — raziskava M4** (D-029: vsak milestone se začne z raziskavo izvedbe, postopek v [`05-SEJA-PROTOKOL.md`](docs/05-SEJA-PROTOKOL.md) §1a). M5-S: S1, S2, profil JFR in M5.0 narejeni; idle-500 p95 44 → 5,2 ms, boj nespremenjen. Dnevnik: [`docs/04-STANJE.md`](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
 | Prevedljivih razredov | 109 v `src/patch`, 28 testnih datotek (208 JUnit + 31 primerjalnih testov originala zelenih 5. 10.); `verify-package`: 64 spremenjenih razredov originala |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
@@ -75,7 +75,7 @@ M1  Integriteta podatkov        R9 + B1/B2, atomski zapis, migracija ← zaklju�
 M2  Diagnostika in meritve      reprodukcije, profiling, baseline    ← ~96 %, baseline M2.6 tece 5. 10.
 M3  Jedro entitete              R1 mount, R6 solid hitbox            ← smo tu (5 od 10 paketov)
 M4  Gibanje in navigacija       R2 letenje, 3D pathfinding, kopenska navigacija
-M5  Performance AI              R5, odstranitev globalnega script locka
+M5  Performance AI              R5 (idle narejen; boj: sledenje poti; lock preseljen v M6.6, D-030)
 M6  Scripting platforma         R7 Java scripting, hook registry
 M7  Animacije + AI okolje       R4 animacijski sistem in avtorsko okolje
 M8  (izločeno, D-023)           migracija CustomNPC+ ni več v planu
