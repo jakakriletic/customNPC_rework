@@ -9,10 +9,10 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-08** (seja 73: **M5-S P1 profil JFR** — boj-500: 48 % CPU strežniške niti v vanilla `pathFollow` → `isDirectPathBetweenPoints` (27 % hash iskanje chunka), iskanje poti 2 %; idle: `Entity.move` 29 %, `onCollide` 12 %, utrip oči 6 %; nov kandidat S14, vrstni red S14 → S4 → S7. Prej seja 72: odločitvi Q13 → D-027, `RwTargetPrefilter` privzeto 2; Q15 → D-028, nosilec z NPC posadko sprejme potisk. Prej seja 71: **M5-S S2 zaključen** — poizvedba iskalnika tarč samo po igralcih, `RwTargetPrefilter=2`: idle-500 p95 10,2 → 5,2 ms, boj nevtralen) |
+| Zadnja posodobitev | **2026-10-08** (seja 74: **D-029** — vsak milestone se začne z raziskavo izvedbe M?.0, plan ni dogma; M5-S S14 v kodi, enakost dokazana 0/616.276, A/B nedokazan. Prej seja 73: **M5-S P1 profil JFR** — boj-500: 48 % CPU strežniške niti v vanilla `pathFollow` → `isDirectPathBetweenPoints` (27 % hash iskanje chunka), iskanje poti 2 %; idle: `Entity.move` 29 %, `onCollide` 12 %, utrip oči 6 %; nov kandidat S14, vrstni red S14 → S4 → S7. Prej seja 72: odločitvi Q13 → D-027, `RwTargetPrefilter` privzeto 2; Q15 → D-028, nosilec z NPC posadko sprejme potisk. Prej seja 71: **M5-S S2 zaključen** — poizvedba iskalnika tarč samo po igralcih, `RwTargetPrefilter=2`: idle-500 p95 10,2 → 5,2 ms, boj nevtralen) |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **M3.6 zaključen 5. 10.:** način 1 zelen (tavajoči v dosegu 10/10 vzorcev z zakasnitvijo 10 = kontrola), način 0 napako ponovi (združeno 6/8 nad kontrolo, mediana 25), hipoteza P2 (`aggroRange`) potrjena. M3.7 in M3.8 zaključena 5. 10. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | **M5-S S1 zaključen 6. 10.**, **S2 zaključen 7. 10.**, **profil JFR (P1) 8. 10.** ([meritev](meritve/2026-10-08-M5-S-P1-profil-jfr.md)). Naslednje: **M5-S S14** (sledenje poti brez hash iskanja chunka za vsak blok; boj-500 do −27…48 % CPU), nato S4 (`onCollide` brez opazovalca) in S7 (utrip oči); vzporedno **M3.8b GUI v klientu** (z igralcem, tudi potisk med dvema solid NPC-jema iz M3.9), M3.10 (opcijsko). Odprto: PR `codex/m7-cnpc-integration` → `main`; potrditev razdelitve M5-S/M5-K ([09](09-PERFORMANCE-RAZISKAVA.md)) |
+| Naslednji paketi | **M5.0 — raziskava preostanka M5** (D-029), nato **M4.0**. Vhod za M5.0: profil JFR ([P1](meritve/2026-10-08-M5-S-P1-profil-jfr.md)), S14 nedokazan ([zapis](meritve/2026-10-08-M5-S14-sledenje-poti.md)), kandidat S14b (tip vozlišča na pozicijo; ~1.110 branj blokov na klic). Vzporedno: M3.8b GUI v klientu (z igralcem). Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -80,6 +80,35 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-10-08 (74) — M5-S S14 (delno) in D-029: raziskava pred vsakim milestonom
+
+**Paket:** M5-S S14 · **Stanje:** delno — koda in dokaz enakosti narejena, učinek nedokazan
+
+**Narejeno:**
+- `rework/nav`: `RwPathNavigateGround` (navigator vsakega kopenskega NPC-ja, pri 0 kliče `super`),
+  `MemoBlockAccess`, `ChunkMemo`, `PathFollowCache`, `/rwpath [0|1|2|reset]`; stikalo
+  `RwPathFollowCache` (privzeto 0). `ChunkMemoTest` (4), build 253 testov zelen, `verify-package` PASS (64).
+- `perf-run.ps1 -RwPath N` (merili R1/R2 za način 2).
+- **Enakost v svetu:** boj-500, način 2: 616.276 primerjav, **0 neujemanj**.
+- **A/B boj-500:** A 8,96 ms povp (razpon 0,30); B 8,84 in 7,85, tretja ponovitev B neveljavna (P9:
+  med celico je tekel uporabnikov `ladja_mod`). Izid **nedokazano**, stikalo ostane 0.
+  [zapis](meritve/2026-10-08-M5-S14-sledenje-poti.md)
+- **D-029** (odločitev uporabnika): pred vsakim milestonom paket M?.0 — raziskava izvedbe (koda,
+  meritve, zunanji viri), ki lahko pakete spremeni, zavrže ali doda; plan je delno nastal s šibkejšimi
+  AI modeli. `05-SEJA-PROTOKOL.md` §1a, `03-FAZE.md` (pravilo, M4.0, M5.0), README.
+
+**Ugotovitve:**
+- Profil JFR je strošek iskanja chunka precenil; pravi strošek je ~1.110 branj blokov na klic
+  (prekrivajoča se okna `isSafeToStandAt`) → kandidat S14b.
+- Uporabnik je dovolil, da seja med meritvijo zapre tuje java procese, nato je zagon zaustavil;
+  serija B ni bila ponovljena in noben proces ni bil zaprt.
+
+**Spremembe obnašanja:** nobene (privzeto 0).
+
+**Meritve:** S14 enakost in delni A/B (tabela Meritve).
+
+**Naslednja seja:** M5.0 — raziskava preostanka M5 (S14/S14b, M5.1–M5.7, S4, S7), po D-029.
 
 ### 2026-10-08 (73) — M5-S P1: profil JFR strežniške niti pri 500 NPC-jih
 
@@ -3776,6 +3805,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-10-08 | M5-S S14 `RwPathFollowCache`, boj-500: enakost (način 2) in A/B 0/1 | enakost **0 neujemanj / 616.276**; A povp 8,96 ms (razpon 0,30), B 8,84 / 7,85 (3. ponovitev neveljavna, P9) — **nedokazano**, stikalo ostane 0 | [zapis](meritve/2026-10-08-M5-S14-sledenje-poti.md) |
 | 2026-10-08 | M5-S P1 profil JFR, idle/boj/skripte × 500, `RwTarget 2`, ena ponovitev | boj-500: **48 %** CPU strežniške niti v `pathFollow` → `isDirectPathBetweenPoints` (27 % hash iskanje chunka), iskanje poti 2 %; idle-500: `Entity.move` 29 %, `onCollide` 12 %, `EntityDataManager.get` 12 %, utrip oči 6,5 %, iskalnik tarč 1,8 %; alokacija ~55 % vanilla `AxisAlignedBB` | [zapis](meritve/2026-10-08-M5-S-P1-profil-jfr.md) |
 | 2026-10-07 | M5-S S2 A/B `RwTargetPrefilter` 1/2, idle-500 in boj-500, 3 ponovitve | idle-500: MSPT p95 10,22 → **5,24** ms, p99 11,27 → **5,51**, µs/NPC 9,74 → **6,60**, ticki >10 ms 370 → **6**, alokacija nespremenjena; boj-500 nevtralen (`zozenih = 0`) | [zapis](meritve/2026-10-07-M5-S2-poizvedba-igralci.md) |
 | 2026-10-07 | M3.9 solid × jahanje, `m39-run.ps1` | J1–J6, P1–P4 zelena: jahan nosilec 0 v vseh načinih (J4 solid proti jahanemu 0/0 → Q15); 8/8 hodečih mimo NPC-ja na poti brez teleporta; solid ob stiku 0 proti 0,0219 bloka/tick | [zapis](meritve/2026-10-07-M3.9-solid-jahanje.md) |

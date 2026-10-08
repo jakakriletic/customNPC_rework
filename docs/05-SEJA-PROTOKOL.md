@@ -21,6 +21,30 @@ da se ne izgubi kontekst in da se delo ne podvaja.
 **Ne začni kodirati, dokler nisi prebral 1–5.** Vsak paket ima razlog, zakaj je tam kjer je,
 in ta razlog ni v kodi.
 
+### 1a. Nov milestone — najprej raziskava, šele nato paketi (D-029)
+
+Plan v `03-FAZE.md` in `02-ZAHTEVE.md` je delno nastal s šibkejšimi AI modeli. **Ne sledi mu
+slepo.** Preden se začne prvi paket novega milestona (ali nadaljuje milestone, ki ima v
+`03-FAZE.md` odprt paket **M?.0**), seja izvede paket **M?.0 — raziskava izvedbe**:
+
+1. **Koda in podatki:** preberi dejansko kodo (original v `reference-src`, vanilla/Forge vire),
+   vse obstoječe meritve in profile za to področje. Kaj je **izmerjeno**, kaj samo **ocenjeno**?
+2. **Zunanji viri (deep research):** kako so isti problem rešili drugi (CustomNPC+, drugi modi,
+   Paper/Sponge/Spigot, Forge, literatura, issue trackerji). Navedi vire s povezavami.
+3. **Kritika plana:** za vsak paket milestona zapiši *ohrani / spremeni / zavrzi / dodaj* in zakaj.
+   Preveri tudi premise in vrstni red, ne samo izvedbo. Napačna premisa je najdražja napaka
+   (primera: D-020, M5-S P1).
+4. **Zapis:** `docs/raziskave/<milestone>-<tema>.md` z oznakami **[K]** (iz kode), **[M]** (izmerjeno),
+   **[H]** (hipoteza), **[W]** (zunanji vir).
+5. **Prilagoditev dokumentacije:** posodobi `03-FAZE.md` (paketi, vrstni red, izhodni kriterij),
+   `02-ZAHTEVE.md`, povzetek v `README.md` in po potrebi nova odločitev D-0NN v `01-ARHITEKTURA.md`.
+   Kar spremeni **obseg ali cilj** zahteve, ne odloči seja sama: zapiše se kot vprašanje
+   uporabniku (Q) v `04-STANJE.md`.
+
+Raziskava je **samostojen paket** (ena seja) in ne piše produkcijske kode. Merilni poskus, ki
+odloči med dvema možnostma, je dovoljen. Ista pravila veljajo, kadar se med milestonom izkaže,
+da je premisa paketa napačna: ustavi se, zapiši, prilagodi plan, šele nato nadaljuj.
+
 ---
 
 ## 2. Pravila dela

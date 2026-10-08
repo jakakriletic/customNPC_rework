@@ -7,6 +7,12 @@ napisana.
 Oznake velikosti: **S** = ena seja · **M** = 2–4 seje · **L** = 5–10 sej · **XL** = več kot 10.
 Ocene so grobe in se popravljajo v `docs/04-STANJE.md`.
 
+**Ta plan ni dogma (D-029, 8. 10. 2026).** Paketi spodaj so delno nastali s šibkejšimi AI modeli.
+Vsak milestone se zato začne s paketom **M?.0 — raziskava izvedbe** (koda, meritve, zunanji
+viri, kritika vsakega paketa), ki lahko pakete spremeni, zavrže, doda ali prerazvrsti. Postopek:
+[`05-SEJA-PROTOKOL.md` §1a](05-SEJA-PROTOKOL.md). Milestone brez zaključenega M?.0 se ne začne;
+za milestone, ki že teče (M5), M5.0 velja pred naslednjim paketom.
+
 ---
 
 ## Pregled
@@ -187,6 +193,7 @@ kakovosti navigacije) za pakete M4.10–M4.13.
 
 | ID | Paket | Vel. |
 |---|---|---|
+| **M4.0** | **Raziskava izvedbe (D-029), pred vsemi ostalimi paketi M4.** Letenje (CustomNPC+, vanilla `PathNavigateFlying`/`FlyingNodeProcessor`, drugi modi z letečimi entitetami, 3D A* in alternative) in kopenska navigacija (izmerjeno: R2 je zastarela delna pot, M2.3; sledenje poti je v boju 48 % CPU, M5-S P1; Baritone kot izbirno ozadje, D-022). Za vsak paket M4.1–M4.14 odločitev ohrani/spremeni/zavrzi/dodaj, zapis v `docs/raziskave/`, prilagoditev tega razdelka | S |
 | M4.1 | Branje CustomNPC+ flying implementacije; odločitev: port ali lasten 3D pathfinder | S |
 | M4.2 | `rework/movement/FlightMode` enum + NBT ključ `RwFlightMode` + GUI; privzeto = original | S |
 | M4.3 | `HoverMoveHelper` — creative-style, brez inercije, hitro dušenje | M |
@@ -240,6 +247,7 @@ NPC-jev. Odprejo se šele, če po M4.10, M4.11 in M5.6 merila M2.7 še vedno pad
 
 | ID | Paket | Vel. |
 |---|---|---|
+| **M5.0** | **Raziskava preostanka M5 (D-029), pred naslednjim paketom M5.** Izhodišče je profil JFR (M5-S P1, 8. 10.): kje gre CPU v idle/boj/skripte in kaj od M5.1–M5.7 ter S-paketov v [09](09-PERFORMANCE-RAZISKAVA.md) to sploh naslavlja. Zunanji viri: Paper/Spigot/Sponge optimizacije poti in entitet, Lithium/Canary za 1.12, drugi NPC modi. Vključi odprt A/B S14 (koda v kodi, enakost dokazana, učinek nedokazan) in kandidata S14b (tip vozlišča na pozicijo). Paketi M5.1–M5.7 in S-seznam se po potrebi prepišejo | S |
 | M5.1 | **Odstranitev globalnega script locka** (`ScriptContainer.java:51,142`); lock na instanco; `Current`/`CurrentType` iz statike v kontekst. Skupaj z M6.6. | M |
 | M5.2 | AI budget / scheduler: globalna omejitev novih izračunov poti na tick, poštena vrsta. **Brez** zmanjšanja tick frekvence NPC-jev. | M |
 | M5.3 | Deduplikacija poizvedb po svetu: faction check (`EntityNPCInterface.java:435-441`) in `onCollide` enkrat na chunk, ne na NPC-ja | M |
