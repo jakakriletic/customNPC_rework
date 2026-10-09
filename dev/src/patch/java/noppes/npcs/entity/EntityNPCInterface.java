@@ -1221,6 +1221,11 @@ IAnimals {
         if (!this.isEntityAlive() || this.ticksExisted % 4 != 0 || this.world.isRemote) {
             return;
         }
+        // M5.12 (S4): brez skript in brez poslusalca CollideEvent je poizvedba brez ucinka.
+        int rwCollide = noppes.npcs.rework.entity.CollideSkip.decide(this);
+        if (rwCollide == noppes.npcs.rework.entity.CollideSkip.SKIP_QUERY) {
+            return;
+        }
         AxisAlignedBB axisalignedbb = null;
         axisalignedbb = this.getRidingEntity() != null && this.getRidingEntity().isEntityAlive() ? this.getEntityBoundingBox().union(this.getRidingEntity().getEntityBoundingBox()).grow(1.0, 0.0, 1.0) : this.getEntityBoundingBox().grow(1.0, 0.5, 1.0);
         List list = this.world.getEntitiesWithinAABB(EntityLivingBase.class, axisalignedbb);
@@ -1231,6 +1236,9 @@ IAnimals {
             Entity entity = (Entity)list.get(i);
             if (entity == this || !entity.isEntityAlive()) continue;
             EventHooks.onNPCCollide(this, entity);
+            if (rwCollide == noppes.npcs.rework.entity.CollideSkip.RUN_UNOBSERVED) {
+                noppes.npcs.rework.entity.CollideSkip.unobservedEvent();
+            }
         }
     }
 

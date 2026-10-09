@@ -115,6 +115,8 @@ import noppes.npcs.rework.ai.AttackPriority;
 import noppes.npcs.rework.ai.CommandRwAttack;
 import noppes.npcs.rework.ai.CommandRwTarget;
 import noppes.npcs.rework.nav.CommandRwPath;
+import noppes.npcs.rework.entity.CollideSkip;
+import noppes.npcs.rework.entity.CommandRwCollide;
 import noppes.npcs.rework.nav.PathFollowCache;
 import noppes.npcs.rework.ai.TargetPrefilter;
 import noppes.npcs.rework.diag.CommandRwDiag;
@@ -159,6 +161,8 @@ public class CustomNpcs {
     public static int RwTargetPrefilter = 2;
     @ConfigProp(info="Rework M5.11 (S14b): ground NPC path following (PathNavigateGround.isDirectPathBetweenPoints, called every tick while an NPC follows a path) evaluates the path node type of each block position once per call and reuses it (the original evaluates the same positions about three times). Same result. 0 = original, 1 = reuse node types, 2 = verify (runs both, returns the original, counts mismatches; double cost, for test scenarios only). Default 1 since 2026-10-09 (D-032)")
     public static int RwPathFollowCache = 1;
+    @ConfigProp(info="Rework M5.12 (S4): an NPC without enabled scripts skips the collide area query (every 4th tick) when nothing listens for NpcEvent.CollideEvent on the CustomNPCs event bus; with no script and no listener the original query has no effect. Listeners are checked on every call. 0 = original, 1 = skip without an observer, 2 = verify (original, counts calls and events that would be skipped)")
+    public static int RwCollideSkip = 0;
     @ConfigProp(info="Rework M7: allow NPC Baritone as an optional navigation backend for NPCs with RwNavBackend=1 in NBT. 0 = original vanilla navigation, 1 = permit opt-in NPCs")
     public static int RwNavBackend = 0;
     @ConfigProp(info="Rework M3.8 (R6): honour per-NPC hitbox modes (NBT RwHitboxMode: 1 = solid, cannot be moved by entity pushing; 2 = smart, push strength by hitbox size and shield). With 1, an NPC carrier ridden only by NPCs is pushed too, with the mass of carrier and riders (D-028). 0 = original vanilla pushing for every NPC, 1 = honour the modes")
@@ -359,8 +363,11 @@ public class CustomNpcs {
         // M5-S S1: predzavrnitev v iskalniku tarc; /rwtarget jo med tekom preklopi.
         event.registerServerCommand((ICommand)new CommandRwTarget());
         TargetPrefilter.setMode(RwTargetPrefilter);
-        // M5-S S14: sledenje poti prek predpomnilnika chunkov; /rwpath ga med tekom preklopi.
+        // M5.11 (S14b): pomnjenje tipa vozlisca v sledenju poti; /rwpath ga med tekom preklopi.
         event.registerServerCommand((ICommand)new CommandRwPath());
+        // M5.12 (S4): onCollide brez opazovalca; /rwcollide ga med tekom preklopi.
+        event.registerServerCommand((ICommand)new CommandRwCollide());
+        CollideSkip.setMode(RwCollideSkip);
         PathFollowCache.setMode(RwPathFollowCache);
         // M4.14: formacije. Brez ukaza (ali klica iz skripte) paket ni prijavljen na event
         // bus in ne doda nobenega AI taska, zato je obnasanje brez ukaza enako originalu.

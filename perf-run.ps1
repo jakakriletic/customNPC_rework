@@ -63,6 +63,13 @@
 # med nacinoma razlikuje najvec 10 %, pogoj veljavnosti M5.0). MSPT celice je mesanica nacinov.
 #     .\perf-run.ps1 -Variants boj -Counts 500 -RwTarget 2 -RwPathAB 0,1 -RwPathCas
 #
+# -RwCollide N (M5.12, 9. 10.): po postavitvi sveta poslje '/rwcollide N' (onCollide brez opazovalca:
+# 1 = preskok, 2 = preverba). Odtis dobi kljuc rwcollide, celica velicine rwcollide.* (klici,
+# preskoceni, brez opazovalca, dogodki brez opazovalca). Merilo K1: v nacinu 1/2 je odlocitev tekla.
+# V nacinu 1 po meritvi se preverba poslusalca: '/rwcollide poslusalec 1' - preskok se mora ustaviti
+# in poslusalec mora dobiti dogodke (K2), po '/rwcollide poslusalec 0' se preskok nadaljuje (K3).
+#     .\perf-run.ps1 -Variants idle -Counts 500 -RwTarget 2 -RwCollide 1
+#
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
 # pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
 # (merilo P9), in ob sesutju serverja takoj konca z vzrokom iz loga.
@@ -74,7 +81,7 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [int]$Seconds = 300, [int]$WarmupSeconds = 120, [int]$ChunkRadius = 1,
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
       [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1,
-      [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15)
+      [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15, [int]$RwCollide = -1)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -185,6 +192,21 @@ function Send-RwPath($Srv, [string]$Cmd) {
         $r['poNacinu'] = $po
     }
     return $r
+}
+
+# M5.12: ukaz /rwcollide; vrne slovar stevcev iz odgovora ($null, ce ni odgovora).
+function Send-RwCollide($Srv, [string]$Cmd) {
+    $pred = ([regex]::Matches((Get-MarkerText $Srv.Log), 'RWCOLLIDE nacin=')).Count
+    Send-Command $Srv $Cmd
+    $ok = Wait-ForCount $Srv 'RWCOLLIDE nacin=' ($pred + 1) 60
+    Check ("ukaz '{0}' odgovori" -f $Cmd) $ok
+    if (-not $ok) { return $null }
+    $m = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWCOLLIDE nacin=(\d+) .*? klicev=(\d+) preskocenih=(\d+) brezOpazovalca=(\d+) dogodkovBrezOpazovalca=(\d+) poslusalec=(\d) poslusalecDogodkov=(\d+) opazovalec=(\d)')
+    if ($m.Count -eq 0) { return $null }
+    $g = $m[$m.Count - 1].Groups
+    return @{ nacin = [int]$g[1].Value; klicev = [long]$g[2].Value; preskocenih = [long]$g[3].Value
+              brezOpazovalca = [long]$g[4].Value; dogodkovBrezOpazovalca = [long]$g[5].Value
+              poslusalec = [int]$g[6].Value; poslusalecDogodkov = [long]$g[7].Value; opazovalec = [int]$g[8].Value }
 }
 
 # M5-S P1: PID java procesa serverja (GradleStartServer) v drevesu nasega zagona.
@@ -504,6 +526,10 @@ try {
         $null = Send-RwTarget $srv ("rwtarget {0}" -f $RwTarget)
         Check ("stikalo RwTarget je {0}" -f $RwTarget) ((Get-MarkerText $srv.Log) -match ("RWTARGET nacin={0} " -f $RwTarget))
     }
+    if ($RwCollide -ge 0) {
+        $rc = Send-RwCollide $srv ("rwcollide {0}" -f $RwCollide)
+        Check ("stikalo RwCollide je {0}" -f $RwCollide) (($null -ne $rc) -and ($rc.nacin -eq $RwCollide))
+    }
     if ($RwPath -ge 0) {
         $rp = Send-RwPath $srv ("rwpath {0}" -f $RwPath)
         Check ("stikalo RwPath je {0}" -f $RwPath) (($null -ne $rp) -and ($rp.nacin -eq $RwPath))
@@ -608,6 +634,7 @@ try {
         # M5.11: A/B v istem boju zacne vsako celico v prvem nacinu (prejsnja je lahko koncala v drugem).
         if ($RwPathAB.Count -gt 0) { $null = Send-RwPath $srv ("rwpath {0}" -f $RwPathAB[0]) }
         if ($RwPath -ge 0) { $null = Send-RwPath $srv 'rwpath reset' }
+        if ($RwCollide -ge 0) { $null = Send-RwCollide $srv 'rwcollide reset' }
         Send-Command $srv 'rwdiag on'
         $nOn++
         Check 'merjenje vklopljeno' (Wait-ForCount $srv 'RWDIAG vklopljen' $nOn 60)
@@ -668,6 +695,30 @@ try {
                             ($rwPathStevci['kandidatNs'] / 1e6), $rwPathStevci['tickov'], $rwPathStevci['histKand'])
                     }
                 }
+            }
+        }
+        $rwCollideStevci = $null
+        if ($RwCollide -ge 0) {
+            $rwCollideStevci = Send-RwCollide $srv 'rwcollide'
+            if ($null -ne $rwCollideStevci) {
+                Write-Host ("  RwCollide={0}: klicev {1}, preskocenih {2}, brez opazovalca {3}, dogodkov brez opazovalca {4}" -f `
+                    $RwCollide, $rwCollideStevci.klicev, $rwCollideStevci.preskocenih, $rwCollideStevci.brezOpazovalca, $rwCollideStevci.dogodkovBrezOpazovalca)
+                if ($RwCollide -gt 0) {
+                    Check ("K1: odlocitev onCollide je tekla ({0} klicev)" -f $rwCollideStevci.klicev) ($rwCollideStevci.klicev -gt 0)
+                }
+            }
+            if ($RwCollide -eq 1) {
+                # K2/K3: preskok mora videti poslusalca takoj (registracija med tekom).
+                $r1 = Send-RwCollide $srv 'rwcollide poslusalec 1'
+                Wait-SPreverbo 5
+                $r2 = Send-RwCollide $srv 'rwcollide'
+                $okK2 = ($null -ne $r1) -and ($null -ne $r2) -and ($r1.opazovalec -eq 1) -and ($r2.preskocenih -eq $r1.preskocenih) -and ($r2.poslusalecDogodkov -gt 0)
+                Check ("K2: s poslusalcem ni preskoka ({0} -> {1}) in poslusalec dobi dogodke ({2})" -f $r1.preskocenih, $r2.preskocenih, $r2.poslusalecDogodkov) $okK2
+                $r3 = Send-RwCollide $srv 'rwcollide poslusalec 0'
+                Wait-SPreverbo 5
+                $r4 = Send-RwCollide $srv 'rwcollide'
+                $okK3 = ($null -ne $r3) -and ($null -ne $r4) -and ($r3.opazovalec -eq 0) -and ($r4.preskocenih -gt $r3.preskocenih)
+                Check ("K3: po odjavi se preskok nadaljuje ({0} -> {1})" -f $r3.preskocenih, $r4.preskocenih) $okK3
             }
         }
         Send-Command $srv 'rwdiag off'
@@ -803,6 +854,12 @@ try {
             $odtis['rwpath'] = $RwPath
             if ($null -ne $rwPathStevci) {
                 foreach ($k in @('klicev', 'ocen', 'izracunov', 'primerjav', 'neujemanj')) { $vel['rwpath.' + $k] = $rwPathStevci[$k] }
+            }
+        }
+        if ($RwCollide -ge 0) {
+            $odtis['rwcollide'] = $RwCollide
+            if ($null -ne $rwCollideStevci) {
+                foreach ($k in @('klicev', 'preskocenih', 'brezOpazovalca', 'dogodkovBrezOpazovalca')) { $vel['rwcollide.' + $k] = $rwCollideStevci[$k] }
             }
         }
         if ($RwPathAB.Count -gt 0) {
