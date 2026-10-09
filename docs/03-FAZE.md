@@ -250,8 +250,8 @@ NPC-jev. Odprejo se šele, če po M4.10, M4.11 in M5.6 merila M2.7 še vedno pad
 | **M5.0** | **Raziskava preostanka M5 (D-029)** | **zaključeno 8. 10.** — [zapis](raziskave/M5.0-preostanek-performance.md); plan spodaj je prepisan po njem (D-030) |
 | M5-S S1, S2 | Predzavrnitev tarč in poizvedba samo po igralcih (`RwTargetPrefilter`, D-027) | **zaključeno 6./7. 10.** — idle-500 p95 44 → 5,2 ms |
 | M5-S P1 | Profil JFR strežniške niti (idle/boj/skripte × 500) | **zaključeno 8. 10.** |
-| **M5.10** | **Odločilni poskus za boj:** števec ns okoli `isDirectPathBetweenPoints` in celega `pathFollow` v načinu 0 ter štetje klicev in kandidatov v vseh načinih `RwPathFollowCache`. Če neposredno izmerjen delež sledenja poti v boju-500 ni vsaj ~25 % ticka, se M5.11 ne izvede. Ob tem nov pogoj veljavnosti A/B boja: klici sledenja poti na tick med ponovitvami in vejama v ±10 %, sicer primerjava časa na klic | S |
-| **M5.11** | **S14b — pomnjenje tipa vozlišča za čas enega `pathFollow`** v `RwPathNavigateGround` (ključ = pozicija; entiteta in svet med klicem enaka; `currentEntity` nastaviti kot vanilla). Model: 3× manj ocen na klic, 5–8× na `pathFollow` z več kandidati; ~56 % alokacij boja je v teh ocenah. Enakost z obstoječim načinom preverbe; A/B 0 / S14 / S14b — kandidat pod šumom gre iz kode (tudi S14) | S |
+| **M5.10** | **Odločilni poskus za boj:** števec ns okoli `isDirectPathBetweenPoints` in celega `pathFollow`, štetje kandidatov (`/rwpath cas 1`, `perf-run -RwPathCas`), pogoj veljavnosti A/B boja (`dev/tools/ab-boj.js`) | **zaključeno 9. 10.** — delež `pathFollow` v boju-500 **47,7–53,6 %** ticka (prag 25 % presežen); na `pathFollow` vedno 0 ali 1 kandidat, vsak uspe; šum boja je v delu na klic (µs/kandidata razpon 24,5 %), ne v številu klicev (1,1 %) → pogoj ±10 % je nujen, ne zadosten. [zapis](meritve/2026-10-09-M5.10-delez-sledenja-poti.md) |
+| **M5.11** | **S14b — pomnjenje tipa vozlišča za čas enega klica `isDirectPathBetweenPoints`** v `RwPathNavigateGround` (ključ = pozicija; entiteta in svet med klicem enaka; `currentEntity` nastaviti kot vanilla). Po M5.10 zadošča en klic: v boju ima `pathFollow` en kandidat, ostane ~3× ponavljanje istih mest v klicu (model); kandidati so ~49 % ticka, ~56 % alokacij boja je v teh ocenah. Enakost z obstoječim načinom preverbe (2). **A/B pri istem boju:** preklapljanje načina med tekom v izmenjujočih se oknih s števci ločeno po načinu, ključna veličina µs na kandidata; nato MSPT s ponovitvami in `ab-boj.js`. Kandidat pod šumom gre iz kode (tudi S14) | S |
 | M5.12 | **S4 — `onCollide` brez opazovalca:** brez skripte `collide` in brez poslušalca `CollideEvent` na `WrapperNpcAPI.EVENT_BUS` preskočiti poizvedbo (idle 12 %, skripte 15 % CPU). Nadomesti M5.3 | S |
 | M5.13 | **S7 — prejemniki utripa oči** po `world.playerEntities` z istim testom presečišča namesto AABB 160 blokov (idle 6,5 %) | S |
 | M5.9 | **Scenarij nedosegljive tarče** (`perf-run` varianta): NPC-ji s tarčo, do katere ni poti (stolp/zid). Edina podlaga za M5.2, M5.6 in S5 — v obstoječih celicah je iskanje poti 2 % | S |
@@ -267,7 +267,7 @@ NPC-jev. Odprejo se šele, če po M4.10, M4.11 in M5.6 merila M2.7 še vedno pad
 | ~~M5.5~~ | Meritev po vsakem → ni paket, je pravilo (D-016) | — |
 | ~~M5.7~~ | Prostorski indeks → **zavrženo** (D-030, chunk sekcije so že indeks; drag je gostota mreže); render LOD → K5 v M5-K | — |
 
-Vrstni red M5-S: **M5.10 → M5.11 → M5.12 → M5.13 → M5.9 → (M5.2 / M5.6 po izidu) → M5.14 → M5.15 → M5.16 → M5.8.**
+Vrstni red M5-S: **~~M5.10~~ → M5.11 → M5.12 → M5.13 → M5.9 → (M5.2 / M5.6 po izidu) → M5.14 → M5.15 → M5.16 → M5.8.**
 Sledenje poti brez branja blokov po vzoru 1.21.1 (S15, sprememba gibanja) ni v M5, ampak vhod za M4.13.
 M5-K (klient, K0–K13 v [09](09-PERFORMANCE-RAZISKAVA.md)) je ločena veja z vhodnim pogojem M2.4r.
 Vanilla `Entity.move` (idle 26–29 %): Q16 odločeno → D-031 (lasten coremod v CNPC jarju), paketa M5.15 in M5.16.
@@ -279,7 +279,7 @@ Vanilla `Entity.move` (idle 26–29 %): Q16 odločeno → D-031 (lasten coremod 
 - zapisano, koliko NPC-jev zdaj zmore isti stroj proti baselineu (M5.8)
 
 **Tveganja:** S4 mora zanesljivo zaznati poslušalce na vodilu CNPC API-ja (tudi registrirane kasneje),
-sicer tiho izgine dogodek; A/B boja je šumen zaradi poteka boja (M5.10). Tveganje odstranitve globalnega
+sicer tiho izgine dogodek; A/B boja je šumen zaradi poteka boja — po M5.10 zaradi dela na klic, ne števila klicev, zato A/B pri istem boju (M5.11). Tveganje odstranitve globalnega
 locka je od D-030 v M6.6.
 
 ---

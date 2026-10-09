@@ -1,5 +1,7 @@
 package noppes.npcs.rework.nav;
 
+import java.util.Arrays;
+
 /**
  * M5-S S14: stikalo in stevci za sledenje poti brez hash iskanja chunka za vsak blok.
  *
@@ -14,6 +16,9 @@ package noppes.npcs.rework.nav;
  *   <li>2 = preverba: oboje, vrne original, steje neujemanja (samo za scenarij, dvojna cena)</li>
  * </ul>
  * Stanje bere samo strezniska nit.
+ *
+ * <p>M5.10: neodvisno od nacina lahko steje cas in kandidate sledenja poti ({@link #setTiming}).
+ * Merjenje je privzeto izklopljeno; vklopi ga ukaz {@code /rwpath cas 1} (scenarij meritve).
  */
 public final class PathFollowCache {
     public static final int ORIGINAL = 0;
@@ -26,6 +31,16 @@ public final class PathFollowCache {
     static long misses;
     static long compared;
     static long mismatches;
+
+    /** M5.10: stevilo predalov histograma kandidatov na en pathFollow (zadnji = HIST-1 ali vec). */
+    public static final int HIST = 6;
+    private static boolean timing;
+    static long followCalls;
+    static long followNanos;
+    static long directCalls;
+    static long directNanos;
+    static long directTrue;
+    static final long[] candidateHist = new long[HIST];
 
     private PathFollowCache() {
     }
@@ -59,6 +74,71 @@ public final class PathFollowCache {
         misses = 0;
         compared = 0;
         mismatches = 0;
+        followCalls = 0;
+        followNanos = 0;
+        directCalls = 0;
+        directNanos = 0;
+        directTrue = 0;
+        Arrays.fill(candidateHist, 0L);
+    }
+
+    public static void setTiming(boolean on) {
+        timing = on;
+    }
+
+    public static boolean timing() {
+        return timing;
+    }
+
+    /** En pathFollow: trajanje (z vsemi kandidati) in stevilo klicev isDirectPathBetweenPoints. */
+    static void recordFollow(long nanos, int candidates) {
+        ++followCalls;
+        followNanos += nanos;
+        ++candidateHist[Math.min(Math.max(candidates, 0), HIST - 1)];
+    }
+
+    /** En klic isDirectPathBetweenPoints (kandidat) v katerem koli nacinu. */
+    static void recordDirect(long nanos, boolean result) {
+        ++directCalls;
+        directNanos += nanos;
+        if (result) {
+            ++directTrue;
+        }
+    }
+
+    /** Merjeni klici pathFollow (samo pri vklopljenem merjenju). */
+    public static long followCalls() {
+        return followCalls;
+    }
+
+    public static long followNanos() {
+        return followNanos;
+    }
+
+    /** Merjeni klici isDirectPathBetweenPoints (kandidati) v katerem koli nacinu. */
+    public static long directCalls() {
+        return directCalls;
+    }
+
+    public static long directNanos() {
+        return directNanos;
+    }
+
+    /** Kandidati, do katerih je bila prosta pot (pathFollow se pri prvem ustavi). */
+    public static long directTrue() {
+        return directTrue;
+    }
+
+    /** Histogram kandidatov na pathFollow kot "a/b/c/..." (predal i = i kandidatov, zadnji = HIST-1 ali vec). */
+    public static String candidateHistogram() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < HIST; ++i) {
+            if (i > 0) {
+                sb.append('/');
+            }
+            sb.append(candidateHist[i]);
+        }
+        return sb.toString();
     }
 
     /** Klici isDirectPathBetweenPoints v nacinu 1 ali 2. */

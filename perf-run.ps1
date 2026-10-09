@@ -47,6 +47,14 @@
 # se stikala ne dotakne.
 #     .\perf-run.ps1 -Variants boj -Counts 500 -RwTarget 2 -RwPath 2   # dokaz enakosti v svetu
 #
+# -RwPathCas (M5.10, 9. 10.; zahteva -RwPath): poslje se '/rwpath cas 1', ki izmeri ns celega
+# vanilla pathFollow in vsakega kandidata (isDirectPathBetweenPoints) ter presteje kandidate na
+# pathFollow. Celica dobi rwpath.sledenje.delez (delez povprecnega ticka v pathFollow, %),
+# rwpath.kandidat.delez, rwpath.sledenjNaTick, rwpath.kandidatovNaTick, rwpath.kandidat.usNaKlic
+# in histogram kandidatov; merilo M1 (meritev je stela). Odtis dobi rwpathCas=1 (dva klica
+# nanoTime na klic - ni primerljivo z zagoni brez merjenja).
+#     .\perf-run.ps1 -Variants boj -Counts 500 -RwTarget 2 -RwPath 0 -RwPathCas
+#
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
 # pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
 # (merilo P9), in ob sesutju serverja takoj konca z vzrokom iz loga.
@@ -57,7 +65,8 @@
 param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][string[]]$CountsIn = @('50', '200', '500'),
       [int]$Seconds = 300, [int]$WarmupSeconds = 120, [int]$ChunkRadius = 1,
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
-      [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1)
+      [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1,
+      [switch]$RwPathCas)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -146,8 +155,17 @@ function Send-RwPath($Srv, [string]$Cmd) {
     $m = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=(\d+) .*? klicev=(\d+) branj=(\d+) iskanjChunka=(\d+) primerjav=(\d+) neujemanj=(\d+)')
     if ($m.Count -eq 0) { return $null }
     $g = $m[$m.Count - 1].Groups
-    return @{ nacin = [int]$g[1].Value; klicev = [long]$g[2].Value; branj = [long]$g[3].Value
-              iskanjChunka = [long]$g[4].Value; primerjav = [long]$g[5].Value; neujemanj = [long]$g[6].Value }
+    $r = @{ nacin = [int]$g[1].Value; klicev = [long]$g[2].Value; branj = [long]$g[3].Value
+            iskanjChunka = [long]$g[4].Value; primerjav = [long]$g[5].Value; neujemanj = [long]$g[6].Value }
+    # M5.10: merjenje casa (starejsi build teh polj ne izpise)
+    $c = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=\d+ .*? cas=(\d) tickov=(-?\d+) sledenj=(\d+) sledenjNs=(\d+) kandidatov=(\d+) kandidatNs=(\d+) prostih=(\d+) histKand=([\d/]+)')
+    if ($c.Count -gt 0) {
+        $h = $c[$c.Count - 1].Groups
+        $r['cas'] = [int]$h[1].Value; $r['tickov'] = [long]$h[2].Value; $r['sledenj'] = [long]$h[3].Value
+        $r['sledenjNs'] = [long]$h[4].Value; $r['kandidatov'] = [long]$h[5].Value; $r['kandidatNs'] = [long]$h[6].Value
+        $r['prostih'] = [long]$h[7].Value; $r['histKand'] = $h[8].Value
+    }
+    return $r
 }
 
 # M5-S P1: PID java procesa serverja (GradleStartServer) v drevesu nasega zagona.
@@ -367,6 +385,7 @@ try {
     $cells = @()
     foreach ($v in $Variants) { foreach ($n in $Counts) { $cells += [pscustomobject]@{ Varianta = $v; N = $n } } }
     if ($JsonPath -ne '' -and $cells.Count -ne 1) { throw '-JsonPath je dovoljen samo za eno celico (ena varianta, eno stevilo).' }
+    if ($RwPathCas -and $RwPath -lt 0) { throw '-RwPathCas zahteva -RwPath N (nacin, v katerem se meri; za M5.10 -RwPath 0).' }
     $perCell = $WarmupSeconds + $Seconds + 25
     Write-Host ("  celice: {0}" -f (($cells | ForEach-Object { '{0}/{1}' -f $_.Varianta, $_.N }) -join ', '))
     Write-Host ("  ogrevanje {0} s, merjenje {1} s, obroc {2}; ocena trajanja ~{3} min" -f `
@@ -456,6 +475,10 @@ try {
     if ($RwPath -ge 0) {
         $rp = Send-RwPath $srv ("rwpath {0}" -f $RwPath)
         Check ("stikalo RwPath je {0}" -f $RwPath) (($null -ne $rp) -and ($rp.nacin -eq $RwPath))
+        if ($RwPathCas) {
+            $rp = Send-RwPath $srv 'rwpath cas 1'
+            Check 'merjenje sledenja poti vklopljeno (rwpath cas 1)' (($null -ne $rp) -and ($rp['cas'] -eq 1))
+        }
     }
 
     # Pobijanje fixtur M0.6. Vrstni red je bistven: 'noppes slay npcs' samo oznaci isDead,
@@ -592,6 +615,15 @@ try {
                     Check ("R1: preverba je primerjala original in predpomnilnik ({0} primerjav)" -f $rwPathStevci.primerjav) ($rwPathStevci.primerjav -gt 0)
                     Check ("R2: nobenega neujemanja ({0})" -f $rwPathStevci.neujemanj) ($rwPathStevci.neujemanj -eq 0)
                 }
+                if ($RwPathCas) {
+                    $okCas = ($rwPathStevci['cas'] -eq 1) -and ($rwPathStevci['tickov'] -gt 0) -and ($rwPathStevci['sledenj'] -gt 0)
+                    Check ("M1: merjenje sledenja poti je stelo ({0} pathFollow v {1} tickih)" -f $rwPathStevci['sledenj'], $rwPathStevci['tickov']) $okCas
+                    if ($okCas) {
+                        Write-Host ("  sledenje poti: {0} pathFollow, {1} kandidatov ({2} prostih), {3:N1} ms + {4:N1} ms kandidati v {5} tickih; histogram kandidatov {6}" -f `
+                            $rwPathStevci['sledenj'], $rwPathStevci['kandidatov'], $rwPathStevci['prostih'], ($rwPathStevci['sledenjNs'] / 1e6), `
+                            ($rwPathStevci['kandidatNs'] / 1e6), $rwPathStevci['tickov'], $rwPathStevci['histKand'])
+                    }
+                }
             }
         }
         Send-Command $srv 'rwdiag off'
@@ -727,6 +759,35 @@ try {
             $odtis['rwpath'] = $RwPath
             if ($null -ne $rwPathStevci) {
                 foreach ($k in @('klicev', 'branj', 'iskanjChunka', 'primerjav', 'neujemanj')) { $vel['rwpath.' + $k] = $rwPathStevci[$k] }
+            }
+        }
+        if ($RwPathCas) {
+            $odtis['rwpathCas'] = 1
+            # M5.10: delez ticka iz lastnega stevca tickov (od 'rwpath reset' do branja), da okno
+            # stevcev ne rabi sovpadati z oknom rwdiag; povprecen tick iz rwdiag (mspt.povp).
+            if (($null -ne $rwPathStevci) -and ($rwPathStevci['tickov'] -gt 0) -and ($rwPathStevci['sledenj'] -gt 0)) {
+                $t = [double]$rwPathStevci['tickov']
+                $vel['rwpath.tickov'] = $rwPathStevci['tickov']
+                $vel['rwpath.sledenj'] = $rwPathStevci['sledenj']
+                $vel['rwpath.kandidatov'] = $rwPathStevci['kandidatov']
+                $vel['rwpath.prostih'] = $rwPathStevci['prostih']
+                $vel['rwpath.sledenjNaTick'] = [math]::Round($rwPathStevci['sledenj'] / $t, 1)
+                $vel['rwpath.kandidatovNaTick'] = [math]::Round($rwPathStevci['kandidatov'] / $t, 1)
+                $vel['rwpath.kandidatovNaSledenje'] = [math]::Round($rwPathStevci['kandidatov'] / [double]$rwPathStevci['sledenj'], 3)
+                $vel['rwpath.sledenje.msNaTick'] = [math]::Round($rwPathStevci['sledenjNs'] / $t / 1e6, 3)
+                $vel['rwpath.kandidat.msNaTick'] = [math]::Round($rwPathStevci['kandidatNs'] / $t / 1e6, 3)
+                $vel['rwpath.sledenje.usNaKlic'] = [math]::Round($rwPathStevci['sledenjNs'] / [double]$rwPathStevci['sledenj'] / 1000.0, 2)
+                if ($rwPathStevci['kandidatov'] -gt 0) {
+                    $vel['rwpath.kandidat.usNaKlic'] = [math]::Round($rwPathStevci['kandidatNs'] / [double]$rwPathStevci['kandidatov'] / 1000.0, 2)
+                }
+                $hi = 0
+                foreach ($x in ($rwPathStevci['histKand'] -split '/')) { $vel[('rwpath.hist.{0}' -f $hi)] = [long]$x; $hi++ }
+                if (($null -ne $vel['mspt.povp']) -and ($vel['mspt.povp'] -gt 0)) {
+                    $vel['rwpath.sledenje.delez'] = [math]::Round(100.0 * $vel['rwpath.sledenje.msNaTick'] / $vel['mspt.povp'], 1)
+                    $vel['rwpath.kandidat.delez'] = [math]::Round(100.0 * $vel['rwpath.kandidat.msNaTick'] / $vel['mspt.povp'], 1)
+                    Write-Host ("  M5.10: pathFollow {0} ms/tick = {1} % povprecnega ticka ({2} ms), od tega kandidati {3} %" -f `
+                        $vel['rwpath.sledenje.msNaTick'], $vel['rwpath.sledenje.delez'], $vel['mspt.povp'], $vel['rwpath.kandidat.delez'])
+                }
             }
         }
         $cellFails = @()

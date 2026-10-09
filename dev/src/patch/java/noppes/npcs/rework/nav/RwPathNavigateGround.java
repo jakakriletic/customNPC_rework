@@ -13,7 +13,8 @@ import noppes.npcs.LogWriter;
 
 /**
  * M5-S S14: kopenski navigator NPC-ja. Od {@link PathNavigateGround} se razlikuje samo v
- * {@link #isDirectPathBetweenPoints}, ki ga {@code pathFollow} klice vsak tick sledenja poti.
+ * {@link #isDirectPathBetweenPoints}, ki ga {@code pathFollow} klice vsak tick sledenja poti
+ * (M5.10: {@link #pathFollow} je prepisan samo za merjenje, vedno klice {@code super}).
  *
  * <p>V nacinu {@link PathFollowCache#MEMO} je metoda prepis vanilla kode (Forge
  * 14.23.5.2847, {@code PathNavigateGround.isDirectPathBetweenPoints}, {@code isSafeToStandAt},
@@ -26,14 +27,44 @@ import noppes.npcs.LogWriter;
  */
 public class RwPathNavigateGround extends PathNavigateGround {
     private final MemoBlockAccess access;
+    /** M5.10: kandidati v trenutnem pathFollow (samo pri vklopljenem merjenju). */
+    private int candidates;
 
     public RwPathNavigateGround(EntityLiving entity, World world) {
         super(entity, world);
         this.access = MemoBlockAccess.supports(world) ? new MemoBlockAccess(world) : null;
     }
 
+    /**
+     * M5.10: pri vklopljenem merjenju ({@link PathFollowCache#setTiming}) izmeri cel vanilla
+     * {@code pathFollow} in presteje kandidate (klice {@link #isDirectPathBetweenPoints}) v njem.
+     * Obnasanje je v obeh vejah {@code super.pathFollow()}.
+     */
+    @Override
+    protected void pathFollow() {
+        if (!PathFollowCache.timing()) {
+            super.pathFollow();
+            return;
+        }
+        this.candidates = 0;
+        long t0 = System.nanoTime();
+        super.pathFollow();
+        PathFollowCache.recordFollow(System.nanoTime() - t0, this.candidates);
+    }
+
     @Override
     protected boolean isDirectPathBetweenPoints(Vec3d posVec31, Vec3d posVec32, int sizeX, int sizeY, int sizeZ) {
+        if (!PathFollowCache.timing()) {
+            return this.directPathByMode(posVec31, posVec32, sizeX, sizeY, sizeZ);
+        }
+        ++this.candidates;
+        long t0 = System.nanoTime();
+        boolean result = this.directPathByMode(posVec31, posVec32, sizeX, sizeY, sizeZ);
+        PathFollowCache.recordDirect(System.nanoTime() - t0, result);
+        return result;
+    }
+
+    private boolean directPathByMode(Vec3d posVec31, Vec3d posVec32, int sizeX, int sizeY, int sizeZ) {
         int mode = PathFollowCache.mode();
         if (mode == PathFollowCache.ORIGINAL || this.access == null) {
             return super.isDirectPathBetweenPoints(posVec31, posVec32, sizeX, sizeY, sizeZ);
