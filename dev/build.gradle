@@ -163,6 +163,7 @@ task testOriginal(type: Test) {
     exclude '**/TargetPrefilterTest.class'
     exclude '**/ChunkMemoTest.class'
     exclude '**/PathFollowCacheTest.class'
+    exclude '**/NodeTypeMemoTest.class'
     exclude '**/MountGuardTest.class'
     exclude '**/RiderStateTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }

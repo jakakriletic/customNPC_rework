@@ -2,6 +2,7 @@ package noppes.npcs.rework.nav;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.util.math.BlockPos;
@@ -22,6 +23,10 @@ import noppes.npcs.LogWriter;
  * {@code this.world}. Vrstni red in koordinate branj so enaki; enakost izida preveri nacin
  * {@link PathFollowCache#VERIFY} v svetu.
  *
+ * <p>M5.11 (S14b): v nacinu {@link PathFollowCache#NODE_MEMO} se klice {@code super}, node
+ * procesor ({@link RwWalkNodeProcessor}) pa si za cas klica zapomni posamezne ocene tipa
+ * vozlisca po poziciji; nacin {@link PathFollowCache#VERIFY_NODE} primerja z originalom.
+ *
  * <p>Razred je navigator vsakega kopenskega NPC-ja ne glede na stikalo; pri nacinu 0 (privzeto)
  * se klice {@code super}, torej original. {@code instanceof PathNavigateGround} ostane resnicen.
  */
@@ -36,6 +41,18 @@ public class RwPathNavigateGround extends PathNavigateGround {
     }
 
     /**
+     * Enako kot {@code PathNavigateGround.getPathFinder} (2847), le da je node procesor
+     * {@link RwWalkNodeProcessor} (podrazred {@code WalkNodeProcessor}, izven pomnjenja enak).
+     * Klice ga konstruktor {@code PathNavigate}, preden so polja tega razreda nastavljena.
+     */
+    @Override
+    protected PathFinder getPathFinder() {
+        this.nodeProcessor = new RwWalkNodeProcessor();
+        this.nodeProcessor.setCanEnterDoors(true);
+        return new PathFinder(this.nodeProcessor);
+    }
+
+    /**
      * M5.10: pri vklopljenem merjenju ({@link PathFollowCache#setTiming}) izmeri cel vanilla
      * {@code pathFollow} in presteje kandidate (klice {@link #isDirectPathBetweenPoints}) v njem.
      * Obnasanje je v obeh vejah {@code super.pathFollow()}.
@@ -47,9 +64,10 @@ public class RwPathNavigateGround extends PathNavigateGround {
             return;
         }
         this.candidates = 0;
+        int mode = PathFollowCache.mode();
         long t0 = System.nanoTime();
         super.pathFollow();
-        PathFollowCache.recordFollow(System.nanoTime() - t0, this.candidates);
+        PathFollowCache.recordFollow(mode, System.nanoTime() - t0, this.candidates);
     }
 
     @Override
@@ -58,30 +76,63 @@ public class RwPathNavigateGround extends PathNavigateGround {
             return this.directPathByMode(posVec31, posVec32, sizeX, sizeY, sizeZ);
         }
         ++this.candidates;
+        int mode = PathFollowCache.mode();
         long t0 = System.nanoTime();
         boolean result = this.directPathByMode(posVec31, posVec32, sizeX, sizeY, sizeZ);
-        PathFollowCache.recordDirect(System.nanoTime() - t0, result);
+        PathFollowCache.recordDirect(mode, System.nanoTime() - t0, result);
         return result;
     }
 
     private boolean directPathByMode(Vec3d posVec31, Vec3d posVec32, int sizeX, int sizeY, int sizeZ) {
         int mode = PathFollowCache.mode();
+        if (mode == PathFollowCache.NODE_MEMO || mode == PathFollowCache.VERIFY_NODE) {
+            if (!(this.nodeProcessor instanceof RwWalkNodeProcessor)) {
+                return super.isDirectPathBetweenPoints(posVec31, posVec32, sizeX, sizeY, sizeZ);
+            }
+            if (mode == PathFollowCache.NODE_MEMO) {
+                return this.nodeMemoDirectPath(posVec31, posVec32, sizeX, sizeY, sizeZ);
+            }
+            boolean original = super.isDirectPathBetweenPoints(posVec31, posVec32, sizeX, sizeY, sizeZ);
+            boolean memo = this.nodeMemoDirectPath(posVec31, posVec32, sizeX, sizeY, sizeZ);
+            this.compare(original, memo, posVec31, posVec32, sizeX, sizeY, sizeZ);
+            return original;
+        }
         if (mode == PathFollowCache.ORIGINAL || this.access == null) {
             return super.isDirectPathBetweenPoints(posVec31, posVec32, sizeX, sizeY, sizeZ);
         }
         if (mode == PathFollowCache.VERIFY) {
             boolean original = super.isDirectPathBetweenPoints(posVec31, posVec32, sizeX, sizeY, sizeZ);
             boolean memo = this.memoDirectPath(posVec31, posVec32, sizeX, sizeY, sizeZ);
-            ++PathFollowCache.compared;
-            if (original != memo) {
-                if (++PathFollowCache.mismatches <= 5) {
-                    LogWriter.info("RWPATH neujemanje: original=" + original + " predpomnilnik=" + memo + " od=" + posVec31
-                            + " do=" + posVec32 + " velikost=" + sizeX + "/" + sizeY + "/" + sizeZ);
-                }
-            }
+            this.compare(original, memo, posVec31, posVec32, sizeX, sizeY, sizeZ);
             return original;
         }
         return this.memoDirectPath(posVec31, posVec32, sizeX, sizeY, sizeZ);
+    }
+
+    private void compare(boolean original, boolean memo, Vec3d posVec31, Vec3d posVec32, int sizeX, int sizeY, int sizeZ) {
+        ++PathFollowCache.compared;
+        if (original != memo) {
+            if (++PathFollowCache.mismatches <= 5) {
+                LogWriter.info("RWPATH neujemanje: original=" + original + " predpomnilnik=" + memo + " od=" + posVec31
+                        + " do=" + posVec32 + " velikost=" + sizeX + "/" + sizeY + "/" + sizeZ);
+            }
+        }
+    }
+
+    /** M5.11 (S14b): vanilla klic s pomnjenjem posameznih ocen tipa vozlisca za cas klica. */
+    private boolean nodeMemoDirectPath(Vec3d posVec31, Vec3d posVec32, int sizeX, int sizeY, int sizeZ) {
+        RwWalkNodeProcessor processor = (RwWalkNodeProcessor) this.nodeProcessor;
+        ++PathFollowCache.calls;
+        long l0 = processor.memoLookups();
+        long m0 = processor.memoMisses();
+        processor.beginMemo();
+        try {
+            return super.isDirectPathBetweenPoints(posVec31, posVec32, sizeX, sizeY, sizeZ);
+        } finally {
+            processor.endMemo();
+            PathFollowCache.lookups += processor.memoLookups() - l0;
+            PathFollowCache.misses += processor.memoMisses() - m0;
+        }
     }
 
     private boolean memoDirectPath(Vec3d posVec31, Vec3d posVec32, int sizeX, int sizeY, int sizeZ) {

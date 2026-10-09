@@ -55,6 +55,16 @@
 # nanoTime na klic - ni primerljivo z zagoni brez merjenja).
 #     .\perf-run.ps1 -Variants boj -Counts 500 -RwTarget 2 -RwPath 0 -RwPathCas
 #
+# -RwPath 4 (M5.11, 9. 10.): preverba S14b (pomnjenje tipa vozlisca) - isti merili R1/R2 kot nacin 2.
+#
+# -RwPathAB a,b (M5.11, parameter -RwPathABNiz z vzdevkom -RwPathAB; zahteva -RwPathCas): A/B nacinov sledenja poti v ISTEM boju. Merilno okno
+# se razdeli na okna po -RwPathOkno sekund (privzeto 15), nacini se izmenjujejo a,b,a,b,... (stevilo
+# oken mora biti veckratnik stevila nacinov); streznik steje ticke, pathFollow in kandidate loceno po
+# nacinu (poNacinu v odgovoru /rwpath). Celica dobi rwpath.ab.<nacin>.* in razmerje us na kandidata
+# (drugi / prvi); merili AB1 (vsak nacin je tekel in imel kandidate) in AB2 (kandidatov na tick se
+# med nacinoma razlikuje najvec 10 %, pogoj veljavnosti M5.0). MSPT celice je mesanica nacinov.
+#     .\perf-run.ps1 -Variants boj -Counts 500 -RwTarget 2 -RwPathAB 0,3 -RwPathCas
+#
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
 # pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
 # (merilo P9), in ob sesutju serverja takoj konca z vzrokom iz loga.
@@ -66,7 +76,7 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [int]$Seconds = 300, [int]$WarmupSeconds = 120, [int]$ChunkRadius = 1,
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
       [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1,
-      [switch]$RwPathCas)
+      [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -164,6 +174,17 @@ function Send-RwPath($Srv, [string]$Cmd) {
         $r['cas'] = [int]$h[1].Value; $r['tickov'] = [long]$h[2].Value; $r['sledenj'] = [long]$h[3].Value
         $r['sledenjNs'] = [long]$h[4].Value; $r['kandidatov'] = [long]$h[5].Value; $r['kandidatNs'] = [long]$h[6].Value
         $r['prostih'] = [long]$h[7].Value; $r['histKand'] = $h[8].Value
+    }
+    # M5.11: stevci po nacinu "m:tickov:sledenj:sledenjNs:kandidatov:kandidatNs;..."
+    $pn = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=\d+ .*? poNacinu=([\d:;]*)')
+    if ($pn.Count -gt 0) {
+        $po = @{}
+        foreach ($del in ($pn[$pn.Count - 1].Groups[1].Value -split ';')) {
+            if ($del -eq '') { continue }
+            $x = $del -split ':'
+            $po[[int]$x[0]] = @{ tickov = [long]$x[1]; sledenj = [long]$x[2]; sledenjNs = [long]$x[3]; kandidatov = [long]$x[4]; kandidatNs = [long]$x[5] }
+        }
+        $r['poNacinu'] = $po
     }
     return $r
 }
@@ -385,6 +406,19 @@ try {
     $cells = @()
     foreach ($v in $Variants) { foreach ($n in $Counts) { $cells += [pscustomobject]@{ Varianta = $v; N = $n } } }
     if ($JsonPath -ne '' -and $cells.Count -ne 1) { throw '-JsonPath je dovoljen samo za eno celico (ena varianta, eno stevilo).' }
+    # -File poda argumente kot nize, zato seznam nacinov pride kot "0,3" in se razcepi tu.
+    [int[]]$RwPathAB = @($RwPathABNiz -split ',' | Where-Object { $_.Trim() -ne '' } | ForEach-Object { [int]$_.Trim() })
+    if ($RwPathAB.Count -gt 0) {
+        if ($RwPathAB.Count -lt 2) { throw '-RwPathAB potrebuje vsaj dva nacina (npr. 0,3).' }
+        if (-not $RwPathCas) { throw '-RwPathAB zahteva -RwPathCas (primerjajo se merjeni stevci po nacinu).' }
+        if ($RwPath -lt 0) { $RwPath = $RwPathAB[0] }
+        if ($RwPath -ne $RwPathAB[0]) { throw '-RwPath mora biti enak prvemu nacinu v -RwPathAB.' }
+        if ($RwPathOkno -lt 1) { throw '-RwPathOkno mora biti vsaj 1 s.' }
+        $oknaAB = [math]::Floor($Seconds / $RwPathOkno)
+        if (($oknaAB -lt $RwPathAB.Count) -or (($oknaAB % $RwPathAB.Count) -ne 0)) {
+            throw ("-Seconds {0} / -RwPathOkno {1} = {2} oken; potreben je veckratnik stevila nacinov ({3})." -f $Seconds, $RwPathOkno, $oknaAB, $RwPathAB.Count)
+        }
+    }
     if ($RwPathCas -and $RwPath -lt 0) { throw '-RwPathCas zahteva -RwPath N (nacin, v katerem se meri; za M5.10 -RwPath 0).' }
     $perCell = $WarmupSeconds + $Seconds + 25
     Write-Host ("  celice: {0}" -f (($cells | ForEach-Object { '{0}/{1}' -f $_.Varianta, $_.N }) -join ', '))
@@ -573,6 +607,8 @@ try {
         }
 
         if ($RwTarget -ge 0) { $null = Send-RwTarget $srv 'rwtarget reset' }
+        # M5.11: A/B v istem boju zacne vsako celico v prvem nacinu (prejsnja je lahko koncala v drugem).
+        if ($RwPathAB.Count -gt 0) { $null = Send-RwPath $srv ("rwpath {0}" -f $RwPathAB[0]) }
         if ($RwPath -ge 0) { $null = Send-RwPath $srv 'rwpath reset' }
         Send-Command $srv 'rwdiag on'
         $nOn++
@@ -589,7 +625,17 @@ try {
             if ($izJ -notmatch 'Started recording') { Write-Host ("      {0}" -f $izJ.Trim()) }
         }
         Write-Host ("  merjenje {0} s" -f $Seconds)
-        Wait-SPreverbo $Seconds
+        if ($RwPathAB.Count -gt 0) {
+            Write-Host ("  A/B sledenja poti: {0} oken po {1} s, nacini {2}" -f $oknaAB, $RwPathOkno, ($RwPathAB -join ','))
+            for ($ok = 0; $ok -lt $oknaAB; $ok++) {
+                if ($ok -gt 0) { $null = Send-RwPath $srv ("rwpath {0}" -f $RwPathAB[$ok % $RwPathAB.Count]) }
+                Wait-SPreverbo $RwPathOkno
+            }
+            $ostanek = $Seconds - $oknaAB * $RwPathOkno
+            if ($ostanek -gt 0) { Wait-SPreverbo $ostanek }
+        } else {
+            Wait-SPreverbo $Seconds
+        }
         if ($Jfr -and $javaPid -gt 0) {
             $izJ = Invoke-Jcmd $javaPid @('JFR.stop', ("name=rw{0}" -f $idx))
             $jfrOk = ($izJ -match 'Stopped recording') -and (Test-Path $jfrPot) -and ((Get-Item $jfrPot).Length -gt 0)
@@ -611,7 +657,7 @@ try {
             if ($null -ne $rwPathStevci) {
                 Write-Host ("  RwPath={0}: klicev {1}, branj blokov {2}, iskanj chunka {3}, primerjav {4}, neujemanj {5}" -f `
                     $RwPath, $rwPathStevci.klicev, $rwPathStevci.branj, $rwPathStevci.iskanjChunka, $rwPathStevci.primerjav, $rwPathStevci.neujemanj)
-                if ($RwPath -eq 2) {
+                if (($RwPath -eq 2) -or ($RwPath -eq 4)) {
                     Check ("R1: preverba je primerjala original in predpomnilnik ({0} primerjav)" -f $rwPathStevci.primerjav) ($rwPathStevci.primerjav -gt 0)
                     Check ("R2: nobenega neujemanja ({0})" -f $rwPathStevci.neujemanj) ($rwPathStevci.neujemanj -eq 0)
                 }
@@ -759,6 +805,38 @@ try {
             $odtis['rwpath'] = $RwPath
             if ($null -ne $rwPathStevci) {
                 foreach ($k in @('klicev', 'branj', 'iskanjChunka', 'primerjav', 'neujemanj')) { $vel['rwpath.' + $k] = $rwPathStevci[$k] }
+            }
+        }
+        if ($RwPathAB.Count -gt 0) {
+            $odtis['rwpathAB'] = ($RwPathAB -join ',')
+            $odtis['rwpathOkno'] = $RwPathOkno
+            $po = if ($null -ne $rwPathStevci) { $rwPathStevci['poNacinu'] } else { $null }
+            $abOk = $null -ne $po
+            if ($abOk) { foreach ($m in $RwPathAB) { if (-not $po.ContainsKey($m) -or ($po[$m].tickov -le 0) -or ($po[$m].kandidatov -le 0)) { $abOk = $false } } }
+            Check ("AB1: vsak nacin ({0}) je tekel in imel kandidate" -f ($RwPathAB -join ',')) $abOk
+            if ($abOk) {
+                $knt = @()
+                foreach ($m in $RwPathAB) {
+                    $t = [double]$po[$m].tickov
+                    $p = 'rwpath.ab.{0}.' -f $m
+                    $vel[$p + 'tickov'] = $po[$m].tickov
+                    $vel[$p + 'kandidatov'] = $po[$m].kandidatov
+                    $vel[$p + 'kandidatovNaTick'] = [math]::Round($po[$m].kandidatov / $t, 2)
+                    $vel[$p + 'sledenjNaTick'] = [math]::Round($po[$m].sledenj / $t, 2)
+                    $vel[$p + 'kandidat.usNaKlic'] = [math]::Round($po[$m].kandidatNs / [double]$po[$m].kandidatov / 1000.0, 3)
+                    $vel[$p + 'kandidat.msNaTick'] = [math]::Round($po[$m].kandidatNs / $t / 1e6, 3)
+                    $vel[$p + 'sledenje.msNaTick'] = [math]::Round($po[$m].sledenjNs / $t / 1e6, 3)
+                    $knt += $po[$m].kandidatov / $t
+                    Write-Host ("  AB nacin {0}: {1} tickov, {2} kandidatov/tick, {3} us/kandidat, pathFollow {4} ms/tick" -f `
+                        $m, $po[$m].tickov, $vel[$p + 'kandidatovNaTick'], $vel[$p + 'kandidat.usNaKlic'], $vel[$p + 'sledenje.msNaTick'])
+                }
+                $a = $RwPathAB[0]; $b = $RwPathAB[1]
+                $vel['rwpath.ab.kandidat.usRazmerje'] = [math]::Round($vel[('rwpath.ab.{0}.kandidat.usNaKlic' -f $b)] / $vel[('rwpath.ab.{0}.kandidat.usNaKlic' -f $a)], 3)
+                $vel['rwpath.ab.sledenje.msRazlika'] = [math]::Round($vel[('rwpath.ab.{0}.sledenje.msNaTick' -f $b)] - $vel[('rwpath.ab.{0}.sledenje.msNaTick' -f $a)], 3)
+                $kMin = ($knt | Measure-Object -Minimum).Minimum; $kMax = ($knt | Measure-Object -Maximum).Maximum
+                $vel['rwpath.ab.kandidatovNaTick.razpon'] = [math]::Round(100.0 * ($kMax - $kMin) / $kMin, 1)
+                Check ("AB2: kandidatov na tick med nacini v 10 % (razpon {0} %)" -f $vel['rwpath.ab.kandidatovNaTick.razpon']) ($vel['rwpath.ab.kandidatovNaTick.razpon'] -le 10.0)
+                Write-Host ("  AB: us na kandidata {0}/{1} = {2}, pathFollow {3} ms/tick razlike" -f $b, $a, $vel['rwpath.ab.kandidat.usRazmerje'], $vel['rwpath.ab.sledenje.msRazlika'])
             }
         }
         if ($RwPathCas) {
