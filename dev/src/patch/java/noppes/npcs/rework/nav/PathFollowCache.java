@@ -3,22 +3,20 @@ package noppes.npcs.rework.nav;
 import java.util.Arrays;
 
 /**
- * M5-S S14: stikalo in stevci za sledenje poti brez hash iskanja chunka za vsak blok.
+ * Stikalo in stevci sledenja poti kopenskega NPC-ja ({@link RwPathNavigateGround}).
  *
- * <p>Profil JFR 8. 10. (boj-500): 48 % CPU strezniske niti je v vanilla
- * {@code PathNavigate.pathFollow -> PathNavigateGround.isDirectPathBetweenPoints}, od tega 27 % v
- * {@code ChunkProviderServer.getLoadedChunk} za vsak prebrani blok. {@link RwPathNavigateGround}
- * v nacinu {@link #MEMO} bere iste bloke prek {@link MemoBlockAccess}.
+ * <p>Profil JFR 8. 10. in M5.10 (boj-500): ~50 % ticka je v vanilla
+ * {@code PathNavigate.pathFollow -> PathNavigateGround.isDirectPathBetweenPoints}, ki isto mesto
+ * oceni ~3x na klic (M5.0). M5.11 (S14b): posamezne ocene tipa vozlisca se za cas klica pomnijo.
  *
  * <ul>
  *   <li>0 = original ({@code super.isDirectPathBetweenPoints})</li>
- *   <li>1 = isti algoritem, bloki prek predpomnilnika chunkov</li>
+ *   <li>1 = S14b: original, posamezne ocene tipa vozlisca pomnjene po poziciji za cas klica</li>
  *   <li>2 = preverba: oboje, vrne original, steje neujemanja (samo za scenarij, dvojna cena)</li>
- *   <li>3 = M5.11 (S14b): original, posamezne ocene tipa vozlisca pomnjene po poziciji za cas klica</li>
- *   <li>4 = preverba nacina 3 (kot 2)</li>
  * </ul>
- * Stevci {@code klicev/branj/iskanjChunka} v nacinih 3 in 4 pomenijo klice, ocene tipa vozlisca
- * in dejanske izracune (zgresitve pomnilnika).
+ * Do 9. 10. sta bila nacina 1/2 S14 (bloki prek predpomnilnika chunkov) in 3/4 S14b; S14 je bil z
+ * A/B v sumu in je odstranjen, S14b je dobil stevilki 1/2. Stevci {@code klicev/ocen/izracunov}
+ * so klici v nacinih 1-2, ocene tipa vozlisca in dejanski izracuni (zgresitve pomnilnika).
  * Stanje bere samo strezniska nit.
  *
  * <p>M5.10: neodvisno od nacina lahko steje cas in kandidate sledenja poti ({@link #setTiming}).
@@ -30,12 +28,10 @@ import java.util.Arrays;
  */
 public final class PathFollowCache {
     public static final int ORIGINAL = 0;
-    public static final int MEMO = 1;
-    public static final int VERIFY = 2;
-    public static final int NODE_MEMO = 3;
-    public static final int VERIFY_NODE = 4;
+    public static final int NODE_MEMO = 1;
+    public static final int VERIFY_NODE = 2;
     /** Stevilo nacinov (velikost tabel po nacinu). */
-    public static final int MODES = 5;
+    public static final int MODES = 3;
 
     private static int mode = ORIGINAL;
     static long calls;
@@ -93,10 +89,6 @@ public final class PathFollowCache {
 
     public static String describe(int m) {
         switch (m) {
-            case MEMO:
-                return "predpomnilnik chunkov";
-            case VERIFY:
-                return "preverba: original in predpomnilnik";
             case NODE_MEMO:
                 return "pomnjenje tipa vozlisca";
             case VERIFY_NODE:
@@ -215,17 +207,17 @@ public final class PathFollowCache {
         return sb.toString();
     }
 
-    /** Klici isDirectPathBetweenPoints v nacinih 1-4. */
+    /** Klici isDirectPathBetweenPoints v nacinih 1-2. */
     public static long calls() {
         return calls;
     }
 
-    /** Branja blokov prek predpomnilnika. */
+    /** Ocene tipa vozlisca prek pomnilnika (nacina 1-2). */
     public static long lookups() {
         return lookups;
     }
 
-    /** Iskanja chunka v svetu (zgresitve predpomnilnika). */
+    /** Dejanski izracuni ocene (zgresitve pomnilnika). */
     public static long misses() {
         return misses;
     }

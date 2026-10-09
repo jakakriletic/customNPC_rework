@@ -161,7 +161,6 @@ task testOriginal(type: Test) {
     exclude '**/SlowTicksTest.class'
     exclude '**/AttackPriorityTest.class'
     exclude '**/TargetPrefilterTest.class'
-    exclude '**/ChunkMemoTest.class'
     exclude '**/PathFollowCacheTest.class'
     exclude '**/NodeTypeMemoTest.class'
     exclude '**/MountGuardTest.class'

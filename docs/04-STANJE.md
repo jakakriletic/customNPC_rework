@@ -9,10 +9,10 @@
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-09** (seja 76: **M5.10 zaključen** — neposredno izmerjeno: `pathFollow` je v boju-500 **47,7–53,6 %** ticka (prag 25 % za M5.11 presežen); na `pathFollow` vedno 0 ali 1 kandidat; šum boja je v delu na klic, ne v številu klicev. Prej seja 75: **M5.0 zaključen** — raziskava preostanka M5: boj je edina celica brez napredka, njegov strošek je ocena tipa vozlišča v vanilla sledenju poti (~1.110 branj na klic, model se ujema), lock in iskanje poti nista ozko grlo; plan M5 prepisan (D-030), Q16. Prej seja 74: **D-029** — vsak milestone se začne z raziskavo izvedbe M?.0, plan ni dogma; M5-S S14 v kodi, enakost dokazana 0/616.276, A/B nedokazan. Prej seja 73: **M5-S P1 profil JFR** — boj-500: 48 % CPU strežniške niti v vanilla `pathFollow` → `isDirectPathBetweenPoints` (27 % hash iskanje chunka), iskanje poti 2 %; idle: `Entity.move` 29 %, `onCollide` 12 %, utrip oči 6 %; nov kandidat S14, vrstni red S14 → S4 → S7. Prej seja 72: odločitvi Q13 → D-027, `RwTargetPrefilter` privzeto 2; Q15 → D-028, nosilec z NPC posadko sprejme potisk. Prej seja 71: **M5-S S2 zaključen** — poizvedba iskalnika tarč samo po igralcih, `RwTargetPrefilter=2`: idle-500 p95 10,2 → 5,2 ms, boj nevtralen) |
+| Zadnja posodobitev | **2026-10-09** (seja 77: **M5.11 zaključen** — S14b, pomnjenje tipa vozlišča v sledenju poti: boj-500 MSPT povp **8,73 → 5,88 ms (−33 %)**, p95 9,96 → 7,21, alokacija 89 → 58 MB/s, enakost 0 / 1,25 M primerjav; S14 v istem boju v šumu in odstranjen; stikalo `RwPathFollowCache` preštevilčeno (1 = S14b), privzeto 0 → **Q17**. Prej seja 76: **M5.10 zaključen** — neposredno izmerjeno: `pathFollow` je v boju-500 **47,7–53,6 %** ticka (prag 25 % za M5.11 presežen); na `pathFollow` vedno 0 ali 1 kandidat; šum boja je v delu na klic, ne v številu klicev. Prej seja 75: **M5.0 zaključen** — raziskava preostanka M5: boj je edina celica brez napredka, njegov strošek je ocena tipa vozlišča v vanilla sledenju poti (~1.110 branj na klic, model se ujema), lock in iskanje poti nista ozko grlo; plan M5 prepisan (D-030), Q16. Prej seja 74: **D-029** — vsak milestone se začne z raziskavo izvedbe M?.0, plan ni dogma; M5-S S14 v kodi, enakost dokazana 0/616.276, A/B nedokazan. Prej seja 73: **M5-S P1 profil JFR** — boj-500: 48 % CPU strežniške niti v vanilla `pathFollow` → `isDirectPathBetweenPoints` (27 % hash iskanje chunka), iskanje poti 2 %; idle: `Entity.move` 29 %, `onCollide` 12 %, utrip oči 6 %; nov kandidat S14, vrstni red S14 → S4 → S7. Prej seja 72: odločitvi Q13 → D-027, `RwTargetPrefilter` privzeto 2; Q15 → D-028, nosilec z NPC posadko sprejme potisk. Prej seja 71: **M5-S S2 zaključen** — poizvedba iskalnika tarč samo po igralcih, `RwTargetPrefilter=2`: idle-500 p95 10,2 → 5,2 ms, boj nevtralen) |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **M3.6 zaključen 5. 10.:** način 1 zelen (tavajoči v dosegu 10/10 vzorcev z zakasnitvijo 10 = kontrola), način 0 napako ponovi (združeno 6/8 nad kontrolo, mediana 25), hipoteza P2 (`aggroRange`) potrjena. M3.7 in M3.8 zaključena 5. 10. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | **M5.11** (S14b, pomnjenje tipa vozlišča za čas enega klica; A/B pri istem boju s preklapljanjem načina med tekom), nato M5.12 (S4), M5.13 (S7); vrstni red v `03-FAZE.md` (D-030), [raziskava M5.0](raziskave/M5.0-preostanek-performance.md), [M5.10](meritve/2026-10-09-M5.10-delez-sledenja-poti.md). **M4.0** je lahko vmes (raziskava, brez merjenja). Vzporedno: M3.8b GUI v klientu (z igralcem). Odprto: PR `codex/m7-cnpc-integration` → `main` |
+| Naslednji paketi | **M5.12** (S4, `onCollide` brez opazovalca), nato M5.13 (S7); vrstni red v `03-FAZE.md` (D-030), [raziskava M5.0](raziskave/M5.0-preostanek-performance.md), [M5.11](meritve/2026-10-09-M5.11-pomnjenje-tipa-vozlisca.md). Q17 (privzeta vrednost S14b) čaka na uporabnika. **M4.0** je lahko vmes (raziskava, brez merjenja). Vzporedno: M3.8b GUI v klientu (z igralcem). Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Prevedljivih razredov | 35 (14 v `rework/diag`, vsi prevedeni 21. 9. v seji) — prejšnjih 21 + 14 v `rework/diag` (M2.1d doda `DiagChunkPlan` in `DiagChunkLoader`, M2.5a `SlowTicks`, **M2.7a `NavProbe` in `NavSweep`**) |
 | Testi | 31 primerjalnih v obeh načinih + 16 za varne writerje/session/fault injection + **90 za instrumentacijo** (61 + **27** `NavProbeTest` + 2 za vrstico opazovalca); zeleni, zadnjič prevedeni in pognani v seji **21. 9.** (D-014; 27/27 `NavProbeTest`). Dodatno 13 preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.\ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -36,7 +36,7 @@
 | M2 Diagnostika | **zaključeno 5. 10.** (razen M2.4r render, prestavljen v M5-K kot klientski harness) | M2.1–M2.7 preverjeni v svetu; **baseline M2.6 zelen 5. 10.** (3 ponovitve × 9 celic, B1–B3 in P0–P9) — [baseline](meritve/baseline-2026-10-05.md) |
 | M3 Jedro entitete | **v teku** — M3.1–M3.5 zaključeni (vzrok R1 potrjen, R1 popravljen pod stikalom, regresija zelena v načinih 0/1/2, hitbox po sestopu); M3.6 zaključen 5. 10. (D-020, `RwAttackPriority`), M3.7 zaključen brez spremembe, M3.8 zaključen (`RwHitbox`), M3.8b strežniško zelen 7. 10. (GUI v klientu odprt), **M3.9 zaključen 7. 10.** (Q15 odprto) | analiza narejena in **reprodukcija R1 obstaja**; glej R1 in R6 |
 | M4 Gibanje | **M4.14a v kodi** (izven vrstnega reda, na zahtevo uporabnika) | R2 analiza narejena; formacije (M4.14) prevedene in testirane v simulaciji, v svetu še ne — [zasnova](06-FORMACIJE.md), [scenarij](scenariji/M4.14-formacije.md) |
-| M5 Performance | **M5.0 zaključen 8. 10.** (plan prepisan, D-030); **M5.10 zaključen 9. 10.** (`pathFollow` 50 % ticka boja-500 → M5.11 se izvede); **S1 zaključen 6. 10.** (`RwTargetPrefilter`: idle-500 alokacija 342 → 21 MB/s, MSPT p95 41,9 → 9,96 ms, boj-500 nevtralen); **S2 zaključen 7. 10.** (način 2: p95 → 5,24 ms, µs/NPC 9,7 → 6,6, ticki >10 ms 370 → 6, boj nevtralen); **profil JFR 8. 10.** (nov vrstni red S14 → S4 → S7; S3 in S8 umaknjena) | del že pokrit z M1.3, glej meritve; razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
+| M5 Performance | **M5.0 zaključen 8. 10.** (plan prepisan, D-030); **M5.10 zaključen 9. 10.** (`pathFollow` 50 % ticka boja-500 → M5.11 se izvede); **M5.11 zaključen 9. 10.** (S14b: boj-500 MSPT povp 8,73 → 5,88 ms, p50 5,8 proti baselineu 8,9; S14 odstranjen; privzeto 0, Q17); **S1 zaključen 6. 10.** (`RwTargetPrefilter`: idle-500 alokacija 342 → 21 MB/s, MSPT p95 41,9 → 9,96 ms, boj-500 nevtralen); **S2 zaključen 7. 10.** (način 2: p95 → 5,24 ms, µs/NPC 9,7 → 6,6, ticki >10 ms 370 → 6, boj nevtralen); **profil JFR 8. 10.** (nov vrstni red S14 → S4 → S7; S3 in S8 umaknjena) | del že pokrit z M1.3, glej meritve; razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
@@ -80,6 +80,37 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-10-09 (77) — M5.11: S14b, pomnjenje tipa vozlišča v sledenju poti
+
+**Paket:** M5.11 · **Stanje:** končano
+
+**Narejeno:**
+- `RwWalkNodeProcessor` (node procesor vsakega kopenskega NPC-ja, `RwPathNavigateGround.getPathFinder` kot vanilla) si
+  med enim klicem `isDirectPathBetweenPoints` zapomni `getPathNodeType(x, y, z)` po poziciji (`NodeTypeMemo`); vanilla
+  metoda se kliče nespremenjena. Stikalo `RwPathFollowCache` 1 = S14b, 2 = preverba, privzeto 0.
+- Števci po načinu in ticki v vsakem načinu (`/rwpath ... poNacinu=`), `perf-run.ps1 -RwPathAB a,b -RwPathOkno N`
+  (A/B v istem boju, merili AB1/AB2). Testi `NodeTypeMemoTest` (6), `PathFollowCacheTest` (+2).
+- Enakost v svetu dvakrat: 618.004 in 627.601 primerjav, **0 neujemanj**; 3,03 ocene na izračun (model 3,07).
+- A/B v istem boju (0/S14b/S14, okna 20 s, 3 ponovitve): µs na kandidata 0,37–0,41× originala, pathFollow
+  −2,9 do −3,5 ms/tick (razpon originala 0,73); S14 −0,2 do −0,95 ms, v šumu.
+- **S14 odstranjen** (`MemoBlockAccess`, `ChunkMemo`, `ChunkMemoTest`, prepis vanilla metode), načini preštevilčeni.
+- A/B celih zagonov na končni kodi (3 + 3, `ab-boj.js` pogoj izpolnjen, odmik klicev ≤ 1,9 %): MSPT povp
+  **8,73 → 5,88 ms**, p50 8,65 → 5,77, p95 9,96 → 7,21, µs/NPC 17,3 → 11,6, alokacija 89 → 58 MB/s.
+  Build zelen (260), `verify-package` PASS (64). [zapis](meritve/2026-10-09-M5.11-pomnjenje-tipa-vozlisca.md)
+
+**Ugotovitve:**
+- Boj-500, edina celica brez napredka po M5.0, je zdaj p50 5,8 ms proti 8,9 v baselineu M2.6.
+- Šum boja se z S14b skoraj izgubi (razpon MSPT povp 0,52 → 0,07 ms): del na klic, ki ga je M5.10 označil za
+  vir šuma, so bile ponovljene ocene [H].
+- `pathFollow` ostane 34,5 % ticka; naslednji vzvod je S15 (M4.13, sprememba gibanja) ali S15b.
+- Zaganjalnik je 4 ure čakal na obvisel `ladja_mod` proces (brez okna); uporabnik ga je dovolil ustaviti.
+
+**Spremembe obnašanja:** nobene (S14b da isti izid; privzeto 0). **Meritve:** M5.11 (tabela Meritve).
+
+**Odprto:** Q17 — naj bo S14b privzeto vklopljen (`RwPathFollowCache=1`)?
+
+**Naslednja seja:** M5.12 (S4) ali M4.0 (raziskava M4).
 
 ### 2026-10-09 (76) — M5.10: delež sledenja poti v boju, neposredno
 
@@ -3808,6 +3839,7 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 | Q13 | Naj bo predzavrnitev tarč (`RwTargetPrefilter`) privzeto vklopljena? | M5, D-007 | **odločeno 7. 10.: da, način 2 (S1 + S2)** → D-027 |
 | Q15 | Naj nosilec z NPC jahačem pod `RwHitbox=1` sprejme potisk (masa nosilec + jahač)? | M3.9, R6 × R1 | **odločeno 7. 10.: da** → D-028 |
 | Q16 | Ali sme projekt za vanilla vroče točke dobiti **vanilla posege** (npr. prek MixinBooterja)? Največji preostali strošek idle je vanilla `Entity.move` (26–29 % CPU, od tega poizvedba entitet za trke 11,8 %), ki ga CNPC prek lastnih razredov ne doseže; Lithium to v novejših verzijah reši brez spremembe obnašanja, za 1.12 porta ni. Pomeni novo odvisnost in poseg izven CNPC razredov (D-006) | M5, D-006 | **odločeno 8. 10.: da, zapakirano v CNPC jar (lasten coremod, brez zunanjega moda)** → D-031, paketa M5.15/M5.16 |
+| Q17 | Naj bo pomnjenje tipa vozlišča v sledenju poti (S14b, `RwPathFollowCache=1`) privzeto vklopljeno? Izid je enak originalu (0 neujemanj v 1,25 M primerjav v svetu), boj-500 MSPT −33 % | M5.11, D-007 | **odprto 9. 10.** |
 | Q14 | Pri R10 — kateri zemljevid: lasten iz `ladja_mod` (izbira kot pri ladjah), JourneyMap, Xaero ali nov v CNPC? | M11.3 | **odprto 6. 10.**, ne blokira do M11 |
 
 ---
@@ -3873,6 +3905,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-10-09 | M5.11 S14b, boj-500, `RwTarget 2`: enakost (2×), A/B v istem boju 0/S14b/S14 (3 ponovitve), A/B celih zagonov 0/1 (3 + 3) | enakost **0 / 1.245.605**; v istem boju µs/kandidat 0,37–0,41×, pathFollow −2,9…−3,5 ms/tick, S14 v šumu (odstranjen); celi zagoni MSPT povp **8,73 → 5,88 ms**, p95 9,96 → 7,21, alokacija 89 → 58 MB/s | [zapis](meritve/2026-10-09-M5.11-pomnjenje-tipa-vozlisca.md) |
 | 2026-10-09 | M5.10 delež sledenja poti, boj-500, `RwTarget 2`, `RwPath 0` + merjenje, 3 ponovitve | `pathFollow` **47,7–53,6 %** povprečnega ticka (mediana 4,08 od 8,55 ms); 262 `pathFollow` in 251 kandidatov na tick (razpon 1,4 / 1,1 %), 0 ali 1 kandidat na `pathFollow`, vsi prosti; µs na kandidata 15,8–19,7 (razpon 24,5 %), MSPT razpon 14 % | [zapis](meritve/2026-10-09-M5.10-delez-sledenja-poti.md) |
 | 2026-10-08 | M5-S S14 `RwPathFollowCache`, boj-500: enakost (način 2) in A/B 0/1 | enakost **0 neujemanj / 616.276**; A povp 8,96 ms (razpon 0,30), B 8,84 / 7,85 (3. ponovitev neveljavna, P9) — **nedokazano**, stikalo ostane 0 | [zapis](meritve/2026-10-08-M5-S14-sledenje-poti.md) |
 | 2026-10-08 | M5-S P1 profil JFR, idle/boj/skripte × 500, `RwTarget 2`, ena ponovitev | boj-500: **48 %** CPU strežniške niti v `pathFollow` → `isDirectPathBetweenPoints` (27 % hash iskanje chunka), iskanje poti 2 %; idle-500: `Entity.move` 29 %, `onCollide` 12 %, `EntityDataManager.get` 12 %, utrip oči 6,5 %, iskalnik tarč 1,8 %; alokacija ~55 % vanilla `AxisAlignedBB` | [zapis](meritve/2026-10-08-M5-S-P1-profil-jfr.md) |

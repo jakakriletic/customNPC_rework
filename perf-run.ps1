@@ -40,11 +40,11 @@
 # zato celica dobi v odtis jfr=1 in ni primerljiva z baselinom ali A/B brez profila.
 #     .\perf-run.ps1 -Variants idle,boj -Counts 500 -RwTarget 2 -Jfr
 #
-# -RwPath N (M5-S S14, 8. 10.): po postavitvi sveta poslje '/rwpath N' (sledenje poti prek
-# predpomnilnika chunkov). Odtis dobi kljuc rwpath, celica velicine rwpath.* (klici, branja
-# blokov, iskanja chunka, primerjave, neujemanja). Nacin 2 = preverba: merilo R1 (vsaj ena
-# primerjava) in R2 (nic neujemanj); nacin 2 stane dvojno, zato ni za A/B. Brez parametra (-1)
-# se stikala ne dotakne.
+# -RwPath N (M5-S S14 8. 10., od M5.11 9. 10. S14b): po postavitvi sveta poslje '/rwpath N'
+# (1 = pomnjenje tipa vozlisca v sledenju poti). Odtis dobi kljuc rwpath, celica velicine rwpath.*
+# (klici, ocene tipa vozlisca, izracuni, primerjave, neujemanja). Nacin 2 = preverba: merilo R1
+# (vsaj ena primerjava) in R2 (nic neujemanj); nacin 2 stane dvojno, zato ni za A/B. Brez
+# parametra (-1) se stikala ne dotakne. Do 9. 10. sta bila 1/2 S14 (odstranjen), S14b pa 3/4.
 #     .\perf-run.ps1 -Variants boj -Counts 500 -RwTarget 2 -RwPath 2   # dokaz enakosti v svetu
 #
 # -RwPathCas (M5.10, 9. 10.; zahteva -RwPath): poslje se '/rwpath cas 1', ki izmeri ns celega
@@ -55,15 +55,13 @@
 # nanoTime na klic - ni primerljivo z zagoni brez merjenja).
 #     .\perf-run.ps1 -Variants boj -Counts 500 -RwTarget 2 -RwPath 0 -RwPathCas
 #
-# -RwPath 4 (M5.11, 9. 10.): preverba S14b (pomnjenje tipa vozlisca) - isti merili R1/R2 kot nacin 2.
-#
 # -RwPathAB a,b (M5.11, parameter -RwPathABNiz z vzdevkom -RwPathAB; zahteva -RwPathCas): A/B nacinov sledenja poti v ISTEM boju. Merilno okno
 # se razdeli na okna po -RwPathOkno sekund (privzeto 15), nacini se izmenjujejo a,b,a,b,... (stevilo
 # oken mora biti veckratnik stevila nacinov); streznik steje ticke, pathFollow in kandidate loceno po
 # nacinu (poNacinu v odgovoru /rwpath). Celica dobi rwpath.ab.<nacin>.* in razmerje us na kandidata
 # (drugi / prvi); merili AB1 (vsak nacin je tekel in imel kandidate) in AB2 (kandidatov na tick se
 # med nacinoma razlikuje najvec 10 %, pogoj veljavnosti M5.0). MSPT celice je mesanica nacinov.
-#     .\perf-run.ps1 -Variants boj -Counts 500 -RwTarget 2 -RwPathAB 0,3 -RwPathCas
+#     .\perf-run.ps1 -Variants boj -Counts 500 -RwTarget 2 -RwPathAB 0,1 -RwPathCas
 #
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
 # pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
@@ -155,18 +153,18 @@ function Send-RwTarget($Srv, [string]$Cmd) {
     return [long]$m[$m.Count - 1].Groups[1].Value
 }
 
-# M5-S S14: ukaz /rwpath; vrne slovar stevcev iz zadnjega odgovora ($null, ce ni odgovora).
+# M5-S S14 / M5.11: ukaz /rwpath; vrne slovar stevcev iz zadnjega odgovora ($null, ce ni odgovora).
 function Send-RwPath($Srv, [string]$Cmd) {
     $pred = ([regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=')).Count
     Send-Command $Srv $Cmd
     $ok = Wait-ForCount $Srv 'RWPATH nacin=' ($pred + 1) 60
     Check ("ukaz '{0}' odgovori" -f $Cmd) $ok
     if (-not $ok) { return $null }
-    $m = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=(\d+) .*? klicev=(\d+) branj=(\d+) iskanjChunka=(\d+) primerjav=(\d+) neujemanj=(\d+)')
+    $m = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=(\d+) .*? klicev=(\d+) ocen=(\d+) izracunov=(\d+) primerjav=(\d+) neujemanj=(\d+)')
     if ($m.Count -eq 0) { return $null }
     $g = $m[$m.Count - 1].Groups
-    $r = @{ nacin = [int]$g[1].Value; klicev = [long]$g[2].Value; branj = [long]$g[3].Value
-            iskanjChunka = [long]$g[4].Value; primerjav = [long]$g[5].Value; neujemanj = [long]$g[6].Value }
+    $r = @{ nacin = [int]$g[1].Value; klicev = [long]$g[2].Value; ocen = [long]$g[3].Value
+            izracunov = [long]$g[4].Value; primerjav = [long]$g[5].Value; neujemanj = [long]$g[6].Value }
     # M5.10: merjenje casa (starejsi build teh polj ne izpise)
     $c = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=\d+ .*? cas=(\d) tickov=(-?\d+) sledenj=(\d+) sledenjNs=(\d+) kandidatov=(\d+) kandidatNs=(\d+) prostih=(\d+) histKand=([\d/]+)')
     if ($c.Count -gt 0) {
@@ -655,10 +653,10 @@ try {
         if ($RwPath -ge 0) {
             $rwPathStevci = Send-RwPath $srv 'rwpath'
             if ($null -ne $rwPathStevci) {
-                Write-Host ("  RwPath={0}: klicev {1}, branj blokov {2}, iskanj chunka {3}, primerjav {4}, neujemanj {5}" -f `
-                    $RwPath, $rwPathStevci.klicev, $rwPathStevci.branj, $rwPathStevci.iskanjChunka, $rwPathStevci.primerjav, $rwPathStevci.neujemanj)
-                if (($RwPath -eq 2) -or ($RwPath -eq 4)) {
-                    Check ("R1: preverba je primerjala original in predpomnilnik ({0} primerjav)" -f $rwPathStevci.primerjav) ($rwPathStevci.primerjav -gt 0)
+                Write-Host ("  RwPath={0}: klicev {1}, ocen tipa vozlisca {2}, izracunov {3}, primerjav {4}, neujemanj {5}" -f `
+                    $RwPath, $rwPathStevci.klicev, $rwPathStevci.ocen, $rwPathStevci.izracunov, $rwPathStevci.primerjav, $rwPathStevci.neujemanj)
+                if ($RwPath -eq 2) {
+                    Check ("R1: preverba je primerjala original in pomnjenje ({0} primerjav)" -f $rwPathStevci.primerjav) ($rwPathStevci.primerjav -gt 0)
                     Check ("R2: nobenega neujemanja ({0})" -f $rwPathStevci.neujemanj) ($rwPathStevci.neujemanj -eq 0)
                 }
                 if ($RwPathCas) {
@@ -804,7 +802,7 @@ try {
         if ($RwPath -ge 0) {
             $odtis['rwpath'] = $RwPath
             if ($null -ne $rwPathStevci) {
-                foreach ($k in @('klicev', 'branj', 'iskanjChunka', 'primerjav', 'neujemanj')) { $vel['rwpath.' + $k] = $rwPathStevci[$k] }
+                foreach ($k in @('klicev', 'ocen', 'izracunov', 'primerjav', 'neujemanj')) { $vel['rwpath.' + $k] = $rwPathStevci[$k] }
             }
         }
         if ($RwPathAB.Count -gt 0) {

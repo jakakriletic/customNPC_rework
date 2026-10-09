@@ -8,7 +8,7 @@ import net.minecraft.util.text.TextComponentString;
 import noppes.npcs.LogWriter;
 
 /**
- * Ukaz {@code /rwpath [0|1|2|3|4|reset]}: pokaze ali med tekom preklopi nacin
+ * Ukaz {@code /rwpath [0|1|2|reset]}: pokaze ali med tekom preklopi nacin
  * {@link PathFollowCache} in izpise stevce. Ne zapise v config — trajna nastavitev je
  * {@code RwPathFollowCache}. {@code /rwpath cas 1} vklopi merjenje casa in kandidatov sledenja
  * poti (M5.10), {@code tickov} v odgovoru so ticki od zadnjega {@code reset}. M5.11: odgovor ima
@@ -29,7 +29,7 @@ public class CommandRwPath extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/rwpath [0|1|2|3|4|reset|cas 0|cas 1]";
+        return "/rwpath [0|1|2|reset|cas 0|cas 1]";
     }
 
     @Override
@@ -64,7 +64,7 @@ public class CommandRwPath extends CommandBase {
         }
         int m = PathFollowCache.mode();
         String msg = "RWPATH nacin=" + m + " (" + PathFollowCache.describe(m) + ") klicev=" + PathFollowCache.calls()
-                + " branj=" + PathFollowCache.lookups() + " iskanjChunka=" + PathFollowCache.misses()
+                + " ocen=" + PathFollowCache.lookups() + " izracunov=" + PathFollowCache.misses()
                 + " primerjav=" + PathFollowCache.compared() + " neujemanj=" + PathFollowCache.mismatches()
                 + " cas=" + (PathFollowCache.timing() ? 1 : 0) + " tickov=" + (server.getTickCounter() - resetTick)
                 + " sledenj=" + PathFollowCache.followCalls() + " sledenjNs=" + PathFollowCache.followNanos()

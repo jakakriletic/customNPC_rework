@@ -24,7 +24,7 @@ public class PathFollowCacheTest {
     public void merjenjeJePrivzetoIzklopljenoInNeodvisnoOdNacina() {
         assertFalse(PathFollowCache.timing());
         PathFollowCache.setTiming(true);
-        PathFollowCache.setMode(PathFollowCache.MEMO);
+        PathFollowCache.setMode(PathFollowCache.NODE_MEMO);
         assertTrue(PathFollowCache.timing());
         PathFollowCache.setMode(PathFollowCache.ORIGINAL);
         assertTrue(PathFollowCache.timing());
@@ -76,7 +76,7 @@ public class PathFollowCacheTest {
         assertEquals(PathFollowCache.ORIGINAL, PathFollowCache.mode());
         assertEquals(20 + 10, PathFollowCache.ticksIn(PathFollowCache.ORIGINAL, 160));
         assertEquals(30, PathFollowCache.ticksIn(PathFollowCache.NODE_MEMO, 160));
-        assertEquals("0:30:1:1000:1:800;3:30:1:400:1:300", PathFollowCache.perMode(160));
+        assertEquals("0:30:1:1000:1:800;1:30:1:400:1:300", PathFollowCache.perMode(160));
         // vsote ostanejo skupne
         assertEquals(2, PathFollowCache.followCalls());
         assertEquals(1100, PathFollowCache.directNanos());
