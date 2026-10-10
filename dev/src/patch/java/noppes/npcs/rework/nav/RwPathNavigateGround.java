@@ -28,6 +28,13 @@ public class RwPathNavigateGround extends PathNavigateGround {
     /** M5.10: kandidati v trenutnem pathFollow (samo pri vklopljenem merjenju). */
     private int candidates;
 
+    // M5.6 (S5): spomin na zadnje neuspelo iskanje tega NPC-ja (brez alokacije, ena reza).
+    private boolean memoHasFail;
+    private int memoX;
+    private int memoY;
+    private int memoZ;
+    private int memoTick;
+
     public RwPathNavigateGround(EntityLiving entity, World world) {
         super(entity, world);
     }
@@ -47,19 +54,37 @@ public class RwPathNavigateGround extends PathNavigateGround {
     /**
      * M5.9: pri vklopljenem merjenju ({@link PathSearch#setTiming}) izmeri in razvrsti vsako
      * iskanje poti. Vse poti ({@code getPathToEntityLiving}, {@code getPathToXYZ}) vodijo skozi to
-     * metodo [K]. Obnasanje je v obeh vejah {@code super.getPathToPos(pos)}.
+     * metodo [K].
+     *
+     * <p>M5.6 (S5): v nacinu {@link NegativePathCache#ON} se iskanje preskoci in vrne {@code null},
+     * ce je isti NPC do (skoraj) iste tarce v zadnjih {@link NegativePathCache#ttl()} tickih ze
+     * iskal brez cele poti. Dokler task tece, {@code tryMoveToEntityLiving} ob {@code null} obdrzi
+     * obstojeco pot (ne poklice {@code setPath}) [K]; ko task ne tece,
+     * {@code EntityAIAttackTarget.shouldExecute} ostane {@code false} - to je sprememba obnasanja,
+     * ki jo nacin {@link NegativePathCache#VERIFY} izmeri.
+     *
+     * <p>V nacinu 0 brez merjenja je to natanko {@code super.getPathToPos(pos)}.
      */
     @Override
     public Path getPathToPos(BlockPos pos) {
-        if (!PathSearch.timing()) {
+        int neg = NegativePathCache.mode();
+        if (neg == NegativePathCache.ORIGINAL && !PathSearch.timing()) {
             return super.getPathToPos(pos);
         }
+        int now = (int) this.world.getTotalWorldTime();
+        boolean memoApplies = NegativePathCache.applies(this.memoHasFail, now - this.memoTick,
+                this.memoDistance(pos));
+        if (neg == NegativePathCache.ON && memoApplies) {
+            ++NegativePathCache.skipped;
+            return null;
+        }
+
         Path before = this.currentPath;
-        long t0 = System.nanoTime();
+        long t0 = PathSearch.timing() ? System.nanoTime() : 0L;
         Path path = super.getPathToPos(pos);
-        long dt = System.nanoTime() - t0;
+        boolean fresh = path != before;
         int distance = 0;
-        if (path != null && path != before) {
+        if (path != null && fresh) {
             PathPoint end = path.getFinalPathPoint();
             if (end == null) {
                 distance = 999;
@@ -68,8 +93,41 @@ public class RwPathNavigateGround extends PathNavigateGround {
                         Math.abs(end.z - pos.getZ()));
             }
         }
-        PathSearch.record(PathSearch.classify(path != null, path != null && path == before, distance), dt, distance);
+        if (PathSearch.timing()) {
+            PathSearch.record(PathSearch.classify(path != null, path != null && !fresh, distance),
+                    System.nanoTime() - t0, distance);
+        }
+        if (neg == NegativePathCache.VERIFY && memoApplies) {
+            // Predpomnjeni odgovor bi bil null; ujemanje pomeni, da iskanje tudi zdaj ne da poti.
+            ++NegativePathCache.compared;
+            if (path != null) {
+                ++NegativePathCache.mismatches;
+            }
+        }
+        // Nacin 2 ob veljavnem spominu spomina ne osvezi, da je zivljenjski cikel enak nacinu 1
+        // in sta stevca primerjav in preskokov neposredno primerljiva.
+        if (neg != NegativePathCache.ORIGINAL && fresh && !(neg == NegativePathCache.VERIFY && memoApplies)) {
+            if (path == null || (distance > 0 && NegativePathCache.partialCounts())) {
+                this.memoHasFail = true;
+                this.memoX = pos.getX();
+                this.memoY = pos.getY();
+                this.memoZ = pos.getZ();
+                this.memoTick = now;
+                ++NegativePathCache.stored;
+            } else {
+                this.memoHasFail = false;
+            }
+        }
         return path;
+    }
+
+    /** Cebiseva razdalja med zapisano neuspelo tarco in zdajsnjo (velika, ce spomina ni). */
+    private int memoDistance(BlockPos pos) {
+        if (!this.memoHasFail) {
+            return Integer.MAX_VALUE;
+        }
+        return Math.max(Math.max(Math.abs(this.memoX - pos.getX()), Math.abs(this.memoY - pos.getY())),
+                Math.abs(this.memoZ - pos.getZ()));
     }
 
     /**

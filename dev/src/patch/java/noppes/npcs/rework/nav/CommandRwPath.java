@@ -35,7 +35,7 @@ public class CommandRwPath extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/rwpath [0|1|2|reset|cas 0|cas 1|iskanje 0|iskanje 1]";
+        return "/rwpath [0|1|2|reset|cas N|iskanje N|neg N|negttl T|negtol B|negdelne N]";
     }
 
     @Override
@@ -51,11 +51,49 @@ public class CommandRwPath extends CommandBase {
                 resetTick = server.getTickCounter();
                 PathFollowCache.reset(resetTick);
                 PathSearch.reset();
+                NegativePathCache.reset();
             } else if ("cas".equals(args[0])) {
                 if (args.length < 2 || !("0".equals(args[1]) || "1".equals(args[1]))) {
                     throw new WrongUsageException(getUsage(sender));
                 }
                 PathFollowCache.setTiming("1".equals(args[1]));
+            } else if ("neg".equals(args[0])) {
+                if (args.length < 2) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+                int requested;
+                try {
+                    requested = Integer.parseInt(args[1]);
+                } catch (NumberFormatException e) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+                if (!NegativePathCache.isValidMode(requested)) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+                NegativePathCache.setMode(requested);
+            } else if ("negttl".equals(args[0])) {
+                if (args.length < 2) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+                try {
+                    NegativePathCache.setTtl(Integer.parseInt(args[1]));
+                } catch (NumberFormatException e) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+            } else if ("negdelne".equals(args[0])) {
+                if (args.length < 2 || !("0".equals(args[1]) || "1".equals(args[1]))) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+                NegativePathCache.setPartialCounts("1".equals(args[1]));
+            } else if ("negtol".equals(args[0])) {
+                if (args.length < 2) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+                try {
+                    NegativePathCache.setTolerance(Integer.parseInt(args[1]));
+                } catch (NumberFormatException e) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
             } else if ("iskanje".equals(args[0])) {
                 if (args.length < 2 || !("0".equals(args[1]) || "1".equals(args[1]))) {
                     throw new WrongUsageException(getUsage(sender));
@@ -87,7 +125,11 @@ public class CommandRwPath extends CommandBase {
                 + " iskNs=" + PathSearch.nanos() + " iskMaxNs=" + PathSearch.maxNanos()
                 + " iskPomnilnik=" + PathSearch.cached() + " iskBrezPoti=" + PathSearch.none()
                 + " iskCelih=" + PathSearch.full() + " iskDelnih=" + PathSearch.partial()
-                + " iskDelnaRazdalja=" + String.format(java.util.Locale.ROOT, "%.2f", PathSearch.averagePartialDistance());
+                + " iskDelnaRazdalja=" + String.format(java.util.Locale.ROOT, "%.2f", PathSearch.averagePartialDistance())
+                + " neg=" + NegativePathCache.mode() + " negTtl=" + NegativePathCache.ttl()
+                + " negTol=" + NegativePathCache.tolerance() + " negDelne=" + (NegativePathCache.partialCounts() ? 1 : 0) + " negPreskokov=" + NegativePathCache.skipped()
+                + " negZapisov=" + NegativePathCache.stored() + " negPrimerjav=" + NegativePathCache.compared()
+                + " negNeujemanj=" + NegativePathCache.mismatches();
         sender.sendMessage(new TextComponentString(msg));
         LogWriter.info(msg);
     }

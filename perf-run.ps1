@@ -88,6 +88,15 @@
 # tocke od cilja. Merilo U3 (merjenje je stelo). Odtis dobi rwpathIskanje=1 (dva klica nanoTime na
 # iskanje).
 #
+# -RwPathNeg N in -RwPathNegTtl T (M5.6 / S5, 10. 10.; zahteva -RwPath): negativni predpomnilnik
+# iskanja poti - po iskanju brez cele poti isti NPC iste tarce T tickov (privzeto 20) ne isce vec.
+# SPREMEMBA OBNASANJA (D-007, privzeto 0): ce se pot medtem odpre, NPC reagira do T tickov kasneje.
+# 1 = vklopljen, 2 = preverba (iskanje vseeno tece, odgovor je original, steje se, kolikokrat bi se
+# predpomnjeni odgovor razlikoval - s tem je velikost spremembe izmerjena). Celica dobi
+# rwpath.neg.preskokov(NaTick), rwpath.neg.zapisov, rwpath.neg.primerjav, rwpath.neg.neujemanj(Delez);
+# merili N1 (nacin 1 je preskakoval) in N2 (nacin 2 je primerjal).
+#     .\perf-run.ps1 -Variants nedosegljiva -Counts 500 -RwTarget 2 -RwPath 0 -RwPathIskanje -RwPathNeg 2
+#
 # -RwBlink N (M5.13, 10. 10.): po postavitvi sveta poslje '/rwblink N' (prejemniki utripa oci:
 # 1 = iskanje po world.playerEntities, 2 = preverba). Odtis dobi kljuc rwblink, celica velicine
 # rwblink.* (iskanj, igralcev, prejemnikov, chunkov, primerjav, neujemanj). Merilo B1: v nacinu 1/2
@@ -124,7 +133,7 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
       [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1,
       [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15, [int]$RwCollide = -1,
-      [switch]$RwPathIskanje, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15)
+      [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -232,6 +241,15 @@ function Send-RwPath($Srv, [string]$Cmd) {
         $r['iskBrezPoti'] = [long]$q[6].Value; $r['iskCelih'] = [long]$q[7].Value
         $r['iskDelnih'] = [long]$q[8].Value
         $r['iskDelnaRazdalja'] = [double]($q[9].Value -replace ',', '.')
+    }
+    # M5.6: stevci negativnega predpomnilnika (starejsi build teh polj ne izpise)
+    $ng = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=\d+ .*? neg=(\d) negTtl=(\d+) negTol=(\d+) negDelne=(\d) negPreskokov=(\d+) negZapisov=(\d+) negPrimerjav=(\d+) negNeujemanj=(\d+)')
+    if ($ng.Count -gt 0) {
+        $w = $ng[$ng.Count - 1].Groups
+        $r['neg'] = [int]$w[1].Value; $r['negTtl'] = [int]$w[2].Value; $r['negTol'] = [int]$w[3].Value
+        $r['negDelne'] = [int]$w[4].Value
+        $r['negPreskokov'] = [long]$w[5].Value; $r['negZapisov'] = [long]$w[6].Value
+        $r['negPrimerjav'] = [long]$w[7].Value; $r['negNeujemanj'] = [long]$w[8].Value
     }
     # M5.11: stevci po nacinu "m:tickov:sledenj:sledenjNs:kandidatov:kandidatNs;..."
     $pn = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=\d+ .*? poNacinu=([\d:;]*)')
@@ -573,6 +591,8 @@ try {
     }
     if ($RwBlinkCas -and $RwBlink -lt 0) { throw '-RwBlinkCas zahteva -RwBlink N (nacin, v katerem se meri).' }
     if ($RwPathIskanje -and $RwPath -lt 0) { throw '-RwPathIskanje zahteva -RwPath N (za M5.9 -RwPath 0).' }
+    if ($RwPathNeg -ge 0 -and $RwPath -lt 0) { throw '-RwPathNeg zahteva -RwPath N (stikali sta loceni, stevci pa v istem ukazu).' }
+    if ($RwPathNegTtl -ne 0 -and $RwPathNeg -lt 1) { throw '-RwPathNegTtl zahteva -RwPathNeg 1 ali 2.' }
     $perCell = $WarmupSeconds + $Seconds + 25
     Write-Host ("  celice: {0}" -f (($cells | ForEach-Object { '{0}/{1}' -f $_.Varianta, $_.N }) -join ', '))
     Write-Host ("  ogrevanje {0} s, merjenje {1} s, obroc {2}; ocena trajanja ~{3} min" -f `
@@ -687,6 +707,18 @@ try {
         if ($RwPathIskanje) {
             $rp = Send-RwPath $srv 'rwpath iskanje 1'
             Check 'merjenje iskanja poti vklopljeno (rwpath iskanje 1)' (($null -ne $rp) -and ($rp['isk'] -eq 1))
+        }
+        if ($RwPathNeg -ge 0) {
+            if ($RwPathNegTtl -gt 0) {
+                $rp = Send-RwPath $srv ("rwpath negttl {0}" -f $RwPathNegTtl)
+                Check ("trajanje negativnega predpomnilnika je {0} tickov" -f $RwPathNegTtl) (($null -ne $rp) -and ($rp['negTtl'] -eq $RwPathNegTtl))
+            }
+            if ($RwPathNegDelne) {
+                $rp = Send-RwPath $srv 'rwpath negdelne 1'
+                Check 'delna pot steje za neuspeh (rwpath negdelne 1)' (($null -ne $rp) -and ($rp['negDelne'] -eq 1))
+            }
+            $rp = Send-RwPath $srv ("rwpath neg {0}" -f $RwPathNeg)
+            Check ("stikalo RwPathNeg je {0}" -f $RwPathNeg) (($null -ne $rp) -and ($rp['neg'] -eq $RwPathNeg))
         }
     }
 
@@ -1086,6 +1118,30 @@ try {
             $odtis['rwcollide'] = $RwCollide
             if ($null -ne $rwCollideStevci) {
                 foreach ($k in @('klicev', 'preskocenih', 'brezOpazovalca', 'dogodkovBrezOpazovalca')) { $vel['rwcollide.' + $k] = $rwCollideStevci[$k] }
+            }
+        }
+        if ($RwPathNeg -ge 0) {
+            $odtis['rwpathNeg'] = $RwPathNeg
+            if (($null -ne $rwPathStevci) -and ($null -ne $rwPathStevci['negPreskokov'])) {
+                $odtis['rwpathNegTtl'] = $rwPathStevci['negTtl']
+                $odtis['rwpathNegDelne'] = $rwPathStevci['negDelne']
+                $vel['rwpath.neg.preskokov'] = $rwPathStevci['negPreskokov']
+                $vel['rwpath.neg.zapisov'] = $rwPathStevci['negZapisov']
+                $vel['rwpath.neg.primerjav'] = $rwPathStevci['negPrimerjav']
+                $vel['rwpath.neg.neujemanj'] = $rwPathStevci['negNeujemanj']
+                if ($rwPathStevci['tickov'] -gt 0) {
+                    $vel['rwpath.neg.preskokovNaTick'] = [math]::Round($rwPathStevci['negPreskokov'] / [double]$rwPathStevci['tickov'], 2)
+                }
+                if ($rwPathStevci['negPrimerjav'] -gt 0) {
+                    $vel['rwpath.neg.neujemanjDelez'] = [math]::Round(100.0 * $rwPathStevci['negNeujemanj'] / [double]$rwPathStevci['negPrimerjav'], 2)
+                }
+                if ($RwPathNeg -eq 1) {
+                    Check ("N1: negativni predpomnilnik je preskakoval iskanja ({0} preskokov)" -f $rwPathStevci['negPreskokov']) ($rwPathStevci['negPreskokov'] -gt 0)
+                }
+                if ($RwPathNeg -eq 2) {
+                    Check ("N2: preverba je primerjala predpomnjeni in pravi odgovor ({0} primerjav)" -f $rwPathStevci['negPrimerjav']) ($rwPathStevci['negPrimerjav'] -gt 0)
+                    Write-Host ("  M5.6 preverba: {0} primerjav, {1} neujemanj = {2} % (toliko bi nacin 1 odgovoril drugace kot original)" -f $rwPathStevci['negPrimerjav'], $rwPathStevci['negNeujemanj'], $vel['rwpath.neg.neujemanjDelez'])
+                }
             }
         }
         if ($RwPathIskanje) {
