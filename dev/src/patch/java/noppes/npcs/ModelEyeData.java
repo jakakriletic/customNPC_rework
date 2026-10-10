@@ -68,7 +68,9 @@ extends ModelPartData {
             if (this.r.nextInt(140) == 1) {
                 this.blinkStart = System.currentTimeMillis();
                 if (npc != null) {
-                    Server.sendAssociatedData((Entity)npc, EnumPacketClient.EYE_BLINK, npc.getEntityId());
+                    // M5.13 (S7): v nacinu 0 je to isti klic kot v originalu, v nacinu 1 se
+                    // prejemniki poiscejo po world.playerEntities namesto po ~441 chunkih.
+                    noppes.npcs.rework.net.AssociatedPlayers.sendAssociatedData((Entity)npc, EnumPacketClient.EYE_BLINK, npc.getEntityId());
                 }
             }
         } else if (System.currentTimeMillis() - this.blinkStart > 300L) {

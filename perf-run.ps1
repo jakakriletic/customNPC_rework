@@ -70,6 +70,30 @@
 # in poslusalec mora dobiti dogodke (K2), po '/rwcollide poslusalec 0' se preskok nadaljuje (K3).
 #     .\perf-run.ps1 -Variants idle -Counts 500 -RwTarget 2 -RwCollide 1
 #
+# -RwBlink N (M5.13, 10. 10.): po postavitvi sveta poslje '/rwblink N' (prejemniki utripa oci:
+# 1 = iskanje po world.playerEntities, 2 = preverba). Odtis dobi kljuc rwblink, celica velicine
+# rwblink.* (iskanj, igralcev, prejemnikov, chunkov, primerjav, neujemanj). Merilo B1: v nacinu 1/2
+# je iskanje teklo. Nacin 2 = preverba: B2 (vsaj ena primerjava) in B3 (nic neujemanj); nacin 2
+# stane dvojno in ni za A/B. V nacinu 1/2 se po merjenju pozene se '/rwblink poskus 64': ker na
+# dediciranem strezniku ni igralcev, je seznam prejemnikov vedno prazen in B2/B3 sama nista dokaz,
+# zato poskus primerja vanilla poizvedbo in obhod seznama entitet na NPC-jih (64 x 5 kvadrov,
+# brez posiljanja) - merili B4 (primerjave so tekle) in B5 (nic neujemanj).
+#     .\perf-run.ps1 -Variants idle -Counts 500 -RwTarget 2 -RwBlink 2   # dokaz enakosti v svetu
+#
+# -RwBlinkCas (M5.13; zahteva -RwBlink): poslje se '/rwblink cas 1', ki izmeri ns okoli iskanja
+# prejemnikov. Celica dobi rwblink.usNaIskanje, rwblink.msNaTick, rwblink.delez (delez povprecnega
+# ticka), rwblink.iskanjNaTick in rwblink.chunkovNaIskanje. Odtis dobi rwblinkCas=1.
+#
+# -RwBlinkAB a,b (M5.13, parameter -RwBlinkABNiz z vzdevkom -RwBlinkAB; zahteva -RwBlinkCas): A/B
+# nacinov iskanja prejemnikov v ISTEM zagonu, po vzoru M5.11. Merilno okno se razdeli na okna po
+# -RwBlinkOkno sekund (privzeto 15), nacini se izmenjujejo a,b,a,b,...; streznik steje ticke in
+# iskanja loceno po nacinu (poNacinu v odgovoru /rwblink). Celica dobi rwblink.ab.<nacin>.* in
+# razmerje us na iskanje (drugi / prvi); merili AB3 (vsak nacin je tekel in imel iskanja) in AB4
+# (iskanj na tick se med nacinoma razlikuje najvec 10 % - utrip je nakljucen, zato je to pogoj
+# veljavnosti primerjave). Hkratni -RwPathAB in -RwBlinkAB nista dovoljena. MSPT celice je
+# mesanica nacinov.
+#     .\perf-run.ps1 -Variants idle -Counts 500 -RwTarget 2 -RwBlinkAB 0,1 -RwBlinkCas
+#
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
 # pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
 # (merilo P9), in ob sesutju serverja takoj konca z vzrokom iz loga.
@@ -81,7 +105,8 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [int]$Seconds = 300, [int]$WarmupSeconds = 120, [int]$ChunkRadius = 1,
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
       [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1,
-      [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15, [int]$RwCollide = -1)
+      [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15, [int]$RwCollide = -1,
+      [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -209,6 +234,29 @@ function Send-RwCollide($Srv, [string]$Cmd) {
               poslusalec = [int]$g[6].Value; poslusalecDogodkov = [long]$g[7].Value; opazovalec = [int]$g[8].Value }
 }
 
+# M5.13: ukaz /rwblink; vrne slovar stevcev iz odgovora ($null, ce ni odgovora).
+function Send-RwBlink($Srv, [string]$Cmd) {
+    $pred = ([regex]::Matches((Get-MarkerText $Srv.Log), 'RWBLINK nacin=')).Count
+    Send-Command $Srv $Cmd
+    $ok = Wait-ForCount $Srv 'RWBLINK nacin=' ($pred + 1) 60
+    Check ("ukaz '{0}' odgovori" -f $Cmd) $ok
+    if (-not $ok) { return $null }
+    $m = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWBLINK nacin=(\d+) .*? iskanj=(\d+) igralcev=(\d+) prejemnikov=(\d+) chunkov=(\d+) primerjav=(\d+) neujemanj=(\d+) cas=(\d) tickov=(-?\d+) poNacinu=([\d:;]*)')
+    if ($m.Count -eq 0) { return $null }
+    $g = $m[$m.Count - 1].Groups
+    $r = @{ nacin = [int]$g[1].Value; iskanj = [long]$g[2].Value; igralcev = [long]$g[3].Value
+            prejemnikov = [long]$g[4].Value; chunkov = [long]$g[5].Value; primerjav = [long]$g[6].Value
+            neujemanj = [long]$g[7].Value; cas = [int]$g[8].Value; tickov = [long]$g[9].Value }
+    $po = @{}
+    foreach ($del in ($g[10].Value -split ';')) {
+        if ($del -eq '') { continue }
+        $x = $del -split ':'
+        $po[[int]$x[0]] = @{ tickov = [long]$x[1]; iskanj = [long]$x[2]; ns = [long]$x[3]; prejemnikov = [long]$x[4] }
+    }
+    $r['poNacinu'] = $po
+    return $r
+}
+
 # M5-S P1: PID java procesa serverja (GradleStartServer) v drevesu nasega zagona.
 function Get-ServerJavaPid {
     $drevo = Get-DrevoProcesov @($srv.Proc.Id)
@@ -245,6 +293,21 @@ function Send-Command($srv, [string]$Cmd) {
     $srv.Proc.StandardInput.WriteLine($Cmd)
     $srv.Proc.StandardInput.Flush()
     Start-Sleep -Milliseconds 300
+}
+
+# M5.13 (10. 10.): prvi ukaz po zagonu serverja se lahko izgubi. Vhod gre PowerShell -> cmd.exe
+# -> gradlew.bat -> gradle (ki zaradi org.gradle.jvmargs tudi z --no-daemon forka build JVM) ->
+# javaexec serverja; gradlov posredovalnik vhoda vrstico, zapisano preden se prikljuci, pogoltne,
+# do serverja pride samo konec vrstice in ta odgovori "Unknown command". Zato se vhod po zagonu
+# ogreje z 'list', dokler server ne odgovori; vse naslednje vrstice pridejo.
+function Prime-ServerInput($srv, [int]$Tries = 6, [int]$TimeoutSec = 5) {
+    $marker = 'players online'
+    for ($i = 0; $i -lt $Tries; ++$i) {
+        $pred = ([regex]::Matches((Get-MarkerText $srv.Log), $marker)).Count
+        Send-Command $srv 'list'
+        if (Wait-ForCount $srv $marker ($pred + 1) $TimeoutSec) { return $true }
+    }
+    return $false
 }
 
 function Send-File($srv, [string]$Path) {
@@ -427,7 +490,7 @@ try {
     foreach ($v in $Variants) { foreach ($n in $Counts) { $cells += [pscustomobject]@{ Varianta = $v; N = $n } } }
     if ($JsonPath -ne '' -and $cells.Count -ne 1) { throw '-JsonPath je dovoljen samo za eno celico (ena varianta, eno stevilo).' }
     # -File poda argumente kot nize, zato seznam nacinov pride kot "0,3" in se razcepi tu.
-    [int[]]$RwPathAB = @($RwPathABNiz -split ',' | Where-Object { $_.Trim() -ne '' } | ForEach-Object { [int]$_.Trim() })
+    [int[]]$RwPathAB = @($RwPathABNiz -split '[,\s]+' | Where-Object { $_.Trim() -ne '' } | ForEach-Object { [int]$_.Trim() })
     if ($RwPathAB.Count -gt 0) {
         if ($RwPathAB.Count -lt 2) { throw '-RwPathAB potrebuje vsaj dva nacina (npr. 0,3).' }
         if (-not $RwPathCas) { throw '-RwPathAB zahteva -RwPathCas (primerjajo se merjeni stevci po nacinu).' }
@@ -440,6 +503,21 @@ try {
         }
     }
     if ($RwPathCas -and $RwPath -lt 0) { throw '-RwPathCas zahteva -RwPath N (nacin, v katerem se meri; za M5.10 -RwPath 0).' }
+    [int[]]$RwBlinkAB = @($RwBlinkABNiz -split '[,\s]+' | Where-Object { $_.Trim() -ne '' } | ForEach-Object { [int]$_.Trim() })
+    $oknaBlinkAB = 0
+    if ($RwBlinkAB.Count -gt 0) {
+        if ($RwPathAB.Count -gt 0) { throw '-RwBlinkAB in -RwPathAB se ne moreta izmenjevati v istem zagonu.' }
+        if ($RwBlinkAB.Count -lt 2) { throw '-RwBlinkAB potrebuje vsaj dva nacina (npr. 0,1).' }
+        if (-not $RwBlinkCas) { throw '-RwBlinkAB zahteva -RwBlinkCas (primerjajo se merjeni stevci po nacinu).' }
+        if ($RwBlink -lt 0) { $RwBlink = $RwBlinkAB[0] }
+        if ($RwBlink -ne $RwBlinkAB[0]) { throw '-RwBlink mora biti enak prvemu nacinu v -RwBlinkAB.' }
+        if ($RwBlinkOkno -lt 1) { throw '-RwBlinkOkno mora biti vsaj 1 s.' }
+        $oknaBlinkAB = [math]::Floor($Seconds / $RwBlinkOkno)
+        if (($oknaBlinkAB -lt $RwBlinkAB.Count) -or (($oknaBlinkAB % $RwBlinkAB.Count) -ne 0)) {
+            throw ("-Seconds {0} / -RwBlinkOkno {1} = {2} oken; potreben je veckratnik stevila nacinov ({3})." -f $Seconds, $RwBlinkOkno, $oknaBlinkAB, $RwBlinkAB.Count)
+        }
+    }
+    if ($RwBlinkCas -and $RwBlink -lt 0) { throw '-RwBlinkCas zahteva -RwBlink N (nacin, v katerem se meri).' }
     $perCell = $WarmupSeconds + $Seconds + 25
     Write-Host ("  celice: {0}" -f (($cells | ForEach-Object { '{0}/{1}' -f $_.Varianta, $_.N }) -join ', '))
     Write-Host ("  ogrevanje {0} s, merjenje {1} s, obroc {2}; ocena trajanja ~{3} min" -f `
@@ -507,6 +585,9 @@ try {
     $a = Start-DevServer 'a'
     Check 'server A je dosegel "Done ("' (Wait-ForMarker $a 'Done (' 900)
     if ($failures.Count -eq 0) {
+        Check 'standardni vhod serverja A odgovarja (ogrevanje z "list")' (Prime-ServerInput $a)
+    }
+    if ($failures.Count -eq 0) {
         Send-Command $a 'setworldspawn 0 4 0'
         Check 'world spawn nastavljen' (Wait-ForMarker $a 'Set the world spawn point' 60)
         Send-Command $a 'save-all flush'
@@ -518,6 +599,9 @@ try {
     Step 3 'Zagon B: postavitev sveta'
     $srv = Start-DevServer
     Check 'server B je dosegel "Done ("' (Wait-ForMarker $srv 'Done (' 900)
+    if ($failures.Count -eq 0) {
+        Check 'standardni vhod serverja B odgovarja (ogrevanje z "list")' (Prime-ServerInput $srv)
+    }
     if ($failures.Count -gt 0) { throw "Server se ni zagnal. Glej $($srv.Log)" }
     $script:nasiPid = Get-DrevoProcesov @($srv.Proc.Id)
     Send-File $srv (Join-Path $seed 'perf-setup-commands.txt')
@@ -529,6 +613,14 @@ try {
     if ($RwCollide -ge 0) {
         $rc = Send-RwCollide $srv ("rwcollide {0}" -f $RwCollide)
         Check ("stikalo RwCollide je {0}" -f $RwCollide) (($null -ne $rc) -and ($rc.nacin -eq $RwCollide))
+    }
+    if ($RwBlink -ge 0) {
+        $rb = Send-RwBlink $srv ("rwblink {0}" -f $RwBlink)
+        Check ("stikalo RwBlink je {0}" -f $RwBlink) (($null -ne $rb) -and ($rb.nacin -eq $RwBlink))
+        if ($RwBlinkCas) {
+            $rb = Send-RwBlink $srv 'rwblink cas 1'
+            Check 'merjenje prejemnikov utripa vklopljeno (rwblink cas 1)' (($null -ne $rb) -and ($rb['cas'] -eq 1))
+        }
     }
     if ($RwPath -ge 0) {
         $rp = Send-RwPath $srv ("rwpath {0}" -f $RwPath)
@@ -635,6 +727,9 @@ try {
         if ($RwPathAB.Count -gt 0) { $null = Send-RwPath $srv ("rwpath {0}" -f $RwPathAB[0]) }
         if ($RwPath -ge 0) { $null = Send-RwPath $srv 'rwpath reset' }
         if ($RwCollide -ge 0) { $null = Send-RwCollide $srv 'rwcollide reset' }
+        # M5.13: A/B v istem zagonu zacne vsako celico v prvem nacinu.
+        if ($RwBlinkAB.Count -gt 0) { $null = Send-RwBlink $srv ("rwblink {0}" -f $RwBlinkAB[0]) }
+        if ($RwBlink -ge 0) { $null = Send-RwBlink $srv 'rwblink reset' }
         Send-Command $srv 'rwdiag on'
         $nOn++
         Check 'merjenje vklopljeno' (Wait-ForCount $srv 'RWDIAG vklopljen' $nOn 60)
@@ -657,6 +752,14 @@ try {
                 Wait-SPreverbo $RwPathOkno
             }
             $ostanek = $Seconds - $oknaAB * $RwPathOkno
+            if ($ostanek -gt 0) { Wait-SPreverbo $ostanek }
+        } elseif ($RwBlinkAB.Count -gt 0) {
+            Write-Host ("  A/B prejemnikov utripa: {0} oken po {1} s, nacini {2}" -f $oknaBlinkAB, $RwBlinkOkno, ($RwBlinkAB -join ','))
+            for ($ok = 0; $ok -lt $oknaBlinkAB; $ok++) {
+                if ($ok -gt 0) { $null = Send-RwBlink $srv ("rwblink {0}" -f $RwBlinkAB[$ok % $RwBlinkAB.Count]) }
+                Wait-SPreverbo $RwBlinkOkno
+            }
+            $ostanek = $Seconds - $oknaBlinkAB * $RwBlinkOkno
             if ($ostanek -gt 0) { Wait-SPreverbo $ostanek }
         } else {
             Wait-SPreverbo $Seconds
@@ -694,6 +797,37 @@ try {
                             $rwPathStevci['sledenj'], $rwPathStevci['kandidatov'], $rwPathStevci['prostih'], ($rwPathStevci['sledenjNs'] / 1e6), `
                             ($rwPathStevci['kandidatNs'] / 1e6), $rwPathStevci['tickov'], $rwPathStevci['histKand'])
                     }
+                }
+            }
+        }
+        $rwBlinkStevci = $null
+        $rwBlinkPoskus = $null
+        if ($RwBlink -ge 0) {
+            $rwBlinkStevci = Send-RwBlink $srv 'rwblink'
+            if ($null -ne $rwBlinkStevci) {
+                Write-Host ("  RwBlink={0}: iskanj {1}, prejemnikov {2}, chunkov originala {3}, primerjav {4}, neujemanj {5}" -f $RwBlink, $rwBlinkStevci.iskanj, $rwBlinkStevci.prejemnikov, $rwBlinkStevci.chunkov, $rwBlinkStevci.primerjav, $rwBlinkStevci.neujemanj)
+                if ($RwBlink -gt 0) {
+                    Check ("B1: iskanje prejemnikov je teklo ({0} iskanj)" -f $rwBlinkStevci.iskanj) ($rwBlinkStevci.iskanj -gt 0)
+                }
+                if ($RwBlink -eq 2) {
+                    Check ("B2: preverba je primerjala original in playerEntities ({0} primerjav)" -f $rwBlinkStevci.primerjav) ($rwBlinkStevci.primerjav -gt 0)
+                    Check ("B3: nobenega neujemanja ({0})" -f $rwBlinkStevci.neujemanj) ($rwBlinkStevci.neujemanj -eq 0)
+                }
+            }
+            # B4/B5: preverba enakosti v svetu na NPC-jih (na dediciranem strezniku ni igralcev,
+            # zato je seznam prejemnikov vedno prazen in B2/B3 sama nista dokaz). Izven merilnega
+            # okna, ker poizvedba originala stane.
+            if ($RwBlink -gt 0) {
+                $predP = ([regex]::Matches((Get-MarkerText $srv.Log), 'RWBLINK-POSKUS ')).Count
+                Send-Command $srv 'rwblink poskus 64'
+                $okP = Wait-ForCount $srv 'RWBLINK-POSKUS ' ($predP + 1) 120
+                Check 'ukaz rwblink poskus odgovori' $okP
+                if ($okP) {
+                    $mp = [regex]::Matches((Get-MarkerText $srv.Log), 'RWBLINK-POSKUS primerjav=(\d+) skupaj=(\d+) neujemanj=(\d+)')
+                    $gp = $mp[$mp.Count - 1].Groups
+                    $rwBlinkPoskus = @{ primerjav = [long]$gp[1].Value; neujemanj = [long]$gp[3].Value }
+                    Check ("B4: poskus je primerjal poizvedbi v svetu ({0} primerjav)" -f $gp[1].Value) ([long]$gp[1].Value -gt 0)
+                    Check ("B5: poskus brez neujemanj ({0})" -f $gp[3].Value) ([long]$gp[3].Value -eq 0)
                 }
             }
         }
@@ -860,6 +994,62 @@ try {
             $odtis['rwcollide'] = $RwCollide
             if ($null -ne $rwCollideStevci) {
                 foreach ($k in @('klicev', 'preskocenih', 'brezOpazovalca', 'dogodkovBrezOpazovalca')) { $vel['rwcollide.' + $k] = $rwCollideStevci[$k] }
+            }
+        }
+        if ($RwBlink -ge 0) {
+            $odtis['rwblink'] = $RwBlink
+            if ($null -ne $rwBlinkStevci) {
+                foreach ($k in @('iskanj', 'igralcev', 'prejemnikov', 'chunkov', 'primerjav', 'neujemanj')) { $vel['rwblink.' + $k] = $rwBlinkStevci[$k] }
+            }
+            if ($null -ne $rwBlinkPoskus) {
+                $vel['rwblink.poskus.primerjav'] = $rwBlinkPoskus.primerjav
+                $vel['rwblink.poskus.neujemanj'] = $rwBlinkPoskus.neujemanj
+            }
+        }
+        if ($RwBlinkCas) {
+            $odtis['rwblinkCas'] = 1
+            if (($null -ne $rwBlinkStevci) -and ($rwBlinkStevci['tickov'] -gt 0) -and ($rwBlinkStevci['iskanj'] -gt 0)) {
+                $tb = [double]$rwBlinkStevci['tickov']
+                $nsb = 0.0
+                foreach ($m in $rwBlinkStevci['poNacinu'].Keys) { $nsb += $rwBlinkStevci['poNacinu'][$m].ns }
+                $vel['rwblink.tickov'] = $rwBlinkStevci['tickov']
+                $vel['rwblink.iskanjNaTick'] = [math]::Round($rwBlinkStevci['iskanj'] / $tb, 3)
+                $vel['rwblink.chunkovNaIskanje'] = [math]::Round($rwBlinkStevci['chunkov'] / [double]$rwBlinkStevci['iskanj'], 1)
+                $vel['rwblink.usNaIskanje'] = [math]::Round($nsb / [double]$rwBlinkStevci['iskanj'] / 1000.0, 2)
+                $vel['rwblink.msNaTick'] = [math]::Round($nsb / $tb / 1e6, 4)
+                if (($null -ne $vel['mspt.povp']) -and ($vel['mspt.povp'] -gt 0)) {
+                    $vel['rwblink.delez'] = [math]::Round(100.0 * $vel['rwblink.msNaTick'] / $vel['mspt.povp'], 2)
+                }
+                Write-Host ("  M5.13: iskanje prejemnikov {0} us na iskanje, {1} iskanj/tick = {2} ms/tick ({3} % povprecnega ticka)" -f $vel['rwblink.usNaIskanje'], $vel['rwblink.iskanjNaTick'], $vel['rwblink.msNaTick'], $vel['rwblink.delez'])
+            }
+        }
+        if ($RwBlinkAB.Count -gt 0) {
+            $odtis['rwblinkAB'] = ($RwBlinkAB -join ',')
+            $odtis['rwblinkOkno'] = $RwBlinkOkno
+            $pob = if ($null -ne $rwBlinkStevci) { $rwBlinkStevci['poNacinu'] } else { $null }
+            $abOkB = $null -ne $pob
+            if ($abOkB) { foreach ($m in $RwBlinkAB) { if (-not $pob.ContainsKey($m) -or ($pob[$m].tickov -le 0) -or ($pob[$m].iskanj -le 0)) { $abOkB = $false } } }
+            Check ("AB3: vsak nacin ({0}) je tekel in imel iskanja" -f ($RwBlinkAB -join ',')) $abOkB
+            if ($abOkB) {
+                $intenz = @()
+                foreach ($m in $RwBlinkAB) {
+                    $tm = [double]$pob[$m].tickov
+                    $pre = 'rwblink.ab.{0}.' -f $m
+                    $vel[$pre + 'tickov'] = $pob[$m].tickov
+                    $vel[$pre + 'iskanj'] = $pob[$m].iskanj
+                    $vel[$pre + 'iskanjNaTick'] = [math]::Round($pob[$m].iskanj / $tm, 3)
+                    $vel[$pre + 'usNaIskanje'] = [math]::Round($pob[$m].ns / [double]$pob[$m].iskanj / 1000.0, 2)
+                    $vel[$pre + 'msNaTick'] = [math]::Round($pob[$m].ns / $tm / 1e6, 4)
+                    $intenz += $pob[$m].iskanj / $tm
+                    Write-Host ("  AB nacin {0}: {1} tickov, {2} iskanj/tick, {3} us na iskanje, {4} ms/tick" -f $m, $pob[$m].tickov, $vel[$pre + 'iskanjNaTick'], $vel[$pre + 'usNaIskanje'], $vel[$pre + 'msNaTick'])
+                }
+                $aB = $RwBlinkAB[0]; $bB = $RwBlinkAB[1]
+                $vel['rwblink.ab.usRazmerje'] = [math]::Round($vel[('rwblink.ab.{0}.usNaIskanje' -f $bB)] / $vel[('rwblink.ab.{0}.usNaIskanje' -f $aB)], 3)
+                $vel['rwblink.ab.msNaTickRazlika'] = [math]::Round($vel[('rwblink.ab.{0}.msNaTick' -f $bB)] - $vel[('rwblink.ab.{0}.msNaTick' -f $aB)], 4)
+                $iMin = ($intenz | Measure-Object -Minimum).Minimum; $iMax = ($intenz | Measure-Object -Maximum).Maximum
+                $vel['rwblink.ab.iskanjNaTick.razpon'] = [math]::Round(100.0 * ($iMax - $iMin) / $iMin, 1)
+                Check ("AB4: iskanj na tick med nacini v 10 % (razpon {0} %)" -f $vel['rwblink.ab.iskanjNaTick.razpon']) ($vel['rwblink.ab.iskanjNaTick.razpon'] -le 10.0)
+                Write-Host ("  AB: us na iskanje {0}/{1} = {2}, {3} ms/tick razlike" -f $bB, $aB, $vel['rwblink.ab.usRazmerje'], $vel['rwblink.ab.msNaTickRazlika'])
             }
         }
         if ($RwPathAB.Count -gt 0) {

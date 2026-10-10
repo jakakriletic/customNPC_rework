@@ -129,6 +129,8 @@ import noppes.npcs.rework.nav.CommandRwNav;
 import noppes.npcs.rework.entity.RiderState;
 import noppes.npcs.rework.formation.CommandRwSquad;
 import noppes.npcs.rework.formation.SquadManager;
+import noppes.npcs.rework.net.AssociatedPlayers;
+import noppes.npcs.rework.net.CommandRwBlink;
 
 @Mod(modid="customnpcs", name="CustomNpcs", version="1.12", acceptedMinecraftVersions="1.12, 1.12.1, 1.12.2")
 public class CustomNpcs {
@@ -163,6 +165,8 @@ public class CustomNpcs {
     public static int RwPathFollowCache = 1;
     @ConfigProp(info="Rework M5.12 (S4): an NPC without enabled scripts skips the collide area query (every 4th tick) when nothing listens for NpcEvent.CollideEvent on the CustomNPCs event bus; with no script and no listener the original query has no effect. Listeners are checked on every call. 0 = original, 1 = skip without an observer, 2 = verify (original, counts calls and events that would be skipped). Default 1 since 2026-10-09 (D-032)")
     public static int RwCollideSkip = 1;
+    @ConfigProp(info="Rework M5.13 (S7): recipients of the eye blink packet (every NPC blinks about once every 140 ticks) are found by walking world.playerEntities with the same selection the vanilla area query makes, instead of scanning every loaded chunk in a 160 block cube (about 441 chunks). Same recipients. 0 = original, 1 = walk playerEntities, 2 = verify (runs both, sends by the original list, counts mismatches; double cost, for test scenarios only)")
+    public static int RwBlinkRecipients = 0;
     @ConfigProp(info="Rework M7: allow NPC Baritone as an optional navigation backend for NPCs with RwNavBackend=1 in NBT. 0 = original vanilla navigation, 1 = permit opt-in NPCs")
     public static int RwNavBackend = 0;
     @ConfigProp(info="Rework M3.8 (R6): honour per-NPC hitbox modes (NBT RwHitboxMode: 1 = solid, cannot be moved by entity pushing; 2 = smart, push strength by hitbox size and shield). With 1, an NPC carrier ridden only by NPCs is pushed too, with the mass of carrier and riders (D-028). 0 = original vanilla pushing for every NPC, 1 = honour the modes")
@@ -369,6 +373,9 @@ public class CustomNpcs {
         event.registerServerCommand((ICommand)new CommandRwCollide());
         CollideSkip.setMode(RwCollideSkip);
         PathFollowCache.setMode(RwPathFollowCache);
+        // M5.13 (S7): prejemniki utripa oci; /rwblink jih med tekom preklopi.
+        event.registerServerCommand((ICommand)new CommandRwBlink());
+        AssociatedPlayers.setMode(RwBlinkRecipients);
         // M4.14: formacije. Brez ukaza (ali klica iz skripte) paket ni prijavljen na event
         // bus in ne doda nobenega AI taska, zato je obnasanje brez ukaza enako originalu.
         event.registerServerCommand((ICommand)new CommandRwSquad());
