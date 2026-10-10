@@ -22,15 +22,30 @@ public final class NodeTypeMemo<T> {
     private int mask;
     private int size;
     private int generation = 1;
+    private int maxCapacity = Integer.MAX_VALUE;
+    private final boolean clearValues;
     private long lookups;
     private long misses;
 
     public NodeTypeMemo() {
-        this(256);
+        this(256, true);
     }
 
     /** @param capacity zacetno stevilo rez, potenca 2 */
     public NodeTypeMemo(int capacity) {
+        this(capacity, true);
+    }
+
+    /**
+     * @param capacity zacetno stevilo rez, potenca 2
+     * @param clearValues ali {@link #reset()} pobrise tudi vrednosti. Veljavnost rez doloca stevec
+     *     generacije, zato brisanje ni potrebno za pravilnost - je samo higiena, da pomnilnik ne
+     *     zadrzi referenc. Pri enum vrednostih (tip vozlisca) ni kaj zadrzati, brisanje pa je
+     *     O(velikost tabele) ob vsakem klicu: pri 1024 rezah in kratkem iskanju poti (3,5 us v
+     *     boju) bi bilo to vec kot samo iskanje (M5.17, 10. 10.)
+     */
+    public NodeTypeMemo(int capacity, boolean clearValues) {
+        this.clearValues = clearValues;
         if (capacity < 2 || Integer.bitCount(capacity) != 1) {
             throw new IllegalArgumentException("velikost mora biti potenca 2: " + capacity);
         }
@@ -47,6 +62,15 @@ public final class NodeTypeMemo<T> {
         this.size = 0;
     }
 
+    /**
+     * M5.17: zgornja meja rez. Ko je tabela polna in je ne bi smela vec podvojiti, se novi vnosi
+     * ne shranjujejo (iskanja se vedno delujejo). Brez meje bi en navigator pri velikem iskanju
+     * zadrzal desetine kilobajtov, pri 500 NPC-jih pa to ni vec zanemarljivo.
+     */
+    public void setMaxCapacity(int slots) {
+        this.maxCapacity = slots < 2 ? 2 : slots;
+    }
+
     /** Pozabi vse vnose; tabela ostane enako velika. */
     public void reset() {
         this.size = 0;
@@ -55,8 +79,9 @@ public final class NodeTypeMemo<T> {
             Arrays.fill(this.gen, 0);
             this.generation = 1;
         }
-        // Brez referenc med klici (izidi so enum konstante, a pomnilnik je splosen).
-        Arrays.fill(this.value, null);
+        if (this.clearValues) {
+            Arrays.fill(this.value, null);
+        }
     }
 
     private static int hash(int x, int y, int z) {
@@ -85,6 +110,9 @@ public final class NodeTypeMemo<T> {
             return;
         }
         if ((this.size + 1) * 2 > this.mask + 1) {
+            if (this.mask + 1 >= this.maxCapacity) {
+                return;
+            }
             this.grow();
         }
         this.insert(x, y, z, v);

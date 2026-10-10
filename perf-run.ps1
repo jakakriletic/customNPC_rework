@@ -88,6 +88,13 @@
 # tocke od cilja. Merilo U3 (merjenje je stelo). Odtis dobi rwpathIskanje=1 (dva klica nanoTime na
 # iskanje).
 #
+# -RwPathMemo N (M5.17 / S14c, 10. 10.; zahteva -RwPath): pomnjenje ocene tipa vozlisca za cas celega
+# iskanja poti (1 = vklopljeno, 2 = preverba, kjer se vsaka ocena izracuna in primerja s pomnjeno).
+# Isti izid kot original (ista pomnjena metoda in isti pogoji kot S14b/M5.11). Celica dobi
+# rwpath.memo.ocenNaIskanje, rwpath.memo.izracunovNaIskanje, rwpath.memo.delezZadetkov in
+# rwpath.memo.neujemanj; merili S1 (pomnjenje je teklo) in S2 (nic neujemanj v nacinu 2).
+#     .\perf-run.ps1 -Variants nedosegljiva -Counts 500 -RwTarget 2 -RwPath 0 -RwPathMemo 2
+#
 # -RwPathNeg N in -RwPathNegTtl T (M5.6 / S5, 10. 10.; zahteva -RwPath): negativni predpomnilnik
 # iskanja poti - po iskanju brez cele poti isti NPC iste tarce T tickov (privzeto 20) ne isce vec.
 # SPREMEMBA OBNASANJA (D-007, privzeto 0): ce se pot medtem odpre, NPC reagira do T tickov kasneje.
@@ -133,7 +140,7 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
       [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1,
       [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15, [int]$RwCollide = -1,
-      [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15)
+      [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwPathMemo = -1, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -250,6 +257,14 @@ function Send-RwPath($Srv, [string]$Cmd) {
         $r['negDelne'] = [int]$w[4].Value
         $r['negPreskokov'] = [long]$w[5].Value; $r['negZapisov'] = [long]$w[6].Value
         $r['negPrimerjav'] = [long]$w[7].Value; $r['negNeujemanj'] = [long]$w[8].Value
+    }
+    # M5.17: stevci pomnjenja med iskanjem poti (starejsi build teh polj ne izpise)
+    $mm = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=\d+ .*? memo=(\d) memoIskanj=(\d+) memoOcen=(\d+) memoIzracunov=(\d+) memoNeujemanj=(\d+)')
+    if ($mm.Count -gt 0) {
+        $v = $mm[$mm.Count - 1].Groups
+        $r['memo'] = [int]$v[1].Value; $r['memoIskanj'] = [long]$v[2].Value
+        $r['memoOcen'] = [long]$v[3].Value; $r['memoIzracunov'] = [long]$v[4].Value
+        $r['memoNeujemanj'] = [long]$v[5].Value
     }
     # M5.11: stevci po nacinu "m:tickov:sledenj:sledenjNs:kandidatov:kandidatNs;..."
     $pn = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=\d+ .*? poNacinu=([\d:;]*)')
@@ -591,6 +606,7 @@ try {
     }
     if ($RwBlinkCas -and $RwBlink -lt 0) { throw '-RwBlinkCas zahteva -RwBlink N (nacin, v katerem se meri).' }
     if ($RwPathIskanje -and $RwPath -lt 0) { throw '-RwPathIskanje zahteva -RwPath N (za M5.9 -RwPath 0).' }
+    if ($RwPathMemo -ge 0 -and $RwPath -lt 0) { throw '-RwPathMemo zahteva -RwPath N (stikali sta loceni, stevci pa v istem ukazu).' }
     if ($RwPathNeg -ge 0 -and $RwPath -lt 0) { throw '-RwPathNeg zahteva -RwPath N (stikali sta loceni, stevci pa v istem ukazu).' }
     if ($RwPathNegTtl -ne 0 -and $RwPathNeg -lt 1) { throw '-RwPathNegTtl zahteva -RwPathNeg 1 ali 2.' }
     $perCell = $WarmupSeconds + $Seconds + 25
@@ -707,6 +723,10 @@ try {
         if ($RwPathIskanje) {
             $rp = Send-RwPath $srv 'rwpath iskanje 1'
             Check 'merjenje iskanja poti vklopljeno (rwpath iskanje 1)' (($null -ne $rp) -and ($rp['isk'] -eq 1))
+        }
+        if ($RwPathMemo -ge 0) {
+            $rp = Send-RwPath $srv ("rwpath memo {0}" -f $RwPathMemo)
+            Check ("stikalo RwPathSearchMemo je {0}" -f $RwPathMemo) (($null -ne $rp) -and ($rp['memo'] -eq $RwPathMemo))
         }
         if ($RwPathNeg -ge 0) {
             if ($RwPathNegTtl -gt 0) {
@@ -1118,6 +1138,29 @@ try {
             $odtis['rwcollide'] = $RwCollide
             if ($null -ne $rwCollideStevci) {
                 foreach ($k in @('klicev', 'preskocenih', 'brezOpazovalca', 'dogodkovBrezOpazovalca')) { $vel['rwcollide.' + $k] = $rwCollideStevci[$k] }
+            }
+        }
+        if ($RwPathMemo -ge 0) {
+            $odtis['rwpathMemo'] = $RwPathMemo
+            if (($null -ne $rwPathStevci) -and ($null -ne $rwPathStevci['memoIskanj'])) {
+                $vel['rwpath.memo.iskanj'] = $rwPathStevci['memoIskanj']
+                $vel['rwpath.memo.ocen'] = $rwPathStevci['memoOcen']
+                $vel['rwpath.memo.izracunov'] = $rwPathStevci['memoIzracunov']
+                $vel['rwpath.memo.neujemanj'] = $rwPathStevci['memoNeujemanj']
+                if ($rwPathStevci['memoIskanj'] -gt 0) {
+                    $vel['rwpath.memo.ocenNaIskanje'] = [math]::Round($rwPathStevci['memoOcen'] / [double]$rwPathStevci['memoIskanj'], 1)
+                    $vel['rwpath.memo.izracunovNaIskanje'] = [math]::Round($rwPathStevci['memoIzracunov'] / [double]$rwPathStevci['memoIskanj'], 1)
+                }
+                if ($rwPathStevci['memoOcen'] -gt 0) {
+                    $vel['rwpath.memo.delezZadetkov'] = [math]::Round(100.0 * ($rwPathStevci['memoOcen'] - $rwPathStevci['memoIzracunov']) / [double]$rwPathStevci['memoOcen'], 2)
+                }
+                if ($RwPathMemo -gt 0) {
+                    Check ("S1: pomnjenje med iskanjem je teklo ({0} iskanj, {1} ocen)" -f $rwPathStevci['memoIskanj'], $rwPathStevci['memoOcen']) (($rwPathStevci['memoIskanj'] -gt 0) -and ($rwPathStevci['memoOcen'] -gt 0))
+                    Write-Host ("  M5.17: {0} ocen na iskanje, od tega {1} izracunov; zadetkov {2} %" -f $vel['rwpath.memo.ocenNaIskanje'], $vel['rwpath.memo.izracunovNaIskanje'], $vel['rwpath.memo.delezZadetkov'])
+                }
+                if ($RwPathMemo -eq 2) {
+                    Check ("S2: nobene ocene se ni razlikovala od pomnjene ({0} neujemanj)" -f $rwPathStevci['memoNeujemanj']) ($rwPathStevci['memoNeujemanj'] -eq 0)
+                }
             }
         }
         if ($RwPathNeg -ge 0) {

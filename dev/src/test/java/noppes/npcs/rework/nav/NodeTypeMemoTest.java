@@ -97,4 +97,20 @@ public class NodeTypeMemoTest {
     public void velikostMoraBitiPotenca2() {
         new NodeTypeMemo<String>(6);
     }
+
+    @org.junit.Test
+    public void resetBrezBrisanjaVrednostiJeSeVednoPrazen() {
+        // M5.17: pri enum vrednostih reset ne brise tabele vrednosti (O(1) namesto O(velikosti));
+        // veljavnost rez doloca stevec generacije, zato mora biti pomnilnik po resetu vseeno prazen.
+        NodeTypeMemo<String> memo = new NodeTypeMemo<String>(4, false);
+        memo.put(1, 2, 3, "a");
+        memo.put(4, 5, 6, "b");
+        org.junit.Assert.assertEquals("a", memo.get(1, 2, 3));
+        memo.reset();
+        org.junit.Assert.assertEquals(null, memo.get(1, 2, 3));
+        org.junit.Assert.assertEquals(null, memo.get(4, 5, 6));
+        org.junit.Assert.assertEquals(0, memo.size());
+        memo.put(1, 2, 3, "c");
+        org.junit.Assert.assertEquals("c", memo.get(1, 2, 3));
+    }
 }

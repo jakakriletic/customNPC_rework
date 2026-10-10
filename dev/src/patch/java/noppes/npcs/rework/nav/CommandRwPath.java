@@ -35,7 +35,7 @@ public class CommandRwPath extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/rwpath [0|1|2|reset|cas N|iskanje N|neg N|negttl T|negtol B|negdelne N]";
+        return "/rwpath [0|1|2|reset|cas N|iskanje N|neg N|negttl T|negtol B|negdelne N|memo N]";
     }
 
     @Override
@@ -52,11 +52,26 @@ public class CommandRwPath extends CommandBase {
                 PathFollowCache.reset(resetTick);
                 PathSearch.reset();
                 NegativePathCache.reset();
+                PathSearchMemo.reset();
             } else if ("cas".equals(args[0])) {
                 if (args.length < 2 || !("0".equals(args[1]) || "1".equals(args[1]))) {
                     throw new WrongUsageException(getUsage(sender));
                 }
                 PathFollowCache.setTiming("1".equals(args[1]));
+            } else if ("memo".equals(args[0])) {
+                if (args.length < 2) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+                int requestedMemo;
+                try {
+                    requestedMemo = Integer.parseInt(args[1]);
+                } catch (NumberFormatException e) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+                if (!PathSearchMemo.isValidMode(requestedMemo)) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+                PathSearchMemo.setMode(requestedMemo);
             } else if ("neg".equals(args[0])) {
                 if (args.length < 2) {
                     throw new WrongUsageException(getUsage(sender));
@@ -129,7 +144,10 @@ public class CommandRwPath extends CommandBase {
                 + " neg=" + NegativePathCache.mode() + " negTtl=" + NegativePathCache.ttl()
                 + " negTol=" + NegativePathCache.tolerance() + " negDelne=" + (NegativePathCache.partialCounts() ? 1 : 0) + " negPreskokov=" + NegativePathCache.skipped()
                 + " negZapisov=" + NegativePathCache.stored() + " negPrimerjav=" + NegativePathCache.compared()
-                + " negNeujemanj=" + NegativePathCache.mismatches();
+                + " negNeujemanj=" + NegativePathCache.mismatches()
+                + " memo=" + PathSearchMemo.mode() + " memoIskanj=" + PathSearchMemo.searches()
+                + " memoOcen=" + PathSearchMemo.lookups() + " memoIzracunov=" + PathSearchMemo.misses()
+                + " memoNeujemanj=" + PathSearchMemo.mismatches();
         sender.sendMessage(new TextComponentString(msg));
         LogWriter.info(msg);
     }

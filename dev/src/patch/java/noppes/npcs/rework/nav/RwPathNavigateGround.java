@@ -68,7 +68,8 @@ public class RwPathNavigateGround extends PathNavigateGround {
     @Override
     public Path getPathToPos(BlockPos pos) {
         int neg = NegativePathCache.mode();
-        if (neg == NegativePathCache.ORIGINAL && !PathSearch.timing()) {
+        if (neg == NegativePathCache.ORIGINAL && !PathSearch.timing()
+                && PathSearchMemo.mode() == PathSearchMemo.ORIGINAL) {
             return super.getPathToPos(pos);
         }
         int now = (int) this.world.getTotalWorldTime();
@@ -81,7 +82,7 @@ public class RwPathNavigateGround extends PathNavigateGround {
 
         Path before = this.currentPath;
         long t0 = PathSearch.timing() ? System.nanoTime() : 0L;
-        Path path = super.getPathToPos(pos);
+        Path path = this.searchByMode(pos);
         boolean fresh = path != before;
         int distance = 0;
         if (path != null && fresh) {
@@ -119,6 +120,32 @@ public class RwPathNavigateGround extends PathNavigateGround {
             }
         }
         return path;
+    }
+
+    /**
+     * M5.17 (S14c): iskanje poti s pomnjenjem ocen tipa vozlisca za cas celega klica. V nacinu 0 je
+     * to natanko {@code super.getPathToPos(pos)}; pomnjena metoda je ista kot pri S14b, zato velja
+     * isti dokaz enakosti ({@link PathSearchMemo}).
+     */
+    private Path searchByMode(BlockPos pos) {
+        int memoMode = PathSearchMemo.mode();
+        if (memoMode == PathSearchMemo.ORIGINAL || !(this.nodeProcessor instanceof RwWalkNodeProcessor)) {
+            return super.getPathToPos(pos);
+        }
+        RwWalkNodeProcessor processor = (RwWalkNodeProcessor) this.nodeProcessor;
+        long l0 = processor.memoLookups();
+        long m0 = processor.memoMisses();
+        long x0 = processor.memoMismatches();
+        processor.beginMemo(memoMode == PathSearchMemo.VERIFY);
+        try {
+            return super.getPathToPos(pos);
+        } finally {
+            processor.endMemo();
+            ++PathSearchMemo.searches;
+            PathSearchMemo.lookups += processor.memoLookups() - l0;
+            PathSearchMemo.misses += processor.memoMisses() - m0;
+            PathSearchMemo.mismatches += processor.memoMismatches() - x0;
+        }
     }
 
     /** Cebiseva razdalja med zapisano neuspelo tarco in zdajsnjo (velika, ce spomina ni). */

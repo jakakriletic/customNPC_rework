@@ -127,6 +127,7 @@ import noppes.npcs.rework.entity.HitboxTrack;
 import noppes.npcs.rework.entity.CommandRwMount;
 import noppes.npcs.rework.nav.CommandRwNav;
 import noppes.npcs.rework.nav.NegativePathCache;
+import noppes.npcs.rework.nav.PathSearchMemo;
 import noppes.npcs.rework.entity.RiderState;
 import noppes.npcs.rework.formation.CommandRwSquad;
 import noppes.npcs.rework.formation.SquadManager;
@@ -164,6 +165,8 @@ public class CustomNpcs {
     public static int RwTargetPrefilter = 2;
     @ConfigProp(info="Rework M5.11 (S14b): ground NPC path following (PathNavigateGround.isDirectPathBetweenPoints, called every tick while an NPC follows a path) evaluates the path node type of each block position once per call and reuses it (the original evaluates the same positions about three times). Same result. 0 = original, 1 = reuse node types, 2 = verify (runs both, returns the original, counts mismatches; double cost, for test scenarios only). Default 1 since 2026-10-09 (D-032)")
     public static int RwPathFollowCache = 1;
+    @ConfigProp(info="Rework M5.17 (S14c): the path search (PathFinder.findPath) evaluates the path node type of each block position once per search and reuses it; the original evaluates the same positions several times because every node checks its neighbours and the neighbourhoods overlap. Same result (same memoised method and same invariants as M5.11). 0 = original, 1 = reuse node types during a search, 2 = verify (every evaluation is computed and compared with the memoised one; no saving, for test scenarios only). Default 1 since 2026-10-10 (D-032)")
+    public static int RwPathSearchMemo = 1;
     @ConfigProp(info="Rework M5.6 (S5): after a path search that found no complete path to the target, the same NPC does not search for (almost) the same target again for 20 ticks. M5.9 measured that a visible but unreachable target costs 51 percent of the tick in path searching, 180 microseconds per search, because the vanilla A* spends its whole 200 node budget when it cannot reach the goal. This CHANGES BEHAVIOUR: if a path opens in the meantime, the NPC reacts up to 20 ticks later, so the default is the original (D-007). 0 = original, 1 = skip repeated failed searches, 2 = verify (searches anyway, answers with the original, counts how often the cached answer would have differed)")
     public static int RwPathNegCache = 0;
     @ConfigProp(info="Rework M5.12 (S4): an NPC without enabled scripts skips the collide area query (every 4th tick) when nothing listens for NpcEvent.CollideEvent on the CustomNPCs event bus; with no script and no listener the original query has no effect. Listeners are checked on every call. 0 = original, 1 = skip without an observer, 2 = verify (original, counts calls and events that would be skipped). Default 1 since 2026-10-09 (D-032)")
@@ -377,6 +380,7 @@ public class CustomNpcs {
         CollideSkip.setMode(RwCollideSkip);
         PathFollowCache.setMode(RwPathFollowCache);
         NegativePathCache.setMode(RwPathNegCache);
+        PathSearchMemo.setMode(RwPathSearchMemo);
         // M5.13 (S7): prejemniki utripa oci; /rwblink jih med tekom preklopi.
         event.registerServerCommand((ICommand)new CommandRwBlink());
         AssociatedPlayers.setMode(RwBlinkRecipients);
