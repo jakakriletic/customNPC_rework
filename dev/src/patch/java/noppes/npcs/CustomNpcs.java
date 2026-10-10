@@ -117,6 +117,8 @@ import noppes.npcs.rework.ai.CommandRwTarget;
 import noppes.npcs.rework.nav.CommandRwPath;
 import noppes.npcs.rework.entity.CollideSkip;
 import noppes.npcs.rework.entity.CommandRwCollide;
+import noppes.npcs.rework.entity.CommandRwData;
+import noppes.npcs.rework.entity.DataShadow;
 import noppes.npcs.rework.nav.PathFollowCache;
 import noppes.npcs.rework.ai.TargetPrefilter;
 import noppes.npcs.rework.diag.CommandRwDiag;
@@ -165,6 +167,8 @@ public class CustomNpcs {
     public static int RwTargetPrefilter = 2;
     @ConfigProp(info="Rework M5.11 (S14b): ground NPC path following (PathNavigateGround.isDirectPathBetweenPoints, called every tick while an NPC follows a path) evaluates the path node type of each block position once per call and reuses it (the original evaluates the same positions about three times). Same result. 0 = original, 1 = reuse node types, 2 = verify (runs both, returns the original, counts mismatches; double cost, for test scenarios only). Default 1 since 2026-10-09 (D-032)")
     public static int RwPathFollowCache = 1;
+    @ConfigProp(info="Rework M5.14 (S16): the NPC keeps its own EntityDataManager keys (Attacking, IsDead, Walking, FactionData) in plain fields refreshed by notifyDataManagerChange, and reads them from there. Every write to a data manager value calls that hook after storing the value (EntityDataManager.set and setEntryValues), so the field always equals the stored value. Same result; it avoids a read lock and a HashMap lookup per read (EntityDataManager.get is 11.6 percent of the server thread in idle-500). 0 = original, 1 = read from the fields, 2 = verify (reads the data manager, compares with the field, counts mismatches). Default 1 since 2026-10-10 (D-032)")
+    public static int RwDataShadow = 1;
     @ConfigProp(info="Rework M5.17 (S14c): the path search (PathFinder.findPath) evaluates the path node type of each block position once per search and reuses it; the original evaluates the same positions several times because every node checks its neighbours and the neighbourhoods overlap. Same result (same memoised method and same invariants as M5.11). 0 = original, 1 = reuse node types during a search, 2 = verify (every evaluation is computed and compared with the memoised one; no saving, for test scenarios only). Default 1 since 2026-10-10 (D-032)")
     public static int RwPathSearchMemo = 1;
     @ConfigProp(info="Rework M5.6 (S5): after a path search that found no complete path to the target, the same NPC does not search for (almost) the same target again for 20 ticks. M5.9 measured that a visible but unreachable target costs 51 percent of the tick in path searching, 180 microseconds per search, because the vanilla A* spends its whole 200 node budget when it cannot reach the goal. This CHANGES BEHAVIOUR: if a path opens in the meantime, the NPC reacts up to 20 ticks later, so the default is the original (D-007). 0 = original, 1 = skip repeated failed searches, 2 = verify (searches anyway, answers with the original, counts how often the cached answer would have differed)")
@@ -378,6 +382,9 @@ public class CustomNpcs {
         // M5.12 (S4): onCollide brez opazovalca; /rwcollide ga med tekom preklopi.
         event.registerServerCommand((ICommand)new CommandRwCollide());
         CollideSkip.setMode(RwCollideSkip);
+        // M5.14 (S16): sencna polja CNPC kljucev; /rwdata jih med tekom preklopi.
+        event.registerServerCommand((ICommand)new CommandRwData());
+        DataShadow.setMode(RwDataShadow);
         PathFollowCache.setMode(RwPathFollowCache);
         NegativePathCache.setMode(RwPathNegCache);
         PathSearchMemo.setMode(RwPathSearchMemo);

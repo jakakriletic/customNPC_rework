@@ -151,6 +151,7 @@ import noppes.npcs.ai.CombatHandler;
 import noppes.npcs.rework.ai.AttackPriority;
 import noppes.npcs.rework.entity.HitboxGui;
 import noppes.npcs.rework.entity.HitboxWeights;
+import noppes.npcs.rework.entity.DataShadow;
 import noppes.npcs.rework.entity.MountGuard;
 import noppes.npcs.rework.entity.RiderState;
 import noppes.npcs.rework.entity.RwHitbox;
@@ -364,6 +365,12 @@ IAnimals {
         this.getEntityAttribute(SharedMonsterAttributes.FLYING_SPEED).setBaseValue((double)(this.getSpeed() * 2.0f));
     }
 
+    // M5.14 (S16): sencna polja CNPC kljucev; osvezena v notifyDataManagerChange.
+    private boolean rwAttacking;
+    private boolean rwIsDead;
+    private boolean rwWalking;
+    private int rwFaction;
+
     protected void entityInit() {
         super.entityInit();
         this.dataManager.register(RoleData, String.valueOf(""));
@@ -374,6 +381,33 @@ IAnimals {
         this.dataManager.register(Interacting, false);
         this.dataManager.register(IsDead, false);
         this.dataManager.register(Attacking, false);
+        // M5.14 (S16): register kavlja notifyDataManagerChange ne klice, zato zacetne vrednosti tu.
+        this.rwRefreshShadows();
+    }
+
+    /**
+     * M5.14 (S16): osvezi sencno polje kljuca, ki se je spremenil. Vanilla poklice ta kavelj po
+     * vsakem zapisu vrednosti (EntityDataManager.set in setEntryValues), zato so polja vedno enaka.
+     */
+    @Override
+    public void notifyDataManagerChange(DataParameter<?> key) {
+        super.notifyDataManagerChange(key);
+        if (Attacking.equals(key)) {
+            this.rwAttacking = (Boolean)this.dataManager.get(Attacking);
+        } else if (IsDead.equals(key)) {
+            this.rwIsDead = (Boolean)this.dataManager.get(IsDead);
+        } else if (Walking.equals(key)) {
+            this.rwWalking = (Boolean)this.dataManager.get(Walking);
+        } else if (FactionData.equals(key)) {
+            this.rwFaction = (Integer)this.dataManager.get(FactionData);
+        }
+    }
+
+    private void rwRefreshShadows() {
+        this.rwAttacking = (Boolean)this.dataManager.get(Attacking);
+        this.rwIsDead = (Boolean)this.dataManager.get(IsDead);
+        this.rwWalking = (Boolean)this.dataManager.get(Walking);
+        this.rwFaction = (Integer)this.dataManager.get(FactionData);
     }
 
     public boolean isEntityAlive() {
@@ -1491,7 +1525,16 @@ IAnimals {
     }
 
     public boolean isWalking() {
-        return this.ais.getMovingType() != 0 || this.isAttacking() || this.isFollower() || (Boolean)this.dataManager.get(Walking) != false;
+        // M5.14 (S16): zadnji clen verige je branje kljuca Walking.
+        if (DataShadow.useShadow()) {
+            DataShadow.read();
+            return this.ais.getMovingType() != 0 || this.isAttacking() || this.isFollower() || this.rwWalking;
+        }
+        boolean realWalking = (Boolean)this.dataManager.get(Walking);
+        if (DataShadow.verifying()) {
+            DataShadow.compare(this.rwWalking, realWalking);
+        }
+        return this.ais.getMovingType() != 0 || this.isAttacking() || this.isFollower() || realWalking != false;
     }
 
     public boolean isSneaking() {
@@ -1503,7 +1546,18 @@ IAnimals {
     }
 
     public Faction getFaction() {
-        Faction fac = FactionController.instance.getFaction((Integer)this.dataManager.get(FactionData));
+        // M5.14 (S16)
+        int fid;
+        if (DataShadow.useShadow()) {
+            DataShadow.read();
+            fid = this.rwFaction;
+        } else {
+            fid = (Integer)this.dataManager.get(FactionData);
+            if (DataShadow.verifying()) {
+                DataShadow.compare(this.rwFaction, fid);
+            }
+        }
+        Faction fac = FactionController.instance.getFaction(fid);
         if (fac == null) {
             return FactionController.instance.getFaction(FactionController.instance.getFirstFactionId());
         }
@@ -1532,11 +1586,29 @@ IAnimals {
     }
 
     public boolean isAttacking() {
-        return (Boolean)this.dataManager.get(Attacking);
+        // M5.14 (S16)
+        if (DataShadow.useShadow()) {
+            DataShadow.read();
+            return this.rwAttacking;
+        }
+        boolean real = (Boolean)this.dataManager.get(Attacking);
+        if (DataShadow.verifying()) {
+            DataShadow.compare(this.rwAttacking, real);
+        }
+        return real;
     }
 
     public boolean isKilled() {
-        return this.isDead || (Boolean)this.dataManager.get(IsDead) != false;
+        // M5.14 (S16)
+        if (DataShadow.useShadow()) {
+            DataShadow.read();
+            return this.isDead || this.rwIsDead;
+        }
+        boolean real = (Boolean)this.dataManager.get(IsDead);
+        if (DataShadow.verifying()) {
+            DataShadow.compare(this.rwIsDead, real);
+        }
+        return this.isDead || real != false;
     }
 
     public void writeSpawnData(ByteBuf buffer) {

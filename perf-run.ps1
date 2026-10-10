@@ -88,6 +88,12 @@
 # tocke od cilja. Merilo U3 (merjenje je stelo). Odtis dobi rwpathIskanje=1 (dva klica nanoTime na
 # iskanje).
 #
+# -RwData N (M5.14 / S16, 10. 10.): po postavitvi sveta poslje '/rwdata N' (sencna polja CNPC kljucev
+# EntityDataManager: 1 = branje iz polj, 2 = preverba). Odtis dobi kljuc rwdata, celica velicine
+# rwdata.branj(NaTick), rwdata.primerjav(NaTick) in rwdata.neujemanj. Merila: D1 (nacin 1 je bral iz
+# polj), D2 in D3 (nacin 2 je primerjal in nic neujemanj).
+#     .\perf-run.ps1 -Variants idle -Counts 500 -RwTarget 2 -RwData 2   # dokaz enakosti v svetu
+#
 # -RwPathMemo N (M5.17 / S14c, 10. 10.; zahteva -RwPath): pomnjenje ocene tipa vozlisca za cas celega
 # iskanja poti (1 = vklopljeno, 2 = preverba, kjer se vsaka ocena izracuna in primerja s pomnjeno).
 # Isti izid kot original (ista pomnjena metoda in isti pogoji kot S14b/M5.11). Celica dobi
@@ -140,7 +146,7 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
       [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1,
       [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15, [int]$RwCollide = -1,
-      [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwPathMemo = -1, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15)
+      [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwPathMemo = -1, [int]$RwData = -1, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -278,6 +284,20 @@ function Send-RwPath($Srv, [string]$Cmd) {
         $r['poNacinu'] = $po
     }
     return $r
+}
+
+# M5.14: ukaz /rwdata; vrne slovar stevcev iz odgovora ($null, ce ni odgovora).
+function Send-RwData($Srv, [string]$Cmd) {
+    $pred = ([regex]::Matches((Get-MarkerText $Srv.Log), 'RWDATA nacin=')).Count
+    Send-Command $Srv $Cmd
+    $ok = Wait-ForCount $Srv 'RWDATA nacin=' ($pred + 1) 60
+    Check ("ukaz '{0}' odgovori" -f $Cmd) $ok
+    if (-not $ok) { return $null }
+    $m = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWDATA nacin=(\d) .*? branj=(\d+) primerjav=(\d+) neujemanj=(\d+)')
+    if ($m.Count -eq 0) { return $null }
+    $g = $m[$m.Count - 1].Groups
+    return @{ nacin = [int]$g[1].Value; branj = [long]$g[2].Value; primerjav = [long]$g[3].Value
+              neujemanj = [long]$g[4].Value }
 }
 
 # M5.12: ukaz /rwcollide; vrne slovar stevcev iz odgovora ($null, ce ni odgovora).
@@ -701,6 +721,10 @@ try {
         $null = Send-RwTarget $srv ("rwtarget {0}" -f $RwTarget)
         Check ("stikalo RwTarget je {0}" -f $RwTarget) ((Get-MarkerText $srv.Log) -match ("RWTARGET nacin={0} " -f $RwTarget))
     }
+    if ($RwData -ge 0) {
+        $rd = Send-RwData $srv ("rwdata {0}" -f $RwData)
+        Check ("stikalo RwDataShadow je {0}" -f $RwData) (($null -ne $rd) -and ($rd.nacin -eq $RwData))
+    }
     if ($RwCollide -ge 0) {
         $rc = Send-RwCollide $srv ("rwcollide {0}" -f $RwCollide)
         Check ("stikalo RwCollide je {0}" -f $RwCollide) (($null -ne $rc) -and ($rc.nacin -eq $RwCollide))
@@ -864,6 +888,7 @@ try {
         if ($RwPathAB.Count -gt 0) { $null = Send-RwPath $srv ("rwpath {0}" -f $RwPathAB[0]) }
         if ($RwPath -ge 0) { $null = Send-RwPath $srv 'rwpath reset' }
         if ($RwCollide -ge 0) { $null = Send-RwCollide $srv 'rwcollide reset' }
+        if ($RwData -ge 0) { $null = Send-RwData $srv 'rwdata reset' }
         # M5.13: A/B v istem zagonu zacne vsako celico v prvem nacinu.
         if ($RwBlinkAB.Count -gt 0) { $null = Send-RwBlink $srv ("rwblink {0}" -f $RwBlinkAB[0]) }
         if ($RwBlink -ge 0) { $null = Send-RwBlink $srv 'rwblink reset' }
@@ -965,6 +990,20 @@ try {
                     $rwBlinkPoskus = @{ primerjav = [long]$gp[1].Value; neujemanj = [long]$gp[3].Value }
                     Check ("B4: poskus je primerjal poizvedbi v svetu ({0} primerjav)" -f $gp[1].Value) ([long]$gp[1].Value -gt 0)
                     Check ("B5: poskus brez neujemanj ({0})" -f $gp[3].Value) ([long]$gp[3].Value -eq 0)
+                }
+            }
+        }
+        $rwDataStevci = $null
+        if ($RwData -ge 0) {
+            $rwDataStevci = Send-RwData $srv 'rwdata'
+            if ($null -ne $rwDataStevci) {
+                Write-Host ("  RwData={0}: branj {1}, primerjav {2}, neujemanj {3}" -f $RwData, $rwDataStevci.branj, $rwDataStevci.primerjav, $rwDataStevci.neujemanj)
+                if ($RwData -eq 1) {
+                    Check ("D1: branja iz sencnih polj so tekla ({0})" -f $rwDataStevci.branj) ($rwDataStevci.branj -gt 0)
+                }
+                if ($RwData -eq 2) {
+                    Check ("D2: preverba je primerjala sencna polja z dataManager ({0} primerjav)" -f $rwDataStevci.primerjav) ($rwDataStevci.primerjav -gt 0)
+                    Check ("D3: nobenega neujemanja ({0})" -f $rwDataStevci.neujemanj) ($rwDataStevci.neujemanj -eq 0)
                 }
             }
         }
@@ -1132,6 +1171,16 @@ try {
             $odtis['rwpath'] = $RwPath
             if ($null -ne $rwPathStevci) {
                 foreach ($k in @('klicev', 'ocen', 'izracunov', 'primerjav', 'neujemanj')) { $vel['rwpath.' + $k] = $rwPathStevci[$k] }
+            }
+        }
+        if ($RwData -ge 0) {
+            $odtis['rwdata'] = $RwData
+            if ($null -ne $rwDataStevci) {
+                foreach ($k in @('branj', 'primerjav', 'neujemanj')) { $vel['rwdata.' + $k] = $rwDataStevci[$k] }
+                if (($null -ne $dump) -and ($dump.ticks -gt 0)) {
+                    $vel['rwdata.branjNaTick'] = [math]::Round($rwDataStevci.branj / [double]$dump.ticks, 1)
+                    $vel['rwdata.primerjavNaTick'] = [math]::Round($rwDataStevci.primerjav / [double]$dump.ticks, 1)
+                }
             }
         }
         if ($RwCollide -ge 0) {
