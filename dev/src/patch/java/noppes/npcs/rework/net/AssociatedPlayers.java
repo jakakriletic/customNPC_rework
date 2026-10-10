@@ -59,7 +59,8 @@ import noppes.npcs.util.CustomNPCsScheduler;
  *   <li>1 = S7: prejemniki po {@code world.playerEntities}</li>
  *   <li>2 = preverba: oboje, poslje po seznamu originala, steje neujemanja (dvojna cena)</li>
  * </ul>
- * Stanje bere samo strezniska nit.
+ * Privzeto 1 od 10. 10. 2026 (D-032): iskanje je 55,42 -> 0,12 us, idle-500 MSPT povp 2,824 -> 2,570 ms,
+ * p95 4,325 -> 3,932, locitev drzi nad sumom. Stanje bere samo strezniska nit.
  */
 public final class AssociatedPlayers {
     public static final int ORIGINAL = 0;
