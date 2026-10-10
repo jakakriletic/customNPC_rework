@@ -117,6 +117,7 @@ import noppes.npcs.rework.ai.CommandRwTarget;
 import noppes.npcs.rework.nav.CommandRwPath;
 import noppes.npcs.rework.entity.CollideSkip;
 import noppes.npcs.rework.entity.CommandRwCollide;
+import noppes.npcs.rework.core.CommandRwCore;
 import noppes.npcs.rework.entity.CommandRwData;
 import noppes.npcs.rework.entity.DataShadow;
 import noppes.npcs.rework.nav.PathFollowCache;
@@ -385,6 +386,8 @@ public class CustomNpcs {
         // M5.14 (S16): sencna polja CNPC kljucev; /rwdata jih med tekom preklopi.
         event.registerServerCommand((ICommand)new CommandRwData());
         DataShadow.setMode(RwDataShadow);
+        // M5.15 (D-031): stanje coremoda; transformer ne spremeni nicesar.
+        event.registerServerCommand((ICommand)new CommandRwCore());
         PathFollowCache.setMode(RwPathFollowCache);
         NegativePathCache.setMode(RwPathNegCache);
         PathSearchMemo.setMode(RwPathSearchMemo);

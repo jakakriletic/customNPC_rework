@@ -52,7 +52,14 @@ afterEvaluate { tasks.getByName('getAssets').enabled = false }
 // original mapped classes. Never launch the already reobfuscated patch-only JAR.
 task devRuntimeMod(type: Jar, dependsOn: classes) {
     archiveName = 'customnpcs-dev-runtime.jar'
-    manifest { attributes 'FMLAT': 'cnpcs_at.cfg' }
+    // M5.15 (D-031): jar je hkrati coremod in mod. V dev okolju je ta jar na classpathu in ne v
+    // mods/, zato ga FML prek manifesta ne najde - tam ga prizge systemProperty fml.coreMods.load
+    // (spodaj). Vnosa sta vseeno tu, da je dev jar enak zapakiranemu.
+    manifest {
+        attributes 'FMLAT': 'cnpcs_at.cfg'
+        attributes 'FMLCorePlugin': 'noppes.npcs.rework.core.RwCoreMod'
+        attributes 'FMLCorePluginContainsFMLMod': 'true'
+    }
     from(zipTree('libs/customnpcs-mapped-01Oct19.jar')) {
         exclude 'META-INF/MANIFEST.MF'
         exclude { details ->
@@ -81,6 +88,8 @@ afterEvaluate {
             classpath = files(classpath.files.findAll {
                 !it.name.toLowerCase().startsWith('customnpcs')
             }) + files(snap)
+            // M5.15 (D-031): v dev okolju coremod ni v mods/, zato ga FML dobi prek lastnosti.
+            systemProperty 'fml.coreMods.load', 'noppes.npcs.rework.core.RwCoreMod'
             if (project.hasProperty('npcBaritoneDev')) {
                 classpath += files("${npcBaritoneModDir}/build/classes/java/main",
                                    "${npcBaritoneModDir}/build/resources/main")
@@ -188,6 +197,11 @@ task buildPatchedMod(dependsOn: ['reobfJar', 'test', 'testOriginal']) {
         try {
             def replacements = patches.entries().findAll { !it.directory && it.name.endsWith('.class') }
             def names = replacements.collect { it.name } as Set
+            // M5.15 (D-031): manifest dobi dva vnosa, da je jar hkrati coremod in mod. To je edini
+            // vnos originala, ki ni bitna kopija; verify-package.ps1 ga zato preveri posebej in
+            // zahteva, da je razlika natanko ta dva vnosa.
+            def manifestName = 'META-INF/MANIFEST.MF'
+            names << manifestName
             input.entries().each { entry ->
                 if (!names.contains(entry.name)) {
                     output.putNextEntry(new java.util.zip.ZipEntry(entry.name))
@@ -195,12 +209,20 @@ task buildPatchedMod(dependsOn: ['reobfJar', 'test', 'testOriginal']) {
                     output.closeEntry()
                 }
             }
+            def originalManifest = input.getEntry(manifestName)
+            if (originalManifest == null) throw new GradleException('Original JAR has no manifest.')
+            def mf = new java.util.jar.Manifest(input.getInputStream(originalManifest))
+            mf.mainAttributes.putValue('FMLCorePlugin', 'noppes.npcs.rework.core.RwCoreMod')
+            mf.mainAttributes.putValue('FMLCorePluginContainsFMLMod', 'true')
+            output.putNextEntry(new java.util.zip.ZipEntry(manifestName))
+            mf.write(output)
+            output.closeEntry()
             replacements.each { entry ->
                 output.putNextEntry(new java.util.zip.ZipEntry(entry.name))
                 patches.getInputStream(entry).withCloseable { output << it }
                 output.closeEntry()
             }
-            println "Packaged ${names.size()} restored class files into $outputFile"
+            println "Packaged ${names.size() - 1} restored class files + coremod manifest into $outputFile"
         } finally { output.close(); input.close(); patches.close() }
     }
 }

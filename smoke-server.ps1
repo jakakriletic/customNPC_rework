@@ -62,6 +62,32 @@ function Send-Command($srv, [string]$Cmd) {
     $srv.Proc.StandardInput.Flush()
 }
 
+# M5.15 (10. 10.): prvi ukaz po zagonu serverja se lahko izgubi. Vhod gre PowerShell -> cmd.exe ->
+# gradlew.bat -> gradle (ki zaradi org.gradle.jvmargs tudi z --no-daemon forka build JVM) ->
+# javaexec serverja; gradlov posredovalnik vhoda vrstico, zapisano preden se prikljuci, pogoltne -
+# do serverja pride samo konec vrstice in ta odgovori "Unknown command". Zato se vhod po zagonu
+# ogreje z 'list', dokler server ne odgovori. Isti popravek je v perf-run.ps1; ostale scenarijske
+# skripte so odprto vprasanje Q18.
+function Prime-ServerInput($srv, [int]$Tries = 6, [int]$TimeoutSec = 5) {
+    for ($i = 0; $i -lt $Tries; ++$i) {
+        $pred = 0
+        if (Test-Path $srv.Log) {
+            $c = Get-Content $srv.Log -Raw -ErrorAction SilentlyContinue
+            if ($c) { $pred = ([regex]::Matches($c, 'players online')).Count }
+        }
+        Send-Command $srv 'list'
+        $deadline = (Get-Date).AddSeconds($TimeoutSec)
+        while ((Get-Date) -lt $deadline) {
+            if (Test-Path $srv.Log) {
+                $c = Get-Content $srv.Log -Raw -ErrorAction SilentlyContinue
+                if ($c -and ([regex]::Matches($c, 'players online')).Count -gt $pred) { return $true }
+            }
+            Start-Sleep -Milliseconds 500
+        }
+    }
+    return $false
+}
+
 function Stop-DevServer($srv, [int]$TimeoutSec = 180) {
     Send-Command $srv 'stop'
     if (-not $srv.Proc.WaitForExit($TimeoutSec * 1000)) {
@@ -129,6 +155,10 @@ try {
     Check 'server A je dosegel "Done ("'           (Wait-ForMarker $a.Log 'Done (' 900)
     if ($failures.Count -eq 0) {
         Check 'FML je nalozil CustomNPCs'          (Wait-ForMarker $a.Log 'customnpcs' 5)
+        # M5.15 (D-031): coremod se nalozi pred modi; brez teh dveh preverb bi lahko tiho izpadel.
+        Check 'M5.15: coremod se je nalozil (RWCORE)' (Wait-ForMarker $a.Log 'RWCORE coremod nalozen' 5)
+        Check 'M5.15: transformer je aktiven'          (Wait-ForMarker $a.Log 'RWCORE transformer aktiven' 5)
+        Check 'standardni vhod serverja A odgovarja'   (Prime-ServerInput $a)
         Send-Command $a 'setworldspawn 0 5 0'
         Check 'world spawn nastavljen'             (Wait-ForMarker $a.Log 'Set the world spawn point' 60)
         Send-Command $a 'save-all flush'
@@ -140,6 +170,7 @@ try {
     $b = Start-DevServer 'b'
     Check 'server B je dosegel "Done ("'           (Wait-ForMarker $b.Log 'Done (' 900)
     if ($failures.Count -eq 0) {
+        Check 'standardni vhod serverja B odgovarja'   (Prime-ServerInput $b)
         Send-Command $b 'summon customnpcs:CustomNpc 0 5 0 {Name:"SmokeNPC"}'
         Check 'NPC ustvarjen'                      (Wait-ForMarker $b.Log 'Object successfully summoned' 60)
         Send-Command $b 'execute @e[type=customnpcs:CustomNpc] ~ ~ ~ say M05-NPC-PRESENT'
@@ -153,6 +184,7 @@ try {
     $c = Start-DevServer 'c'
     Check 'server C je dosegel "Done ("'           (Wait-ForMarker $c.Log 'Done (' 900)
     if ($failures.Count -eq 0) {
+        Check 'standardni vhod serverja C odgovarja'   (Prime-ServerInput $c)
         Send-Command $c 'execute @e[type=customnpcs:CustomNpc] ~ ~ ~ say M05-NPC-PRESENT'
         Check 'NPC je prezivel save + restart'     (Wait-ForMarker $c.Log '[SmokeNPC] M05-NPC-PRESENT' 120)
     }
