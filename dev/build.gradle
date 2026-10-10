@@ -165,6 +165,7 @@ task testOriginal(type: Test) {
     exclude '**/NodeTypeMemoTest.class'
     exclude '**/CollideSkipTest.class'
     exclude '**/AssociatedPlayersTest.class'
+    exclude '**/PathSearchTest.class'
     exclude '**/MountGuardTest.class'
     exclude '**/RiderStateTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }

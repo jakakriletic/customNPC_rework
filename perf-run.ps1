@@ -70,6 +70,24 @@
 # in poslusalec mora dobiti dogodke (K2), po '/rwcollide poslusalec 0' se preskok nadaljuje (K3).
 #     .\perf-run.ps1 -Variants idle -Counts 500 -RwTarget 2 -RwCollide 1
 #
+# Varianta 'nedosegljiva' (M5.9, 10. 10.): kot 'boj' (A frakcija 1, B frakcija 2, N/2 + N/2), le da
+# je okoli skupine B pas ograje (minecraft:fence - v 1.12.2 je to hrastova ograja), debel 3 bloke. Ograja je pathfindingu zaprta
+# (PathNodeType.FENCE), visoka pa 1,5 bloka, zato vodoravni zarek med ocmi NPC-jev (~1,62) gre nad
+# njo: tarca je vidna (fixtura ima DirectLOS 1b) in nedosegljiva hkrati. Obroc in ne vrsta, ker bi
+# dolga vrsta NPC-jem blizu konca dala pot okoli; debela 3 bloke, ker obe skupini prideta do ograje
+# in bi se cez eno vrsto udarili (doseg 2). Merili U1 (NPC-ji imajo tarco) in U2 (nihce ni
+# ranjen - tarca res ni dosegljiva). Prizorisce se pred vsakim spawnom pocisti ('fill ... air' na
+# y = 4), zato ograja ne ostane za naslednjo celico.
+#     .\perf-run.ps1 -Variants nedosegljiva -Counts 500 -RwTarget 2 -RwPath 0 -RwPathIskanje
+#
+# -RwPathIskanje (M5.9; zahteva -RwPath): poslje se '/rwpath iskanje 1'; navigator izmeri in
+# razvrsti vsako iskanje poti (getPathToPos, skozi katerega gredo vsi klici). Celica dobi
+# rwpath.isk.iskanjNaTick, rwpath.isk.usNaIskanje, rwpath.isk.msNaTick, rwpath.isk.delez (% ticka),
+# rwpath.isk.maxUs in razvrstitev izidov: rwpath.isk.pomnilnik (vanilla je vrnila obstojeco pot brez
+# iskanja), rwpath.isk.brezPoti, rwpath.isk.celih, rwpath.isk.delnih z povprecno razdaljo zadnje
+# tocke od cilja. Merilo U3 (merjenje je stelo). Odtis dobi rwpathIskanje=1 (dva klica nanoTime na
+# iskanje).
+#
 # -RwBlink N (M5.13, 10. 10.): po postavitvi sveta poslje '/rwblink N' (prejemniki utripa oci:
 # 1 = iskanje po world.playerEntities, 2 = preverba). Odtis dobi kljuc rwblink, celica velicine
 # rwblink.* (iskanj, igralcev, prejemnikov, chunkov, primerjav, neujemanj). Merilo B1: v nacinu 1/2
@@ -106,7 +124,7 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
       [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1,
       [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15, [int]$RwCollide = -1,
-      [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15)
+      [switch]$RwPathIskanje, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -123,7 +141,7 @@ $gridZ     = -12     # severni rob mreze
 $gridW     = 25      # NPC-jev v vrsti (os x); N mora biti veckratnik 2*gridW = 50
 $bojGap    = 4       # prazne vrste med skupinama A in B (AggroRange 16 jih pokrije)
 $kontrolaAt = '60,4,30'
-$znaneVariante = @('idle', 'boj', 'skripte')
+$znaneVariante = @('idle', 'boj', 'skripte', 'nedosegljiva')
 # -Razprseno: skupina po 5 NPC-jev na ukaz, ukazi ~7 tickov narazen. 7 je tuje 10, zato
 # zaporedni ukazi padejo v vse faze 'ticksExisted % 10' (EntityNPCInterface.java:358).
 $razKos   = 5
@@ -204,6 +222,16 @@ function Send-RwPath($Srv, [string]$Cmd) {
         $r['cas'] = [int]$h[1].Value; $r['tickov'] = [long]$h[2].Value; $r['sledenj'] = [long]$h[3].Value
         $r['sledenjNs'] = [long]$h[4].Value; $r['kandidatov'] = [long]$h[5].Value; $r['kandidatNs'] = [long]$h[6].Value
         $r['prostih'] = [long]$h[7].Value; $r['histKand'] = $h[8].Value
+    }
+    # M5.9: stevci iskanja poti (starejsi build teh polj ne izpise)
+    $i = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=\d+ .*? isk=(\d) iskKlicev=(\d+) iskNs=(\d+) iskMaxNs=(\d+) iskPomnilnik=(\d+) iskBrezPoti=(\d+) iskCelih=(\d+) iskDelnih=(\d+) iskDelnaRazdalja=([\d,.]+)')
+    if ($i.Count -gt 0) {
+        $q = $i[$i.Count - 1].Groups
+        $r['isk'] = [int]$q[1].Value; $r['iskKlicev'] = [long]$q[2].Value; $r['iskNs'] = [long]$q[3].Value
+        $r['iskMaxNs'] = [long]$q[4].Value; $r['iskPomnilnik'] = [long]$q[5].Value
+        $r['iskBrezPoti'] = [long]$q[6].Value; $r['iskCelih'] = [long]$q[7].Value
+        $r['iskDelnih'] = [long]$q[8].Value
+        $r['iskDelnaRazdalja'] = [double]($q[9].Value -replace ',', '.')
     }
     # M5.11: stevci po nacinu "m:tickov:sledenj:sledenjNs:kandidatov:kandidatNs;..."
     $pn = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=\d+ .*? poNacinu=([\d:;]*)')
@@ -441,13 +469,39 @@ function Get-GroupCommands([string]$Ime, [int]$N, [int]$Z0) {
     return $out
 }
 
+# M5.9 (varianta 'nedosegljiva'): ograja okoli skupine B, da do nje ni poti. Ograja je
+# pathfindingu vedno zaprta (PathNodeType.FENCE), visoka pa je 1,5 bloka, zato vodoravni zarek
+# med ocmi NPC-jev (visina ~1,62) gre nad njo in skupini se vidita - tarca je torej vidna
+# (DirectLOS 1b v fixturi) in nedosegljiva hkrati. Obroc (ne le vrsta) zato, da obhoda ni:
+# dolga vrsta bi NPC-jem blizu konca dala pot okoli (domet iskanja je followRange 32).
+function Get-FenceCommands([int]$Rows, [int]$ZB, [string]$Block) {
+    # Pas je debel 3 bloke, ne ena vrsta. Zakaj (10. 10., dva padla poskusa U2): obe skupini
+    # prideta do ograje z svoje strani, zato sta na koncu samo 2 bloka narazen in udarec gre
+    # skozi njo (doseg udarca 2 bloka; odmik ob spawnu ne pomaga, ker se premikata). Pri pasu
+    # debeline 3 je najblizja mozna razdalja napadalec-tarca 4 bloke, torej izven dosega.
+    $x1 = $gridX - 3
+    $x2 = $gridX + $gridW + 2
+    $z1 = $ZB - 3
+    $z2 = $ZB + $Rows + 2
+    return @(
+        ('fill {0} 4 {1} {2} 4 {3} {4}' -f $x1, $z1, $x2, ($z1 + 2), $Block),
+        ('fill {0} 4 {1} {2} 4 {3} {4}' -f $x1, ($z2 - 2), $x2, $z2, $Block),
+        ('fill {0} 4 {1} {2} 4 {3} {4}' -f $x1, $z1, ($x1 + 2), $z2, $Block),
+        ('fill {0} 4 {1} {2} 4 {3} {4}' -f ($x2 - 2), $z1, $x2, $z2, $Block)
+    )
+}
+
 # Ukazi za spawn ene celice. 'noppes clone grid <ime> 1 <sirina x> <vrstic z> x,y,z'
 # (CmdClone.grid: zanka x < args[2], z < args[3]; NPC stoji na prvem polnem bloku).
 function Get-SpawnCommands([string]$Variant, [int]$N) {
     $cmds = @()
-    if ($Variant -eq 'boj') {
+    # M5.9: prizorisce se pred vsakim spawnom pocisti (y = 4 je nad povrsino superflata, zato je
+    # tam samo to, kar postavi scenarij - ograja variante 'nedosegljiva'). 'fill' ne premakne entitet.
+    $cmds += ('fill {0} 4 {1} {2} 4 {3} minecraft:air' -f ($gridX - 4), ($gridZ - 4), ($gridX + $gridW + 3), ($gridZ + 32))
+    if ($Variant -eq 'boj' -or $Variant -eq 'nedosegljiva') {
         $rows = [int](($N / 2) / $gridW)
         $zB = $gridZ + $rows + $bojGap
+        if ($Variant -eq 'nedosegljiva') { $cmds += Get-FenceCommands $rows $zB 'minecraft:fence' }
         $cmds += Get-GroupCommands 'PERF_BojA' ($N / 2) $gridZ
         $cmds += Get-GroupCommands 'PERF_BojB' ($N / 2) $zB
     } else {
@@ -518,6 +572,7 @@ try {
         }
     }
     if ($RwBlinkCas -and $RwBlink -lt 0) { throw '-RwBlinkCas zahteva -RwBlink N (nacin, v katerem se meri).' }
+    if ($RwPathIskanje -and $RwPath -lt 0) { throw '-RwPathIskanje zahteva -RwPath N (za M5.9 -RwPath 0).' }
     $perCell = $WarmupSeconds + $Seconds + 25
     Write-Host ("  celice: {0}" -f (($cells | ForEach-Object { '{0}/{1}' -f $_.Varianta, $_.N }) -join ', '))
     Write-Host ("  ogrevanje {0} s, merjenje {1} s, obroc {2}; ocena trajanja ~{3} min" -f `
@@ -629,6 +684,10 @@ try {
             $rp = Send-RwPath $srv 'rwpath cas 1'
             Check 'merjenje sledenja poti vklopljeno (rwpath cas 1)' (($null -ne $rp) -and ($rp['cas'] -eq 1))
         }
+        if ($RwPathIskanje) {
+            $rp = Send-RwPath $srv 'rwpath iskanje 1'
+            Check 'merjenje iskanja poti vklopljeno (rwpath iskanje 1)' (($null -ne $rp) -and ($rp['isk'] -eq 1))
+        }
     }
 
     # Pobijanje fixtur M0.6. Vrstni red je bistven: 'noppes slay npcs' samo oznaci isDead,
@@ -685,6 +744,32 @@ try {
         }
         Start-Sleep -Seconds 3
 
+        # M5.9 / U0: ograja mora biti res v svetu. Prvi poskusi 10. 10. so tiho merili navaden
+        # boj, ker se blok v 1.12.2 imenuje minecraft:fence in ne oak_fence - 'fill' je odgovoril
+        # "There is no such block", scenarij pa tega ni gledal. Preveri se vsaka od stirih stran
+        # pasu in da je notranjost (polje skupine B) prosta.
+        if ($v -eq 'nedosegljiva') {
+            $uRows = [int](($N / 2) / $gridW)
+            $uZB = $gridZ + $uRows + $bojGap
+            $tocke = @(
+                @{ x = ($gridX - 3);            z = ($uZB - 3);            blok = 'minecraft:fence'; kaj = 'severna stran' },
+                @{ x = ($gridX - 3);            z = ($uZB + $uRows + 2);   blok = 'minecraft:fence'; kaj = 'juzna stran' },
+                @{ x = ($gridX + $gridW + 2);  z = ($uZB - 1);            blok = 'minecraft:fence'; kaj = 'vzhodna stran' },
+                @{ x = ($gridX - 1);           z = ($uZB - 1);            blok = 'minecraft:fence'; kaj = 'zapadna stran' },
+                @{ x = $gridX;                 z = $uZB;                  blok = 'minecraft:air';   kaj = 'notranjost prosta' }
+            )
+            $uOk = $true
+            foreach ($t in $tocke) {
+                $pred = ([regex]::Matches((Get-MarkerText $srv.Log), 'Successfully found the block')).Count
+                Send-Command $srv ('testforblock {0} 4 {1} {2}' -f $t.x, $t.z, $t.blok)
+                if (-not (Wait-ForCount $srv 'Successfully found the block' ($pred + 1) 30)) {
+                    Write-Host ("  ! ograja: {0} ({1},4,{2}) ni {3}" -f $t.kaj, $t.x, $t.z, $t.blok)
+                    $uOk = $false
+                }
+            }
+            Check ("U0: pas ograje je v svetu (stiri strani in prosta notranjost pri z={0})" -f $uZB) $uOk
+        }
+
         # P2: pogoj meritve (M2.1d) in hkrati neodvisno stetje NPC-jev. PRED krmilnikom:
         # ce je svet ustavljen (prva celica), PERF_Kontrola brez tega ne bi nikoli tiknil.
         Send-Command $srv ("rwdiag chunks on {0}" -f $ChunkRadius)
@@ -708,12 +793,12 @@ try {
         $want = @{ Idle = 0; BojA = 0; BojB = 0; Skripte = 0 }
         if ($v -eq 'idle')    { $want.Idle = $N }
         if ($v -eq 'skripte') { $want.Skripte = $N }
-        if ($v -eq 'boj')     { $want.BojA = $N / 2; $want.BojB = $N / 2 }
+        if ($v -eq 'boj' -or $v -eq 'nedosegljiva') { $want.BojA = $N / 2; $want.BojB = $N / 2 }
         $spawnOk = ($k0.Idle -eq $want.Idle) -and ($k0.BojA -eq $want.BojA) -and ($k0.BojB -eq $want.BojB) -and `
                    ($k0.Skripte -eq $want.Skripte) -and ($k0.Drugi -eq 0)
         Check ("P1: v svetu je natanko obremenitev celice (idle={0} bojA={1} bojB={2} skripte={3} drugi={4})" -f `
             $k0.Idle, $k0.BojA, $k0.BojB, $k0.Skripte, $k0.Drugi) $spawnOk
-        if ($v -eq 'boj') { Check 'P1: frakciji 1 in 2 sta sovrazni druga drugi' (Read-Frakcije $srv.Log) }
+        if ($v -eq 'boj' -or $v -eq 'nedosegljiva') { Check 'P1: frakciji 1 in 2 sta sovrazni druga drugi' (Read-Frakcije $srv.Log) }
         # Krmilnik se odstrani sam; pocakamo, da ga ni vec, preden se zacne ogrevanje.
         Start-Sleep -Seconds 2
 
@@ -953,6 +1038,13 @@ try {
                 $vel['boj.sCiljem'] = $k1.Cilj
                 $vel['boj.ranjenih'] = $k1.Ranjenih
             }
+            if ($v -eq 'nedosegljiva') {
+                # U1: tarca je vidna (NPC-ji jo imajo za cilj). U2: ni dosegljiva (nihce ni ranjen).
+                Check ("U1: NPC-ji imajo tarco (s ciljem {0} od {1})" -f $k1.Cilj, $N) ($k1.Cilj -ge ($N / 2))
+                Check ("U2: tarca ni dosegljiva (ranjenih {0}, pricakovano 0)" -f $k1.Ranjenih) ($k1.Ranjenih -eq 0)
+                $vel['boj.sCiljem'] = $k1.Cilj
+                $vel['boj.ranjenih'] = $k1.Ranjenih
+            }
             if ($v -eq 'skripte') {
                 $delta = $k1.SkriptTickov - $k0.SkriptTickov
                 $wanted = if ($null -ne $dump) { [long](0.9 * $N * $dump.ticks / 10) } else { 1 }
@@ -994,6 +1086,31 @@ try {
             $odtis['rwcollide'] = $RwCollide
             if ($null -ne $rwCollideStevci) {
                 foreach ($k in @('klicev', 'preskocenih', 'brezOpazovalca', 'dogodkovBrezOpazovalca')) { $vel['rwcollide.' + $k] = $rwCollideStevci[$k] }
+            }
+        }
+        if ($RwPathIskanje) {
+            $odtis['rwpathIskanje'] = 1
+            if (($null -ne $rwPathStevci) -and ($rwPathStevci['tickov'] -gt 0) -and ($null -ne $rwPathStevci['iskKlicev'])) {
+                $ti = [double]$rwPathStevci['tickov']
+                $kl = [long]$rwPathStevci['iskKlicev']
+                $vel['rwpath.isk.klicev'] = $kl
+                $vel['rwpath.isk.naTick'] = [math]::Round($kl / $ti, 2)
+                $vel['rwpath.isk.msNaTick'] = [math]::Round($rwPathStevci['iskNs'] / $ti / 1e6, 3)
+                $vel['rwpath.isk.maxUs'] = [math]::Round($rwPathStevci['iskMaxNs'] / 1000.0, 1)
+                $vel['rwpath.isk.pomnilnik'] = $rwPathStevci['iskPomnilnik']
+                $vel['rwpath.isk.brezPoti'] = $rwPathStevci['iskBrezPoti']
+                $vel['rwpath.isk.celih'] = $rwPathStevci['iskCelih']
+                $vel['rwpath.isk.delnih'] = $rwPathStevci['iskDelnih']
+                $vel['rwpath.isk.delnaRazdalja'] = $rwPathStevci['iskDelnaRazdalja']
+                $isci = $kl - [long]$rwPathStevci['iskPomnilnik']
+                $vel['rwpath.isk.iskanj'] = $isci
+                $vel['rwpath.isk.iskanjNaTick'] = [math]::Round($isci / $ti, 2)
+                if ($isci -gt 0) { $vel['rwpath.isk.usNaIskanje'] = [math]::Round($rwPathStevci['iskNs'] / [double]$isci / 1000.0, 1) }
+                if (($null -ne $vel['mspt.povp']) -and ($vel['mspt.povp'] -gt 0)) {
+                    $vel['rwpath.isk.delez'] = [math]::Round(100.0 * $vel['rwpath.isk.msNaTick'] / $vel['mspt.povp'], 2)
+                }
+                Check ("U3: merjenje iskanja poti je stelo ({0} klicev v {1} tickih)" -f $kl, $rwPathStevci['tickov']) ($kl -gt 0)
+                Write-Host ("  M5.9: iskanj {0} ({1}/tick, {2} us na iskanje), iz pomnilnika {3}, brez poti {4}, celih {5}, delnih {6} (povp. razdalja {7}); {8} ms/tick = {9} % ticka" -f $isci, $vel['rwpath.isk.iskanjNaTick'], $vel['rwpath.isk.usNaIskanje'], $vel['rwpath.isk.pomnilnik'], $vel['rwpath.isk.brezPoti'], $vel['rwpath.isk.celih'], $vel['rwpath.isk.delnih'], $vel['rwpath.isk.delnaRazdalja'], $vel['rwpath.isk.msNaTick'], $vel['rwpath.isk.delez'])
             }
         }
         if ($RwBlink -ge 0) {

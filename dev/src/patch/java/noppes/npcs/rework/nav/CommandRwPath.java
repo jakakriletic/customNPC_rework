@@ -8,12 +8,18 @@ import net.minecraft.util.text.TextComponentString;
 import noppes.npcs.LogWriter;
 
 /**
- * Ukaz {@code /rwpath [0|1|2|reset]}: pokaze ali med tekom preklopi nacin
+ * Ukaz {@code /rwpath [0|1|2|reset|cas N|iskanje N]}: pokaze ali med tekom preklopi nacin
  * {@link PathFollowCache} in izpise stevce. Ne zapise v config — trajna nastavitev je
  * {@code RwPathFollowCache}. {@code /rwpath cas 1} vklopi merjenje casa in kandidatov sledenja
  * poti (M5.10), {@code tickov} v odgovoru so ticki od zadnjega {@code reset}. M5.11: odgovor ima
  * {@code poNacinu=} (ticki in merjeni stevci po nacinu od {@code reset}), da scenarij primerja
  * nacina, med katerima preklaplja v istem boju.
+ *
+ * <p>M5.9: {@code /rwpath iskanje 1} vklopi merjenje **iskanja poti** ({@link PathSearch}); odgovor
+ * dobi {@code iskKlicev}, {@code iskNs}, {@code iskMaxNs} in razvrstitev izidov
+ * ({@code iskPomnilnik} = vanilla je vrnila obstojeco pot brez iskanja, {@code iskBrezPoti},
+ * {@code iskCelih}, {@code iskDelnih} z povprecno razdaljo zadnje tocke od cilja). {@code reset}
+ * pobrise tudi te stevce.
  *
  * <p>Nacin se prebere ob vsakem klicu {@code isDirectPathBetweenPoints}, zato preklop velja
  * takoj. Odgovor gre tudi v log z markerjem {@code RWPATH}, da ga prebere skripta meritve.
@@ -29,7 +35,7 @@ public class CommandRwPath extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/rwpath [0|1|2|reset|cas 0|cas 1]";
+        return "/rwpath [0|1|2|reset|cas 0|cas 1|iskanje 0|iskanje 1]";
     }
 
     @Override
@@ -44,11 +50,17 @@ public class CommandRwPath extends CommandBase {
             if ("reset".equals(args[0])) {
                 resetTick = server.getTickCounter();
                 PathFollowCache.reset(resetTick);
+                PathSearch.reset();
             } else if ("cas".equals(args[0])) {
                 if (args.length < 2 || !("0".equals(args[1]) || "1".equals(args[1]))) {
                     throw new WrongUsageException(getUsage(sender));
                 }
                 PathFollowCache.setTiming("1".equals(args[1]));
+            } else if ("iskanje".equals(args[0])) {
+                if (args.length < 2 || !("0".equals(args[1]) || "1".equals(args[1]))) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+                PathSearch.setTiming("1".equals(args[1]));
             } else {
                 int requested;
                 try {
@@ -70,7 +82,12 @@ public class CommandRwPath extends CommandBase {
                 + " sledenj=" + PathFollowCache.followCalls() + " sledenjNs=" + PathFollowCache.followNanos()
                 + " kandidatov=" + PathFollowCache.directCalls() + " kandidatNs=" + PathFollowCache.directNanos()
                 + " prostih=" + PathFollowCache.directTrue() + " histKand=" + PathFollowCache.candidateHistogram()
-                + " poNacinu=" + PathFollowCache.perMode(server.getTickCounter());
+                + " poNacinu=" + PathFollowCache.perMode(server.getTickCounter())
+                + " isk=" + (PathSearch.timing() ? 1 : 0) + " iskKlicev=" + PathSearch.calls()
+                + " iskNs=" + PathSearch.nanos() + " iskMaxNs=" + PathSearch.maxNanos()
+                + " iskPomnilnik=" + PathSearch.cached() + " iskBrezPoti=" + PathSearch.none()
+                + " iskCelih=" + PathSearch.full() + " iskDelnih=" + PathSearch.partial()
+                + " iskDelnaRazdalja=" + String.format(java.util.Locale.ROOT, "%.2f", PathSearch.averagePartialDistance());
         sender.sendMessage(new TextComponentString(msg));
         LogWriter.info(msg);
     }

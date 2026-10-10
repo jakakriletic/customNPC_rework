@@ -1,8 +1,11 @@
 package noppes.npcs.rework.nav;
 
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.pathfinding.PathNavigateGround;
+import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import noppes.npcs.LogWriter;
@@ -39,6 +42,34 @@ public class RwPathNavigateGround extends PathNavigateGround {
         this.nodeProcessor = new RwWalkNodeProcessor();
         this.nodeProcessor.setCanEnterDoors(true);
         return new PathFinder(this.nodeProcessor);
+    }
+
+    /**
+     * M5.9: pri vklopljenem merjenju ({@link PathSearch#setTiming}) izmeri in razvrsti vsako
+     * iskanje poti. Vse poti ({@code getPathToEntityLiving}, {@code getPathToXYZ}) vodijo skozi to
+     * metodo [K]. Obnasanje je v obeh vejah {@code super.getPathToPos(pos)}.
+     */
+    @Override
+    public Path getPathToPos(BlockPos pos) {
+        if (!PathSearch.timing()) {
+            return super.getPathToPos(pos);
+        }
+        Path before = this.currentPath;
+        long t0 = System.nanoTime();
+        Path path = super.getPathToPos(pos);
+        long dt = System.nanoTime() - t0;
+        int distance = 0;
+        if (path != null && path != before) {
+            PathPoint end = path.getFinalPathPoint();
+            if (end == null) {
+                distance = 999;
+            } else {
+                distance = Math.max(Math.max(Math.abs(end.x - pos.getX()), Math.abs(end.y - pos.getY())),
+                        Math.abs(end.z - pos.getZ()));
+            }
+        }
+        PathSearch.record(PathSearch.classify(path != null, path != null && path == before, distance), dt, distance);
+        return path;
     }
 
     /**
