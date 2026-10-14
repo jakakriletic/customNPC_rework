@@ -395,7 +395,7 @@ klient pri 200–500 vidnih ozko grlo.
      in potrebuje preverbo imen SRG še na pravem klientu.
 - **Q25: po priporočilu** — vrstni red M5: M5-K.0 → M5-K.1 → K5 → **M5-V.1 … M5-V.8** → K12 → ostali
   K-paketi; K13 in K10 se po M5-V.8 ponovno ocenita.
-- **Q26 (novo, odprto)** — `RwFarLos`: na strežniku nadomestki razkrijejo pozicije NPC-jev do
+- **Q26 — odločeno 14. 10.: po priporočilu, `RwFarLos=0`** (→ D-035). Vprašanje je bilo: `RwFarLos`: na strežniku nadomestki razkrijejo pozicije NPC-jev do
   `view-distance` tudi za zidovi (imena in naslovi nikoli). Naj ostane privzeto 0 (brez raytracea, najcenejše)
   ali naj strežnik privzeto pošilja samo NPC-je v vidni črti? Priporočilo: 0 — NPC-ji niso igralci, vanilla
   znotraj 64 blokov prav tako pošilja vse; operater lahko vklopi.

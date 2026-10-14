@@ -521,7 +521,7 @@ Raziskava: [`raziskave/M5-V.0-daljna-vidnost.md`](raziskave/M5-V.0-daljna-vidnos
   izmeri jo M5-V.1).
 
 **Kaj je treba še preveriti:** cena variante A proti B (M5-V.1), OptiFine/senčilniki (M5-V.7), vanilla cena
-`view-distance` 24 proti 10 na dediciranem strežniku (M5-V.1), preverba vidnosti `RwFarLos` (Q26).
+`view-distance` 24 proti 10 na dediciranem strežniku (M5-V.1), preverba vidnosti `RwFarLos` (Q26 → D-035: privzeto 0, operater lahko vklopi).
 
 ### Izrecno prepovedano brez ločenega projekta
 
