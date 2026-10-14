@@ -239,7 +239,8 @@ NPC-jev. Odprejo se šele, če po M4.10, M4.11 in M5.6 merila M2.7 še vedno pad
 
 ## M5 — Performance AI
 
-**Cilj:** **R5** — merljivo več NPC-jev pri istem MSPT.
+**Cilj:** **R5** — merljivo več NPC-jev pri istem MSPT (**M5-S**, strežnik) **in** pri istem času sličice
+(**M5-K**, klient). Od D-033 (14. 10.) sta obvezna oba dela; M5 je zaključen šele, ko sta zaključena oba.
 
 **Vhodni pogoj:** M2.6 (baseline meritve). Brez njih se M5 ne začne.
 
@@ -268,16 +269,36 @@ NPC-jev. Odprejo se šele, če po M4.10, M4.11 in M5.6 merila M2.7 še vedno pad
 | ~~M5.5~~ | Meritev po vsakem → ni paket, je pravilo (D-016) | — |
 | ~~M5.7~~ | Prostorski indeks → **zavrženo** (D-030, chunk sekcije so že indeks; drag je gostota mreže); render LOD → K5 v M5-K | — |
 
-Vrstni red M5-S: **~~M5.10~~ → ~~M5.11~~ → ~~M5.12~~ → ~~M5.13~~ → ~~M5.9~~ → ~~M5.6/S5~~ → ~~M5.17 (S14c)~~ → ~~M5.14 (S16)~~ → ~~M5.15~~ → ~~M5.16~~ → (M5.2 po Q21) → M5.8.** Celica `nedosegljiva` gre v M5.8 (kapaciteta brez nje je optimistična).
+Vrstni red M5-S: **~~M5.10~~ → ~~M5.11~~ → ~~M5.12~~ → ~~M5.13~~ → ~~M5.9~~ → ~~M5.6/S5~~ → ~~M5.17 (S14c)~~ → ~~M5.14 (S16)~~ → ~~M5.15~~ → ~~M5.16~~ → M5.8** → **M5-K.0 → M5-K.1 → K-paketi** (D-033); M5.2 po odgovoru na Q21. Celica `nedosegljiva` gre v M5.8 (kapaciteta brez nje je optimistična).
 Sledenje poti brez branja blokov po vzoru 1.21.1 (S15, sprememba gibanja) ni v M5, ampak vhod za M4.13.
-M5-K (klient, K0–K13 v [09](09-PERFORMANCE-RAZISKAVA.md)) je ločena veja z vhodnim pogojem M2.4r.
+M5-K (klient) je od D-033 obvezen del M5 in sledi takoj za M5.8 — glej razdelek **M5-K** spodaj.
 Vanilla `Entity.move` (idle 26–29 %): Q16 odločeno → D-031 (lasten coremod v CNPC jarju), paketa M5.15 in M5.16.
+
+### M5-K — klient (D-033)
+
+Izhodišče je raziskava [09](09-PERFORMANCE-RAZISKAVA.md) (5. 10.): klientskih meritev **ni**; en gol NPC po
+kodi stane ~18 `glCallList`, 25–40 matričnih operacij in nekaj neposrednih izrisov (oči, senca, ime),
+pri 300 vidnih NPC-jih ≈5.400 klicev listov na sličico — obremenitev procesorja in gonilnika, ne GPU
+**[H, iz kode]**. Kot pri M5-S (profil JFR je obrnil vrstni red) se vrstni red K-paketov potrdi šele z
+meritvijo.
+
+| ID | Paket | Vel. |
+|---|---|---|
+| **M5-K.0** | **Harness M2.4r** (K0): razvojni klient z igralcem na svetovih M2.4 (50/200/500, kasneje več), fiksna kamera (teleport, yaw/pitch), brez view bobbinga in VSynca, fiksna razdalja upodobitve, ločljivost in GUI; ~30 s ogrevanja, 60 s beleženja `System.nanoTime()` razlik v `RenderTickEvent`; poročilo p50/p95/p99 časa sličice, FPS, 1 % in 0,1 % low, `countEntitiesRendered`, GC, število tekstur; različice gol NPC, oklep + orožje, ime + naslov, oblački, delci, URL skini; tri ponovitve (D-016). Merila v slogu P1–P9 (vidnih NPC-jev je res N, kamera res fiksna, brez tujega procesa) | M |
+| **M5-K.1** | **Baseline in profil klienta**: original pri 50/200/500 vidnih NPC-jih (+ celice z igralcem za idle-500 in boj-500, ker brez igralca strežniški sledilnik in omrežje nista izmerjena); profil render niti (JFR ali vzorčevalnik) — kje gre čas sličice. **Potrdi ali obrne** vrstni red spodaj (D-029) | S |
+| M5-K K5 | LOD in proračun upodobitve po razdalji; zadnja stopnja impostor (ploskev z vnaprej upodobljeno sliko). Spremeni videz → stikalo, privzeto original | M |
+| M5-K K12 | Okluzija: najprej združljivost z Entity Culling (render bounding box velikih NPC-jev, `isInRangeToRenderDist`), lastna izvedba samo, če ne zadošča | S |
+| M5-K K13 | Skini v teksturnem nizu/atlasu — ena vezava teksture za vse NPC-je; pogoj za K10 | M |
+| M5-K K10 | Instanced renderer: vsi vidni NPC-ji istega modela v en klic; največji vzvod pri tisočih vidnih in največje tveganje (OptiFine, senčilniki, `customNPC_entities_mod`) | L |
+| M5-K K1–K4, K6–K9, K11 | Manjši paketi iz [09](09-PERFORMANCE-RAZISKAVA.md) (delci, mikropopravki, oči, imena in oblački, skini, omrežje, morph, animirani NPC-ji, redkejši klientski tick); uvrstijo se po profilu M5-K.1 | S–M |
 
 **Izhodni kriterij:**
 - vsak sprejet paket ima A/B meritev, ki presega šum
 - nobena funkcionalna regresija v matriki iz `PLAN_IMPLEMENTACIJE.md` §6
 - timerji in script trace se ujemajo z referenco
 - zapisano, koliko NPC-jev zdaj zmore isti stroj proti baselineu (M5.8)
+- **klient (D-033):** zapisano, kakšen je čas sličice (p95, 1 % low) pri 200 in 500 vidnih NPC-jih
+  z originalom in z vsemi sprejetimi K-paketi; sprememba videza je izključno za stikalom
 
 **Tveganja:** S4 mora zanesljivo zaznati poslušalce na vodilu CNPC API-ja (tudi registrirane kasneje),
 sicer tiho izgine dogodek; A/B boja je šumen zaradi poteka boja — po M5.10 zaradi dela na klic, ne števila klicev, zato A/B pri istem boju (M5.11). Tveganje odstranitve globalnega

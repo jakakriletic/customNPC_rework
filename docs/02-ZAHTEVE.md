@@ -413,6 +413,10 @@ M7 jo uporabi za animacije.
 
 > *"Rad bi da se optimizira performance AI NPC-jev da s tem omogoči čim več NPC-jev v svetu."*
 
+> **Razširitev obsega (14. 10. 2026, D-033):** *"ja to je NUJNI modul optimizacije. Jst kle hocem server
+> side in client side optimizacijo"* — R5 zajema **strežnik** (MSPT/TPS, M5-S) **in klient** (čas
+> sličice, FPS, M5-K). Do takrat je bil klient le neizvedena merilna točka M2.4r in izbirna veja.
+
 **Faza:** M5 · **Velikost:** velika · **Tveganje:** visoko (tiho spreminjanje obnašanja)
 
 ### Kaj kaže koda
