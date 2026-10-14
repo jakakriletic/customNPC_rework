@@ -158,6 +158,8 @@ try {
         # M5.15 (D-031): coremod se nalozi pred modi; brez teh dveh preverb bi lahko tiho izpadel.
         Check 'M5.15: coremod se je nalozil (RWCORE)' (Wait-ForMarker $a.Log 'RWCORE coremod nalozen' 5)
         Check 'M5.15: transformer je aktiven'          (Wait-ForMarker $a.Log 'RWCORE transformer aktiven' 5)
+        Check 'M5.16: poseg v World.getCollisionBoxes je uspel' (Wait-ForMarker $a.Log 'RWCORE poseg v net.minecraft.world.World' 5)
+        Check 'M5.16: svet je spremljan (RWMOVE)'      (Wait-ForMarker $a.Log 'RWMOVE svet' 20)
         Check 'standardni vhod serverja A odgovarja'   (Prime-ServerInput $a)
         Send-Command $a 'setworldspawn 0 5 0'
         Check 'world spawn nastavljen'             (Wait-ForMarker $a.Log 'Set the world spawn point' 60)

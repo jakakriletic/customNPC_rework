@@ -180,6 +180,10 @@ task testOriginal(type: Test) {
     exclude '**/DataShadowTest.class'
     exclude '**/MountGuardTest.class'
     exclude '**/RiderStateTest.class'
+    // M5.16: razredi coremoda (rework/core) jih v originalu ni.
+    exclude '**/CollisionGateTest.class'
+    exclude '**/CollisionClassesTest.class'
+    exclude '**/CollisionBoxesPatchTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

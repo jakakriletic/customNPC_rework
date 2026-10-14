@@ -117,7 +117,10 @@ import noppes.npcs.rework.ai.CommandRwTarget;
 import noppes.npcs.rework.nav.CommandRwPath;
 import noppes.npcs.rework.entity.CollideSkip;
 import noppes.npcs.rework.entity.CommandRwCollide;
+import noppes.npcs.rework.core.CollisionGate;
+import noppes.npcs.rework.core.CollisionWatcher;
 import noppes.npcs.rework.core.CommandRwCore;
+import noppes.npcs.rework.core.CommandRwMove;
 import noppes.npcs.rework.entity.CommandRwData;
 import noppes.npcs.rework.entity.DataShadow;
 import noppes.npcs.rework.nav.PathFollowCache;
@@ -168,6 +171,8 @@ public class CustomNpcs {
     public static int RwTargetPrefilter = 2;
     @ConfigProp(info="Rework M5.11 (S14b): ground NPC path following (PathNavigateGround.isDirectPathBetweenPoints, called every tick while an NPC follows a path) evaluates the path node type of each block position once per call and reuses it (the original evaluates the same positions about three times). Same result. 0 = original, 1 = reuse node types, 2 = verify (runs both, returns the original, counts mismatches; double cost, for test scenarios only). Default 1 since 2026-10-09 (D-032)")
     public static int RwPathFollowCache = 1;
+    @ConfigProp(info="Rework M5.16 (D-031): World.getCollisionBoxes skips the entity query while no entity in the world can contribute a collision box. Entity.getCollisionBoundingBox() and Entity.getCollisionBox(Entity) both return null in vanilla, so only classes that override one of them contribute (boat, minecart, shulker, modded classes); such classes are counted conservatively per world. The query is skipped only when that count is 0 and the moving entity class does not override getCollisionBox(Entity). Same result. This needs the coremod patch of net.minecraft.world.World; without it the switch does nothing. 0 = original, 1 = skip when provably empty, 2 = verify (runs the query and counts entities that would have contributed). Default 1 since 2026-10-14 (D-032): idle-500 MSPT average 2.787 to 2.540 ms, p95 4.194 to 3.867, five repetitions per series with separated ranges, 0 mismatches in 945162 comparisons")
+    public static int RwMoveBoxes = 1;
     @ConfigProp(info="Rework M5.14 (S16): the NPC keeps its own EntityDataManager keys (Attacking, IsDead, Walking, FactionData) in plain fields refreshed by notifyDataManagerChange, and reads them from there. Every write to a data manager value calls that hook after storing the value (EntityDataManager.set and setEntryValues), so the field always equals the stored value. Same result; it avoids a read lock and a HashMap lookup per read (EntityDataManager.get is 11.6 percent of the server thread in idle-500). 0 = original, 1 = read from the fields, 2 = verify (reads the data manager, compares with the field, counts mismatches). Default 1 since 2026-10-10 (D-032)")
     public static int RwDataShadow = 1;
     @ConfigProp(info="Rework M5.17 (S14c): the path search (PathFinder.findPath) evaluates the path node type of each block position once per search and reuses it; the original evaluates the same positions several times because every node checks its neighbours and the neighbourhoods overlap. Same result (same memoised method and same invariants as M5.11). 0 = original, 1 = reuse node types during a search, 2 = verify (every evaluation is computed and compared with the memoised one; no saving, for test scenarios only). Default 1 since 2026-10-10 (D-032)")
@@ -276,6 +281,8 @@ public class CustomNpcs {
             }
         }, () -> null);
         NetworkRegistry.INSTANCE.registerGuiHandler((Object)this, (IGuiHandler)proxy);
+        // M5.16 (D-031): stevec entitet, ki lahko prispevajo trkalno skatlo, po svetovih.
+        MinecraftForge.EVENT_BUS.register(CollisionWatcher.createEventHandler());
         MinecraftForge.EVENT_BUS.register((Object)new ServerEventsHandler());
         MinecraftForge.EVENT_BUS.register((Object)new ServerTickHandler());
         MinecraftForge.EVENT_BUS.register((Object)new CustomEntities());
@@ -388,6 +395,9 @@ public class CustomNpcs {
         DataShadow.setMode(RwDataShadow);
         // M5.15 (D-031): stanje coremoda; transformer ne spremeni nicesar.
         event.registerServerCommand((ICommand)new CommandRwCore());
+        // M5.16 (D-031): preskok poizvedbe entitet za trke; /rwmove ga med tekom preklopi.
+        event.registerServerCommand((ICommand)new CommandRwMove());
+        CollisionGate.setMode(RwMoveBoxes);
         PathFollowCache.setMode(RwPathFollowCache);
         NegativePathCache.setMode(RwPathNegCache);
         PathSearchMemo.setMode(RwPathSearchMemo);

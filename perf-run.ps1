@@ -88,6 +88,13 @@
 # tocke od cilja. Merilo U3 (merjenje je stelo). Odtis dobi rwpathIskanje=1 (dva klica nanoTime na
 # iskanje).
 #
+# -RwMove N (M5.16 / D-031, 11. 10.): preskok poizvedbe entitet za trke v World.getCollisionBoxes
+# (1 = preskok, kadar nihce ne more prispevati skatle, 2 = preverba). Zahteva poseg coremoda; ce ta
+# ni uspel, merilo pade. Odtis dobi kljuc rwmove, celica velicine rwmove.* (klici, preskoceni,
+# delez preskokov, primerjave, neujemanja, prispevajoce entitete). Merila: V1 (nacin 1 je
+# preskakoval), V2 in V3 (nacin 2 je prestel kandidate in nihce ni prispeval skatle).
+#     .\perf-run.ps1 -Variants idle,boj -Counts 500 -RwTarget 2 -RwMove 2   # dokaz enakosti
+#
 # -RwData N (M5.14 / S16, 10. 10.): po postavitvi sveta poslje '/rwdata N' (sencna polja CNPC kljucev
 # EntityDataManager: 1 = branje iz polj, 2 = preverba). Odtis dobi kljuc rwdata, celica velicine
 # rwdata.branj(NaTick), rwdata.primerjav(NaTick) in rwdata.neujemanj. Merila: D1 (nacin 1 je bral iz
@@ -146,7 +153,7 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
       [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1,
       [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15, [int]$RwCollide = -1,
-      [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwPathMemo = -1, [int]$RwData = -1, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15)
+      [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwPathMemo = -1, [int]$RwData = -1, [int]$RwMove = -1, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -284,6 +291,21 @@ function Send-RwPath($Srv, [string]$Cmd) {
         $r['poNacinu'] = $po
     }
     return $r
+}
+
+# M5.16: ukaz /rwmove; vrne slovar stevcev iz odgovora ($null, ce ni odgovora).
+function Send-RwMove($Srv, [string]$Cmd) {
+    $pred = ([regex]::Matches((Get-MarkerText $Srv.Log), 'RWMOVE-STANJE nacin=')).Count
+    Send-Command $Srv $Cmd
+    $ok = Wait-ForCount $Srv 'RWMOVE-STANJE nacin=' ($pred + 1) 60
+    Check ("ukaz '{0}' odgovori" -f $Cmd) $ok
+    if (-not $ok) { return $null }
+    $m = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWMOVE-STANJE nacin=(\d) .*? poseg=(\d) klicev=(\d+) preskocenih=(\d+) primerjav=(\d+) neujemanj=(\d+) svetov=(\d+) prispevajocih=(-?\d+)')
+    if ($m.Count -eq 0) { return $null }
+    $g = $m[$m.Count - 1].Groups
+    return @{ nacin = [int]$g[1].Value; poseg = [int]$g[2].Value; klicev = [long]$g[3].Value
+              preskocenih = [long]$g[4].Value; primerjav = [long]$g[5].Value; neujemanj = [long]$g[6].Value
+              svetov = [int]$g[7].Value; prispevajocih = [int]$g[8].Value }
 }
 
 # M5.14: ukaz /rwdata; vrne slovar stevcev iz odgovora ($null, ce ni odgovora).
@@ -721,6 +743,11 @@ try {
         $null = Send-RwTarget $srv ("rwtarget {0}" -f $RwTarget)
         Check ("stikalo RwTarget je {0}" -f $RwTarget) ((Get-MarkerText $srv.Log) -match ("RWTARGET nacin={0} " -f $RwTarget))
     }
+    if ($RwMove -ge 0) {
+        $rm = Send-RwMove $srv ("rwmove {0}" -f $RwMove)
+        Check ("stikalo RwMoveBoxes je {0}" -f $RwMove) (($null -ne $rm) -and ($rm.nacin -eq $RwMove))
+        Check 'M5.16: poseg v World.getCollisionBoxes je uspel' (($null -ne $rm) -and ($rm.poseg -eq 1))
+    }
     if ($RwData -ge 0) {
         $rd = Send-RwData $srv ("rwdata {0}" -f $RwData)
         Check ("stikalo RwDataShadow je {0}" -f $RwData) (($null -ne $rd) -and ($rd.nacin -eq $RwData))
@@ -889,6 +916,7 @@ try {
         if ($RwPath -ge 0) { $null = Send-RwPath $srv 'rwpath reset' }
         if ($RwCollide -ge 0) { $null = Send-RwCollide $srv 'rwcollide reset' }
         if ($RwData -ge 0) { $null = Send-RwData $srv 'rwdata reset' }
+        if ($RwMove -ge 0) { $null = Send-RwMove $srv 'rwmove reset' }
         # M5.13: A/B v istem zagonu zacne vsako celico v prvem nacinu.
         if ($RwBlinkAB.Count -gt 0) { $null = Send-RwBlink $srv ("rwblink {0}" -f $RwBlinkAB[0]) }
         if ($RwBlink -ge 0) { $null = Send-RwBlink $srv 'rwblink reset' }
@@ -990,6 +1018,23 @@ try {
                     $rwBlinkPoskus = @{ primerjav = [long]$gp[1].Value; neujemanj = [long]$gp[3].Value }
                     Check ("B4: poskus je primerjal poizvedbi v svetu ({0} primerjav)" -f $gp[1].Value) ([long]$gp[1].Value -gt 0)
                     Check ("B5: poskus brez neujemanj ({0})" -f $gp[3].Value) ([long]$gp[3].Value -eq 0)
+                }
+            }
+        }
+        $rwMoveStevci = $null
+        if ($RwMove -ge 0) {
+            $rwMoveStevci = Send-RwMove $srv 'rwmove'
+            if ($null -ne $rwMoveStevci) {
+                Write-Host ("  RwMove={0}: klicev {1}, preskocenih {2}, primerjav {3}, neujemanj {4}, prispevajocih {5} v {6} svetovih" -f $RwMove, $rwMoveStevci.klicev, $rwMoveStevci.preskocenih, $rwMoveStevci.primerjav, $rwMoveStevci.neujemanj, $rwMoveStevci.prispevajocih, $rwMoveStevci.svetov)
+                if ($RwMove -eq 1) {
+                    Check ("V1: poizvedba entitet za trke se je preskakovala ({0} od {1} klicev)" -f $rwMoveStevci.preskocenih, $rwMoveStevci.klicev) ($rwMoveStevci.preskocenih -gt 0)
+                }
+                if ($RwMove -eq 2) {
+                    # V2 ne zahteva kandidatov: v idle celici poizvedba originala ne najde nikogar
+                    # (NPC-ji stojijo 1 blok narazen, kvader +0,25 se ne dotakne soseda), strosek pa je
+                    # sama poizvedba. Zahteva se, da so vrata tekla; kandidate steje V3.
+                    Check ("V2: vrata so tekla ({0} klicev, {1} primerjav)" -f $rwMoveStevci.klicev, $rwMoveStevci.primerjav) ($rwMoveStevci.klicev -gt 0)
+                    Check ("V3: nihce ni prispeval trkalne skatle ({0} neujemanj)" -f $rwMoveStevci.neujemanj) ($rwMoveStevci.neujemanj -eq 0)
                 }
             }
         }
@@ -1171,6 +1216,19 @@ try {
             $odtis['rwpath'] = $RwPath
             if ($null -ne $rwPathStevci) {
                 foreach ($k in @('klicev', 'ocen', 'izracunov', 'primerjav', 'neujemanj')) { $vel['rwpath.' + $k] = $rwPathStevci[$k] }
+            }
+        }
+        if ($RwMove -ge 0) {
+            $odtis['rwmove'] = $RwMove
+            if ($null -ne $rwMoveStevci) {
+                foreach ($k in @('klicev', 'preskocenih', 'primerjav', 'neujemanj', 'prispevajocih')) { $vel['rwmove.' + $k] = $rwMoveStevci[$k] }
+                if (($null -ne $dump) -and ($dump.ticks -gt 0)) {
+                    $vel['rwmove.klicevNaTick'] = [math]::Round($rwMoveStevci.klicev / [double]$dump.ticks, 1)
+                    $vel['rwmove.preskocenihNaTick'] = [math]::Round($rwMoveStevci.preskocenih / [double]$dump.ticks, 1)
+                }
+                if ($rwMoveStevci.klicev -gt 0) {
+                    $vel['rwmove.delezPreskokov'] = [math]::Round(100.0 * $rwMoveStevci.preskocenih / [double]$rwMoveStevci.klicev, 2)
+                }
             }
         }
         if ($RwData -ge 0) {
