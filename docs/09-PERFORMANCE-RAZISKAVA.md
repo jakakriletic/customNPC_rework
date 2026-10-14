@@ -135,6 +135,8 @@ ne menjav vezave teksture — te reši K13. Učinek ima le na pomnilnik pri HD/U
 proračun), ne ločljivosti teksture. Če harness K0 pokaže drugače (npr. HD skini 512+ na šibki GPU), se
 vprašanje odpre znova.
 
+**Dopolnitev 14. 10. 2026 (D-034):** impostor iz K5 je preseljen v modul **M5-V** (vidnost NPC-jev do 24 chunkov). Mipmapi so tam del impostor atlasa zaradi **kakovosti** (brez migetanja), ne FPS — zgornji sklep ostane. Domet vidnosti veže strežniški sledilnik (`tracker(64, 3, true)`), ne klient. [Raziskava M5-V.0](raziskave/M5-V.0-daljna-vidnost.md).
+
 Zunanji modi pokrijejo del klienta brez spremembe CNPC: meldexun Entity Culling (GL 4.3 occlusion queries, kompatibilen z OptiFine G5, „ogromne izboljšave“ pri ~200 entitetah, brez številk) ([CurseForge](https://www.curseforge.com/minecraft/mc-mods/entity-culling)) in Entity Distance za razdaljo po tipu ([CurseForge](https://www.curseforge.com/minecraft/mc-mods/entity-distance-1-12-2)). Za pravilno okluzijo morajo veliki NPC-ji imeti pravilno velik render bounding box **[H]**. Z OptiFine senčilniki se entitete lahko rišejo še v senčni prehod, kar podvoji strošek ([shaders.properties](https://shaders.properties/current/reference/shadersproperties/ordering/)).
 
 ## Brez klientskega harnessa in profila nobena izboljšava ni sprejemljiva

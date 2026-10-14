@@ -417,6 +417,12 @@ M7 jo uporabi za animacije.
 > side in client side optimizacijo"* — R5 zajema **strežnik** (MSPT/TPS, M5-S) **in klient** (čas
 > sličice, FPS, M5-K). Do takrat je bil klient le neizvedena merilna točka M2.4r in izbirna veja.
 
+> **Razširitev obsega (14. 10. 2026, D-034):** *"nakonc client side performenca bos pa dodal se tale modul
+> za nujno implementacijo: … vidim npcje sele pr nvm 8ih chunkih … da bi se npcje videlo tudi na 24
+> chunkov daleč, samo pač bi bila textura sm par pixlov. S tem bi lahka se ful bl na dalc vidl pa neb
+> impactal performance"* — R5 zajema tudi **vidnost NPC-jev na daljavo** (modul **M5-V**, na koncu M5-K).
+> Glej razdelek »Vidnost na daljavo« spodaj.
+
 **Faza:** M5 · **Velikost:** velika · **Tveganje:** visoko (tiho spreminjanje obnašanja)
 
 ### Kaj kaže koda
@@ -485,6 +491,34 @@ sledenje poti (`pathFollow` → `isDirectPathBetweenPoints`, ~1.110 branj blokov
 5. **Alokacijska higiena** (M5.4): `StringBuilder`, lazy writerji, zgodnji izhodi pri praznih
    zbirkah (`DataTimers.update()` iz `PLAN_IMPLEMENTACIJE.md`).
 6. **Šele nato** dražje stvari: cache poti, prostorski indeks, LOD.
+
+### Vidnost na daljavo (M5-V, D-034, 14. 10. 2026)
+
+Raziskava: [`raziskave/M5-V.0-daljna-vidnost.md`](raziskave/M5-V.0-daljna-vidnost.md).
+
+**Kaj kaže koda [K]:**
+- NPC razredi so registrirani s `tracker(64, 3, true)` (`CustomEntities.java:62-75`); strežnik NPC-ja
+  pošlje samo, ko je |dx| ≤ 64 in |dz| ≤ 64 (`EntityTrackerEntry.isVisibleTo`). To je **4 chunke v vsako
+  smer** (8 chunkov premera) — uporabnikovih "8 chunkov".
+- Klient riše do `povprečni rob AABB × 64 × clamp(RD/8, 1, 2.5)` (`Entity.isInRangeToRenderDist`,
+  `RenderGlobal.java:903`): privzeti NPC 64–160 blokov, NPC brez hitboxa (širina `1.0E-5`) samo 38–96.
+- Entitetne teksture nimajo mipmapov in so `GL_NEAREST` (`TextureUtil.setTextureBlurMipmap`) →
+  oddaljen NPC migeta.
+- V enem igralcu so NPC-ji do RD naloženi in tickajo (`IntegratedServer` nastavi `viewDistance = RD`);
+  na dediciranem strežniku je meja `view-distance`.
+
+**Kaj mora nastati:**
+- NPC viden do **min(24 chunkov, naloženi chunki)** kot nekaj pikslov velik **impostor** (slika NPC-ja
+  iz 8 smeri, atlas z mipmapi — "slabša tekstura z razdaljo").
+- Brez dviga dometa vanilla sledilnika: oddaljeni NPC-ji gredo na klient po lastnem kanalu kot lahki
+  nadomestki, videz enkrat na videz; vsi oddaljeni NPC-ji v enem klicu izrisa.
+- Isti impostor za sledene NPC-je onkraj ~56 blokov (manj klicev na sličico).
+- Brez spremembe AI, frekvence ticka ali vanilla sledilnika; nevidni NPC-ji se nikoli ne pošljejo;
+  opis videza brez imena in naslova.
+- Stikala; videz se spremeni → privzeto original (D-007), dokler ne odloči Q23.
+
+**Kaj je treba še preveriti:** cena variante A proti B (M5-V.1), OptiFine/senčilniki (M5-V.7), ali je
+cilj en igralec ali dedicirani strežnik (Q24).
 
 ### Izrecno prepovedano brez ločenega projekta
 
