@@ -12,7 +12,7 @@
 | Zadnja posodobitev | **2026-10-14** (seja 88: **Q26 → D-035**, `RwFarLos` privzeto 0). Prej seja 87: odgovori na **Q23–Q25 → D-035** — M5-V po sprejemu privzeto vklopljen, cilj dedicirani strežnik (`view-distance=24` = 5,4× več tickajočih chunkov, izmeri M5-V.1), vrstni red M5-K.0 → M5-K.1 → K5 → M5-V → K12; novo Q26 (`RwFarLos`). Prej seja 86: **M5-V.0** — raziskava vidnosti NPC-jev na daljavo po zahtevi uporabnika: NPC-ji so vidni samo do ±64 blokov, ker jih strežnik dlje ne pošlje (`tracker(64, 3, true)`); izbrana varianta B (nadomestki po kanalu `rwfar` + impostorji z mipmapi v enem klicu), nov obvezen modul **M5-V** na koncu M5-K (D-034), Q23–Q25; [raziskava](raziskave/M5-V.0-daljna-vidnost.md). Prej seja 85: **M5.16 zaključen** — prvi pravi poseg v vanilla bajtkodo: `World.getCollisionBoxes` preskoči poizvedbo entitet za trke, kadar v svetu nihče ne more prispevati trkalne škatle; enakost **945.162 primerjav / 0 neujemanj** v boju in po kodi (v vanilli prispevata samo `EntityBoat`/`EntityMinecart` in `EntityShulker`), idle-500 (5 + 5 ponovitev, **ločeni razponi**) MSPT povp 2,787 → **2,540 ms (−8,9 %)**, p95 4,194 → **3,867**, µs/NPC 5,47 → 4,98, 100 % klicev preskočenih; boj-500 brez regresije; 15 novih testov (4 nad pravimi bajti `net.minecraft.world.World`), dimni test M0.5 **20/20** (tudi s stikalom na 1), `verify-package` PASS → **`RwMoveBoxes` privzeto 1** (D-032). Produkcijski zagon ostane neprever­jen → Q22 postane najbolj nujno. Prej seja 84: **M5.15 zaključen** — infrastruktura vanilla posegov: lasten coremod v CNPC jarju (`rework/core`), manifest `FMLCorePlugin` + `FMLCorePluginContainsFMLMod`, `verify-package` razliko manifesta preveri vnos za vnosom; dimni test M0.5 18/18 zelenih, coremod naložen, transformer brez posega; zagon na pravem Forge strežniku ni preverjen → Q22. Prej seje 79-83. **Seja 83: M5.14/S16** — senčna polja CNPC ključev `EntityDataManager`: enakost **0 neujemanj / 52,0 M primerjav**, idle-500 MSPT **3,02 → 2,86 ms (−5,3 %)**, p95 4,59 → 4,33 → **privzeto 1** (D-032). **Seja 82: M5.17/S14c** — pomnjenje tipa vozlišča med celim iskanjem poti: enakost **0 neujemanj / 239,5 M primerjav**, 184,0 → **144,9 µs** na iskanje, `nedosegljiva`-500 MSPT **17,96 → 15,25 ms (−15 %)**, `boj`-500 nevtralen → **privzeto 1** (D-032). **Seja 81: M5.6/S5** — negativni predpomnilnik iskanja poti: v prizorišču nedosegljive tarče MSPT **17,85 → 14,46 ms (−19 %)**, alokacija 292 → 135 MB/s, a **ni enakovreden originalu** (59 % preskokov bi original odgovoril drugače) → privzeto 0 in **Q21**; nov kandidat brez spremembe obnašanja: M5.17 (S14c). **Seja 80: M5.9 zaključen** — scenarij nedosegljive tarče (varianta `nedosegljiva`, pas ograje: tarča vidna, brez poti) in instrumentacija iskanja poti: iskanje je **2,45 % ticka pri boju proti 51,18 % pri nedosegljivi tarči**, eno iskanje 3,5 proti **180,5 µs** (vanilla A* porabi ves proračun 200 vozlišč), MSPT 9,23 → **17,73 ms**, alokacija 91 → 293 MB/s → **M5.2, M5.6 in S5 dobijo podlago**. Prej seja 79: **M5.13 zaključen** — S7, prejemniki utripa oči po `world.playerEntities`: iskanje 55,42 → **0,12 µs**, idle-500 celi zagoni MSPT povp 2,824 → **2,570 ms**, p95 4,325 → **3,932**, p99 4,719 → 4,325 — vse nad šumom; enakost 0 neujemanj (4.327 primerjav v svetu, 200.000 leg v testu); `RwBlinkRecipients` privzeto 1 (D-032). Ob tem odpravljena blokada scenarijev: **prvi ukaz po zagonu serverja se je izgubljal** (gradlov posredovalnik vhoda), zdaj se vhod ogreje z `list` — Q18, Q19, Q20 odprta. Prej seja 78: **M5.12 zaključen** — S4, `onCollide` brez opazovalca preskoči poizvedbo: idle-500 p95 5,24 → **3,93 ms**, p99 6,16 → **4,13**, povp 3,53 → 3,02 (v šumu A); enakost po kodi + test + poslušalec v svetu (K2/K3); `RwCollideSkip` privzeto 1 (D-032). Prej seja 77: Q17 → **D-032**, optimizacija z dokazano enakim izidom in izmerjeno koristjo je privzeto vklopljena, `RwPathFollowCache` privzeto 1. **M5.11 zaključen** — S14b, pomnjenje tipa vozlišča v sledenju poti: boj-500 MSPT povp **8,73 → 5,88 ms (−33 %)**, p95 9,96 → 7,21, alokacija 89 → 58 MB/s, enakost 0 / 1,25 M primerjav; S14 v istem boju v šumu in odstranjen; stikalo `RwPathFollowCache` preštevilčeno (1 = S14b), privzeto 1 (D-032). Prej seja 76: **M5.10 zaključen** — neposredno izmerjeno: `pathFollow` je v boju-500 **47,7–53,6 %** ticka (prag 25 % za M5.11 presežen); na `pathFollow` vedno 0 ali 1 kandidat; šum boja je v delu na klic, ne v številu klicev. Prej seja 75: **M5.0 zaključen** — raziskava preostanka M5: boj je edina celica brez napredka, njegov strošek je ocena tipa vozlišča v vanilla sledenju poti (~1.110 branj na klic, model se ujema), lock in iskanje poti nista ozko grlo; plan M5 prepisan (D-030), Q16. Prej seja 74: **D-029** — vsak milestone se začne z raziskavo izvedbe M?.0, plan ni dogma; M5-S S14 v kodi, enakost dokazana 0/616.276, A/B nedokazan. Prej seja 73: **M5-S P1 profil JFR** — boj-500: 48 % CPU strežniške niti v vanilla `pathFollow` → `isDirectPathBetweenPoints` (27 % hash iskanje chunka), iskanje poti 2 %; idle: `Entity.move` 29 %, `onCollide` 12 %, utrip oči 6 %; nov kandidat S14, vrstni red S14 → S4 → S7. Prej seja 72: odločitvi Q13 → D-027, `RwTargetPrefilter` privzeto 2; Q15 → D-028, nosilec z NPC posadko sprejme potisk. Prej seja 71: **M5-S S2 zaključen** — poizvedba iskalnika tarč samo po igralcih, `RwTargetPrefilter=2`: idle-500 p95 10,2 → 5,2 ms, boj nevtralen) |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; znana omejitev: zadnji prihod na skupni cilj 2–6 s kasneje. Izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Trenutni milestone | **M3 — jedro entitete**: M3.1–M3.5 zaključeni (**M3.5 zaključen 24. 9.:** E9 v svetu — način 0 po sestopu 1,463, način 1 1,900). **M3.6 preusmerjen in v kodi 24. 9.:** premisa o mutex bitih ovržena (D-020), popravljena je prioriteta napada pred tavanjem pod stikalom `RwAttackPriority`. **M3.6 zaključen 5. 10.:** način 1 zelen (tavajoči v dosegu 10/10 vzorcev z zakasnitvijo 10 = kontrola), način 0 napako ponovi (združeno 6/8 nad kontrolo, mediana 25), hipoteza P2 (`aggroRange`) potrjena. M3.7 in M3.8 zaključena 5. 10. R1 popravljen pod stikalom `RwMountSteering=1` (M3.3). M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | **M5.8** (kapaciteta proti baselineu, v teku 14. 10.), nato **M5-K.0** (harness klienta M2.4r) in **M5-K.1** (baseline in profil klienta) — od **D-033** (14. 10.) je klientska optimizacija obvezen del M5; na koncu M5-K obvezen modul **M5-V** (vidnost NPC-jev do 24 chunkov, D-034); po Q25 (D-035) vrstni red **M5-K.0 → M5-K.1 → K5 → M5-V.1 … M5-V.8 → K12** → ostali K-paketi; **M5.2** po odgovoru na Q21; pred izdajo **Q22** (pravi Forge strežnik: od M5.16 jar privzeto spreminja vanilla bajtkodo, pot v produkciji je preverjena samo statično); **M4.0** (raziskava M4) je lahko vmes; vrstni red v `03-FAZE.md` (D-030), [raziskava M5.0](raziskave/M5.0-preostanek-performance.md), [M5.11](meritve/2026-10-09-M5.11-pomnjenje-tipa-vozlisca.md). Q17 odločeno → D-032. **M4.0** je lahko vmes (raziskava, brez merjenja). Vzporedno: M3.8b GUI v klientu (z igralcem). Odprto: PR `codex/m7-cnpc-integration` → `main` |
+| Naslednji paketi | **M5.8** (kapaciteta proti baselineu — **delno, ustavljeno 14. 10. na zahtevo uporabnika**; idle lestvici O in S narejeni, ostalo v dnevniku seje 89), nato **M5-K.0** (harness klienta M2.4r) in **M5-K.1** (baseline in profil klienta) — od **D-033** (14. 10.) je klientska optimizacija obvezen del M5; na koncu M5-K obvezen modul **M5-V** (vidnost NPC-jev do 24 chunkov, D-034); po Q25 (D-035) vrstni red **M5-K.0 → M5-K.1 → K5 → M5-V.1 … M5-V.8 → K12** → ostali K-paketi; **M5.2** po odgovoru na Q21; pred izdajo **Q22** (pravi Forge strežnik: od M5.16 jar privzeto spreminja vanilla bajtkodo, pot v produkciji je preverjena samo statično); **M4.0** (raziskava M4) je lahko vmes; vrstni red v `03-FAZE.md` (D-030), [raziskava M5.0](raziskave/M5.0-preostanek-performance.md), [M5.11](meritve/2026-10-09-M5.11-pomnjenje-tipa-vozlisca.md). Q17 odločeno → D-032. **M4.0** je lahko vmes (raziskava, brez merjenja). Vzporedno: M3.8b GUI v klientu (z igralcem). Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Prevedljivih razredov | **137** datotek `.java` v `src/patch` (14. 10.), od tega **77** v `noppes/npcs/rework/…` (`ai` 5, `core` 9, `data` 5, `diag` 15, `entity` 13, `formation` 15, `nav` 12, `net` 3) in 3 dostopni razredi v `net/minecraft/…`; `verify-package`: **66** vnosov (65 razredov originala + manifest coremoda). (Števci so prešteti 14. 10.; prejšnja vrstica je navajala 128/48, kar se z nobenim štetjem ne ujema) |
 | Testi | **274 JUnit** v 41 datotekah + **35 primerjalnih testov originala** (naloga `:testOriginal` proti nespremenjenemu binarju); vsi zeleni 14. 10. Dodatno **20** preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.ponovitve-samotest.ps1`, M2.5c, zelene 18. 9. v oblačnem PowerShellu). (Vrstica je bila do 10. 10. zastarela — navajala je stanje iz 21. 9.) |
 | Odprti pojavi | **nobenega blokirnega.** P1 je 21. 9. **ovržen** z meritvijo: faza D je začela natanko na z = −16,0 in leteči NPC-ji so se premikali že v prvem vzorcu (`gib = 0,1183`, prevozili 15,93). Hipoteza `pathFollow` 0,45 proti `FlyingMoveHelper` 0,5 je padla. Ostane **R-P1b**: stara zmrznitev je zahtevala postavitev izven mreže **in** 40 tickov mirovanja pred `navigateTo`; recept je zapisan, poskus (faza E) se požene šele, če ga M4 potrebuje |
@@ -80,6 +80,63 @@
 ---
 
 ## Dnevnik sej
+
+### 2026-10-14 (89) — M5.8: kapaciteta, idle lestvici (delno, ustavljeno)
+
+**Paket:** M5.8 · **Stanje:** **delno** — ustavljeno na zahtevo uporabnika (»ok ustavi to nimam zdj
+tega cajta«); nič ni pokvarjeno, nadaljuje se po isti zasnovi.
+
+**Narejeno:**
+- **Zasnova** [scenariji/M5.8-kapaciteta.md](scenariji/M5.8-kapaciteta.md): O = vsa stikala 0 (izrecno
+  poslana, ne po predpostavki o configu), S = vsa po D-032 privzeto vklopljena
+  (`-RwTarget 2 -RwPath 1 -RwPathMemo 1 -RwCollide 1 -RwBlink 1 -RwData 1 -RwMove 1`); lestvica s
+  kratkimi celicami (60 + 120 s, ena ponovitev) samo obkroži prag, številko da potrditev s polnim
+  oknom in tremi ponovitvami. Merila K1–K5.
+- **`perf-run.ps1` do 8000 NPC-jev** (commit 428ce18). Stara meja 1000 je imela razlago »mreža bi
+  segla čez prostor scenarija«, ki ne drži (ovire testnega sveta so pri x ≤ 20, mreža pri x 48..72
+  raste v +z). Popravljeno, kar bi pri velikem N tiho merilo drugo: pas čiščenja čez cel obseg celice,
+  umiritev po spawnu 3 + N/250 s, merilo S1 kot invarianta (v idle ni iskanja poti, zato je prej
+  padlo v vsaki idle celici). Gostota mreže nespremenjena.
+- **Lestvici idle** (kratke celice, P1–P9 zelena v vseh, vsi NPC-ji tikajo vsak tick):
+
+| N | O p95 (ms) | O p99 | O alok. MB/s | | N | S p95 (ms) | S p99 | S alok. MB/s |
+|---:|---:|---:|---:|---|---:|---:|---:|---:|
+| 250 | 10,22 | 11,01 | 77 | | 1000 | 5,24 | 6,42 | 36 |
+| 300 | 14,68 | 15,99 | 113 | | 1500 | 9,18 | 10,49 | 55 |
+| 350 | **20,97** | 22,54 | 159 | | 2000 | 12,32 | 14,16 | 73 |
+| 400 | **29,88** | 31,98 | 215 | | 2500 | 16,78 | 18,87 | 90 |
+| 500 | **48,23** | 52,43 | 341 | | 3000 | 19,92 | 20,97 | 113 |
+| 600 | **71,30** | 75,50 | 471 | | 3500 | **23,59** | 25,17 | 131 |
+| | | | | | 4000 | **25,17** | 27,26 | 150 |
+
+  **Obkroženo (K2):** O ≤ 25 ms med **350 in 400**, ≤ 50 ms med **500 in 600**; S ≤ 25 ms med
+  **3500 in 4000** (4000 nad mejo le za 0,17 ms — potrditev lahko prag premakne). **~10× več stoječih
+  NPC-jev pri istem p95.** O-500 iz lestvice (48,2) se ujema z baselineom M2.6 (44,0; 43,0–45,1) v
+  okviru krajšega okna.
+- S-idle 5000: spawn in prisilno nalaganje uspešna (P2: npc = 5000, 60 chunkov, 0 zavrnjenih),
+  meritev prekinjena pred koncem → **številke ni**.
+
+**Ni narejeno (za nadaljevanje):**
+- S-idle **5000–8000** (prag 50 ms za S je nad 4000).
+- **boj in nedosegljiva** za O in S — po dogovoru s sejo »Nadaljuj development« [202625] jih poganja
+  ona (S-boj 1000–3500, O-boj 1000–3000, S-ned 500–1400, O-ned 400–1200; zaganjalnik
+  `m58-lestvica.ps1` v njenem scratchpadu, izid v `audit/m24-perf-*` in `audit/m58-*`); ob ustavitvi
+  še ni bila pognana nobena celica.
+- `-Razprseno` za idle na pragu.
+- **Potrditve pragov** (polno okno, tri ponovitve) in zapis `meritve/…-M5.8-kapaciteta.md`.
+
+**Ugotovitve:**
+- Razpršitev **polja** v PowerShellu stikala prenese pozicijsko (`@S` z `-RwTarget`… je pristalo na
+  `ChunkRadius`); za stikala `perf-run` iz drugega ukaza je treba razpršiti **razpredelnico**.
+- Dve seji na isti veji sta hkrati prevzeli M5.8; zaklep `.scenarij.lock` je preprečil prekrivanje
+  zagonov, delo pa je bilo usklajeno s sporočili (delitev zgoraj).
+
+**Spremembe obnašanja:** nobene. **Meritve:** zgornji lestvici (kratke celice, ne rezultat paketa).
+
+**Naslednja seja:** nadaljuj M5.8 po [zasnovi](scenariji/M5.8-kapaciteta.md): S-idle 5000–8000,
+boj/nedosegljiva (O in S), nato potrditve s tremi ponovitvami.
+
+---
 
 ### 2026-10-14 (88) — odgovor Q26 (M5-V)
 
