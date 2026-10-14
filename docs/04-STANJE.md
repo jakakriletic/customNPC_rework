@@ -120,8 +120,8 @@ tega cajta«); nič ni pokvarjeno, nadaljuje se po isti zasnovi.
 - S-idle **5000–8000** (prag 50 ms za S je nad 4000).
 - **boj in nedosegljiva** za O in S — po dogovoru s sejo »Nadaljuj development« [202625] jih poganja
   ona (S-boj 1000–3500, O-boj 1000–3000, S-ned 500–1400, O-ned 400–1200; zaganjalnik
-  `m58-lestvica.ps1` v njenem scratchpadu, izid v `audit/m24-perf-*` in `audit/m58-*`); ob ustavitvi
-  še ni bila pognana nobena celica.
+  `audit/m58-lestvica.ps1`, **ni komitiran**, požene se brez parametrov, poti so absolutne; izid v
+  `audit/m24-perf-*` in `audit/m58-*`) — **ni pognano, zaganjalnik pripravljen**.
 - `-Razprseno` za idle na pragu.
 - **Potrditve pragov** (polno okno, tri ponovitve) in zapis `meritve/…-M5.8-kapaciteta.md`.
 
