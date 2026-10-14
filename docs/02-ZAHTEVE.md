@@ -420,7 +420,7 @@ M7 jo uporabi za animacije.
 > **Razširitev obsega (14. 10. 2026, D-034):** *"nakonc client side performenca bos pa dodal se tale modul
 > za nujno implementacijo: … vidim npcje sele pr nvm 8ih chunkih … da bi se npcje videlo tudi na 24
 > chunkov daleč, samo pač bi bila textura sm par pixlov. S tem bi lahka se ful bl na dalc vidl pa neb
-> impactal performance"* — R5 zajema tudi **vidnost NPC-jev na daljavo** (modul **M5-V**, na koncu M5-K).
+> impactal performance"* — R5 zajema tudi **vidnost NPC-jev na daljavo** (modul **M5-V**, po Q25 takoj za M5-K.1 in K5 — D-035).
 > Glej razdelek »Vidnost na daljavo« spodaj.
 
 **Faza:** M5 · **Velikost:** velika · **Tveganje:** visoko (tiho spreminjanje obnašanja)
@@ -515,10 +515,13 @@ Raziskava: [`raziskave/M5-V.0-daljna-vidnost.md`](raziskave/M5-V.0-daljna-vidnos
 - Isti impostor za sledene NPC-je onkraj ~56 blokov (manj klicev na sličico).
 - Brez spremembe AI, frekvence ticka ali vanilla sledilnika; nevidni NPC-ji se nikoli ne pošljejo;
   opis videza brez imena in naslova.
-- Stikala; videz se spremeni → privzeto original (D-007), dokler ne odloči Q23.
+- Stikala; do sprejema (M5-V.8) privzeto 0, po sprejemu **privzeto vklopljeno** (Q23 → D-035).
+- Cilj je **dedicirani strežnik** (Q24 → D-035): doseg `(view-distance − 1) · 16`; za 24 chunkov
+  `view-distance=24`, kar v 1.12 pomeni 5,4× več tickajočih chunkov na igralca kot pri 10 (vanilla cena,
+  izmeri jo M5-V.1).
 
-**Kaj je treba še preveriti:** cena variante A proti B (M5-V.1), OptiFine/senčilniki (M5-V.7), ali je
-cilj en igralec ali dedicirani strežnik (Q24).
+**Kaj je treba še preveriti:** cena variante A proti B (M5-V.1), OptiFine/senčilniki (M5-V.7), vanilla cena
+`view-distance` 24 proti 10 na dediciranem strežniku (M5-V.1), preverba vidnosti `RwFarLos` (Q26).
 
 ### Izrecno prepovedano brez ločenega projekta
 

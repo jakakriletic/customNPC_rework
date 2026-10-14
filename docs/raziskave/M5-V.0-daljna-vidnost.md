@@ -216,7 +216,7 @@ Histereza na vsaki meji (npr. ±4 bloke), da NPC na meji ne utripa med stopnjama
   ki jih je ta igralec dejansko prejel (omejitev hitrosti, zaščita pred zlorabo).
 - **Zasebnost [H]**: brez imena/naslova oddaljeni NPC ne razkrije zgodbe. Pozicije pa so vidne do
   `view-distance` (enako kot vanilla znotraj sledilnika, le dlje) — na PvP strežniku je to "radar".
-  Stikalo `RwFarLos` (raytrace vidnosti kot Render Distant Players) je kasnejša možnost → Q23.
+  Stikalo `RwFarLos` (raytrace vidnosti kot Render Distant Players) je kasnejša možnost → Q26.
 
 ### 5.3 Klient — nadomestki in šiv s sledilnikom
 
@@ -283,7 +283,8 @@ Histereza na vsaki meji (npr. ±4 bloke), da NPC na meji ne utripa med stopnjama
 
 ### 5.7 Stikala in privzete vrednosti
 
-Videz se spremeni → D-007: privzeto original, dokler uporabnik ne odloči drugače (**Q23**).
+Videz se spremeni → D-007: privzeto original, dokler uporabnik ne odloči drugače. **Odločeno 14. 10. (Q23 → D-035):**
+stolpec "privzeto" velja do sprejema M5-V.8; po sprejemu sta strežnik `RwFarView=1` in klient `RwFarView=2`.
 
 | Stikalo | Stran | Vrednosti | Privzeto |
 |---|---|---|---|
@@ -345,7 +346,7 @@ Primerjava z varianto A (M5-V.1) mora pokazati, da je B pri istem N cenejša na 
 | K13 skini v nizu | ohrani, **ni pogoj za M5-V** | impostor atlas je lasten; K13 ostane pogoj za K10 |
 | K10 instancing | ohrani, a **vrednost pade** | če so NPC-ji onkraj ~56 blokov impostorji, ostane za instancing le gneča blizu; po M5-V.8 ponovno oceniti |
 | K11 redkejši klientski tick | ohrani | nadomestki nimajo klientskega ticka; K11 velja samo za sledene |
-| **M5-V** | **dodaj** (D-034) | zahteva uporabnika; ločen modul na koncu M5-K |
+| **M5-V** | **dodaj** (D-034) | zahteva uporabnika; ločen modul, po Q25 (D-035) takoj za M5-K.1 in K5 |
 
 Premisa, ki jo ta raziskava popravi: v planu je bil impostor **samo FPS ukrep** za NPC-je, ki jih klient
 že pozna. Uporabnikov problem je **domet**, in ta je strežniški (§1). Brez kanala `rwfar` impostor
@@ -367,13 +368,39 @@ uporabniku ne bi pokazal niti enega NPC-ja več.
 | **M5-V.7** | **Združljivost**: OptiFine (brez in s senčilniki, senčni prehod), Entity Culling, `customNPC_entities_mod`, morph, veliki, jahajoči, mrtvi, pol-vidni, URL skini | matrika z izidom vsake celice; vsaka nekompatibilnost ima samodejni izklop ali stikalo | M |
 | **M5-V.8** | **Sprejem**: A/B vseh celic M5-V.1 z `RwFarView` 0/1/2 (3 ponovitve, D-016), vizualni posnetki pri 64/128/256/368 blokih, zapis v `docs/meritve/` | cilji iz §6 izpolnjeni; odločitev o privzeti vrednosti po Q23 | S |
 
-Vrstni red: **M5-V.1 → V.2 → V.3 → V.4 → V.5 → V.6 → V.7 → V.8**. V.2–V.3 (strežnik) in V.4 (peka) sta
+Vrstni red: **M5-V.1 → V.2 → V.3 → V.4 → V.5 → V.6 → V.7 → V.8**, v M5 takoj za M5-K.1 in K5 (Q25 → D-035). V.2–V.3 (strežnik) in V.4 (peka) sta
 neodvisna in se lahko zamenjata; V.5 potrebuje oboje. V.6 lahko gre takoj za V.4, če M5-K.1 pokaže, da je
 klient pri 200–500 vidnih ozko grlo.
 
 ---
 
 ## 10. Odprta vprašanja (prenesena v `04-STANJE.md`)
+
+### Odgovori uporabnika 14. 10. 2026 (→ D-035)
+
+- **Q23: da** — po sprejemu (M5-V.8) privzeto vklopljeno: strežnik `RwFarView=1`, klient `RwFarView=2`.
+  Drugi del vprašanja (pozicije brez preverbe vidnosti) v chatu ni bil zastavljen → ločeno kot **Q26**.
+- **Q24: strežnik** — cilj je dedicirani strežnik. Posledice:
+  1. Za 24 chunkov mora operater nastaviti `view-distance=24`. Minecraft 1.12 nima ločene razdalje
+     simulacije (prišla v 1.18): vsak naložen chunk tika, pri 24 je to 49² = 2.401 chunkov na igralca proti
+     441 pri 10 (**5,4×**), z vsemi entitetami in polnim AI NPC-jev **[K/izračun]**. To je vanilla cena,
+     M5-V je ne more odpraviti — "uspavanje oddaljenih NPC-jev" je v R5 izrecno prepovedano. Edina pot mimo
+     bi bila ločena razdalja pošiljanja in simulacije (vzor 1.18), ki je ločen projekt.
+  2. M5-V.1 meri na **dediciranem strežniku s priključenim klientom**, pri `view-distance` 10 in 24, da je
+     vanilla cena razdalje ločena od cene M5-V.
+  3. Cena na igralca (kadenca, delta, omrežje) je linearna v številu igralcev **[H]**; dev okolje ima en
+     klient, zato se več igralcev oceni iz meritve enega (omejitev, zapisana v M5-V.8).
+  4. Varianta C ostane zavržena: na strežniku z manjšim `view-distance` klient onkraj nima terena.
+  5. Q22 (pravi Forge strežnik) postane pogoj za izdajo tudi za M5-V; poseg v `RenderGlobal` je klientski
+     in potrebuje preverbo imen SRG še na pravem klientu.
+- **Q25: po priporočilu** — vrstni red M5: M5-K.0 → M5-K.1 → K5 → **M5-V.1 … M5-V.8** → K12 → ostali
+  K-paketi; K13 in K10 se po M5-V.8 ponovno ocenita.
+- **Q26 (novo, odprto)** — `RwFarLos`: na strežniku nadomestki razkrijejo pozicije NPC-jev do
+  `view-distance` tudi za zidovi (imena in naslovi nikoli). Naj ostane privzeto 0 (brez raytracea, najcenejše)
+  ali naj strežnik privzeto pošilja samo NPC-je v vidni črti? Priporočilo: 0 — NPC-ji niso igralci, vanilla
+  znotraj 64 blokov prav tako pošilja vse; operater lahko vklopi.
+
+### Prvotna vprašanja
 
 - **Q23** — Privzeta vrednost: naj bo daljna vidnost po sprejemu (M5-V.8) **privzeto vklopljena**
   (`RwFarView` 1 na strežniku, 2 na klientu)? Spremeni videz (D-007), zato odloči uporabnik. In: ali sme

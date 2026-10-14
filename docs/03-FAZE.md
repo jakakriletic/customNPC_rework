@@ -269,9 +269,9 @@ NPC-jev. Odprejo se šele, če po M4.10, M4.11 in M5.6 merila M2.7 še vedno pad
 | ~~M5.5~~ | Meritev po vsakem → ni paket, je pravilo (D-016) | — |
 | ~~M5.7~~ | Prostorski indeks → **zavrženo** (D-030, chunk sekcije so že indeks; drag je gostota mreže); render LOD → K5 v M5-K | — |
 
-Vrstni red M5-S: **~~M5.10~~ → ~~M5.11~~ → ~~M5.12~~ → ~~M5.13~~ → ~~M5.9~~ → ~~M5.6/S5~~ → ~~M5.17 (S14c)~~ → ~~M5.14 (S16)~~ → ~~M5.15~~ → ~~M5.16~~ → M5.8** → **M5-K.0 → M5-K.1 → K-paketi** (D-033) → **M5-V.1 … M5-V.8** (D-034, vidnost na daljavo; Q25 predlaga M5-V takoj po M5-K.1 in K5); M5.2 po odgovoru na Q21. Celica `nedosegljiva` gre v M5.8 (kapaciteta brez nje je optimistična).
+Vrstni red M5-S: **~~M5.10~~ → ~~M5.11~~ → ~~M5.12~~ → ~~M5.13~~ → ~~M5.9~~ → ~~M5.6/S5~~ → ~~M5.17 (S14c)~~ → ~~M5.14 (S16)~~ → ~~M5.15~~ → ~~M5.16~~ → M5.8** → **M5-K.0 → M5-K.1 → K5 → M5-V.1 … M5-V.8 → K12 → ostali K-paketi** (D-033, D-034, D-035; K13 in K10 se po M5-V.8 ponovno ocenita); M5.2 po odgovoru na Q21. Celica `nedosegljiva` gre v M5.8 (kapaciteta brez nje je optimistična).
 Sledenje poti brez branja blokov po vzoru 1.21.1 (S15, sprememba gibanja) ni v M5, ampak vhod za M4.13.
-M5-K (klient) je od D-033 obvezen del M5 in sledi takoj za M5.8 — glej razdelek **M5-K** spodaj. Na koncu M5-K je obvezen modul **M5-V** (vidnost NPC-jev do 24 chunkov z impostorji, D-034).
+M5-K (klient) je od D-033 obvezen del M5 in sledi takoj za M5.8 — glej razdelek **M5-K** spodaj. Obvezen modul **M5-V** (vidnost NPC-jev do 24 chunkov z impostorji, D-034) gre po Q25 (D-035) takoj za M5-K.1 in K5.
 Vanilla `Entity.move` (idle 26–29 %): Q16 odločeno → D-031 (lasten coremod v CNPC jarju), paketa M5.15 in M5.16.
 
 ### M5-K — klient (D-033)
@@ -295,8 +295,17 @@ meritvijo.
 ### M5-V — vidnost NPC-jev na daljavo, impostorji do 24 chunkov (D-034)
 
 Zahteva uporabnika 14. 10.: NPC-ji naj bodo vidni do **24 chunkov** kot nekaj pikslov velika slika, brez
-vpliva na performance; modul je **obvezen** in pride **na koncu M5-K**. Raziskava:
-[M5-V.0](raziskave/M5-V.0-daljna-vidnost.md).
+vpliva na performance; modul je **obvezen**. Raziskava: [M5-V.0](raziskave/M5-V.0-daljna-vidnost.md).
+
+**Odločitve uporabnika 14. 10. (Q23–Q25 → D-035):** po sprejemu (M5-V.8) **privzeto vklopljeno**
+(strežnik `RwFarView=1`, klient `RwFarView=2`); cilj je **dedicirani strežnik**; M5-V gre **takoj za
+M5-K.1 in K5**, pred K12, K13 in K10.
+
+**Posledica cilja "strežnik":** za 24 chunkov mora biti `view-distance=24`. Minecraft 1.12 nima ločene
+razdalje simulacije (prišla je v 1.18), zato vsak naložen chunk tudi tika — pri 24 je to 49² = 2.401 chunkov
+na igralca proti 441 pri 10 (**5,4×**), z vsemi entitetami in polnim AI NPC-jev. To je vanilla cena, ki je
+M5-V ne more odpraviti (uspavanje oddaljenih NPC-jev je v R5 prepovedano); M5-V.1 jo izmeri, da je odločitev
+operaterja informirana. Na strežniku z manjšim `view-distance` je doseg M5-V `(view-distance − 1) · 16`.
 
 Ključna ugotovitev raziskave: NPC-je danes vidiš do **±64 blokov (4 chunki v vsako smer)**, ker jih CNPC
 registrira s `tracker(64, 3, true)` in jih strežnik dlje **ne pošlje** **[K]**; klient bi jih pri RD ≥ 20
@@ -310,20 +319,22 @@ model tudi pri sledenih NPC-jih onkraj ~56 blokov (L2, FPS dobitek). Stopnje: L0
 
 | ID | Paket | Vel. |
 |---|---|---|
-| **M5-V.0** | **Raziskava (D-029)** | **zaključeno 14. 10.** — [zapis](raziskave/M5-V.0-daljna-vidnost.md); D-034, Q23–Q25 |
-| **M5-V.1** | **Odločilni poskus + prizorišče "daleč"**: svet z 1.000 / 5.000 NPC-ji v pasu do 384 blokov, igralec na vzpetini (razširitev harnessa M5-K.0); celici original (sledilnik 64) in varianta A (domet 368 prek preizkusnega stikala); MSPT z igralcem, bajti/s proti klientu, čas sličice in klientski tick, porazdelitev velikosti spawn NBT; merilo veljavnosti: vidnih NPC-jev je res N | M |
+| **M5-V.0** | **Raziskava (D-029)** | **zaključeno 14. 10.** — [zapis](raziskave/M5-V.0-daljna-vidnost.md); D-034; Q23–Q25 odločena → D-035; Q26 odprto |
+| **M5-V.1** | **Odločilni poskus + prizorišče "daleč"**: svet z 1.000 / 5.000 NPC-ji v pasu do 384 blokov, igralec na vzpetini (razširitev harnessa M5-K.0), na **dediciranem strežniku s priključenim klientom** (D-035); celice original (sledilnik 64) in varianta A (domet 368 prek preizkusnega stikala), obe pri `view-distance` **10 in 24** (vanilla cena razdalje, ločena od cene M5-V); MSPT z igralcem, bajti/s proti klientu, čas sličice in klientski tick, porazdelitev velikosti spawn NBT; merilo veljavnosti: vidnih NPC-jev je res N | M |
 | **M5-V.2** | **Strežnik**: register NPC-jev (`IWorldEventListener`, vzorec M5.16), krožna kadenca ~1 Hz na igralca, pas Chebyshev `(sledilnik − 8, min(RwFarRange, (vd−1)·16)]`, `isPlayerWatchingChunk`, nevidni (`display.visible == 1`) nikoli, delta posnetkov, format ~16 B na vnos, kanal `rwfar` + `HELLO` (samo klientom, ki zahtevajo), `/rwfar`; stikali `RwFarView`, `RwFarRange` (privzeto 0 / 384). JUnit: kodirnik, delta, pas | M |
 | **M5-V.3** | **Opis videza**: podmnožica spawn NBT **brez imena in naslova** (razred, display, oklep, orožje, `ModelData`, poza), 64-bit hash (kloni si ga delijo), LRU, invalidacija na poteh `UPDATE_NPC`, `REQ`/odgovor z omejitvijo hitrosti. JUnit: kloni isti hash, sprememba videza nov hash, ime ne vpliva | S |
 | **M5-V.4** | **Klient: peka impostorjev**: lažna entiteta iz opisa (precedens `GuiNpcMobSpawnerAdd`), FBO, 8 kotov, samodejni obrez, atlas 2048² z robovi, mipmapi z ohranjanjem pokritosti alfe, LRU, proračun 1 videz na sličico, samodejni izklop brez FBO. Primerjava pikslov impostor ↔ model pri 56 blokih | L |
 | **M5-V.5** | **Klient: nadomestki in izris L3**: shramba, interpolacija, šiv z živimi entitetami (isti `entityId`, 8 blokov prekrivanja), en `BufferBuilder` (`POSITION_TEX_COLOR_NORMAL_LMAP`), cilindrični billboard, izbira okvirja po kotu, lightmap, megla; poseg coremoda v `RenderGlobal.renderEntities` pred `"blockentities"` (prehod 0) z rezervo `RenderWorldLastEvent`; frustum, histereza. Merilo: NPC viden na ≥ 368 blokih pri RD 24 (SP), brez izginotja na meji 64 | M |
 | **M5-V.6** | **L2**: sledeni NPC-ji onkraj `RwImpostorStart` (privzeto 56) prek preklicljivega `RenderLivingEvent.Pre` (brez popravka CNPC rendererja); tudi NPC-ji brez hitboxa, ki danes izginejo na 38 blokih. Merilo: čas sličice pri 200/500 vidnih **nižji** od originala (A/B, D-016) | M |
 | **M5-V.7** | **Združljivost**: OptiFine brez/s senčilniki (senčni prehod), Entity Culling, `customNPC_entities_mod`, morph, veliki, jahajoči, mrtvi, pol-vidni NPC-ji, URL skini; vsaka nekompatibilnost ima samodejni izklop ali stikalo | M |
-| **M5-V.8** | **Sprejem**: A/B celic M5-V.1 z `RwFarView` 0/1/2, tri ponovitve, posnetki pri 64/128/256/368 blokih, zapis v `docs/meritve/`; privzeta vrednost po Q23 | S |
+| **M5-V.8** | **Sprejem**: A/B celic M5-V.1 z `RwFarView` 0/1/2, tri ponovitve, posnetki pri 64/128/256/368 blokih, zapis v `docs/meritve/`; ob uspehu **privzeto vklopljeno** (D-035: strežnik `RwFarView=1`, klient `RwFarView=2`) | S |
 
 Vrstni red M5-V: **V.1 → V.2 → V.3 → V.4 → V.5 → V.6 → V.7 → V.8**; V.2–V.3 (strežnik) in V.4 (peka) sta
-neodvisna. Vsa stikala spremenijo videz → privzeto original (D-007), dokler ne odloči Q23.
+neodvisna. Do sprejema (M5-V.8) so stikala privzeto 0; po sprejemu so **privzeto vklopljena** (Q23 → D-035,
+izjema od D-007 po odločitvi uporabnika). Obstoječi configi obdržijo svojo vrednost kot pri D-032; `dev/run`
+ostane 0, da baseline meri original.
 Pogoj, ki ga modul ne odpravi: NPC obstaja samo v naloženem chunku — v enem igralcu do RD, na dediciranem
-strežniku do `view-distance` (Q24).
+strežniku do `view-distance` (cilj po Q24 → D-035).
 
 **Izhodni kriterij:**
 - vsak sprejet paket ima A/B meritev, ki presega šum
@@ -332,7 +343,7 @@ strežniku do `view-distance` (Q24).
 - zapisano, koliko NPC-jev zdaj zmore isti stroj proti baselineu (M5.8)
 - **klient (D-033):** zapisano, kakšen je čas sličice (p95, 1 % low) pri 200 in 500 vidnih NPC-jih
   z originalom in z vsemi sprejetimi K-paketi; sprememba videza je izključno za stikalom
-- **vidnost na daljavo (D-034, M5-V):** NPC viden na ≥ 368 blokih pri RD 24 v enem igralcu; pri 5.000
+- **vidnost na daljavo (D-034, M5-V):** NPC viden na ≥ 368 blokih na **dediciranem strežniku** z `view-distance=24` in klientom z RD 24; pri 5.000
   oddaljenih NPC-jih dodatni čas sličice p95 ≤ 1,0 ms, strežnik MSPT p95 +≤ 0,1 ms na igralca, omrežje
   idle ≤ 1 KB/s in hoja ≤ 20 KB/s na igralca, VRAM ≤ 32 MB; brez utripanja na mejah stopenj
 
