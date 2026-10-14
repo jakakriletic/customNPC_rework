@@ -174,6 +174,20 @@ $znaneVariante = @('idle', 'boj', 'skripte', 'nedosegljiva')
 # -Razprseno: skupina po 5 NPC-jev na ukaz, ukazi ~7 tickov narazen. 7 je tuje 10, zato
 # zaporedni ukazi padejo v vse faze 'ticksExisted % 10' (EntityNPCInterface.java:358).
 $razKos   = 5
+
+# M5.8 (14. 10.): zgornja meja N. Do takrat je bila 1000 z razlago "mreza bi segla cez prostor
+# scenarija"; ta ne drzi. Vse ovire testnega sveta (M0.6) so pri x <= 20 (stena x=20 za R2,
+# kamniti vrsti pri z=20 in z=36 samo za x od -8 do 8), merilna mreza pa stoji pri x od 48 do 72,
+# zato podaljsevanje v +z gre v prazno. Kar omejuje N v resnici:
+#   - 'noppes slay npcs 2000' pocisti radij 2000 blokov, torej tudi N=4000 (160 vrst),
+#   - prisilno nalaganje chunkov ima mejo 400 na svet (DiagChunkLoader.MAX_CHUNKS_PER_WORLD);
+#     mreza 25 x 160 je z obrocem 1 okoli ~50 chunkov, torej meja ne veze (P2 bi zavrnitve ujel),
+#   - 'fill' za ciscenje ima mejo 32768 blokov na ukaz; pas sirine 33 zdrzi 993 vrst,
+#   - pomnilnik serverja je 2 GB (build.gradle, runServer); pri N=4000 je alokacija 150 MB/s in
+#     merilo P7 (brez OutOfMemoryError) je zeleno, zato je to edina meja, ki je se ni pokazala.
+# Zato 8000 (320 vrst, ~88 chunkov z obrocem 1, pas ciscenja 10.692 blokov). Vsak N nad tem naj se
+# dvigne z meritvijo, ne z ugibanjem.
+$npcMax   = 8000
 $razPavza = 50       # ms poleg 300 ms v Send-Command; skupaj ~350 ms = ~7 tickov
 
 function Step($n, $t) { Write-Host ''; Write-Host "===== $n : $t =====" }
@@ -572,7 +586,11 @@ function Get-SpawnCommands([string]$Variant, [int]$N) {
     $cmds = @()
     # M5.9: prizorisce se pred vsakim spawnom pocisti (y = 4 je nad povrsino superflata, zato je
     # tam samo to, kar postavi scenarij - ograja variante 'nedosegljiva'). 'fill' ne premakne entitet.
-    $cmds += ('fill {0} 4 {1} {2} 4 {3} minecraft:air' -f ($gridX - 4), ($gridZ - 4), ($gridX + $gridW + 3), ($gridZ + 32))
+    # M5.8: pas ciscenja mora pokriti **cel** obseg celice, ne fiksnih 32 vrst (pri N > 900 bi
+    # ostanek ograje prejsnje celice 'nedosegljiva' ostal pod NPC-ji in tiho spremenil prizorisce).
+    $cRows = [int]($N / $gridW)
+    $cGlobina = if ($Variant -eq 'boj' -or $Variant -eq 'nedosegljiva') { [int](($N / 2) / $gridW) * 2 + $bojGap + 6 } else { $cRows + 4 }
+    $cmds += ('fill {0} 4 {1} {2} 4 {3} minecraft:air' -f ($gridX - 4), ($gridZ - 4), ($gridX + $gridW + 3), ($gridZ + $cGlobina))
     if ($Variant -eq 'boj' -or $Variant -eq 'nedosegljiva') {
         $rows = [int](($N / 2) / $gridW)
         $zB = $gridZ + $rows + $bojGap
@@ -613,7 +631,7 @@ try {
     }
     foreach ($n in $Counts) {
         if ($n -le 0 -or ($n % (2 * $gridW)) -ne 0) { throw ("Stevilo NPC-jev {0} ni pozitiven veckratnik {1}." -f $n, (2 * $gridW)) }
-        if ($n -gt 1000) { throw "Vec kot 1000 NPC-jev ni predvideno (mreza bi segla cez prostor scenarija)." }
+        if ($n -gt $npcMax) { throw ("Vec kot {0} NPC-jev ni predvideno (glej $npcMax in razlago nad njim)." -f $npcMax) }
     }
     $cells = @()
     foreach ($v in $Variants) { foreach ($n in $Counts) { $cells += [pscustomobject]@{ Varianta = $v; N = $n } } }
@@ -845,7 +863,9 @@ try {
         } else {
             foreach ($c in $spawnCmds) { Write-Host "  > $c"; Send-Command $srv $c }
         }
-        Start-Sleep -Seconds 3
+        # M5.8: umiritev po spawnu raste z N (pri 2000 NPC-jih en 'clone grid' ne konca v 3 s;
+        # P2 in P1 bi to ujela kot napacno stevilo, zato je to cena pravilnosti, ne udobja).
+        Start-Sleep -Seconds (3 + [int]($N / 250))
 
         # M5.9 / U0: ograja mora biti res v svetu. Prvi poskusi 10. 10. so tiho merili navaden
         # boj, ker se blok v 1.12.2 imenuje minecraft:fence in ne oak_fence - 'fill' je odgovoril
@@ -1262,7 +1282,14 @@ try {
                     $vel['rwpath.memo.delezZadetkov'] = [math]::Round(100.0 * ($rwPathStevci['memoOcen'] - $rwPathStevci['memoIzracunov']) / [double]$rwPathStevci['memoOcen'], 2)
                 }
                 if ($RwPathMemo -gt 0) {
-                    Check ("S1: pomnjenje med iskanjem je teklo ({0} iskanj, {1} ocen)" -f $rwPathStevci['memoIskanj'], $rwPathStevci['memoOcen']) (($rwPathStevci['memoIskanj'] -gt 0) -and ($rwPathStevci['memoOcen'] -gt 0))
+                    # M5.8 (14. 10.): S1 je bilo "vsaj eno iskanje in vsaj ena ocena". V celici idle
+                    # NPC-ji ne iscejo poti, zato je merilo tam padlo, cetudi je stikalo pravilno
+                    # vklopljeno. Prava invarianta je: **ce** je bilo iskanje, je pomnjenje teklo.
+                    if ($rwPathStevci['memoIskanj'] -eq 0) {
+                        Check ("S1: v tej celici ni bilo iskanja poti, zato pomnjenje ni imelo kaj pomniti ({0} ocen)" -f $rwPathStevci['memoOcen']) ($rwPathStevci['memoOcen'] -eq 0)
+                    } else {
+                        Check ("S1: pomnjenje med iskanjem je teklo ({0} iskanj, {1} ocen)" -f $rwPathStevci['memoIskanj'], $rwPathStevci['memoOcen']) ($rwPathStevci['memoOcen'] -gt 0)
+                    }
                     Write-Host ("  M5.17: {0} ocen na iskanje, od tega {1} izracunov; zadetkov {2} %" -f $vel['rwpath.memo.ocenNaIskanje'], $vel['rwpath.memo.izracunovNaIskanje'], $vel['rwpath.memo.delezZadetkov'])
                 }
                 if ($RwPathMemo -eq 2) {
