@@ -115,6 +115,13 @@
   range, omejitev ponovnega iskanja) — odločitev uporabnika; pred tem nov profil JFR optimiziranega
   boja (zadnji je z 8. 10., pred S14b/S14c/M5.16).
 
+- **Plan: nov paket M4.15** (D-036) na zahtevo uporabnika — izbira navigacijskega ozadja
+  *vanilla* / *Baritone* v GUI NPC-ja s prikazom dejanskega ozadja. Izbira na NPC-ju v kodi že
+  obstaja (NBT `RwNavBackend`, `/rwnav`, ponovni priklop po `updateTasks`), manjka samo GUI. Pred
+  tem M4.15a: lestvica boj/nedosegljiva z Baritonom, velikosti, leteči, jahači. Kritična ocena:
+  Baritone je boljši v kakovosti poti, cena pri velikem N ni izmerjena, model gibanja je igralčev
+  → ni kandidat za privzeto ozadje vseh NPC-jev pred meritvijo.
+
 **Spremembe obnašanja:** nobene (meja je merilna, `rework/diag`).
 **Meritve:** lestvica M5.8 (kratke celice, ne končni rezultat paketa).
 
