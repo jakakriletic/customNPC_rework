@@ -180,7 +180,8 @@ $razKos   = 5
 # kamniti vrsti pri z=20 in z=36 samo za x od -8 do 8), merilna mreza pa stoji pri x od 48 do 72,
 # zato podaljsevanje v +z gre v prazno. Kar omejuje N v resnici:
 #   - 'noppes slay npcs 2000' pocisti radij 2000 blokov, torej tudi N=4000 (160 vrst),
-#   - prisilno nalaganje chunkov ima mejo 400 na svet (DiagChunkLoader.MAX_CHUNKS_PER_WORLD);
+#   - prisilno nalaganje chunkov ima mejo 2000 na svet (DiagChunkLoader.MAX_CHUNKS_PER_WORLD, do 15. 10. 400:
+#     razbezani borci v boju-2500 so jo dosegli, glej P4c);
 #     mreza 25 x 160 je z obrocem 1 okoli ~50 chunkov, torej meja ne veze (P2 bi zavrnitve ujel),
 #   - 'fill' za ciscenje ima mejo 32768 blokov na ukaz; pas sirine 33 zdrzi 993 vrst,
 #   - pomnilnik serverja je 2 GB (build.gradle, runServer); pri N=4000 je alokacija 150 MB/s in
@@ -188,6 +189,8 @@ $razKos   = 5
 # Zato 8000 (320 vrst, ~88 chunkov z obrocem 1, pas ciscenja 10.692 blokov). Vsak N nad tem naj se
 # dvigne z meritvijo, ne z ugibanjem.
 $npcMax   = 8000
+# DiagChunkLoader.MAX_CHUNKS_PER_WORLD (do 15. 10. 400, zdaj 2000); merilo P4c.
+$chunkMax = 2000
 $razPavza = 50       # ms poleg 300 ms v Send-Command; skupaj ~350 ms = ~7 tickov
 
 function Step($n, $t) { Write-Host ''; Write-Host "===== $n : $t =====" }
@@ -1182,6 +1185,9 @@ try {
                   ($null -ne $killed) -and ($killed.max -eq 0)
             Check ("P4: NPC-jev ves cas {0} (loaded min={1} max={2}, killed max={3})" -f $N, $loaded.min, $loaded.max, $killed.max) $p4
             Check ("P4b: pogoj meritve je veljal ves cas (world.chunks.forced min={0})" -f $forced.min) (($null -ne $forced) -and ($forced.min -gt 0))
+            # P4c (M5.8, 15. 10.): nabor prisilnih chunkov ni dosegel meje DiagChunkLoader. Na meji se
+            # NPC-ji, ki odidejo iz pokritega obmocja, raztovorijo (S-boj 2500 pri stari meji 400).
+            Check ("P4c: meja prisilnih chunkov ni bila dosezena (world.chunks.forced max={0}, meja {1})" -f $forced.max, $chunkMax) (($null -ne $forced) -and ($forced.max -lt $chunkMax))
         }
 
         # P5: obremenitev je bila res obremenitev celice.

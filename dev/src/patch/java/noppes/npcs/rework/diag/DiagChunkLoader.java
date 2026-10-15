@@ -54,8 +54,15 @@ public final class DiagChunkLoader {
     /** Privzeto en obroc okoli chunka vsakega NPC-ja: NPC sme malo zatavati, pa je se pokrit. */
     public static final int DEFAULT_RADIUS = 1;
 
-    /** Zgornja meja na svet. Pri 25 chunkih na ticket je to 16 ticketov od 200 dovoljenih. */
-    public static final int MAX_CHUNKS_PER_WORLD = 400;
+    /**
+     * Zgornja meja na svet. Pri 25 chunkih na ticket je to 80 ticketov od 200 dovoljenih.
+     *
+     * <p>Do M5.8 (15. 10.) je bila 400. V boju z 2500 NPC-ji so se borci razbezali cez vec
+     * chunkov, nabor je med merjenjem stal na meji, del NPC-jev se je raztovoril in celica je
+     * padla na P3/P4. Chunki se ne sproscajo (glej {@code onWorldTick}), zato meja omejuje
+     * razprsenost cele celice; {@code perf-run.ps1} jo preveri z merilom P4c.
+     */
+    public static final int MAX_CHUNKS_PER_WORLD = 2000;
 
     /** Ponovni pregled enkrat na sekundo: NPC-ji se premikajo in lahko zapustijo pokrit chunk. */
     private static final int REFRESH_EVERY_TICKS = 20;
