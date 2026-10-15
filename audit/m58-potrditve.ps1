@@ -4,12 +4,11 @@ $ErrorActionPreference = 'Continue'
 Remove-Item Env:NoDefaultCurrentDirectoryInExePath -ErrorAction SilentlyContinue
 $root  = 'C:\Users\jakak\Desktop\customNPC_rework'
 $audit = Join-Path $root 'audit'
-$S = "'-RwTarget','2','-RwPath','1','-RwPathMemo','1','-RwCollide','1','-RwBlink','1','-RwData','1','-RwMove','1'"
+# Ne $S: PowerShell ne loci velikih crk, zancna $s bi ga povozila (15. 10. se je to zgodilo).
+$stikalaS = "'-RwTarget','2','-RwPath','1','-RwPathMemo','1','-RwCollide','1','-RwBlink','1','-RwData','1','-RwMove','1'"
+# 15. 10. narejeno (T1-T6 zelena): S-idle 3500 in 4000, O-idle 350 in 400. S-boj 1500 je bil
+# prekinjen po 1/3 na zahtevo uporabnika in se pozene znova.
 $serije = @(
-    @{ ime = 'S-idle-3500'; v = 'idle'; n = 3500; s = $true },
-    @{ ime = 'S-idle-4000'; v = 'idle'; n = 4000; s = $true },
-    @{ ime = 'O-idle-350';  v = 'idle'; n = 350;  s = $false },
-    @{ ime = 'O-idle-400';  v = 'idle'; n = 400;  s = $false },
     @{ ime = 'S-boj-1500';  v = 'boj';  n = 1500; s = $true },
     @{ ime = 'S-boj-2000';  v = 'boj';  n = 2000; s = $true },
     @{ ime = 'O-boj-1000';  v = 'boj';  n = 1000; s = $false },
@@ -39,7 +38,7 @@ foreach ($s in $serije) {
         Write-Host ("[{0}] {1} poskus {2}: cakam na mir" -f (Get-Date -Format 'HH:mm:ss'), $s.ime, $poskus)
         Cakaj-Mir
         $dod = "'-Variants','{0}','-Counts','{1}'" -f $s.v, $s.n
-        if ($s.s) { $dod = $dod + ',' + $S }
+        if ($s.s) { $dod = $dod + ',' + $stikalaS }
         $ukaz = "& '{0}' -Scenarij perf -Ponovitev 3 -Dodatno @({1}); exit `$LASTEXITCODE" -f (Join-Path $root 'ponovitve-run.ps1'), $dod
         $log = Join-Path $audit ("m58-pot-{0}-p{1}.log" -f $s.ime, $poskus)
         Write-Host ("[{0}] {1}: {2}" -f (Get-Date -Format 'HH:mm:ss'), $s.ime, $ukaz)
