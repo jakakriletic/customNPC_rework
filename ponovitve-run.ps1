@@ -27,7 +27,7 @@
 # Skripta sama NE zazene Minecrafta; to naredi merilna skripta, ki jo poklice.
 
 param(
-    [ValidateSet('nav', 'rwdiag', 'perf')][string]$Scenarij = 'nav',
+    [ValidateSet('nav', 'rwdiag', 'perf', 'klient')][string]$Scenarij = 'nav',
     [int]$Ponovitev = 3,
     [double]$PragSum = 0.20,
     [switch]$BrezResetaSveta,
@@ -54,8 +54,12 @@ $znani = @{
     rwdiag = [pscustomobject]@{ Skripta = 'rwdiag-run.ps1'; Paket = 'M2.1';  Predpona = 'm21-rwdiag' }
     # M2.4: ena celica na ponovitev, npr. -Dodatno @('-Variants','boj','-Counts','200')
     perf   = [pscustomobject]@{ Skripta = 'perf-run.ps1';   Paket = 'M2.4';  Predpona = 'm24-perf' }
+    # M5-K.0: klient, npr. -Dodatno @('-Variant','idle','-N','200'). k-run.ps1 vsak zagon ustvari svoj svez
+    # svet v dev\run\saves, zato reset strezniskega sveta (testworld.ps1) tu ni potreben in se preskoci.
+    klient = [pscustomobject]@{ Skripta = 'k-run.ps1';      Paket = 'M5-K.0'; Predpona = 'm5k0-klient' }
 }
 $izbrani = $znani[$Scenarij]
+if ($Scenarij -eq 'klient') { $BrezResetaSveta = [switch]$true }
 if ($Skripta -ne '') {
     $izbrani = [pscustomobject]@{
         Skripta  = $Skripta

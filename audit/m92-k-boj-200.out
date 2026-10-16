@@ -1,0 +1,35 @@
+
+===== 1 : Parametri in priprava =====
+  OK       zaklep scenarija (.scenarij.lock)
+  OK       K0: pred zagonom ne tece tuj gradle build ali Minecraft
+  OK       fixture PERF_* namescene v svet (5)
+  kamera (60,5, 19, 12) yaw 180 pitch 39,8; najdaljsi NPC 30,9 blokov
+  OK       najbolj oddaljen NPC je znotraj dometa sledilnika (30,9 <= 60)
+  navodilo: C:\Users\jakak\Desktop\customNPC_rework\audit\k-boj-200-2026-10-16-181757.job (17 ukazov)
+
+===== 2 : Zagon klienta =====
+    Downloading 0 missing Minecraft 1.12 assets over HTTPS.
+    Asset download complete.
+  RWHARNESS-INSTALL world=rwk-boj-200 out=C:/Users/jakak/Desktop/customNPC_rework/audit/k-boj-200-2026-10-16-181757-klient.json
+  RWHARNESS-FAZA JOINING
+  RWHARNESS-FAZA PRELOAD
+  RWHARNESS-FAZA COMMANDS
+  RWHARNESS-FAZA SETTLE
+  RWHARNESS-FAZA WARMUP
+  RWHARNESS-FAZA MEASURE
+  RWHARNESS-FAZA DONE
+  RWHARNESS-KONEC C:/Users/jakak/Desktop/customNPC_rework/audit/k-boj-200-2026-10-16-181757-klient.json
+
+===== 3 : Merila =====
+  OK       K1: klient je zapisal rezultat in prisel do konca meritve (faza MEASURE, napak 0)
+  OK       K2: vsi ukazi prizorisca so uspeli
+  OK       K3: v klientu je 200 NPC-jev (pricakovano 180..201)
+  OK       K4: upodobljenih min 193 / max 200, zivih min 200, delez upodobljenih min 96,5 % v 60 vzorcih (prag 90 %)
+  OK       K5: kamera fiksna (odmik 0,0000 blokov, 0,0000 stopinj)
+  OK       K6: nastavitve: vsync 0, limit 260, RD 8, FOV 70,0000
+  OK       K7: 11536 slicic v 60,0 s
+  OK       K8: med ogrevanjem in merjenjem ni tekel tuj gradle build ali Minecraft
+
+  boj-200: slicica p50 5,11 / p95 5,76 / p99 6,11 / max 16,7 ms, FPS 192,3, 1 % low 131,5, 0,1 % low 81,2, GC 8 (45 ms), integrirani streznik 5,27 ms/tick
+
+M5-K.0 K1-K8 USPESNO.

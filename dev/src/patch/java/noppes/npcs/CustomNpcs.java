@@ -290,6 +290,17 @@ public class CustomNpcs {
         NpcAPI.Instance().events().register((Object)new AbilityEventHandler());
         ForgeChunkManager.setForcedChunkLoadingCallback((Object)this, (ForgeChunkManager.LoadingCallback)new ChunkController());
         proxy.load();
+        // M5-K.0: klientski merilni harness, samo z -Drwharness=<navodilo>. Refleksija, da
+        // dedicated server razreda s klientskimi tipi nikoli ne nalozi.
+        String rwHarness = System.getProperty("rwharness");
+        if (rwHarness != null && ev.getSide().isClient()) {
+            try {
+                Class.forName("noppes.npcs.rework.diag.ClientHarness")
+                        .getMethod("install", String.class).invoke(null, rwHarness);
+            } catch (ReflectiveOperationException e) {
+                System.out.println("RWHARNESS-NAPAKA namestitev: " + e);
+            }
+        }
         ObfuscationReflectionHelper.setPrivateValue(RangedAttribute.class,
                 (RangedAttribute)SharedMonsterAttributes.MAX_HEALTH, Double.MAX_VALUE, 1);
     }

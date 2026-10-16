@@ -98,6 +98,10 @@ afterEvaluate {
         if (project.hasProperty('rwNavBackend')) {
             tasks.getByName(taskName).systemProperty 'rwnavbackend', project.property('rwNavBackend')
         }
+        // M5-K.0: -PrwHarness=<navodilo> vklopi klientski merilni harness (k-run.ps1)
+        if (taskName == 'runClient' && project.hasProperty('rwHarness')) {
+            tasks.getByName(taskName).systemProperty 'rwharness', project.property('rwHarness')
+        }
         // M7.10 (knjiznica npcbaritone): -PnpcbCrowdYield=true vklopi cakanje v gneci (movement.crowdYield)
         if (project.hasProperty('npcbCrowdYield')) {
             tasks.getByName(taskName).systemProperty 'npcbcrowdyield', project.property('npcbCrowdYield')
@@ -155,6 +159,8 @@ task testOriginal(type: Test) {
     exclude '**/SafeFileWriterFaultInjectionTest.class'
     exclude '**/DiagTest.class'
     exclude '**/DistributionTest.class'
+    exclude '**/FrameStatsTest.class'
+    exclude '**/HarnessJobTest.class'
     exclude '**/DiagSnapshotTest.class'
     exclude '**/DiagChunkPlanTest.class'
     // M4.14: formacije so nov paket, v originalu ga ni.

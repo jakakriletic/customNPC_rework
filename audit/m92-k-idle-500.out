@@ -1,0 +1,35 @@
+
+===== 1 : Parametri in priprava =====
+  OK       zaklep scenarija (.scenarij.lock)
+  OK       K0: pred zagonom ne tece tuj gradle build ali Minecraft
+  OK       fixture PERF_* namescene v svet (5)
+  kamera (60,5, 24, 24) yaw 180 pitch 37,6; najdaljsi NPC 43,0 blokov
+  OK       najbolj oddaljen NPC je znotraj dometa sledilnika (43,0 <= 60)
+  navodilo: C:\Users\jakak\Desktop\customNPC_rework\audit\k-idle-500-2026-10-16-180317.job (15 ukazov)
+
+===== 2 : Zagon klienta =====
+    Downloading 0 missing Minecraft 1.12 assets over HTTPS.
+    Asset download complete.
+  RWHARNESS-INSTALL world=rwk-idle-500 out=C:/Users/jakak/Desktop/customNPC_rework/audit/k-idle-500-2026-10-16-180317-klient.json
+  RWHARNESS-FAZA JOINING
+  RWHARNESS-FAZA PRELOAD
+  RWHARNESS-FAZA COMMANDS
+  RWHARNESS-FAZA SETTLE
+  RWHARNESS-FAZA WARMUP
+  RWHARNESS-FAZA MEASURE
+  RWHARNESS-FAZA DONE
+  RWHARNESS-KONEC C:/Users/jakak/Desktop/customNPC_rework/audit/k-idle-500-2026-10-16-180317-klient.json
+
+===== 3 : Merila =====
+  OK       K1: klient je zapisal rezultat in prisel do konca meritve (faza MEASURE, napak 0)
+  OK       K2: vsi ukazi prizorisca so uspeli
+  OK       K3: v klientu je 500 NPC-jev (pricakovano 500)
+  OK       K4: upodobljenih entitet min 500 / max 500 v 60 vzorcih (prag 500)
+  OK       K5: kamera fiksna (odmik 0,0000 blokov, 0,0000 stopinj)
+  OK       K6: nastavitve: vsync 0, limit 260, RD 8, FOV 70,0000
+  OK       K7: 5087 slicic v 60,1 s
+  OK       K8: med ogrevanjem in merjenjem ni tekel tuj gradle build ali Minecraft
+
+  idle-500: slicica p50 11,40 / p95 12,76 / p99 16,99 / max 28,2 ms, FPS 84,7, 1 % low 50,2, 0,1 % low 40,1, GC 41 (94 ms), integrirani streznik 19,06 ms/tick
+
+M5-K.0 K1-K8 USPESNO.

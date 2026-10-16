@@ -1,0 +1,107 @@
+package local.customnpcs;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.util.Arrays;
+import java.util.Properties;
+
+import noppes.npcs.rework.diag.HarnessJob;
+
+import org.junit.Test;
+
+/** M5-K.0: navodilo harnessa, ki ga zapise k-run.ps1. */
+public class HarnessJobTest {
+
+    private static Properties base() {
+        Properties p = new Properties();
+        p.setProperty("world", "rwk-idle-200");
+        p.setProperty("cam", "60.5, 12, -30, 180, 30");
+        p.setProperty("out", "C:/tmp/k.json");
+        return p;
+    }
+
+    @Test
+    public void expectNpcMinDovoliPadleVBoju() {
+        Properties p = base();
+        p.setProperty("expectNpc", "201");
+        p.setProperty("expectNpcMin", "180");
+        HarnessJob j = HarnessJob.parse(p);
+        assertEquals(201, j.expectNpc);
+        assertEquals(180, j.expectNpcMin);
+    }
+
+    @Test
+    public void parsesFullJobInOrder() {
+        Properties p = base();
+        p.setProperty("cmd.1", "/noppes slay npcs 2000");
+        p.setProperty("cmd.2", "noppes clone grid PERF_Idle 1 25 8 48,4,-12");
+        p.setProperty("cmd.4", "ignored - vrzel v stevilcenju konca seznam");
+        p.setProperty("expectNpc", "200");
+        p.setProperty("renderDistance", "12");
+        p.setProperty("fov", "90");
+        p.setProperty("settle", "3");
+        p.setProperty("warmup", "30");
+        p.setProperty("measure", "60");
+        HarnessJob j = HarnessJob.parse(p);
+        assertEquals("rwk-idle-200", j.world);
+        assertEquals(Arrays.asList("noppes slay npcs 2000", "noppes clone grid PERF_Idle 1 25 8 48,4,-12"), j.commands);
+        assertEquals(200, j.expectNpc);
+        assertEquals("brez expectNpcMin velja natancno", 200, j.expectNpcMin);
+        assertEquals(60.5, j.camX, 0.0);
+        assertEquals(12.0, j.camY, 0.0);
+        assertEquals(-30.0, j.camZ, 0.0);
+        assertEquals(180.0f, j.camYaw, 0.0f);
+        assertEquals(30.0f, j.camPitch, 0.0f);
+        assertEquals(12, j.renderDistance);
+        assertEquals(90.0f, j.fov, 0.0f);
+        assertEquals(3, j.settleSeconds);
+        assertEquals(30, j.warmupSeconds);
+        assertEquals(60, j.measureSeconds);
+        assertEquals("C:/tmp/k.json", j.out);
+    }
+
+    @Test
+    public void defaults() {
+        HarnessJob j = HarnessJob.parse(base());
+        assertEquals(0, j.commands.size());
+        assertEquals(-1, j.expectNpc);
+        assertEquals(8, j.renderDistance);
+        assertEquals(70.0f, j.fov, 0.0f);
+        assertEquals(5, j.settleSeconds);
+        assertEquals(30, j.warmupSeconds);
+        assertEquals(60, j.measureSeconds);
+    }
+
+    @Test
+    public void createSeedMatchesDedicatedServer() {
+        Properties p = base();
+        assertEquals(null, HarnessJob.parse(p).createSeed);
+        p.setProperty("createSeed", " customnpc-rework ");
+        assertEquals("customnpc-rework", HarnessJob.parse(p).createSeed);
+        assertEquals((long) "customnpc-rework".hashCode(), HarnessJob.seedOf("customnpc-rework"));
+        assertEquals(42L, HarnessJob.seedOf("42"));
+    }
+
+    @Test
+    public void rejectsBadJobs() {
+        String[][] bad = {
+            {"world", ""},
+            {"out", " "},
+            {"cam", "1,2,3"},
+            {"renderDistance", "40"},
+            {"measure", "0"},
+            {"warmup", "-1"},
+        };
+        for (String[] kv : bad) {
+            Properties p = base();
+            p.setProperty(kv[0], kv[1]);
+            try {
+                HarnessJob.parse(p);
+                fail("sprejeto: " + kv[0] + "=" + kv[1]);
+            } catch (IllegalArgumentException expected) {
+                // ok
+            }
+        }
+    }
+}
