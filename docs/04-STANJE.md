@@ -115,6 +115,15 @@ K14/K4/K3 so ceneje in brez spremembe videza → **Q28**.
 
 **Naslednja seja:** po odgovoru na Q28 K14 (priporočeno) ali K5 (D-035 brez spremembe).
 
+**Dopolnitev 19. 10.:** Q28 odločeno — **K14 → K4 → K3 pred K5**. K14 začet in prekinjen na zahtevo
+uporabnika, **koda ni spremenjena**. Prebrano: `ModelHeadwear extends ModelScaleRenderer` ima 6 otrok
+`Model2DRenderer`; vsak `render` = `push` + `postRender` (rotacijska točka + koti, v konstruktorju
+konstantni) + `callList` (en `Tessellator.draw`, 34 štirikotnikov) + `pop`; starš `ModelScaleRenderer.render`
+pokliče še svoj prazen list (nima kock). Noben od teh razredov še ni v `src/patch` → najprej 1:1 prenos
+(ločen commit, `primerjaj-bytecode.js`), nato en list pod stikalom. Odprto za dokaz enakosti: ali kdo
+med igro spreminja `showModel`/`isHidden`/kote otrok (`LayerHeadwear.preRender` nastavi samo
+`config = null` in `bipedHeadwear.isHidden`).
+
 ### 2026-10-16 (92) — M5-K.0 zaključen: klientski harness
 
 **Paket:** M5-K.0 · **Stanje:** **zaključeno**.
@@ -4459,7 +4468,7 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 | Q24 | Kje boš NPC-je gledal na 24 chunkov: v **enem igralcu/LAN** (deluje takoj — integrirani strežnik naloži chunke do RD) ali na **dediciranem strežniku**? Tam mora operater nastaviti `view-distance=24` (vanilla cena nalaganja in ticka vseh chunkov, ne cena M5-V); NPC-ji onkraj naloženih chunkov (varianta C) bi brez LOD terena lebdeli v praznini | M5-V obseg | **odločeno 14. 10.: strežnik** → D-035; M5-V.1 meri na dediciranem strežniku pri `view-distance` 10 in 24 (v 1.12 ni ločene razdalje simulacije: 5,4× več tickajočih chunkov — vanilla cena); varianta C ostane zavržena |
 | Q25 | Vrstni red M5-V: dobesedno "na koncu M5-K" (po K5, K12, K13, K10) ali **takoj po M5-K.1 in K5**? M5-V ne potrebuje K13/K10, stopnja L2 pa zmanjša vrednost K10 (instancing ostane le za gnečo blizu) | M5-K/M5-V vrstni red | **odločeno 14. 10.: po priporočilu** → D-035; M5-K.0 → M5-K.1 → K5 → M5-V → K12 → ostali; K13/K10 po M5-V.8 ponovno oceniti |
 | Q27 | Obseg potrditev M5.8 (K3): po polnem protokolu ostane ~14 h stroja (boj in nedosegljiva pri 25 ms ~4 h, pari pri 50 ms ~8 h, `-Razprseno` ~2 h). Predlog skrajšave: (a) potrdi samo N tik pod pragom, (b) mejo 50 ms vzemi iz lestvice, (c) okno 60 + 180 s (S-idle 3500 je imel razpon p95 4 %) — skupaj ~2–3 h. Polni protokol ali skrajšan? | M5.8 izhodni kriterij | **odločeno 16. 10.: skrajšan** — (a) + (b) + (c); zaganjalnik `audit/m58-skrajsano.ps1` (S-boj 1500, O-boj 1000, S-ned 700, O-ned 500; 3 ponovitve, 60 + 180 s) |
-| Q28 | Vrstni red M5-K po profilu M5-K.1: D-035 določa M5-K.1 → **K5** (LOD, spremeni videz daleč) → M5-V. Profil pokaže tri cenejše pakete **brez spremembe videza**, ki pomagajo tudi blizu igralca, kjer K5 ne seže: **K14** pokrivalo v enem listu (19–26 % render niti), **K4** predpomnilnik napisov (20 % pri 200 NPC-jih v 22,6 bloka), **K3** oči (10–14 %). Naj gredo **K14 → K4 → K3 pred K5** (priporočeno; M5-V se zamakne za ~3 seje) ali ostane D-035 (K5 takoj)? | M5-K vrstni red | odprto |
+| Q28 | Vrstni red M5-K po profilu M5-K.1: D-035 določa M5-K.1 → **K5** (LOD, spremeni videz daleč) → M5-V. Profil pokaže tri cenejše pakete **brez spremembe videza**, ki pomagajo tudi blizu igralca, kjer K5 ne seže: **K14** pokrivalo v enem listu (19–26 % render niti), **K4** predpomnilnik napisov (20 % pri 200 NPC-jih v 22,6 bloka), **K3** oči (10–14 %). Naj gredo **K14 → K4 → K3 pred K5** (priporočeno; M5-V se zamakne za ~3 seje) ali ostane D-035 (K5 takoj)? | M5-K vrstni red | **odločeno 19. 10.: da** — K14 → K4 → K3 → K5 → M5-V (dopolni D-035) |
 | Q26 | M5-V na strežniku: nadomestki razkrijejo pozicije NPC-jev do `view-distance` tudi za zidovi (imena in naslovi se ne pošljejo nikoli). Naj bo `RwFarLos` privzeto **0** (brez preverbe vidnosti, najcenejše) ali **1** (strežnik pošlje samo NPC-je v vidni črti igralca, raytrace ~1 Hz na par igralec–NPC)? | M5-V.2, M5-V.8 | **odločeno 14. 10.: po priporočilu, privzeto 0** → D-035; operater lahko vklopi `RwFarLos=1` |
 | Q14 | Pri R10 — kateri zemljevid: lasten iz `ladja_mod` (izbira kot pri ladjah), JourneyMap, Xaero ali nov v CNPC? | M11.3 | **odprto 6. 10.**, ne blokira do M11 |
 

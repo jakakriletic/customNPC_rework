@@ -273,7 +273,7 @@ NPC-jev. Odprejo se šele, če po M4.10, M4.11 in M5.6 merila M2.7 še vedno pad
 | ~~M5.5~~ | Meritev po vsakem → ni paket, je pravilo (D-016) | — |
 | ~~M5.7~~ | Prostorski indeks → **zavrženo** (D-030, chunk sekcije so že indeks; drag je gostota mreže); render LOD → K5 v M5-K | — |
 
-Vrstni red M5-S: **~~M5.10~~ → ~~M5.11~~ → ~~M5.12~~ → ~~M5.13~~ → ~~M5.9~~ → ~~M5.6/S5~~ → ~~M5.17 (S14c)~~ → ~~M5.14 (S16)~~ → ~~M5.15~~ → ~~M5.16~~ → ~~M5.8~~** → **~~M5-K.0~~ → ~~M5-K.1~~ → (Q28: K14 → K4 → K3?) → K5 → M5-V.1 … M5-V.8 → K12 → ostali K-paketi** (D-033, D-034, D-035; K13 in K10 se po M5-V.8 ponovno ocenita); M5.2 po odgovoru na Q21. Celica `nedosegljiva` gre v M5.8 (kapaciteta brez nje je optimistična).
+Vrstni red M5-S: **~~M5.10~~ → ~~M5.11~~ → ~~M5.12~~ → ~~M5.13~~ → ~~M5.9~~ → ~~M5.6/S5~~ → ~~M5.17 (S14c)~~ → ~~M5.14 (S16)~~ → ~~M5.15~~ → ~~M5.16~~ → ~~M5.8~~** → **~~M5-K.0~~ → ~~M5-K.1~~ → K14 → K4 → K3 (Q28, 19. 10.) → K5 → M5-V.1 … M5-V.8 → K12 → ostali K-paketi** (D-033, D-034, D-035; K13 in K10 se po M5-V.8 ponovno ocenita); M5.2 po odgovoru na Q21. Celica `nedosegljiva` gre v M5.8 (kapaciteta brez nje je optimistična).
 Sledenje poti brez branja blokov po vzoru 1.21.1 (S15, sprememba gibanja) ni v M5, ampak vhod za M4.13.
 M5-K (klient) je od D-033 obvezen del M5 in sledi takoj za M5.8 — glej razdelek **M5-K** spodaj. Obvezen modul **M5-V** (vidnost NPC-jev do 24 chunkov z impostorji, D-034) gre po Q25 (D-035) takoj za M5-K.1 in K5.
 Vanilla `Entity.move` (idle 26–29 %): Q16 odločeno → D-031 (lasten coremod v CNPC jarju), paketa M5.15 in M5.16.
