@@ -11,7 +11,7 @@ da se ne izgubi kontekst in da se delo ne podvaja.
 
 ```
 1. Preberi  README.md
-2. Preberi  docs/04-STANJE.md          ← kje smo
+2. Preberi  docs/04-STANJE.md          ← kje smo (kratek: ~17 KB)
 3. Preberi  docs/05-SEJA-PROTOKOL.md   ← ta datoteka
 4. Preberi razdelek v docs/03-FAZE.md za paket, ki ga boš delal
 5. Preberi razdelek v docs/02-ZAHTEVE.md za pripadajočo zahtevo
@@ -20,6 +20,18 @@ da se ne izgubi kontekst in da se delo ne podvaja.
 
 **Ne začni kodirati, dokler nisi prebral 1–5.** Vsak paket ima razlog, zakaj je tam kjer je,
 in ta razlog ni v kodi.
+
+**Arhiva in registrov ne beri na začetku.** Do 2026-10-19 je bil `04-STANJE.md` ~320 KB
+(~80 k tokenov); zdaj je kratek, ostalo pa je dobesedno v:
+
+| Datoteka | Vsebina | Kako do nje |
+|---|---|---|
+| `docs/arhiv/04-STANJE-dnevnik.md` | dnevnik sej, vsi vnosi razen zadnjih 2 | `grep -n "M5.16" docs/arhiv/04-STANJE-dnevnik.md`, nato `Read` z `offset`/`limit` samo za ta vnos |
+| `docs/arhiv/04-STANJE-tabele.md` | polne stare tabele stanja in milestonov, M1/M2 po paketih, **vsa** vprašanja Q, **Znane omejitve** | `grep`; **Znane omejitve** (§5) preglej, preden pišeš nov scenarij ali meritev |
+| `docs/04-REGISTRI.md` | živi registri: Sprejete spremembe obnašanja, Prevzeta koda, Meritve | `grep` po stikalu (`Rw…`); odpri, ko dodajaš vrstico |
+
+Pravilo: kar potrebuješ za svoj paket, poišči z `grep` po imenu paketa, stikala ali ključni
+besedi, ne bereš celih datotek. Če iščeš dolg vnos, bereš samo njegove vrstice.
 
 ### 1a. Nov milestone — najprej raziskava, šele nato paketi (D-029)
 
@@ -93,14 +105,27 @@ da je premisa paketa napačna: ustavi se, zapiši, prilagodi plan, šele nato na
 
 Preden seja konča, **vedno**:
 
-1. **Posodobi `docs/04-STANJE.md`:**
-   - datum in trenutni milestone na vrhu
-   - nov vnos v "Dnevnik sej": kaj je narejeno, kaj ni, zakaj
-   - napredek po milestonih
-   - nova odprta vprašanja za uporabnika
-   - vsaka sprejeta sprememba obnašanja → tabela "Sprejete spremembe obnašanja"
-   - vsaka prevzeta koda → tabela "Prevzeta koda"
-   - vsaka meritev → tabela "Meritve" (+ polni zapis v `docs/meritve/`)
+1. **Posodobi `docs/04-STANJE.md`** (ostane kratek, cilj ≤ ~25 KB):
+   - tabela "Trenutno stanje": celica "Zadnja posodobitev" se **prepiše** (ne dopolnjuje): samo
+     ta seja, 2–3 stavki. Povzetkov starejših sej tja ne kopiraj — so v dnevniku
+   - "Napredek po milestonih": vrstica milestona, ki se je premaknil, z **eno kratko opombo**;
+     podrobnosti po paketih sodijo v dnevnik in v zapis v `docs/meritve/`
+   - **nov vnos v "Dnevnik sej" gre na vrh** razdelka. Nato je v tej datoteki več kot 2 vnosa:
+     **najstarejši vnos prestavi dobesedno** na vrh `docs/arhiv/04-STANJE-dnevnik.md` (pod uvod,
+     nad prejšnje vnose). V `04-STANJE.md` ostaneta vedno **zadnja 2 vnosa**. Pri prestavitvi
+     popravi relativne povezave: `](meritve/…)` → `](../meritve/…)`, `](../OKOLJE.md)` →
+     `](../../OKOLJE.md)` (arhiv je v podmapi)
+   - nova odprta vprašanja za uporabnika → tabela "Odprta vprašanja" v `04-STANJE.md` (naslednja
+     prosta številka Q) **in** ista vrstica v `arhiv/04-STANJE-tabele.md` §4. Odločeno vprašanje
+     se v `04-STANJE.md` **izbriše**, v §4 arhiva pa posodobi stanje
+   - nov odprt pojav (hipoteza) → "Odprti pojavi"; ko je razrešen, vrstico izbriši in rezultat
+     zapiši v dnevnik
+   - nova pasta ali pravilo merjenja → na konec **Znane omejitve**, `arhiv/04-STANJE-tabele.md` §5
+   - **v `docs/04-REGISTRI.md`** (ne v `04-STANJE.md`):
+     - vsaka sprejeta sprememba obnašanja → tabela "Sprejete spremembe obnašanja"
+     - vsaka prevzeta koda → tabela "Prevzeta koda"
+     - vsaka meritev → tabela "Meritve" (+ polni zapis v `docs/meritve/`)
+   - števci v "Trenutno stanje" (razredi, testi), če so se spremenili
 
 2. **Če je bila sprejeta arhitekturna odločitev**, jo dopiši v `01-ARHITEKTURA.md` §9 z
    novim ID-jem `D-0NN`, datumom in razlogom.
@@ -134,6 +159,9 @@ Preden seja konča, **vedno**:
 ---
 
 ## 5. Predloga za vnos v dnevnik sej
+
+Vnos gre na vrh razdelka "Dnevnik sej" v `docs/04-STANJE.md` (glej §3). Naj bo kratek: dolge
+tabele in surove številke sodijo v zapis v `docs/meritve/`, v vnosu pa je povzetek in povezava.
 
 ```markdown
 ### YYYY-MM-DD — <kratek naslov>
@@ -191,6 +219,8 @@ Opozorila in podrobnosti: [`../OKOLJE.md`](../OKOLJE.md).
 | Zakaj je nekaj tako postavljeno | `docs/01-ARHITEKTURA.md` |
 | Kaj točno je narobe z X | `docs/02-ZAHTEVE.md` |
 | Kaj delam naslednje | `docs/04-STANJE.md`, potem `docs/03-FAZE.md` |
+| Starejši dnevnik sej, vsa vprašanja Q, znane omejitve | `docs/arhiv/` (`grep`, glej §1) |
+| Stikala (spremembe obnašanja), prevzeta koda, kazalo meritev | `docs/04-REGISTRI.md` |
 | Kako zbuildam / poženem | `OKOLJE.md` |
 | Kateri bugi so že najdeni v originalu | `PLAN_IMPLEMENTACIJE.md` |
 | Originalno kodo razreda X | `dev/reference-src/noppes/npcs/…` (samo branje) |

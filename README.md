@@ -36,7 +36,7 @@ datotek za obnovo in ima mod pomembnejše težave, se dodatna forenzika R9, migr
 | [`docs/01-ARHITEKTURA.md`](docs/01-ARHITEKTURA.md) | odločitve, struktura, kompatibilnostna politika, licence | preden se lotiš karkoli spreminjati |
 | [`docs/02-ZAHTEVE.md`](docs/02-ZAHTEVE.md) | R1–R9 podrobno, z dokazi iz kode (`datoteka:vrstica`) | ko delaš na konkretni zahtevi |
 | [`docs/03-FAZE.md`](docs/03-FAZE.md) | milestoni M0–M10, delovni paketi, odvisnosti, izhodni kriteriji | ko načrtuješ sejo |
-| [`docs/04-STANJE.md`](docs/04-STANJE.md) | **živ dnevnik** — kaj je narejeno, kaj teče, kaj je blokirano | vedno drugo |
+| [`docs/04-STANJE.md`](docs/04-STANJE.md) | **živ dnevnik** (kratek: stanje, zadnja 2 vnosa, odprta vprašanja) — kaj je narejeno, kaj teče, kaj je blokirano; starejše v `docs/arhiv/`, stikala/meritve v `docs/04-REGISTRI.md` | vedno drugo |
 | [`docs/05-SEJA-PROTOKOL.md`](docs/05-SEJA-PROTOKOL.md) | kako seja začne, dela in zaključi | vedno, tudi na koncu seje |
 | [`docs/08-PREGLED-IN-PLAN.md`](docs/08-PREGLED-IN-PLAN.md) | **ocena projekta (3. 10.)**: kaj je narejeno, kaj ostane, priporočen vrstni red | ko načrtuješ naslednje korake |
 | [`docs/07-BARITONE-OZADJE.md`](docs/07-BARITONE-OZADJE.md) | **Baritone kot izbirno ozadje navigacije (NB, D-022)**: klici navigatorja, ukrepi, izid A/B | ko delaš na navigaciji ali `RwNavBackend` |

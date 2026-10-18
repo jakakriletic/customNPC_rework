@@ -24,7 +24,7 @@ Razlog:
 - [`BetaZavr/CustomNPCs_1.12.2-Unofficial`](https://github.com/BetaZavr/CustomNPCs_1.12.2-Unofficial)
   — polna 1.12.2 source koda, aktivna. Beremo, primerjamo, portamo ideje. Licenca **CC BY-NC 3.0**
   omejuje komercialno distribucijo; dobesedno prevzemanje kode zahteva atribucijo in
-  vpis v `docs/04-STANJE.md`.
+  vpis v `docs/04-REGISTRI.md` → "Prevzeta koda".
 - [`KAMKEEL/CustomNPC-Plus`](https://github.com/KAMKEEL/CustomNPC-Plus) — 1.7.10, ima že
   implementirano to, kar zahtevata R7 (Java scripting prek Janino), R4 (frame-based
   animacije z in-game urejevalnikom) in del R2 (flying AI s 3D pathfindingom) ter 154+
@@ -33,7 +33,7 @@ Razlog:
 
 Praktično: preden implementiramo karkoli iz R1–R9, **najprej pogledamo, kako sta to rešila
 ta dva projekta**. To prihrani dneve. Ampak vsako prevzeto rešitev zapišemo v
-`docs/04-STANJE.md` z izvorom in licenco.
+`docs/04-REGISTRI.md` z izvorom in licenco.
 
 ---
 
@@ -108,7 +108,7 @@ Velja vse iz `PLAN_IMPLEMENTACIJE.md`, razdelek 2. Povzetek plus dopolnitve za r
 Vsaka sprememba, ki spremeni obnašanje v igri (nov način letenja, solid hitbox, LOD za AI,
 Java scripting), se uvaja s **stikalom v configu ali na NPC-ju**, privzeto v načinu, ki
 posnema original. Šele ko je funkcija dokazana, se lahko privzeta vrednost spremeni —
-z zapisom v `docs/04-STANJE.md`.
+z zapisom v `docs/04-REGISTRI.md` → "Sprejete spremembe obnašanja".
 
 ---
 
@@ -190,7 +190,7 @@ Ne obstaja "to je hitrejše" brez številke. Minimalni protokol (iz `PLAN_IMPLEM
 - meri se: MSPT p50/p95/p99 in max, TPS, alokacije/s, GC premori, heap po GC
 - klient posebej: frame time p95/p99
 
-Rezultati gredo v `docs/meritve/<datum>-<paket>.md` in se povzamejo v `docs/04-STANJE.md`.
+Rezultati gredo v `docs/meritve/<datum>-<paket>.md` in se povzamejo v `docs/04-REGISTRI.md` → "Meritve" (in v dnevnik v `docs/04-STANJE.md`).
 
 ---
 
@@ -203,7 +203,7 @@ Rezultati gredo v `docs/meritve/<datum>-<paket>.md` in se povzamejo v `docs/04-S
 | CustomNPC+ (KAMKEEL) | branch po dovoljenju avtorja | branje, ideje; port zahteva preverbo pogojev |
 
 **Pravilo:** vsak prevzet blok kode dobi v izvorni datoteki komentar z izvorom, verzijo in
-licenco, in vnos v `docs/04-STANJE.md` → "Prevzeta koda".
+licenco, in vnos v `docs/04-REGISTRI.md` → "Prevzeta koda".
 
 Ta rework je za osebno/lokalno uporabo. Pred kakršnokoli javno distribucijo je treba
 pogoje preveriti posebej.

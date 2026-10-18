@@ -472,7 +472,7 @@ lahko uporabi.
 M8.4–M8.11 se izvajajo **samo v obsegu, izbranem v M8.2**.
 
 **Izhodni kriterij:** vsaka prenesena funkcija ima svoj NBT ključ, stikalo, test in vnos v
-`docs/04-STANJE.md` z izvorom in licenco.
+`docs/04-REGISTRI.md` z izvorom in licenco.
 
 **Tveganja:** visoko. 1.7.10 → 1.12.2 ni port, ampak ponovna implementacija. Ocene iz
 CustomNPC+ repozitorija se ne prenesejo.
