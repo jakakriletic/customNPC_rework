@@ -28,8 +28,9 @@ glavni meni → integrirani svet `rwk-<varianta>-<N>` (vsak zagon **svež** FLAT
 prepisan) → umiritev in štetje NPC-jev → ogrevanje (privzeto 30 s) → merjenje (privzeto 60 s,
 razlika `System.nanoTime()` med zaporednima `RenderTickEvent` START) → JSON → izhod.
 
-Nastavitve: VSync izklopljen, `limitFramerate` 260 (neomejeno), brez view bobbinga, brez GUI-ja,
-RD 8, FOV 70. Kamera: južno od mreže, yaw 180, pitch proti sredini; najbolj oddaljen NPC mora biti
+Nastavitve: VSync izklopljen, `limitFramerate` 260 (neomejeno), brez view bobbinga, RD 8, FOV 70.
+**GUI je od M5-K.1 (18. 10.) viden:** F1 (`hideGUI`) v 1.12 skrije tudi vsa imena NPC-jev
+(`canRenderName` → `isGuiEnabled`), zato je M5-K.0 meril brez imen; staro vedenje `-SkrijGui`. Kamera: južno od mreže, yaw 180, pitch proti sredini; najbolj oddaljen NPC mora biti
 ≤ 60 blokov (domet sledilnika `tracker(64, …)`), sicer ga strežnik ne pošlje.
 
 ## Merila
@@ -52,7 +53,12 @@ RD 8, FOV 70. Kamera: južno od mreže, yaw 180, pitch proti sredini; najbolj od
 .\k-run.ps1 -Variant idle -N 50 -Warmup 10 -Measure 20     # hiter preizkus
 .\k-run.ps1 -Variant idle -N 200
 .\ponovitve-run.ps1 -Scenarij klient -Dodatno @('-Variant','idle','-N','200')
+.\k-run.ps1 -Variant idle -N 500 -Vzorci 1     # M5-K.1: profil render niti (StackSampler), ni baseline
+.\k-run.ps1 -Variant idle -N 50 -Jfr           # JFR; za render nit premalo vzorcev (M5-K.1)
 ```
+
+`-Vzorci <ms>` doda merilo **J3** (vsaj 100 vzorcev/s) in povzetek `<izhod>-skladi.md`
+(`dev/tools/skladi-povzetek.js`); `-Jfr` doda J1/J2. Oba stanejo čas sličice, zato nista baseline.
 
 ## Omejitve (znane)
 

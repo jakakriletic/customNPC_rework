@@ -19,6 +19,8 @@
 //   node dev/tools/jfr-povzetek.js <posnetek.jfr> [--nit "Server thread"] [--top 25] [--md izhod.md]
 //   node dev/tools/jfr-povzetek.js <posnetek.jfr> --klicatelji java.util.HashMap$TreeNode.root [--globina 4]
 //            verige klicateljev metode (CPU vzorci), da se vrh sklada poveze s kodo
+//   --native [utez]  (M5-K.1) steje tudi jdk.NativeMethodSample (nit v JNI, npr. GL gonilnik ali
+//            Display.update); utez = perioda native / perioda Java vzorca, v 'profile' 20 / 10 ms = 2
 // jfr.exe: okoljska JFR ali .tools/jdk8/bin/jfr.exe v korenu repozitorija.
 'use strict';
 const fs = require('fs');
@@ -28,13 +30,14 @@ const { spawn, execFileSync } = require('child_process');
 
 function args() {
     const a = process.argv.slice(2);
-    const o = { file: null, nit: 'Server thread', top: 25, md: null, klicatelji: null, globina: 4 };
+    const o = { file: null, nit: 'Server thread', top: 25, md: null, klicatelji: null, globina: 4, nativeUtez: 0 };
     for (let i = 0; i < a.length; i++) {
         if (a[i] === '--nit') o.nit = a[++i];
         else if (a[i] === '--top') o.top = parseInt(a[++i], 10);
         else if (a[i] === '--md') o.md = a[++i];
         else if (a[i] === '--klicatelji') o.klicatelji = a[++i];
         else if (a[i] === '--globina') o.globina = parseInt(a[++i], 10);
+        else if (a[i] === '--native') o.nativeUtez = (i + 1 < a.length && /^[\d.]+$/.test(a[i + 1])) ? parseFloat(a[++i]) : 2;
         else o.file = a[i];
     }
     if (!o.file) {
@@ -127,22 +130,25 @@ async function main() {
     }
 
     // --- vzorci CPU ---
-    let vzorcev = 0, vsehVzorcev = 0, drugeNiti = new Map();
+    let vzorcev = 0, vsehVzorcev = 0, nativeVzorcev = 0, drugeNiti = new Map();
     const self = new Map(), selfAt = new Map(), incl = new Map(), podNoppes = new Map();
-    await beri(o.file, 'jdk.ExecutionSample', (e) => {
-        vsehVzorcev++;
+    const cpuDogodki = o.nativeUtez > 0 ? 'jdk.ExecutionSample,jdk.NativeMethodSample' : 'jdk.ExecutionSample';
+    await beri(o.file, cpuDogodki, (e) => {
+        const w = e.tip === 'jdk.NativeMethodSample' ? o.nativeUtez : 1;
+        vsehVzorcev += w;
         const n = nitIme(e.polja.sampledThread);
-        if (n !== o.nit) { add(drugeNiti, n, 1); return; }
-        vzorcev++;
+        if (n !== o.nit) { add(drugeNiti, n, w); return; }
+        vzorcev += w;
+        if (e.tip === 'jdk.NativeMethodSample') nativeVzorcev += w;
         if (e.sklad.length === 0) return;
-        add(self, e.sklad[0].m, 1);
-        add(selfAt, e.sklad[0].at, 1);
+        add(self, e.sklad[0].m, w);
+        add(selfAt, e.sklad[0].at, w);
         const vid = new Set();
         for (const f of e.sklad) {
-            if ((isNoppes(f.m) || isMc(f.m)) && !vid.has(f.m)) { vid.add(f.m); add(incl, f.m, 1); }
+            if ((isNoppes(f.m) || isMc(f.m)) && !vid.has(f.m)) { vid.add(f.m); add(incl, f.m, w); }
         }
         const prviN = e.sklad.find((f) => isNoppes(f.m));
-        add(podNoppes, prviN ? prviN.m : '(brez noppes okvirja)', 1);
+        add(podNoppes, prviN ? prviN.m : '(brez noppes okvirja)', w);
     });
 
     // --- alokacije ---
@@ -180,6 +186,8 @@ async function main() {
     L.push('Vzorcev CPU niti: ' + vzorcev + ' (vseh niti ' + vsehVzorcev + '). Alokacij niti (ocena iz TLAB vzorcev): ' +
         mb(alokB) + ' MB' + (sekund ? ' = ' + (alokB / (1024 * 1024) / sekund).toFixed(1) + ' MB/s' : '') +
         ' (vse niti ' + mb(alokVseB) + ' MB, dogodkov niti ' + alokDogodkov + ').');
+    if (o.nativeUtez > 0) L.push('', 'Vzorci vkljucujejo jdk.NativeMethodSample z utezjo ' + o.nativeUtez + ': nativnih (JNI) ' +
+        nativeVzorcev + ' = ' + pct(nativeVzorcev, vzorcev) + ' % utezenih vzorcev niti.');
 
     tabela('CPU: lastni cas po metodi (vrh sklada)', ['metoda', 'vzorcev', '%'],
         urejeno(self).slice(0, o.top).map(([k, v]) => [ime(k), v, pct(v, vzorcev)]));

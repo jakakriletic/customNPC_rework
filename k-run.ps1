@@ -13,6 +13,13 @@
         .\ponovitve-run.ps1 -Scenarij klient -Dodatno @('-Variant','idle','-N','200')
 
     Merila (K1-K8) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
+
+    -Jfr (M5-K.1): v merilnem oknu snema JFR klientskega JVM-ja (jcmd JFR.start, nastavitve 'profile')
+    v audit\jfr\k-<varianta>-<N>-<stamp>.jfr in napise povzetek niti 'Client thread' z nativnimi
+    vzorci (dev\tools\jfr-povzetek.js --native). Profiler stane CPU, zato zagon z -Jfr ni baseline.
+    JFR v JDK 8 ujame le malo vzorcev render niti (vecino casa je v JNI), zato je za profil
+    namenjen -Vzorci <ms>: harness med merjenjem vzorci sklad samo render niti (rework/diag/StackSampler)
+    v <izhod>-skladi.txt, povzetek po fazah slicice napise dev\tools\skladi-povzetek.js. Tudi to ni baseline.
 #>
 param(
     [ValidateSet('idle', 'boj', 'skripte', 'nedosegljiva')][string]$Variant = 'idle',
@@ -22,7 +29,11 @@ param(
     [int]$RenderDistance = 8,
     [int]$Fov = 70,
     [string]$JsonPath = '',
-    [switch]$DovoliTuje
+    [switch]$DovoliTuje,
+    [switch]$Jfr,
+    [int]$Vzorci = 0,
+    # M5-K.0 je meril s skritim GUI-jem; v 1.12 to skrije tudi imena NPC-jev, zato je od M5-K.1 GUI viden.
+    [switch]$SkrijGui
 )
 
 $ErrorActionPreference = 'Stop'
@@ -113,7 +124,7 @@ $jobPath = Join-Path $audit "k-$Variant-$N-$stamp.job"
 $job = @("world=$world", 'createSeed=customnpc-rework', "expectNpc=$pricakovano", "expectNpcMin=$pricakovanoMin",
          # Invariantna kultura: v sl-SI bi -f dal decimalne vejice in HarnessJob kamere ne bi prebral.
          [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, 'cam={0},{1},{2},180,{3}', $camX, $camY, $camZ, $pitch),
-         "renderDistance=$RenderDistance", "fov=$Fov", ('settle={0}' -f (3 + [int]($N / 250))),
+         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci",('settle={0}' -f (3 + [int]($N / 250))),
          "warmup=$Warmup", "measure=$Measure", ('out=' + ($out -replace '\\', '/')))
 for ($i = 0; $i -lt $cmds.Count; $i++) { $job += ('cmd.{0}={1}' -f ($i + 1), $cmds[$i]) }
 [System.IO.File]::WriteAllLines($jobPath, $job, (New-Object System.Text.UTF8Encoding($false)))
@@ -133,6 +144,13 @@ $psi.CreateNoWindow = $true
 $proc = [System.Diagnostics.Process]::Start($psi)
 $casMeja = (Get-Date).AddSeconds(600 + $Warmup + $Measure)
 $tujiMed = @{}
+$jfrPot = ''
+$jfrIzpis = ''
+if ($Jfr) {
+    $jfrDir = Join-Path $audit 'jfr'
+    New-Item -ItemType Directory -Force -Path $jfrDir | Out-Null
+    $jfrPot = Join-Path $jfrDir "k-$Variant-$N-$stamp.jfr"
+}
 while (-not $proc.HasExited) {
     if ((Get-Date) -gt $casMeja) {
         Write-Host '  ! klient se ni koncal pravocasno; ubijam drevo procesov'
@@ -149,7 +167,22 @@ while (-not $proc.HasExited) {
     if ("$tekst" -match 'RWHARNESS-FAZA (WARMUP|MEASURE)') {
         foreach ($t in @(Get-TujiJava (Get-DrevoProcesov @($proc.Id)))) { $tujiMed[$t] = $true }
     }
-    Start-Sleep -Seconds 5
+    if ($Jfr -and $jfrIzpis -eq '' -and "$tekst" -match 'RWHARNESS-FAZA MEASURE') {
+        # Klientski JVM je GradleStart (streznik bi bil GradleStartServer) v drevesu nasega procesa.
+        $drevo = Get-DrevoProcesov @($proc.Id)
+        $javaPid = -1
+        foreach ($p in @(Get-CimInstance Win32_Process -Filter "Name='java.exe'" -ErrorAction SilentlyContinue)) {
+            if ($drevo.ContainsKey([int]$p.ProcessId) -and ("$($p.CommandLine)" -match 'GradleStart(\s|$)')) { $javaPid = [int]$p.ProcessId }
+        }
+        if ($javaPid -gt 0) {
+            # Posnetek se konca pred koncem merjenja, zato ga JVM zapise, preden se klient ugasne.
+            $ErrorActionPreference = 'Continue'
+            $jfrIzpis = (& (Join-Path $env:JAVA_HOME 'bin\jcmd.exe') $javaPid JFR.start name=rwk settings=profile ("duration={0}s" -f ($Measure - 6)) ("filename={0}" -f $jfrPot) 2>&1 | Out-String)
+            $ErrorActionPreference = 'Stop'
+        } else { $jfrIzpis = 'ni klientskega java procesa' }
+        Write-Host ("  JFR (PID {0}): {1}" -f $javaPid, $jfrIzpis.Trim())
+    }
+    Start-Sleep -Seconds $(if ($Jfr -and $jfrIzpis -eq '') { 1 } else { 5 })
 }
 $tekst = if (Test-Path $log) { Get-Content $log -Raw } else { '' }
 foreach ($m in [regex]::Matches("$tekst", 'RWHARNESS-[A-Z]+[^\r\n]*')) { if ($m.Value -notmatch '^RWHARNESS-UKAZ') { Write-Host "  $($m.Value)" } }
@@ -173,10 +206,32 @@ if ($r) {
         Check ("K4: upodobljenih min {0} / max {1}, zivih min {2}, delez upodobljenih min {3:P1} v {4} vzorcih (prag 90 %)" -f $r.upodobljenoMin, $r.upodobljenoMax, $r.zivihMin, $r.upodobljenoDelezMin, $r.upodobljenoVzorcev) ($dovoljVzorcev -and ($r.upodobljenoDelezMin -ge 0.9))
     }
     Check ("K5: kamera fiksna (odmik {0} blokov, {1} stopinj)" -f $r.kameraOdmikPoz, $r.kameraOdmikKot) (($r.kameraOdmikPoz -le 0.01) -and ($r.kameraOdmikKot -le 0.01))
-    Check ("K6: nastavitve: vsync {0}, limit {1}, RD {2}, FOV {3}" -f $r.vsync, $r.limitFramerate, $r.renderDistance, $r.fov) (($r.vsync -eq 0) -and ($r.limitFramerate -ge 260) -and ($r.renderDistance -eq $RenderDistance) -and ([math]::Abs($r.fov - $Fov) -lt 0.01))
+    Check ("K6: nastavitve: vsync {0}, limit {1}, RD {2}, FOV {3}, skrit GUI {4}" -f $r.vsync, $r.limitFramerate, $r.renderDistance, $r.fov, $r.hideGui) (($r.vsync -eq 0) -and ($r.limitFramerate -ge 260) -and ($r.renderDistance -eq $RenderDistance) -and ([math]::Abs($r.fov - $Fov) -lt 0.01) -and ($r.hideGui -eq [int][bool]$SkrijGui))
     Check ("K7: {0} slicic v {1:N1} s" -f $r.slicic, $r.sekundMerjenja) (($r.slicic -ge 10 * $Measure) -and ([math]::Abs($r.sekundMerjenja - $Measure) -le 2))
 }
 Check ("K8: med ogrevanjem in merjenjem ni tekel tuj gradle build ali Minecraft" + $(if ($tujiMed.Count) { ' - ' + (@($tujiMed.Keys) -join '; ') } else { '' })) ($tujiMed.Count -eq 0 -or $DovoliTuje)
+if ($Jfr) {
+    $jfrOk = ($jfrIzpis -match 'Started recording') -and (Test-Path $jfrPot) -and ((Get-Item $jfrPot).Length -gt 0)
+    Check ("J1: JFR posnetek render niti zapisan ({0})" -f $jfrPot) $jfrOk
+    if ($jfrOk) {
+        $md = $jfrPot -replace '\.jfr$', '.md'
+        $ErrorActionPreference = 'Continue'
+        & node (Join-Path $root 'dev\tools\jfr-povzetek.js') $jfrPot --nit 'Client thread' --native --top 30 --md $md 2>&1 | Out-Null
+        $ErrorActionPreference = 'Stop'
+        Check ("J2: povzetek JFR ({0})" -f $md) (Test-Path $md)
+    }
+}
+if ($Vzorci -gt 0) {
+    $skladi = $out -replace '\.json$', '-skladi.txt'
+    $nVz = if ($r) { [int]$r.vzorcevSklada } else { 0 }
+    # Ob 1 ms bi bilo 1000/s; getStackTrace potrebuje varno tocko, zato je vsaj 100/s dovolj za delez +-1 %.
+    Check ("J3: vzorci sklada render niti ({0}, {1:N0} na s, {2:N1} us na vzorec)" -f $nVz, ($nVz / [math]::Max(1, $Measure)), $(if ($r) { $r.vzorcevalnikUsNaVzorec } else { 0 })) ((Test-Path $skladi) -and ($nVz -ge 100 * $Measure))
+    if (Test-Path $skladi) {
+        $ErrorActionPreference = 'Continue'
+        & node (Join-Path $root 'dev\tools\skladi-povzetek.js') $skladi --md ($skladi -replace '\.txt$', '.md') 2>&1 | Out-Null
+        $ErrorActionPreference = 'Stop'
+    }
+}
 
 if ($r) {
     Write-Host ''
@@ -184,7 +239,9 @@ if ($r) {
         $Variant, $N, $r.frameMsP50, $r.frameMsP95, $r.frameMsP99, $r.frameMsMax, $r.fps, $r.fpsLow1, $r.fpsLow01, $r.gcStevilo, $r.gcMs, $r.integriraniStreznikMsPovp)
     if ($JsonPath -ne '') {
         $odtis = @{ varianta = $Variant; npc = $N; ogrevanje = $Warmup; sekund = $Measure; rd = $RenderDistance; fov = $Fov;
-                    kamera = [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, '{0},{1},{2},180,{3}', $camX, $camY, $camZ, $pitch); sirina = $r.sirina; visina = $r.visina }
+                    kamera = [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, '{0},{1},{2},180,{3}', $camX, $camY, $camZ, $pitch); sirina = $r.sirina; visina = $r.visina; jfr = [int][bool]$Jfr; skritGui = [int][bool]$SkrijGui }
+        # Samo, ce je vklopljen: baseline M5-K.1 (18. 10.) kljuca nima, odtis ostane primerljiv.
+        if ($Vzorci -gt 0) { $odtis['vzorci'] = $Vzorci }
         $vel = @{ 'frame.p50' = $r.frameMsP50; 'frame.p95' = $r.frameMsP95; 'frame.p99' = $r.frameMsP99; 'frame.max' = $r.frameMsMax;
                   'fps' = $r.fps; 'fps.low1' = $r.fpsLow1; 'fps.low01' = $r.fpsLow01; 'gc.stevilo' = $r.gcStevilo; 'gc.ms' = $r.gcMs;
                   'upodobljeno.min' = $r.upodobljenoMin; 'streznik.ms' = $r.integriraniStreznikMsPovp }

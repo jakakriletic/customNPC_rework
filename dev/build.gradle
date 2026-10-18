@@ -161,6 +161,7 @@ task testOriginal(type: Test) {
     exclude '**/DistributionTest.class'
     exclude '**/FrameStatsTest.class'
     exclude '**/HarnessJobTest.class'
+    exclude '**/StackSamplerTest.class'
     exclude '**/DiagSnapshotTest.class'
     exclude '**/DiagChunkPlanTest.class'
     // M4.14: formacije so nov paket, v originalu ga ni.

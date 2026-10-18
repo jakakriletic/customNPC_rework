@@ -71,6 +71,8 @@ public final class ClientHarness {
     private long measureStartNs;
     private long measureEndNs;
     private volatile int commandsDone = -1;
+    /** M5-K.1: vzorcevalnik sklada render niti med merjenjem (samo s {@code sampleMs > 0}). */
+    private StackSampler sampler;
     private final List<String> errors = new ArrayList<String>();
 
     private ClientHarness(HarnessJob job) {
@@ -180,6 +182,11 @@ public final class ClientHarness {
                         this.lastFrame = 0L;
                         this.lastSample = 0L;
                         this.measureStartNs = System.nanoTime();
+                        if (this.job.sampleMs > 0) {
+                            // ClientTickEvent tece na render niti, zato je currentThread() prava nit.
+                            this.sampler = new StackSampler(Thread.currentThread(), this.job.sampleMs, 96);
+                            this.sampler.start();
+                        }
                         enter(Phase.MEASURE);
                     }
                     break;
@@ -232,7 +239,8 @@ public final class ClientHarness {
         mc.gameSettings.viewBobbing = false;
         mc.gameSettings.limitFramerate = 260; // 260 = neomejeno v 1.12
         mc.gameSettings.fovSetting = this.job.fov;
-        mc.gameSettings.hideGUI = true;
+        // M5-K.1: s skritim GUI-jem vanilla ne narise nobenega imena (canRenderName -> isGuiEnabled).
+        mc.gameSettings.hideGUI = this.job.hideGui;
         mc.gameSettings.showDebugInfo = false;
         mc.gameSettings.pauseOnLostFocus = false;
         org.lwjgl.opengl.Display.setVSyncEnabled(false);
@@ -325,6 +333,14 @@ public final class ClientHarness {
         }
         Phase reached = this.phase;
         enter(Phase.DONE);
+        if (this.sampler != null) {
+            this.sampler.stop();
+            try {
+                this.sampler.writeFolded(new File(this.job.out.replaceAll("\\.json$", "") + "-skladi.txt"));
+            } catch (Exception e) {
+                this.errors.add("zapis skladov: " + e);
+            }
+        }
         try {
             writeJson(mc, reached);
             System.out.println("RWHARNESS-KONEC " + this.job.out);
@@ -381,6 +397,10 @@ public final class ClientHarness {
         num(b, "fov", mc.gameSettings.fovSetting);
         num(b, "vsync", mc.gameSettings.enableVsync ? 1 : 0);
         num(b, "limitFramerate", mc.gameSettings.limitFramerate);
+        num(b, "hideGui", mc.gameSettings.hideGUI ? 1 : 0);
+        num(b, "vzorcevSklada", this.sampler == null ? 0 : this.sampler.samples());
+        num(b, "vzorcevSkladaRunnable", this.sampler == null ? 0 : this.sampler.samplesInState(Thread.State.RUNNABLE));
+        num(b, "vzorcevalnikUsNaVzorec", this.sampler == null ? 0.0 : this.sampler.avgCostMicros());
         num(b, "sirina", mc.displayWidth);
         num(b, "visina", mc.displayHeight);
         num(b, "heapMaxMb", Runtime.getRuntime().maxMemory() / (1024L * 1024L));

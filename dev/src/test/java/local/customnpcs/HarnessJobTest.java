@@ -1,6 +1,8 @@
 package local.customnpcs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
@@ -40,6 +42,8 @@ public class HarnessJobTest {
         p.setProperty("expectNpc", "200");
         p.setProperty("renderDistance", "12");
         p.setProperty("fov", "90");
+        p.setProperty("hideGui", "1");
+        p.setProperty("sampleMs", "2");
         p.setProperty("settle", "3");
         p.setProperty("warmup", "30");
         p.setProperty("measure", "60");
@@ -55,6 +59,8 @@ public class HarnessJobTest {
         assertEquals(30.0f, j.camPitch, 0.0f);
         assertEquals(12, j.renderDistance);
         assertEquals(90.0f, j.fov, 0.0f);
+        assertTrue(j.hideGui);
+        assertEquals(2, j.sampleMs);
         assertEquals(3, j.settleSeconds);
         assertEquals(30, j.warmupSeconds);
         assertEquals(60, j.measureSeconds);
@@ -68,6 +74,8 @@ public class HarnessJobTest {
         assertEquals(-1, j.expectNpc);
         assertEquals(8, j.renderDistance);
         assertEquals(70.0f, j.fov, 0.0f);
+        assertFalse("privzeto GUI viden, da se imena NPC-jev narisejo (M5-K.1)", j.hideGui);
+        assertEquals("vzorcevalnik privzeto izklopljen", 0, j.sampleMs);
         assertEquals(5, j.settleSeconds);
         assertEquals(30, j.warmupSeconds);
         assertEquals(60, j.measureSeconds);
