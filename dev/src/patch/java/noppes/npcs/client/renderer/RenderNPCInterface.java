@@ -43,7 +43,9 @@ import net.minecraft.util.ResourceLocation;
 import noppes.npcs.client.ImageDownloadAlt;
 import noppes.npcs.client.renderer.ImageBufferDownloadAlt;
 import noppes.npcs.entity.EntityCustomNpc;
+import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.rework.render.LabelCache;
 import org.lwjgl.opengl.GL11;
 
 public class RenderNPCInterface<T extends EntityNPCInterface>
@@ -81,6 +83,15 @@ extends RenderLiving<T> {
         }
     }
 
+    // M5-K K4: napis iz display lista (rework/render/LabelCache); z RwLabelCache 0 original.
+    private void rwDrawLabel(FontRenderer fontrenderer, String text, int color) {
+        if (CustomNpcs.RwLabelCache != 0) {
+            LabelCache.drawCentered(fontrenderer, text, color);
+        } else {
+            fontrenderer.drawString(text, -fontrenderer.getStringWidth(text) / 2, 0, color);
+        }
+    }
+
     protected void renderLivingLabel(EntityNPCInterface npc, float d, float d1, float d2, int i, String name, String title) {
         FontRenderer fontrenderer = this.getFontRendererFromRenderManager();
         float f1 = npc.baseHeight / 5.0f * (float)npc.display.getSize();
@@ -102,19 +113,19 @@ extends RenderLiving<T> {
             float f3 = 0.01666667f * f1 * 0.6f;
             GlStateManager.translate((float)0.0f, (float)(-f1 / 6.5f * 0.4f), (float)0.0f);
             GlStateManager.scale((float)(-f3), (float)(-f3), (float)f3);
-            fontrenderer.drawString(title, -fontrenderer.getStringWidth(title) / 2, 0, color);
+            this.rwDrawLabel(fontrenderer, title, color);
             GlStateManager.scale((float)(1.0f / -f3), (float)(1.0f / -f3), (float)(1.0f / f3));
             GlStateManager.translate((float)0.0f, (float)(f1 / 6.5f * 0.85f), (float)0.0f);
         }
         GlStateManager.scale((float)(-f2), (float)(-f2), (float)f2);
         if (npc.isInRange(this.renderManager.renderViewEntity, 4.0)) {
             GlStateManager.disableDepth();
-            fontrenderer.drawString(name, -fontrenderer.getStringWidth(name) / 2, 0, color + 0x55000000);
+            this.rwDrawLabel(fontrenderer, name, color + 0x55000000);
             GlStateManager.enableDepth();
         }
         GlStateManager.depthMask((boolean)true);
         GlStateManager.color((float)1.0f, (float)1.0f, (float)1.0f, (float)1.0f);
-        fontrenderer.drawString(name, -fontrenderer.getStringWidth(name) / 2, 0, color);
+        this.rwDrawLabel(fontrenderer, name, color);
         GlStateManager.enableLighting();
         GlStateManager.disableBlend();
         GlStateManager.color((float)1.0f, (float)1.0f, (float)1.0f, (float)1.0f);

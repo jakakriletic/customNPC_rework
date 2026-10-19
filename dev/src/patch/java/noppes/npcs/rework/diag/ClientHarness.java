@@ -27,6 +27,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.rework.render.HeadwearSkip;
+import noppes.npcs.rework.render.LabelCache;
 
 /**
  * Klientski merilni harness M2.4r (M5-K.0).
@@ -79,6 +80,7 @@ public final class ClientHarness {
     /** M5-K K14b: zahteva za preverbo pokrivala v naslednjem RenderWorldLastEvent in njen izid. */
     private boolean headwearCheckPending;
     private HeadwearCheck headwearCheck;
+    private LabelCheck labelCheck;
     private final List<String> errors = new ArrayList<String>();
 
     private ClientHarness(HarnessJob job) {
@@ -177,7 +179,8 @@ public final class ClientHarness {
                     break;
                 case WARMUP:
                     pinCamera(mc, false);
-                    if (secondsInPhase() >= this.job.warmupSeconds && this.job.headwearCheck && this.headwearCheck == null) {
+                    if (secondsInPhase() >= this.job.warmupSeconds && ((this.job.headwearCheck && this.headwearCheck == null)
+                            || (this.job.labelCheck && this.labelCheck == null))) {
                         // M5-K K14b: preverba v naslednjem RenderWorldLastEvent, merjenje po njej.
                         this.headwearCheckPending = true;
                     } else if (secondsInPhase() >= this.job.warmupSeconds) {
@@ -220,13 +223,24 @@ public final class ClientHarness {
             return;
         }
         this.headwearCheckPending = false;
-        HeadwearCheck r = HeadwearCheck.run(Minecraft.getMinecraft(), ev.getPartialTicks());
-        StringBuilder s = new StringBuilder();
-        for (HeadwearCheck.Series x : r.series) {
-            s.append(" | ").append(x);
+        if (this.job.headwearCheck) {
+            HeadwearCheck r = HeadwearCheck.run(Minecraft.getMinecraft(), ev.getPartialTicks());
+            StringBuilder s = new StringBuilder();
+            for (HeadwearCheck.Series x : r.series) {
+                s.append(" | ").append(x);
+            }
+            System.out.println("RWHARNESS-POKRIVALO ok=" + r.ok() + " npc=" + r.npcs + " obcutljivost=" + r.sensitivity + s + " " + r.error);
+            this.headwearCheck = r;
         }
-        System.out.println("RWHARNESS-POKRIVALO ok=" + r.ok() + " npc=" + r.npcs + " obcutljivost=" + r.sensitivity + s + " " + r.error);
-        this.headwearCheck = r;
+        if (this.job.labelCheck) {
+            LabelCheck r = LabelCheck.run(Minecraft.getMinecraft(), ev.getPartialTicks());
+            StringBuilder s = new StringBuilder();
+            for (LabelCheck.Series x : r.series) {
+                s.append(" | ").append(x);
+            }
+            System.out.println("RWHARNESS-NAPISI ok=" + r.ok() + " npc=" + r.npcs + " vDometu=" + r.labelled + " obcutljivost=" + r.sensitivity + s + " " + r.error);
+            this.labelCheck = r;
+        }
     }
 
     @SubscribeEvent
@@ -261,6 +275,9 @@ public final class ClientHarness {
         if (this.job.headwearSkip >= 0) {
             // M5-K K14b: klient in integrirani streznik si delita JVM in staticno polje.
             CustomNpcs.RwHeadwearSkip = this.job.headwearSkip;
+        }
+        if (this.job.labelCache >= 0) {
+            CustomNpcs.RwLabelCache = this.job.labelCache;
         }
         mc.gameSettings.renderDistanceChunks = this.job.renderDistance;
         mc.gameSettings.enableVsync = false;
@@ -437,6 +454,23 @@ public final class ClientHarness {
         num(b, "pokrivaloDelovNic", HeadwearSkip.partsNone);
         num(b, "pokrivaloDelovNekaj", HeadwearSkip.partsSome);
         num(b, "pokrivaloDelovVse", HeadwearSkip.partsAll);
+        num(b, "rwLabelCache", CustomNpcs.RwLabelCache);
+        num(b, "napisiZListom", LabelCache.drawsList);
+        num(b, "napisiOriginal", LabelCache.drawsOriginal);
+        num(b, "napisiPrevodov", LabelCache.compiles);
+        LabelCheck lc = this.labelCheck;
+        num(b, "napisiPreverba", lc == null ? -1 : (lc.ok() ? 1 : 0));
+        if (lc != null) {
+            num(b, "napisiNpc", lc.npcs);
+            num(b, "napisiVDometu", lc.labelled);
+            num(b, "napisiObcutljivost", lc.sensitivity);
+            StringBuilder ls = new StringBuilder();
+            for (LabelCheck.Series x : lc.series) {
+                ls.append(ls.length() == 0 ? "" : " | ").append(x);
+            }
+            kv(b, "napisiSerije", ls.toString());
+            kv(b, "napisiNapaka", lc.error);
+        }
         HeadwearCheck hc = this.headwearCheck;
         num(b, "pokrivaloPreverba", hc == null ? -1 : (hc.ok() ? 1 : 0));
         if (hc != null) {

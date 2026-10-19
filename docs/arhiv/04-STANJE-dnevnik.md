@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 93 → 1)
+# Arhiv: dnevnik sej (vnosi 94 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,37 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-19 (94) — M5-K K14 zavržen: en list pokrivala ne pomaga, geometrija pa
+
+**Paket:** M5-K K14 · **Stanje:** **zaključeno — zavrženo** (izid meritve, ne nedokončano delo).
+
+**Narejeno:**
+- Prenos 1:1 `Model2DRenderer` in `ModelHeadwear` v `src/patch` (`b896cfc`; `primerjaj-bytecode` 0 za pregled,
+  `ModelHeadwearBaselineTest`). Ostane.
+- Poskus `RwHeadwearList` (`03ab3bc`): 6 delov pokrivala v en display list (način 1 kliče liste otrok, 2 raven
+  list), `HeadwearState` spremlja stanje otrok. Dokaz v klientu `k-run -PreveriPokrivalo` (`HeadwearCheck`, FBO,
+  načini 0/1/2/0, skin + neprozorna testna tekstura): **0 razlik** barve in globine; med igro 0 prevezav.
+- A/B 3 + 3 (`audit/m5k14-ab.ps1`): idle-500 p50 11,589 → 11,423 ms (razpona se prekrivata), idle-200
+  6,538 → 6,590 → **zavrženo**, koda odstranjena v `4370184` (vrne se z `git revert 4370184`).
+- Zgornja meja `HeadWearType=0` (3 ponovitve): idle-500 p50 **11,589 → 8,907 ms (−23 %)**, p95 −22 %.
+- `dev/tools/skini-pokrivalo.js`: 41 % od 239 humanoidnih skinov CNPC ima povsem prozorno pokrivalo, prazni so
+  60 % delov in 70 % trakov ekstruzije. [zapis](../meritve/2026-10-19-M5-K-K14-pokrivalo-en-list.md)
+
+**Ni narejeno in zakaj:** privzeti vklop (D-032) — ni dobitka nad šumom.
+
+**Ugotovitve:**
+- **Napačna premisa K14:** profil z enim listom pokaže pokrivalo še vedno 26,1 % — čas je v gonilniku pri
+  izvajanju **816 oglišč na NPC** (6 × 34 štirikotnikov `renderItemIn2D`), ne v ~30 klicih GL. Pravilo merjenja
+  dodano v Znane omejitve (arhiv §5).
+- Skin fixture `humanmale/steve.png` ima prozoren klobuk: pokrivalo stane 23 % sličice in ne nariše niti
+  enega piksla → nov kandidat **K14b** (izpusti geometrijo prozornih tekselov, ista slika) → **Q29**.
+
+**Spremembe obnašanja:** nobene (stikalo poskusa odstranjeno; `verify-package` 68 vnosov: +2 razreda prenosa 1:1).
+
+**Meritve:** enakost pikslov, A/B idle-500/idle-200 (3 + 3), zgornja meja (3), profil idle-500 z enim listom.
+
+**Naslednja seja:** po odgovoru na Q29 **K14b** (priporočeno) ali **K4** (imena) po Q28.
 
 ### 2026-10-18 (93) — M5-K.1 zaključen: baseline in profil klienta
 

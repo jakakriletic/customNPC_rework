@@ -12,7 +12,7 @@
         .\k-run.ps1 -Variant idle -N 50 -Warmup 10 -Measure 20      # hiter preizkus harnessa
         .\ponovitve-run.ps1 -Scenarij klient -Dodatno @('-Variant','idle','-N','200')
 
-    Merila (K1-K8, z -PreveriPokrivalo K9, s -Pokrivalo K10) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
+    Merila (K1-K8, z -PreveriPokrivalo K9, s -Pokrivalo K10, z -PreveriNapise K11, z -Napisi K12) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
 
     -Jfr (M5-K.1): v merilnem oknu snema JFR klientskega JVM-ja (jcmd JFR.start, nastavitve 'profile')
     v audit\jfr\k-<varianta>-<N>-<stamp>.jfr in napise povzetek niti 'Client thread' z nativnimi
@@ -37,7 +37,11 @@ param(
     # M5-K K14b: RwHeadwearSkip za ta zagon (harness ga nastavi ob vstopu); -1 = iz CustomNpcs.cfg.
     [ValidateRange(-1, 1)][int]$Pokrivalo = -1,
     # M5-K K14b: po ogrevanju primerjaj piksle in globino z RwHeadwearSkip 0 in 1 (merilo K9).
-    [switch]$PreveriPokrivalo
+    [switch]$PreveriPokrivalo,
+    # M5-K K4: RwLabelCache za ta zagon; -1 = iz CustomNpcs.cfg.
+    [ValidateRange(-1, 1)][int]$Napisi = -1,
+    # M5-K K4: po ogrevanju primerjaj piksle in globino z RwLabelCache 0 in 1 (merilo K11).
+    [switch]$PreveriNapise
 )
 
 $ErrorActionPreference = 'Stop'
@@ -128,7 +132,7 @@ $jobPath = Join-Path $audit "k-$Variant-$N-$stamp.job"
 $job = @("world=$world", 'createSeed=customnpc-rework', "expectNpc=$pricakovano", "expectNpcMin=$pricakovanoMin",
          # Invariantna kultura: v sl-SI bi -f dal decimalne vejice in HarnessJob kamere ne bi prebral.
          [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, 'cam={0},{1},{2},180,{3}', $camX, $camY, $camZ, $pitch),
-         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci", "headwearSkip=$Pokrivalo", ('headwearCheck={0}' -f [int][bool]$PreveriPokrivalo),('settle={0}' -f (3 + [int]($N / 250))),
+         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci", "headwearSkip=$Pokrivalo", ('headwearCheck={0}' -f [int][bool]$PreveriPokrivalo), "labelCache=$Napisi", ('labelCheck={0}' -f [int][bool]$PreveriNapise),('settle={0}' -f (3 + [int]($N / 250))),
          "warmup=$Warmup", "measure=$Measure", ('out=' + ($out -replace '\\', '/')))
 for ($i = 0; $i -lt $cmds.Count; $i++) { $job += ('cmd.{0}={1}' -f ($i + 1), $cmds[$i]) }
 [System.IO.File]::WriteAllLines($jobPath, $job, (New-Object System.Text.UTF8Encoding($false)))
@@ -218,6 +222,14 @@ if ($r -and $Pokrivalo -ge 0) {
     # Vsi NPC-ji fixture imajo isti skin (SimpleTexture): z 1 vsak izris brez vrnitve na original, ena analiza na renderer.
     Check ("K10: RwHeadwearSkip {0} (zahtevano {1}), izrisov K14b {2}, na original {3} + {4} (stanje), analiz {5}, delov nic/nekaj/vse {6}/{7}/{8}" -f $r.rwHeadwearSkip, $Pokrivalo, $r.pokrivaloIzrisov, $r.pokrivaloOriginal, $r.pokrivaloOriginalStanje, $r.pokrivaloAnaliz, $r.pokrivaloDelovNic, $r.pokrivaloDelovNekaj, $r.pokrivaloDelovVse) (($r.rwHeadwearSkip -eq $Pokrivalo) -and ($PreveriPokrivalo -or ((($Pokrivalo -eq 0) -eq ($r.pokrivaloIzrisov -eq 0)) -and ($r.pokrivaloOriginal -eq 0) -and ($r.pokrivaloOriginalStanje -eq 0))))
 }
+if ($r -and $Napisi -ge 0) {
+    # Prvi izris niza je original, drugi posname list; v 60 s so skoraj vsi izrisi z listom.
+    Check ("K12: RwLabelCache {0} (zahtevano {1}), napisov z listom {2}, original {3}, prevodov {4}" -f $r.rwLabelCache, $Napisi, $r.napisiZListom, $r.napisiOriginal, $r.napisiPrevodov) (($r.rwLabelCache -eq $Napisi) -and ($PreveriNapise -or (($Napisi -eq 0) -eq ($r.napisiZListom -eq 0))))
+}
+if ($r -and $PreveriNapise) {
+    foreach ($ser in ("$($r.napisiSerije)" -split ' \| ')) { Write-Host ("    napisi {0}" -f $ser) }
+    Check ("K11: napisi bitno enaki z RwLabelCache 0 in 1 ({0} NPC, {1} v dometu imen; ime testnega sveta, barvne kode in sumniki, koda k po originalu), drug naslov spremeni {2} pikslov {3}" -f $r.napisiNpc, $r.napisiVDometu, $r.napisiObcutljivost, $r.napisiNapaka) ($r.napisiPreverba -eq 1)
+}
 if ($r -and $PreveriPokrivalo) {
     foreach ($ser in ("$($r.pokrivaloSerije)" -split ' \| ')) { Write-Host ("    pokrivalo {0}" -f $ser) }
     Check ("K9: slika in globina pokrivala bitno enaki z RwHeadwearSkip 0 in 1 ({0} NPC; skin, vzorec, 5 pravih skinov), vzorec spremeni {1} pikslov {2}" -f $r.pokrivaloNpc, $r.pokrivaloObcutljivost, $r.pokrivaloNapaka) ($r.pokrivaloPreverba -eq 1)
@@ -255,6 +267,7 @@ if ($r) {
         # Samo, ce je vklopljen: baseline M5-K.1 (18. 10.) kljuca nima, odtis ostane primerljiv.
         if ($Vzorci -gt 0) { $odtis['vzorci'] = $Vzorci }
         if ($Pokrivalo -ge 0) { $odtis['rwHeadwearSkip'] = $Pokrivalo }
+        if ($Napisi -ge 0) { $odtis['rwLabelCache'] = $Napisi }
         $vel = @{ 'frame.p50' = $r.frameMsP50; 'frame.p95' = $r.frameMsP95; 'frame.p99' = $r.frameMsP99; 'frame.max' = $r.frameMsMax;
                   'fps' = $r.fps; 'fps.low1' = $r.fpsLow1; 'fps.low01' = $r.fpsLow01; 'gc.stevilo' = $r.gcStevilo; 'gc.ms' = $r.gcMs;
                   'upodobljeno.min' = $r.upodobljenoMin; 'streznik.ms' = $r.integriraniStreznikMsPovp }

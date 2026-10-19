@@ -30,6 +30,8 @@ import java.util.Properties;
  *                             integrirani streznik si delita JVM); -1 = pusti nastavitev iz CustomNpcs.cfg
  * headwearCheck=0             M5-K K14b: 1 = po ogrevanju primerjaj piksle in globino z RwHeadwearSkip 0 in 1
  *                             ({@link HeadwearCheck}); izid v JSON
+ * labelCache=-1               M5-K K4: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwLabelCache}; -1 = iz konfiguracije
+ * labelCheck=0                M5-K K4: 1 = po ogrevanju primerjaj piksle in globino z RwLabelCache 0 in 1 ({@link LabelCheck})
  * sampleMs=0                 M5-K.1: &gt; 0 = med merjenjem vzorci sklad render niti vsakih toliko ms
  *                             ({@link StackSampler}); izhod {@code out} s koncnico -skladi.txt
  * settle=5                  s po ukazih, preden se steje NPC-je
@@ -62,6 +64,10 @@ public final class HarnessJob {
     public final int headwearSkip;
     /** M5-K K14b: preverba enakosti slike pokrivala po ogrevanju. */
     public final boolean headwearCheck;
+    /** M5-K K4: RwLabelCache za zagon, -1 = iz konfiguracije. */
+    public final int labelCache;
+    /** M5-K K4: preverba enakosti slike napisov po ogrevanju. */
+    public final boolean labelCheck;
     public final int settleSeconds;
     public final int warmupSeconds;
     public final int measureSeconds;
@@ -99,6 +105,8 @@ public final class HarnessJob {
         this.sampleMs = intValue(p, "sampleMs", 0);
         this.headwearSkip = intValue(p, "headwearSkip", -1);
         this.headwearCheck = intValue(p, "headwearCheck", 0) != 0;
+        this.labelCache = intValue(p, "labelCache", -1);
+        this.labelCheck = intValue(p, "labelCheck", 0) != 0;
         this.settleSeconds = intValue(p, "settle", 5);
         this.warmupSeconds = intValue(p, "warmup", 30);
         this.measureSeconds = intValue(p, "measure", 60);
@@ -107,8 +115,8 @@ public final class HarnessJob {
             throw new IllegalArgumentException("renderDistance izven 2..32: " + this.renderDistance);
         }
         if (this.measureSeconds < 1 || this.warmupSeconds < 0 || this.settleSeconds < 0 || this.sampleMs < 0
-                || this.headwearSkip < -1 || this.headwearSkip > 1) {
-            throw new IllegalArgumentException("casi morajo biti nenegativni, measure >= 1, headwearSkip -1..1");
+                || this.headwearSkip < -1 || this.headwearSkip > 1 || this.labelCache < -1 || this.labelCache > 1) {
+            throw new IllegalArgumentException("casi morajo biti nenegativni, measure >= 1, headwearSkip in labelCache -1..1");
         }
     }
 
