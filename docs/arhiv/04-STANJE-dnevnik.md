@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 94 → 1)
+# Arhiv: dnevnik sej (vnosi 95 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,32 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-19 (95) — M5-K K14b: pokrivalo brez prozornih štirikotnikov
+
+**Paket:** M5-K K14b · **Stanje:** **zaključeno** (koda pod stikalom, privzeto 0; vklop Q30).
+
+**Narejeno:**
+- **Q29 odločeno** (uporabnik: "nared kar misls da bi blo bolje" → priporočilo K14b pred K4).
+- 1:1 prenos `LayerHeadwear` (1903772, bajtkoda 5/5), nato `rework/render/HeadwearQuads`, `HeadwearMask`,
+  `HeadwearSkip`, `Model2DRenderer.rwCompileFiltered`, stikalo `RwHeadwearSkip`; harness `HeadwearCheck`
+  (`k-run -Pokrivalo 1 -PreveriPokrivalo`, merili K9/K10).
+- Preverba pikslov: 7 serij × 200 NPC-jev (skin, vzorec, 5 pravih skinov CNPC) **0 razlik** barve in globine.
+- A/B 3 + 3 (`audit/m5k14b-ab.ps1`): idle-500 p50 11,493 → **8,595 ms (−25 %)**, p95 −24 %; idle-200 6,521 →
+  **5,317 (−18 %)**; razponi ≤ 3,6 %, ločeni. [zapis](../meritve/2026-10-19-M5-K-K14b-pokrivalo-brez-prozornih.md)
+- Testi 297/0 + testOriginal 37/0, `verify-package` PASS (69 vnosov).
+
+**Ni narejeno in zakaj:** privzeti vklop — ni *dokazano* enako (fragment točno na robni črti lahko v
+originalu vzame sosednji teksel), zato po D-007 → **Q30**.
+
+**Ugotovitve:** strogo enaka maska (z robom enega teksla) pri standardni postavitvi skina ne izpusti
+skoraj ničesar, ker so ob klobuku neprozorni teksli glave, telesa in rok (in čez `GL_REPEAT` noge) —
+A/B v šumu, zavržena. Pravilo merjenja: pri dokazu "izpusti nevidno geometrijo" preveri sosednje teksle
+v pravi postavitvi teksture, preden izmeriš.
+
+**Spremembe obnašanja:** nobene privzeto (`RwHeadwearSkip=0`).
+
+**Naslednja seja:** **K4** (imena: ~8 µs na napis, 20 % render niti pri 200 NPC-jih v dometu), nato K3.
 
 ### 2026-10-19 (94) — M5-K K14 zavržen: en list pokrivala ne pomaga, geometrija pa
 

@@ -273,7 +273,7 @@ NPC-jev. Odprejo se šele, če po M4.10, M4.11 in M5.6 merila M2.7 še vedno pad
 | ~~M5.5~~ | Meritev po vsakem → ni paket, je pravilo (D-016) | — |
 | ~~M5.7~~ | Prostorski indeks → **zavrženo** (D-030, chunk sekcije so že indeks; drag je gostota mreže); render LOD → K5 v M5-K | — |
 
-Vrstni red M5-S: **~~M5.10~~ → ~~M5.11~~ → ~~M5.12~~ → ~~M5.13~~ → ~~M5.9~~ → ~~M5.6/S5~~ → ~~M5.17 (S14c)~~ → ~~M5.14 (S16)~~ → ~~M5.15~~ → ~~M5.16~~ → ~~M5.8~~** → **~~M5-K.0~~ → ~~M5-K.1~~ → ~~K14~~ (zavržen 19. 10.) → ~~K14b~~ (19. 10., Q29; vklop Q30) → ~~K4~~ (19. 10., `RwLabelCache` privzeto 1) → K3 (Q28, 19. 10.) → K5 → M5-V.1 … M5-V.8 → K12 → ostali K-paketi** (D-033, D-034, D-035; K13 in K10 se po M5-V.8 ponovno ocenita); M5.2 po odgovoru na Q21. Celica `nedosegljiva` gre v M5.8 (kapaciteta brez nje je optimistična).
+Vrstni red M5-S: **~~M5.10~~ → ~~M5.11~~ → ~~M5.12~~ → ~~M5.13~~ → ~~M5.9~~ → ~~M5.6/S5~~ → ~~M5.17 (S14c)~~ → ~~M5.14 (S16)~~ → ~~M5.15~~ → ~~M5.16~~ → ~~M5.8~~** → **~~M5-K.0~~ → ~~M5-K.1~~ → ~~K14~~ (zavržen 19. 10.) → ~~K14b~~ (19. 10., Q29; vklop Q30) → ~~K4~~ (19. 10., `RwLabelCache` privzeto 1) → K3 (Q28; koda 19. 10., `RwEyesList=0`, A/B 20. 10.) → K5 → M5-V.1 … M5-V.8 → K12 → ostali K-paketi** (D-033, D-034, D-035; K13 in K10 se po M5-V.8 ponovno ocenita); M5.2 po odgovoru na Q21. Celica `nedosegljiva` gre v M5.8 (kapaciteta brez nje je optimistična).
 Sledenje poti brez branja blokov po vzoru 1.21.1 (S15, sprememba gibanja) ni v M5, ampak vhod za M4.13.
 M5-K (klient) je od D-033 obvezen del M5 in sledi takoj za M5.8 — glej razdelek **M5-K** spodaj. Obvezen modul **M5-V** (vidnost NPC-jev do 24 chunkov z impostorji, D-034) gre po Q25 (D-035) takoj za M5-K.1 in K5.
 Vanilla `Entity.move` (idle 26–29 %): Q16 odločeno → D-031 (lasten coremod v CNPC jarju), paketa M5.15 in M5.16.
@@ -297,7 +297,8 @@ meritvijo.
 | M5-K K13 | Skini v teksturnem nizu/atlasu — ena vezava teksture za vse NPC-je; pogoj za K10 | M |
 | M5-K K10 | Instanced renderer: vsi vidni NPC-ji istega modela v en klic; največji vzvod pri tisočih vidnih in največje tveganje (OptiFine, senčilniki, `customNPC_entities_mod`) | L |
 | ~~M5-K K4~~ | **zaključeno 19. 10.** ([zapis](meritve/2026-10-19-M5-K-K4-napisi-display-list.md)) — `RwLabelCache`, **privzeto 1** (D-032): ime in naslov iz display lista od drugega izrisa niza; preverba pikslov 0 razlik, idle-200 p50 −7,0 %, idle-50 −6,4 % (razponi ločeni). Dobitek ~⅓ stroška napisov; ostanek je izvajanje ~34 znakov v gonilniku | S |
-| M5-K K1–K3, K6–K9, K11 | Manjši paketi iz [09](09-PERFORMANCE-RAZISKAVA.md) (delci, mikropopravki, oči, imena in oblački, skini, omrežje, morph, animirani NPC-ji, redkejši klientski tick). **Po profilu M5-K.1 (18. 10.):** K4 (imena, ~8 µs na napis, 20 % pri 200 v dometu) in K3 (oči, 3,5 µs na NPC, 10–14 %) sta merljiva; K1, K2, K6 v celicah M2.4 nista (brez delcev in URL skinov), uvrstita se, ko prizorišče to vsebuje | S–M |
+| M5-K K3 | **v kodi 19. 10.** (49bd247): geometrija oči iz display lista (`RwEyesList`, privzeto 0); preverba pikslov 0 razlik (tudi ×8); manjka A/B `audit/m5k3-ab.ps1` (idle-200/500, 3 + 3) → po D-032 privzeto 1 ali zavrženo | S |
+| M5-K K1, K2, K6–K9, K11 | Manjši paketi iz [09](09-PERFORMANCE-RAZISKAVA.md) (delci, mikropopravki, oči, imena in oblački, skini, omrežje, morph, animirani NPC-ji, redkejši klientski tick). **Po profilu M5-K.1 (18. 10.):** K4 (imena, ~8 µs na napis, 20 % pri 200 v dometu) in K3 (oči, 3,5 µs na NPC, 10–14 %) sta merljiva; K1, K2, K6 v celicah M2.4 nista (brez delcev in URL skinov), uvrstita se, ko prizorišče to vsebuje | S–M |
 
 ### M5-V — vidnost NPC-jev na daljavo, impostorji do 24 chunkov (D-034)
 

@@ -278,3 +278,7 @@ nove omejitve/pasti se dopisujejo na konec §5.
 - **Delež v profilu ni dobitek manj klicev** (M5-K K14, 19. 10.): lastni čas v `nglCallList` vsebuje izvajanje
   vsebine lista v gonilniku (oglišča), ne samo klic. En list namesto 30 klicev pokrivala ni premaknil deleža (26,0 →
   26,1 %), izpustitev geometrije pa −23 %. Pred paketom »manj klicev« izmeri zgornjo mejo (izpusti del in izmeri).
+- **Klientski A/B: miška in ne-java procesi** (M5-K K3, 19. 10.): testni klient prevzame miško; premik miške nad
+  njegovim oknom zasuka kamero in zagon pade na K5 (6,9°). Med klientsko meritvijo se računalnika ne uporablja.
+  Zaščita P9/K0/K8 vidi samo javo/gradle: zapuščena procesa `find /` sta dvignila p95 idle-200 s ~7 na ~12 ms.
+  Pred A/B preveri procese z velikim CPU (`Get-Process | Sort-Object CPU -Descending`).
