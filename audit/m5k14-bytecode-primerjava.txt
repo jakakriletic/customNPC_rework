@@ -1,0 +1,6 @@
+razredov 2, metod 25: enakih 24, razlika v obliki 1, za PREGLED 0
+
+Prenos M5-K K14 (19. 10. 2026; node dev/tools/primerjaj-bytecode.js <original jar> dev/build/libs/CustomNPCs_1.12.2-01Oct19-workspace.jar ...):
+- Model2DRenderer in ModelHeadwear dobesedno iz reference-src; ena metoda se razlikuje samo v obliki
+  (isti multiset pomenskih ukazov), nobena za pregled.
+Izid: brez spremembe obnasanja. verify-package PASS (68 vnosov: +2).
