@@ -1,0 +1,5 @@
+razredov 1, metod 8: enakih 8, razlika v obliki 0, za PREGLED 0
+
+Prenos M5-K K3 (19. 10. 2026; node dev/tools/primerjaj-bytecode.js <original jar> dev/build/libs/CustomNPCs_1.12.2-01Oct19-workspace.jar noppes/npcs/client/layer/LayerEyes):
+- LayerEyes dobesedno iz reference-src.
+Izid: brez spremembe obnasanja. verify-package PASS (71 vnosov: +1).
