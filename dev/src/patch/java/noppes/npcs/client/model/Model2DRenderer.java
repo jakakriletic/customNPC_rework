@@ -108,6 +108,61 @@ extends ModelRenderer {
         this.isCompiled = true;
     }
 
+    // M5-K K14b (rework/render/HeadwearSkip): pokrivalo brez stirikotnikov, ki vzorcijo samo
+    // prozorne teksle. Original (compile, render, renderItemIn2D) je nespremenjen.
+    public float rwU1() {
+        return this.x1;
+    }
+
+    public float rwV1() {
+        return this.y1;
+    }
+
+    public float rwU2() {
+        return this.x2;
+    }
+
+    public float rwV2() {
+        return this.y2;
+    }
+
+    public int rwWidth() {
+        return this.width;
+    }
+
+    public int rwHeight() {
+        return this.height;
+    }
+
+    /** List kot {@code compile}, le stirikotniki obraza so samo tisti s {@code keep[q]}. */
+    @SideOnly(value=Side.CLIENT)
+    public int rwCompileFiltered(float scale, boolean[] keep) {
+        int list = GLAllocation.generateDisplayLists((int)1);
+        GlStateManager.glNewList((int)list, (int)4864);
+        GlStateManager.translate((float)(this.rotationOffsetX * scale), (float)(this.rotationOffsetY * scale), (float)(this.rotationOffsetZ * scale));
+        GlStateManager.scale((float)(this.scaleX * (float)this.width / (float)this.height), (float)this.scaleY, (float)this.thickness);
+        GlStateManager.rotate((float)180.0f, (float)1.0f, (float)0.0f, (float)0.0f);
+        if (this.mirror) {
+            GlStateManager.translate((float)0.0f, (float)0.0f, (float)(-1.0f * scale));
+            GlStateManager.rotate((float)180.0f, (float)0.0f, (float)1.0f, (float)0.0f);
+        }
+        noppes.npcs.rework.render.HeadwearQuads.emit(Tessellator.getInstance().getBuffer(), this.x1, this.y1, this.x2, this.y2, this.width, this.height, scale, keep);
+        Tessellator.getInstance().draw();
+        GL11.glEndList();
+        return list;
+    }
+
+    /** Kot {@code render}, z danim listom namesto lastnega. */
+    public void rwRenderList(float scale, int list) {
+        if (!this.showModel || this.isHidden) {
+            return;
+        }
+        GlStateManager.pushMatrix();
+        this.postRender(scale);
+        GlStateManager.callList((int)list);
+        GlStateManager.popMatrix();
+    }
+
     public static void renderItemIn2D(BufferBuilder worldrenderer, float p_78439_1_, float p_78439_2_, float p_78439_3_, float p_78439_4_, int p_78439_5_, int p_78439_6_, float p_78439_7_) {
         float f9;
         float f8;

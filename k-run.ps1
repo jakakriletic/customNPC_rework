@@ -12,7 +12,7 @@
         .\k-run.ps1 -Variant idle -N 50 -Warmup 10 -Measure 20      # hiter preizkus harnessa
         .\ponovitve-run.ps1 -Scenarij klient -Dodatno @('-Variant','idle','-N','200')
 
-    Merila (K1-K8) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
+    Merila (K1-K8, z -PreveriPokrivalo K9, s -Pokrivalo K10) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
 
     -Jfr (M5-K.1): v merilnem oknu snema JFR klientskega JVM-ja (jcmd JFR.start, nastavitve 'profile')
     v audit\jfr\k-<varianta>-<N>-<stamp>.jfr in napise povzetek niti 'Client thread' z nativnimi
@@ -33,7 +33,11 @@ param(
     [switch]$Jfr,
     [int]$Vzorci = 0,
     # M5-K.0 je meril s skritim GUI-jem; v 1.12 to skrije tudi imena NPC-jev, zato je od M5-K.1 GUI viden.
-    [switch]$SkrijGui
+    [switch]$SkrijGui,
+    # M5-K K14b: RwHeadwearSkip za ta zagon (harness ga nastavi ob vstopu); -1 = iz CustomNpcs.cfg.
+    [ValidateRange(-1, 1)][int]$Pokrivalo = -1,
+    # M5-K K14b: po ogrevanju primerjaj piksle in globino z RwHeadwearSkip 0 in 1 (merilo K9).
+    [switch]$PreveriPokrivalo
 )
 
 $ErrorActionPreference = 'Stop'
@@ -124,7 +128,7 @@ $jobPath = Join-Path $audit "k-$Variant-$N-$stamp.job"
 $job = @("world=$world", 'createSeed=customnpc-rework', "expectNpc=$pricakovano", "expectNpcMin=$pricakovanoMin",
          # Invariantna kultura: v sl-SI bi -f dal decimalne vejice in HarnessJob kamere ne bi prebral.
          [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, 'cam={0},{1},{2},180,{3}', $camX, $camY, $camZ, $pitch),
-         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci",('settle={0}' -f (3 + [int]($N / 250))),
+         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci", "headwearSkip=$Pokrivalo", ('headwearCheck={0}' -f [int][bool]$PreveriPokrivalo),('settle={0}' -f (3 + [int]($N / 250))),
          "warmup=$Warmup", "measure=$Measure", ('out=' + ($out -replace '\\', '/')))
 for ($i = 0; $i -lt $cmds.Count; $i++) { $job += ('cmd.{0}={1}' -f ($i + 1), $cmds[$i]) }
 [System.IO.File]::WriteAllLines($jobPath, $job, (New-Object System.Text.UTF8Encoding($false)))
@@ -210,6 +214,14 @@ if ($r) {
     Check ("K7: {0} slicic v {1:N1} s" -f $r.slicic, $r.sekundMerjenja) (($r.slicic -ge 10 * $Measure) -and ([math]::Abs($r.sekundMerjenja - $Measure) -le 2))
 }
 Check ("K8: med ogrevanjem in merjenjem ni tekel tuj gradle build ali Minecraft" + $(if ($tujiMed.Count) { ' - ' + (@($tujiMed.Keys) -join '; ') } else { '' })) ($tujiMed.Count -eq 0 -or $DovoliTuje)
+if ($r -and $Pokrivalo -ge 0) {
+    # Vsi NPC-ji fixture imajo isti skin (SimpleTexture): z 1 vsak izris brez vrnitve na original, ena analiza na renderer.
+    Check ("K10: RwHeadwearSkip {0} (zahtevano {1}), izrisov K14b {2}, na original {3} + {4} (stanje), analiz {5}, delov nic/nekaj/vse {6}/{7}/{8}" -f $r.rwHeadwearSkip, $Pokrivalo, $r.pokrivaloIzrisov, $r.pokrivaloOriginal, $r.pokrivaloOriginalStanje, $r.pokrivaloAnaliz, $r.pokrivaloDelovNic, $r.pokrivaloDelovNekaj, $r.pokrivaloDelovVse) (($r.rwHeadwearSkip -eq $Pokrivalo) -and ($PreveriPokrivalo -or ((($Pokrivalo -eq 0) -eq ($r.pokrivaloIzrisov -eq 0)) -and ($r.pokrivaloOriginal -eq 0) -and ($r.pokrivaloOriginalStanje -eq 0))))
+}
+if ($r -and $PreveriPokrivalo) {
+    foreach ($ser in ("$($r.pokrivaloSerije)" -split ' \| ')) { Write-Host ("    pokrivalo {0}" -f $ser) }
+    Check ("K9: slika in globina pokrivala bitno enaki z RwHeadwearSkip 0 in 1 ({0} NPC; skin, vzorec, 5 pravih skinov), vzorec spremeni {1} pikslov {2}" -f $r.pokrivaloNpc, $r.pokrivaloObcutljivost, $r.pokrivaloNapaka) ($r.pokrivaloPreverba -eq 1)
+}
 if ($Jfr) {
     $jfrOk = ($jfrIzpis -match 'Started recording') -and (Test-Path $jfrPot) -and ((Get-Item $jfrPot).Length -gt 0)
     Check ("J1: JFR posnetek render niti zapisan ({0})" -f $jfrPot) $jfrOk
@@ -242,6 +254,7 @@ if ($r) {
                     kamera = [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, '{0},{1},{2},180,{3}', $camX, $camY, $camZ, $pitch); sirina = $r.sirina; visina = $r.visina; jfr = [int][bool]$Jfr; skritGui = [int][bool]$SkrijGui }
         # Samo, ce je vklopljen: baseline M5-K.1 (18. 10.) kljuca nima, odtis ostane primerljiv.
         if ($Vzorci -gt 0) { $odtis['vzorci'] = $Vzorci }
+        if ($Pokrivalo -ge 0) { $odtis['rwHeadwearSkip'] = $Pokrivalo }
         $vel = @{ 'frame.p50' = $r.frameMsP50; 'frame.p95' = $r.frameMsP95; 'frame.p99' = $r.frameMsP99; 'frame.max' = $r.frameMsMax;
                   'fps' = $r.fps; 'fps.low1' = $r.fpsLow1; 'fps.low01' = $r.fpsLow01; 'gc.stevilo' = $r.gcStevilo; 'gc.ms' = $r.gcMs;
                   'upodobljeno.min' = $r.upodobljenoMin; 'streznik.ms' = $r.integriraniStreznikMsPovp }

@@ -18,12 +18,15 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.GameType;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.rework.render.HeadwearSkip;
 
 /**
  * Klientski merilni harness M2.4r (M5-K.0).
@@ -73,6 +76,9 @@ public final class ClientHarness {
     private volatile int commandsDone = -1;
     /** M5-K.1: vzorcevalnik sklada render niti med merjenjem (samo s {@code sampleMs > 0}). */
     private StackSampler sampler;
+    /** M5-K K14b: zahteva za preverbo pokrivala v naslednjem RenderWorldLastEvent in njen izid. */
+    private boolean headwearCheckPending;
+    private HeadwearCheck headwearCheck;
     private final List<String> errors = new ArrayList<String>();
 
     private ClientHarness(HarnessJob job) {
@@ -171,7 +177,10 @@ public final class ClientHarness {
                     break;
                 case WARMUP:
                     pinCamera(mc, false);
-                    if (secondsInPhase() >= this.job.warmupSeconds) {
+                    if (secondsInPhase() >= this.job.warmupSeconds && this.job.headwearCheck && this.headwearCheck == null) {
+                        // M5-K K14b: preverba v naslednjem RenderWorldLastEvent, merjenje po njej.
+                        this.headwearCheckPending = true;
+                    } else if (secondsInPhase() >= this.job.warmupSeconds) {
                         this.npcLoaded = countNpcs(mc);
                         this.maxPosDrift = 0.0;
                         this.maxAngleDrift = 0.0;
@@ -206,6 +215,21 @@ public final class ClientHarness {
     }
 
     @SubscribeEvent
+    public void onRenderWorldLast(RenderWorldLastEvent ev) {
+        if (!this.headwearCheckPending) {
+            return;
+        }
+        this.headwearCheckPending = false;
+        HeadwearCheck r = HeadwearCheck.run(Minecraft.getMinecraft(), ev.getPartialTicks());
+        StringBuilder s = new StringBuilder();
+        for (HeadwearCheck.Series x : r.series) {
+            s.append(" | ").append(x);
+        }
+        System.out.println("RWHARNESS-POKRIVALO ok=" + r.ok() + " npc=" + r.npcs + " obcutljivost=" + r.sensitivity + s + " " + r.error);
+        this.headwearCheck = r;
+    }
+
+    @SubscribeEvent
     public void onRenderTick(TickEvent.RenderTickEvent ev) {
         if (ev.phase != TickEvent.Phase.START || this.phase != Phase.MEASURE) {
             return;
@@ -234,6 +258,10 @@ public final class ClientHarness {
 
     private void applySettings(Minecraft mc) {
         // Samo v pomnilniku: saveOptions() se ne klice, options.txt ostane.
+        if (this.job.headwearSkip >= 0) {
+            // M5-K K14b: klient in integrirani streznik si delita JVM in staticno polje.
+            CustomNpcs.RwHeadwearSkip = this.job.headwearSkip;
+        }
         mc.gameSettings.renderDistanceChunks = this.job.renderDistance;
         mc.gameSettings.enableVsync = false;
         mc.gameSettings.viewBobbing = false;
@@ -401,6 +429,26 @@ public final class ClientHarness {
         num(b, "vzorcevSklada", this.sampler == null ? 0 : this.sampler.samples());
         num(b, "vzorcevSkladaRunnable", this.sampler == null ? 0 : this.sampler.samplesInState(Thread.State.RUNNABLE));
         num(b, "vzorcevalnikUsNaVzorec", this.sampler == null ? 0.0 : this.sampler.avgCostMicros());
+        num(b, "rwHeadwearSkip", CustomNpcs.RwHeadwearSkip);
+        num(b, "pokrivaloIzrisov", HeadwearSkip.draws);
+        num(b, "pokrivaloOriginal", HeadwearSkip.fallbacks);
+        num(b, "pokrivaloOriginalStanje", HeadwearSkip.stateFallbacks);
+        num(b, "pokrivaloAnaliz", HeadwearSkip.analyses);
+        num(b, "pokrivaloDelovNic", HeadwearSkip.partsNone);
+        num(b, "pokrivaloDelovNekaj", HeadwearSkip.partsSome);
+        num(b, "pokrivaloDelovVse", HeadwearSkip.partsAll);
+        HeadwearCheck hc = this.headwearCheck;
+        num(b, "pokrivaloPreverba", hc == null ? -1 : (hc.ok() ? 1 : 0));
+        if (hc != null) {
+            num(b, "pokrivaloNpc", hc.npcs);
+            num(b, "pokrivaloObcutljivost", hc.sensitivity);
+            StringBuilder s = new StringBuilder();
+            for (HeadwearCheck.Series x : hc.series) {
+                s.append(s.length() == 0 ? "" : " | ").append(x);
+            }
+            kv(b, "pokrivaloSerije", s.toString());
+            kv(b, "pokrivaloNapaka", hc.error);
+        }
         num(b, "sirina", mc.displayWidth);
         num(b, "visina", mc.displayHeight);
         num(b, "heapMaxMb", Runtime.getRuntime().maxMemory() / (1024L * 1024L));

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 92 → 1)
+# Arhiv: dnevnik sej (vnosi 93 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,49 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-18 (93) — M5-K.1 zaključen: baseline in profil klienta
+
+**Paket:** M5-K.1 · **Stanje:** **zaključeno**.
+
+**Narejeno:**
+- **Napaka merilnega pogoja M5-K.0:** harness je nastavil `hideGUI`, kar v 1.12 izklopi vsa imena NPC-jev
+  (`canRenderName` → `isGuiEnabled`); fixture imajo `ShowName 0` + naslov. Nov ključ `hideGui` (privzeto 0),
+  `k-run -SkrijGui`, K6 preveri nastavitev. idle-200 p50 4,78 → **6,57 ms** z imeni.
+- Baseline originala, 5 celic × 3 ponovitve (`audit/m5k1-baseline.ps1`), T1–T6 in K0–K8 zelena:
+  p50 idle-50/200/500 2,15 / 6,57 / 11,57 ms, boj-200/500 5,78 / 12,55 ms; FPS 458 / 150 / 83 / 170 / 78.
+- `k-run -Jfr` (JFR render niti) + `jfr-povzetek.js --native`: deluje, a **38 vzorcev** render niti v 14 s —
+  vzorčevalnik JDK 8 nativnim nitim da en vzorec na 20 ms za vse. Zato nov **`rework/diag/StackSampler`**
+  (vzorci samo render nit vsako 1 ms, ~665/s, ~100 µs na vzorec) + `dev/tools/skladi-povzetek.js`, `k-run -Vzorci 1`.
+- Profili idle-50/200/500 in boj-500: NPC-ji ~89–90 % render niti pri 200/500; model 31–38 %, **pokrivalo
+  (`LayerHeadwear`, 6 `Model2DRenderer` delov) 19–26 % = 6,7 µs/NPC**, ime + naslov 20,5 % pri 174 napisih
+  (~8 µs na napis), oči 10–14 % (3,5 µs/NPC); lastni čas 45–56 % v `nglCallList`. Hipoteza 09 (klici na NPC,
+  CPU + gonilnik) potrjena. [zapis](../meritve/2026-10-18-M5-K.1-baseline-profil.md)
+- Testi 287/0 + testOriginal 35/0 (`StackSamplerTest` izključen iz testOriginal kot ostali testi harnessa),
+  `verify-package` PASS (66 vnosov).
+
+**Ni narejeno in zakaj:** različice videza (oklep, oblački, delci, URL skini) — profil ne kaže, da bi
+spremenile vrstni red; dodajo se v paketu, ki jih spreminja. JFR zagoni idle-200/500 in boj-500 izpuščeni
+(nadomestil jih je vzorčevalnik).
+
+**Ugotovitve:** pokrivalo (`HeadWearType=1`) ni bilo v nobenem K-paketu raziskave 09 → nov paket **K14**
+(6 delov v en display list, ista slika). Vrstni red D-035 se ne obrne (K5 in K10/K13 sta potrjena), a
+K14/K4/K3 so ceneje in brez spremembe videza → **Q28**.
+
+**Spremembe obnašanja:** nobene (harness in vzorčevalnik obstajata samo z `-Drwharness`).
+
+**Meritve:** baseline + 4 profili (zgoraj).
+
+**Naslednja seja:** po odgovoru na Q28 K14 (priporočeno) ali K5 (D-035 brez spremembe).
+
+**Dopolnitev 19. 10.:** Q28 odločeno — **K14 → K4 → K3 pred K5**. K14 začet in prekinjen na zahtevo
+uporabnika, **koda ni spremenjena**. Prebrano: `ModelHeadwear extends ModelScaleRenderer` ima 6 otrok
+`Model2DRenderer`; vsak `render` = `push` + `postRender` (rotacijska točka + koti, v konstruktorju
+konstantni) + `callList` (en `Tessellator.draw`, 34 štirikotnikov) + `pop`; starš `ModelScaleRenderer.render`
+pokliče še svoj prazen list (nima kock). Noben od teh razredov še ni v `src/patch` → najprej 1:1 prenos
+(ločen commit, `primerjaj-bytecode.js`), nato en list pod stikalom. Odprto za dokaz enakosti: ali kdo
+med igro spreminja `showModel`/`isHidden`/kote otrok (`LayerHeadwear.preRender` nastavi samo
+`config = null` in `bipedHeadwear.isHidden`).
 
 ### 2026-10-16 (92) — M5-K.0 zaključen: klientski harness
 

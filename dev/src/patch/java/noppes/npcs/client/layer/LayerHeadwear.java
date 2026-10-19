@@ -17,6 +17,7 @@ import noppes.npcs.client.layer.LayerInterface;
 import noppes.npcs.client.layer.LayerPreRender;
 import noppes.npcs.client.model.part.head.ModelHeadwear;
 import noppes.npcs.entity.EntityCustomNpc;
+import noppes.npcs.rework.render.HeadwearSkip;
 
 public class LayerHeadwear
 extends LayerInterface
@@ -42,7 +43,10 @@ implements LayerPreRender {
         }
         ClientProxy.bindTexture(this.npc.textureLocation);
         this.model.bipedHead.postRender(par7);
-        this.headwear.render(par7);
+        // M5-K K14b: brez stirikotnikov, ki vzorcijo samo prozorne teksle.
+        if (CustomNpcs.RwHeadwearSkip == 0 || !HeadwearSkip.render(this.headwear, this.npc.textureLocation, par7)) {
+            this.headwear.render(par7);
+        }
     }
 
     @Override
