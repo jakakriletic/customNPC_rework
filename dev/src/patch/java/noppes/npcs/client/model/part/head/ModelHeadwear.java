@@ -11,15 +11,10 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import noppes.npcs.client.model.Model2DRenderer;
 import noppes.npcs.client.model.ModelScaleRenderer;
-import noppes.npcs.CustomNpcs;
 import noppes.npcs.constants.EnumParts;
-import noppes.npcs.rework.render.HeadwearList;
 
 public class ModelHeadwear
 extends ModelScaleRenderer {
-    // M5-K K14: z RwHeadwearList != 0 se 6 otrok narise z enim display listom (ista slika).
-    private final HeadwearList rwList = new HeadwearList();
-
     public ModelHeadwear(ModelBase base) {
         super(base, EnumParts.HEAD);
         Model2DRenderer right = new Model2DRenderer(base, 32.0f, 8.0f, 8, 8);
@@ -58,14 +53,6 @@ extends ModelScaleRenderer {
         bottom.setThickness(0.65f);
         this.setRotation(bottom, -1.5707964f, 0.0f, 0.0f);
         this.addChild(bottom);
-    }
-
-    @Override
-    public void render(float par1) {
-        int mode = CustomNpcs.RwHeadwearList;
-        if (mode == 0 || !this.rwList.render(this, par1, mode)) {
-            super.render(par1);
-        }
     }
 
     @Override

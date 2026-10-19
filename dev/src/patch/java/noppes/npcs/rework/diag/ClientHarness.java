@@ -18,15 +18,12 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.GameType;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
-import noppes.npcs.rework.render.HeadwearList;
 
 /**
  * Klientski merilni harness M2.4r (M5-K.0).
@@ -77,9 +74,6 @@ public final class ClientHarness {
     /** M5-K.1: vzorcevalnik sklada render niti med merjenjem (samo s {@code sampleMs > 0}). */
     private StackSampler sampler;
     private final List<String> errors = new ArrayList<String>();
-    /** M5-K K14: zahteva za preverbo pokrivala v naslednjem RenderWorldLastEvent in njen izid. */
-    private boolean headwearCheckPending;
-    private HeadwearCheck headwearCheck;
 
     private ClientHarness(HarnessJob job) {
         this.job = job;
@@ -136,10 +130,6 @@ public final class ClientHarness {
                     if (mc.player != null && mc.world != null && mc.getIntegratedServer() != null
                             && mc.currentScreen == null) {
                         applySettings(mc);
-                        if (this.job.headwearList >= 0) {
-                            // Klient in integrirani streznik si delita JVM in staticno polje.
-                            CustomNpcs.RwHeadwearList = this.job.headwearList;
-                        }
                         String name = mc.player.getName();
                         List<String> pre = new ArrayList<String>();
                         pre.add("gamemode 3 " + name);
@@ -181,9 +171,7 @@ public final class ClientHarness {
                     break;
                 case WARMUP:
                     pinCamera(mc, false);
-                    if (secondsInPhase() >= this.job.warmupSeconds && this.job.headwearCheck && this.headwearCheck == null) {
-                        this.headwearCheckPending = true;
-                    } else if (secondsInPhase() >= this.job.warmupSeconds) {
+                    if (secondsInPhase() >= this.job.warmupSeconds) {
                         this.npcLoaded = countNpcs(mc);
                         this.maxPosDrift = 0.0;
                         this.maxAngleDrift = 0.0;
@@ -242,35 +230,6 @@ public final class ClientHarness {
                 }
             }
         }
-    }
-
-    @SubscribeEvent
-    public void onRenderWorldLast(RenderWorldLastEvent ev) {
-        if (!this.headwearCheckPending) {
-            return;
-        }
-        this.headwearCheckPending = false;
-        HeadwearCheck r = HeadwearCheck.run(Minecraft.getMinecraft(), ev.getPartialTicks(),
-                new File(this.job.out.replaceAll("\\.json$", "") + "-pokrivalo.png"));
-        System.out.println("RWHARNESS-POKRIVALO ok=" + r.ok() + " npc=" + r.npcs + " tekstur=" + r.textures
-                + " skin " + series(r.skin) + " test " + series(r.pattern) + " obcutljivost=" + r.sensitivity + " " + r.error);
-        this.headwearCheck = r;
-    }
-
-    private static String series(HeadwearCheck.Series s) {
-        return "pikslov=" + s.covered + " razlik1=" + s.diffMode1 + "/" + s.diffDepthMode1 + " razlik2=" + s.diffMode2
-                + "/" + s.diffDepthMode2 + " ponovitev=" + s.diffRepeat + " listov=" + s.listDrawsMode1 + "/" + s.listDrawsMode2;
-    }
-
-    private static void series(StringBuilder b, String p, HeadwearCheck.Series s) {
-        num(b, p + "Pikslov", s.covered);
-        num(b, p + "Razlik1", s.diffMode1);
-        num(b, p + "RazlikGlobina1", s.diffDepthMode1);
-        num(b, p + "Razlik2", s.diffMode2);
-        num(b, p + "RazlikGlobina2", s.diffDepthMode2);
-        num(b, p + "RazlikPonovitev", s.diffRepeat);
-        num(b, p + "Listov1", s.listDrawsMode1);
-        num(b, p + "Listov2", s.listDrawsMode2);
     }
 
     private void applySettings(Minecraft mc) {
@@ -442,21 +401,6 @@ public final class ClientHarness {
         num(b, "vzorcevSklada", this.sampler == null ? 0 : this.sampler.samples());
         num(b, "vzorcevSkladaRunnable", this.sampler == null ? 0 : this.sampler.samplesInState(Thread.State.RUNNABLE));
         num(b, "vzorcevalnikUsNaVzorec", this.sampler == null ? 0.0 : this.sampler.avgCostMicros());
-        num(b, "rwHeadwearList", CustomNpcs.RwHeadwearList);
-        num(b, "pokrivaloListIzrisov", HeadwearList.drawsList);
-        num(b, "pokrivaloListPrevodov", HeadwearList.compiles);
-        num(b, "pokrivaloListPrevezav", HeadwearList.rebuilds);
-        num(b, "pokrivaloListOriginal", HeadwearList.fallbacks);
-        HeadwearCheck hc = this.headwearCheck;
-        num(b, "pokrivaloPreverba", hc == null ? -1 : (hc.ok() ? 1 : 0));
-        if (hc != null) {
-            num(b, "pokrivaloNpc", hc.npcs);
-            num(b, "pokrivaloTekstur", hc.textures);
-            series(b, "pokrivaloSkin", hc.skin);
-            series(b, "pokrivaloTest", hc.pattern);
-            num(b, "pokrivaloObcutljivost", hc.sensitivity);
-            kv(b, "pokrivaloNapaka", hc.error);
-        }
         num(b, "sirina", mc.displayWidth);
         num(b, "visina", mc.displayHeight);
         num(b, "heapMaxMb", Runtime.getRuntime().maxMemory() / (1024L * 1024L));
