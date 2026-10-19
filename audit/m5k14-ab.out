@@ -1,0 +1,16 @@
+[09:30:23] idle-500-p0 poskus 1: cakam na mir
+[09:32:23] idle-500-p0: zagon
+[09:38:49] idle-500-p0: izhod 0
+[09:38:49] idle-500-p1 poskus 1: cakam na mir
+[09:40:49] idle-500-p1: zagon
+[09:47:15] idle-500-p1: izhod 0
+[09:47:15] idle-500-hw0 poskus 1: cakam na mir
+[09:49:15] idle-500-hw0: zagon
+[09:55:40] idle-500-hw0: izhod 0
+[09:55:40] idle-200-p0 poskus 1: cakam na mir
+[09:57:41] idle-200-p0: zagon
+[10:04:06] idle-200-p0: izhod 0
+[10:04:06] idle-200-p1 poskus 1: cakam na mir
+[10:06:06] idle-200-p1: zagon
+[10:12:32] idle-200-p1: izhod 0
+[10:12:32] KONEC

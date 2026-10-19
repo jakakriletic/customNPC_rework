@@ -183,6 +183,8 @@ public class CustomNpcs {
     public static int RwCollideSkip = 1;
     @ConfigProp(info="Rework M5.13 (S7): recipients of the eye blink packet (every NPC blinks about once every 140 ticks) are found by walking world.playerEntities with the same selection the vanilla area query makes, instead of scanning every loaded chunk in a 160 block cube (about 441 chunks). Same recipients. 0 = original, 1 = walk playerEntities, 2 = verify (runs both, sends by the original list, counts mismatches; double cost, for test scenarios only). Default 1 since 2026-10-10 (D-032)")
     public static int RwBlinkRecipients = 1;
+    @ConfigProp(info="Rework M5-K K14 (client): the NPC headwear layer (HeadWearType=1) draws its 6 parts with one display list instead of a push, transform, call list and pop per part. The part positions and angles are constant; if they change, the list is rebuilt. Same picture. 0 = original, 1 = one list that calls the 6 part lists, 2 = one flat list that also contains the part geometry")
+    public static int RwHeadwearList = 0;
     @ConfigProp(info="Rework M7: allow NPC Baritone as an optional navigation backend for NPCs with RwNavBackend=1 in NBT. 0 = original vanilla navigation, 1 = permit opt-in NPCs")
     public static int RwNavBackend = 0;
     @ConfigProp(info="Rework M3.8 (R6): honour per-NPC hitbox modes (NBT RwHitboxMode: 1 = solid, cannot be moved by entity pushing; 2 = smart, push strength by hitbox size and shield). With 1, an NPC carrier ridden only by NPCs is pushed too, with the mass of carrier and riders (D-028). 0 = original vanilla pushing for every NPC, 1 = honour the modes")

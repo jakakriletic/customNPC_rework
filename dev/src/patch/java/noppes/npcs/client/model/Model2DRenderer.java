@@ -96,6 +96,26 @@ extends ModelRenderer {
     private void compile(float scale) {
         this.displayList = GLAllocation.generateDisplayLists((int)1);
         GlStateManager.glNewList((int)this.displayList, (int)4864);
+        this.rwCompileBody(scale);
+        GL11.glEndList();
+        this.isCompiled = true;
+    }
+
+    // M5-K K14 (rework/render/HeadwearList): dostop za en display list pokrivala. rwCompileBody je
+    // nespremenjena vsebina lista iz compile (original jo je imel med glNewList in glEndList).
+    @SideOnly(value=Side.CLIENT)
+    public void rwEnsureCompiled(float scale) {
+        if (!this.isCompiled) {
+            this.compile(scale);
+        }
+    }
+
+    public int rwDisplayList() {
+        return this.displayList;
+    }
+
+    @SideOnly(value=Side.CLIENT)
+    public void rwCompileBody(float scale) {
         GlStateManager.translate((float)(this.rotationOffsetX * scale), (float)(this.rotationOffsetY * scale), (float)(this.rotationOffsetZ * scale));
         GlStateManager.scale((float)(this.scaleX * (float)this.width / (float)this.height), (float)this.scaleY, (float)this.thickness);
         GlStateManager.rotate((float)180.0f, (float)1.0f, (float)0.0f, (float)0.0f);
@@ -104,8 +124,6 @@ extends ModelRenderer {
             GlStateManager.rotate((float)180.0f, (float)0.0f, (float)1.0f, (float)0.0f);
         }
         Model2DRenderer.renderItemIn2D(Tessellator.getInstance().getBuffer(), this.x1, this.y1, this.x2, this.y2, this.width, this.height, scale);
-        GL11.glEndList();
-        this.isCompiled = true;
     }
 
     public static void renderItemIn2D(BufferBuilder worldrenderer, float p_78439_1_, float p_78439_2_, float p_78439_3_, float p_78439_4_, int p_78439_5_, int p_78439_6_, float p_78439_7_) {
