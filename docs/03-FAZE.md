@@ -187,26 +187,41 @@ hitbox, kolizije in passenger logiko v `EntityNPCInterface`.
 navigacije, ki so **izmerjene**, ne občutene (D-012).
 
 **Vhodni pogoj:** M3.1 (`ai/` paket prenesen), M2.3 (reprodukcija R2), **M2.7** (merila
-kakovosti navigacije) za pakete M4.10–M4.13.
+kakovosti navigacije) za pakete M4.10–M4.13, **M4.16** (scenarij letenja in dometa) za vse pakete
+letenja in M4.10.
+
+**Plan po raziskavi M4.0 (20. 10., D-038):** [zapis](raziskave/M4.0-gibanje-in-letenje.md). Glavne
+ugotovitve: vanilla 1.12 leteči NPC sledi poti **brez preverbe ovir** (`PathNavigateFlying.isDirectPathBetweenPoints`
+vedno `true`, skok na zadnjo točko iste višine); `FlyingMoveHelper` je vanilla `GhastMoveHelper` (sunki
+vsake 4 ticke, po prihodu do ~3,5 bloka drsenja, **[H]** model); cilj dlje od `NpcNavRange` vrne **brez
+poti**, ne delne poti; CustomNPC+ ima isto iskanje kot vanilla 1.12, razlika je v sledenju in krmiljenju.
+M4.1, M4.4, M4.9 in M4.12 zavrženi ali združeni, M4.11 pogojen, dodana M4.16 in M4.17.
+
+**Vrstni red znotraj M4 (D-038):** M4.14b → **M4.16** → M4.10 → **M4.17** → M4.2 → M4.3 → (M4.5 samo,
+če merila M4.16 niso izpolnjena) → M4.6 → M4.7; kopenska veja M4.13 → (M4.11 pogojno) in M4.15a → b → c
+neodvisno od letenja; M4.14c po M4.14b; M4.8 na koncu, samo na zahtevo. Med milestoni M4 ostane za
+M5-K/M5-V (`04-STANJE.md`); M4.14b in M4.16 se lahko vrineta, ko računalnik ni v rabi.
 
 ### Paketi
 
 | ID | Paket | Vel. |
 |---|---|---|
-| **M4.0** | **Raziskava izvedbe (D-029), pred vsemi ostalimi paketi M4.** Letenje (CustomNPC+, vanilla `PathNavigateFlying`/`FlyingNodeProcessor`, drugi modi z letečimi entitetami, 3D A* in alternative) in kopenska navigacija (izmerjeno: R2 je zastarela delna pot, M2.3; sledenje poti je v boju 48 % CPU, M5-S P1; Baritone kot izbirno ozadje, D-022). Za vsak paket M4.1–M4.14 odločitev ohrani/spremeni/zavrzi/dodaj, zapis v `docs/raziskave/`, prilagoditev tega razdelka | S |
-| M4.1 | Branje CustomNPC+ flying implementacije; odločitev: port ali lasten 3D pathfinder | S |
-| M4.2 | `rework/movement/FlightMode` enum + NBT ključ `RwFlightMode` + GUI; privzeto = original | S |
-| M4.3 | `HoverMoveHelper` — creative-style, brez inercije, hitro dušenje | M |
-| M4.4 | Popravek `isNotColliding` — vzorčenje po hitboxu, obhod namesto `WAIT` | S |
-| M4.5 | 3D pathfinding (lasten A* ali port) z oceno stroška; integracija s `PathNavigateFlying` | L |
-| M4.6 | `MomentumMoveHelper` — inercija, omejen kotni pospešek, minimalna hitrost, dviganje/spuščanje | M |
-| M4.7 | Pitch in roll: server→klient sinhronizacija + render | M |
-| M4.8 | Vrata, zavetje in vodna navigacija za leteče NPC-je (trenutno zgodnji `return` pri `canFly()`) | S |
-| M4.9 | Meritve: strošek 3D pathfindinga proti obstoječemu, pri 50/200 letečih NPC-jih | S |
-| M4.10 | **Nadaljevanje delne poti.** Vanilla A* se prekine po 200 vozliščih in vrne **delno** pot (`PathFinder.findPath:65`), dolžino pa omeji na `getPathSearchRange()` = `FOLLOW_RANGE` = `NpcNavRange` = 32 (`EntityNPCInterface.java:334`). NPC obstane na koncu delne poti in to izgleda kot ovira. Popravek: ob prihodu na konec delne poti se pot obnovi, dokler cilj ni dosežen ali dokazano nedosegljiv, z omejitvijo števila obnov. Pod stikalom, privzeto original | S |
-| M4.11 | **Lasten `NodeProcessor`** — realna cena diagonale (1,41 namesto manhattanskih 2) in pregledani malusi `PathNodeType`. Vanilla uporablja manhattansko ceno **in** hevristiko pri 8-smernem gibanju (`PathPoint.distanceManhattan:86`), zato poti sistematično bežijo od diagonal; od tod stopničasto cikcakanje. A/B proti merilom M2.7 | M |
-| M4.12 | **Odločitvena točka: lasten `PathNavigate` z lastnim A\***. Izvede se **samo**, če M4.10, M4.11 in M5.6 po merilih M2.7 ne zadostujejo. Obseg: lasten proračun vozlišč, hevristika in domet; `Path`, `PathPoint` in move helper ostanejo vanilla, da vsi obstoječi AI taski delujejo nespremenjeno. **Brez asinhronega iskanja** | L |
-| M4.13 | Mehkejše sledenje poti: toleranca do waypointa in „string pulling" v `pathFollow` (`PathNavigate:271-305`). Samo če M2.7 pokaže trzanje in striženje vogalov kot merljiv pojav, ne kot občutek. **Vhod iz M5.0 (S15):** to isto zanko (`isDirectPathBetweenPoints` za vsako točko nazaj) Mojang v 1.21.1 za kopenske mobe ne izvaja več — napredovanje po razdalji in geometrijskem testu smeri, brez branja blokov; v boju-500 je ta zanka največji strošek CPU. Sprememba gibanja, zato tu in ne v M5; skupaj z M4.11 (stopničaste poti se brez rezanja vidijo) | S |
+| **M4.0** | **Raziskava izvedbe (D-029), pred vsemi ostalimi paketi M4.** Letenje (CustomNPC+, vanilla `PathNavigateFlying`/`FlyingNodeProcessor`, drugi modi z letečimi entitetami, 3D A* in alternative) in kopenska navigacija (izmerjeno: R2 je zastarela delna pot, M2.3; sledenje poti je v boju 48 % CPU, M5-S P1; Baritone kot izbirno ozadje, D-022). Za vsak paket M4.1–M4.14 odločitev ohrani/spremeni/zavrzi/dodaj, zapis v `docs/raziskave/`, prilagoditev tega razdelka | **narejeno 20. 10.** — [zapis](raziskave/M4.0-gibanje-in-letenje.md), D-038, Q31 |
+| ~~M4.1~~ | ~~Branje CustomNPC+ flying implementacije; odločitev: port ali lasten 3D pathfinder~~ | **zavrženo — opravljeno v M4.0**: `FlyPathFinder` je 1.12 `FlyingNodeProcessor` na 1.7.10 (200 vozlišč, filter dometa, hevristika = kvadrat razdalje); uporabne ideje (žarek pri sledenju ≤ 6 blokov, upoštevana hitrost, zavoj ≤ 20°/tick, višinska meja, spust brez poti) gredo v M4.17, M4.3 in Q31. Brez prenosa kode (D-002) |
+| M4.2 | `rework/movement/FlightMode` enum + NBT ključ `RwFlightMode` (ključa ni = original); **GUI kot ločen korak M4.2b** (gumb ob obstoječem `movementType` v `SubGuiNpcMovement`, preverba v klientu), ko obstaja vsaj en nov način (po M4.3). Načini in parametri po Q31 | S |
+| M4.3 | `HoverMoveHelper` — creative-style. **Izhodišče vanilla `EntityFlyHelper` (papiga) / 1.21 `FlyingMoveControl`:** hitrost iz navigatorja (danes ignorirana), omejen zavoj, upočasnitev pred točko, da drsenje po prihodu pade pod mero M4.16. `FLYING_SPEED` NPC nima registriranega — samo pri `RwFlightMode` ali iz `MOVEMENT_SPEED` | M → S/M |
+| ~~M4.4~~ | ~~Popravek `isNotColliding` — vzorčenje po hitboxu, obhod namesto `WAIT`~~ | **zavrženo kot samostojen paket**: ostanek ghasta; z vidno črto pri sledenju (M4.17) in `move()` v novem helperju ni potreben, v originalnem načinu ostane |
+| M4.5 | **Odločitvena točka (spremenjeno, D-038):** iskanje poti za leteče. Izvede se **samo**, če M4.10 + M4.17 + M4.3 ne izpolnijo meril M4.16. Obseg: podrazred `PathFinder` za leteče po vzoru 1.21.1 (evklidska cena, hevristika ×1,5, proračun `FOLLOW_RANGE·16`, brez filtra dometa do cilja), po potrebi Lazy Theta\*. Brez oktalnega drevesa in **brez asinhronega iskanja** (D-012) | L → M |
+| M4.6 | `MomentumMoveHelper` — inercija, omejen kotni pospešek, minimalna hitrost, dviganje/spuščanje; **zasledovanje točke vnaprej po poti** (»pure pursuit«) in redčenje poti, ker se točke na 1 blok in minimalna hitrost izključujeta. Obseg po Q6/Q31 | M |
+| M4.7 | **Spremenjeno:** pitch vanilla že sinhronizira (`EntityTrackerEntry`); paket je render nagiba telesa in roll, izpeljan na klientu iz spremembe yaw (brez novega paketa ali `DataParameter`, **[H]**). Uskladitev z `customNPC_entities_mod` (D-024) | M → S/M |
+| M4.8 | Vrata, zavetje in vodna navigacija za leteče NPC-je (trenutno zgodnji `return` pri `canFly()`) | **odloženo** — brez zahteve in meritve; `FlyingNodeProcessor` vrata že prehaja, manjka odpiranje. Na konec, samo na zahtevo · S |
+| ~~M4.9~~ | ~~Meritve: strošek 3D pathfindinga proti obstoječemu, pri 50/200 letečih NPC-jih~~ | **združeno v M4.16**: cena se meri v vsakem paketu proti celici `leteci-200` |
+| M4.10 | **Nadaljevanje delne poti in cilj izven dometa** (premisa razširjena v M4.0). Vanilla A* se prekine po 200 vozliščih in vrne **delno** pot (`PathFinder.findPath:65`), dolžino pa omeji na `getPathSearchRange()` = `FOLLOW_RANGE` = `NpcNavRange` = 32 (`EntityNPCInterface.java:362`); **sosede, ki so od cilja dlje kot 32, zavrne** (`findPathOptions`), zato cilj ~33+ blokov stran vrne `null`, ne delne poti. Popravek: (a) ob prihodu na konec delne poti se pot obnovi, (b) pri cilju izven dometa vmesni cilj na črti proti cilju (≤ domet − 4); oboje dokler cilj ni dosežen ali dokazano nedosegljiv, z omejitvijo števila obnov. Kopenski in leteči. Upoštevati S5 (`RwPathNegCache` delne poti zavrne za 20 tickov). Prizorišče *daleč* iz M4.16. Pod stikalom, privzeto original | S |
+| M4.11 | **Lasten `NodeProcessor`** — realna cena diagonale (1,41 namesto manhattanskih 2) in pregledani malusi `PathNodeType`. Vanilla uporablja manhattansko ceno **in** hevristiko pri 8-smernem gibanju (`PathPoint.distanceManhattan:86`), zato poti sistematično bežijo od diagonal; od tod stopničasto cikcakanje. A/B proti merilom M2.7 | **pogojno, po M4.13 (D-038)**: premisa ni v meritvah (razmerje poti 1,131–1,151, M2.7); izvede se samo, če M4.13 brez rezanja vogalov pokaže daljše poti ali počasnejši prihod čez razpon · M |
+| ~~M4.12~~ | ~~**Odločitvena točka: lasten `PathNavigate` z lastnim A\***. Izvede se **samo**, če M4.10, M4.11 in M5.6 po merilih M2.7 ne zadostujejo~~ | **zavrženo (D-038)**: stopnjo D pokrije izbirni Baritone (D-022, D-036); ožja različica za leteče je M4.5 |
+| M4.13 | Mehkejše sledenje poti (**S15**): napredovanje po razdalji in geometrijskem testu smeri po vzoru 1.21.1, brez branja blokov v `pathFollow` (`PathNavigate:272-308`). **Edini kopenski paket z izmerjeno ceno:** sledenje poti je po S14b še **34,5 % ticka boja-500** ([M5.11](meritve/2026-10-09-M5.11-pomnjenje-tipa-vozlisca.md)). Sprememba gibanja (NPC ne reže več vogalov) → stikalo, privzeto original; A/B CPU **in** kakovost (M2.7 + proga *vogal* iz M4.16); o privzeti vrednosti po meritvi odloči uporabnik. Za njim pogojno M4.11 | S |
+| **M4.16** | **Scenarij letenja in dometa (novo, D-038)** — vhod za vse pakete letenja in M4.10. Proge v `r2-run.ps1`: *zid* (obstoječa F), *vogal* (L-zid na isti višini), *daleč* (cilj 48 blokov, prosto; enako za kopenske), *labirint* (fiksna postavitev). Veličine: prispeli z enim `navigateTo` in z osveževanjem, čas do cilja, **drsenje po prihodu**, `cele`, hitrost proti `navigateTo(speed)`. Perf celica **`leteci-200`** (patrulja in boj) v `perf-run.ps1`. Tri ponovitve originala (D-016). Brez produkcijske kode | S |
+| **M4.17** | **Sledenje poti letečega NPC-ja z vidno črto (novo, D-038).** `RwPathNavigateFlying` (podrazred kot `RwPathNavigateGround`): `isDirectPathBetweenPoints` s pravo preverbo (premik hitboxa ali žarki po vogalih hitboxa), skok omejen na nekaj blokov; velik model napreduje po razdalji. Stikalo, privzeto original. A/B na progah *vogal* in *labirint*, cena na `leteci-200` | S |
 | M4.14 | **Formacije** (novo 18. 9., na zahtevo uporabnika, D-017): skupina NPC-jev se premika kot ena enota — ena pot za vse (vodja), zaprta zanka hitrosti, stiskanje skozi ozka grla, sidranje na koncu. Ukaz `/rwsquad` in `FormationApi` za skripte; brez ukaza paket ni prijavljen in ne doda taska. Zasnova: [`06-FORMACIJE.md`](06-FORMACIJE.md) | M |
 | M4.14a | Jedro (`SquadPlanner`, oblike, dodelitev mest, pot sidra) + adapter (`Squad`, `FormationMoveTask`, `SquadManager`, ukaz, API) + 21 testov v simulaciji | **narejeno 18. 9.** — prevedeno in zeleno v seji (D-014), v svetu ni pognano |
 | M4.14b | Preverjanje v svetu: dimni test F1–F12 in A/B proti skripti na prizorišču M2.7 (FA1–FA6). Za A/B mora `nav-control.js` dobiti način `FORMACIJA`. [Scenarij](scenariji/M4.14-formacije.md) | S |
@@ -216,12 +231,15 @@ kakovosti navigacije) za pakete M4.10–M4.13.
 | M4.15b | **GUI in prenos stanja:** v nastavitvah AI NPC-ja (gibanje) izbira ozadja *vanilla* / *Baritone* (obstoječi ključ `RwNavBackend` 0/1; tretje stanje »po configu« samo, če ga M4.15a upraviči) in vrstica **dejanskega** ozadja z razlogom, kadar izbira ne velja (`npcbaritone` ni nameščen, globalno stikalo `RwNavBackend` 0, velikost ali način gibanja ni podprt, član formacije U7). Obstoječi NBT tipi, packet ID-ji in vrstni redi enumov nespremenjeni; dejansko ozadje izračuna strežnik in ga pošlje ob odprtju GUI. Privzeto vanilla, brez knjižnice bitno enako kot prej (D-007, D-022) | M |
 | M4.15c | Preverba v klientu z igralcem: preklop v GUI, ponovno nalaganje sveta, urejanje NPC-ja (`updateTasks`), klient brez `npcbaritone`, dedicirani strežnik | S |
 
-**Izhodni kriterij:**
-- leteči NPC pride od A do B skozi labirint z ovirami, brez obtičanja
-- način Hover: NPC se ustavi na mestu, ne drseva
+**Izhodni kriterij** (merljiv na scenariju M4.16, D-038; pragovi z **[H]** se potrdijo ali popravijo
+po treh ponovitvah originala):
+- leteči NPC pride od A do B na progah *zid*, *vogal*, *daleč* (48 blokov) in *labirint* z **enim**
+  `navigateTo`: 6/6 prispelih v vseh ponovitvah (original: zid 0/6 **[M]**, ostale izmeri M4.16)
+- način Hover: drsenje po prihodu ≤ 0,25 bloka **[H]**; hitrost iz `navigateTo` velja
 - način Momentum: NPC zavija po krivulji, ne v pravem kotu; ima minimalno hitrost
-- pathfinding pri 200 letečih NPC-jih ne pojé več kot dogovorjen delež MSPT-ja
-- obstoječi leteči NPC-ji brez `RwFlightMode` se obnašajo **enako kot prej**
+- celica `leteci-200`: MSPT p95 z vklopljenimi paketi ne preseže originala za več kot izmerjeni razpon
+  + 10 % **[H]**
+- obstoječi leteči NPC-ji brez `RwFlightMode` (in z izklopljenimi stikali) se obnašajo **enako kot prej**
 
 **Izhodni kriterij za formacije (M4.14):** F1–F12 in FA1–FA6 iz scenarija M4.14b; brez
 tega paket ostane "v kodi", ne "narejen". M4.14 **ni** odvisen od M3.1: ne spreminja
@@ -232,7 +250,9 @@ M2.7, ki presega merilni šum; kandidat, ki ga ne, se **zavrže** in se ne obdr�
 slučaj".
 
 **Tveganja:** 3D pathfinding je klasično ozko grlo. Če se izkaže za predrag, je fallback
-"smer + izogibanje oviram" brez polnega A*.
+"smer + izogibanje oviram" brez polnega A*. Leteča cena danes ni izmerjena (perf scenariji
+letečih nimajo) — zato celica `leteci-200` v M4.16 pred prvim posegom. M4.17 doda preverbo, ki je
+original nima (vsak tick sledenja) — strošek je treba izmeriti, ne predpostaviti.
 
 **Kaj je tu zavrnjeno in zakaj** (D-012): asinhrono iskanje poti, flow fieldi za skupinsko
 gibanje in lasten gibalni sklad. Prvo je edini del tega sklopa z resnično visokim tveganjem

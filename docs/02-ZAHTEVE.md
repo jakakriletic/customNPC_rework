@@ -256,6 +256,28 @@ fizike**, s posebnostjo, da pri `movementType == 2` sili `motionY = -0.15` izven
 **[dokazano] leteči NPC-ji nimajo interakcije z vrati in ne iščejo zavetja pred soncem:**
 `doorInteractType()` (vrstica 869) in del `seekShelter()` (vrstica 888) zgodaj vrneta, če `canFly()`.
 
+**[dokazano iz kode, M4.0 20. 10.] Leteči NPC sledi poti brez preverbe ovir.** Vanilla 1.12
+`PathNavigateFlying.isDirectPathBetweenPoints` (`:83-162`) prehodi celice med točkama, a nobene ne
+prebere in vedno vrne `true`. `PathNavigate.pathFollow` (`:298-305`) zato leteči NPC vsak tick preskoči
+na zadnjo točko poti na isti višini, tudi za vogalom; tam `isNotColliding` vrne `false` in NPC dobi
+`WAIT`. Edina zaščita je `checkForStuck` (100 tickov, < 1,5 bloka); časovna zaščita po vozlišču je za
+leteče izklopljena, ker `getAIMoveSpeed()` ostane 0. Učinek (obtičanje ob vodoravnem vogalu) je
+**hipoteza**: M2.3 ima zid čez vso širino, pot gre čez vrh in sprememba višine skok prekine.
+
+**[dokazano iz kode, M4.0] `FlyingMoveHelper` je vanilla `EntityGhast.GhastMoveHelper`** (isti
+`courseChangeCooldown` in `isNotColliding`), narejen za ghasta brez poti. Sunek hitrosti vsake 4 ticke,
+med njimi samo dušenje 0,91; model da vrh ~0,32 bloka/tick in po prihodu **do ~3,5 bloka drsenja**, ker
+se po `WAIT` nič več ne popravlja (**hipoteza, model** — drsenje ni bilo merjeno; M4.16).
+
+**[dokazano iz kode, M4.0] Cilj dlje od `NpcNavRange` ne vrne delne poti, ampak `null`.**
+`FlyingNodeProcessor`/`WalkNodeProcessor.findPathOptions` sprejmeta soseda samo, če je od cilja bliže
+kot 32. Delna pot nastane samo, ko je cilj v dometu, obvoz pa daljši ali predrag za 200 vozlišč.
+
+**[zunanji vir, M4.0]** CustomNPC+ ima isto iskanje kot vanilla 1.12 (`FlyPathFinder` = 1.12
+`FlyingNodeProcessor` na 1.7.10); razlika je v sledenju (žarek, skok ≤ 6 blokov) in krmiljenju
+(upoštevana hitrost, zavoj ≤ 20°/tick, višinska meja, spust brez poti, hoja ob tleh). Vanilla 1.12 ima
+za papigo `EntityFlyHelper`, ki hitrost navigatorja upošteva. [raziskava](raziskave/M4.0-gibanje-in-letenje.md)
+
 ### Kaj hoče uporabnik
 
 | Način | Obnašanje | Uporaba |
@@ -266,6 +288,11 @@ fizike**, s posebnostjo, da pri `movementType == 2` sili `motionY = -0.15` izven
 | **D — Swim** | kot zdaj, ločeno od letenja | vodni NPC-ji |
 
 ### Predlagana rešitev
+
+*Popravljeno po raziskavi M4.0 (20. 10., D-038): vrstni red v `03-FAZE.md` je M4.16 (scenarij) →
+M4.10 (nadaljevanje poti in cilj izven dometa) → M4.17 (sledenje z vidno črto) → M4.2/M4.3 (Hover) →
+M4.5 samo pogojno → M4.6 → M4.7. Točki 3 in 5 spodaj sta spremenjeni; obseg nastavitev letenja je
+vprašanje Q31, vozilo za igralca Q6.*
 
 1. **Nov enum `FlightMode`** v `rework/movement/`, shranjen v novem NBT ključu
    (`RwFlightMode`). `ais.movementType` ostane nedotaknjen za združljivost; nova vrednost
@@ -279,6 +306,10 @@ fizike**, s posebnostjo, da pri `movementType == 2` sili `motionY = -0.15` izven
    - preslikati pristop iz CustomNPC+ ("smart pathfinding in 3D space")
    - ali lasten `AStar3D` s cenovno funkcijo, ki kaznuje bližino blokov
    Odločitev pade po branju CustomNPC+ implementacije v M4.1.
+   **M4.0:** CustomNPC+ nima boljšega iskanja od vanilla 1.12, port odpade. 3D iskanje (M4.5) postane
+   odločitvena točka — samo če M4.10 + M4.17 + M4.3 ne izpolnijo meril M4.16; tedaj podrazred
+   `PathFinder` po vzoru 1.21.1 (evklidska cena, hevristika ×1,5, proračun `FOLLOW_RANGE·16`), ne
+   lasten iskalnik iz nič.
 4. **Osveževanje poti — po meritvi prva stvar, ki jo je treba popraviti.** M2.3 je pokazal,
    da isto skupino čez isto oviro spravi že to, da se pot osvežuje (6/6 proti 0/6). Vsak
    `PathNavigateFlying`, ki dobi pot z `cele = false`, jo mora znova poiskati, namesto da NPC
@@ -286,7 +317,9 @@ fizike**, s posebnostjo, da pri `movementType == 2` sili `motionY = -0.15` izven
    gre pred 3D pathfinding.
 5. **Popravek `isNotColliding`**: vzorčenje po dejanskem hitboxu z več žarki, ne po eni črti,
    in obhod namesto `WAIT`. **Po meritvi to ni bil vzrok obstanka v prizorišču M2.3**, zato
-   gre za izboljšavo in ne za popravek te napake.
+   gre za izboljšavo in ne za popravek te napake. **M4.0:** nadomesti ga M4.17 — prava preverba
+   vidne črte v `isDirectPathBetweenPoints` (vanilla je nima), da NPC ne cilja točke za vogalom;
+   `isNotColliding` v originalnem načinu ostane, novi helperji ga ne rabijo.
 6. **Render podpora za nagib.** Trenutno se NPC-ju nastavlja samo `rotationYaw`
    (`FlyingMoveHelper.java:48`). Za način C je potreben pitch in po možnosti roll →
    sprememba na render strani, klient/server sinhronizacija.

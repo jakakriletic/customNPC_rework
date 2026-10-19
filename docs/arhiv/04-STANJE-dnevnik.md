@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 95 → 1)
+# Arhiv: dnevnik sej (vnosi 96 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,34 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-19 (96) — M5-K K4: napisi NPC-jev iz display lista
+
+**Paket:** M5-K K4 · **Stanje:** **zaključeno** (`RwLabelCache` **privzeto 1**, D-032).
+
+**Narejeno:**
+- 1:1 prenos `RenderNPCInterface` (0abb22e; bajtkoda 26 metod: 18 enakih, 8 razlik v obliki, 0 za pregled;
+  `RenderNPCInterfaceBaselineTest`), nato trije klici `drawString` v `renderLivingLabel` → `rwDrawLabel`.
+- `rework/render/LabelCache`: ob drugem izrisu istega niza (barva, Unicode, bidi) posname ukaze v display list
+  (`GL_COMPILE_AND_EXECUTE`) in jih nato predvaja; predpomnilnik `GlStateManager` (alfa, barva, tekstura) se
+  pred snemanjem in po predvajanju uskladi. Original za prvi izris, podrazrede `FontRenderer`, OptiFine,
+  `§k`/`§n`/`§m`; listi se pobrišejo ob ponovnem nalaganju virov; LRU 1.024. `LabelCacheTest` (2).
+- Harness `LabelCheck` (`k-run -Napisi 1 -PreveriNapise`, merili K11/K12): idle-200, 174 napisov v dometu,
+  serije ime testnega sveta in barvne kode/šumniki **0 razlik** barve in globine (drug naslov 2.817 pikslov).
+- A/B 3 + 3 (`audit/m5k4-ab.ps1`): idle-200 p50 6,556 → **6,100 ms (−7,0 %)**, idle-50 2,164 → **2,025 (−6,4 %)**,
+  p95 −6,1 / −7,6 %, razponi ločeni. [zapis](../meritve/2026-10-19-M5-K-K4-napisi-display-list.md)
+- Testi 300/0 + testOriginal 38/0, `verify-package` PASS (70 vnosov).
+
+**Ni narejeno in zakaj:** napis bližje kot 4 bloke (drugi prehod brez globinskega testa) gre po isti poti,
+v prizorišču ga ni in ni posebej preverjen s pikslom.
+
+**Ugotovitve:** list prihrani ~⅓ stroška napisov (klici JNI); ostanek je izvajanje ~34 znakov v takojšnjem
+načinu v gonilniku. Večji dobitek bi zahteval VBO/atlas za vse napise (ni v obsegu K4).
+
+**Spremembe obnašanja:** nobene vidne; `RwLabelCache=1` privzeto (isti ukazi GL, 0 razlik pikslov). Dev
+`CustomNpcs.cfg` drži 0, zato scenariji merijo original.
+
+**Naslednja seja:** **K3** (oči, 3,5 µs na NPC, 10–14 % render niti); Q30 še odprto.
 
 ### 2026-10-19 (95) — M5-K K14b: pokrivalo brez prozornih štirikotnikov
 
