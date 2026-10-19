@@ -12,7 +12,7 @@
         .\k-run.ps1 -Variant idle -N 50 -Warmup 10 -Measure 20      # hiter preizkus harnessa
         .\ponovitve-run.ps1 -Scenarij klient -Dodatno @('-Variant','idle','-N','200')
 
-    Merila (K1-K8, z -PreveriPokrivalo K9, s -Pokrivalo K10, z -PreveriNapise K11, z -Napisi K12) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
+    Merila (K1-K8, z -PreveriPokrivalo K9, s -Pokrivalo K10, z -PreveriNapise K11, z -Napisi K12, z -PreveriOci K13, z -Oci K14) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
 
     -Jfr (M5-K.1): v merilnem oknu snema JFR klientskega JVM-ja (jcmd JFR.start, nastavitve 'profile')
     v audit\jfr\k-<varianta>-<N>-<stamp>.jfr in napise povzetek niti 'Client thread' z nativnimi
@@ -41,7 +41,11 @@ param(
     # M5-K K4: RwLabelCache za ta zagon; -1 = iz CustomNpcs.cfg.
     [ValidateRange(-1, 1)][int]$Napisi = -1,
     # M5-K K4: po ogrevanju primerjaj piksle in globino z RwLabelCache 0 in 1 (merilo K11).
-    [switch]$PreveriNapise
+    [switch]$PreveriNapise,
+    # M5-K K3: RwEyesList za ta zagon; -1 = iz CustomNpcs.cfg.
+    [ValidateRange(-1, 1)][int]$Oci = -1,
+    # M5-K K3: po ogrevanju primerjaj piksle in globino z RwEyesList 0 in 1 (merilo K13).
+    [switch]$PreveriOci
 )
 
 $ErrorActionPreference = 'Stop'
@@ -132,7 +136,7 @@ $jobPath = Join-Path $audit "k-$Variant-$N-$stamp.job"
 $job = @("world=$world", 'createSeed=customnpc-rework', "expectNpc=$pricakovano", "expectNpcMin=$pricakovanoMin",
          # Invariantna kultura: v sl-SI bi -f dal decimalne vejice in HarnessJob kamere ne bi prebral.
          [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, 'cam={0},{1},{2},180,{3}', $camX, $camY, $camZ, $pitch),
-         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci", "headwearSkip=$Pokrivalo", ('headwearCheck={0}' -f [int][bool]$PreveriPokrivalo), "labelCache=$Napisi", ('labelCheck={0}' -f [int][bool]$PreveriNapise),('settle={0}' -f (3 + [int]($N / 250))),
+         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci", "headwearSkip=$Pokrivalo", ('headwearCheck={0}' -f [int][bool]$PreveriPokrivalo), "labelCache=$Napisi", ('labelCheck={0}' -f [int][bool]$PreveriNapise), "eyesList=$Oci", ('eyesCheck={0}' -f [int][bool]$PreveriOci),('settle={0}' -f (3 + [int]($N / 250))),
          "warmup=$Warmup", "measure=$Measure", ('out=' + ($out -replace '\\', '/')))
 for ($i = 0; $i -lt $cmds.Count; $i++) { $job += ('cmd.{0}={1}' -f ($i + 1), $cmds[$i]) }
 [System.IO.File]::WriteAllLines($jobPath, $job, (New-Object System.Text.UTF8Encoding($false)))
@@ -230,6 +234,14 @@ if ($r -and $PreveriNapise) {
     foreach ($ser in ("$($r.napisiSerije)" -split ' \| ')) { Write-Host ("    napisi {0}" -f $ser) }
     Check ("K11: napisi bitno enaki z RwLabelCache 0 in 1 ({0} NPC, {1} v dometu imen; ime testnega sveta, barvne kode in sumniki, koda k po originalu), drug naslov spremeni {2} pikslov {3}" -f $r.napisiNpc, $r.napisiVDometu, $r.napisiObcutljivost, $r.napisiNapaka) ($r.napisiPreverba -eq 1)
 }
+if ($r -and $Oci -ge 0) {
+    # Prvo srecanje kljuca posname list, nato vsi izrisi zunaj utripa z listom.
+    Check ("K14: RwEyesList {0} (zahtevano {1}), oci z listom {2}, original {3}, prevodov {4}" -f $r.rwEyesList, $Oci, $r.ociZListom, $r.ociOriginal, $r.ociPrevodov) (($r.rwEyesList -eq $Oci) -and ($PreveriOci -or (($Oci -eq 0) -eq ($r.ociZListom -eq 0))))
+}
+if ($r -and $PreveriOci) {
+    foreach ($ser in ("$($r.ociSerije)" -split ' \| ')) { Write-Host ("    oci {0}" -f $ser) }
+    Check ("K13: oci bitno enake z RwEyesList 0 in 1 ({0} NPC; oci testnega sveta, vzorci, utrip po originalu; vse tudi v povecavi x8), druga barva oci spremeni {1} / {2} pikslov {3}" -f $r.ociNpc, $r.ociObcutljivost, $r.ociObcutljivostPovecava, $r.ociNapaka) ($r.ociPreverba -eq 1)
+}
 if ($r -and $PreveriPokrivalo) {
     foreach ($ser in ("$($r.pokrivaloSerije)" -split ' \| ')) { Write-Host ("    pokrivalo {0}" -f $ser) }
     Check ("K9: slika in globina pokrivala bitno enaki z RwHeadwearSkip 0 in 1 ({0} NPC; skin, vzorec, 5 pravih skinov), vzorec spremeni {1} pikslov {2}" -f $r.pokrivaloNpc, $r.pokrivaloObcutljivost, $r.pokrivaloNapaka) ($r.pokrivaloPreverba -eq 1)
@@ -268,6 +280,7 @@ if ($r) {
         if ($Vzorci -gt 0) { $odtis['vzorci'] = $Vzorci }
         if ($Pokrivalo -ge 0) { $odtis['rwHeadwearSkip'] = $Pokrivalo }
         if ($Napisi -ge 0) { $odtis['rwLabelCache'] = $Napisi }
+        if ($Oci -ge 0) { $odtis['rwEyesList'] = $Oci }
         $vel = @{ 'frame.p50' = $r.frameMsP50; 'frame.p95' = $r.frameMsP95; 'frame.p99' = $r.frameMsP99; 'frame.max' = $r.frameMsMax;
                   'fps' = $r.fps; 'fps.low1' = $r.fpsLow1; 'fps.low01' = $r.fpsLow01; 'gc.stevilo' = $r.gcStevilo; 'gc.ms' = $r.gcMs;
                   'upodobljeno.min' = $r.upodobljenoMin; 'streznik.ms' = $r.integriraniStreznikMsPovp }

@@ -27,6 +27,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.rework.render.HeadwearSkip;
+import noppes.npcs.rework.render.EyesList;
 import noppes.npcs.rework.render.LabelCache;
 
 /**
@@ -81,6 +82,7 @@ public final class ClientHarness {
     private boolean headwearCheckPending;
     private HeadwearCheck headwearCheck;
     private LabelCheck labelCheck;
+    private EyesCheck eyesCheck;
     private final List<String> errors = new ArrayList<String>();
 
     private ClientHarness(HarnessJob job) {
@@ -180,7 +182,8 @@ public final class ClientHarness {
                 case WARMUP:
                     pinCamera(mc, false);
                     if (secondsInPhase() >= this.job.warmupSeconds && ((this.job.headwearCheck && this.headwearCheck == null)
-                            || (this.job.labelCheck && this.labelCheck == null))) {
+                            || (this.job.labelCheck && this.labelCheck == null)
+                            || (this.job.eyesCheck && this.eyesCheck == null))) {
                         // M5-K K14b: preverba v naslednjem RenderWorldLastEvent, merjenje po njej.
                         this.headwearCheckPending = true;
                     } else if (secondsInPhase() >= this.job.warmupSeconds) {
@@ -241,6 +244,15 @@ public final class ClientHarness {
             System.out.println("RWHARNESS-NAPISI ok=" + r.ok() + " npc=" + r.npcs + " vDometu=" + r.labelled + " obcutljivost=" + r.sensitivity + s + " " + r.error);
             this.labelCheck = r;
         }
+        if (this.job.eyesCheck) {
+            EyesCheck r = EyesCheck.run(Minecraft.getMinecraft(), ev.getPartialTicks());
+            StringBuilder s = new StringBuilder();
+            for (EyesCheck.Series x : r.series) {
+                s.append(" | ").append(x);
+            }
+            System.out.println("RWHARNESS-OCI ok=" + r.ok() + " npc=" + r.npcs + " obcutljivost=" + r.sensitivity + "/" + r.sensitivityZoom + s + " " + r.error);
+            this.eyesCheck = r;
+        }
     }
 
     @SubscribeEvent
@@ -278,6 +290,9 @@ public final class ClientHarness {
         }
         if (this.job.labelCache >= 0) {
             CustomNpcs.RwLabelCache = this.job.labelCache;
+        }
+        if (this.job.eyesList >= 0) {
+            CustomNpcs.RwEyesList = this.job.eyesList;
         }
         mc.gameSettings.renderDistanceChunks = this.job.renderDistance;
         mc.gameSettings.enableVsync = false;
@@ -454,6 +469,23 @@ public final class ClientHarness {
         num(b, "pokrivaloDelovNic", HeadwearSkip.partsNone);
         num(b, "pokrivaloDelovNekaj", HeadwearSkip.partsSome);
         num(b, "pokrivaloDelovVse", HeadwearSkip.partsAll);
+        num(b, "rwEyesList", CustomNpcs.RwEyesList);
+        num(b, "ociZListom", EyesList.drawsList);
+        num(b, "ociOriginal", EyesList.drawsOriginal);
+        num(b, "ociPrevodov", EyesList.compiles);
+        EyesCheck ec = this.eyesCheck;
+        num(b, "ociPreverba", ec == null ? -1 : (ec.ok() ? 1 : 0));
+        if (ec != null) {
+            num(b, "ociNpc", ec.npcs);
+            num(b, "ociObcutljivost", ec.sensitivity);
+            num(b, "ociObcutljivostPovecava", ec.sensitivityZoom);
+            StringBuilder es = new StringBuilder();
+            for (EyesCheck.Series x : ec.series) {
+                es.append(es.length() == 0 ? "" : " | ").append(x);
+            }
+            kv(b, "ociSerije", es.toString());
+            kv(b, "ociNapaka", ec.error);
+        }
         num(b, "rwLabelCache", CustomNpcs.RwLabelCache);
         num(b, "napisiZListom", LabelCache.drawsList);
         num(b, "napisiOriginal", LabelCache.drawsOriginal);

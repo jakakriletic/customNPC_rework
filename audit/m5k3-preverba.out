@@ -1,0 +1,44 @@
+
+===== 1 : Parametri in priprava =====
+  OK       zaklep scenarija (.scenarij.lock)
+  OK       K0: pred zagonom ne tece tuj gradle build ali Minecraft
+  OK       fixture PERF_* namescene v svet (5)
+  kamera (60,5, 17, 6) yaw 180 pitch 42,9; najdaljsi NPC 25,5 blokov
+  OK       najbolj oddaljen NPC je znotraj dometa sledilnika (25,5 <= 60)
+  navodilo: C:\Users\jakak\Desktop\customNPC_rework\audit\k-idle-200-2026-10-19-192641.job (15 ukazov)
+
+===== 2 : Zagon klienta =====
+    Downloading 0 missing Minecraft 1.12 assets over HTTPS.
+    Asset download complete.
+  RWHARNESS-INSTALL world=rwk-idle-200 out=C:/Users/jakak/Desktop/customNPC_rework/audit/k-idle-200-2026-10-19-192641-klient.json
+  RWHARNESS-FAZA JOINING
+  RWHARNESS-FAZA PRELOAD
+  RWHARNESS-FAZA COMMANDS
+  RWHARNESS-FAZA SETTLE
+  RWHARNESS-FAZA WARMUP
+  RWHARNESS-OCI ok=true npc=200 obcutljivost=44/511 | svet: oci=200 pikslov=36306 razlik=0/0 predvajanje=0 ponovitev=0 izrisov z listom=400 original=0 prevodov=1 | vzorci: oci=200 pikslov=36306 razlik=0/0 predvajanje=0 ponovitev=0 izrisov z listom=400 original=0 prevodov=60 | utrip: oci=200 pikslov=36306 razlik=0/0 predvajanje=0 ponovitev=0 izrisov z listom=0 original=400 prevodov=0 | svet x8: oci=200 pikslov=341191 razlik=0/0 predvajanje=0 ponovitev=0 izrisov z listom=400 original=0 prevodov=1 | vzorci x8: oci=200 pikslov=341191 razlik=0/0 predvajanje=0 ponovitev=0 izrisov z listom=400 original=0 prevodov=60 | utrip x8: oci=200 pikslov=341191 razlik=0/0 predvajanje=5 ponovitev=6 izrisov z listom=0 original=400 prevodov=0 
+  RWHARNESS-FAZA MEASURE
+  RWHARNESS-FAZA DONE
+  RWHARNESS-KONEC C:/Users/jakak/Desktop/customNPC_rework/audit/k-idle-200-2026-10-19-192641-klient.json
+
+===== 3 : Merila =====
+  OK       K1: klient je zapisal rezultat in prisel do konca meritve (faza MEASURE, napak 0)
+  OK       K2: vsi ukazi prizorisca so uspeli
+  OK       K3: v klientu je 200 NPC-jev (pricakovano 200..200)
+  OK       K4: upodobljenih entitet min 200 / max 200 v 60 vzorcih (prag 200)
+  OK       K5: kamera fiksna (odmik 0,0000 blokov, 0,0000 stopinj)
+  OK       K6: nastavitve: vsync 0, limit 260, RD 8, FOV 70,0000, skrit GUI 0
+  OK       K7: 7983 slicic v 60,0 s
+  OK       K8: med ogrevanjem in merjenjem ni tekel tuj gradle build ali Minecraft
+  OK       K14: RwEyesList 1 (zahtevano 1), oci z listom 2485516, original 3600, prevodov 124
+    oci svet: oci=200 pikslov=36306 razlik=0/0 predvajanje=0 ponovitev=0 izrisov z listom=400 original=0 prevodov=1
+    oci vzorci: oci=200 pikslov=36306 razlik=0/0 predvajanje=0 ponovitev=0 izrisov z listom=400 original=0 prevodov=60
+    oci utrip: oci=200 pikslov=36306 razlik=0/0 predvajanje=0 ponovitev=0 izrisov z listom=0 original=400 prevodov=0
+    oci svet x8: oci=200 pikslov=341191 razlik=0/0 predvajanje=0 ponovitev=0 izrisov z listom=400 original=0 prevodov=1
+    oci vzorci x8: oci=200 pikslov=341191 razlik=0/0 predvajanje=0 ponovitev=0 izrisov z listom=400 original=0 prevodov=60
+    oci utrip x8: oci=200 pikslov=341191 razlik=0/0 predvajanje=5 ponovitev=6 izrisov z listom=0 original=400 prevodov=0
+  OK       K13: oci bitno enake z RwEyesList 0 in 1 (200 NPC; oci testnega sveta, vzorci, utrip po originalu; vse tudi v povecavi x8), druga barva oci spremeni 44 / 511 pikslov 
+
+  idle-200: slicica p50 7,01 / p95 11,73 / p99 13,69 / max 17,7 ms, FPS 133,0, 1 % low 69,6, 0,1 % low 61,1, GC 9 (56 ms), integrirani streznik 3,50 ms/tick
+
+M5-K.0 K1-K8 USPESNO.

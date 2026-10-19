@@ -21,7 +21,9 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderLiving;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import noppes.npcs.CustomNpcs;
 import noppes.npcs.client.layer.LayerInterface;
+import noppes.npcs.rework.render.EyesList;
 
 public class LayerEyes
 extends LayerInterface {
@@ -53,12 +55,14 @@ extends LayerInterface {
         int k = i / 65536;
         OpenGlHelper.setLightmapTextureCoords((int)OpenGlHelper.lightmapTexUnit, (float)j, (float)k);
         Minecraft.getMinecraft().entityRenderer.setupFogColor(true);
-        this.tessellator = Tessellator.getInstance().getBuffer();
-        this.tessellator.begin(7, DefaultVertexFormats.POSITION_COLOR);
-        this.drawLeft();
-        this.drawRight();
-        this.drawBrows();
-        Tessellator.getInstance().draw();
+        // M5-K K3: geometrija oci iz display lista (rework/render/EyesList); z RwEyesList 0 original.
+        boolean alive = this.npc.isEntityAlive();
+        if (CustomNpcs.RwEyesList != 0 && EyesList.usable(this.playerdata.eyes, alive, this.npc.deathTime)) {
+            EyesList.draw(this.playerdata.eyes, alive, this::rwDrawGeometry);
+        } else {
+            EyesList.drawsOriginal++;
+            this.rwDrawGeometry();
+        }
         Minecraft.getMinecraft().entityRenderer.setupFogColor(false);
         GlStateManager.depthMask((boolean)true);
         GlStateManager.disableBlend();
@@ -68,6 +72,16 @@ extends LayerInterface {
         GlStateManager.disableRescaleNormal();
         GlStateManager.popMatrix();
         GlStateManager.enableTexture2D();
+    }
+
+    // M5-K K3: izris oci iz originala, nespremenjen.
+    private void rwDrawGeometry() {
+        this.tessellator = Tessellator.getInstance().getBuffer();
+        this.tessellator.begin(7, DefaultVertexFormats.POSITION_COLOR);
+        this.drawLeft();
+        this.drawRight();
+        this.drawBrows();
+        Tessellator.getInstance().draw();
     }
 
     private void drawLeft() {
