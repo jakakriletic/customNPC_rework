@@ -3,7 +3,7 @@
 Dobesedno prenesene vsebine iz `docs/04-STANJE.md` (stanje 2026-10-19, pred prestrukturiranjem).
 Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
 Kazalo: §1 Trenutno stanje (polna) · §2 Napredek po milestonih (polna) · §3 M1/M2 po paketih ·
-§4 Vsa vprašanja Q1–Q28 · §5 Znane omejitve.
+§4 Vsa vprašanja Q1–Q29 · §5 Znane omejitve.
 
 Pravila vzdrževanja: odločeno vprašanje se v `04-STANJE.md` izbriše in tu v §4 posodobi;
 nove omejitve/pasti se dopisujejo na konec §5.
@@ -90,7 +90,7 @@ nove omejitve/pasti se dopisujejo na konec §5.
 
 ---
 
-## 4. Odprta vprašanja za uporabnika — vsa (Q1–Q28), stanje 2026-10-19
+## 4. Odprta vprašanja za uporabnika — vsa (Q1–Q29), stanje 2026-10-19
 
 | # | Vprašanje | Vpliva na | Stanje |
 |---|---|---|---|
@@ -120,6 +120,7 @@ nove omejitve/pasti se dopisujejo na konec §5.
 | Q25 | Vrstni red M5-V: dobesedno "na koncu M5-K" (po K5, K12, K13, K10) ali **takoj po M5-K.1 in K5**? M5-V ne potrebuje K13/K10, stopnja L2 pa zmanjša vrednost K10 (instancing ostane le za gnečo blizu) | M5-K/M5-V vrstni red | **odločeno 14. 10.: po priporočilu** → D-035; M5-K.0 → M5-K.1 → K5 → M5-V → K12 → ostali; K13/K10 po M5-V.8 ponovno oceniti |
 | Q27 | Obseg potrditev M5.8 (K3): po polnem protokolu ostane ~14 h stroja (boj in nedosegljiva pri 25 ms ~4 h, pari pri 50 ms ~8 h, `-Razprseno` ~2 h). Predlog skrajšave: (a) potrdi samo N tik pod pragom, (b) mejo 50 ms vzemi iz lestvice, (c) okno 60 + 180 s (S-idle 3500 je imel razpon p95 4 %) — skupaj ~2–3 h. Polni protokol ali skrajšan? | M5.8 izhodni kriterij | **odločeno 16. 10.: skrajšan** — (a) + (b) + (c); zaganjalnik `audit/m58-skrajsano.ps1` (S-boj 1500, O-boj 1000, S-ned 700, O-ned 500; 3 ponovitve, 60 + 180 s) |
 | Q28 | Vrstni red M5-K po profilu M5-K.1: D-035 določa M5-K.1 → **K5** (LOD, spremeni videz daleč) → M5-V. Profil pokaže tri cenejše pakete **brez spremembe videza**, ki pomagajo tudi blizu igralca, kjer K5 ne seže: **K14** pokrivalo v enem listu (19–26 % render niti), **K4** predpomnilnik napisov (20 % pri 200 NPC-jih v 22,6 bloka), **K3** oči (10–14 %). Naj gredo **K14 → K4 → K3 pred K5** (priporočeno; M5-V se zamakne za ~3 seje) ali ostane D-035 (K5 takoj)? | M5-K vrstni red | **odločeno 19. 10.: da** — K14 → K4 → K3 → K5 → M5-V (dopolni D-035) |
+| Q29 | K14 (en list pokrivala) je zavržen: ista slika, a brez dobitka, ker je čas v geometriji (816 oglišč na NPC), ne v klicih. Brez 6 delov pokrivala je idle-500 p50 −23 %, 41 % od 239 skinov CNPC pa nima nobenega neprozornega teksla pokrivala (tudi skin fixture). Naj se pred K4 vstavi **K14b**: list pokrivala na teksturo, ki izpusti dele in trakove samo s prozornimi teksli (ista slika, dokaz s primerjavo pikslov, nato D-032)? Tveganje: OptiFine/senčilniki brez alfa testa bi prozorne fragmente pisali v globino | vrstni red M5-K (Q28), K14b, K4 | **odprto 19. 10.**; priporočilo: da, K14b pred K4 |
 | Q26 | M5-V na strežniku: nadomestki razkrijejo pozicije NPC-jev do `view-distance` tudi za zidovi (imena in naslovi se ne pošljejo nikoli). Naj bo `RwFarLos` privzeto **0** (brez preverbe vidnosti, najcenejše) ali **1** (strežnik pošlje samo NPC-je v vidni črti igralca, raytrace ~1 Hz na par igralec–NPC)? | M5-V.2, M5-V.8 | **odločeno 14. 10.: po priporočilu, privzeto 0** → D-035; operater lahko vklopi `RwFarLos=1` |
 | Q14 | Pri R10 — kateri zemljevid: lasten iz `ladja_mod` (izbira kot pri ladjah), JourneyMap, Xaero ali nov v CNPC? | M11.3 | **odprto 6. 10.**, ne blokira do M11 |
 
@@ -273,3 +274,6 @@ nove omejitve/pasti se dopisujejo na konec §5.
   se do M3.1 ocenjuje kot zmnožek časa enega iskanja (sonda) in te pogostosti.
 - Že pokvarjenih datotek na disku nova koda ne popravlja; M1.4 je po navodilu uporabnika
   odložen, dokler ne obstaja konkreten primer.
+- **Delež v profilu ni dobitek manj klicev** (M5-K K14, 19. 10.): lastni čas v `nglCallList` vsebuje izvajanje
+  vsebine lista v gonilniku (oglišča), ne samo klic. En list namesto 30 klicev pokrivala ni premaknil deleža (26,0 →
+  26,1 %), izpustitev geometrije pa −23 %. Pred paketom »manj klicev« izmeri zgornjo mejo (izpusti del in izmeri).

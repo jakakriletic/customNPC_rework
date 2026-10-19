@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-19** — Q28 odločeno (**K14 → K4 → K3 → K5 → M5-V**, dopolni D-035), K14 še brez kode; dokumentacija prestrukturirana (04-STANJE skrajšan, starejše v `arhiv/`). Zadnja razvojna seja 93 (18. 10.): **M5-K.1 zaključen** — baseline klienta 5 celic × 3 ponovitve, T1–T6 zelena (p50 idle-50/200/500 2,15 / 6,57 / 11,57 ms, boj-200/500 5,78 / 12,55 ms); profil render niti: NPC-ji ~90 %, **pokrivalo 19–26 % (nov paket K14)**, ime + naslov 20 %, oči 10–14 %; popravljena napaka pogoja M5-K.0 (F1 skrije imena NPC-jev). Zapis: [meritev](meritve/2026-10-18-M5-K.1-baseline-profil.md) |
-| Trenutni milestone | **M5 — Performance**: M5-S (strežnik) zaključen 16. 10. (M5.8: idle 10×, boj 1,5×, nedosegljiva 1,4× pri p95 ≤ 25 ms); M5-K (klient): K.0 in K.1 zaključena, naslednji K14. M3 (jedro entitete) zaključen do M3.9 (GUI za hitbox način M3.8b v klientu odprt); M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | **K14 → K4 → K3** (brez spremembe videza, skupaj ~45 % render niti; Q28), nato **K5** (LOD), **M5-V** (vidnost NPC-jev do 24 chunkov, D-034/D-035), K12, ostali K-paketi. Pred izdajo **Q22** (pravi Forge strežnik: jar od M5.16 privzeto spreminja vanilla bajtkodo, produkcijska pot je preverjena samo statično). **M4.0** (raziskava M4) je lahko vmes; vrstni red v `03-FAZE.md` (D-030). Odprto: PR `codex/m7-cnpc-integration` → `main` |
+| Zadnja posodobitev | **2026-10-19** (seja 94) — **M5-K K14 zavržen**: 6 delov pokrivala v enem display listu da isto sliko (0 razlik pikslov in globine), a ne skrajša sličice (idle-500 p50 −1,4 % v šumu, idle-200 +0,8 %); čas je v 816 ogliščih na NPC, ne v klicih. Zgornja meja brez geometrije pokrivala −23 % p50; 41 % skinov CNPC ima povsem prozorno pokrivalo → nov kandidat **K14b**, **Q29**. Zapis: [meritev](meritve/2026-10-19-M5-K-K14-pokrivalo-en-list.md) |
+| Trenutni milestone | **M5 — Performance**: M5-S (strežnik) zaključen 16. 10. (M5.8: idle 10×, boj 1,5×, nedosegljiva 1,4× pri p95 ≤ 25 ms); M5-K (klient): K.0 in K.1 zaključena, K14 zavržen 19. 10., naslednji K14b (Q29) ali K4. M3 (jedro entitete) zaključen do M3.9 (GUI za hitbox način M3.8b v klientu odprt); M2 zaključen (baseline M2.6 zelen 5. 10.) |
+| Naslednji paketi | **K14b → K4 → K3** (brez spremembe videza; K14b po **Q29**, sicer K4; Q28), nato **K5** (LOD), **M5-V** (vidnost NPC-jev do 24 chunkov, D-034/D-035), K12, ostali K-paketi. Pred izdajo **Q22** (pravi Forge strežnik: jar od M5.16 privzeto spreminja vanilla bajtkodo, produkcijska pot je preverjena samo statično). **M4.0** (raziskava M4) je lahko vmes; vrstni red v `03-FAZE.md` (D-030). Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **141** datotek `.java` v `src/patch` (18. 10.; +3 harness M5-K.0, +1 `StackSampler`), od tega **81** v `noppes/npcs/rework/…` (`ai` 5, `core` 9, `data` 5, `diag` 19, `entity` 13, `formation` 15, `nav` 12, `net` 3) in 3 dostopni razredi v `net/minecraft/…`; `verify-package`: **66** vnosov (65 razredov originala + manifest coremoda) |
-| Testi | **287 JUnit** v 44 datotekah (18. 10.; vsi zeleni skupaj s testOriginal 35/0) + **35 primerjalnih testov originala** (`:testOriginal` proti nespremenjenemu binarju). Dodatno **20** preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.ponovitve-samotest.ps1`, M2.5c) |
+| Prevedljivih razredov | **143** datotek `.java` v `src/patch` (19. 10.; +2 prenos 1:1 `Model2DRenderer`, `ModelHeadwear`), od tega **81** v `noppes/npcs/rework/…` (`ai` 5, `core` 9, `data` 5, `diag` 19, `entity` 13, `formation` 15, `nav` 12, `net` 3) in 3 dostopni razredi v `net/minecraft/…`; `verify-package`: **68** vnosov (67 razredov originala + manifest coremoda) |
+| Testi | **288 JUnit** v 45 datotekah (19. 10.; vsi zeleni skupaj s testOriginal 36/0) + **36 primerjalnih testov originala** (`:testOriginal` proti nespremenjenemu binarju). Dodatno **20** preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.ponovitve-samotest.ps1`, M2.5c) |
 | Odprti pojavi | nobenega blokirnega; P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6, Q8, Q10, Q12 in Q14 odprta; specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Seja teče na uporabnikovem Windows računalniku (DESKTOP-SN494C0) s PowerShellom, Gradlom in JDK 8 — **sama poganja build, `verify-package` in scenarije v svetu**. Pred zagonom scenarija odstrani `NoDefaultCurrentDirectoryInExePath` (glej `OKOLJE.md`). Python ni nameščen (node je) |
@@ -39,7 +39,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M2 Diagnostika | **zaključeno 5. 10.** (razen M2.4r render, prestavljen v M5-K) | M2.1–M2.7 preverjeni v svetu; baseline M2.6 zelen 5. 10. — [baseline](meritve/baseline-2026-10-05.md) |
 | M3 Jedro entitete | **zaključeno do M3.9** | M3.1–M3.5 (R1 reproduciran, popravljen pod `RwMountSteering=1`), M3.6 (D-020, `RwAttackPriority`), M3.7, M3.8 (`RwHitbox`), M3.9 (7. 10.). Odprto: M3.8b GUI v klientu (z igralcem), Q15 → D-028 |
 | M4 Gibanje | **M4.14a v kodi** (izven vrstnega reda) | formacije prevedene in testirane v simulaciji, v svetu še ne — [zasnova](06-FORMACIJE.md), [scenarij](scenariji/M4.14-formacije.md); M4.15 (izbira vanilla/Baritone v GUI, D-036) |
-| M5 Performance | **M5-S zaključen 16. 10.**; M5-K.0 (16. 10.) in M5-K.1 (18. 10.) zaključena; naprej K14 → K4 → K3 → K5 → M5-V (Q28, D-035) | M5-S: S1, S2, S14b, S4, S7, S5 (D-037, `RwPathNegCache=1`), S14c, S16, M5.15 (coremod), M5.16 (`RwMoveBoxes`) vsi privzeto vklopljeni po D-032; M5.2 zavržen. Podrobnosti po paketih: [arhiv, tabele §2](arhiv/04-STANJE-tabele.md); razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
+| M5 Performance | **M5-S zaključen 16. 10.**; M5-K.0 (16. 10.) in M5-K.1 (18. 10.) zaključena, K14 zavržen (19. 10.); naprej K14b (Q29) → K4 → K3 → K5 → M5-V (Q28, D-035) | M5-S: S1, S2, S14b, S4, S7, S5 (D-037, `RwPathNegCache=1`), S14c, S16, M5.15 (coremod), M5.16 (`RwMoveBoxes`) vsi privzeto vklopljeni po D-032; M5.2 zavržen. Podrobnosti po paketih: [arhiv, tabele §2](arhiv/04-STANJE-tabele.md); razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
@@ -55,7 +55,38 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 91 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 92 → 1, novejši zgoraj).*
+
+### 2026-10-19 (94) — M5-K K14 zavržen: en list pokrivala ne pomaga, geometrija pa
+
+**Paket:** M5-K K14 · **Stanje:** **zaključeno — zavrženo** (izid meritve, ne nedokončano delo).
+
+**Narejeno:**
+- Prenos 1:1 `Model2DRenderer` in `ModelHeadwear` v `src/patch` (`b896cfc`; `primerjaj-bytecode` 0 za pregled,
+  `ModelHeadwearBaselineTest`). Ostane.
+- Poskus `RwHeadwearList` (`03ab3bc`): 6 delov pokrivala v en display list (način 1 kliče liste otrok, 2 raven
+  list), `HeadwearState` spremlja stanje otrok. Dokaz v klientu `k-run -PreveriPokrivalo` (`HeadwearCheck`, FBO,
+  načini 0/1/2/0, skin + neprozorna testna tekstura): **0 razlik** barve in globine; med igro 0 prevezav.
+- A/B 3 + 3 (`audit/m5k14-ab.ps1`): idle-500 p50 11,589 → 11,423 ms (razpona se prekrivata), idle-200
+  6,538 → 6,590 → **zavrženo**, koda odstranjena v `4370184` (vrne se z `git revert 4370184`).
+- Zgornja meja `HeadWearType=0` (3 ponovitve): idle-500 p50 **11,589 → 8,907 ms (−23 %)**, p95 −22 %.
+- `dev/tools/skini-pokrivalo.js`: 41 % od 239 humanoidnih skinov CNPC ima povsem prozorno pokrivalo, prazni so
+  60 % delov in 70 % trakov ekstruzije. [zapis](meritve/2026-10-19-M5-K-K14-pokrivalo-en-list.md)
+
+**Ni narejeno in zakaj:** privzeti vklop (D-032) — ni dobitka nad šumom.
+
+**Ugotovitve:**
+- **Napačna premisa K14:** profil z enim listom pokaže pokrivalo še vedno 26,1 % — čas je v gonilniku pri
+  izvajanju **816 oglišč na NPC** (6 × 34 štirikotnikov `renderItemIn2D`), ne v ~30 klicih GL. Pravilo merjenja
+  dodano v Znane omejitve (arhiv §5).
+- Skin fixture `humanmale/steve.png` ima prozoren klobuk: pokrivalo stane 23 % sličice in ne nariše niti
+  enega piksla → nov kandidat **K14b** (izpusti geometrijo prozornih tekselov, ista slika) → **Q29**.
+
+**Spremembe obnašanja:** nobene (stikalo poskusa odstranjeno; `verify-package` 68 vnosov: +2 razreda prenosa 1:1).
+
+**Meritve:** enakost pikslov, A/B idle-500/idle-200 (3 + 3), zgornja meja (3), profil idle-500 z enim listom.
+
+**Naslednja seja:** po odgovoru na Q29 **K14b** (priporočeno) ali **K4** (imena) po Q28.
 
 ### 2026-10-18 (93) — M5-K.1 zaključen: baseline in profil klienta
 
@@ -100,31 +131,14 @@ pokliče še svoj prazen list (nima kock). Noben od teh razredov še ni v `src/p
 med igro spreminja `showModel`/`isHidden`/kote otrok (`LayerHeadwear.preRender` nastavi samo
 `config = null` in `bipedHeadwear.isHidden`).
 
-### 2026-10-16 (92) — M5-K.0 zaključen: klientski harness
-
-**Paket:** M5-K.0 · **Stanje:** **zaključeno**.
-
-**Narejeno:**
-- Nedokončano delo iz delovne kopije (harness brez commita) dokončano in pognano v svetu: `k-run.ps1`,
-  `rework/diag/{ClientHarness,HarnessJob,FrameStats}`, `ponovitve-run.ps1 -Scenarij klient`,
-  [scenarij](scenariji/M5-K.0-klient.md). Brez `-Drwharness` se obnašanje ne spremeni.
-- Celice idle-50/200/500 in boj-200, K0–K8 zelena; [zapis](meritve/2026-10-16-M5-K.0-harness.md).
-- Popravki: locale (decimalne vejice v navodilu kamere), boj K3 (`expectNpcMin`), boj K4 (delež upodobljenih/živih).
-- Testi 285/0 + testOriginal 35/0, `verify-package` PASS (66 vnosov).
-
-**Ni narejeno in zakaj:** različice videza (oklep, ime, oblački, delci, URL skini) in tri ponovitve —
-prestavljeno v M5-K.1 (baseline), harness jih podpira prek fixtur in `ponovitve-run.ps1`.
-
-**Spremembe obnašanja:** nobene. **Naslednja seja:** M5-K.1 (baseline in profil render niti).
-
 ---
 
 ## Odprta vprašanja za uporabnika
 
 Samo **odprta** vprašanja (in Q1 kot trajna blokada). Ko je vprašanje odločeno, se vrstica
 **prestavi** v [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §4 (tam so vsa vprašanja
-Q1–Q28 s stanjem na 2026-10-19; odločitev se zapiše tam in v `01-ARHITEKTURA.md` §9).
-Nova vprašanja dobijo naslednjo prosto številko (zadnja uporabljena: **Q28**).
+Q1–Q29 s stanjem na 2026-10-19; odločitev se zapiše tam in v `01-ARHITEKTURA.md` §9).
+Nova vprašanja dobijo naslednjo prosto številko (zadnja uporabljena: **Q29**).
 
 | # | Vprašanje | Vpliva na | Stanje |
 |---|---|---|---|
@@ -137,6 +151,7 @@ Nova vprašanja dobijo naslednjo prosto številko (zadnja uporabljena: **Q28**).
 | Q18 | Popravek »prvi ukaz po zagonu serverja se izgubi« (ogrevanje vhoda z `list`) je zdaj samo v `perf-run.ps1`. Vsaka od 11 scenarijskih skript ima svojo kopijo `Start-DevServer`/`Send-Command`; v `nav-run`, `rwdiag-run`, `r1/r2-run`, `m36/m39-run`, `hb-run`, `fixture-run`, `testworld-run` in `smoke-server` lahko izgubljen prvi ukaz tiho spremeni pogoj meritve (npr. izgubljen `gamerule`). Naj se `Start-DevServer`, `Send-Command` in `Prime-ServerInput` preselijo v `meritve-lib.ps1` in popravijo vse skripte (svoj paket)? | vsi scenariji, veljavnost meritev | **odprto 10. 10.**; priporočilo: da |
 | Q19 | Ostali trije klicatelji `Server.sendAssociatedData` (`UPDATE_NPC` ob uredbi NPC-ja, `PARTICLE`, `DELETE_NPC`) še pregledajo ~450 chunkov na klic. Niso na tick, zato izmerjene koristi ni; ob masovnem spawnu/brisanju (500 NPC-jev) pa je to 225.000 pregledov chunkov. Naj se preusmerijo tudi ti (S7b)? | M5, R5 | **odprto 10. 10.**; priporočilo: samo če scenarij pokaže številko |
 | Q20 | Enakost S7 za **neprazen** seznam prejemnikov v svetu ni bila preverjena s pravim igralcem (dedicirani strežnik scenarija jih ne ima); stoji na viru vanille, 200.000 legah v testu in preverbi na NPC-jih. Naj se pred izdajo doda preverba v klientu (`/rwblink 2` z igralcem v svetu)? | M5.13, M10 | **odprto 10. 10.**; priporočilo: da, skupaj z M3.8b GUI preverbo |
+| Q29 | K14 (en list pokrivala) je zavržen: ista slika, a brez dobitka, ker je čas v geometriji (816 oglišč na NPC), ne v klicih. Brez 6 delov pokrivala je idle-500 p50 −23 %, 41 % od 239 skinov CNPC pa nima nobenega neprozornega teksla pokrivala (tudi skin fixture). Naj se pred K4 vstavi **K14b**: list pokrivala na teksturo, ki izpusti dele in trakove samo s prozornimi teksli (ista slika, dokaz s primerjavo pikslov, nato D-032)? Tveganje: OptiFine/senčilniki brez alfa testa bi prozorne fragmente pisali v globino | vrstni red M5-K (Q28), K14b, K4 | **odprto 19. 10.**; priporočilo: da, K14b pred K4 |
 | Q22 | Naj se postavi minimalen **pravi Forge strežnik** (ne dev) za dimni test zapakiranega jarja? Od M5.15 je jar hkrati coremod in mod; dev okolje je deobfuskirano in reobfuskiranega jarja ne more naložiti, zato je produkcijska pot preverjena samo statično (manifest, razredi, odvisnosti coremoda). To je tudi vhod v M10 (release) | M5.15, M5.16, M10 | **odprto 11. 10., nujnost narasla 14. 10.**: od M5.16 jar **privzeto** (`RwMoveBoxes=1`) spreminja bajtkodo `net.minecraft.world.World`, in prav tisto, kar v produkciji ni preverjeno, so imena SRG. Če poseg v produkciji ne uspe, se obnašanje ne pokvari (transformer vrne iste bajte, vrata niso klicana, `/rwmove` pokaže `poseg=0`) — izgubi se samo korist. Priporočilo: da, pred M5.8 |
 
 ---
@@ -159,6 +174,6 @@ pa še razlage in ni ločen od možne napake scenarija, zato je tu in ne med bug
 | Vsebina | Datoteka | Kdaj ga odpreš |
 |---|---|---|
 | Dnevnik sej: vnosi od seje 91 (16. 10.) nazaj do seje 1 (11. 9., postavitev načrta) | [`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) | `grep` po paketu (npr. `M5.16`), seji ali ključni besedi |
-| Polna tabela "Trenutno stanje" (18. 10.), polna tabela milestonov, M1/M2 po paketih, **vsa** vprašanja Q1–Q28, **Znane omejitve** (pasti scenarijev, pravila merjenja, okolje) | [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) | `grep`; pred pisanjem novega scenarija preglej §5 Znane omejitve |
+| Polna tabela "Trenutno stanje" (18. 10.), polna tabela milestonov, M1/M2 po paketih, **vsa** vprašanja Q1–Q29, **Znane omejitve** (pasti scenarijev, pravila merjenja, okolje) | [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) | `grep`; pred pisanjem novega scenarija preglej §5 Znane omejitve |
 | **Sprejete spremembe obnašanja**, **Prevzeta koda**, **Meritve** (živi registri; nove vrstice se dodajo tam) | [`04-REGISTRI.md`](04-REGISTRI.md) | ko dodajaš stikalo, prevzeto kodo ali meritev; `grep` po stikalu (`Rw…`) |
 | Polni zapisi meritev | [`meritve/`](meritve/) | po povezavi iz registra |

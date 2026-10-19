@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 91 → 1)
+# Arhiv: dnevnik sej (vnosi 92 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,23 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-16 (92) — M5-K.0 zaključen: klientski harness
+
+**Paket:** M5-K.0 · **Stanje:** **zaključeno**.
+
+**Narejeno:**
+- Nedokončano delo iz delovne kopije (harness brez commita) dokončano in pognano v svetu: `k-run.ps1`,
+  `rework/diag/{ClientHarness,HarnessJob,FrameStats}`, `ponovitve-run.ps1 -Scenarij klient`,
+  [scenarij](../scenariji/M5-K.0-klient.md). Brez `-Drwharness` se obnašanje ne spremeni.
+- Celice idle-50/200/500 in boj-200, K0–K8 zelena; [zapis](../meritve/2026-10-16-M5-K.0-harness.md).
+- Popravki: locale (decimalne vejice v navodilu kamere), boj K3 (`expectNpcMin`), boj K4 (delež upodobljenih/živih).
+- Testi 285/0 + testOriginal 35/0, `verify-package` PASS (66 vnosov).
+
+**Ni narejeno in zakaj:** različice videza (oklep, ime, oblački, delci, URL skini) in tri ponovitve —
+prestavljeno v M5-K.1 (baseline), harness jih podpira prek fixtur in `ponovitve-run.ps1`.
+
+**Spremembe obnašanja:** nobene. **Naslednja seja:** M5-K.1 (baseline in profil render niti).
 
 ### 2026-10-16 (91) — M5.8 zaključen: skrajšane potrditve K3
 
