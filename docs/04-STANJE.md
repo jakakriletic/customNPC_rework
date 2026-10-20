@@ -14,7 +14,7 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-20** (seja 100) — **OPS.2**: [Nočna izmena](../overnight/README.md), frontend Start/Stop, neprekinjeno avtonomno delo in dnevnik odločitev. 40/40 testov + pravi Codex/schema poziv uspešni. Claude prijavi in prvi Minecraft cikel še čakata; A/B K3 ostane naslednji projektni korak. |
+| Zadnja posodobitev | **2026-10-20** (seja 100) — **OPS.2**: [Nočna izmena](../overnight/README.md), frontend Start/Stop, neprekinjeno avtonomno delo in dnevnik odločitev. 40/40 testov + prava Codex/Claude 1 schema poziva uspešni. Claude 2 prijava in prvi Minecraft cikel še čakata; A/B K3 ostane naslednji projektni korak. |
 | Trenutni milestone | **M5 — Performance**: M5-S (strežnik) zaključen 16. 10. (M5.8: idle 10×, boj 1,5×, nedosegljiva 1,4× pri p95 ≤ 25 ms); M5-K (klient): K.0 in K.1 zaključena, K14 zavržen, K14b v kodi (privzeto 0, Q30) in K4 (privzeto 1) 19. 10., K3 v kodi (A/B 20. 10.). M3 (jedro entitete) zaključen do M3.9 (GUI za hitbox način M3.8b v klientu odprt); M2 zaključen (baseline M2.6 zelen 5. 10.) |
 | Naslednji paketi | **A/B K3** (`audit/m5k3-ab.ps1`, ~40 min brez miške nad oknom MC; vklop K14b Q30), nato **K5** (LOD), **M5-V** (vidnost NPC-jev do 24 chunkov, D-034/D-035), K12, ostali K-paketi. Pred izdajo **Q22** (pravi Forge strežnik: jar od M5.16 privzeto spreminja vanilla bajtkodo, produkcijska pot je preverjena samo statično). **M4.0** narejen 20. 10. (D-038); od M4 se lahko vrineta **M4.14b** (formacije v svetu, samo zagon) in **M4.16** (scenarij letenja), ko računalnik ni v rabi. Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
@@ -61,7 +61,7 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ### 2026-10-20 (100) — OPS.2: frontend in neprekinjeno avtonomno delo
 
 **Paket:** OPS.2 (razvojno orodje) · **Stanje:** implementirano, 40/40 krmilnih testov in
-brskalniška preverba uspešni; kratek pravi Codex poziv uspešen. Minecraft K3 še neizmerjen.
+brskalniška preverba uspešni; kratka prava Codex in Claude 1 poziva uspešna. Minecraft K3 še neizmerjen.
 
 **Narejeno:**
 - Lokalni frontend **Nočna izmena**: `ODPRI-UPRAVLJALNIK.bat` / `ZAZENI-NOCNI.bat`,
@@ -83,11 +83,11 @@ brskalniška preverba uspešni; kratek pravi Codex poziv uspešen. Minecraft K3 
 **Preverjanje:** 40/40 testov (prejšnjih 29 + 11 avtonomija/API/preklic), tudi resničen
 proces s podprocesom in nepovezan proces, ki ostane živ; HTTP start/pause/resume/stop/restart,
 Host/Origin/žeton, dokazila, registracija scenarijev in profile dogodki. Brskalniško potrjeni
-Start, pavza, Stop in dodajanje cilja na ločenem sintetičnem projektu. Pravi Codex poziv
-z novo shemo/dovoljenji prek obstoječe ChatGPT prijave uspešen, brez orodij/sprememb repoja.
-Živa Claude adapterja po loginu in pravi Minecraft cikel ostajata integracijska preverba.
+Start, pavza, Stop in dodajanje cilja na ločenem sintetičnem projektu. Prava Codex in Claude 1
+poziva z novo shemo/dovoljenji prek naročniških prijav uspešna, brez orodij/sprememb repoja.
+Claude 2 po loginu in pravi Minecraft cikel ostajata integracijska preverba.
 
-**Naslednji korak:** odpreti frontend, native login vsakega Claude profila v svoj račun,
+**Naslednji korak:** odpreti frontend, native login Claude 2 v drugi račun (Claude 1 in Codex potrjena),
 nato Start ob prostem odklenjenem PC. Prva naloga ostaja pripravljeni A/B K3, nato K5 in M5-V
 po aktualnem planu. Navodila: [overnight/README.md](../overnight/README.md).
 

@@ -69,6 +69,9 @@ Omejitve niso nujno samo peturne; obstajajo tudi druge ponudnikove omejitve.
 potrjena, oba Claude native profila pa sta zahtevala prijavo. Frontend status dejansko
 preveri z gumbom. Terminalska prijava ni nujno ista kot prijava v drugi aplikaciji.
 
+Ob končni preverbi sta **Claude 1 in Codex prijavljena in preverjena s pravim kratkim
+modelskim pozivom**. **Claude 2 še potrebuje native prijavo v drugi račun.**
+
 Prijava odda dogodek v vrsto, zato deluje tudi med prižganim upravljalnikom. AI ne vidi
 ali kopira prijavnih žetonov; hrani jih native CLI. Pred vsakim AI klicem se ponovno preveri
 native naročniška prijava. API/cloud credential override se odstrani iz okolja; sistem
@@ -150,9 +153,9 @@ Resničen sintetični proces s podprocesom se prekine, nepovezan proces ostane �
 zavrne napačen Host, Origin in manjkajoč žeton. Brskalniško preverjeni še gumbi in dodajanje
 naloge v vrsto. Ti testi ne kličejo AI modelov in ne zaganjajo Minecrafta.
 
-Kratek **pravi Codex poziv prek ChatGPT prijave je uspel** z novimi dovoljenji in polno
-izhodno shemo (brez orodij ali sprememb projekta). Živa Claude adapterja in **prvi pravi
-Minecraft cikel** ostajajo integracijska preverba po prijavi oziroma ob tvojem prvem zagonu.
+Kratka **prava Codex in Claude 1 poziva prek naročniških prijav sta uspela** z novimi
+dovoljenji in polno izhodno shemo (brez orodij ali sprememb projekta). Claude 2 adapter in
+**prvi pravi Minecraft cikel** ostajata integracijska preverba po prijavi oziroma ob zagonu.
 Nastavitev samega orodja ne pomeni izmerjenega K3 rezultata.
 
 Uradne reference: [Codex CLI](https://learn.chatgpt.com/docs/cli/reference),
