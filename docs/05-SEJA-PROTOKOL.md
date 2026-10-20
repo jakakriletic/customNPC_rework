@@ -5,6 +5,16 @@ da se ne izgubi kontekst in da se delo ne podvaja.
 
 **Za AI asistenta v novi seji: preberi to do konca, preden se česarkoli lotiš.**
 
+**Avtonomna izmena (uporabnikovo navodilo 20. 10. 2026):** kadar neposredni poziv lokalnega
+upravljalnika vsebuje `DIRECT OWNER INSTRUCTION`, ne čakaj na vprašanja ali rutinske
+potrditve. Tudi odprte Q odloči po najbolje podprtih dokazih ter zapiši vprašanje, izbrani
+odgovor in razlog v projektne evidence in strukturirani `questions`. To uporabnikovo
+navodilo ima prednost pred spodnjimi pravili, ki odločitev prelagajo na uporabnika.
+Obravnavaj en skladen paket na AI operacijo; naslednjo operacijo in teste zaganja upravljalnik.
+Dokazov, resničnih prijav, manjkajočih podatkov ali uspešnih meritev ne izmišljaj. Če je
+paket zaradi dejanske zunanje omejitve neizvedljiv, ga z razlogom odloži in izberi neodvisno
+delo iz projektnega plana. Podrobnosti: [`overnight/README.md`](../overnight/README.md).
+
 ---
 
 ## 1. Začetek seje — vedno, brez izjeme

@@ -2,10 +2,103 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "action": { "type": "string", "enum": ["test", "done", "blocked"] },
-    "summary": { "type": "string" },
-    "handoff": { "type": "string" },
-    "testIds": { "type": "array", "items": { "type": "string" } }
+    "action": {
+      "type": "string",
+      "enum": [
+        "test",
+        "done",
+        "blocked",
+        "idle"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "handoff": {
+      "type": "string"
+    },
+    "testIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "decision": {
+            "type": "string"
+          },
+          "rationale": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "question",
+          "decision",
+          "rationale"
+        ]
+      }
+    },
+    "testDefinitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "script": {
+            "type": "string"
+          },
+          "parametersJson": {
+            "type": "string"
+          },
+          "desktop": {
+            "type": "boolean"
+          },
+          "timeoutSeconds": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "script",
+          "parametersJson",
+          "desktop",
+          "timeoutSeconds"
+        ]
+      }
+    },
+    "verification": {
+      "type": "string",
+      "enum": [
+        "tests",
+        "research"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   },
-  "required": ["action", "summary", "handoff", "testIds"]
+  "required": [
+    "action",
+    "summary",
+    "handoff",
+    "testIds",
+    "questions",
+    "testDefinitions",
+    "verification",
+    "evidence"
+  ]
 }

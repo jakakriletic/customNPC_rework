@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="sl">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="overnight-token" content="%%TOKEN%%"><title>Nočna izmena · CustomNPC</title>
+  <link rel="stylesheet" href="/style.css"><script type="module" src="/app.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#overview"><span class="brand-mark">N</span><span>Nočna izmena<small>LOKALNI UPRAVLJALNIK</small></span></a>
+    <div class="workspace-label">DELOVNI PROSTOR</div>
+    <a class="nav active" href="#overview"><span>◉</span> Pregled</a>
+    <a class="nav" href="#accounts"><span>⇄</span> AI računi</a>
+    <a class="nav" href="#queue"><span>≡</span> Naloge</a>
+    <a class="nav" href="#decisions"><span>◇</span> Odločitve</a>
+    <div class="sidebar-bottom"><span class="local-dot"></span> Samo na tem računalniku<p>CustomNPC Rework<br>Samostojno delo. Tvoj nadzor.</p></div>
+  </aside>
+  <main id="overview">
+    <header><div class="breadcrumb">CustomNPC Rework <span>/</span> Upravljalnik</div><div class="connection" id="connection">Povezujem …</div></header>
+    <section class="page-title"><div><div class="eyebrow">DELO, KI TEČE NAPREJ</div><h1>Nočna izmena</h1><p>Zaženi razvoj, pusti računalnik pri miru in spremljaj napredek.</p></div><span class="mode-label">∞ Do tvoje prekinitve</span></section>
+    <section class="work-panel" aria-labelledby="work-heading">
+      <div class="work-top"><div class="status-tag" id="status-tag">PRIPRAVLJENO</div><span class="subtle" id="run-time">Ni časovne omejitve</span></div>
+      <h2 id="work-heading">Pripravljeno za delo</h2><p class="work-message" id="work-message">Berem stanje projekta …</p>
+      <div class="progress-track"><div id="progress-bar"></div></div>
+      <div class="progress-meta"><span id="progress-label">Čakam na zagon</span><span id="phase-label">—</span></div>
+      <div class="controls"><button class="primary" id="start">▶ &nbsp; Zaženi neprekinjeno</button><button class="secondary" id="pause" disabled>Ⅱ &nbsp; Pavza po koraku</button><button class="stop" id="stop" disabled>■ &nbsp; Ustavi zdaj</button></div>
+      <div class="work-foot"><span>Samostojne odločitve</span><span>Samodejna menjava računov</span><span id="permission-label">Dostopi brez potrditev</span></div>
+    </section>
+    <p class="note">Klientske meritve potrebujejo odklenjeno lokalno namizje in računalnik brez uporabe miške ali tipkovnice.</p>
+    <section class="statistics" aria-label="Napredek"><div><span class="stat-value" id="stat-done">0</span><span>zaključenih paketov</span></div><div><span class="stat-value" id="stat-tests">0</span><span>uspešnih testnih korakov</span></div><div><span class="stat-value" id="stat-decisions">0</span><span>shranjenih odločitev</span></div><div><span class="stat-value" id="stat-queue">0</span><span>nalog v vrsti</span></div></section>
+    <section id="accounts" class="section"><div class="section-heading"><div><h2>AI računi</h2><p>Ob izčrpani kvoti delo prevzame naslednji razpoložljiv profil.</p></div><button class="text-button" id="probe">Preveri prijave ↻</button></div><div class="profiles" id="profiles"></div><p class="note">Claude 1 in Claude 2 prijavi v različna računa. Ko so vse kvote porabljene, sistem počaka in poskusi ponovno. Čas brez podatka ponudnika je ocena.</p></section>
+    <section id="queue" class="section"><div class="section-heading"><div><h2>Delovna vrsta</h2><p>Po zaključenem paketu sledi naslednji korak iz projektnega načrta.</p></div><button class="text-button" id="add-toggle" aria-expanded="false">+ Dodaj cilj</button></div>
+      <form id="add-form" hidden><label for="goal">Kaj naj naredi?</label><textarea id="goal" rows="3" maxlength="10000" placeholder="Opiši konkreten cilj za ta projekt …" required></textarea><div class="form-actions"><button type="button" class="secondary" id="add-cancel">Prekliči</button><button class="primary" type="submit">Dodaj v vrsto</button></div></form>
+      <div id="tasks" class="task-list"></div>
+    </section>
+    <section id="decisions" class="section"><div class="section-heading"><div><h2>Odločitve med delom</h2><p>Vprašanje, izbrana rešitev in razlog. Delo medtem teče naprej.</p></div><span id="decision-count" class="count">0</span></div><div id="questions" class="decision-list"><div class="empty">Tu se bodo pojavile odločitve, ki jih AI sprejme med delom.</div></div></section>
+    <details class="section logs" id="logs"><summary>Dnevnik izvajanja <span>Izpis trenutne ali zadnje operacije</span></summary><button class="text-button" id="refresh-log">Osveži izpis ↻</button><pre id="log-content">Dnevnik še ni odprt.</pre></details>
+    <footer><span id="project-path"></span><span>Zaprtje te strani ne ustavi dela. Za prekinitev uporabi »Ustavi zdaj«.</span></footer>
+  </main>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+</body></html>

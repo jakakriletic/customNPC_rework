@@ -14,7 +14,7 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-20** (seja 99) — **OPS.1**: lokalni nočni upravljalnik (`nocni-run.ps1`, [navodila](../overnight/README.md)); 29/29 testov krmiljenja, trajna vrsta in native Codex/Claude adapterji. Pravi cikel še nepreverjen, Claude prijavi čakata uporabnika; A/B K3 ostane naslednji projektni korak. |
+| Zadnja posodobitev | **2026-10-20** (seja 100) — **OPS.2**: [Nočna izmena](../overnight/README.md), frontend Start/Stop, neprekinjeno avtonomno delo in dnevnik odločitev. 40/40 testov + pravi Codex/schema poziv uspešni. Claude prijavi in prvi Minecraft cikel še čakata; A/B K3 ostane naslednji projektni korak. |
 | Trenutni milestone | **M5 — Performance**: M5-S (strežnik) zaključen 16. 10. (M5.8: idle 10×, boj 1,5×, nedosegljiva 1,4× pri p95 ≤ 25 ms); M5-K (klient): K.0 in K.1 zaključena, K14 zavržen, K14b v kodi (privzeto 0, Q30) in K4 (privzeto 1) 19. 10., K3 v kodi (A/B 20. 10.). M3 (jedro entitete) zaključen do M3.9 (GUI za hitbox način M3.8b v klientu odprt); M2 zaključen (baseline M2.6 zelen 5. 10.) |
 | Naslednji paketi | **A/B K3** (`audit/m5k3-ab.ps1`, ~40 min brez miške nad oknom MC; vklop K14b Q30), nato **K5** (LOD), **M5-V** (vidnost NPC-jev do 24 chunkov, D-034/D-035), K12, ostali K-paketi. Pred izdajo **Q22** (pravi Forge strežnik: jar od M5.16 privzeto spreminja vanilla bajtkodo, produkcijska pot je preverjena samo statično). **M4.0** narejen 20. 10. (D-038); od M4 se lahko vrineta **M4.14b** (formacije v svetu, samo zagon) in **M4.16** (scenarij letenja), ko računalnik ni v rabi. Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
@@ -55,7 +55,43 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 97 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 98 → 1, novejši zgoraj).*
+
+
+### 2026-10-20 (100) — OPS.2: frontend in neprekinjeno avtonomno delo
+
+**Paket:** OPS.2 (razvojno orodje) · **Stanje:** implementirano, 40/40 krmilnih testov in
+brskalniška preverba uspešni; kratek pravi Codex poziv uspešen. Minecraft K3 še neizmerjen.
+
+**Narejeno:**
+- Lokalni frontend **Nočna izmena**: `ODPRI-UPRAVLJALNIK.bat` / `ZAZENI-NOCNI.bat`,
+  Start do prekinitve, pavza/nadaljevanje, takojšnji Stop z lastnim procesnim drevesom,
+  računi/prijava/status, trajna vrsta, shranjene odločitve in izpisi. Zaprtje strani ne ustavi
+  dela. Strežnik samo na 127.0.0.1; mutacije zahtevajo lokalni Origin in sejni žeton.
+- Po koncu paketa naslednji izvedljivi korak iz projektnega plana. Brez osemurne/fiksne
+  iteracijske meje v načinu continuous; če ni izvedljivega dela, čaka do 1 h ali novega cilja.
+  Kvota menja native profil; ko ni prijave, čaka. Login dogodki delujejo tudi med tekom.
+- Uporabnik izrecno pooblastil samostojno odločanje tudi pri odprtih Q. Navodilo v vsakem
+  pozivu, AGENTS in protokolu; vprašanje/izbrani odgovor/razlog v UI in ODLOCITVE.md.
+  Full native CLI dostopi brez potrditev samo za ta proces, brez globalnih/UAC sprememb.
+  Dejanski manjkajoči podatki/prijave ostanejo omejitve, sprejemnih meril ni dovoljeno obiti.
+- AI sme pripraviti/registrirati nove scenarije za controller, ne zamenjati obveznih ID-jev.
+  Nove skripte vključene v SHA-256. Raziskovalni zaključek zahteva obstoječe dokumente in
+  nespremenjene merilne vhode brez odprtih obveznih testov. Motnje meritev čakajo in ponovijo
+  isto celico. Prekinjena celica se ne šteje za uspeh, prejšnje ostanejo shranjene.
+
+**Preverjanje:** 40/40 testov (prejšnjih 29 + 11 avtonomija/API/preklic), tudi resničen
+proces s podprocesom in nepovezan proces, ki ostane živ; HTTP start/pause/resume/stop/restart,
+Host/Origin/žeton, dokazila, registracija scenarijev in profile dogodki. Brskalniško potrjeni
+Start, pavza, Stop in dodajanje cilja na ločenem sintetičnem projektu. Pravi Codex poziv
+z novo shemo/dovoljenji prek obstoječe ChatGPT prijave uspešen, brez orodij/sprememb repoja.
+Živa Claude adapterja po loginu in pravi Minecraft cikel ostajata integracijska preverba.
+
+**Naslednji korak:** odpreti frontend, native login vsakega Claude profila v svoj račun,
+nato Start ob prostem odklenjenem PC. Prva naloga ostaja pripravljeni A/B K3, nato K5 in M5-V
+po aktualnem planu. Navodila: [overnight/README.md](../overnight/README.md).
+
+**Spremembe obnašanja moda:** nobene. **Minecraft meritve:** nobene.
 
 ### 2026-10-20 (99) — OPS.1: nočni upravljalnik testov in AI iteracij
 
@@ -89,40 +125,6 @@ pravo integracijo. Prihodnji K5/M5-V scenariji še niso v katalogu; manjkajoča 
 blokado za pregled. Nadaljnji vrstni red M5 in odprta Q so nespremenjeni.
 
 **Spremembe obnašanja moda:** nobene. **Minecraft meritve:** nobene.
-
-### 2026-10-20 (98) — M4.0: raziskava izvedbe M4 (gibanje in letenje)
-
-**Paket:** M4.0 · **Stanje:** **zaključeno** (raziskava po §1a, brez produkcijske kode in brez zagonov
-Minecrafta — uporabnik je delal na računalniku).
-
-**Narejeno:**
-- Koda letenja in navigacije: CNPC `FlyingMoveHelper`/`EntityNPCFlying`, vanilla 1.12 `PathNavigate`,
-  `PathNavigateFlying`, `PathFinder`, `FlyingNodeProcessor`, `EntityGhast`, `EntityFlyHelper`; za primerjavo
-  1.21.1 (`FlyingPathNavigation`, `FlyingMoveControl`, `PathNavigation`, `PathFinder`) in CustomNPC+ (`master`,
-  `ai/pathfinder/`). Pregled vseh meritev gibanja (M2.3, M2.7, M2.5c, M5.6, M5.9–M5.11, M7.8, M7.10) z ločitvijo
-  izmerjenega od ocenjenega. Zunanji viri (ARLR, Pufferfish, Lithium, SVO/Warframe, Theta\*, bug tracker).
-- Zapis [`raziskave/M4.0-gibanje-in-letenje.md`](raziskave/M4.0-gibanje-in-letenje.md); `03-FAZE` M4 prepisan
-  (D-038: M4.1/M4.4/M4.9/M4.12 zavrženi ali združeni, M4.5 in M4.11 pogojna, nova M4.16 scenarij in M4.17 vidna
-  črta, merljiv izhodni kriterij); R2 v `02-ZAHTEVE` dopolnjen; README; Q31; priporočilo k Q6.
-
-**Ugotovitve:**
-- **Leteči NPC sledi poti brez preverbe ovir** [K]: vanilla `PathNavigateFlying.isDirectPathBetweenPoints` vedno
-  vrne `true`, `pathFollow` skoči na zadnjo točko iste višine (tudi za vogalom), nato `isNotColliding` → `WAIT`.
-  Obtičanje ob vodoravnem vogalu je [H] — M2.3 (zid čez vso širino, pot čez vrh) ga ne more videti.
-- **`FlyingMoveHelper` = vanilla `GhastMoveHelper`** [K]: sunek vsake 4 ticke, po prihodu do ~3,5 bloka drsenja
-  ([H] model). Časovna zaščita vozlišča je za leteče izklopljena (`getAIMoveSpeed()` = 0) [K], zato razlaga
-  R-P1b s to zaščito odpade.
-- **Cilj dlje od `NpcNavRange` vrne `null`, ne delne poti** [K] (`findPathOptions` zavrne sosede > 32 od cilja) —
-  M4.10 razširjen na vmesni cilj.
-- **CustomNPC+ ima isto iskanje kot vanilla 1.12**; uporabne so ideje okoli sledenja in krmiljenja (žarek ≤ 6
-  blokov, hitrost, zavoj, višinska meja, spust brez poti). Port odpade.
-- Kopensko: edini izmerjen strošek je sledenje poti (34,5 % boja-500 po S14b) → M4.13 (S15) ostane najbolj podprt.
-
-**Spremembe obnašanja:** nobene. **Meritve:** nobene.
-
-**Naslednja seja:** A/B K3 (`audit/m5k3-ab.ps1`, ko računalnik ni v rabi), nato po M5 vrstnem redu. Od M4 se lahko
-vrineta M4.14b (formacije, samo zagon) in M4.16 (scenarij letenja, brez produkcijske kode). Odgovor na Q31 ni nujen
-pred M4.16/M4.10/M4.17.
 
 
 ---
@@ -168,7 +170,7 @@ pa še razlage in ni ločen od možne napake scenarija, zato je tu in ne med bug
 
 | Vsebina | Datoteka | Kdaj ga odpreš |
 |---|---|---|
-| Dnevnik sej: vnosi od seje 96 (19. 10.) nazaj do seje 1 (11. 9., postavitev načrta) | [`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) | `grep` po paketu (npr. `M5.16`), seji ali ključni besedi |
+| Dnevnik sej: vnosi od seje 98 (20. 10.) nazaj do seje 1 (11. 9., postavitev načrta) | [`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) | `grep` po paketu (npr. `M5.16`), seji ali ključni besedi |
 | Polna tabela "Trenutno stanje" (18. 10.), polna tabela milestonov, M1/M2 po paketih, **vsa** vprašanja Q1–Q29, **Znane omejitve** (pasti scenarijev, pravila merjenja, okolje) | [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) | `grep`; pred pisanjem novega scenarija preglej §5 Znane omejitve |
 | **Sprejete spremembe obnašanja**, **Prevzeta koda**, **Meritve** (živi registri; nove vrstice se dodajo tam) | [`04-REGISTRI.md`](04-REGISTRI.md) | ko dodajaš stikalo, prevzeto kodo ali meritev; `grep` po stikalu (`Rw…`) |
 | Polni zapisi meritev | [`meritve/`](meritve/) | po povezavi iz registra |

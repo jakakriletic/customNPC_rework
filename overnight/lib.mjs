@@ -61,6 +61,8 @@ export function fingerprint(c) {
     }
   };
   for (const relative of [...c.fingerprintPaths].sort()) visit(within(c.projectRoot, relative));
+  // New scenario scripts are measurement inputs even if absent from the original path list.
+  for (const script of [...new Set(Object.values(c.tests || {}).map(t => t.script).filter(Boolean))].sort()) visit(within(c.projectRoot, script));
   return hash.digest('hex');
 }
 export function alive(pid) {
@@ -164,12 +166,32 @@ export function desktopReason(d, c) {
   return null;
 }
 export function decision(value, c) {
-  if (!value || !['test', 'done', 'blocked'].includes(value.action) || typeof value.summary !== 'string' || typeof value.handoff !== 'string' || !Array.isArray(value.testIds)) throw new Error('AI ni vrnil veljavnega nacrta');
+  if (!value || !['test', 'done', 'blocked', 'idle'].includes(value.action) || typeof value.summary !== 'string' || typeof value.handoff !== 'string' || !Array.isArray(value.testIds)) throw new Error('AI ni vrnil veljavnega nacrta');
   if (value.summary.length > 12000 || value.handoff.length > 16000 || value.testIds.length > 30) throw new Error('AI nacrt je prevelik');
-  if (Object.keys(value).some(k => !['action', 'summary', 'handoff', 'testIds'].includes(k))) throw new Error('Nepricakovana polja AI nacrta');
+  if (Object.keys(value).some(k => !['action', 'summary', 'handoff', 'testIds', 'questions', 'testDefinitions', 'verification', 'evidence'].includes(k))) throw new Error('Nepricakovana polja AI nacrta');
+  const definitions = {};
+  if (!Array.isArray(value.questions || []) || (value.questions || []).length > 30) throw new Error('Neveljaven dnevnik odlocitev');
+  for (const q of value.questions || []) for (const key of ['question', 'decision', 'rationale']) if (typeof q[key] !== 'string' || q[key].length > 6000) throw new Error('Neveljavna odlocitev');
+  if (!Array.isArray(value.testDefinitions || []) || (value.testDefinitions || []).length > 30) throw new Error('Neveljaven katalog');
+  for (const t of value.testDefinitions || []) {
+    if (!/^[a-z0-9-]{1,80}$/.test(t.id) || Object.hasOwn(c.tests, t.id) || Object.hasOwn(definitions, t.id)) throw new Error('Test ze obstaja ali ima neveljavno ime');
+    const script = fs.realpathSync(within(c.projectRoot, t.script)); within(c.projectRoot, script);
+    if (!script.toLowerCase().endsWith('.ps1') || !fs.statSync(script).isFile()) throw new Error('Neveljavna testna skripta');
+    const parameters = JSON.parse(t.parametersJson);
+    if (!parameters || typeof parameters !== 'object' || Array.isArray(parameters)) throw new Error('Neveljavni parametri');
+    for (const [key, v] of Object.entries(parameters)) {
+      if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(key) || !(Array.isArray(v) ? v.every(x => ['string', 'number', 'boolean'].includes(typeof x)) : ['string', 'number', 'boolean'].includes(typeof v))) throw new Error('Neveljavni literalni parametri');
+    }
+    if (!Number.isInteger(t.timeoutSeconds) || t.timeoutSeconds < 1 || t.timeoutSeconds > 14400 || typeof t.desktop !== 'boolean') throw new Error('Neveljavna meja testa');
+    // Every new scenario uses desktop guards; only the known non-client scripts can opt out.
+    const desktop = !['dev.ps1', 'verify-package.ps1'].includes(path.relative(c.projectRoot, script).replaceAll('\\', '/')) || t.desktop;
+    definitions[t.id] = { script, parameters, desktop, quiet: true, timeoutSeconds: t.timeoutSeconds };
+  }
+  if (value.verification !== undefined && !['tests', 'research'].includes(value.verification)) throw new Error('Neveljavno preverjanje');
+  if (!Array.isArray(value.evidence || []) || (value.evidence || []).length > 30 || (value.evidence || []).some(e => typeof e !== 'string' || e.length > 500)) throw new Error('Neveljavna dokazila');
   if (value.action === 'test' && value.testIds.length === 0) throw new Error('Prazen seznam testov');
-  for (const id of value.testIds) if (!Object.hasOwn(c.tests, id)) throw new Error(`AI je zahteval neznan test: ${id}`);
-  return value;
+  for (const id of value.testIds) if (!Object.hasOwn(c.tests, id) && !Object.hasOwn(definitions, id)) throw new Error(`AI je zahteval neznan test: ${id}`);
+  return { ...value, definitions };
 }
 export function quotaReset(error, currentMs, defaultMinutes) {
   for (const candidate of [error?.resets_at, error?.reset_at, error?.resetAt]) {
@@ -219,7 +241,9 @@ export function parseAgent(kind, stdout, stderr, exitCode, finalFile, retryMinut
   if (exitCode === 0 && (errors.length === 0 || completed) && value) return { kind: 'success', decision: value, session };
   return { ...classifyFailure(errors, stderr, exitCode, retryMinutes), session };
 }
-export function agentArguments(profile, finalFile) {
+export function agentArguments(profile, finalFile, { fullAccess = false } = {}) {
+  if (fullAccess && profile.kind === 'codex') return ['exec', '--json', '--dangerously-bypass-approvals-and-sandbox', '--output-schema', schemaPath, '--output-last-message', finalFile, '-'];
+  if (fullAccess) return ['-p', '--output-format', 'json', '--json-schema', fs.readFileSync(schemaPath, 'utf8'), '--dangerously-skip-permissions', '--permission-prompts', 'none'];
   if (profile.kind === 'codex') return ['exec', '--json', '--approve-for-me', '--output-schema', schemaPath, '--output-last-message', finalFile, '-'];
   return ['-p', '--output-format', 'json', '--json-schema', fs.readFileSync(schemaPath, 'utf8'), '--permission-mode', 'acceptEdits', '--permission-prompts', 'none', '--allowedTools', 'Read', 'Edit', 'Write', 'Glob', 'Grep', 'Bash(git status *)', 'Bash(git diff *)', 'Bash(git log *)', 'Bash(git show *)', 'Bash(git add *)', 'Bash(git commit *)', 'Bash(git fetch *)', 'Bash(git pull *)', 'Bash(git push *)'];
 }

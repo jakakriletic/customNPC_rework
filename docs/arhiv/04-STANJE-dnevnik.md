@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 97 → 1)
+# Arhiv: dnevnik sej (vnosi 98 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,40 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-20 (98) — M4.0: raziskava izvedbe M4 (gibanje in letenje)
+
+**Paket:** M4.0 · **Stanje:** **zaključeno** (raziskava po §1a, brez produkcijske kode in brez zagonov
+Minecrafta — uporabnik je delal na računalniku).
+
+**Narejeno:**
+- Koda letenja in navigacije: CNPC `FlyingMoveHelper`/`EntityNPCFlying`, vanilla 1.12 `PathNavigate`,
+  `PathNavigateFlying`, `PathFinder`, `FlyingNodeProcessor`, `EntityGhast`, `EntityFlyHelper`; za primerjavo
+  1.21.1 (`FlyingPathNavigation`, `FlyingMoveControl`, `PathNavigation`, `PathFinder`) in CustomNPC+ (`master`,
+  `ai/pathfinder/`). Pregled vseh meritev gibanja (M2.3, M2.7, M2.5c, M5.6, M5.9–M5.11, M7.8, M7.10) z ločitvijo
+  izmerjenega od ocenjenega. Zunanji viri (ARLR, Pufferfish, Lithium, SVO/Warframe, Theta\*, bug tracker).
+- Zapis [`raziskave/M4.0-gibanje-in-letenje.md`](../raziskave/M4.0-gibanje-in-letenje.md); `03-FAZE` M4 prepisan
+  (D-038: M4.1/M4.4/M4.9/M4.12 zavrženi ali združeni, M4.5 in M4.11 pogojna, nova M4.16 scenarij in M4.17 vidna
+  črta, merljiv izhodni kriterij); R2 v `02-ZAHTEVE` dopolnjen; README; Q31; priporočilo k Q6.
+
+**Ugotovitve:**
+- **Leteči NPC sledi poti brez preverbe ovir** [K]: vanilla `PathNavigateFlying.isDirectPathBetweenPoints` vedno
+  vrne `true`, `pathFollow` skoči na zadnjo točko iste višine (tudi za vogalom), nato `isNotColliding` → `WAIT`.
+  Obtičanje ob vodoravnem vogalu je [H] — M2.3 (zid čez vso širino, pot čez vrh) ga ne more videti.
+- **`FlyingMoveHelper` = vanilla `GhastMoveHelper`** [K]: sunek vsake 4 ticke, po prihodu do ~3,5 bloka drsenja
+  ([H] model). Časovna zaščita vozlišča je za leteče izklopljena (`getAIMoveSpeed()` = 0) [K], zato razlaga
+  R-P1b s to zaščito odpade.
+- **Cilj dlje od `NpcNavRange` vrne `null`, ne delne poti** [K] (`findPathOptions` zavrne sosede > 32 od cilja) —
+  M4.10 razširjen na vmesni cilj.
+- **CustomNPC+ ima isto iskanje kot vanilla 1.12**; uporabne so ideje okoli sledenja in krmiljenja (žarek ≤ 6
+  blokov, hitrost, zavoj, višinska meja, spust brez poti). Port odpade.
+- Kopensko: edini izmerjen strošek je sledenje poti (34,5 % boja-500 po S14b) → M4.13 (S15) ostane najbolj podprt.
+
+**Spremembe obnašanja:** nobene. **Meritve:** nobene.
+
+**Naslednja seja:** A/B K3 (`audit/m5k3-ab.ps1`, ko računalnik ni v rabi), nato po M5 vrstnem redu. Od M4 se lahko
+vrineta M4.14b (formacije, samo zagon) in M4.16 (scenarij letenja, brez produkcijske kode). Odgovor na Q31 ni nujen
+pred M4.16/M4.10/M4.17.
 
 ### 2026-10-19 (97) — M5-K K3: oči iz display lista (koda, A/B jutri)
 

@@ -21,10 +21,11 @@ async function executeChild(spec) {
     const auth = subscriptionStatus(spec.profile);
     if (!auth.ok) return { kind: 'auth', message: auth.reason };
   }
+  if (fs.existsSync(path.join(spec.directory, 'CANCEL'))) return { kind: 'cancelled', message: 'Prekinjeno pred zagonom' };
   const result = await new Promise(resolve => {
     const out = fs.openSync(output, 'a'); const err = fs.openSync(errorOutput, 'a');
-    let child; let timer; let timedOut = false; let finished = false;
-    const finish = value => { if (finished) return; finished = true; clearTimeout(timer); fs.closeSync(out); fs.closeSync(err); resolve(value); };
+    let child; let timer; let cancelTimer; let timedOut = false; let cancelled = false; let finished = false;
+    const finish = value => { if (finished) return; finished = true; clearTimeout(timer); clearInterval(cancelTimer); fs.closeSync(out); fs.closeSync(err); resolve({ ...value, cancelled }); };
     try {
       child = spawn(spec.command, spec.arguments, { cwd: spec.cwd, env: nativeEnvironment(spec.profile), windowsHide: true, stdio: ['pipe', out, err] });
     } catch (e) { finish({ code: -1, error: e.message }); return; }
@@ -32,14 +33,18 @@ async function executeChild(spec) {
     child.on('close', code => finish({ code: code ?? -1, timedOut }));
     child.stdin.on('error', () => {});
     child.stdin.end(spec.prompt || '');
-    timer = setTimeout(() => {
-      timedOut = true;
+    const killOwnedChild = () => {
       if (child.pid) {
         if (process.platform === 'win32') spawnSync('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, timeout: 15000, stdio: 'ignore' });
         else child.kill('SIGTERM');
       }
-    }, spec.timeoutSeconds * 1000);
+    };
+    timer = setTimeout(() => { timedOut = true; killOwnedChild(); }, spec.timeoutSeconds * 1000);
+    cancelTimer = setInterval(() => {
+      if (!cancelled && fs.existsSync(path.join(spec.directory, 'CANCEL'))) { cancelled = true; killOwnedChild(); }
+    }, 250);
   });
+  if (result.cancelled) return { kind: 'cancelled', message: 'Uporabnik je ustavil operacijo; delni test ni sprejet', stdout: output, stderr: errorOutput };
   if (result.error || result.timedOut) return { kind: 'error', message: result.error || 'Operacija je dosegla casovno mejo; pred nadaljevanjem preglej delne spremembe', stdout: output, stderr: errorOutput };
   if (spec.type === 'agent') return { ...parseAgent(spec.profile.kind, tail(output), tail(errorOutput), result.code, spec.finalFile, spec.retryMinutes), stdout: output, stderr: errorOutput };
   let afterDesktop;

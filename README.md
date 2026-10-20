@@ -115,8 +115,9 @@ Vse odločitve, ki jih sprejmeš med sejo, gredo v `docs/01-ARHITEKTURA.md` pod
 ## Osnovni ukazi (PowerShell, iz korena mape)
 
 Za samodejne testne/AI iteracije med odsotnostjo je pripravljen lokalni
-[nočni upravljalnik](overnight/README.md) (`.\nocni-run.ps1 doctor`, nato
-`.\nocni-run.ps1 run --hours 8`). Začetna vrsta vsebuje pripravljeni A/B K3;
+[Nočna izmena](overnight/README.md): dvoklik `ODPRI-UPRAVLJALNIK.bat`, nato v lokalnem
+frontend vmesniku **Zaženi neprekinjeno** / **Ustavi zdaj**. AI nadaljuje po projektnem
+načrtu in odločitve sprejema sam ter jih beleži. Začetna vrsta vsebuje pripravljeni A/B K3;
 pravi cikel še ni preverjen in K3 s tem ni zaključen. Claude profila potrebujeta native login.
 
 ```powershell
