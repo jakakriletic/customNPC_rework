@@ -19,6 +19,10 @@ dev/testworld/nav-markerji-vzorec.txt
 __pycache__/
 .rw-compile.zip
 .rw-src.zip
+
+# Local overnight controller state, native CLI profiles, and machine paths.
+.overnight/
+overnight/config.local.json
 audit/*.csv
 # M2.6b: zaklepa scenarija in baselina (odprta samo med zagonom)
 .scenarij.lock

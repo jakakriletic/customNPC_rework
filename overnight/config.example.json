@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "projectRoot": "..",
+  "stateDirectory": ".overnight",
+  "minimumIdleSeconds": 120,
+  "maximumCpuPercent": 20,
+  "unknownQuotaRetryMinutes": 15,
+  "maximumIterations": 6,
+  "maximumTestRetries": 2,
+  "agentTimeoutSeconds": 3600,
+  "fingerprintPaths": [
+    "dev/src", "dev/build.gradle", "dev/testworld", "environment-lock.json",
+    "dev.ps1", "prepare-assets.ps1", "verify-package.ps1", "perf-run.ps1",
+    "k-run.ps1", "ponovitve-run.ps1", "meritve-lib.ps1",
+    "overnight/runner.mjs", "overnight/lib.mjs", "overnight/worker.mjs",
+    "overnight/windows.ps1", "overnight/decision.schema.json"
+  ],
+  "profiles": [
+    { "id": "claude-1", "kind": "claude", "executable": "claude", "enabled": true },
+    { "id": "claude-2", "kind": "claude", "executable": "claude", "enabled": false, "configDirectory": ".overnight/claude-2" },
+    { "id": "codex", "kind": "codex", "executable": "codex", "enabled": true }
+  ],
+  "tests": {
+    "unit": { "script": "dev.ps1", "parameters": { "GradleArgs": ["testOriginal", "test", "--offline"] }, "quiet": true, "timeoutSeconds": 1200 },
+    "build": { "script": "dev.ps1", "parameters": { "GradleArgs": ["buildPatchedMod", "--offline"] }, "quiet": true, "timeoutSeconds": 1200 },
+    "package": { "script": "verify-package.ps1", "parameters": {}, "quiet": true, "timeoutSeconds": 180 },
+    "k3-200-off": { "script": "ponovitve-run.ps1", "parameters": { "Scenarij": "klient", "Ponovitev": 3, "Dodatno": ["-Variant", "idle", "-N", "200", "-Oci", "0"] }, "desktop": true, "timeoutSeconds": 1800 },
+    "k3-200-on": { "script": "ponovitve-run.ps1", "parameters": { "Scenarij": "klient", "Ponovitev": 3, "Dodatno": ["-Variant", "idle", "-N", "200", "-Oci", "1"] }, "desktop": true, "timeoutSeconds": 1800 },
+    "k3-500-off": { "script": "ponovitve-run.ps1", "parameters": { "Scenarij": "klient", "Ponovitev": 3, "Dodatno": ["-Variant", "idle", "-N", "500", "-Oci", "0"] }, "desktop": true, "timeoutSeconds": 1800 },
+    "k3-500-on": { "script": "ponovitve-run.ps1", "parameters": { "Scenarij": "klient", "Ponovitev": 3, "Dodatno": ["-Variant", "idle", "-N", "500", "-Oci", "1"] }, "desktop": true, "timeoutSeconds": 1800 }
+  }
+}

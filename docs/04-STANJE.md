@@ -14,7 +14,7 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-20** (seja 98) — **M4.0 zaključen** (raziskava M4, brez kode in brez zagonov): vanilla 1.12 leteči NPC sledi poti brez preverbe ovir, `FlyingMoveHelper` je ghastov (drsenje do ~3,5 bloka po modelu), cilj dlje od `NpcNavRange` vrne brez poti; plan M4 prerazvrščen (D-038), novo Q31. [zapis](raziskave/M4.0-gibanje-in-letenje.md). A/B K3 še čaka |
+| Zadnja posodobitev | **2026-10-20** (seja 99) — **OPS.1**: lokalni nočni upravljalnik (`nocni-run.ps1`, [navodila](../overnight/README.md)); 29/29 testov krmiljenja, trajna vrsta in native Codex/Claude adapterji. Pravi cikel še nepreverjen, Claude prijavi čakata uporabnika; A/B K3 ostane naslednji projektni korak. |
 | Trenutni milestone | **M5 — Performance**: M5-S (strežnik) zaključen 16. 10. (M5.8: idle 10×, boj 1,5×, nedosegljiva 1,4× pri p95 ≤ 25 ms); M5-K (klient): K.0 in K.1 zaključena, K14 zavržen, K14b v kodi (privzeto 0, Q30) in K4 (privzeto 1) 19. 10., K3 v kodi (A/B 20. 10.). M3 (jedro entitete) zaključen do M3.9 (GUI za hitbox način M3.8b v klientu odprt); M2 zaključen (baseline M2.6 zelen 5. 10.) |
 | Naslednji paketi | **A/B K3** (`audit/m5k3-ab.ps1`, ~40 min brez miške nad oknom MC; vklop K14b Q30), nato **K5** (LOD), **M5-V** (vidnost NPC-jev do 24 chunkov, D-034/D-035), K12, ostali K-paketi. Pred izdajo **Q22** (pravi Forge strežnik: jar od M5.16 privzeto spreminja vanilla bajtkodo, produkcijska pot je preverjena samo statično). **M4.0** narejen 20. 10. (D-038); od M4 se lahko vrineta **M4.14b** (formacije v svetu, samo zagon) in **M4.16** (scenarij letenja), ko računalnik ni v rabi. Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
@@ -55,7 +55,40 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 96 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 97 → 1, novejši zgoraj).*
+
+### 2026-10-20 (99) — OPS.1: nočni upravljalnik testov in AI iteracij
+
+**Paket:** OPS.1 (lokalno razvojno orodje) · **Stanje:** implementirano in krmiljenje preverjeno;
+**pravi Minecraft/AI cikel še nepreverjen**, Claude native prijavi čakata uporabnika.
+
+**Narejeno:**
+- `nocni-run.ps1`, `ZAZENI-NOCNI.bat` in `overnight/`: trajna vrsta, ločeni delovni procesi,
+  nadaljevanje zaključene celice po prekinitvi upravljalnika, strukturirane AI odločitve,
+  Codex/Claude native CLI, predaja rezultatov med profili in čakanje na kvoto. Ni API ključev
+  ali branja/kopiranja prijavnih žetonov. Native prijava se preveri pred AI klicem.
+- Začetna lokalna vrsta vsebuje samo že pripravljeni K3 (unit/build/package + idle-200/500,
+  oči 0/1, po 3 ponovitve). AI ne more odstraniti obveznih testov ali zaključiti s starimi
+  rezultati. SHA-256 vhodov prepreči mešanje različnih verzij. K3 ni označen kot opravljen.
+- Pred klientom: aktivno lokalno namizje, 120 s brez vnosa, brez drugih Java procesov in
+  CPU ≤ 20 %. Vnos med serijo pomeni neveljavno meritev. Globalni Windows mutex prepreči dva
+  upravljalnika; procesna zahteva zadrži spanje brez trajne spremembe power nastavitev.
+- Navodila in meje: [`overnight/README.md`](../overnight/README.md). Lokalne poti/stanje/native
+  profili so git-ignored. Ponovljiv urnik ni nameščen; uporabnik ročno zažene 8-urno okno.
+
+**Preverjanje:** **29/29** Node testov: parserji ponudnikov, kvote/failover/reset, nespremenljivi
+obvezni testi, meje iteracij/ponovitev, izhodni kode/timeout, Windows mutex, literalni PowerShell
+argumenti (presledki, šumniki, `$()`) in resnični ločeni sintetični proces po izhodu upravljalnika.
+`init`, `doctor`, suhi zagon ter Node/PowerShell sintaksa uspešni. Pravi Minecraft, Gradle build
+in modeli pri tej postavitvi niso bili zagnani. Codex ChatGPT auth potrjen; Claude Code 2.1.282
+najden v VS Code, `auth status` vrne brez prijave.
+
+**Naslednji korak:** uporabnik izvede `login claude-1` in `login claude-2`, nato prvi pravi
+`run --hours 8` (ali `--test-only`) med odsotnostjo. Preveriti nočni desktop/zaklep in prvo
+pravo integracijo. Prihodnji K5/M5-V scenariji še niso v katalogu; manjkajoča merila vrnejo
+blokado za pregled. Nadaljnji vrstni red M5 in odprta Q so nespremenjeni.
+
+**Spremembe obnašanja moda:** nobene. **Minecraft meritve:** nobene.
 
 ### 2026-10-20 (98) — M4.0: raziskava izvedbe M4 (gibanje in letenje)
 
@@ -91,40 +124,6 @@ Minecrafta — uporabnik je delal na računalniku).
 vrineta M4.14b (formacije, samo zagon) in M4.16 (scenarij letenja, brez produkcijske kode). Odgovor na Q31 ni nujen
 pred M4.16/M4.10/M4.17.
 
-### 2026-10-19 (97) — M5-K K3: oči iz display lista (koda, A/B jutri)
-
-**Paket:** M5-K K3 · **Stanje:** **delno** — koda, testi in preverba pikslov narejeni, **A/B ni pognan**
-(uporabnik potrebuje računalnik; meritev 20. 10.). `RwEyesList` je zato privzeto 0.
-
-**Narejeno:**
-- Razčlenitev profila M5-K.1 (idle-500): 80 % časa `LayerEyes` je `Tessellator.draw` (`glDrawArrays` 54 %,
-  `glVertexPointer` 23 %), menjave stanja in `setupFogColor` skupaj < 15 %.
-- 1:1 prenos `LayerEyes` (7881e50; bajtkoda 8/8 enakih; `LayerEyesBaselineTest`).
-- `rework/render/EyesList` (49bd247): ob prvem srečanju ključa (tip, vzorec, barva, sijaj pri živem NPC-ju,
-  debelina in barva obrvi) se isti `Tessellator.draw` posname v display list (`glDrawArrays` z razrešenimi
-  vrednostmi, kot vanilla chunki brez VBO) znotraj `glPushAttrib(GL_CURRENT_BIT)`; nato `callList`.
-  `GlStateManager` uskladen (`color(1,1,1,1)` pred, `resetColor()` po, kot `WorldVertexBufferUploader`).
-  Utrip in OptiFine po originalu; LRU 256. `EyesListTest` (4). Stikalo `RwEyesList`.
-- Harness `EyesCheck` (`k-run -Oci 1 -PreveriOci`, merili K13/K14): idle-200, serije svet, vzorci
-  (60 ključev), utrip — vse še v povečavi ×8 (projekcija); **0 razlik** barve in globine (povečava pokrije
-  341.191 pikslov, druga barva oči spremeni 511), utrip gre po originalu. `audit/m5k3-preverba.out`.
-- Testi 306/0 + testOriginal 40/0, `verify-package` PASS (71 vnosov).
-
-**Kje je obstal / naslednji korak (natančno):** pognati `audit/m5k3-ab.ps1` (idle-200 in idle-500, `-Oci 0/1`,
-3 + 3; ~40 min; **med meritvijo se miške nad oknom Minecrafta ne premika** — prvi poskus 19. 10. je padel
-na K5, kamera 6,9°; skripta zdaj ponovi tudi padec K5). Če sta razpona ločena → `RwEyesList` privzeto 1
-(D-032; dev `CustomNpcs.cfg` ostane 0), vrstici v registrih (spremembe obnašanja, meritve), zapis
-`docs/meritve/2026-10-2?-M5-K-K3-oci-display-list.md`, K3 v `03-FAZE` prečrtan. Če ne → zavrženo kot K14.
-
-**Ugotovitve:**
-- Hitri zagon idle-200 (1 + 1, brez ponovitev) je bil neuporaben: dva zapuščena procesa `find /` sta
-  pojedla CPU (p95 ~12 ms namesto ~7). Pravilo merjenja: pred A/B preveri tudi ne-java procese z velikim CPU.
-- Oči so pri kameri M5-K le nekaj pikslov na NPC; preverba pikslov brez povečave je skoraj slepa
-  (49 pikslov občutljivosti), zato povečava ×8.
-
-**Spremembe obnašanja:** nobene (`RwEyesList=0`).
-
-**Naslednja seja:** A/B K3 (zgoraj), nato K5 (LOD). Brez meritev je lahko vmes **M4.0** (raziskava M4).
 
 ---
 

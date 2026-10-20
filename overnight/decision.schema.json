@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "action": { "type": "string", "enum": ["test", "done", "blocked"] },
+    "summary": { "type": "string" },
+    "handoff": { "type": "string" },
+    "testIds": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["action", "summary", "handoff", "testIds"]
+}

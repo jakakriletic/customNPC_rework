@@ -114,6 +114,11 @@ Vse odločitve, ki jih sprejmeš med sejo, gredo v `docs/01-ARHITEKTURA.md` pod
 
 ## Osnovni ukazi (PowerShell, iz korena mape)
 
+Za samodejne testne/AI iteracije med odsotnostjo je pripravljen lokalni
+[nočni upravljalnik](overnight/README.md) (`.\nocni-run.ps1 doctor`, nato
+`.\nocni-run.ps1 run --hours 8`). Začetna vrsta vsebuje pripravljeni A/B K3;
+pravi cikel še ni preverjen in K3 s tem ni zaključen. Claude profila potrebujeta native login.
+
 ```powershell
 .\obnovi-okolje.ps1                        # nova delovna postaja: obnovi dev/libs in preveri vse
 .\dev.ps1 setupDecompWorkspace --offline   # priprava Minecraft/Forge odvisnosti

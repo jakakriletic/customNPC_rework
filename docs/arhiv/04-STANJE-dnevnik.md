@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 96 → 1)
+# Arhiv: dnevnik sej (vnosi 97 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,41 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-19 (97) — M5-K K3: oči iz display lista (koda, A/B jutri)
+
+**Paket:** M5-K K3 · **Stanje:** **delno** — koda, testi in preverba pikslov narejeni, **A/B ni pognan**
+(uporabnik potrebuje računalnik; meritev 20. 10.). `RwEyesList` je zato privzeto 0.
+
+**Narejeno:**
+- Razčlenitev profila M5-K.1 (idle-500): 80 % časa `LayerEyes` je `Tessellator.draw` (`glDrawArrays` 54 %,
+  `glVertexPointer` 23 %), menjave stanja in `setupFogColor` skupaj < 15 %.
+- 1:1 prenos `LayerEyes` (7881e50; bajtkoda 8/8 enakih; `LayerEyesBaselineTest`).
+- `rework/render/EyesList` (49bd247): ob prvem srečanju ključa (tip, vzorec, barva, sijaj pri živem NPC-ju,
+  debelina in barva obrvi) se isti `Tessellator.draw` posname v display list (`glDrawArrays` z razrešenimi
+  vrednostmi, kot vanilla chunki brez VBO) znotraj `glPushAttrib(GL_CURRENT_BIT)`; nato `callList`.
+  `GlStateManager` uskladen (`color(1,1,1,1)` pred, `resetColor()` po, kot `WorldVertexBufferUploader`).
+  Utrip in OptiFine po originalu; LRU 256. `EyesListTest` (4). Stikalo `RwEyesList`.
+- Harness `EyesCheck` (`k-run -Oci 1 -PreveriOci`, merili K13/K14): idle-200, serije svet, vzorci
+  (60 ključev), utrip — vse še v povečavi ×8 (projekcija); **0 razlik** barve in globine (povečava pokrije
+  341.191 pikslov, druga barva oči spremeni 511), utrip gre po originalu. `audit/m5k3-preverba.out`.
+- Testi 306/0 + testOriginal 40/0, `verify-package` PASS (71 vnosov).
+
+**Kje je obstal / naslednji korak (natančno):** pognati `audit/m5k3-ab.ps1` (idle-200 in idle-500, `-Oci 0/1`,
+3 + 3; ~40 min; **med meritvijo se miške nad oknom Minecrafta ne premika** — prvi poskus 19. 10. je padel
+na K5, kamera 6,9°; skripta zdaj ponovi tudi padec K5). Če sta razpona ločena → `RwEyesList` privzeto 1
+(D-032; dev `CustomNpcs.cfg` ostane 0), vrstici v registrih (spremembe obnašanja, meritve), zapis
+`docs/meritve/2026-10-2?-M5-K-K3-oci-display-list.md`, K3 v `03-FAZE` prečrtan. Če ne → zavrženo kot K14.
+
+**Ugotovitve:**
+- Hitri zagon idle-200 (1 + 1, brez ponovitev) je bil neuporaben: dva zapuščena procesa `find /` sta
+  pojedla CPU (p95 ~12 ms namesto ~7). Pravilo merjenja: pred A/B preveri tudi ne-java procese z velikim CPU.
+- Oči so pri kameri M5-K le nekaj pikslov na NPC; preverba pikslov brez povečave je skoraj slepa
+  (49 pikslov občutljivosti), zato povečava ×8.
+
+**Spremembe obnašanja:** nobene (`RwEyesList=0`).
+
+**Naslednja seja:** A/B K3 (zgoraj), nato K5 (LOD). Brez meritev je lahko vmes **M4.0** (raziskava M4).
 
 ### 2026-10-19 (96) — M5-K K4: napisi NPC-jev iz display lista
 
