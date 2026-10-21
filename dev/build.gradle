@@ -102,6 +102,11 @@ afterEvaluate {
         if (taskName == 'runClient' && project.hasProperty('rwHarness')) {
             tasks.getByName(taskName).systemProperty 'rwharness', project.property('rwHarness')
         }
+        // M5-V.1: -PrwWorld=<mapa> zazene dedicated server v lastnem svetu (MinecraftServer --world),
+        // da prizorisce v-run.ps1 ne pise v dev/run/world in server.properties ostane nespremenjen
+        if (taskName == 'runServer' && project.hasProperty('rwWorld')) {
+            tasks.getByName(taskName).args '--world', project.property('rwWorld')
+        }
         // M7.10 (knjiznica npcbaritone): -PnpcbCrowdYield=true vklopi cakanje v gneci (movement.crowdYield)
         if (project.hasProperty('npcbCrowdYield')) {
             tasks.getByName(taskName).systemProperty 'npcbcrowdyield', project.property('npcbCrowdYield')
@@ -166,6 +171,7 @@ task testOriginal(type: Test) {
     exclude '**/LabelCacheTest.class'
     exclude '**/EyesListTest.class'
     exclude '**/LodTest.class'
+    exclude '**/FarProbeTest.class'
     exclude '**/DiagSnapshotTest.class'
     exclude '**/DiagChunkPlanTest.class'
     // M4.14: formacije so nov paket, v originalu ga ni.

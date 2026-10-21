@@ -112,6 +112,11 @@ public class HarnessJobTest {
             {"warmup", "-1"},
             {"lodStart", "-2"},
             {"lodStart", "513"},
+            {"connect", ":25565"},
+            {"connect", "localhost:0"},
+            {"connect", "localhost:x"},
+            {"renderWeight", "-1"},
+            {"renderWeight", "17"},
         };
         for (String[] kv : bad) {
             Properties p = base();
@@ -123,5 +128,21 @@ public class HarnessJobTest {
                 // ok
             }
         }
+    }
+
+    @Test
+    public void connectInRenderWeight() {
+        HarnessJob brez = HarnessJob.parse(base());
+        assertEquals("privzeto integrirani svet", null, brez.connectHost);
+        assertEquals(0.0, brez.renderWeight, 0.0);
+        Properties p = base();
+        p.setProperty("connect", " 127.0.0.1:25599 ");
+        p.setProperty("renderWeight", "6");
+        HarnessJob j = HarnessJob.parse(p);
+        assertEquals("127.0.0.1", j.connectHost);
+        assertEquals(25599, j.connectPort);
+        assertEquals(6.0, j.renderWeight, 0.0);
+        p.setProperty("connect", "localhost");
+        assertEquals("brez vrat privzeta 25565", 25565, HarnessJob.parse(p).connectPort);
     }
 }

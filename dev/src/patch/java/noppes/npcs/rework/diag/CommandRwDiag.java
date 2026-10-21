@@ -21,7 +21,7 @@ import noppes.npcs.LogWriter;
  */
 public class CommandRwDiag extends CommandBase {
     private static final List<String> SUBCOMMANDS =
-            Arrays.asList("on", "off", "status", "reset", "dump", "chunks", "nav");
+            Arrays.asList("on", "off", "status", "reset", "dump", "chunks", "nav", "vd", "track", "spawnnbt");
 
     private static final List<String> CHUNK_ACTIONS = Arrays.asList("on", "off", "status");
 
@@ -35,7 +35,8 @@ public class CommandRwDiag extends CommandBase {
     @Override
     public String getUsage(ICommandSender sender) {
         return "/rwdiag <on|off|status|reset|dump [ime]|chunks <on [obroc]|off|status>"
-                + "|nav <x y z [ponovitev] [maxNpc] [imePredpona]|status>>";
+                + "|nav <x y z [ponovitev] [maxNpc] [imePredpona]|status>"
+                + "|vd [razdalja]|track [bloki|0]|spawnnbt>";
     }
 
     @Override
@@ -136,6 +137,27 @@ public class CommandRwDiag extends CommandBase {
             String prefix = args.length > 6 ? args[6] : "";
             reply(sender, NavSweep.sweep(server, x, y, z, repeats, maxNpcs, prefix));
             reply(sender, Diag.nav().markerLine());
+            return;
+        }
+        // M5-V.1: orodja odlocilnega poskusa (FarProbe); brez ukaza igra ostane nespremenjena.
+        if (action.equals("vd") || action.equals("track")) {
+            boolean vd = action.equals("vd");
+            if (args.length < 2) {
+                reply(sender, vd ? FarProbe.viewStatus(server) : FarProbe.trackStatus());
+                return;
+            }
+            int value;
+            try {
+                value = Integer.parseInt(args[1]);
+            } catch (NumberFormatException notANumber) {
+                reply(sender, "RWDIAG-" + (vd ? "VD" : "TRACK") + "-NAPAKA ni stevilo: " + args[1]);
+                return;
+            }
+            reply(sender, vd ? FarProbe.viewDistance(server, value) : FarProbe.track(value));
+            return;
+        }
+        if (action.equals("spawnnbt")) {
+            reply(sender, FarProbe.spawnNbt(server));
             return;
         }
         if (action.equals("dump")) {

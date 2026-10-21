@@ -27,7 +27,7 @@
 # Skripta sama NE zazene Minecrafta; to naredi merilna skripta, ki jo poklice.
 
 param(
-    [ValidateSet('nav', 'rwdiag', 'perf', 'klient')][string]$Scenarij = 'nav',
+    [ValidateSet('nav', 'rwdiag', 'perf', 'klient', 'dalec')][string]$Scenarij = 'nav',
     [int]$Ponovitev = 3,
     [double]$PragSum = 0.20,
     [switch]$BrezResetaSveta,
@@ -57,9 +57,12 @@ $znani = @{
     # M5-K.0: klient, npr. -Dodatno @('-Variant','idle','-N','200'). k-run.ps1 vsak zagon ustvari svoj svez
     # svet v dev\run\saves, zato reset strezniskega sveta (testworld.ps1) tu ni potreben in se preskoci.
     klient = [pscustomobject]@{ Skripta = 'k-run.ps1';      Paket = 'M5-K.0'; Predpona = 'm5k0-klient' }
+    # M5-V.1: dedicated server + klient, npr. -Dodatno @('-Vd','24','-Domet','64','-N','1000'). v-run.ps1 vsak
+    # zagon ustvari svoj svez svet dev\run\rwv-dalec (--world), testnega sveta ne uporablja.
+    dalec  = [pscustomobject]@{ Skripta = 'v-run.ps1';      Paket = 'M5-V.1'; Predpona = 'm5v1-dalec' }
 }
 $izbrani = $znani[$Scenarij]
-if ($Scenarij -eq 'klient') { $BrezResetaSveta = [switch]$true }
+if ($Scenarij -eq 'klient' -or $Scenarij -eq 'dalec') { $BrezResetaSveta = [switch]$true }
 if ($Skripta -ne '') {
     $izbrani = [pscustomobject]@{
         Skripta  = $Skripta

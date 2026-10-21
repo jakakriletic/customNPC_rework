@@ -10,14 +10,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicLong;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.multiplayer.GuiConnecting;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.GameType;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
+import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -48,14 +55,24 @@ import noppes.npcs.rework.render.LabelCache;
  * <p>Kamera je med ogrevanjem in merjenjem pribita vsak tick; odmik se zapise (merilo
  * "kamera res fiksna"). Vidni NPC-ji se berejo iz {@code RenderGlobal.getDebugInfoEntities()}
  * enkrat na sekundo (stevilo res upodobljenih entitet v zadnji slicici).
+ *
+ * <p>M5-V.1 ({@code connect=}): namesto integriranega sveta se klient poveze na dedicirani
+ * streznik, ki ga vodi {@code v-run.ps1}. Ukazov ne izvaja; po vstopu izpise
+ * {@code RWHARNESS-IGRALEC <ime>}, skripta prek konzole nastavi nacin, teleport in prizorisce ter
+ * na koncu poslje {@code say RWHARNESS-SCENA}, sele nato se NPC-je steje. Dodatno belezi zicne
+ * bajte s streznika (stevec na zacetku Netty cevovoda, pred razpakiranjem) in cas klientskega
+ * ticka (START do END {@code ClientTickEvent}).
  */
 @SideOnly(Side.CLIENT)
 public final class ClientHarness {
-    private enum Phase { MENU, JOINING, PRELOAD, COMMANDS, SETTLE, WARMUP, MEASURE, DONE }
+    private enum Phase { MENU, JOINING, SCENE, PRELOAD, COMMANDS, SETTLE, WARMUP, MEASURE, DONE }
 
     private static final int MAX_FRAMES = 1 << 20;
     private static final long JOIN_TIMEOUT_NS = 180L * 1000000000L;
     private static final long NPC_TIMEOUT_NS = 180L * 1000000000L;
+    /** M5-V.1: skripta pred sporocilom generira do 49 x 49 chunkov in spawna do 5.000 NPC-jev. */
+    private static final long SCENE_TIMEOUT_NS = 900L * 1000000000L;
+    static final String SCENE_MARKER = "RWHARNESS-SCENA";
 
     private final HarnessJob job;
     private Phase phase = Phase.MENU;
@@ -70,6 +87,8 @@ public final class ClientHarness {
     private int aliveMin = Integer.MAX_VALUE;
     private double renderedShareMin = Double.MAX_VALUE;
     private int npcLoaded = -1;
+    private int renderWeightResets;
+    private int renderWeightResetsMeasure;
     private double maxPosDrift;
     private double maxAngleDrift;
     private long gcCount0;
@@ -85,6 +104,16 @@ public final class ClientHarness {
     private LabelCheck labelCheck;
     private EyesCheck eyesCheck;
     private final List<String> errors = new ArrayList<String>();
+    /** M5-V.1: klientski tick (START..END) med merjenjem in zicni bajti s streznika. */
+    private final long[] ticks = new long[MAX_FRAMES];
+    private int tickCount;
+    private long tickStart;
+    private volatile boolean sceneReady;
+    private final AtomicLong bytesIn = new AtomicLong();
+    private boolean bytesInstalled;
+    private long bytesAtWarmup = -1L;
+    private long bytesAtMeasure = -1L;
+    private long bytesAtEnd = -1L;
 
     private ClientHarness(HarnessJob job) {
         this.job = job;
@@ -113,14 +142,34 @@ public final class ClientHarness {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent ev) {
+        if (ev.phase == TickEvent.Phase.START) {
+            this.tickStart = System.nanoTime();
+            return;
+        }
         if (ev.phase != TickEvent.Phase.END) {
             return;
         }
+        if (this.phase == Phase.MEASURE && this.tickStart != 0L && this.tickCount < MAX_FRAMES) {
+            this.ticks[this.tickCount++] = System.nanoTime() - this.tickStart;
+        }
         Minecraft mc = Minecraft.getMinecraft();
+        if (this.job.renderWeight > 0.0 && this.phase.ordinal() > Phase.JOINING.ordinal()
+                && Entity.getRenderDistanceWeight() != this.job.renderWeight) {
+            // M5-V.1: vsak RenderGlobal.loadRenderers (tudi po vstopu) jo vrne na clamp(RD / 8, 1, 2,5).
+            Entity.setRenderDistanceWeight(this.job.renderWeight);
+            this.renderWeightResets++;
+            if (this.phase == Phase.MEASURE) {
+                this.renderWeightResetsMeasure++;
+            }
+        }
         try {
             switch (this.phase) {
                 case MENU:
-                    if (mc.currentScreen instanceof GuiMainMenu) {
+                    if (mc.currentScreen instanceof GuiMainMenu && this.job.connectHost != null) {
+                        enter(Phase.JOINING);
+                        System.out.println("RWHARNESS-POVEZAVA " + this.job.connectHost + ":" + this.job.connectPort);
+                        mc.displayGuiScreen(new GuiConnecting(new GuiMainMenu(), mc, this.job.connectHost, this.job.connectPort));
+                    } else if (mc.currentScreen instanceof GuiMainMenu) {
                         File save = new File(new File(mc.mcDataDir, "saves"), this.job.world);
                         WorldSettings create = null;
                         if (!new File(save, "level.dat").isFile()) {
@@ -138,7 +187,13 @@ public final class ClientHarness {
                     }
                     break;
                 case JOINING:
-                    if (mc.player != null && mc.world != null && mc.getIntegratedServer() != null
+                    if (this.job.connectHost != null && mc.player != null && mc.world != null
+                            && mc.getConnection() != null && mc.currentScreen == null) {
+                        applySettings(mc);
+                        installByteCounter(mc);
+                        System.out.println("RWHARNESS-IGRALEC " + mc.player.getName());
+                        enter(Phase.SCENE);
+                    } else if (mc.player != null && mc.world != null && mc.getIntegratedServer() != null
                             && mc.currentScreen == null) {
                         applySettings(mc);
                         String name = mc.player.getName();
@@ -150,6 +205,15 @@ public final class ClientHarness {
                         enter(Phase.PRELOAD);
                     } else if (System.nanoTime() - this.phaseStart > JOIN_TIMEOUT_NS) {
                         fail("vstop v svet ni uspel v 180 s");
+                    }
+                    break;
+                case SCENE:
+                    // Kamero postavi streznik (tp); pred tem bi jo pribijanje vleklo v nepripravljen svet.
+                    if (this.sceneReady) {
+                        pinCamera(mc, false);
+                        enter(Phase.SETTLE);
+                    } else if (System.nanoTime() - this.phaseStart > SCENE_TIMEOUT_NS) {
+                        fail("streznik ni poslal " + SCENE_MARKER + " v 900 s");
                     }
                     break;
                 case PRELOAD:
@@ -173,6 +237,7 @@ public final class ClientHarness {
                         int n = countNpcs(mc);
                         if (this.job.expectNpc < 0 || (n >= this.job.expectNpcMin && n <= this.job.expectNpc)) {
                             this.npcLoaded = n;
+                            this.bytesAtWarmup = this.bytesIn.get();
                             enter(Phase.WARMUP);
                         } else if (System.nanoTime() - this.phaseStart > NPC_TIMEOUT_NS) {
                             this.npcLoaded = n;
@@ -197,6 +262,8 @@ public final class ClientHarness {
                         this.frameCount = 0;
                         this.lastFrame = 0L;
                         this.lastSample = 0L;
+                        this.tickCount = 0;
+                        this.bytesAtMeasure = this.bytesIn.get();
                         this.measureStartNs = System.nanoTime();
                         if (this.job.sampleMs > 0) {
                             // ClientTickEvent tece na render niti, zato je currentThread() prava nit.
@@ -210,6 +277,7 @@ public final class ClientHarness {
                     pinCamera(mc, true);
                     if (secondsInPhase() >= this.job.measureSeconds) {
                         this.measureEndNs = System.nanoTime();
+                        this.bytesAtEnd = this.bytesIn.get();
                         finish(mc);
                     }
                     break;
@@ -219,6 +287,32 @@ public final class ClientHarness {
         } catch (RuntimeException e) {
             fail("izjema v fazi " + this.phase + ": " + e);
         }
+    }
+
+    @SubscribeEvent
+    public void onChat(ClientChatReceivedEvent ev) {
+        if (this.phase == Phase.SCENE && ev.getMessage() != null
+                && ev.getMessage().getUnformattedText().contains(SCENE_MARKER)) {
+            this.sceneReady = true;
+        }
+    }
+
+    /** M5-V.1: zicni bajti s streznika; prvi v cevovodu, torej pred razpakiranjem in razrezom paketov. */
+    private void installByteCounter(Minecraft mc) {
+        if (this.bytesInstalled) {
+            return;
+        }
+        this.bytesInstalled = true;
+        final AtomicLong counter = this.bytesIn;
+        mc.getConnection().getNetworkManager().channel().pipeline().addFirst("rwharness_bytes", new ChannelInboundHandlerAdapter() {
+            @Override
+            public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                if (msg instanceof ByteBuf) {
+                    counter.addAndGet(((ByteBuf) msg).readableBytes());
+                }
+                ctx.fireChannelRead(msg);
+            }
+        });
     }
 
     @SubscribeEvent
@@ -309,6 +403,10 @@ public final class ClientHarness {
         mc.gameSettings.pauseOnLostFocus = false;
         org.lwjgl.opengl.Display.setVSyncEnabled(false);
         mc.renderGlobal.loadRenderers();
+        if (this.job.renderWeight > 0.0) {
+            // M5-V.1 varianta A: loadRenderers jo pravkar nastavi na RD / 8 (1..2,5).
+            Entity.setRenderDistanceWeight(this.job.renderWeight);
+        }
     }
 
     private void runOnServer(final MinecraftServer server, final List<String> cmds, final boolean signal) {
@@ -457,6 +555,21 @@ public final class ClientHarness {
         num(b, "kameraOdmikPoz", this.maxPosDrift);
         num(b, "kameraOdmikKot", this.maxAngleDrift);
         num(b, "integriraniStreznikMsPovp", serverMs);
+        kv(b, "povezava", this.job.connectHost == null ? "integrirani" : this.job.connectHost + ":" + this.job.connectPort);
+        FrameStats tk = FrameStats.of(this.ticks, this.tickCount);
+        num(b, "klientTickov", tk.count);
+        num(b, "klientTickMsP50", tk.p50 / 1.0e6);
+        num(b, "klientTickMsP95", tk.p95 / 1.0e6);
+        num(b, "klientTickMsP99", tk.p99 / 1.0e6);
+        num(b, "klientTickMsMax", tk.max / 1.0e6);
+        num(b, "bajtovPredMeritvijo", this.bytesAtWarmup);
+        boolean bytesOk = this.bytesAtEnd >= 0L && this.bytesAtMeasure >= 0L;
+        num(b, "bajtovMeritev", bytesOk ? this.bytesAtEnd - this.bytesAtMeasure : -1L);
+        double measured = (this.measureEndNs - this.measureStartNs) / 1.0e9;
+        num(b, "bajtovNaS", bytesOk && measured > 0.0 ? (this.bytesAtEnd - this.bytesAtMeasure) / measured : -1.0);
+        num(b, "renderWeight", Entity.getRenderDistanceWeight());
+        num(b, "renderWeightPonastavitev", this.renderWeightResets);
+        num(b, "renderWeightPonastavitevMeritev", this.renderWeightResetsMeasure);
         num(b, "renderDistance", mc.gameSettings.renderDistanceChunks);
         num(b, "fov", mc.gameSettings.fovSetting);
         num(b, "vsync", mc.gameSettings.enableVsync ? 1 : 0);

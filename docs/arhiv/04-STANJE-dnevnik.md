@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 100 → 1)
+# Arhiv: dnevnik sej (vnosi 101 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,34 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-21 (101) — M5-K K3: A/B oči iz display lista — zavrženo
+
+**Paket:** M5-K K3 · **Stanje:** **zaključeno (zavrženo)** — A/B 3 + 3 brez koristi, `RwEyesList` ostane 0.
+
+**Narejeno:**
+- Analiza serij nočnega upravljalnika (prvi pravi Minecraft cikel OPS.2): `k3-200-off/on`, `k3-500-off/on`,
+  vse na kodi `c5289db1…`, kjer so zeleni tudi `unit`, `build`, `package`. T1–T6 v 4 serijah, K0–K8 v 12
+  zagonih zeleno; K14 potrdi pot z listom (0 izrisov po originalu); med serijami ni bilo vnosa.
+- p50 idle-200 **6,451 → 6,644 ms (+3,0 %)**, razpona ločena v slabšo smer; idle-500 11,435 → 11,754
+  (+2,8 %, prekrivanje); p95 +1,7 / +3,3 %; p99 idle-500 +6,3 % (ločena, slabše); FPS −2,1 / −2,8 %.
+  Original se ujema z baseline M5-K.1. Po D-016 ni koristi → D-032 ne velja → **zavrženo** kot K14.
+- Zapis [meritve/2026-10-21-M5-K-K3-oci-display-list.md](../meritve/2026-10-21-M5-K-K3-oci-display-list.md),
+  vrstica v `04-REGISTRI` (meritve), K3 v `03-FAZE` prečrtan.
+
+**Odločitve (samostojno po pooblastilu):**
+- Koda poskusa (`EyesList`, `EyesCheck`) ostane v drevesu s privzeto 0: obvezni testi so tekli na tej kodi;
+  odstranitev je ločen čistilni korak (unit/build/package), ne del tega paketa.
+- Q30 (vklop K14b) v tem paketu **ni** odločen: zahteva spremembo privzete vrednosti in nove teste, je
+  izven obsega K3 in ostane odprt (priporočilo v vrstici Q30 nespremenjeno).
+
+**Ugotovitev:** [H] pri nekaj štirikotnikih na NPC je cena v gonilniku na izris; list doda
+`glPushAttrib`/`glCallList`/uskladitev stanja in ne skrajša ničesar. Za morebitni nov paket oči najprej
+zgornja meja (oči izpuščene).
+
+**Spremembe obnašanja moda:** nobene. **Minecraft meritve:** 4 serije × 3 (zgoraj).
+
+**Naslednji korak:** **K5** (LOD) po vrstnem redu D-035, nato M5-V. Neodvisno: čistilni korak K3, M4.14b/M4.16.
 
 ### 2026-10-20 (100) — OPS.2: frontend in neprekinjeno avtonomno delo
 

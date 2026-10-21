@@ -35,6 +35,11 @@ import java.util.Properties;
  * eyesList=-1                 M5-K K3: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwEyesList}; -1 = iz konfiguracije
  * eyesCheck=0                 M5-K K3: 1 = po ogrevanju primerjaj piksle in globino z RwEyesList 0 in 1 ({@link EyesCheck})
  * lodStart=-1                 M5-K K5: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwLodStart} (bloki, 0 = original); -1 = iz konfiguracije
+ * connect=127.0.0.1:25565     M5-V.1: namesto integriranega sveta se poveze na dedicirani streznik; ukazov cmd.* ne
+ *                             izvaja (prizorisce postavi skripta prek konzole) in pred stetjem NPC-jev caka na
+ *                             sporocilo {@code RWHARNESS-SCENA} v klepetu
+ * renderWeight=0              M5-V.1 (varianta A): &gt; 0 = po nalaganju rendererjev {@code Entity.setRenderDistanceWeight};
+ *                             0 = vanilla ({@code RD / 8}, omejeno na 1..2,5)
  * sampleMs=0                 M5-K.1: &gt; 0 = med merjenjem vzorci sklad render niti vsakih toliko ms
  *                             ({@link StackSampler}); izhod {@code out} s koncnico -skladi.txt
  * settle=5                  s po ukazih, preden se steje NPC-je
@@ -77,6 +82,10 @@ public final class HarnessJob {
     public final boolean eyesCheck;
     /** M5-K K5: RwLodStart za zagon (bloki), -1 = iz konfiguracije. */
     public final int lodStart;
+    /** M5-V.1: gostitelj dediciranega streznika ali {@code null} (integrirani svet). */
+    public final String connectHost;
+    public final int connectPort;
+    public final double renderWeight;
     public final int settleSeconds;
     public final int warmupSeconds;
     public final int measureSeconds;
@@ -119,6 +128,23 @@ public final class HarnessJob {
         this.eyesList = intValue(p, "eyesList", -1);
         this.eyesCheck = intValue(p, "eyesCheck", 0) != 0;
         this.lodStart = intValue(p, "lodStart", -1);
+        String connect = p.getProperty("connect");
+        if (connect == null || connect.trim().isEmpty()) {
+            this.connectHost = null;
+            this.connectPort = -1;
+        } else {
+            String c = connect.trim();
+            int colon = c.lastIndexOf(':');
+            this.connectHost = colon < 0 ? c : c.substring(0, colon);
+            this.connectPort = colon < 0 ? 25565 : Integer.parseInt(c.substring(colon + 1).trim());
+            if (this.connectHost.isEmpty() || this.connectPort < 1 || this.connectPort > 65535) {
+                throw new IllegalArgumentException("connect mora biti gostitelj[:vrata]: " + connect);
+            }
+        }
+        this.renderWeight = Double.parseDouble(p.getProperty("renderWeight", "0").trim());
+        if (this.renderWeight < 0.0 || this.renderWeight > 16.0) {
+            throw new IllegalArgumentException("renderWeight izven 0..16: " + this.renderWeight);
+        }
         this.settleSeconds = intValue(p, "settle", 5);
         this.warmupSeconds = intValue(p, "warmup", 30);
         this.measureSeconds = intValue(p, "measure", 60);
