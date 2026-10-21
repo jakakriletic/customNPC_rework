@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 108 → 1)
+# Arhiv: dnevnik sej (vnosi 109 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,50 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-21 (109) — M5-V.5: nadomestki in izris L3 — zaključeno
+
+**Paket:** M5-V.5 · **Stanje:** **zaključeno** — vseh 5 zahtevanih testov zelenih na kodi `92f1a22b…`: `unit`, `build`,
+`package`, `v5-izris-24-64-5000`, `v5-izris-10-64-1000` (V0–V24 zeleni v obeh zagonih).
+
+**Narejeno (D-047):**
+- `FarRender` (en `BufferBuilder` za vse nadomestke, pol-vidni v drugem z alfo 0,15; cilindrični billboard, okvir po
+  kotu `ImpostorFrames.frameFor`, alfa test 0,1, lightmap kraja `World.getCombinedLight`, megla; šiv po `entityId`,
+  mrtva entiteta z nadomestkom se ne nariše), `FarInterp` (premik v 1 s od prikazanega položaja, skok nad 16 blokov),
+  coremod `RenderEntitiesPatch` (`RenderGlobal.renderEntities` pred `"blockentities"`, prehod 0; rezerva
+  `RenderWorldLastEvent`), ukaz `/rwimpostor`. `FarBand.PREFETCH`: strežnik videz izračuna 16 blokov pred notranjo
+  mejo, da je ob prehodu že pečen.
+- `FarDrawCheck` (harness): sonda na robu pasu, A/B/C pikslov v pravi sličici s FOV 10; faza `SEAM` s hitrostjo hoje.
+  `v-run.ps1 -Izris 1` z merili V22–V24
+  ([scenarij](scenariji/M5-V.1-dalec.md#m5-v5-izris-l3-v22v24--far-1--impostor-1--izris-1)).
+- JUnit: `FarInterpTest` (9), `RenderEntitiesPatchTest` (4, prave bajte Forge 1.12.2), `FarDrawCheckTest` (4),
+  `FarBandTest` (+1), `HarnessJobTest` (+1); izključeni iz `testOriginal`.
+
+**Izid v svetu (ena ponovitev na celico, `-Far 1 -Impostor 1 -Izris 1`, nočni upravljalnik):**
+
+| Celica | Narisanih min/max (pričakovano) | Živih v šivu | Najdlje | Izris povp. / max | V23 sonda | V24 vrzeli / dvojnih / prehodov | Sličica p50 / p95 ms | B/s | MSPT p50 / p95 ms |
+|---|---|---|---|---|---|---|---|---|---|
+| vd 24, domet 64, 5.000 | 4831 / 4831 (4820..4841) | 40 | **368,0** | 1.305,6 / 18.404 µs | 368 blokov: 114 px, razlika 165, kontrola 0 | **0 / 0** / 170 + 150 | 9,42 / 14,45 (FPS 99,9) | 887 | 58,72 / 71,303 |
+| vd 10, domet 64, 1.000 | 176 / 176 (170..176) | 0 | 168,8 | 53,1 / 160,5 µs | 148 blokov: 810 px, razlika 98, kontrola 0 | **0 / 0** / 25 + 25 | 1,23 / 2,10 (FPS 761,8) | 170 | 1,245 / 1,704 |
+
+- Poseg coremoda uspel v obeh zagonih, 0 sličic prek rezerve; 0 izven frustuma, 0 nadomestkov brez peke.
+- Pot do zelenega: prvi zagon (`9c004fa8…`) je dal v V24 15 vrzeli (videz 0 v prvem krogu → nepečen ob prehodu) in
+  400 dvojnih (mrtva entiteta v chunku do ticka) — popravljeno s predpasom videza in skrivanjem mrtve entitete.
+  Drugi (`1538c62d…`) je pri vd 10 dal 0 pikslov sonde na 168,8 bloka (za koncem megle 160, neviden tudi v
+  originalu) — sonda je odslej najbolj oddaljen nadomestek ≥ 12 blokov pred koncem megle; merilo pri vd 24 ostane 368.
+- Sličica pri vd 24/5000: p50 9,42 ms proti 7,47 ms v M5-V.4 brez izrisa (ena ponovitev, ne A/B) — izris 4831
+  impostorjev stane ~1,3 ms na sličico, kar se ujema s števcem `FarRender`. Primerjava z originalom je M5-V.8.
+- Surovi izidi: git-ignored `audit/v-24-64-5000-izris-2026-10-21-141027*`, `audit/v-10-64-1000-izris-2026-10-21-141445*`.
+
+**Spremembe obnašanja moda:** pri privzetih nastavitvah nobene vidne; coremod spremeni bajtkodo
+`RenderGlobal.renderEntities` (klic, ki se pri `RwFarView=0` takoj vrne — registrirano v 04-REGISTRI).
+**Minecraft meritve:** 6 zagonov `-Izris 1` (2 zelena na končni kodi).
+
+**Za M5-V.8:** `FarRender` riše tudi nadomestke za koncem megle (`RD · 16`), kar je odvečno delo; hitrejše premikanje
+od ~8 blokov/s lahko na meji pusti vrzel do ~1 s.
+
+**Naslednji korak:** **M5-V.6** (L2: sledeni oddaljeni NPC-ji kot impostorji, `RwFarView=2`). Neodvisno: čistilni
+korak K3, M4.14b/M4.16; Q30 odprt.
 
 ### 2026-10-21 (108) — M5-V.4: peka impostorjev na klientu — zaključeno
 

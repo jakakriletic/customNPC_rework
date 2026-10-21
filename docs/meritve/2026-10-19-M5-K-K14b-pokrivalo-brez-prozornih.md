@@ -54,6 +54,11 @@ original. **To ni dokaz za vse primere:** fragment točno na robni črti štirik
 sosednji neprozoren teksel (enopikselni "bleed" na robu klobuka). V 7 serijah × 200 NPC-jev se to ni
 zgodilo nikoli; po D-007 pa sprememba, ki ni dokazano enaka, ostane **privzeto izklopljena** → **Q30**.
 
+**Odločitev 21. 10. 2026 (Q30 → D-049):** lastnik je odgovoril »Ja, Q30: K14b (RwHeadwearSkip=1) naj bo privzeto
+vklopljen.« `RwHeadwearSkip` je od takrat **privzeto 1**; 0 vrne original, varovala iz §1 ostanejo. Novih meritev
+ni bilo: dokaz ostaneta A/B iz §2 in preverba pikslov iz §3. `dev/run/config/CustomNpcs.cfg` ima izrecno 0, zato
+scenariji še naprej merijo original, razen kjer ga `-Pokrivalo` nastavi.
+
 ## 4. Testi
 
 `HeadwearSkipTest` (8): oglišča `emit` z vsemi štirikotniki bajtno enaka originalnemu `renderItemIn2D`;
