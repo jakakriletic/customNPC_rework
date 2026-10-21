@@ -16,6 +16,9 @@ profila. Brez dodatnih npm odvisnosti. Dvoklikni **ODPRI-UPRAVLJALNIK.bat** ali
   in izpusti delno testno celico. Upravljalnik potrdi prekinitev in konča. Običajno traja
   nekaj sekund; native preverjanje prijave pred zagonom lahko traja do 20 sekund.
   Nepovezanih Java procesov ali drugih sej ne zapira.
+- **Po vsaki AI iteraciji:** delovni proces AI teče v Windows job objektu (kill-on-close).
+  Ko je rezultat shranjen, se job zapre in ustavi tudi osirotele podprocese (npr. pozabljen
+  `find /`), ki jih `taskkill /T` ne doseže več. Testi in meritve tega ne uporabljajo.
 - **Dodaj cilj:** doda trajno nalogo tudi med delovanjem. **Poskusi znova** vrne odloženo
   nalogo v vrsto. **Dnevnik izvajanja** pokaže zadnji izpis brez samodejnega nalaganja
   velikih logov med meritvijo.

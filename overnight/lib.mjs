@@ -69,28 +69,37 @@ export function alive(pid) {
   if (!Number.isInteger(pid) || pid < 1) return false;
   try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
 }
+// Holds a windows.ps1 helper open; its release ends stdin and waits for the helper to exit.
+function windowsHelper(mode, extra, failure) {
+  const args = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(toolDirectory, 'windows.ps1'), '-Mode', mode, ...extra];
+  return new Promise((resolve, reject) => {
+    const child = spawn('powershell.exe', args, { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+    let ready = false; let output = ''; let errors = ''; let finishClose;
+    const closed = new Promise(r => { finishClose = r; });
+    const timer = setTimeout(() => { child.kill(); reject(new Error(`Windows ${mode} se ni odzval`)); }, 20000);
+    child.stdin.on('error', () => {});
+    child.stderr.on('data', data => { errors += data; });
+    child.on('error', e => { clearTimeout(timer); reject(e); });
+    child.on('close', () => { finishClose(); clearTimeout(timer); if (!ready) reject(new Error(failure(output, errors))); });
+    child.stdout.on('data', data => {
+      output += data;
+      if (!ready && output.includes('READY')) {
+        ready = true; clearTimeout(timer);
+        resolve(async () => { child.stdin.end('\n'); await closed; });
+      }
+    });
+  });
+}
+// Puts pid and all its future descendants into a kill-on-close job. Release stops every
+// member, including orphans, so call it only when pid itself may also end.
+export async function processJob(pid = process.pid) {
+  if (process.platform !== 'win32') return async () => {};
+  return await windowsHelper('Job', ['-TargetPid', String(pid)], (output, errors) => `Windows job ni uspel: ${(output.match(/NOJOB (.*)/)?.[1] || errors).slice(-800)}`);
+}
 export async function lock(directory, { keepAwake = false } = {}) {
   if (process.platform === 'win32') {
     const name = `Global\\CustomNPCOvernight-${crypto.createHash('sha256').update(path.resolve(directory).toLowerCase()).digest('hex')}`;
-    const args = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(toolDirectory, 'windows.ps1'), '-Mode', 'Lease', '-LeaseName', name];
-    if (keepAwake) args.push('-KeepAwake');
-    return await new Promise((resolve, reject) => {
-      const child = spawn('powershell.exe', args, { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
-      let ready = false; let output = ''; let errors = ''; let finishClose;
-      const closed = new Promise(r => { finishClose = r; });
-      const timer = setTimeout(() => { child.kill(); reject(new Error('Windows lease se ni odzval')); }, 20000);
-      child.stdin.on('error', () => {});
-      child.stderr.on('data', data => { errors += data; });
-      child.on('error', e => { clearTimeout(timer); reject(e); });
-      child.on('close', () => { finishClose(); clearTimeout(timer); if (!ready) reject(new Error(output.includes('BUSY') ? 'Upravljalnik ze tece' : `Windows lease ni uspel: ${errors.slice(-800)}`)); });
-      child.stdout.on('data', data => {
-        output += data;
-        if (!ready && output.includes('READY')) {
-          ready = true; clearTimeout(timer);
-          resolve(async () => { child.stdin.end('\n'); await closed; });
-        }
-      });
-    });
+    return await windowsHelper('Lease', ['-LeaseName', name, ...(keepAwake ? ['-KeepAwake'] : [])], (output, errors) => output.includes('BUSY') ? 'Upravljalnik ze tece' : `Windows lease ni uspel: ${errors.slice(-800)}`);
   }
   const file = path.join(directory, 'controller.lock');
   fs.mkdirSync(directory, { recursive: true });

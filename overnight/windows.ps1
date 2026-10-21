@@ -1,13 +1,52 @@
 param(
-    [ValidateSet('Desktop','Test','Lease')][string]$Mode,
+    [ValidateSet('Desktop','Test','Lease','Job')][string]$Mode,
     [string]$SpecFile = '',
     [string]$LeaseName = '',
-    [switch]$KeepAwake
+    [switch]$KeepAwake,
+    [int]$TargetPid = 0
 )
 $ErrorActionPreference = 'Stop'
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 [Console]::OutputEncoding = $utf8
 $OutputEncoding = $utf8
+if ($Mode -eq 'Job') {
+    # The target and every later descendant join a kill-on-close job. Orphans whose parent
+    # already exited stay members, so closing the job stops the whole AI process tree.
+    try {
+        Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class OvernightJob {
+    [StructLayout(LayoutKind.Sequential)] struct Basic { public long a; public long b; public uint flags; public UIntPtr c; public UIntPtr d; public uint e; public UIntPtr f; public uint g; public uint h; }
+    [StructLayout(LayoutKind.Sequential)] struct Io { public ulong a; public ulong b; public ulong c; public ulong d; public ulong e; public ulong f; }
+    [StructLayout(LayoutKind.Sequential)] struct Extended { public Basic basic; public Io io; public UIntPtr a; public UIntPtr b; public UIntPtr c; public UIntPtr d; }
+    [DllImport("kernel32.dll", SetLastError=true)] static extern IntPtr CreateJobObject(IntPtr attributes, string name);
+    [DllImport("kernel32.dll", SetLastError=true)] static extern bool SetInformationJobObject(IntPtr job, int type, ref Extended info, uint length);
+    [DllImport("kernel32.dll", SetLastError=true)] static extern IntPtr OpenProcess(uint access, bool inherit, int pid);
+    [DllImport("kernel32.dll", SetLastError=true)] static extern bool AssignProcessToJobObject(IntPtr job, IntPtr process);
+    [DllImport("kernel32.dll")] public static extern bool CloseHandle(IntPtr h);
+    public static IntPtr Attach(int pid) {
+        var job = CreateJobObject(IntPtr.Zero, null);
+        if (job == IntPtr.Zero) throw new Exception("CreateJobObject " + Marshal.GetLastWin32Error());
+        var info = new Extended(); info.basic.flags = 0x2000;
+        if (!SetInformationJobObject(job, 9, ref info, (uint)Marshal.SizeOf(info))) { var e = Marshal.GetLastWin32Error(); CloseHandle(job); throw new Exception("SetInformationJobObject " + e); }
+        var process = OpenProcess(0x0101, false, pid);
+        if (process == IntPtr.Zero) { var e = Marshal.GetLastWin32Error(); CloseHandle(job); throw new Exception("OpenProcess " + e); }
+        try { if (!AssignProcessToJobObject(job, process)) { var e = Marshal.GetLastWin32Error(); CloseHandle(job); throw new Exception("AssignProcessToJobObject " + e); } }
+        finally { CloseHandle(process); }
+        return job;
+    }
+}
+'@
+        $job = [OvernightJob]::Attach($TargetPid)
+    } catch { [Console]::WriteLine('NOJOB ' + $_.Exception.Message); exit 0 }
+    [Console]::WriteLine('READY')
+    [Console]::Out.Flush()
+    # EOF on parent exit also closes the job; this helper started before the target joined it.
+    [void][Console]::ReadLine()
+    [void][OvernightJob]::CloseHandle($job)
+    exit 0
+}
 if ($Mode -eq 'Lease') {
     $mutex = New-Object System.Threading.Mutex($false, $LeaseName)
     $owned = $false

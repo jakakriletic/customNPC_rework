@@ -16,4 +16,13 @@ else if (mode === 'tree') {
   fs.writeFileSync(file, JSON.stringify({ parent: process.pid, child: child.pid }));
   setInterval(() => {}, 1000);
 }
+else if (mode === 'orphan') {
+  const { spawn } = await import('node:child_process'); const { processJob } = await import('../lib.mjs');
+  const release = await processJob();
+  // The middle process exits at once, so the grandchild loses its parent like an abandoned tool search.
+  const middle = spawn(process.execPath, ['-e', "const c=require('node:child_process').spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{detached:true,windowsHide:true,stdio:'ignore'});c.unref();console.log(c.pid)"], { windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+  let out = ''; middle.stdout.on('data', d => { out += d; }); await new Promise(r => middle.once('close', r));
+  fs.writeFileSync(file, JSON.stringify({ middle: middle.pid, orphan: Number(out.trim()) }));
+  await release();
+}
 else throw new Error('Unknown fixture mode');

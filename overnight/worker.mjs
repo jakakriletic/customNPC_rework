@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
-import { readJson, writeJson, now, nativeEnvironment, parseAgent, fingerprint, desktopState, subscriptionStatus, toolDirectory, lock } from './lib.mjs';
+import { readJson, writeJson, now, nativeEnvironment, parseAgent, fingerprint, desktopState, subscriptionStatus, toolDirectory, lock, processJob } from './lib.mjs';
 
 export function tail(file, bytes = 4 * 1024 * 1024) {
   if (!fs.existsSync(file)) return '';
@@ -70,10 +70,17 @@ async function main() {
   const claim = path.join(spec.directory, 'claim.json');
   try { fs.writeFileSync(claim, JSON.stringify({ pid: process.pid, startedAt: now() }), { flag: 'wx' }); }
   catch (e) { if (e.code === 'EEXIST') return; throw e; }
+  // AI tools can orphan searches or daemons; the job stops them after the result is saved.
+  let releaseJob = async () => {};
+  if (spec.type === 'agent') {
+    try { releaseJob = await processJob(); }
+    catch (e) { process.stderr.write(`${now()} ${e.message}; AI tece brez zbiranja podprocesov\n`); }
+  }
   let result;
   try { result = await execute(spec); }
   catch (e) { result = { kind: 'error', message: e.stack || e.message }; }
   writeJson(path.join(spec.directory, 'result.json'), { ...result, finishedAt: now() });
+  await releaseJob();
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === path.join(toolDirectory, 'worker.mjs')) {
   main().catch(e => { process.stderr.write(`${e.stack}\n`); process.exitCode = 1; });

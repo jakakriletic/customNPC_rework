@@ -97,6 +97,13 @@ test('cancel terminates the owned process tree and leaves an unrelated process a
     assert.equal(result.kind, 'cancelled'); await until(() => !alive(ids.parent) && !alive(ids.child)); assert.equal(alive(unrelated.pid), true);
   } finally { unrelated.kill(); await new Promise(r => unrelated.once('close', r)); }
 });
+test('AI job stops an orphaned descendant after its parent already exited', { skip: process.platform !== 'win32' }, async t => {
+  const root = temporary(t); const pids = path.join(root, 'pids.json');
+  const fixture = spawn(process.execPath, [fixtures, 'orphan', pids], { windowsHide: true, stdio: 'ignore' });
+  await new Promise(r => fixture.once('close', r)); const ids = readJson(pids);
+  try { assert.ok(ids.orphan > 0); assert.equal(alive(ids.middle), false); await until(() => !alive(ids.orphan)); }
+  finally { if (alive(ids.orphan)) process.kill(ids.orphan); }
+});
 test('local dashboard rejects cross-origin requests and controls a real synthetic run', async t => {
   const c = config(t); fs.writeFileSync(path.join(c.projectRoot, 'scenario.ps1'), "Write-Output 'synthetic running'\nStart-Sleep -Seconds 30\n");
   c.tests.synthetic = { script: path.join(c.projectRoot, 'scenario.ps1'), parameters: {}, timeoutSeconds: 60 };
