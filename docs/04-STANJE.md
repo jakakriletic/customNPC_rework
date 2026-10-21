@@ -60,7 +60,8 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 
 ### 2026-10-21 (103) — M5-V.1: harness "daleč" (dedicated server + klient) — delno
 
-**Paket:** M5-V.1 · **Stanje:** **delno** — harness v kodi, čaka na enotske teste, build in dva poskusna zagona.
+**Paket:** M5-V.1 · **Stanje:** **delno** — harness v kodi in preverjen (unit, build, package, oba poskusna
+zagona zelena na kodi `5cf3683a…`, commit `2b1bbbf`); matrika 8 celic × 3 registrirana, meritve še niso narejene.
 
 **Narejeno:**
 - `v-run.ps1`: ena celica (`-Vd 10|24`, `-Domet 64|368`, `-N 1000|5000`) na dediciranem strežniku
@@ -79,11 +80,17 @@ D-041 — V12 je veljavnost vzorca (≥ 300 sličic, ≥ 15 tickov/s), ne prag 1
 popravku uteži (V9 5000/5000, V11 0 ponastavitev v merjenju) padel samo na V12 pri 356 sličicah (6 FPS), kar je
 izmerjena cena variante A.
 
-**Ni narejeno:** meritve celic (čakajo na zelene poskusne zagone).
+**Poskusna zagona (enkratna, nista meritev celic):** `v1-poskus-24-368-5000` V0–V15 zeleno: 5000/5000 NPC-jev v
+klientu in upodobljenih, sličica p50 159,8 ms (6,1 FPS), **368 sličic** v 60 s (blizu praga 300; prag se ne
+znižuje), MSPT p50 56,6 ms, 29 171 B/s. `v1-poskus-10-64-1000` V0–V15 zeleno: 230 naloženih, 25 v klientu,
+sličica p50 1,17 ms (819 FPS), MSPT p50 1,25 ms, 172 B/s.
+
+**Ni narejeno:** meritve celic — registrirani `v1-10-64-1000` … `v1-24-368-5000` (8 × `ponovitve-run.ps1
+-Scenarij dalec`, 3 ponovitve).
 
 **Spremembe obnašanja moda:** nobene (vse samo v harnessu in `/rwdiag`).
 
-**Naslednji korak:** rezultati poskusnih zagonov → popravki harnessa ali matrika `v1-*` (8 celic × 3).
+**Naslednji korak:** zagon matrike `v1-*` (8 celic × 3) → zapis meritve M5-V.1 in odločitev o varianti A.
 
 ### 2026-10-21 (102) — M5-K K5: stopnja podrobnosti L1 — v kodi, privzeto 0
 
