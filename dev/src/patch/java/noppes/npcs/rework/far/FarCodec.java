@@ -15,23 +15,32 @@ import io.netty.buffer.Unpooled;
  *   <li>{@link #BYE} (klient -&gt; streznik): klient nadomestkov ne zeli vec;</li>
  *   <li>{@link #SNAP} (streznik -&gt; klient): {@code varint m}, {@code m x varint id} odstranjenih,
  *       {@code varint n}, {@code n} vnosov;</li>
- *   <li>{@link #CLEAR} (streznik -&gt; klient): pozabi vse nadomestke (izklop na strezniku).</li>
+ *   <li>{@link #CLEAR} (streznik -&gt; klient): pozabi vse nadomestke (izklop na strezniku);</li>
+ *   <li>{@link #REQ} (klient -&gt; streznik, M5-V.3): {@code varint n}, {@code n x varint id videza};</li>
+ *   <li>{@link #LOOK} (streznik -&gt; klient, M5-V.3): {@code varint id videza}, {@code long hash},
+ *       {@code varint dolzina}, GZIP opis ({@link FarLook}).</li>
  * </ul>
  * Vnos: {@code varint entityId}, pozicija 3 x 24 bitov v 1/8 bloka (spodnjih 24 bitov; klient jih
  * razvije okoli svoje pozicije, {@link #unwrap24}, zato velja na vsaki koordinati sveta, dokler je NPC
  * blizje od 2^20 blokov), {@code yaw} 1 bajt (256 korakov po 1,40625 stopinje), {@code varint videz}
- * (M5-V.3; do takrat 0), zastavice 1 bajt ({@link #F_WALKING} ...). Mirujoc NPC tako stane ~16 B enkrat.
+ * (kratek id iz {@link FarLooks}; 0 = se neznan), zastavice 1 bajt ({@link #F_WALKING} ...). Mirujoc NPC tako stane ~16 B enkrat.
  *
  * <p>Brez Minecraft tipov (samo Netty), testljivo brez sveta.
  */
 public final class FarCodec {
-    public static final int VERSION = 1;
+    /** 2 od M5-V.3 (id videza v vnosu, REQ/LOOK); klient z drugo verzijo ne dobi nicesar. */
+    public static final int VERSION = 2;
     public static final String CHANNEL = "rwfar";
 
     public static final int HELLO = 0;
     public static final int SNAP = 1;
     public static final int CLEAR = 2;
     public static final int BYE = 3;
+    public static final int REQ = 4;
+    public static final int LOOK = 5;
+
+    /** Najvec id-jev v enem REQ. */
+    public static final int MAX_REQ = 256;
 
     /** Najvec odstranitev + vnosov v enem sporocilu (~16 KB). */
     public static final int MAX_ITEMS = 1024;
@@ -59,6 +68,10 @@ public final class FarCodec {
 
         /** Pozicija je v spodnjih 24 bitih (glej {@link #unwrap24}). */
         void entry(int id, int qx24, int qy24, int qz24, int yaw, int look, int flags);
+
+        /** M5-V.3: opis videza (GZIP, {@link FarLook#decode}). */
+        default void look(int id, long hash, byte[] data) {
+        }
     }
 
     // --- osnovni tipi ---------------------------------------------------------
@@ -137,9 +150,22 @@ public final class FarCodec {
         return buf;
     }
 
+    /** M5-V.3: zahteva za opise videzov (najvec {@link #MAX_REQ} id-jev). */
+    public static ByteBuf req(int[] ids, int from, int n) {
+        int take = Math.min(n, MAX_REQ);
+        ByteBuf buf = Unpooled.buffer(2 + take * 3);
+        buf.writeByte(REQ);
+        writeVarInt(buf, take);
+        for (int i = 0; i < take; ++i) {
+            writeVarInt(buf, ids[from + i]);
+        }
+        return buf;
+    }
+
     /**
      * Razbere sporocilo klienta. Vrne {@code {vrsta, verzija, domet}} za HELLO, {@code {BYE, 0, 0}}
-     * za BYE, sicer {@code null} (neznana vrsta se zavrze).
+     * za BYE, {@code {REQ, n, id1 .. idn}} za REQ, sicer {@code null} (neznana vrsta se zavrze).
+     * REQ z vec kot {@link #MAX_REQ} id-ji je neveljaven.
      */
     public static int[] readClientMessage(ByteBuf buf) {
         if (!buf.isReadable()) {
@@ -154,6 +180,19 @@ public final class FarCodec {
         if (type == BYE) {
             return new int[] {BYE, 0, 0};
         }
+        if (type == REQ) {
+            int n = readVarInt(buf);
+            if (n < 0 || n > MAX_REQ) {
+                throw new IllegalArgumentException("REQ s " + n + " id-ji");
+            }
+            int[] out = new int[2 + n];
+            out[0] = REQ;
+            out[1] = n;
+            for (int i = 0; i < n; ++i) {
+                out[2 + i] = readVarInt(buf);
+            }
+            return out;
+        }
         return null;
     }
 
@@ -162,6 +201,17 @@ public final class FarCodec {
     public static ByteBuf clear() {
         ByteBuf buf = Unpooled.buffer(1);
         buf.writeByte(CLEAR);
+        return buf;
+    }
+
+    /** M5-V.3: odgovor z opisom videza. */
+    public static ByteBuf look(int id, long hash, byte[] data) {
+        ByteBuf buf = Unpooled.buffer(16 + data.length);
+        buf.writeByte(LOOK);
+        writeVarInt(buf, id);
+        buf.writeLong(hash);
+        writeVarInt(buf, data.length);
+        buf.writeBytes(data);
         return buf;
     }
 
@@ -213,6 +263,18 @@ public final class FarCodec {
         int type = buf.readUnsignedByte();
         if (type == CLEAR) {
             sink.clear();
+            return type;
+        }
+        if (type == LOOK) {
+            int id = readVarInt(buf);
+            long hash = buf.readLong();
+            int len = readVarInt(buf);
+            if (len < 0 || len > FarLook.MAX_BYTES || len > buf.readableBytes()) {
+                throw new IllegalArgumentException("LOOK dolzine " + len);
+            }
+            byte[] data = new byte[len];
+            buf.readBytes(data);
+            sink.look(id, hash, data);
             return type;
         }
         if (type != SNAP) {

@@ -1,18 +1,24 @@
 package noppes.npcs.rework.far;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.NetHandlerPlayServer;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -39,6 +45,13 @@ import noppes.npcs.entity.EntityNPCInterface;
  * sledilnik so nespremenjeni (R5). Cas obdelave se meri na igralca (D-043: strezniski cilj
  * +&lt;= 0,1 ms na igralca se iz MSPT ne razloci), izpis {@code /rwfar}. Stanje bere in pise samo
  * strezniska nit; {@code HELLO} z Netty niti se prestavi nanjo.
+ *
+ * <p>M5-V.3 (D-045): vnos nosi kratek id videza iz {@link FarLooks}. NPC brez izracunanega videza gre v
+ * vnos z 0 in v vrsto {@link #PENDING}; vrsta se prazni ob koncu streznikovega ticka, najvec
+ * {@link #LOOKS_PER_TICK} opisov ({@link FarLook}; hash se ne racuna na tick), naslednji krog vnos z novim
+ * id-jem poslje znova. Ob {@code UPDATE_NPC} ({@link #invalidateLook}) gre NPC v vrsto za ponoven izracun,
+ * ob odstranitvi iz sveta se videz pozabi. Na {@code REQ} streznik odgovori z {@code LOOK} samo za id-je, ki jih je igralec prejel
+ * ({@link FarRequests}), najvec {@link #REPLIES_PER_TICK} na tick na igralca.
  */
 public final class FarServer {
     public static final int OFF = 0;
@@ -47,12 +60,20 @@ public final class FarServer {
     public static final int PERIOD = 20;
     /** Domet sledilnika, ce razred NPC-ja nima registracije (CNPC registrira 64). */
     public static final int DEFAULT_TRACK_RANGE = 64;
+    /** Najvec izracunov opisa videza na streznikov tick (vsi igralci skupaj). */
+    public static final int LOOKS_PER_TICK = 64;
+    /** Najvec odgovorov LOOK na tick na igralca. */
+    public static final int REPLIES_PER_TICK = 8;
+    /** Nedejavni videzi (brez NPC-ja) v LRU, preden se pozabijo. */
+    public static final int IDLE_LOOKS = 256;
 
     private static FMLEventChannel channel;
     private static int mode = OFF;
     private static int range = 384;
 
     static final Map<UUID, Viewer> VIEWERS = new LinkedHashMap<UUID, Viewer>();
+    static final FarLooks LOOKS = new FarLooks(IDLE_LOOKS);
+    static final LinkedHashSet<EntityNPCInterface> PENDING = new LinkedHashSet<EntityNPCInterface>();
 
     private static int resetTick;
     static long rounds;
@@ -63,10 +84,20 @@ public final class FarServer {
     static long nanos;
     static long maxNanos;
     static long hellos;
+    static long looksComputed;
+    static long lookNanos;
+    static long lookTooBig;
+    static long lookErrors;
+    static long lookReplies;
+    static long lookReplyBytes;
+    static long lookUnknown;
+    /** Vseh izracunov od zagona (ne ponastavi ga {@code /rwfar reset}). */
+    static long looksComputedTotal;
 
     /** Stanje enega igralca, ki je poslal HELLO. */
     static final class Viewer {
         final FarDelta delta = new FarDelta();
+        final FarRequests requests = new FarRequests();
         String name;
         int wantRange;
         int band;
@@ -98,6 +129,9 @@ public final class FarServer {
     /** Ob zagonu streznika iz configa; pozabi igralce prejsnjega streznika. */
     public static void start(int configMode, int configRange) {
         VIEWERS.clear();
+        LOOKS.clear();
+        PENDING.clear();
+        looksComputedTotal = 0;
         mode = configMode >= SEND ? SEND : OFF;
         range = clampRange(configRange);
         reset(0);
@@ -122,8 +156,11 @@ public final class FarServer {
             return;
         }
         mode = next;
+        LOOKS.clear();
+        PENDING.clear();
         for (Map.Entry<UUID, Viewer> e : VIEWERS.entrySet()) {
             e.getValue().delta.clear();
+            e.getValue().requests.clear();
             if (next == OFF && server != null) {
                 EntityPlayerMP p = server.getPlayerList().getPlayerByUUID(e.getKey());
                 if (p != null) {
@@ -147,7 +184,15 @@ public final class FarServer {
         nanos = 0;
         maxNanos = 0;
         hellos = 0;
+        looksComputed = 0;
+        lookNanos = 0;
+        lookTooBig = 0;
+        lookErrors = 0;
+        lookReplies = 0;
+        lookReplyBytes = 0;
+        lookUnknown = 0;
         for (Viewer v : VIEWERS.values()) {
+            v.requests.resetCounters();
             v.rounds = 0;
             v.entries = 0;
             v.removals = 0;
@@ -185,6 +230,18 @@ public final class FarServer {
         }
 
         @SubscribeEvent
+        public void onServerTick(TickEvent.ServerTickEvent event) {
+            if (event.phase != TickEvent.Phase.END || mode == OFF || VIEWERS.isEmpty()) {
+                return;
+            }
+            fillLooks();
+            MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+            if (server != null) {
+                reply(server);
+            }
+        }
+
+        @SubscribeEvent
         public void onLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
             VIEWERS.remove(event.player.getUniqueID());
         }
@@ -204,6 +261,15 @@ public final class FarServer {
             VIEWERS.remove(player.getUniqueID());
             return;
         }
+        if (msg[0] == FarCodec.REQ) {
+            Viewer r = VIEWERS.get(player.getUniqueID());
+            if (r != null) {
+                for (int i = 0; i < msg[1]; ++i) {
+                    r.requests.request(msg[2 + i]);
+                }
+            }
+            return;
+        }
         if (msg[1] != FarCodec.VERSION) {
             LogWriter.info("RWFAR HELLO " + player.getName() + " z neznano verzijo " + msg[1] + ", prezrt");
             return;
@@ -216,6 +282,7 @@ public final class FarServer {
         v.name = player.getName();
         v.wantRange = msg[2];
         v.delta.clear();
+        v.requests.clear();
         ++hellos;
         LogWriter.info("RWFAR HELLO " + v.name + " domet=" + v.wantRange + " nacin=" + mode);
     }
@@ -280,8 +347,15 @@ public final class FarServer {
             int qz = FarCodec.quantize(npc.posZ);
             int yaw = FarCodec.yawByte(npc.rotationYaw);
             int flags = flags(npc, killed);
-            // Videz (M5-V.3) se do takrat ne poslje: 0 = neznan.
-            if (delta.offer(npc.getEntityId(), qx, qy, qz, yaw, 0, flags)) {
+            FarLooks.Look look = LOOKS.get(npc);
+            int lookId = 0;
+            if (look != null) {
+                lookId = look.id;
+            } else {
+                PENDING.add(npc);
+            }
+            if (delta.offer(npc.getEntityId(), qx, qy, qz, yaw, lookId, flags)) {
+                v.requests.offered(lookId);
                 int o = nOut * FarCodec.ENTRY_INTS;
                 if (o + FarCodec.ENTRY_INTS > v.out.length) {
                     v.out = java.util.Arrays.copyOf(v.out, v.out.length * 2);
@@ -291,7 +365,7 @@ public final class FarServer {
                 v.out[o + 2] = qy;
                 v.out[o + 3] = qz;
                 v.out[o + 4] = yaw;
-                v.out[o + 5] = 0;
+                v.out[o + 5] = lookId;
                 v.out[o + 6] = flags;
                 ++nOut;
             }
@@ -318,6 +392,90 @@ public final class FarServer {
         bytes += sentBytes;
         nanos += dt;
         maxNanos = Math.max(maxNanos, dt);
+    }
+
+    /** Konec streznikovega ticka: najvec {@link #LOOKS_PER_TICK} opisov iz vrste {@link #PENDING}. */
+    static void fillLooks() {
+        if (PENDING.isEmpty()) {
+            return;
+        }
+        long t0 = System.nanoTime();
+        int n = 0;
+        for (Iterator<EntityNPCInterface> it = PENDING.iterator(); it.hasNext() && n < LOOKS_PER_TICK;) {
+            EntityNPCInterface npc = it.next();
+            it.remove();
+            if (npc.isDead) {
+                continue;
+            }
+            ++n;
+            try {
+                ResourceLocation key = EntityList.getKey(npc);
+                NBTTagCompound desc = FarLook.describe(key == null ? "" : key.toString(), npc.writeSpawnData());
+                byte[] data = FarLook.encode(desc);
+                if (data.length > FarLook.MAX_BYTES) {
+                    ++lookTooBig;
+                    continue;
+                }
+                LOOKS.put(npc, FarLook.hash(desc), data);
+            } catch (Exception e) {
+                if (lookErrors++ == 0) {
+                    LogWriter.warn("RWFAR opis videza ni uspel: " + e);
+                }
+            }
+        }
+        looksComputed += n;
+        looksComputedTotal += n;
+        lookNanos += System.nanoTime() - t0;
+    }
+
+    /** Odgovori na zahteve REQ: najvec {@link #REPLIES_PER_TICK} na igralca na tick. */
+    static void reply(MinecraftServer server) {
+        for (Map.Entry<UUID, Viewer> e : VIEWERS.entrySet()) {
+            Viewer v = e.getValue();
+            if (!v.requests.hasPending()) {
+                continue;
+            }
+            EntityPlayerMP player = server.getPlayerList().getPlayerByUUID(e.getKey());
+            if (player == null) {
+                continue;
+            }
+            for (int i = 0; i < REPLIES_PER_TICK; ++i) {
+                int id = v.requests.next();
+                if (id == 0) {
+                    break;
+                }
+                FarLooks.Look look = LOOKS.byId(id);
+                if (look == null) {
+                    ++lookUnknown;
+                    continue;
+                }
+                ByteBuf buf = FarCodec.look(look.id, look.hash, look.data);
+                ++lookReplies;
+                lookReplyBytes += buf.readableBytes();
+                send(player, buf);
+            }
+        }
+    }
+
+    /**
+     * Klice {@code EntityNPCInterface.updateClient} (vse poti {@code UPDATE_NPC}): videz se izracuna znova
+     * (do takrat ostane stari id, zato nadomestek ne izgubi videza; isti hash = isti id, nic se ne poslje).
+     * Samo strezniska nit; brez prijavljenih igralcev je tabela prazna in klic ne naredi nic.
+     */
+    public static void invalidateLook(EntityNPCInterface npc) {
+        if (LOOKS.keys() > 0 && LOOKS.get(npc) != null) {
+            PENDING.add(npc);
+        }
+    }
+
+    /** NPC je zapustil svet ({@link FarRegistry}). */
+    static void forgetLook(EntityNPCInterface npc) {
+        if (LOOKS.keys() > 0) {
+            LOOKS.forget(npc);
+        }
+        if (!PENDING.isEmpty()) {
+            PENDING.remove(npc);
+        }
     }
 
     static int flags(EntityNPCInterface npc, boolean killed) {
@@ -387,11 +545,25 @@ public final class FarServer {
                     .append(v.rounds).append(':').append(v.entries).append(':').append(v.removals).append(':')
                     .append(v.bytes).append(':').append(v.nanos).append(':').append(v.maxNanos);
         }
-        double usPerTickPerViewer = viewers == 0 ? 0.0 : nanos / 1000.0 / ticks / viewers;
+        long reqs = 0;
+        long rejected = 0;
+        long dropped = 0;
+        for (Viewer v : VIEWERS.values()) {
+            reqs += v.requests.requested;
+            rejected += v.requests.rejected;
+            dropped += v.requests.dropped;
+        }
+        // M5-V.3: cas opisov videza (skupen vsem igralcem) se steje v cas kode rwfar na igralca.
+        double usPerTickPerViewer = viewers == 0 ? 0.0 : (nanos + lookNanos) / 1000.0 / ticks / viewers;
         return "RWFAR nacin=" + mode + " domet=" + range + " sledilnikMeja=" + server.getPlayerList().getEntityViewDistance()
                 + " igralcev=" + viewers + " hello=" + hellos + " registra=" + registered + " npcVSvetu=" + inWorlds
                 + " krogov=" + rounds + " vnosov=" + entries + " odstranitev=" + removals + " sporocil=" + messages
                 + " bajtov=" + bytes + " ns=" + nanos + " nsMax=" + maxNanos + " tickov=" + ticks
+                + " videzov=" + LOOKS.inUse() + " videzovVse=" + LOOKS.size() + " zVidezom=" + LOOKS.keys()
+                + " cakaVidez=" + PENDING.size() + " izracunov=" + looksComputed + " izracunovVse=" + looksComputedTotal
+                + " nsVidez=" + lookNanos + " prevelikih=" + lookTooBig + " napakVidez=" + lookErrors
+                + " zahtev=" + reqs + " zavrnjenih=" + rejected + " odvrzenih=" + dropped + " odgovorov=" + lookReplies
+                + " neznanih=" + lookUnknown + " bajtovVidez=" + lookReplyBytes
                 + " usNaTickNaIgralca=" + String.format(java.util.Locale.ROOT, "%.3f", usPerTickPerViewer)
                 + " poIgralcih=" + per;
     }

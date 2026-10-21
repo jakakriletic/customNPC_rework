@@ -205,6 +205,9 @@ task testOriginal(type: Test) {
     exclude '**/FarBandTest.class'
     exclude '**/FarCodecTest.class'
     exclude '**/FarDeltaTest.class'
+    exclude '**/FarLookTest.class'
+    exclude '**/FarLooksTest.class'
+    exclude '**/FarRequestsTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

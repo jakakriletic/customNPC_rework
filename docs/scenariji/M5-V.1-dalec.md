@@ -110,3 +110,18 @@ Klient po koncu merjenja (`RWHARNESS-FAZA DONE`, JSON zapisan) ostane povezan, d
 se tako berejo, ko je igralec še prijavljen.
 
 Primerjava z originalom (A/B, tri ponovitve) je M5-V.8; `-Far 1` v M5-V.2 preveri kanal od konca do konca.
+
+## M5-V.3: opis videza (V19, isti `-Far 1`)
+
+Od M5-V.3 vnos nosi kratek id videza (D-045). Strežnik ob koncu ticka izračuna največ 64 opisov
+(`FarLook`: podmnožica spawn NBT brez imena/naslova, 64-bitni hash), naslednji krog pošlje vnos z id-jem;
+klient za neznan id pošlje `REQ`, strežnik odgovori z `LOOK` (GZIP opis + hash), klient hash preveri.
+`rwfar` izpiše `videzov`, `izracunovVse`, `cakaVidez`, `nsVidez`, `zahtev`, `zavrnjenih`, `odgovorov` …;
+JSON klienta `farVidezov`, `farVidezZahtev`, `farVidezOdgovorov`, `farVidezNapak`, `farBrezVideza`.
+Čas opisov se od M5-V.3 šteje v `usNaTickNaIgralca` (V18).
+
+| Merilo | Pogoj |
+|---|---|
+| V19 | strežnik: videzov v rabi **1** (vsi NPC-ji so kloni `PERF_Idle` z različnimi entitetami — kloni si delijo hash), izračunov ≥ pas, 0 zavrnjenih zahtev, 0 napak, 0 prevelikih opisov; klient: ≥ 1 opis in ≥ 1 odgovor, 0 napak (hash po razpakiranju enak poslanemu), **0 nadomestkov brez opisa** ob koncu merjenja |
+
+Testa upravljalnika: `v3-far-24-64-5000`, `v3-far-10-64-1000` (`v-run.ps1 -Far 1`).

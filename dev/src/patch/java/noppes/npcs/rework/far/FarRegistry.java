@@ -63,7 +63,13 @@ public final class FarRegistry implements IWorldEventListener {
         @SubscribeEvent
         public void onWorldUnload(WorldEvent.Unload event) {
             if (event.getWorld() != null) {
-                WORLDS.remove(event.getWorld());
+                FarRegistry r = WORLDS.remove(event.getWorld());
+                if (r != null) {
+                    // M5-V.3: videzi NPC-jev razlozenega sveta se pozabijo.
+                    for (int i = 0; i < r.npcs.size(); ++i) {
+                        FarServer.forgetLook(r.npcs.get(i));
+                    }
+                }
             }
         }
     }
@@ -104,6 +110,7 @@ public final class FarRegistry implements IWorldEventListener {
         if (at == null) {
             return;
         }
+        FarServer.forgetLook((EntityNPCInterface) entity);
         int i = at;
         int last = this.npcs.size() - 1;
         EntityNPCInterface moved = this.npcs.remove(last);

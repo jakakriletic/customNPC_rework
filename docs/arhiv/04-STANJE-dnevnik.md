@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 103 → 1)
+# Arhiv: dnevnik sej (vnosi 105 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,36 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-21 (105) — M5-V.1: matrika "daleč" 8 × 3, varianta A zavrnjena — zaključeno
+
+**Paket:** M5-V.1 · **Stanje:** **zaključeno** — vseh 13 zahtevanih testov zelenih na kodi `f1913db9…`
+(commit `82c82e5`): `unit`, `build`, `package`, oba poskusna zagona in 8 celic × 3 ponovitve (V0–V15 in
+T1–T6 zeleni v vseh 24 zagonih, naloženih/sledenih/upodobljenih razpon 0).
+
+**Narejeno:**
+- Seja 104: celica 10/64/1000 je na prvi kodi padla na V5 (300 namesto 230 naloženih) → D-042
+  (`/rwdiag vd` takoj izprazni chunke zunaj `PlayerChunkMap`); na novi kodi 230 v vseh ponovitvah.
+- Zapis [meritve/2026-10-21-M5-V.1-dalec.md](../meritve/2026-10-21-M5-V.1-dalec.md) (tabele prepisane iz
+  git-ignored `audit/m25c-dalec-2026-10-21-*.md`), vrstica v `04-REGISTRI`, M5-V.1 v `03-FAZE` prečrtan, D-043.
+- **vd 10 → 24 (original):** MSPT p50 1,245 → 7,340 ms (1000) in 8,913 → 56,623 ms (5000), ×5,9–6,4
+  (naloženih 4–4,3×, chunkov 5,4×); sličica p50 +1,9 / +2,7 ms; B/s nespremenjeni (175 / ~1 KB/s).
+- **Varianta A (368 proti 64):** pri 24/5000 sličica p50 7,189 → 163,977 ms (128 → 6 FPS), 942 →
+  29.331 B/s, klientski tick 0,886 → 9,337 ms, MSPT v šumu; 23–32 µs sličice in ~6 B/s na sledenega NPC-ja,
+  ~1,3 kB na spawn. Spawn NBT 559 B (vsi kloni).
+
+**Odločitve (samostojno po pooblastilu):** D-043 — varianta A zavrnjena z meritvijo (~184× nad ciljem
+sličice, ~28× nad ciljem omrežja), varianta B in cilj vd 24 ostaneta; izhodišče V.8 so celice originala;
+strežniški cilj +≤ 0,1 ms na igralca V.2/V.8 meri z lastnim števcem kode `rwfar`, ker ga A/B MSPT ne razloči.
+Opomba za operaterja: 5.000 naloženih NPC-jev pri vd 24 na merilnem stroju ne drži 20 TPS (vanilla cena).
+
+**Omejitve:** strežnik in klient na istem CPU; samo mirujoči NPC-ji in statična kamera (hoja ni merjena);
+en videz (kloni).
+
+**Spremembe obnašanja moda:** nobene. **Minecraft meritve:** 8 serij × 3 + 2 poskusna zagona.
+
+**Naslednji korak:** **M5-V.2** (strežnik: register, pas, kanal `rwfar`, stikali `RwFarView`/`RwFarRange`
+privzeto 0, števec časa na igralca). Neodvisno: čistilni korak K3, M4.14b/M4.16; Q30 odprt.
 
 ### 2026-10-21 (103) — M5-V.1: harness "daleč" (dedicated server + klient) — delno
 

@@ -639,6 +639,11 @@ public final class ClientHarness {
         num(b, "farOdstranitev", FarClient.removes);
         num(b, "farBajtov", FarClient.payloadBytes);
         num(b, "farBajtovMeritev", this.farBytesAtEnd >= 0 ? this.farBytesAtEnd - this.farBytesAtMeasure : -1L);
+        num(b, "farVidezov", FarClient.looks());
+        num(b, "farVidezZahtev", FarClient.lookReqIds);
+        num(b, "farVidezOdgovorov", FarClient.lookReplies);
+        num(b, "farVidezNapak", FarClient.lookErrors);
+        num(b, "farBrezVideza", FarClient.missingLooks());
         EyesCheck ec = this.eyesCheck;
         num(b, "ociPreverba", ec == null ? -1 : (ec.ok() ? 1 : 0));
         if (ec != null) {

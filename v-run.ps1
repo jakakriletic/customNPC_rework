@@ -26,8 +26,10 @@
     postavitvi prizorisca dobi 'rwfar 1' in 'rwfar domet 384', v merilnem oknu se stevci rwfar ponastavijo.
     Merila V16-V18: register NPC-jev = loadedEntityList, nadomestkov v klientu toliko, kot je NPC-jev v pasu
     (Chebyshev (56, min(384, (vd - 1) * 16)], v gledanih chunkih), cas kode rwfar <= 100 us na tick na igralca.
+    M5-V.3: V19 - opis videza: kloni PERF_Idle si delijo en videz, vsak NPC v pasu ima izracunan videz, klient
+    pozna opis za vsak nadomestek (hash preverjen ob prejemu), brez zavrnjenih zahtev in napak.
 
-    Merila V0-V15 (in V16-V18 z -Far 1) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
+    Merila V0-V15 (in V16-V19 z -Far 1) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
 #>
 param(
     [ValidateSet(10, 24)][int]$Vd = 24,
@@ -415,7 +417,18 @@ if ($Far -eq 1) {
         $farBs = if ($r.sekundMerjenja -gt 0) { $r.farBajtovMeritev / $r.sekundMerjenja } else { -1.0 }
         Check ("V17: nadomestkov v klientu ob zacetku / koncu merjenja {0} / {1}, streznik pas {2} / znanih {3} (pricakovano {4}..{5}); HELLO {6}" -f $r.farVKlientuZacetek, $r.farVKlientu, $farPas, $farZnanih, $pasMin, $pasMax, $r.farHello) (($r.farVKlientuZacetek -ge $pasMin) -and ($r.farVKlientuZacetek -le $pasMax) -and ($r.farVKlientu -ge $pasMin) -and ($r.farVKlientu -le $pasMax) -and ($farPas -eq $r.farVKlientu) -and ($farZnanih -eq $r.farVKlientu) -and ($r.farHello -ge 1))
     }
-    Check ("V18: cas kode rwfar {0} us na tick na igralca (cilj <= 100 = 0,1 ms, D-043); rwfar {1:N1} B/s v merjenju" -f $farUs, $farBs) (($farUs -ge 0) -and ($farUs -le 100.0))
+    Check ("V18: cas kode rwfar {0} us na tick na igralca (cilj <= 100 = 0,1 ms, D-043; od M5-V.3 z opisi videza); rwfar {1:N1} B/s v merjenju" -f $farUs, $farBs) (($farUs -ge 0) -and ($farUs -le 100.0))
+    # M5-V.3: kloni istega NPC-ja (noppes clone grid PERF_Idle) imajo en videz; vsak nadomestek ima znan opis.
+    $vVidezov = Get-Polje $farKonec 'videzov'
+    $vIzracunov = Get-Polje $farKonec 'izracunovVse'
+    $vZavrnjenih = Get-Polje $farKonec 'zavrnjenih'
+    $vNapak = Get-Polje $farKonec 'napakVidez'
+    $vPrevelikih = Get-Polje $farKonec 'prevelikih'
+    $vCaka = Get-Polje $farKonec 'cakaVidez'
+    $mNs = [regex]::Match($farKonec, '\bnsVidez=(\d+)'); $vNs = if ($mNs.Success) { [long]$mNs.Groups[1].Value } else { -1 }
+    if ($r) {
+        Check ("V19: videz - streznik videzov v rabi {0} (kloni -> 1), izracunov {1} (>= pas {2}), caka {3}, zavrnjenih {4}, napak {5}, prevelikih {6}, ns opisov v merjenju {7}; klient opisov {8}, zahtevanih id {9}, odgovorov {10}, napak {11}, nadomestkov brez opisa {12}" -f $vVidezov, $vIzracunov, $farPas, $vCaka, $vZavrnjenih, $vNapak, $vPrevelikih, $vNs, $r.farVidezov, $r.farVidezZahtev, $r.farVidezOdgovorov, $r.farVidezNapak, $r.farBrezVideza) (($vVidezov -eq 1) -and ($vIzracunov -ge $farPas) -and ($farPas -gt 0) -and ($vZavrnjenih -eq 0) -and ($vNapak -eq 0) -and ($vPrevelikih -eq 0) -and ($r.farVidezov -ge 1) -and ($r.farVidezOdgovorov -ge 1) -and ($r.farVidezNapak -eq 0) -and ($r.farBrezVideza -eq 0))
+    }
 }
 if ($vdKonec -ne '') { Write-Host ("  ob koncu: {0}" -f $vdKonec) }
 
@@ -434,13 +447,14 @@ if ($r) {
                   'bajti.s' = $r.bajtovNaS; 'bajti.pred' = $r.bajtovPredMeritvijo; 'npc.klient' = $r.npcVKlientu; 'upodobljeno.min' = $r.upodobljenoMin;
                   'gc.ms' = $r.gcMs; 'spawnnbt.p50' = (Get-Polje $spawnNbt 'p50'); 'spawnnbt.max' = (Get-Polje $spawnNbt 'max'); 'npc.streznik' = $npcVd }
         if ($Far -eq 1) { $odtis['far'] = 1; $odtis['pasMin'] = $pasMin; $odtis['pasMax'] = $pasMax }
-        if ($Far -eq 1) { $vel['far.klient'] = $r.farVKlientu; $vel['far.us.tick'] = $farUs; $vel['far.bajti.s'] = $farBs; $vel['far.bajtov'] = $r.farBajtov }
+        if ($Far -eq 1) { $vel['far.klient'] = $r.farVKlientu; $vel['far.us.tick'] = $farUs; $vel['far.bajti.s'] = $farBs; $vel['far.bajtov'] = $r.farBajtov
+                          $vel['far.videzov'] = $vVidezov; $vel['far.izracunov'] = $vIzracunov; $vel['far.klient.opisov'] = $r.farVidezov; $vel['far.klient.zahtev'] = $r.farVidezZahtev }
         if ($tick) { $vel['mspt.p50'] = & $msP $tick.p50; $vel['mspt.p95'] = & $msP $tick.p95; $vel['mspt.p99'] = & $msP $tick.p99; $vel['mspt.povp'] = & $msP ($tick.sum / [math]::Max(1, $tick.count)) }
-        $null = Write-MeritevJson -Path $JsonPath -Paket $(if ($Far -eq 1) { 'M5-V.2' } else { 'M5-V.1' }) -Scenarij ("dalec vd{0}-d{1}-{2}{3}" -f $Vd, $Domet, $N, $(if ($Far -eq 1) { '-far' } else { '' })) -Odtis $odtis -Velicine $vel -Uspeh ($failures.Count -eq 0) -Padle $failures
+        $null = Write-MeritevJson -Path $JsonPath -Paket $(if ($Far -eq 1) { 'M5-V.3' } else { 'M5-V.1' }) -Scenarij ("dalec vd{0}-d{1}-{2}{3}" -f $Vd, $Domet, $N, $(if ($Far -eq 1) { '-far' } else { '' })) -Odtis $odtis -Velicine $vel -Uspeh ($failures.Count -eq 0) -Padle $failures
     }
 }
 $zaklep.Close()
 Write-Host ''
 if ($failures.Count -gt 0) { Write-Host ("M5-V.1 PADLO: {0} meril" -f $failures.Count); exit 1 }
-Write-Host $(if ($Far -eq 1) { 'M5-V.2 V0-V18 USPESNO.' } else { 'M5-V.1 V0-V15 USPESNO.' })
+Write-Host $(if ($Far -eq 1) { 'M5-V.3 V0-V19 USPESNO.' } else { 'M5-V.1 V0-V15 USPESNO.' })
 exit 0

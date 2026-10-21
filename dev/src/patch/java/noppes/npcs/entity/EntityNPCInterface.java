@@ -155,6 +155,7 @@ import noppes.npcs.rework.entity.DataShadow;
 import noppes.npcs.rework.entity.MountGuard;
 import noppes.npcs.rework.entity.RiderState;
 import noppes.npcs.rework.entity.RwHitbox;
+import noppes.npcs.rework.far.FarServer;
 import noppes.npcs.rework.nav.RwNavBackend;
 import noppes.npcs.ai.EntityAIAmbushTarget;
 import noppes.npcs.ai.EntityAIAnimation;
@@ -569,6 +570,8 @@ IAnimals {
         compound.setInteger("EntityId", this.getEntityId());
         Server.sendAssociatedData((Entity)this, EnumPacketClient.UPDATE_NPC, compound);
         this.updateClient = false;
+        // M5-V.3: videz za nadomestke na daljavo se ob naslednjem krogu izracuna znova.
+        FarServer.invalidateLook(this);
     }
 
     protected void damageEntity(DamageSource damageSrc, float damageAmount) {
