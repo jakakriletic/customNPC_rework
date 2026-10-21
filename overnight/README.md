@@ -19,6 +19,9 @@ profila. Brez dodatnih npm odvisnosti. Dvoklikni **ODPRI-UPRAVLJALNIK.bat** ali
 - **Po vsaki AI iteraciji:** delovni proces AI teče v Windows job objektu (kill-on-close).
   Ko je rezultat shranjen, se job zapre in ustavi tudi osirotele podprocese (npr. pozabljen
   `find /`), ki jih `taskkill /T` ne doseže več. Testi in meritve tega ne uporabljajo.
+- **Kvote:** Claude omejitev (»session/weekly limit«, HTTP 429) je kvota, ne napaka paketa.
+  Profil počaka do časa iz sporočila, npr. `resets 5:30pm (Europe/Ljubljana)`; paket se ne
+  odloži. Brez navedenega časa velja `unknownQuotaRetryMinutes`.
 - **Dodaj cilj:** doda trajno nalogo tudi med delovanjem. **Poskusi znova** vrne odloženo
   nalogo v vrsto. **Dnevnik izvajanja** pokaže zadnji izpis brez samodejnega nalaganja
   velikih logov med meritvijo.

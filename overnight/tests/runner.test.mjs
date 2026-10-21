@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { writeJson, readJson, fingerprint, decision, classifyFailure, parseAgent, quotaReset, desktopReason, lock, nativeEnvironment, within, agentArguments } from '../lib.mjs';
+import { writeJson, readJson, fingerprint, decision, classifyFailure, parseAgent, quotaReset, resetFromMessage, desktopReason, lock, nativeEnvironment, within, agentArguments } from '../lib.mjs';
 import { newState, makeTask, applyAgentResult, applyTestResult, selectProfile, tick, importInbox } from '../runner.mjs';
 import { execute } from '../worker.mjs';
 
@@ -66,6 +66,24 @@ test('Claude success envelope and quota envelope are distinguished', () => {
 test('an unknown reset is explicitly an estimate rather than an assumed 5 hours', () => {
   const time = Date.parse('2026-10-20T10:00:00Z'); const result = quotaReset({}, time, 15);
   assert.equal(result.exact, false); assert.equal(result.until, '2026-10-20T10:15:00.000Z');
+});
+test('Claude session limit envelope is quota with the stated reset time', () => {
+  const stdout = JSON.stringify({ type: 'result', is_error: true, api_error_status: 429, result: "You've hit your session limit · resets 5:30pm (Europe/Ljubljana)" });
+  const time = Date.parse('2026-10-21T15:15:26Z'); const result = classifyFailure([{ message: JSON.parse(stdout).result }], '', 1, 15, time);
+  assert.equal(result.kind, 'quota'); assert.equal(result.exact, true); assert.equal(result.until, '2026-10-21T15:30:00.000Z');
+  assert.equal(parseAgent('claude', stdout, '', 1, '', 15).kind, 'quota');
+  assert.equal(parseAgent('claude', JSON.stringify({ type: 'result', is_error: true, api_error_status: 429, result: 'Overloaded' }), '', 1, '', 15).kind, 'quota');
+});
+test('stated reset times roll to the next day, month form and noon/midnight', () => {
+  const time = Date.parse('2026-10-21T16:00:00Z');
+  assert.equal(new Date(resetFromMessage('resets 5:30pm (Europe/Ljubljana)', time)).toISOString(), '2026-10-22T15:30:00.000Z');
+  assert.equal(new Date(resetFromMessage('resets 12am (UTC)', time)).toISOString(), '2026-10-22T00:00:00.000Z');
+  assert.equal(new Date(resetFromMessage('resets 12pm (UTC)', time)).toISOString(), '2026-10-22T12:00:00.000Z');
+  assert.equal(new Date(resetFromMessage('weekly limit · resets Oct 23, 5pm (Europe/Ljubljana)', time)).toISOString(), '2026-10-23T15:00:00.000Z');
+  assert.equal(resetFromMessage('resets 3:55pm (UTC)', time), time + 60000);
+  assert.equal(resetFromMessage('resets 13pm (UTC)', time), null);
+  assert.equal(resetFromMessage('resets 5pm (Not/AZone)', time), null);
+  assert.equal(resetFromMessage('no reset here', time), null);
 });
 test('permission, tool-turn and generic failures are not treated as free quota', () => {
   for (const message of ['permission denied', 'max turns reached', 'test output includes HTTP 429']) assert.equal(classifyFailure([{ message }], '', 1, 15).kind, 'error');

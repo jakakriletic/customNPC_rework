@@ -208,7 +208,38 @@ export function quotaReset(error, currentMs, defaultMinutes) {
     if (Number.isFinite(value) && value > currentMs) return { until: new Date(value).toISOString(), exact: true };
   }
   if (Number(error?.retry_after) > 0) return { until: new Date(currentMs + Number(error.retry_after) * 1000).toISOString(), exact: true };
+  const stated = resetFromMessage(String(error?.message || error?.result || ''), currentMs);
+  if (stated) return { until: new Date(stated).toISOString(), exact: true };
   return { until: new Date(currentMs + defaultMinutes * 60000).toISOString(), exact: false };
+}
+const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+// Claude CLI states the reset only in prose: "resets 5:30pm (Europe/Ljubljana)" or "resets Oct 23, 5pm (...)".
+export function resetFromMessage(message, currentMs) {
+  const m = /\bresets\s+(?:(?:on\s+)?([a-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(?:at\s+)?)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*(?:\(([^)]+)\))?/i.exec(message);
+  if (!m) return null;
+  let hour = Number(m[3]); const minute = Number(m[4] || 0); const half = m[5]?.toLowerCase();
+  if (half && (hour < 1 || hour > 12)) return null;
+  if (half === 'pm' && hour < 12) hour += 12;
+  if (half === 'am' && hour === 12) hour = 0;
+  if (hour > 23 || minute > 59) return null;
+  let parts;
+  try {
+    const format = new Intl.DateTimeFormat('en-US', { timeZone: m[6]?.trim() || undefined, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+    parts = Object.fromEntries(format.formatToParts(new Date(currentMs)).filter(p => p.type !== 'literal').map(p => [p.type, Number(p.value)]));
+  } catch { return null; }
+  // Zone offset at the current instant; a DST switch before the reset shifts the estimate by at most an hour.
+  const offset = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second) - Math.floor(currentMs / 1000) * 1000;
+  if (m[1]) {
+    const month = monthNames.indexOf(m[1].toLowerCase()); if (month < 0) return null;
+    let value = Date.UTC(parts.year, month, Number(m[2]), hour, minute) - offset;
+    if (value <= currentMs) value = Date.UTC(parts.year + 1, month, Number(m[2]), hour, minute) - offset;
+    return value;
+  }
+  let value = Date.UTC(parts.year, parts.month - 1, parts.day, hour, minute) - offset;
+  // The stated minute is rounded; a reset just passed is a retry soon, not tomorrow.
+  if (value <= currentMs && currentMs - value < 15 * 60000) return currentMs + 60000;
+  while (value <= currentMs) value += 86400000;
+  return value;
 }
 export function classifyFailure(errors, stderr, exitCode, defaultMinutes, currentMs = Date.now()) {
   // Inspect provider error envelopes, never arbitrary successful model prose or tool logs.
@@ -216,7 +247,8 @@ export function classifyFailure(errors, stderr, exitCode, defaultMinutes, curren
   for (const error of candidates) {
     const message = String(error.message || error.result || '');
     const code = String(error.code || error.type || '');
-    if (/usage_limit_reached|rate_limit_exceeded|insufficient_quota|rate_limit_error/i.test(code) || /you['’]ve hit (?:your|the) (?:usage )?limit|usage limit (?:reached|exceeded)|rate limit (?:reached|exceeded)|weekly limit reached|too many requests/i.test(message)) {
+    // Structured HTTP 429 only; the same number in model prose or tool logs is not quota.
+    if (Number(error.status) === 429 || /usage_limit_reached|rate_limit_exceeded|insufficient_quota|rate_limit_error/i.test(code) || /you['’]ve hit (?:your|the) (?:[\w-]+ ){0,3}?limit|usage limit (?:reached|exceeded)|rate limit (?:reached|exceeded)|weekly limit reached|too many requests/i.test(message)) {
       return { kind: 'quota', message: message.slice(0, 2000), ...quotaReset(error, currentMs, defaultMinutes) };
     }
     if (/authentication_error|unauthorized/i.test(code) || /not logged in|please (?:log|sign) in|authentication required|invalid api key|oauth token.*expired/i.test(message)) return { kind: 'auth', message: message.slice(0, 2000) };
@@ -240,7 +272,7 @@ export function parseAgent(kind, stdout, stderr, exitCode, finalFile, retryMinut
     if (!envelope) for (const line of stdout.split(/\r?\n/)) { try { const e = JSON.parse(line); if (e.type === 'result') envelope = e; } catch { /* non-JSON line */ } }
     if (envelope) {
       session = envelope.session_id;
-      if (envelope.is_error) errors.push({ message: envelope.result || envelope.errors?.join('\n') || envelope.subtype, ...envelope.error });
+      if (envelope.is_error) errors.push({ message: envelope.result || envelope.errors?.join('\n') || envelope.subtype, status: envelope.api_error_status, ...envelope.error });
       else {
         value = envelope.structured_output;
         if (!value && typeof envelope.result === 'string') { try { value = JSON.parse(envelope.result); } catch { /* invalid response */ } }
