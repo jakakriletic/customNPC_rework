@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 101 → 1)
+# Arhiv: dnevnik sej (vnosi 102 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,39 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-21 (102) — M5-K K5: stopnja podrobnosti L1 — v kodi, privzeto 0
+
+**Paket:** M5-K K5 (L1) · **Stanje:** **zaključeno** — koda, A/B 3 + 3, `RwLodStart` privzeto 0 (D-039).
+
+**Narejeno:**
+- Nov razred `rework/render/Lod`, stikalo `RwLodStart` (bloki, 0 = original). Onkraj praga `LayerEyes`
+  ne riše oči, `LayerHeadwear` pusti ploščato `bipedHeadwear` (videz `HeadWearType=0`) namesto 3D
+  `ModelHeadwear`, `renderName` ne riše imena (original ga skrije že onkraj 22,6 bloka).
+- Harness: `k-run.ps1 -Lod`, `HarnessJob.lodStart`, `ClientHarness` šteje odločitve L1; merilo **K15**
+  primerja delež L1 z geometrijo prizorišča (±5 točk). `LodTest` (3), `HarnessJobTest` +1;
+  `LodTest` izločen iz `testOriginal`.
+- A/B nočni upravljalnik `k5-200-off/on`, `k5-500-off/on` na kodi `0a8d470e…`, kjer so zeleni tudi
+  `unit`, `build`, `package`. T1–T6 v 4 serijah, K0–K8 in K15 v 12 zagonih zeleno; K15 idle-500
+  60,6 % = pričakovano 60,6 %, idle-200 0 %.
+- idle-500 p50 **11,464 → 8,691 ms (−24,2 %)**, p95 12,810 → 10,124 (−21,0 %), p99 16,858 → 13,285
+  (−21,2 %), FPS 84,5 → 110,7; vsi razponi ločeni. idle-200 p50 +0,5 %, p95 +0,2 %, p99 +0,7 % —
+  prekrivanje (preverba razdalje brez L1 je v šumu).
+- Zapis [meritve/2026-10-21-M5-K-K5-lod-L1.md](../meritve/2026-10-21-M5-K-K5-lod-L1.md), vrstica v
+  `04-REGISTRI` (meritve), K5 v `03-FAZE` prečrtan, D-039, Q32 v arhivu §4.
+
+**Odločitve (samostojno po pooblastilu):**
+- **Q32 → D-039:** `RwLodStart` privzeto **0**. L1 spremeni videz oddaljenih NPC-jev, zato D-032 ne
+  velja (D-007); vklop (priporočeno 32) je izbira uporabnika. Za privzeto pot je boljši kandidat K14b
+  (slikovno enak, primerljiv dobitek) — Q30 ostaja odprt.
+- Največje število upodobljenih, prekrivne teksture/delci in histereza praga niso del tega paketa;
+  ponovna ocena po M5-V (L2 impostor).
+
+**Omejitve:** samo statična kamera; videz L1 ni ocenjen s posnetkom; kombinacija K14b + L1 ni izmerjena.
+
+**Spremembe obnašanja moda:** nobene pri privzetih nastavitvah. **Minecraft meritve:** 4 serije × 3.
+
+**Naslednji korak:** **M5-V** (najprej M5-V.1 po 03-FAZE). Neodvisno: čistilni korak K3, M4.14b/M4.16.
 
 ### 2026-10-21 (101) — M5-K K3: A/B oči iz display lista — zavrženo
 
