@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 105 → 1)
+# Arhiv: dnevnik sej (vnosi 106 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,54 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-21 (106) — M5-V.2: strežnik `rwfar` (register, pas, delta, kanal) — zaključeno
+
+**Paket:** M5-V.2 · **Stanje:** **zaključeno** — vseh 5 zahtevanih testov zelenih na kodi `f031f24b…`: `unit`, `build`,
+`package`, `v2-far-24-64-5000`, `v2-far-10-64-1000` (V0–V18 zeleni v obeh zagonih).
+
+**Narejeno:**
+- Paket `rework/far` (D-044): `FarRegistry` (NPC-ji po svetovih prek `IWorldEventListener`, vzorec M5.16),
+  `FarBand` (Chebyshev `(min(sledilnik, meja) − 8, min(RwFarRange, domet HELLO, meja)]`), `FarDelta` (samo novi,
+  premik > 0,5 bloka, yaw > 11,25°, videz/zastavice; odstranjeni), `FarCodec` (`HELLO`/`BYE`/`SNAP`/`CLEAR`, vnos 14–16 B,
+  pozicija 24 bitov z razvojem okoli igralca), `FarServer` (kadenca `(tick + id) % 20`, `isPlayerWatchingChunk`,
+  nevidni in mrtvi s skritim truplom nikoli, števec ns na igralca), `FarClient` (`HELLO`/`BYE`, shramba brez izrisa),
+  `/rwfar [0|1|reset|domet n]`. Stikali `RwFarView` (privzeto 0) in `RwFarRange` (384).
+- Harness: `farView=` v navodilu, polja `far*` v JSON; `v-run.ps1 -Far 1` z merili V16–V18
+  ([scenarij](../scenariji/M5-V.1-dalec.md#m5-v2--far-1-kanal-rwfar)).
+- JUnit: `FarBandTest` (4), `FarCodecTest` (7), `FarDeltaTest` (5), `HarnessJobTest` +1.
+
+**Odločitve (samostojno po pooblastilu):** D-044 — en ključ `RwFarView` za obe strani, 24-bitna pozicija z
+razvojem, videz 0 do V.3, hoja iz premika, register vedno prijavljen, števec v `/rwfar`, klientska shramba v V.2 za
+preverbo od konca do konca, `RwFarLos` odložen.
+
+**Iteracija 2:** `unit` je prvič padel (`testOriginal` je prevajal nove `Far*Test`) → izključeni v `dev/build.gradle`;
+na kodi `5a3454bd…` so `unit`, `build`, `package` zeleni. `v2-far-24-64-5000` je padel samo na V16/V17 (V0–V15, V16a,
+V18 zeleni; klient 4870 nadomestkov ob začetku in koncu merjenja, pričakovano 4860..4880): skripta je `/rwfar` brala
+šele po odjavi klienta (`igralcev=0`, `poIgralcih=` prazen, chunki izpraznjeni → 4573 NPC-jev, µs/tick 0). Napaka
+harnessa, ne kode `rwfar`. Popravek: klient na dediciranem strežniku po DONE ostane povezan do `say RWHARNESS-IZHOD`
+(največ 120 s), ki ga `v-run.ps1` pošlje po branju `rwdiag vd` in `rwfar`.
+
+**Iteracija 3 (izid v svetu, ena ponovitev na celico, `-Far 1`, nočni upravljalnik):**
+
+| Celica | NPC v klientu | Nadomestkov klient / strežnik (pričakovano) | rwfar µs/tick/igralca (max krog) | rwfar B/s v oknu | Sličica p50 / p95 ms | B/s | MSPT p50 / p95 ms |
+|---|---|---|---|---|---|---|---|
+| vd 24, domet 64, 5.000 | 170 | 4870 / 4870 (4860..4880) | **89,188** (2,31 ms) | 0 | 7,68 / 12,17 (FPS 121,4) | 896 | 59,769 / 73,4 |
+| vd 10, domet 64, 1.000 | 25 | 175 / 175 (170..175) | **6,003** (0,15 ms) | 0 | 1,19 / 1,84 (FPS 793,8) | 162 | 1,278 / 1,737 |
+
+- Kanal deluje od konca do konca: `HELLO` sprejet (domet 384 oz. `RD·16` = 160 pri RD 10), klient ima ob začetku in
+  koncu okna isto število nadomestkov kot strežniški pas; mirujoči NPC-ji v oknu ne pošljejo nič (samo spremembe).
+  Začetni posnetek je bil poslan pred `rwfar reset`, zato njegovi bajti v oknu niso šteti (merilo jih ne zahteva).
+- V18 drži (≤ 100 µs), a pri 24/5000 tesno: ~1,8 ms na krog za 4870 NPC-jev v pasu (~0,37 µs na NPC na krog).
+  Sličica/MSPT sta ena ponovitev brez A/B — primerjava z originalom (M5-V.1 §2: 7,19 ms, 942 B/s, MSPT p95 71,3)
+  je stvar M5-V.8; ta zagon ni dokaz koristi ali cene.
+- Surovi izidi: git-ignored `audit/v-24-64-5000-far-2026-10-21-122344*`, `audit/v-10-64-1000-far-2026-10-21-122736*`.
+
+**Spremembe obnašanja moda:** nobene pri privzetih nastavitvah (`RwFarView=0`). **Minecraft meritve:** 2 zagona `-Far 1`
+(+ 1 padli zagon iteracije 2, napaka harnessa).
+
+**Naslednji korak:** M5-V.3 (opis videza: podmnožica spawn NBT, hash, LRU, `REQ`). Za V.8 zabeleženo: cena kroga pri
+5.000 je blizu meje 0,1 ms/tick/igralca — kandidat za optimizacijo (npr. pas iz chunkov namesto preleta registra).
 
 ### 2026-10-21 (105) — M5-V.1: matrika "daleč" 8 × 3, varianta A zavrnjena — zaključeno
 

@@ -34,6 +34,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.rework.far.FarClient;
+import noppes.npcs.rework.far.ImpostorBaker;
 import noppes.npcs.rework.render.HeadwearSkip;
 import noppes.npcs.rework.render.EyesList;
 import noppes.npcs.rework.render.Lod;
@@ -111,6 +112,8 @@ public final class ClientHarness {
     private HeadwearCheck headwearCheck;
     private LabelCheck labelCheck;
     private EyesCheck eyesCheck;
+    /** M5-V.4: izid primerjave impostor - model. */
+    private ImpostorCheck impostorCheck;
     private final List<String> errors = new ArrayList<String>();
     /** M5-V.1: klientski tick (START..END) med merjenjem in zicni bajti s streznika. */
     private final long[] ticks = new long[MAX_FRAMES];
@@ -263,7 +266,8 @@ public final class ClientHarness {
                     pinCamera(mc, false);
                     if (secondsInPhase() >= this.job.warmupSeconds && ((this.job.headwearCheck && this.headwearCheck == null)
                             || (this.job.labelCheck && this.labelCheck == null)
-                            || (this.job.eyesCheck && this.eyesCheck == null))) {
+                            || (this.job.eyesCheck && this.eyesCheck == null)
+                            || (this.job.impostorCheck && this.impostorCheck == null))) {
                         // M5-K K14b: preverba v naslednjem RenderWorldLastEvent, merjenje po njej.
                         this.headwearCheckPending = true;
                     } else if (secondsInPhase() >= this.job.warmupSeconds) {
@@ -375,6 +379,15 @@ public final class ClientHarness {
             }
             System.out.println("RWHARNESS-OCI ok=" + r.ok() + " npc=" + r.npcs + " obcutljivost=" + r.sensitivity + "/" + r.sensitivityZoom + s + " " + r.error);
             this.eyesCheck = r;
+        }
+        if (this.job.impostorCheck) {
+            ImpostorCheck r = ImpostorCheck.run(Minecraft.getMinecraft());
+            StringBuilder s = new StringBuilder();
+            for (ImpostorCheck.Series x : r.series) {
+                s.append(" | ").append(x);
+            }
+            System.out.println("RWHARNESS-IMPOSTOR ok=" + r.ok() + " videzov=" + r.series.size() + "/" + r.expected + " obcutljivost=" + r.sensitivity + s + " " + r.error);
+            this.impostorCheck = r;
         }
     }
 
@@ -644,6 +657,29 @@ public final class ClientHarness {
         num(b, "farVidezOdgovorov", FarClient.lookReplies);
         num(b, "farVidezNapak", FarClient.lookErrors);
         num(b, "farBrezVideza", FarClient.missingLooks());
+        num(b, "impPeceno", ImpostorBaker.baked);
+        num(b, "impVAtlasu", ImpostorBaker.inAtlas());
+        num(b, "impBrezPeke", ImpostorBaker.missing());
+        num(b, "impNapak", ImpostorBaker.failures);
+        num(b, "impOdlozenih", ImpostorBaker.deferred);
+        num(b, "impObrezanih", ImpostorBaker.clipped);
+        num(b, "impPonovitev", ImpostorBaker.retries);
+        num(b, "impIzrinjenih", ImpostorBaker.evictions());
+        num(b, "impBrezFbo", ImpostorBaker.noFbo ? 1 : 0);
+        num(b, "impPekaMsPovp", ImpostorBaker.baked > 0 ? ImpostorBaker.bakeNs / 1.0e6 / ImpostorBaker.baked : -1.0);
+        num(b, "impPekaMsMax", ImpostorBaker.bakeNsMax / 1.0e6);
+        ImpostorCheck ic = this.impostorCheck;
+        num(b, "impPreverba", ic == null ? -1 : (ic.ok() ? 1 : 0));
+        if (ic != null) {
+            num(b, "impVidezov", ic.series.size());
+            num(b, "impObcutljivost", ic.sensitivity);
+            StringBuilder is = new StringBuilder();
+            for (ImpostorCheck.Series x : ic.series) {
+                is.append(is.length() == 0 ? "" : " | ").append(x);
+            }
+            kv(b, "impSerije", is.toString());
+            kv(b, "impNapaka", ic.error);
+        }
         EyesCheck ec = this.eyesCheck;
         num(b, "ociPreverba", ec == null ? -1 : (ec.ok() ? 1 : 0));
         if (ec != null) {

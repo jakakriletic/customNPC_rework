@@ -28,6 +28,10 @@
     (Chebyshev (56, min(384, (vd - 1) * 16)], v gledanih chunkih), cas kode rwfar <= 100 us na tick na igralca.
     M5-V.3: V19 - opis videza: kloni PERF_Idle si delijo en videz, vsak NPC v pasu ima izracunan videz, klient
     pozna opis za vsak nadomestek (hash preverjen ob prejemu), brez zavrnjenih zahtev in napak.
+    M5-V.4: -Impostor 1 (samo z -Far 1): klient spece impostorje (en videz na slicico) in po ogrevanju primerja
+    piksle impostor - model pri 56 blokih (ImpostorCheck). V20: vsak nadomestek z opisom ima pecen videz, brez napak
+    peke, framebuffer na voljo. V21: primerjava pikslov (IoU >= 0,70, razlika barve <= 32 za 8 videzov x 8 kotov,
+    obcutljivost > 64).
 
     Merila V0-V15 (in V16-V19 z -Far 1) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
 #>
@@ -37,6 +41,8 @@ param(
     [ValidateSet(1000, 5000)][int]$N = 1000,
     # M5-V.2: 1 = nadomestki oddaljenih NPC-jev (kanal rwfar); 0 = original (M5-V.1).
     [ValidateSet(0, 1)][int]$Far = 0,
+    # M5-V.4: 1 = peka impostorjev in primerjava pikslov impostor - model (samo z -Far 1).
+    [ValidateSet(0, 1)][int]$Impostor = 0,
     [int]$Warmup = 30,
     [int]$Measure = 60,
     [int]$Fov = 70,
@@ -108,6 +114,7 @@ $nalVd = Get-Nalozenih $Vd
 $daljnji = 0.0; $najblizji = 1e9
 foreach ($p in $npcPos) { $d = [math]::Sqrt([math]::Pow($p[0] - $camX, 2) + [math]::Pow($p[1] - $camZ, 2)); $daljnji = [math]::Max($daljnji, $d); $najblizji = [math]::Min($najblizji, $d) }
 if ($Far -eq 1 -and $Domet -ne 64) { throw '-Far 1 je mogoc samo z -Domet 64 (pas rwfar se zacne pri sledilniku).' }
+if ($Impostor -eq 1 -and $Far -ne 1) { throw '-Impostor 1 potrebuje -Far 1 (opis videza pride po kanalu rwfar).' }
 # M5-V.2: pas rwfar (FarBand): (min(64, meja) - 8, min(RwFarRange 384, zeleni domet klienta RD * 16, meja)], meja = (vd - 1) * 16,
 # samo NPC-ji v chunkih, ki jih igralec gleda (kvadrat vd chunkov). NPC tocno na meji je lahko v ali izven, zato +-1 blok.
 $farMeja = ($Vd - 1) * 16
@@ -153,7 +160,7 @@ Check ("server.properties: online-mode=false (dev klient nima prijave), vrata {0
 if (-not $offline) { throw 'online-mode mora biti false.' }
 
 $stamp = Get-Date -Format 'yyyy-MM-dd-HHmmss'
-$tag = if ($Far -eq 1) { "v-$Vd-$Domet-$N-far-$stamp" } else { "v-$Vd-$Domet-$N-$stamp" }
+$tag = if ($Impostor -eq 1) { "v-$Vd-$Domet-$N-imp-$stamp" } elseif ($Far -eq 1) { "v-$Vd-$Domet-$N-far-$stamp" } else { "v-$Vd-$Domet-$N-$stamp" }
 $svet = 'rwv-dalec'
 $svetDir = Join-Path $run $svet
 # Svez svet vsak zagon (D-016). Mapa je nasa (predpona rwv-), ustvari jo samo ta skripta.
@@ -272,6 +279,7 @@ try {
              "renderDistance=$Vd", "fov=$Fov", 'hideGui=0', [string]::Format($inv, 'renderWeight={0}', $renderWeight),
              'settle=5', "warmup=$Warmup", "measure=$Measure", ('out=' + ($out -replace '\\', '/')))
     if ($Far -eq 1) { $job += 'farView=1' }
+    if ($Impostor -eq 1) { $job += 'impostorCheck=1' }
     [System.IO.File]::WriteAllLines($jobPath, $job, (New-Object System.Text.UTF8Encoding($false)))
     & (Join-Path $root 'prepare-assets.ps1') | ForEach-Object { Write-Host "    $_" }
     $psc = New-Object System.Diagnostics.ProcessStartInfo
@@ -430,6 +438,11 @@ if ($Far -eq 1) {
         Check ("V19: videz - streznik videzov v rabi {0} (kloni -> 1), izracunov {1} (>= pas {2}), caka {3}, zavrnjenih {4}, napak {5}, prevelikih {6}, ns opisov v merjenju {7}; klient opisov {8}, zahtevanih id {9}, odgovorov {10}, napak {11}, nadomestkov brez opisa {12}" -f $vVidezov, $vIzracunov, $farPas, $vCaka, $vZavrnjenih, $vNapak, $vPrevelikih, $vNs, $r.farVidezov, $r.farVidezZahtev, $r.farVidezOdgovorov, $r.farVidezNapak, $r.farBrezVideza) (($vVidezov -eq 1) -and ($vIzracunov -ge $farPas) -and ($farPas -gt 0) -and ($vZavrnjenih -eq 0) -and ($vNapak -eq 0) -and ($vPrevelikih -eq 0) -and ($r.farVidezov -ge 1) -and ($r.farVidezOdgovorov -ge 1) -and ($r.farVidezNapak -eq 0) -and ($r.farBrezVideza -eq 0))
     }
 }
+if ($Impostor -eq 1 -and $r) {
+    # M5-V.4: peka (vsi videzi nadomestkov speceni, brez napak) in primerjava pikslov impostor - model pri 56 blokih.
+    Check ('V20: peka impostorjev - pecenih {0}, v atlasu {1}, nadomestkov brez peke {2}, napak {3}, odlozenih {4}, obrezanih {5}, brez FBO {6}; peka povp. {7:N2} ms, najvec {8:N2} ms' -f $r.impPeceno, $r.impVAtlasu, $r.impBrezPeke, $r.impNapak, $r.impOdlozenih, $r.impObrezanih, $r.impBrezFbo, $r.impPekaMsPovp, $r.impPekaMsMax) (($r.impPeceno -ge 1) -and ($r.impBrezPeke -eq 0) -and ($r.impNapak -eq 0) -and ($r.impBrezFbo -eq 0) -and ($r.farVKlientu -gt 0))
+    Check ('V21: piksli impostor - model pri 56 blokih (8 videzov x 8 kotov, IoU >= 0,70, razlika <= 32, obcutljivost > 64): preverba {0}, videzov {1}, obcutljivost {2:N1}; {3} {4}' -f $r.impPreverba, $r.impVidezov, $r.impObcutljivost, $r.impSerije, $r.impNapaka) ($r.impPreverba -eq 1)
+}
 if ($vdKonec -ne '') { Write-Host ("  ob koncu: {0}" -f $vdKonec) }
 
 if ($r) {
@@ -449,12 +462,13 @@ if ($r) {
         if ($Far -eq 1) { $odtis['far'] = 1; $odtis['pasMin'] = $pasMin; $odtis['pasMax'] = $pasMax }
         if ($Far -eq 1) { $vel['far.klient'] = $r.farVKlientu; $vel['far.us.tick'] = $farUs; $vel['far.bajti.s'] = $farBs; $vel['far.bajtov'] = $r.farBajtov
                           $vel['far.videzov'] = $vVidezov; $vel['far.izracunov'] = $vIzracunov; $vel['far.klient.opisov'] = $r.farVidezov; $vel['far.klient.zahtev'] = $r.farVidezZahtev }
+        if ($Impostor -eq 1) { $odtis['impostor'] = 1; $vel['imp.peceno'] = $r.impPeceno; $vel['imp.atlas'] = $r.impVAtlasu; $vel['imp.peka.ms.povp'] = $r.impPekaMsPovp; $vel['imp.peka.ms.max'] = $r.impPekaMsMax; $vel['imp.obcutljivost'] = $r.impObcutljivost }
         if ($tick) { $vel['mspt.p50'] = & $msP $tick.p50; $vel['mspt.p95'] = & $msP $tick.p95; $vel['mspt.p99'] = & $msP $tick.p99; $vel['mspt.povp'] = & $msP ($tick.sum / [math]::Max(1, $tick.count)) }
-        $null = Write-MeritevJson -Path $JsonPath -Paket $(if ($Far -eq 1) { 'M5-V.3' } else { 'M5-V.1' }) -Scenarij ("dalec vd{0}-d{1}-{2}{3}" -f $Vd, $Domet, $N, $(if ($Far -eq 1) { '-far' } else { '' })) -Odtis $odtis -Velicine $vel -Uspeh ($failures.Count -eq 0) -Padle $failures
+        $null = Write-MeritevJson -Path $JsonPath -Paket $(if ($Impostor -eq 1) { 'M5-V.4' } elseif ($Far -eq 1) { 'M5-V.3' } else { 'M5-V.1' }) -Scenarij ("dalec vd{0}-d{1}-{2}{3}" -f $Vd, $Domet, $N, $(if ($Impostor -eq 1) { '-imp' } elseif ($Far -eq 1) { '-far' } else { '' })) -Odtis $odtis -Velicine $vel -Uspeh ($failures.Count -eq 0) -Padle $failures
     }
 }
 $zaklep.Close()
 Write-Host ''
 if ($failures.Count -gt 0) { Write-Host ("M5-V.1 PADLO: {0} meril" -f $failures.Count); exit 1 }
-Write-Host $(if ($Far -eq 1) { 'M5-V.3 V0-V19 USPESNO.' } else { 'M5-V.1 V0-V15 USPESNO.' })
+Write-Host $(if ($Impostor -eq 1) { 'M5-V.4 V0-V21 USPESNO.' } elseif ($Far -eq 1) { 'M5-V.3 V0-V19 USPESNO.' } else { 'M5-V.1 V0-V15 USPESNO.' })
 exit 0

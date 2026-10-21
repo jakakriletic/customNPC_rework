@@ -125,3 +125,19 @@ JSON klienta `farVidezov`, `farVidezZahtev`, `farVidezOdgovorov`, `farVidezNapak
 | V19 | strežnik: videzov v rabi **1** (vsi NPC-ji so kloni `PERF_Idle` z različnimi entitetami — kloni si delijo hash), izračunov ≥ pas, 0 zavrnjenih zahtev, 0 napak, 0 prevelikih opisov; klient: ≥ 1 opis in ≥ 1 odgovor, 0 napak (hash po razpakiranju enak poslanemu), **0 nadomestkov brez opisa** ob koncu merjenja |
 
 Testa upravljalnika: `v3-far-24-64-5000`, `v3-far-10-64-1000` (`v-run.ps1 -Far 1`).
+
+## M5-V.4: peka impostorjev (V20–V21, `-Far 1 -Impostor 1`)
+
+Z `-Impostor 1` (samo skupaj s `-Far 1`) harness klientu nastavi `impostorCheck=1`. Klient speče vsak videz, ki ga
+prejme po kanalu `rwfar` (`ImpostorBaker`, en videz na sličico, D-046), po ogrevanju pa `ImpostorCheck` za 8 testnih
+videzov (prvi opis iz kanala, isti s petimi pravimi skini CNPC ter z velikostjo 10 in 2) primerja model in ploskev
+impostorja pri 56 blokih za vseh 8 kotov. Klient izpiše vrstico `RWHARNESS-IMPOSTOR`; JSON klienta ima `impPeceno`,
+`impVAtlasu`, `impBrezPeke`, `impNapak`, `impOdlozenih`, `impObrezanih`, `impBrezFbo`, `impPekaMsPovp`, `impPekaMsMax`,
+`impPreverba`, `impVidezov`, `impObcutljivost`, `impSerije`, `impNapaka`.
+
+| Merilo | Pogoj |
+|---|---|
+| V20 | ≥ 1 pečen videz, **0 nadomestkov z opisom brez peke**, 0 napak peke, framebuffer na voljo, nadomestki v klientu > 0 |
+| V21 | za vsak od 8 videzov (združeno čez 8 kotov) IoU silhuete ≥ **0,70** in povprečna razlika barve v preseku ≤ **32**/255; občutljivost (enobarvni skin proti modelu osnove) > **64**; vseh 8 videzov izmerjenih. Merila so določena pred prvo meritvijo |
+
+Testa upravljalnika: `v4-imp-24-64-5000`, `v4-imp-10-64-1000` (`v-run.ps1 -Far 1 -Impostor 1`).

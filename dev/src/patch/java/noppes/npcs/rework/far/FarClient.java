@@ -33,7 +33,10 @@ import noppes.npcs.CustomNpcs;
  * <p>M5-V.3: za id videza, ki ga klient se ne pozna, poslje {@code REQ} (ponovno sele po
  * {@link #REQ_RETRY_MS}); odgovor {@code LOOK} razpakira, preveri, da se hash opisa ujema s poslanim, in
  * ga shrani: id -&gt; hash za ta svet, hash -&gt; opis v LRU ({@link #DESC_CAP}) cez svetove (hash je
- * vsebinski). Peka iz opisa je M5-V.4.
+ * vsebinski).
+ *
+ * <p>M5-V.4: vsak nov opis (in vsak vnos z znanim, a se nepecenim videzom) gre v vrsto peke
+ * {@link ImpostorBaker} (en videz na slicico); ob izklopu stikala se atlas sprosti.
  */
 @SideOnly(Side.CLIENT)
 public final class FarClient {
@@ -71,6 +74,7 @@ public final class FarClient {
         FarClient c = new FarClient();
         FarServer.channel().register(c);
         MinecraftForge.EVENT_BUS.register(c);
+        ImpostorBaker.install();
     }
 
     public static int size() {
@@ -98,6 +102,17 @@ public final class FarClient {
     public static NBTTagCompound description(int lookId) {
         Long hash = LOOK_IDS.get(lookId);
         return hash == null ? null : DESCS.get(hash);
+    }
+
+    /** Kopija opisa videza prvega nadomestka z znanim opisom ali {@code null} (harness, M5-V.4). */
+    public static NBTTagCompound anyDescription() {
+        for (int[] e : STORE.values()) {
+            NBTTagCompound d = e[4] == 0 ? null : description(e[4]);
+            if (d != null) {
+                return d.copy();
+            }
+        }
+        return null;
     }
 
     private static void forgetWorld() {
@@ -146,7 +161,10 @@ public final class FarClient {
                 ++upserts;
                 STORE.put(id, new int[] {FarCodec.unwrap24(qx24, rx), FarCodec.unwrap24(qy24, ry),
                         FarCodec.unwrap24(qz24, rz), yaw, look, flags});
-                if (look != 0 && !LOOK_IDS.containsKey(look)) {
+                Long known = look == 0 ? null : LOOK_IDS.get(look);
+                if (known != null) {
+                    ImpostorBaker.want(known);
+                } else if (look != 0) {
                     Long since = LOOK_PENDING.get(look);
                     if ((since == null || now - since > REQ_RETRY_MS) && nWant[0] < want.length) {
                         LOOK_PENDING.put(look, now);
@@ -172,6 +190,7 @@ public final class FarClient {
                 ++lookReplies;
                 DESCS.put(hash, d);
                 LOOK_IDS.put(id, hash);
+                ImpostorBaker.want(hash);
             }
         });
         for (int i = 0; i < nWant[0]; i += FarCodec.MAX_REQ) {
@@ -206,6 +225,7 @@ public final class FarClient {
         } else if (this.helloWorld != null) {
             this.helloWorld = null;
             forgetWorld();
+            ImpostorBaker.release();
             send(FarCodec.bye());
         }
     }

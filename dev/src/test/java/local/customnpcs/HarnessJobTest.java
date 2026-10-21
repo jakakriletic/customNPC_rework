@@ -100,6 +100,14 @@ public class HarnessJobTest {
     }
 
     @Test
+    public void impostorCheckPrivzetoIzklopljen() {
+        assertEquals("M5-V.4: brez kljuca ni primerjave impostor - model", false, HarnessJob.parse(base()).impostorCheck);
+        Properties p = base();
+        p.setProperty("impostorCheck", "1");
+        assertEquals(true, HarnessJob.parse(p).impostorCheck);
+    }
+
+    @Test
     public void createSeedMatchesDedicatedServer() {
         Properties p = base();
         assertEquals(null, HarnessJob.parse(p).createSeed);

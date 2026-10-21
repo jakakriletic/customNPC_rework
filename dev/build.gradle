@@ -208,6 +208,8 @@ task testOriginal(type: Test) {
     exclude '**/FarLookTest.class'
     exclude '**/FarLooksTest.class'
     exclude '**/FarRequestsTest.class'
+    exclude '**/ImpostorFramesTest.class'
+    exclude '**/ImpostorSlotsTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

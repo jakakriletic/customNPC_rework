@@ -37,6 +37,8 @@ import java.util.Properties;
  * lodStart=-1                 M5-K K5: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwLodStart} (bloki, 0 = original); -1 = iz konfiguracije
  * farView=-1                 M5-V.2: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwFarView} (klient: 1 = HELLO na kanalu rwfar,
  *                             shramba nadomestkov); -1 = iz konfiguracije
+ * impostorCheck=0             M5-V.4: 1 = po ogrevanju speci testne videze in primerjaj piksle impostor - model pri 56 blokih
+ *                             ({@link ImpostorCheck}); potrebuje opis videza s kanala rwfar (farView=1)
  * connect=127.0.0.1:25565     M5-V.1: namesto integriranega sveta se poveze na dedicirani streznik; ukazov cmd.* ne
  *                             izvaja (prizorisce postavi skripta prek konzole) in pred stetjem NPC-jev caka na
  *                             sporocilo {@code RWHARNESS-SCENA} v klepetu
@@ -86,6 +88,8 @@ public final class HarnessJob {
     public final int lodStart;
     /** M5-V.2: RwFarView za zagon (klient), -1 = iz konfiguracije. */
     public final int farView;
+    /** M5-V.4: primerjava pikslov impostor - model ({@link ImpostorCheck}). */
+    public final boolean impostorCheck;
     /** M5-V.1: gostitelj dediciranega streznika ali {@code null} (integrirani svet). */
     public final String connectHost;
     public final int connectPort;
@@ -133,6 +137,7 @@ public final class HarnessJob {
         this.eyesCheck = intValue(p, "eyesCheck", 0) != 0;
         this.lodStart = intValue(p, "lodStart", -1);
         this.farView = intValue(p, "farView", -1);
+        this.impostorCheck = intValue(p, "impostorCheck", 0) != 0;
         String connect = p.getProperty("connect");
         if (connect == null || connect.trim().isEmpty()) {
             this.connectHost = null;
