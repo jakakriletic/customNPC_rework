@@ -12,7 +12,7 @@
         .\k-run.ps1 -Variant idle -N 50 -Warmup 10 -Measure 20      # hiter preizkus harnessa
         .\ponovitve-run.ps1 -Scenarij klient -Dodatno @('-Variant','idle','-N','200')
 
-    Merila (K1-K8, z -PreveriPokrivalo K9, s -Pokrivalo K10, z -PreveriNapise K11, z -Napisi K12, z -PreveriOci K13, z -Oci K14, z -Lod K15) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
+    Merila (K1-K8, z -PreveriPokrivalo K9, s -Pokrivalo K10, z -PreveriNapise K11, z -Napisi K12, z -PreveriOci K13, z -Oci K14, z -Lod K15, s -Far K16) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
 
     -Jfr (M5-K.1): v merilnem oknu snema JFR klientskega JVM-ja (jcmd JFR.start, nastavitve 'profile')
     v audit\jfr\k-<varianta>-<N>-<stamp>.jfr in napise povzetek niti 'Client thread' z nativnimi
@@ -47,7 +47,14 @@ param(
     # M5-K K3: po ogrevanju primerjaj piksle in globino z RwEyesList 0 in 1 (merilo K13).
     [switch]$PreveriOci,
     # M5-K K5: RwLodStart za ta zagon (bloki, 0 = original); -1 = iz CustomNpcs.cfg (merilo K15).
-    [ValidateRange(-1, 512)][int]$Lod = -1
+    [ValidateRange(-1, 512)][int]$Lod = -1,
+    # M5-V.6: RwFarView za ta zagon (0 = original, 2 = L2 + L3); -1 = iz CustomNpcs.cfg (merilo K16).
+    [ValidateRange(-1, 2)][int]$Far = -1,
+    # M5-V.6: RwImpostorStart za ta zagon (bloki, prag L2); -1 = iz CustomNpcs.cfg.
+    [ValidateRange(-1, 512)][int]$ImpostorStart = -1,
+    # M5-V.6: 1 = prizorisce "dalec": kamera 40 blokov nad tlemi, najblizja vrsta 36 blokov vodoravno, da je vecina
+    # NPC-jev onkraj praga L2 (56) in vsi znotraj sledilnika (Chebyshev <= 60) in dometa upodobitve (RD 10: 80).
+    [ValidateRange(0, 1)][int]$Dalec = 0
 )
 
 $ErrorActionPreference = 'Stop'
@@ -108,11 +115,22 @@ $globina = if ($Variant -eq 'boj' -or $Variant -eq 'nedosegljiva') { [int](($N /
 $zSredina = $gridZ + $globina / 2.0
 $camZ = $gridZ + $globina + 6 + [math]::Round($globina * 0.5)
 $camY = 4 + 8 + [math]::Round($globina * 0.6)
+if ($Dalec -eq 1) {
+    $camZ = $gridZ + $globina + 36
+    $camY = 4 + 40
+}
 $camX = $gridX + ($gridW - 1) / 2.0 + 0.5
 $pitch = [math]::Round([math]::Atan2($camY - 4, $camZ - $zSredina) * 180 / [math]::PI, 1)
 $daljnji = [math]::Sqrt([math]::Pow($camZ - $gridZ, 2) + [math]::Pow($gridW / 2.0, 2) + [math]::Pow($camY - 4, 2))
 Write-Host ("  kamera ({0}, {1}, {2}) yaw 180 pitch {3}; najdaljsi NPC {4:N1} blokov" -f $camX, $camY, $camZ, $pitch, $daljnji)
-Check ("najbolj oddaljen NPC je znotraj dometa sledilnika ({0:N1} <= 60)" -f $daljnji) ($daljnji -le 60)
+if ($Dalec -eq 1) {
+    # Sledilnik je kvadrat (Chebyshev, samo x in z); vanilla domet upodobitve je 64 * RD/8 (1..2,5) za NPC z robom 1,0.
+    $cheb = [math]::Max($camZ - $gridZ, $gridW / 2.0)
+    $domet = 64 * [math]::Min(2.5, [math]::Max(1.0, $RenderDistance / 8.0))
+    Check ("najbolj oddaljen NPC je znotraj dometa sledilnika (Chebyshev {0:N1} <= 60) in upodobitve ({1:N1} <= {2:N1} - 4)" -f $cheb, $daljnji, $domet) (($cheb -le 60) -and ($daljnji -le $domet - 4))
+} else {
+    Check ("najbolj oddaljen NPC je znotraj dometa sledilnika ({0:N1} <= 60)" -f $daljnji) ($daljnji -le 60)
+}
 
 $cmds = @()
 foreach ($l in (Get-Content (Join-Path $seed 'perf-setup-commands.txt'))) {
@@ -138,7 +156,7 @@ $jobPath = Join-Path $audit "k-$Variant-$N-$stamp.job"
 $job = @("world=$world", 'createSeed=customnpc-rework', "expectNpc=$pricakovano", "expectNpcMin=$pricakovanoMin",
          # Invariantna kultura: v sl-SI bi -f dal decimalne vejice in HarnessJob kamere ne bi prebral.
          [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, 'cam={0},{1},{2},180,{3}', $camX, $camY, $camZ, $pitch),
-         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci", "headwearSkip=$Pokrivalo", ('headwearCheck={0}' -f [int][bool]$PreveriPokrivalo), "labelCache=$Napisi", ('labelCheck={0}' -f [int][bool]$PreveriNapise), "eyesList=$Oci", ('eyesCheck={0}' -f [int][bool]$PreveriOci), "lodStart=$Lod",('settle={0}' -f (3 + [int]($N / 250))),
+         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci", "headwearSkip=$Pokrivalo", ('headwearCheck={0}' -f [int][bool]$PreveriPokrivalo), "labelCache=$Napisi", ('labelCheck={0}' -f [int][bool]$PreveriNapise), "eyesList=$Oci", ('eyesCheck={0}' -f [int][bool]$PreveriOci), "lodStart=$Lod", "farView=$Far", "impostorStart=$ImpostorStart", ('settle={0}' -f (3 + [int]($N / 250))),
          "warmup=$Warmup", "measure=$Measure", ('out=' + ($out -replace '\\', '/')))
 for ($i = 0; $i -lt $cmds.Count; $i++) { $job += ('cmd.{0}={1}' -f ($i + 1), $cmds[$i]) }
 [System.IO.File]::WriteAllLines($jobPath, $job, (New-Object System.Text.UTF8Encoding($false)))
@@ -267,6 +285,33 @@ if ($r -and $Lod -ge 0) {
     }
     Check ("K15: RwLodStart {0} (zahtevano {1}), odlocitev pokrivala dalec/blizu {2}/{3}, {4}" -f $r.rwLodStart, $Lod, $r.lodDalec, $r.lodBlizu, $opis) $ok
 }
+if ($r -and $Far -ge 0) {
+    # M5-V.6: stevilo NPC-jev v L2 iz geometrije prizorisca (kot FarRender: getDistanceSq od nog NPC-ja, y = 4,
+    # sredina bloka mreze, do kamere = polozaja igralca); staticni NPC-ji, histereza ne vpliva. Vsi so v dometu
+    # upodobitve (K4), zato izven dometa 0.
+    $prag = if ($ImpostorStart -ge 0) { [math]::Max(8, [math]::Min(512, $ImpostorStart)) } else { [int]$r.rwImpostorStart }
+    $ok = ($r.rwFarView -eq $Far)
+    if ($Far -lt 2) {
+        $ok = $ok -and ($r.l2NarisanihMax -le 0) -and ($r.l2Preklicev -eq 0)
+        $opis = 'brez L2'
+    } else {
+        $opis = 'L2 na slicico min/max {0}/{1}, izven dometa {2}, preklicev {3}, brez peke v oknu {4}, videzov {5}, napak {6}' -f $r.l2NarisanihMin, $r.l2NarisanihMax, $r.l2IzvenDometaMax, $r.l2Preklicev, $r.l2BrezPeke, $r.l2Videzov, $r.l2VidezNapak
+        $ok = $ok -and ($r.l2BrezPeke -eq 0) -and ($r.l2VidezNapak -eq 0) -and ($r.l2IzvenDometaMax -eq 0) -and ($r.farPoseg -eq 1) -and ($r.farIzrisRezerva -eq 0)
+        if ($Variant -eq 'idle' -or $Variant -eq 'skripte') {
+            $vL2 = 0
+            for ($vr = 0; $vr -lt [int]($N / $gridW); $vr++) {
+                for ($st = 0; $st -lt $gridW; $st++) {
+                    $dx = $gridX + $st + 0.5 - $camX; $dy = 4 - $camY; $dz = $gridZ + $vr + 0.5 - $camZ
+                    if (($dx * $dx + $dy * $dy + $dz * $dz) -gt ($prag * $prag)) { $vL2++ }
+                }
+            }
+            $tol = [math]::Max(2, [int][math]::Ceiling($N * 0.02))
+            $ok = $ok -and ($vL2 -gt 0) -and ([math]::Abs($r.l2NarisanihMin - $vL2) -le $tol) -and ([math]::Abs($r.l2NarisanihMax - $vL2) -le $tol)
+            $opis += (', pricakovano {0} od {1} (+-{2}, prag {3})' -f $vL2, $N, $tol, $prag)
+        }
+    }
+    Check ("K16: RwFarView {0} (zahtevano {1}), RwImpostorStart {2}, {3}" -f $r.rwFarView, $Far, $r.rwImpostorStart, $opis) $ok
+}
 if ($r -and $PreveriOci) {
     foreach ($ser in ("$($r.ociSerije)" -split ' \| ')) { Write-Host ("    oci {0}" -f $ser) }
     Check ("K13: oci bitno enake z RwEyesList 0 in 1 ({0} NPC; oci testnega sveta, vzorci, utrip po originalu; vse tudi v povecavi x8), druga barva oci spremeni {1} / {2} pikslov {3}" -f $r.ociNpc, $r.ociObcutljivost, $r.ociObcutljivostPovecava, $r.ociNapaka) ($r.ociPreverba -eq 1)
@@ -311,6 +356,9 @@ if ($r) {
         if ($Napisi -ge 0) { $odtis['rwLabelCache'] = $Napisi }
         if ($Oci -ge 0) { $odtis['rwEyesList'] = $Oci }
         if ($Lod -ge 0) { $odtis['rwLodStart'] = $Lod }
+        if ($Far -ge 0) { $odtis['rwFarView'] = $Far }
+        if ($ImpostorStart -ge 0) { $odtis['rwImpostorStart'] = $ImpostorStart }
+        if ($Dalec -ne 0) { $odtis['dalec'] = $Dalec }
         $vel = @{ 'frame.p50' = $r.frameMsP50; 'frame.p95' = $r.frameMsP95; 'frame.p99' = $r.frameMsP99; 'frame.max' = $r.frameMsMax;
                   'fps' = $r.fps; 'fps.low1' = $r.fpsLow1; 'fps.low01' = $r.fpsLow01; 'gc.stevilo' = $r.gcStevilo; 'gc.ms' = $r.gcMs;
                   'upodobljeno.min' = $r.upodobljenoMin; 'streznik.ms' = $r.integriraniStreznikMsPovp }

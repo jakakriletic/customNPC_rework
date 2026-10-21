@@ -21,9 +21,13 @@ import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -35,6 +39,7 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import noppes.npcs.CustomNpcs;
+import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.rework.core.RenderEntitiesPatch;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -60,6 +65,15 @@ import org.lwjgl.opengl.GL11;
  * {@code RenderGlobal.renderEntities} tik pred {@code "blockentities"}, v prehodu 0 - tam so megla, lightmap
  * in matrike kamere stanje entitet. Ce klica v tej slicici ni bilo (poseg ni uspel), se narise v
  * {@code RenderWorldLastEvent} z lastnim frustumom in rocno nastavljeno meglo (rezerva).
+ *
+ * <p><b>L2</b> (M5-V.6, {@code RwFarView=2}, D-048): sledeni NPC, ki ga vanilla ponudi v izris (prehod 0) in je
+ * dlje od {@code RwImpostorStart} ({@link ImpostorL2}, s histerezo), ima pecen videz in je stoj, viden, ziv,
+ * ne jaha in ni jahan, dobi preklican {@code RenderLivingEvent.Pre} (brez popravka rendererja CNPC; senca ostane
+ * vanilla) in gre kot impostor v isti {@link BufferBuilder}. Videz se izracuna na klientu iz prave entitete
+ * ({@link FarLook#describe} spawn NBT, isti opis kot na strezniku), najvec {@link #L2_HASHES_PER_FRAME} na
+ * slicico, znova po vsakem branju spawn podatkov ({@code rwLookVersion}). Dokler videz ni pecen, vanilla
+ * narise model. Sledeni NPC, ki ga vanilla zaradi dometa upodobitve ne ponudi ({@code isInRangeToRender3d},
+ * npr. NPC brez hitboxa onkraj ~38 blokov pri RD 8), se narise kot impostor do konca megle, ne glede na prag.
  */
 @SideOnly(Side.CLIENT)
 public final class FarRender {
@@ -103,6 +117,21 @@ public final class FarRender {
     /** Izrisi mrtvih entitet z nadomestkom, ki jih je {@link #onRenderLivingPre} preklical (siv). */
     public static long deadHidden;
 
+    /** M5-V.6: najvec izracunov videza L2 na slicico. */
+    public static final int L2_HASHES_PER_FRAME = 16;
+    /** Zadnja slicica L2: narisanih skupaj, od tega sledenih izven dometa upodobitve vanille. */
+    public static int lastL2;
+    public static int lastL2Range;
+    /** Zbirni L2 od {@link #resetStats}: min/max narisanih na slicico, max izven dometa, preklici, brez peke. */
+    public static int statL2Min = Integer.MAX_VALUE;
+    public static int statL2Max = -1;
+    public static int statL2RangeMax = -1;
+    public static long statL2Cancelled;
+    public static long statL2Unbaked;
+    /** Skupaj od zagona: izracunani videzi L2, napake izracuna. */
+    public static long l2Hashes;
+    public static long l2HashErrors;
+
     /** Harness: slicica brez izrisa (A/B pikslov). */
     public static boolean suppress;
     /** Harness: nadomestek, katerega pravokotnik na zaslonu se zapise ({@link #NO_PROBE} = noben). */
@@ -117,6 +146,12 @@ public final class FarRender {
 
     private static final Map<Integer, ImpostorAtlas.Entry> LOOKS = new HashMap<Integer, ImpostorAtlas.Entry>();
     private static final List<Object[]> HALF = new ArrayList<Object[]>();
+    /** L2: entitete s preklicanim vanilla izrisom v tej slicici. */
+    private static final List<EntityNPCInterface> L2 = new ArrayList<EntityNPCInterface>();
+    /** L2: {@code entityId -> {hash videza (0 = ni), rwLookVersion, v L2 (0/1)}} za trenutni svet. */
+    private static final Map<Integer, long[]> L2_STATE = new HashMap<Integer, long[]>();
+    private static WorldClient l2World;
+    private static int l2Budget;
     private static final float[] UV = new float[4];
     private static final FloatBuffer MODELVIEW = BufferUtils.createFloatBuffer(16);
     private static final FloatBuffer PROJECTION = BufferUtils.createFloatBuffer(16);
@@ -145,12 +180,26 @@ public final class FarRender {
         statNs = 0L;
         statNsMax = 0L;
         statFallback = 0L;
+        statL2Min = Integer.MAX_VALUE;
+        statL2Max = -1;
+        statL2RangeMax = -1;
+        statL2Cancelled = 0L;
+        statL2Unbaked = 0L;
     }
 
     @SubscribeEvent
     public void onRenderTick(TickEvent.RenderTickEvent ev) {
         if (ev.phase == TickEvent.Phase.START) {
             ++frameNo;
+            L2.clear();
+            l2Budget = L2_HASHES_PER_FRAME;
+            if ((frameNo & 1023) == 0 && l2World != null) {
+                for (java.util.Iterator<Integer> it = L2_STATE.keySet().iterator(); it.hasNext();) {
+                    if (l2World.getEntityByID(it.next()) == null) {
+                        it.remove();
+                    }
+                }
+            }
         }
     }
 
@@ -163,7 +212,7 @@ public final class FarRender {
             return;
         }
         hookFrame = frameNo;
-        if (CustomNpcs.RwFarView < 1 || FarClient.STORE.isEmpty() || view == null) {
+        if (!active() || view == null) {
             return;
         }
         ++hookFrames;
@@ -175,18 +224,109 @@ public final class FarRender {
      * v seznamih chunka pa ostane do naslednjega klientskega ticka in bi jo vanilla narisal se 1..n slicic hkrati z
      * impostorjem. Mrtva entiteta, ki ima nadomestek, se zato ne narise.
      */
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onRenderLivingPre(RenderLivingEvent.Pre<EntityLivingBase> ev) {
         EntityLivingBase e = ev.getEntity();
         if (e.isDead && CustomNpcs.RwFarView >= 1 && FarClient.STORE.containsKey(e.getEntityId())) {
             ++deadHidden;
             ev.setCanceled(true);
+            return;
+        }
+        // M5-V.6: samo izris sveta (prehod 0); GUI-ji in peka rišejo v prehodu -1 ali entiteto izven sveta.
+        if (CustomNpcs.RwFarView >= 2 && e instanceof EntityNPCInterface && MinecraftForgeClient.getRenderPass() == 0) {
+            Minecraft mc = Minecraft.getMinecraft();
+            Entity view = mc.getRenderViewEntity();
+            EntityNPCInterface npc = (EntityNPCInterface) e;
+            if (view != null && l2(mc, npc, npc.getDistanceSq(view), false) != null) {
+                ev.setCanceled(true);
+                L2.add(npc);
+                ++statL2Cancelled;
+            }
+        }
+    }
+
+    /** Ali je izris v tej slicici potreben (L3 nadomestki ali L2). */
+    private static boolean active() {
+        return CustomNpcs.RwFarView >= 2 || (CustomNpcs.RwFarView >= 1 && !FarClient.STORE.isEmpty());
+    }
+
+    /**
+     * L2: atlas videza, ce se ta NPC v tej slicici narise kot impostor, sicer {@code null} (vanilla model).
+     * {@code beyondRange}: vanilla ga zaradi dometa upodobitve ne narise, prag in histereza ne veljata.
+     */
+    private static ImpostorAtlas.Entry l2(Minecraft mc, EntityNPCInterface npc, double distSq, boolean beyondRange) {
+        WorldClient w = mc.world;
+        if (w == null || npc.world != w || w.getEntityByID(npc.getEntityId()) != npc) {
+            return null;
+        }
+        if (w != l2World) {
+            L2_STATE.clear();
+            l2World = w;
+        }
+        int id = npc.getEntityId();
+        long[] s = L2_STATE.get(id);
+        if (!beyondRange) {
+            boolean in = ImpostorL2.next(s != null && s[2] != 0L, distSq, ImpostorL2.start(CustomNpcs.RwImpostorStart));
+            if (s != null) {
+                s[2] = in ? 1L : 0L;
+            }
+            if (!in) {
+                return null;
+            }
+        }
+        if (npc.isKilled() || npc.display.getVisible() == 1 || npc.isInvisible() || npc.currentAnimation != 0
+                || npc.isRiding() || npc.isBeingRidden()) {
+            return null;
+        }
+        if (s == null || s[1] != npc.rwLookVersion) {
+            if (l2Budget <= 0) {
+                return null;
+            }
+            --l2Budget;
+            long hash = lookHash(npc);
+            if (s == null) {
+                s = new long[] {hash, npc.rwLookVersion, beyondRange ? 0L : 1L};
+                L2_STATE.put(id, s);
+            } else {
+                s[0] = hash;
+                s[1] = npc.rwLookVersion;
+            }
+        }
+        if (s[0] == 0L) {
+            return null;
+        }
+        ImpostorAtlas atlas = ImpostorBaker.current();
+        ImpostorAtlas.Entry ae = atlas == null ? null : atlas.get(s[0]);
+        if (ae == null) {
+            ++statL2Unbaked;
+            if (FarClient.DESCS.containsKey(s[0])) {
+                ImpostorBaker.want(s[0]);
+            } else {
+                // Opis je izpadel iz LRU pred peko: naslednjic znova.
+                s[1] = Long.MIN_VALUE;
+            }
+        }
+        return ae;
+    }
+
+    /** Videz prave entitete na klientu (isti opis kot streznikov {@code FarServer.fillLooks}); 0 ob napaki. */
+    private static long lookHash(EntityNPCInterface npc) {
+        try {
+            ResourceLocation key = EntityList.getKey(npc);
+            NBTTagCompound desc = FarLook.describe(key == null ? "" : key.toString(), npc.writeSpawnData());
+            long hash = FarLook.hash(desc);
+            FarClient.DESCS.put(hash, desc);
+            ++l2Hashes;
+            return hash;
+        } catch (RuntimeException ex) {
+            ++l2HashErrors;
+            return 0L;
         }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onRenderWorldLast(RenderWorldLastEvent ev) {
-        if (hookFrame == frameNo || CustomNpcs.RwFarView < 1 || FarClient.STORE.isEmpty()) {
+        if (hookFrame == frameNo || !active()) {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();
@@ -244,7 +384,8 @@ public final class FarRender {
         ImpostorAtlas atlas = ImpostorBaker.current();
         if (suppress || atlas == null) {
             unbaked = suppress ? 0 : FarClient.STORE.size();
-            finish(t0, 0, 0, 0, unbaked, 0, 0.0, fallback);
+            finish(t0, 0, 0, 0, unbaked, 0, 0.0, 0, 0, fallback);
+            L2.clear();
             return;
         }
         double cx = view.lastTickPosX + (view.posX - view.lastTickPosX) * pt;
@@ -300,15 +441,58 @@ public final class FarRender {
             }
             ++drawn;
             if ((e[5] & FarCodec.F_HALF_VISIBLE) != 0) {
-                HALF.add(new Object[] {ae, new double[] {dx, y0 - cy, y1 - cy, dz}, e});
+                HALF.add(new Object[] {ae, new double[] {dx, y0 - cy, y1 - cy, dz, FarInterp.yawOf(e[3]), light}});
                 continue;
             }
             if (!begun) {
                 b.begin(GL11.GL_QUADS, FORMAT);
                 begun = true;
             }
-            quad(b, atlas, ae, e, dx, y0 - cy, y1 - cy, dz, light, 255);
+            quad(b, atlas, ae, FarInterp.yawOf(e[3]), dx, y0 - cy, y1 - cy, dz, light, 255);
         }
+        // M5-V.6: L2 - sledeni NPC-ji s preklicanim vanilla izrisom (frustum je preveril vanilla) in tisti, ki jih
+        // vanilla zaradi dometa upodobitve ne ponudi (lasten frustum, do konca megle).
+        int l2 = 0;
+        int l2Range = 0;
+        if (CustomNpcs.RwFarView >= 2) {
+            for (EntityNPCInterface npc : L2) {
+                ImpostorAtlas.Entry ae = atlas.get(L2_STATE.get(npc.getEntityId())[0]);
+                if (ae != null) {
+                    begun = l2Quad(b, atlas, ae, npc, pt, cx, cy, cz, begun);
+                    ++l2;
+                }
+            }
+            double fogEnd = mc.gameSettings.renderDistanceChunks * 16.0;
+            for (Entity en : world.loadedEntityList) {
+                if (!(en instanceof EntityNPCInterface) || en.isInRangeToRender3d(cx, cy, cz)) {
+                    continue;
+                }
+                double ex = en.lastTickPosX + (en.posX - en.lastTickPosX) * pt - cx;
+                double ez = en.lastTickPosZ + (en.posZ - en.lastTickPosZ) * pt - cz;
+                if (ex * ex + ez * ez > fogEnd * fogEnd) {
+                    continue;
+                }
+                EntityNPCInterface npc = (EntityNPCInterface) en;
+                ImpostorAtlas.Entry ae = l2(mc, npc, 0.0, true);
+                if (ae == null) {
+                    continue;
+                }
+                double ey = en.lastTickPosY + (en.posY - en.lastTickPosY) * pt;
+                double hw = ae.width * 0.5;
+                double y0 = ey + ae.bottom;
+                double y1 = y0 + ae.height;
+                double x = ex + cx;
+                double z = ez + cz;
+                boolean in = frustum != null ? frustum.isBoxInFrustum(x - hw, y0, z - hw, x + hw, y1, z + hw)
+                        : camera.isBoundingBoxInFrustum(new AxisAlignedBB(x - hw, y0, z - hw, x + hw, y1, z + hw));
+                if (in) {
+                    begun = l2Quad(b, atlas, ae, npc, pt, cx, cy, cz, begun);
+                    ++l2;
+                    ++l2Range;
+                }
+            }
+        }
+        L2.clear();
         if (begun || !HALF.isEmpty()) {
             RenderHelper.disableStandardItemLighting();
             GlStateManager.enableTexture2D();
@@ -327,9 +511,7 @@ public final class FarRender {
                 b.begin(GL11.GL_QUADS, FORMAT);
                 for (Object[] h : HALF) {
                     double[] p = (double[]) h[1];
-                    int[] e = (int[]) h[2];
-                    quad(b, atlas, (ImpostorAtlas.Entry) h[0], e, p[0], p[1], p[2], p[3],
-                            e[FarInterp.E_LIGHT] < 0 ? FULL_SKY : e[FarInterp.E_LIGHT], HALF_ALPHA);
+                    quad(b, atlas, (ImpostorAtlas.Entry) h[0], (float) p[4], p[0], p[1], p[2], p[3], (int) p[5], HALF_ALPHA);
                 }
                 GlStateManager.enableBlend();
                 GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
@@ -344,7 +526,7 @@ public final class FarRender {
             RenderHelper.enableStandardItemLighting();
             GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
         }
-        finish(t0, drawn, live, culled, unbaked, HALF.size(), maxDist, fallback);
+        finish(t0, drawn, live, culled, unbaked, HALF.size(), maxDist, l2, l2Range, fallback);
         HALF.clear();
     }
 
@@ -361,11 +543,35 @@ public final class FarRender {
         return ae;
     }
 
+    /**
+     * L2: ploskev zive entitete (interpoliran polozaj in yaw telesa, svetloba kot vanilla
+     * {@code getBrightnessForRender}); pol-vidni gredo v {@link #HALF}. Vrne, ali je glavni medpomnilnik zacet.
+     */
+    private static boolean l2Quad(BufferBuilder b, ImpostorAtlas atlas, ImpostorAtlas.Entry ae, EntityNPCInterface npc,
+            float pt, double cx, double cy, double cz, boolean begun) {
+        double dx = npc.lastTickPosX + (npc.posX - npc.lastTickPosX) * pt - cx;
+        double y = npc.lastTickPosY + (npc.posY - npc.lastTickPosY) * pt - cy;
+        double dz = npc.lastTickPosZ + (npc.posZ - npc.lastTickPosZ) * pt - cz;
+        float yaw = npc.prevRenderYawOffset + MathHelper.wrapDegrees(npc.renderYawOffset - npc.prevRenderYawOffset) * pt;
+        int light = npc.getBrightnessForRender();
+        double y0 = y + ae.bottom;
+        double y1 = y0 + ae.height;
+        if (npc.display.getVisible() == 2) {
+            HALF.add(new Object[] {ae, new double[] {dx, y0, y1, dz, yaw, light}});
+            return begun;
+        }
+        if (!begun) {
+            b.begin(GL11.GL_QUADS, FORMAT);
+        }
+        quad(b, atlas, ae, yaw, dx, y0, y1, dz, light, 255);
+        return true;
+    }
+
     /** Ena ploskev: oglisca zgoraj levo, spodaj levo, spodaj desno, zgoraj desno (kot {@code ImpostorCheck}). */
-    private static void quad(BufferBuilder b, ImpostorAtlas atlas, ImpostorAtlas.Entry ae, int[] e,
+    private static void quad(BufferBuilder b, ImpostorAtlas atlas, ImpostorAtlas.Entry ae, float npcYaw,
             double dx, double y0, double y1, double dz, int light, int alpha) {
         float[] r = FarInterp.right(dx, dz);
-        int k = ImpostorFrames.frameFor(ImpostorFrames.yawOf(dx, dz), FarInterp.yawOf(e[3]));
+        int k = ImpostorFrames.frameFor(ImpostorFrames.yawOf(dx, dz), npcYaw);
         atlas.uvInto(ae, k, UV);
         double hw = ae.width * 0.5;
         double rx = r[0] * hw;
@@ -407,8 +613,14 @@ public final class FarRender {
         probeDist = Math.sqrt(dx * dx + dz * dz);
     }
 
-    private static void finish(long t0, int drawn, int live, int culled, int unbaked, int half, double maxDist, boolean fallback) {
+    private static void finish(long t0, int drawn, int live, int culled, int unbaked, int half, double maxDist,
+            int l2, int l2Range, boolean fallback) {
         lastDrawn = drawn;
+        lastL2 = l2;
+        lastL2Range = l2Range;
+        statL2Min = Math.min(statL2Min, l2);
+        statL2Max = Math.max(statL2Max, l2);
+        statL2RangeMax = Math.max(statL2RangeMax, l2Range);
         lastLive = live;
         lastCulled = culled;
         lastUnbaked = unbaked;
@@ -434,11 +646,13 @@ public final class FarRender {
         return String.format(java.util.Locale.ROOT,
                 "RWIMPOSTOR rwFarView=%d nadomestkov=%d atlas=%d videzov=%d peceno=%d napak=%d poseg=%d slicicPoseg=%d slicicRezerva=%d"
                         + " zadnja: narisanih=%d zivih=%d izvenFrustuma=%d brezPeke=%d polVidnih=%d najdlje=%.1f"
-                        + " izris: slicic=%d usPovp=%.1f usMax=%.1f",
+                        + " izris: slicic=%d usPovp=%.1f usMax=%.1f"
+                        + " L2: start=%d zadnja=%d izvenDometa=%d preklicev=%d brezPeke=%d videzov=%d napak=%d",
                 CustomNpcs.RwFarView, FarClient.size(), ImpostorBaker.current() == null ? 0 : ImpostorBaker.current().size,
                 ImpostorBaker.inAtlas(), ImpostorBaker.baked, ImpostorBaker.failures,
                 RenderEntitiesPatch.patched() ? 1 : 0, hookFrames, fallbackFrames,
                 lastDrawn, lastLive, lastCulled, lastUnbaked, lastHalf, lastMaxDist,
-                statFrames, statFrames == 0 ? 0.0 : statNs / 1000.0 / statFrames, statNsMax / 1000.0);
+                statFrames, statFrames == 0 ? 0.0 : statNs / 1000.0 / statFrames, statNsMax / 1000.0,
+                ImpostorL2.start(CustomNpcs.RwImpostorStart), lastL2, lastL2Range, statL2Cancelled, statL2Unbaked, l2Hashes, l2HashErrors);
     }
 }

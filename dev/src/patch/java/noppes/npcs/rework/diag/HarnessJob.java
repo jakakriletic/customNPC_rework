@@ -37,6 +37,8 @@ import java.util.Properties;
  * lodStart=-1                 M5-K K5: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwLodStart} (bloki, 0 = original); -1 = iz konfiguracije
  * farView=-1                 M5-V.2: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwFarView} (klient: 1 = HELLO na kanalu rwfar,
  *                             shramba nadomestkov); -1 = iz konfiguracije
+ * impostorStart=-1           M5-V.6: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwImpostorStart} (bloki, prag L2 pri
+ *                             farView=2); -1 = iz konfiguracije
  * impostorCheck=0             M5-V.4: 1 = po ogrevanju speci testne videze in primerjaj piksle impostor - model pri 56 blokih
  *                             ({@link ImpostorCheck}); potrebuje opis videza s kanala rwfar (farView=1)
  * farDrawCheck=0              M5-V.5: 1 = po ogrevanju A/B pikslov najbolj oddaljenega nadomestka v pravi slicici
@@ -92,6 +94,8 @@ public final class HarnessJob {
     public final int lodStart;
     /** M5-V.2: RwFarView za zagon (klient), -1 = iz konfiguracije. */
     public final int farView;
+    /** M5-V.6: RwImpostorStart za zagon (bloki), -1 = iz konfiguracije. */
+    public final int impostorStart;
     /** M5-V.4: primerjava pikslov impostor - model ({@link ImpostorCheck}). */
     public final boolean impostorCheck;
     /** M5-V.5: A/B pikslov izrisa L3 v pravi slicici ({@link FarDrawCheck}). */
@@ -145,6 +149,7 @@ public final class HarnessJob {
         this.eyesCheck = intValue(p, "eyesCheck", 0) != 0;
         this.lodStart = intValue(p, "lodStart", -1);
         this.farView = intValue(p, "farView", -1);
+        this.impostorStart = intValue(p, "impostorStart", -1);
         this.impostorCheck = intValue(p, "impostorCheck", 0) != 0;
         this.farDrawCheck = intValue(p, "farDrawCheck", 0) != 0;
         this.seamCheck = intValue(p, "seamCheck", 0) != 0;
@@ -174,8 +179,9 @@ public final class HarnessJob {
         }
         if (this.measureSeconds < 1 || this.warmupSeconds < 0 || this.settleSeconds < 0 || this.sampleMs < 0
                 || this.headwearSkip < -1 || this.headwearSkip > 1 || this.labelCache < -1 || this.labelCache > 1
-                || this.eyesList < -1 || this.eyesList > 1 || this.lodStart < -1 || this.lodStart > 512 || this.farView < -1 || this.farView > 2) {
-            throw new IllegalArgumentException("casi morajo biti nenegativni, measure >= 1, headwearSkip, labelCache in eyesList -1..1, lodStart -1..512, farView -1..2");
+                || this.eyesList < -1 || this.eyesList > 1 || this.lodStart < -1 || this.lodStart > 512 || this.farView < -1 || this.farView > 2
+                || this.impostorStart < -1 || this.impostorStart > 512) {
+            throw new IllegalArgumentException("casi morajo biti nenegativni, measure >= 1, headwearSkip, labelCache in eyesList -1..1, lodStart -1..512, farView -1..2, impostorStart -1..512");
         }
     }
 

@@ -214,6 +214,8 @@ task testOriginal(type: Test) {
     exclude '**/FarInterpTest.class'
     exclude '**/FarDrawCheckTest.class'
     exclude '**/RenderEntitiesPatchTest.class'
+    // M5-V.6: L2.
+    exclude '**/ImpostorL2Test.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

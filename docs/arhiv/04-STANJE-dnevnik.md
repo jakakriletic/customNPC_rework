@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 107 → 1)
+# Arhiv: dnevnik sej (vnosi 108 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,59 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-21 (108) — M5-V.4: peka impostorjev na klientu — zaključeno
+
+**Paket:** M5-V.4 · **Stanje:** **zaključeno** — vseh 5 zahtevanih testov zelenih na kodi `86da496c…`: `unit`, `build`,
+`package`, `v4-imp-24-64-5000`, `v4-imp-10-64-1000` (V0–V21 zeleni v obeh zagonih).
+
+**Narejeno (D-046):**
+- `ImpostorFrames` (čiste funkcije brez GL: postavitev traku 8 celic 40 × 72, obrez, ploskovno pomanjšanje v
+  ≤ 32 × 64, mipmapi z ohranjeno pokritostjo alfe, izbira okvirja po kotu), `ImpostorSlots` (LRU trakov),
+  `ImpostorAtlas` (tekstura GL, 4 stopnje mipmap, stran `RwImpostorAtlas`, privzeto 2048 = 168 videzov),
+  `ImpostorBaker` (vrsta, en videz na sličico, lažna entiteta, FBO 128 × 256, ortogonalno pod 8 koti, brez
+  lightmapa; odlog pri skinu igralca/URL; izklop brez FBO). `FarClient` videz postavi v vrsto peke ob `LOOK`
+  in ob vnosu z znanim, nepečenim videzom; ob izklopu `RwFarView` sprosti atlas.
+- `ImpostorCheck` (harness): primerjava pikslov impostor ↔ model pri 56 blokih (perspektiva z gostoto pikslov
+  zaslona 1080 p, FOV 70) za 8 videzov × 8 kotov in kontrola občutljivosti; merila določena pred meritvijo.
+- Harness: `impostorCheck=1`, polja `imp*` v JSON klienta; `v-run.ps1 -Impostor 1` z meriloma V20/V21
+  ([scenarij](../scenariji/M5-V.1-dalec.md#m5-v4-peka-impostorjev-v20v21--far-1--impostor-1)).
+- JUnit: `ImpostorFramesTest` (9), `ImpostorSlotsTest` (3), `HarnessJobTest` (+1); izključeni iz `testOriginal`.
+
+**Izid v svetu (ena ponovitev na celico, `-Far 1 -Impostor 1`, nočni upravljalnik):**
+
+| Celica | Pečenih / v atlasu / brez peke / napak | Peka povp. / max ms | rwfar µs/tick/igralca | Sličica p50 / p95 ms | B/s | MSPT p50 / p95 ms |
+|---|---|---|---|---|---|---|
+| vd 24, domet 64, 5.000 | 9 / 9 / **0** / 0 | 12,30 / 49,89 | 92,123 | 7,47 / 11,96 (FPS 125,0) | 915 | 57,672 / 71,303 |
+| vd 10, domet 64, 1.000 | 9 / 9 / **0** / 0 | 8,87 / 32,46 | 6,051 | 1,16 / 1,48 (FPS 827,1) | 172 | 1,147 / 1,573 |
+
+Primerjava pikslov (enaka v obeh zagonih; IoU in razlika združeno čez 8 kotov, prag IoU ≥ 0,70, razlika ≤ 32/255):
+
+| Videz | IoU (najslabši kot) | Razlika barve | Piksli model / impostor | Okvir |
+|---|---|---|---|---|
+| osnova (`PERF_Idle` iz kanala) | 0,884 (0,818) | 7,6 | 1656 / 1788 | 32 × 58 |
+| `elffemale.png` | 0,902 (0,848) | 14,8 | 1676 / 1820 | 32 × 58 |
+| `elfmage.png` | 0,912 (0,864) | 11,5 | 1702 / 1828 | 32 × 58 |
+| `elfqueenformal.png` | 0,906 (0,856) | 21,7 | 1676 / 1808 | 32 × 58 |
+| `elfsoldierhelmet.png` | 0,911 (0,856) | 22,0 | 1692 / 1820 | 32 × 58 |
+| `blood_elf_mage.png` | 0,902 (0,856) | 15,1 | 1672 / 1804 | 32 × 58 |
+| velikost 10 | 0,926 (0,789) | 4,2 | 6540 / 6828 | 32 × 57 |
+| velikost 2 | 0,894 (0,789) | 12,5 | 239 / 244 | 32 × 57 |
+
+- Občutljivost: enobarvni skin proti modelu osnove da razliko **95,5** (> 64), torej merilo razlike zazna napačno
+  teksturo. Impostor ima 2–9 % več pokritih pikslov kot model (robovi pomanjšanja in mipmapov), IoU ostane ≥ 0,88.
+- 9 pečenih = 1 videz iz kanala (vsi kloni) + 8 videzov preverbe; 0 odloženih, 0 obrezanih na robu, FBO na voljo.
+- Peka enega videza stane 9–12 ms povprečno, največ 50 ms (`glReadPixels`); proračun en videz na sličico omeji
+  zastoj na eno sličico na nov videz. Za M5-V.8: pri mnogo različnih videzih ob vstopu v svet je to zaporedje
+  počasnih sličic — kandidat za asinhrono branje (PBO).
+- Sličica/MSPT brez A/B (izrisa impostorjev še ni, M5-V.5); primerjava z originalom je M5-V.8.
+- Surovi izidi: git-ignored `audit/v-24-64-5000-imp-2026-10-21-131120*`, `audit/v-10-64-1000-imp-2026-10-21-131528*`.
+
+**Spremembe obnašanja moda:** nobene pri privzetih nastavitvah (`RwFarView=0`: peka se ne zgodi, atlas se ne
+ustvari). **Minecraft meritve:** 2 zagona `-Far 1 -Impostor 1`.
+
+**Naslednji korak:** **M5-V.5** (nadomestki in izris L3 iz atlasa). Neodvisno: čistilni korak K3, M4.14b/M4.16;
+Q30 odprt.
 
 ### 2026-10-21 (107) — M5-V.3: opis videza (`FarLook`, id videza, `REQ`/`LOOK`) — zaključeno
 

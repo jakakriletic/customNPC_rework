@@ -519,6 +519,9 @@ public final class ClientHarness {
             // M5-V.2: FarClient poslje HELLO v naslednjem ticku (nov svet z vklopljenim stikalom).
             CustomNpcs.RwFarView = this.job.farView;
         }
+        if (this.job.impostorStart >= 0) {
+            CustomNpcs.RwImpostorStart = this.job.impostorStart;
+        }
         mc.gameSettings.renderDistanceChunks = this.job.renderDistance;
         mc.gameSettings.enableVsync = false;
         mc.gameSettings.viewBobbing = false;
@@ -832,6 +835,15 @@ public final class ClientHarness {
         num(b, "farIzrisNajdlje", FarRender.statMaxDist);
         num(b, "farIzrisUsPovp", FarRender.statFrames == 0 ? -1.0 : FarRender.statNs / 1000.0 / FarRender.statFrames);
         num(b, "farIzrisUsMax", FarRender.statNsMax / 1000.0);
+        // M5-V.6: L2 v merilnem oknu (FarRender.resetStats ob zacetku merjenja).
+        num(b, "rwImpostorStart", CustomNpcs.RwImpostorStart);
+        num(b, "l2NarisanihMin", FarRender.statFrames == 0 ? -1 : FarRender.statL2Min);
+        num(b, "l2NarisanihMax", FarRender.statL2Max);
+        num(b, "l2IzvenDometaMax", FarRender.statL2RangeMax);
+        num(b, "l2Preklicev", FarRender.statL2Cancelled);
+        num(b, "l2BrezPeke", FarRender.statL2Unbaked);
+        num(b, "l2Videzov", FarRender.l2Hashes);
+        num(b, "l2VidezNapak", FarRender.l2HashErrors);
         FarDrawCheck fd = this.farDraw;
         num(b, "dalecPreverba", fd == null ? -1 : (fd.ok() ? 1 : 0));
         if (fd != null) {

@@ -46,6 +46,7 @@ Nastavitve: VSync izklopljen, `limitFramerate` 260 (neomejeno), brez view bobbin
 | K6 | VSync 0, limit ≥ 260, RD in FOV kot zahtevano |
 | K7 | vsaj 10 sličic/s in trajanje merjenja ±2 s |
 | K8 | med ogrevanjem in merjenjem ni tekel tuj java proces |
+| K16 | (s `-Far`, M5-V.6) L2 po geometriji prizorišča, brez nepečenih in napak — glej spodaj |
 
 ## Uporaba
 
@@ -59,6 +60,25 @@ Nastavitve: VSync izklopljen, `limitFramerate` 260 (neomejeno), brez view bobbin
 
 `-Vzorci <ms>` doda merilo **J3** (vsaj 100 vzorcev/s) in povzetek `<izhod>-skladi.md`
 (`dev/tools/skladi-povzetek.js`); `-Jfr` doda J1/J2. Oba stanejo čas sličice, zato nista baseline.
+
+### M5-V.6: L2 (`-Dalec 1 -Far 0|2 -ImpostorStart 56`, merilo K16)
+
+```
+.\ponovitve-run.ps1 -Scenarij klient -Ponovitev 3 -Dodatno @('-Variant','idle','-N','500','-Dalec','1','-RenderDistance','10','-Far','0')
+.\ponovitve-run.ps1 -Scenarij klient -Ponovitev 3 -Dodatno @('-Variant','idle','-N','500','-Dalec','1','-RenderDistance','10','-Far','2','-ImpostorStart','56')
+```
+
+- **Prizorišče `-Dalec 1`**: ista mreža kot idle, kamera 40 blokov nad tlemi (y 44), najbližja vrsta 36 blokov
+  vodoravno (pogled navzdol na množico, npr. z vzpetine na mesto). Vsi NPC-ji so znotraj sledilnika (Chebyshev
+  ≤ 60, sicer jih strežnik ne pošlje) in dometa upodobitve vanille (RD 10: 80 blokov, NPC z robom 1,0), zato K4
+  (upodobljenih ≥ N) velja tudi pri L2 — `countEntitiesRendered` šteje entiteto, preden `RenderLivingEvent.Pre`
+  prekliče izris. Razdalje 54,2–60,3 (200) in 54,2–69,5 (500) blokov; pri pragu 56 je v L2 **137 od 200** in
+  **437 od 500** NPC-jev.
+- **K16**: `RwFarView` kot zahtevano; z 0 nobenega L2 (0 preklicev); z 2 je število impostorjev L2 v vsaki
+  sličici (min in max) enako geometriji prizorišča (getDistanceSq od nog NPC-ja do igralca, kot `FarRender`)
+  ±2 %, v merilnem oknu 0 NPC-jev brez pečenega videza, 0 napak izračuna videza, 0 izven dometa upodobitve,
+  poseg coremoda uspel in 0 sličic prek rezerve.
+- A/B (D-016): 3 + 3 ponovitve na N, primerjava p50/p95/p99 in FPS; izid v `docs/meritve/`.
 
 ## Omejitve (znane)
 

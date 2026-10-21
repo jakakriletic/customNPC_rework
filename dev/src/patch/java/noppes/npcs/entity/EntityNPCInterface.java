@@ -295,6 +295,8 @@ IAnimals {
     private int rwHitboxMode;
     /** M3.8b: na klientu shranjeni nacin iz spawn podatkov (za GUI Display); na serverju se ne rabi. */
     private int rwHitboxStored;
+    /** M5-V.6: na klientu se poveca ob vsakem branju spawn podatkov (spawn, UPDATE_NPC); impostor L2 ob spremembi znova izracuna videz. */
+    public int rwLookVersion;
     public final BossInfoServer bossInfo = new BossInfoServer(this.getDisplayName(), BossInfo.Color.PURPLE, BossInfo.Overlay.PROGRESS);
     public double field_20066_r;
     public double field_20065_s;
@@ -1677,6 +1679,7 @@ IAnimals {
 
     public void readSpawnData(NBTTagCompound compound) {
         NBTTagCompound puppet;
+        ++this.rwLookVersion;
         this.rwHitboxMode = HitboxWeights.sanitize(compound.getInteger("RwHitboxMode"));
         this.rwHitboxStored = HitboxGui.readStored(compound);
         this.stats.setMaxHealth(compound.getInteger("MaxHealth"));

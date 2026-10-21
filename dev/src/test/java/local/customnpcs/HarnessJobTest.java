@@ -100,6 +100,14 @@ public class HarnessJobTest {
     }
 
     @Test
+    public void impostorStartPrivzetoIzKonfiguracije() {
+        assertEquals("M5-V.6: brez kljuca prag L2 iz konfiguracije", -1, HarnessJob.parse(base()).impostorStart);
+        Properties p = base();
+        p.setProperty("impostorStart", "56");
+        assertEquals(56, HarnessJob.parse(p).impostorStart);
+    }
+
+    @Test
     public void impostorCheckPrivzetoIzklopljen() {
         assertEquals("M5-V.4: brez kljuca ni primerjave impostor - model", false, HarnessJob.parse(base()).impostorCheck);
         Properties p = base();
@@ -141,6 +149,8 @@ public class HarnessJobTest {
             {"lodStart", "513"},
             {"farView", "3"},
             {"farView", "-2"},
+            {"impostorStart", "-2"},
+            {"impostorStart", "513"},
             {"connect", ":25565"},
             {"connect", "localhost:0"},
             {"connect", "localhost:x"},
