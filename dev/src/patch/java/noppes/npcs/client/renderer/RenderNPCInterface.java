@@ -46,6 +46,7 @@ import noppes.npcs.entity.EntityCustomNpc;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.rework.render.LabelCache;
+import noppes.npcs.rework.render.Lod;
 import org.lwjgl.opengl.GL11;
 
 public class RenderNPCInterface<T extends EntityNPCInterface>
@@ -61,7 +62,8 @@ extends RenderLiving<T> {
             return;
         }
         double d0 = npc.getDistanceSq(this.renderManager.renderViewEntity);
-        if (d0 > 512.0) {
+        // M5-K K5: na stopnji L1 (dlje od RwLodStart) brez imena in oblackov, kot onkraj 22,6 bloka.
+        if (d0 > 512.0 || Lod.far(d0, CustomNpcs.RwLodStart)) {
             return;
         }
         if (((EntityNPCInterface)((Object)npc)).messages != null) {

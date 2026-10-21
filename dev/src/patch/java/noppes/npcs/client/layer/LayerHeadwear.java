@@ -18,11 +18,13 @@ import noppes.npcs.client.layer.LayerPreRender;
 import noppes.npcs.client.model.part.head.ModelHeadwear;
 import noppes.npcs.entity.EntityCustomNpc;
 import noppes.npcs.rework.render.HeadwearSkip;
+import noppes.npcs.rework.render.Lod;
 
 public class LayerHeadwear
 extends LayerInterface
 implements LayerPreRender {
     private ModelHeadwear headwear;
+    private boolean rwFar;
 
     public LayerHeadwear(RenderLiving render) {
         super(render);
@@ -31,7 +33,8 @@ implements LayerPreRender {
 
     @Override
     public void render(float par2, float par3, float par4, float par5, float par6, float par7) {
-        if (CustomNpcs.HeadWearType != 1) {
+        // M5-K K5: na stopnji L1 je pokrivalo plosko v modelu (preRender).
+        if (CustomNpcs.HeadWearType != 1 || this.rwFar) {
             return;
         }
         if (this.npc.hurtTime <= 0 && this.npc.deathTime <= 0) {
@@ -55,7 +58,9 @@ implements LayerPreRender {
 
     @Override
     public void preRender(EntityCustomNpc player) {
-        this.model.bipedHeadwear.isHidden = CustomNpcs.HeadWearType == 1;
+        // M5-K K5: dlje od RwLodStart plosko pokrivalo modela (videz HeadWearType=0) namesto 3D.
+        this.rwFar = Lod.farCounted(player);
+        this.model.bipedHeadwear.isHidden = CustomNpcs.HeadWearType == 1 && !this.rwFar;
         this.headwear.config = null;
     }
 }

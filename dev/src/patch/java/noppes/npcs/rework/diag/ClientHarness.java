@@ -28,6 +28,7 @@ import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.rework.render.HeadwearSkip;
 import noppes.npcs.rework.render.EyesList;
+import noppes.npcs.rework.render.Lod;
 import noppes.npcs.rework.render.LabelCache;
 
 /**
@@ -294,6 +295,9 @@ public final class ClientHarness {
         if (this.job.eyesList >= 0) {
             CustomNpcs.RwEyesList = this.job.eyesList;
         }
+        if (this.job.lodStart >= 0) {
+            CustomNpcs.RwLodStart = this.job.lodStart;
+        }
         mc.gameSettings.renderDistanceChunks = this.job.renderDistance;
         mc.gameSettings.enableVsync = false;
         mc.gameSettings.viewBobbing = false;
@@ -473,6 +477,9 @@ public final class ClientHarness {
         num(b, "ociZListom", EyesList.drawsList);
         num(b, "ociOriginal", EyesList.drawsOriginal);
         num(b, "ociPrevodov", EyesList.compiles);
+        num(b, "rwLodStart", CustomNpcs.RwLodStart);
+        num(b, "lodDalec", Lod.farDraws);
+        num(b, "lodBlizu", Lod.nearDraws);
         EyesCheck ec = this.eyesCheck;
         num(b, "ociPreverba", ec == null ? -1 : (ec.ok() ? 1 : 0));
         if (ec != null) {

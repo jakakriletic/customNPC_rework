@@ -82,6 +82,16 @@ public class HarnessJobTest {
     }
 
     @Test
+    public void lodStartIzKonfiguracijeAliZahtevan() {
+        assertEquals("M5-K K5: brez kljuca RwLodStart iz konfiguracije", -1, HarnessJob.parse(base()).lodStart);
+        Properties p = base();
+        p.setProperty("lodStart", "32");
+        assertEquals(32, HarnessJob.parse(p).lodStart);
+        p.setProperty("lodStart", "0");
+        assertEquals(0, HarnessJob.parse(p).lodStart);
+    }
+
+    @Test
     public void createSeedMatchesDedicatedServer() {
         Properties p = base();
         assertEquals(null, HarnessJob.parse(p).createSeed);
@@ -100,6 +110,8 @@ public class HarnessJobTest {
             {"renderDistance", "40"},
             {"measure", "0"},
             {"warmup", "-1"},
+            {"lodStart", "-2"},
+            {"lodStart", "513"},
         };
         for (String[] kv : bad) {
             Properties p = base();

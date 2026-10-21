@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 99 → 1)
+# Arhiv: dnevnik sej (vnosi 100 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,41 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-20 (100) — OPS.2: frontend in neprekinjeno avtonomno delo
+
+**Paket:** OPS.2 (razvojno orodje) · **Stanje:** implementirano, 40/40 krmilnih testov in
+brskalniška preverba uspešni; kratka prava Codex in Claude 1 poziva uspešna. Minecraft K3 še neizmerjen.
+
+**Narejeno:**
+- Lokalni frontend **Nočna izmena**: `ODPRI-UPRAVLJALNIK.bat` / `ZAZENI-NOCNI.bat`,
+  Start do prekinitve, pavza/nadaljevanje, takojšnji Stop z lastnim procesnim drevesom,
+  računi/prijava/status, trajna vrsta, shranjene odločitve in izpisi. Zaprtje strani ne ustavi
+  dela. Strežnik samo na 127.0.0.1; mutacije zahtevajo lokalni Origin in sejni žeton.
+- Po koncu paketa naslednji izvedljivi korak iz projektnega plana. Brez osemurne/fiksne
+  iteracijske meje v načinu continuous; če ni izvedljivega dela, čaka do 1 h ali novega cilja.
+  Kvota menja native profil; ko ni prijave, čaka. Login dogodki delujejo tudi med tekom.
+- Uporabnik izrecno pooblastil samostojno odločanje tudi pri odprtih Q. Navodilo v vsakem
+  pozivu, AGENTS in protokolu; vprašanje/izbrani odgovor/razlog v UI in ODLOCITVE.md.
+  Full native CLI dostopi brez potrditev samo za ta proces, brez globalnih/UAC sprememb.
+  Dejanski manjkajoči podatki/prijave ostanejo omejitve, sprejemnih meril ni dovoljeno obiti.
+- AI sme pripraviti/registrirati nove scenarije za controller, ne zamenjati obveznih ID-jev.
+  Nove skripte vključene v SHA-256. Raziskovalni zaključek zahteva obstoječe dokumente in
+  nespremenjene merilne vhode brez odprtih obveznih testov. Motnje meritev čakajo in ponovijo
+  isto celico. Prekinjena celica se ne šteje za uspeh, prejšnje ostanejo shranjene.
+
+**Preverjanje:** 40/40 testov (prejšnjih 29 + 11 avtonomija/API/preklic), tudi resničen
+proces s podprocesom in nepovezan proces, ki ostane živ; HTTP start/pause/resume/stop/restart,
+Host/Origin/žeton, dokazila, registracija scenarijev in profile dogodki. Brskalniško potrjeni
+Start, pavza, Stop in dodajanje cilja na ločenem sintetičnem projektu. Prava Codex in Claude 1
+poziva z novo shemo/dovoljenji prek naročniških prijav uspešna, brez orodij/sprememb repoja.
+Claude 2 po loginu in pravi Minecraft cikel ostajata integracijska preverba.
+
+**Naslednji korak:** odpreti frontend, native login Claude 2 v drugi račun (Claude 1 in Codex potrjena),
+nato Start ob prostem odklenjenem PC. Prva naloga ostaja pripravljeni A/B K3, nato K5 in M5-V
+po aktualnem planu. Navodila: [overnight/README.md](../../overnight/README.md).
+
+**Spremembe obnašanja moda:** nobene. **Minecraft meritve:** nobene.
 
 ### 2026-10-20 (99) — OPS.1: nočni upravljalnik testov in AI iteracij
 

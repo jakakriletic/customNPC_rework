@@ -24,6 +24,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.client.layer.LayerInterface;
 import noppes.npcs.rework.render.EyesList;
+import noppes.npcs.rework.render.Lod;
 
 public class LayerEyes
 extends LayerInterface {
@@ -35,7 +36,8 @@ extends LayerInterface {
 
     @Override
     public void render(float par2, float par3, float par4, float par5, float par6, float par7) {
-        if (!this.playerdata.eyes.isEnabled()) {
+        // M5-K K5: na stopnji L1 (dlje od RwLodStart) brez oci.
+        if (!this.playerdata.eyes.isEnabled() || Lod.far(this.npc)) {
             return;
         }
         GlStateManager.pushMatrix();

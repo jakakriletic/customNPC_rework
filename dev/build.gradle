@@ -165,6 +165,7 @@ task testOriginal(type: Test) {
     exclude '**/HeadwearSkipTest.class'
     exclude '**/LabelCacheTest.class'
     exclude '**/EyesListTest.class'
+    exclude '**/LodTest.class'
     exclude '**/DiagSnapshotTest.class'
     exclude '**/DiagChunkPlanTest.class'
     // M4.14: formacije so nov paket, v originalu ga ni.
