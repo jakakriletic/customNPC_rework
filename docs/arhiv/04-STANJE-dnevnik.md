@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 98 → 1)
+# Arhiv: dnevnik sej (vnosi 99 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,39 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-20 (99) — OPS.1: nočni upravljalnik testov in AI iteracij
+
+**Paket:** OPS.1 (lokalno razvojno orodje) · **Stanje:** implementirano in krmiljenje preverjeno;
+**pravi Minecraft/AI cikel še nepreverjen**, Claude native prijavi čakata uporabnika.
+
+**Narejeno:**
+- `nocni-run.ps1`, `ZAZENI-NOCNI.bat` in `overnight/`: trajna vrsta, ločeni delovni procesi,
+  nadaljevanje zaključene celice po prekinitvi upravljalnika, strukturirane AI odločitve,
+  Codex/Claude native CLI, predaja rezultatov med profili in čakanje na kvoto. Ni API ključev
+  ali branja/kopiranja prijavnih žetonov. Native prijava se preveri pred AI klicem.
+- Začetna lokalna vrsta vsebuje samo že pripravljeni K3 (unit/build/package + idle-200/500,
+  oči 0/1, po 3 ponovitve). AI ne more odstraniti obveznih testov ali zaključiti s starimi
+  rezultati. SHA-256 vhodov prepreči mešanje različnih verzij. K3 ni označen kot opravljen.
+- Pred klientom: aktivno lokalno namizje, 120 s brez vnosa, brez drugih Java procesov in
+  CPU ≤ 20 %. Vnos med serijo pomeni neveljavno meritev. Globalni Windows mutex prepreči dva
+  upravljalnika; procesna zahteva zadrži spanje brez trajne spremembe power nastavitev.
+- Navodila in meje: [`overnight/README.md`](../../overnight/README.md). Lokalne poti/stanje/native
+  profili so git-ignored. Ponovljiv urnik ni nameščen; uporabnik ročno zažene 8-urno okno.
+
+**Preverjanje:** **29/29** Node testov: parserji ponudnikov, kvote/failover/reset, nespremenljivi
+obvezni testi, meje iteracij/ponovitev, izhodni kode/timeout, Windows mutex, literalni PowerShell
+argumenti (presledki, šumniki, `$()`) in resnični ločeni sintetični proces po izhodu upravljalnika.
+`init`, `doctor`, suhi zagon ter Node/PowerShell sintaksa uspešni. Pravi Minecraft, Gradle build
+in modeli pri tej postavitvi niso bili zagnani. Codex ChatGPT auth potrjen; Claude Code 2.1.282
+najden v VS Code, `auth status` vrne brez prijave.
+
+**Naslednji korak:** uporabnik izvede `login claude-1` in `login claude-2`, nato prvi pravi
+`run --hours 8` (ali `--test-only`) med odsotnostjo. Preveriti nočni desktop/zaklep in prvo
+pravo integracijo. Prihodnji K5/M5-V scenariji še niso v katalogu; manjkajoča merila vrnejo
+blokado za pregled. Nadaljnji vrstni red M5 in odprta Q so nespremenjeni.
+
+**Spremembe obnašanja moda:** nobene. **Minecraft meritve:** nobene.
 
 ### 2026-10-20 (98) — M4.0: raziskava izvedbe M4 (gibanje in letenje)
 
