@@ -22,12 +22,19 @@
         .\v-run.ps1 -Vd 24 -Domet 64 -N 1000
         .\ponovitve-run.ps1 -Scenarij dalec -Dodatno @('-Vd','24','-Domet','368','-N','5000')
 
-    Merila V0-V15 so na koncu; izhodna koda 0 samo, ce so vsa zelena.
+    M5-V.2: -Far 1 (samo z -Domet 64) vklopi kanal rwfar: klient z RwFarView=1 poslje HELLO, streznik po
+    postavitvi prizorisca dobi 'rwfar 1' in 'rwfar domet 384', v merilnem oknu se stevci rwfar ponastavijo.
+    Merila V16-V18: register NPC-jev = loadedEntityList, nadomestkov v klientu toliko, kot je NPC-jev v pasu
+    (Chebyshev (56, min(384, (vd - 1) * 16)], v gledanih chunkih), cas kode rwfar <= 100 us na tick na igralca.
+
+    Merila V0-V15 (in V16-V18 z -Far 1) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
 #>
 param(
     [ValidateSet(10, 24)][int]$Vd = 24,
     [ValidateSet(64, 368)][int]$Domet = 64,
     [ValidateSet(1000, 5000)][int]$N = 1000,
+    # M5-V.2: 1 = nadomestki oddaljenih NPC-jev (kanal rwfar); 0 = original (M5-V.1).
+    [ValidateSet(0, 1)][int]$Far = 0,
     [int]$Warmup = 30,
     [int]$Measure = 60,
     [int]$Fov = 70,
@@ -98,11 +105,29 @@ $nal24 = Get-Nalozenih 24
 $nalVd = Get-Nalozenih $Vd
 $daljnji = 0.0; $najblizji = 1e9
 foreach ($p in $npcPos) { $d = [math]::Sqrt([math]::Pow($p[0] - $camX, 2) + [math]::Pow($p[1] - $camZ, 2)); $daljnji = [math]::Max($daljnji, $d); $najblizji = [math]::Min($najblizji, $d) }
+if ($Far -eq 1 -and $Domet -ne 64) { throw '-Far 1 je mogoc samo z -Domet 64 (pas rwfar se zacne pri sledilniku).' }
+# M5-V.2: pas rwfar (FarBand): (min(64, meja) - 8, min(RwFarRange 384, zeleni domet klienta RD * 16, meja)], meja = (vd - 1) * 16,
+# samo NPC-ji v chunkih, ki jih igralec gleda (kvadrat vd chunkov). NPC tocno na meji je lahko v ali izven, zato +-1 blok.
+$farMeja = ($Vd - 1) * 16
+$farNotr = [math]::Min(64, $farMeja) - 8
+$farZun = [math]::Min([math]::Min(384, $Vd * 16), $farMeja)
+function Get-Pas([double]$Lo, [double]$Hi) {
+    $pcx = [math]::Floor($camX / 16); $pcz = [math]::Floor($camZ / 16); $n = 0
+    foreach ($p in $npcPos) {
+        $c = [math]::Max([math]::Abs($p[0] - $camX), [math]::Abs($p[1] - $camZ))
+        $vChunku = ([math]::Abs([math]::Floor($p[0] / 16) - $pcx) -le $Vd) -and ([math]::Abs([math]::Floor($p[1] / 16) - $pcz) -le $Vd)
+        if ($vChunku -and $c -gt $Lo -and $c -le $Hi) { $n++ }
+    }
+    return $n
+}
+$pasMin = Get-Pas ($farNotr + 1) ($farZun - 1)
+$pasMax = Get-Pas ($farNotr - 1) ($farZun + 1)
 $renderWeight = if ($Domet -gt 64) { 6.0 } else { 0.0 }
 $pricWeight = if ($renderWeight -gt 0) { $renderWeight } else { [math]::Min(2.5, [math]::Max(1.0, $Vd / 8.0)) }
 
 Step 1 'Parametri in priprava'
 Write-Host ("  celica: vd {0}, domet {1} (sledilnik {2}), N {3} v {4} gruckah, NPC od {5:N1} do {6:N1} blokov" -f $Vd, $Domet, $Rsl, $N, $gruc, $najblizji, $daljnji)
+if ($Far -eq 1) { Write-Host ("  rwfar: pas ({0}, {1}], pricakovanih nadomestkov {2}..{3}" -f $farNotr, $farZun, $pasMin, $pasMax) }
 Write-Host ("  pricakovano: nalozenih pri 24 {0}, pri {1} {2}; v klientu (sledenih) {3}..{4}" -f $nal24, $Vd, $nalVd, $slMin, $slMax)
 Check ("V0a: vsi NPC-ji prizorisca so znotraj 24 chunkov ({0} od {1})" -f $nal24, $N) ($nal24 -eq $N)
 $zaklep = Enter-ScenarijZaklep -Pot (Join-Path $root '.scenarij.lock') -Kdo 'v-run'
@@ -126,7 +151,7 @@ Check ("server.properties: online-mode=false (dev klient nima prijave), vrata {0
 if (-not $offline) { throw 'online-mode mora biti false.' }
 
 $stamp = Get-Date -Format 'yyyy-MM-dd-HHmmss'
-$tag = "v-$Vd-$Domet-$N-$stamp"
+$tag = if ($Far -eq 1) { "v-$Vd-$Domet-$N-far-$stamp" } else { "v-$Vd-$Domet-$N-$stamp" }
 $svet = 'rwv-dalec'
 $svetDir = Join-Path $run $svet
 # Svez svet vsak zagon (D-016). Mapa je nasa (predpona rwv-), ustvari jo samo ta skripta.
@@ -195,6 +220,8 @@ $chunki24 = -1
 $npc24 = -1
 $npcVd = -1
 $cakanjeChunkov = -1.0
+$farVklop = ''
+$farKonec = ''
 try {
     Step 2 'Zagon streznika'
     $psi = New-Object System.Diagnostics.ProcessStartInfo
@@ -242,6 +269,7 @@ try {
              [string]::Format($inv, 'cam={0},{1},{2},{3},{4}', $camX, $camY, $camZ, $yaw, $pitch),
              "renderDistance=$Vd", "fov=$Fov", 'hideGui=0', [string]::Format($inv, 'renderWeight={0}', $renderWeight),
              'settle=5', "warmup=$Warmup", "measure=$Measure", ('out=' + ($out -replace '\\', '/')))
+    if ($Far -eq 1) { $job += 'farView=1' }
     [System.IO.File]::WriteAllLines($jobPath, $job, (New-Object System.Text.UTF8Encoding($false)))
     & (Join-Path $root 'prepare-assets.ps1') | ForEach-Object { Write-Host "    $_" }
     $psc = New-Object System.Diagnostics.ProcessStartInfo
@@ -297,6 +325,11 @@ try {
     Check ("V5: nalozenih NPC-jev pri razdalji {0}: {1} (pricakovano iz chunkov {2}); {3}" -f $Vd, $npcVd, $nalVd, $vdOdg) (($npcVd -eq $nalVd) -and ((Get-Polje $vdOdg 'vd') -eq $Vd) -and ((Get-Polje $vdOdg 'sledilnikMeja') -eq (($Vd - 1) * 16)))
     $spawnNbt = Send-Query $srv 'rwdiag spawnnbt' 'RWDIAG-SPAWNNBT'
     Check ("V6: velikost spawn NBT nalozenih NPC-jev ({0})" -f $spawnNbt) ((Get-Polje $spawnNbt 'n') -eq $nalVd)
+    if ($Far -eq 1) {
+        [void](Send-Query $srv 'rwfar domet 384' 'RWFAR nacin=')
+        $farVklop = Send-Query $srv 'rwfar 1' 'RWFAR nacin='
+        Check ("V16a: rwfar vklopljen, klient je poslal HELLO ({0})" -f $farVklop) (((Get-Polje $farVklop 'nacin') -eq 1) -and ((Get-Polje $farVklop 'domet') -eq 384) -and ((Get-Polje $farVklop 'igralcev') -eq 1))
+    }
     Send-Command $srv 'say RWHARNESS-SCENA'
 
     Step 5 'Merjenje'
@@ -312,6 +345,7 @@ try {
         }
         if (-not $rwOn -and "$kt" -match 'RWHARNESS-FAZA MEASURE') {
             Send-Command $srv 'rwdiag on'
+            if ($Far -eq 1) { Send-Command $srv 'rwfar reset' }
             $rwOn = $true
         }
         if ($rwOn -and -not $rwDump -and "$kt" -match 'RWHARNESS-FAZA DONE') {
@@ -325,6 +359,9 @@ try {
                 $dumpJson = $p -replace '\.txt$', '.json'
             }
             $vdKonec = Send-Query $srv 'rwdiag vd' 'RWDIAG-VD'
+            if ($Far -eq 1) { $farKonec = Send-Query $srv 'rwfar' 'RWFAR nacin=' }
+            # M5-V.2: klient po DONE caka povezan (stevci na igralca so brani, ko je se prijavljen).
+            Send-Command $srv 'say RWHARNESS-IZHOD'
         }
         if ("$kt" -match 'RWHARNESS-NAPAKA') {
             # Harness po napaki zapise JSON in se ugasne sam; pocakamo ga.
@@ -365,6 +402,21 @@ if ($r) {
 }
 Check ("V14: streznik je zapisal posnetek merilnega okna ({0}, tickov {1})" -f $dumpJson, $(if ($tick) { $tick.count } else { 0 })) (($null -ne $tick) -and ($tick.count -ge 15 * ($Measure - 4)))
 Check ("V15: med ogrevanjem in merjenjem ni tekel tuj gradle build ali Minecraft" + $(if ($tujiMed.Count) { ' - ' + (@($tujiMed.Keys) -join '; ') } else { '' })) ($tujiMed.Count -eq 0 -or $DovoliTuje)
+$farUs = -1.0
+$farBs = -1.0
+if ($Far -eq 1) {
+    $mu = [regex]::Match($farKonec, 'usNaTickNaIgralca=([0-9.]+)')
+    if ($mu.Success) { $farUs = [double]::Parse($mu.Groups[1].Value, $inv) }
+    $mp = [regex]::Match($farKonec, 'poIgralcih=[^:;\s]+:(\d+):(\d+)')
+    $farPas = if ($mp.Success) { [int]$mp.Groups[1].Value } else { -1 }
+    $farZnanih = if ($mp.Success) { [int]$mp.Groups[2].Value } else { -1 }
+    Check ("V16: register NPC-jev rwfar = loadedEntityList ({0} / {1}); {2}" -f (Get-Polje $farKonec 'registra'), (Get-Polje $farKonec 'npcVSvetu'), $farKonec) (($farKonec -ne '') -and ((Get-Polje $farKonec 'registra') -eq (Get-Polje $farKonec 'npcVSvetu')) -and ((Get-Polje $farKonec 'npcVSvetu') -eq $npcVd))
+    if ($r) {
+        $farBs = if ($r.sekundMerjenja -gt 0) { $r.farBajtovMeritev / $r.sekundMerjenja } else { -1.0 }
+        Check ("V17: nadomestkov v klientu ob zacetku / koncu merjenja {0} / {1}, streznik pas {2} / znanih {3} (pricakovano {4}..{5}); HELLO {6}" -f $r.farVKlientuZacetek, $r.farVKlientu, $farPas, $farZnanih, $pasMin, $pasMax, $r.farHello) (($r.farVKlientuZacetek -ge $pasMin) -and ($r.farVKlientuZacetek -le $pasMax) -and ($r.farVKlientu -ge $pasMin) -and ($r.farVKlientu -le $pasMax) -and ($farPas -eq $r.farVKlientu) -and ($farZnanih -eq $r.farVKlientu) -and ($r.farHello -ge 1))
+    }
+    Check ("V18: cas kode rwfar {0} us na tick na igralca (cilj <= 100 = 0,1 ms, D-043); rwfar {1:N1} B/s v merjenju" -f $farUs, $farBs) (($farUs -ge 0) -and ($farUs -le 100.0))
+}
 if ($vdKonec -ne '') { Write-Host ("  ob koncu: {0}" -f $vdKonec) }
 
 if ($r) {
@@ -381,12 +433,14 @@ if ($r) {
                   'fps' = $r.fps; 'fps.low1' = $r.fpsLow1; 'klient.tick.p50' = $r.klientTickMsP50; 'klient.tick.p95' = $r.klientTickMsP95;
                   'bajti.s' = $r.bajtovNaS; 'bajti.pred' = $r.bajtovPredMeritvijo; 'npc.klient' = $r.npcVKlientu; 'upodobljeno.min' = $r.upodobljenoMin;
                   'gc.ms' = $r.gcMs; 'spawnnbt.p50' = (Get-Polje $spawnNbt 'p50'); 'spawnnbt.max' = (Get-Polje $spawnNbt 'max'); 'npc.streznik' = $npcVd }
+        if ($Far -eq 1) { $odtis['far'] = 1; $odtis['pasMin'] = $pasMin; $odtis['pasMax'] = $pasMax }
+        if ($Far -eq 1) { $vel['far.klient'] = $r.farVKlientu; $vel['far.us.tick'] = $farUs; $vel['far.bajti.s'] = $farBs; $vel['far.bajtov'] = $r.farBajtov }
         if ($tick) { $vel['mspt.p50'] = & $msP $tick.p50; $vel['mspt.p95'] = & $msP $tick.p95; $vel['mspt.p99'] = & $msP $tick.p99; $vel['mspt.povp'] = & $msP ($tick.sum / [math]::Max(1, $tick.count)) }
-        $null = Write-MeritevJson -Path $JsonPath -Paket 'M5-V.1' -Scenarij ("dalec vd{0}-d{1}-{2}" -f $Vd, $Domet, $N) -Odtis $odtis -Velicine $vel -Uspeh ($failures.Count -eq 0) -Padle $failures
+        $null = Write-MeritevJson -Path $JsonPath -Paket $(if ($Far -eq 1) { 'M5-V.2' } else { 'M5-V.1' }) -Scenarij ("dalec vd{0}-d{1}-{2}{3}" -f $Vd, $Domet, $N, $(if ($Far -eq 1) { '-far' } else { '' })) -Odtis $odtis -Velicine $vel -Uspeh ($failures.Count -eq 0) -Padle $failures
     }
 }
 $zaklep.Close()
 Write-Host ''
 if ($failures.Count -gt 0) { Write-Host ("M5-V.1 PADLO: {0} meril" -f $failures.Count); exit 1 }
-Write-Host 'M5-V.1 V0-V15 USPESNO.'
+Write-Host $(if ($Far -eq 1) { 'M5-V.2 V0-V18 USPESNO.' } else { 'M5-V.1 V0-V15 USPESNO.' })
 exit 0

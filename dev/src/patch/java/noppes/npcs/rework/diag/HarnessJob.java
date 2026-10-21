@@ -35,6 +35,8 @@ import java.util.Properties;
  * eyesList=-1                 M5-K K3: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwEyesList}; -1 = iz konfiguracije
  * eyesCheck=0                 M5-K K3: 1 = po ogrevanju primerjaj piksle in globino z RwEyesList 0 in 1 ({@link EyesCheck})
  * lodStart=-1                 M5-K K5: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwLodStart} (bloki, 0 = original); -1 = iz konfiguracije
+ * farView=-1                 M5-V.2: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwFarView} (klient: 1 = HELLO na kanalu rwfar,
+ *                             shramba nadomestkov); -1 = iz konfiguracije
  * connect=127.0.0.1:25565     M5-V.1: namesto integriranega sveta se poveze na dedicirani streznik; ukazov cmd.* ne
  *                             izvaja (prizorisce postavi skripta prek konzole) in pred stetjem NPC-jev caka na
  *                             sporocilo {@code RWHARNESS-SCENA} v klepetu
@@ -82,6 +84,8 @@ public final class HarnessJob {
     public final boolean eyesCheck;
     /** M5-K K5: RwLodStart za zagon (bloki), -1 = iz konfiguracije. */
     public final int lodStart;
+    /** M5-V.2: RwFarView za zagon (klient), -1 = iz konfiguracije. */
+    public final int farView;
     /** M5-V.1: gostitelj dediciranega streznika ali {@code null} (integrirani svet). */
     public final String connectHost;
     public final int connectPort;
@@ -128,6 +132,7 @@ public final class HarnessJob {
         this.eyesList = intValue(p, "eyesList", -1);
         this.eyesCheck = intValue(p, "eyesCheck", 0) != 0;
         this.lodStart = intValue(p, "lodStart", -1);
+        this.farView = intValue(p, "farView", -1);
         String connect = p.getProperty("connect");
         if (connect == null || connect.trim().isEmpty()) {
             this.connectHost = null;
@@ -154,8 +159,8 @@ public final class HarnessJob {
         }
         if (this.measureSeconds < 1 || this.warmupSeconds < 0 || this.settleSeconds < 0 || this.sampleMs < 0
                 || this.headwearSkip < -1 || this.headwearSkip > 1 || this.labelCache < -1 || this.labelCache > 1
-                || this.eyesList < -1 || this.eyesList > 1 || this.lodStart < -1 || this.lodStart > 512) {
-            throw new IllegalArgumentException("casi morajo biti nenegativni, measure >= 1, headwearSkip, labelCache in eyesList -1..1, lodStart -1..512");
+                || this.eyesList < -1 || this.eyesList > 1 || this.lodStart < -1 || this.lodStart > 512 || this.farView < -1 || this.farView > 2) {
+            throw new IllegalArgumentException("casi morajo biti nenegativni, measure >= 1, headwearSkip, labelCache in eyesList -1..1, lodStart -1..512, farView -1..2");
         }
     }
 

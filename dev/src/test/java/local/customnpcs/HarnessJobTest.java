@@ -92,6 +92,14 @@ public class HarnessJobTest {
     }
 
     @Test
+    public void farViewIzKonfiguracijeAliZahtevan() {
+        assertEquals("M5-V.2: brez kljuca RwFarView iz konfiguracije", -1, HarnessJob.parse(base()).farView);
+        Properties p = base();
+        p.setProperty("farView", "1");
+        assertEquals(1, HarnessJob.parse(p).farView);
+    }
+
+    @Test
     public void createSeedMatchesDedicatedServer() {
         Properties p = base();
         assertEquals(null, HarnessJob.parse(p).createSeed);
@@ -112,6 +120,8 @@ public class HarnessJobTest {
             {"warmup", "-1"},
             {"lodStart", "-2"},
             {"lodStart", "513"},
+            {"farView", "3"},
+            {"farView", "-2"},
             {"connect", ":25565"},
             {"connect", "localhost:0"},
             {"connect", "localhost:x"},

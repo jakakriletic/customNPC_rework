@@ -201,6 +201,10 @@ task testOriginal(type: Test) {
     exclude '**/CollisionGateTest.class'
     exclude '**/CollisionClassesTest.class'
     exclude '**/CollisionBoxesPatchTest.class'
+    // M5-V.2: paket rework/far je nov, v originalu ga ni.
+    exclude '**/FarBandTest.class'
+    exclude '**/FarCodecTest.class'
+    exclude '**/FarDeltaTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

@@ -89,3 +89,24 @@ Pričakovano po geometriji (izračun v skripti):
 - Bajti so žični (stisnjeni) in vsebujejo vse pakete (teren, NPC-ji, ključ sledenja); idle NPC-ji
   skoraj ne pošiljajo gibanja, zato je okno idle predvsem ključ obstoja.
 - `track` velja za entitete, ki se začnejo slediti po ukazu; zato pred spawnom.
+
+## M5-V.2: `-Far 1` (kanal `rwfar`)
+
+Ista celica (samo `-Domet 64`) z vklopljenimi nadomestki: klient dobi v navodilu `farView=1`
+(`CustomNpcs.RwFarView=1` ob vstopu → `HELLO` z dometom `RD · 16`), strežnik po postavitvi prizorišča
+`rwfar domet 384` in `rwfar 1`, ob začetku merjenja `rwfar reset`, ob koncu `rwfar`. Pas
+(`FarBand`): Chebyshev `(min(64, (vd−1)·16) − 8, min(384, RD·16, (vd−1)·16)]` v chunkih, ki jih igralec
+gleda; pričakovano število skripta izračuna iz geometrije (±1 blok na mejah).
+
+| Merilo | Pogoj |
+|---|---|
+| V16a | po `rwfar 1`: `nacin=1`, `domet=384`, en igralec s `HELLO` |
+| V16 | register NPC-jev `rwfar` = NPC-ji v `loadedEntityList` = naloženi po V5 |
+| V17 | nadomestkov v klientu ob začetku in koncu merjenja v pričakovanem razponu; strežnikov pas in število znanih id-jev enako klientovi shrambi; `HELLO` ≥ 1 |
+| V18 | čas kode `rwfar` ≤ 100 µs na tick na igralca v merilnem oknu (strežniški cilj +≤ 0,1 ms, D-043); B/s kanala se izpiše |
+
+Klient po koncu merjenja (`RWHARNESS-FAZA DONE`, JSON zapisan) ostane povezan, dokler skripta po branju
+`rwdiag vd` in `rwfar` ne pošlje `say RWHARNESS-IZHOD` (največ 120 s); števci na igralca in naloženi chunki
+se tako berejo, ko je igralec še prijavljen.
+
+Primerjava z originalom (A/B, tri ponovitve) je M5-V.8; `-Far 1` v M5-V.2 preveri kanal od konca do konca.

@@ -33,6 +33,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.rework.far.FarClient;
 import noppes.npcs.rework.render.HeadwearSkip;
 import noppes.npcs.rework.render.EyesList;
 import noppes.npcs.rework.render.Lod;
@@ -62,6 +63,10 @@ import noppes.npcs.rework.render.LabelCache;
  * na koncu poslje {@code say RWHARNESS-SCENA}, sele nato se NPC-je steje. Dodatno belezi zicne
  * bajte s streznika (stevec na zacetku Netty cevovoda, pred razpakiranjem) in cas klientskega
  * ticka (START do END {@code ClientTickEvent}).
+ *
+ * <p>M5-V.2: po koncu merjenja in zapisu JSON klient na dediciranem strezniku ostane povezan, dokler
+ * skripta ne poslje {@code say RWHARNESS-IZHOD} (najvec 120 s), da streznik stevce na igralca
+ * ({@code /rwfar}, {@code /rwdiag vd}) izpise, ko je igralec se prijavljen.
  */
 @SideOnly(Side.CLIENT)
 public final class ClientHarness {
@@ -73,6 +78,9 @@ public final class ClientHarness {
     /** M5-V.1: skripta pred sporocilom generira do 49 x 49 chunkov in spawna do 5.000 NPC-jev. */
     private static final long SCENE_TIMEOUT_NS = 900L * 1000000000L;
     static final String SCENE_MARKER = "RWHARNESS-SCENA";
+    /** M5-V.2: skripta je prebrala strezniske stevce; klient se lahko ugasne. */
+    static final String EXIT_MARKER = "RWHARNESS-IZHOD";
+    private static final long EXIT_TIMEOUT_NS = 120L * 1000000000L;
 
     private final HarnessJob job;
     private Phase phase = Phase.MENU;
@@ -109,11 +117,17 @@ public final class ClientHarness {
     private int tickCount;
     private long tickStart;
     private volatile boolean sceneReady;
+    private boolean exitPending;
+    private volatile boolean exitReady;
     private final AtomicLong bytesIn = new AtomicLong();
     private boolean bytesInstalled;
     private long bytesAtWarmup = -1L;
     private long bytesAtMeasure = -1L;
     private long bytesAtEnd = -1L;
+    /** M5-V.2: nadomestki v shrambi in koristni bajti kanala rwfar ob zacetku merjenja. */
+    private int farAtMeasure = -1;
+    private long farBytesAtMeasure = -1L;
+    private long farBytesAtEnd = -1L;
 
     private ClientHarness(HarnessJob job) {
         this.job = job;
@@ -264,6 +278,8 @@ public final class ClientHarness {
                         this.lastSample = 0L;
                         this.tickCount = 0;
                         this.bytesAtMeasure = this.bytesIn.get();
+                        this.farAtMeasure = FarClient.size();
+                        this.farBytesAtMeasure = FarClient.payloadBytes;
                         this.measureStartNs = System.nanoTime();
                         if (this.job.sampleMs > 0) {
                             // ClientTickEvent tece na render niti, zato je currentThread() prava nit.
@@ -278,7 +294,15 @@ public final class ClientHarness {
                     if (secondsInPhase() >= this.job.measureSeconds) {
                         this.measureEndNs = System.nanoTime();
                         this.bytesAtEnd = this.bytesIn.get();
+                        this.farBytesAtEnd = FarClient.payloadBytes;
                         finish(mc);
+                    }
+                    break;
+                case DONE:
+                    if (this.exitPending && (this.exitReady || System.nanoTime() - this.phaseStart > EXIT_TIMEOUT_NS)) {
+                        this.exitPending = false;
+                        System.out.println("RWHARNESS-IZHOD " + (this.exitReady ? "signal" : "cas"));
+                        mc.shutdown();
                     }
                     break;
                 default:
@@ -294,6 +318,10 @@ public final class ClientHarness {
         if (this.phase == Phase.SCENE && ev.getMessage() != null
                 && ev.getMessage().getUnformattedText().contains(SCENE_MARKER)) {
             this.sceneReady = true;
+        }
+        if (this.exitPending && ev.getMessage() != null
+                && ev.getMessage().getUnformattedText().contains(EXIT_MARKER)) {
+            this.exitReady = true;
         }
     }
 
@@ -391,6 +419,10 @@ public final class ClientHarness {
         }
         if (this.job.lodStart >= 0) {
             CustomNpcs.RwLodStart = this.job.lodStart;
+        }
+        if (this.job.farView >= 0) {
+            // M5-V.2: FarClient poslje HELLO v naslednjem ticku (nov svet z vklopljenim stikalom).
+            CustomNpcs.RwFarView = this.job.farView;
         }
         mc.gameSettings.renderDistanceChunks = this.job.renderDistance;
         mc.gameSettings.enableVsync = false;
@@ -509,6 +541,11 @@ public final class ClientHarness {
         } catch (Exception e) {
             System.out.println("RWHARNESS-NAPAKA zapis " + this.job.out + ": " + e);
         }
+        if (this.job.connectHost != null && reached == Phase.MEASURE && this.errors.isEmpty()) {
+            this.exitPending = true;
+            System.out.println("RWHARNESS-CAKAM " + EXIT_MARKER);
+            return;
+        }
         mc.shutdown();
     }
 
@@ -593,6 +630,15 @@ public final class ClientHarness {
         num(b, "rwLodStart", CustomNpcs.RwLodStart);
         num(b, "lodDalec", Lod.farDraws);
         num(b, "lodBlizu", Lod.nearDraws);
+        num(b, "rwFarView", CustomNpcs.RwFarView);
+        num(b, "farHello", FarClient.hellos);
+        num(b, "farVKlientuZacetek", this.farAtMeasure);
+        num(b, "farVKlientu", FarClient.size());
+        num(b, "farSporocil", FarClient.messages);
+        num(b, "farVnosov", FarClient.upserts);
+        num(b, "farOdstranitev", FarClient.removes);
+        num(b, "farBajtov", FarClient.payloadBytes);
+        num(b, "farBajtovMeritev", this.farBytesAtEnd >= 0 ? this.farBytesAtEnd - this.farBytesAtMeasure : -1L);
         EyesCheck ec = this.eyesCheck;
         num(b, "ociPreverba", ec == null ? -1 : (ec.ok() ? 1 : 0));
         if (ec != null) {

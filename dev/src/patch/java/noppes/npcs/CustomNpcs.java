@@ -139,6 +139,9 @@ import noppes.npcs.rework.formation.CommandRwSquad;
 import noppes.npcs.rework.formation.SquadManager;
 import noppes.npcs.rework.net.AssociatedPlayers;
 import noppes.npcs.rework.net.CommandRwBlink;
+import noppes.npcs.rework.far.CommandRwFar;
+import noppes.npcs.rework.far.FarRegistry;
+import noppes.npcs.rework.far.FarServer;
 
 @Mod(modid="customnpcs", name="CustomNpcs", version="1.12", acceptedMinecraftVersions="1.12, 1.12.1, 1.12.2")
 public class CustomNpcs {
@@ -181,6 +184,10 @@ public class CustomNpcs {
     public static int RwEyesList = 0;
     @ConfigProp(info="Rework M5-K K5 (client): level of detail L1. An NPC farther from the camera than this many blocks is drawn without eyes (including brows and glint), without name and chat bubbles, and with the flat hat layer of the model (the look of HeadWearType=0) instead of the 3D headwear. Changes the look of distant NPCs. 0 = original (full detail at any distance), otherwise the distance in blocks")
     public static int RwLodStart = 0;
+    @ConfigProp(info="Rework M5-V.2 (D-034): NPCs beyond the vanilla entity tracker range (64 blocks) are sent as light placeholders (position, rotation, look id, flags; about 16 bytes, about once per second, only when changed) over the rwfar channel to clients that ask for them, up to RwFarRange blocks and never beyond (view-distance - 1) * 16. Invisible NPCs and killed NPCs with a hidden body are never sent. Server: 0 = send nothing (original), 1 or 2 = send. Client: 0 = original (does not ask), 1 = ask for placeholders (far view, M5-V.5), 2 = also draw tracked distant NPCs as impostors (M5-V.6). Default 0 until acceptance M5-V.8 (D-035)")
+    public static int RwFarView = 0;
+    @ConfigProp(info="Rework M5-V.2: largest distance in blocks (Chebyshev, as the vanilla tracker) at which the server sends far NPC placeholders; limited by (view-distance - 1) * 16. 16..1024")
+    public static int RwFarRange = 384;
     @ConfigProp(info="Rework M5.14 (S16): the NPC keeps its own EntityDataManager keys (Attacking, IsDead, Walking, FactionData) in plain fields refreshed by notifyDataManagerChange, and reads them from there. Every write to a data manager value calls that hook after storing the value (EntityDataManager.set and setEntryValues), so the field always equals the stored value. Same result; it avoids a read lock and a HashMap lookup per read (EntityDataManager.get is 11.6 percent of the server thread in idle-500). 0 = original, 1 = read from the fields, 2 = verify (reads the data manager, compares with the field, counts mismatches). Default 1 since 2026-10-10 (D-032)")
     public static int RwDataShadow = 1;
     @ConfigProp(info="Rework M5.17 (S14c): the path search (PathFinder.findPath) evaluates the path node type of each block position once per search and reuses it; the original evaluates the same positions several times because every node checks its neighbours and the neighbourhoods overlap. Same result (same memoised method and same invariants as M5.11). 0 = original, 1 = reuse node types during a search, 2 = verify (every evaluation is computed and compared with the memoised one; no saving, for test scenarios only). Default 1 since 2026-10-10 (D-032)")
@@ -291,6 +298,17 @@ public class CustomNpcs {
         NetworkRegistry.INSTANCE.registerGuiHandler((Object)this, (IGuiHandler)proxy);
         // M5.16 (D-031): stevec entitet, ki lahko prispevajo trkalno skatlo, po svetovih.
         MinecraftForge.EVENT_BUS.register(CollisionWatcher.createEventHandler());
+        // M5-V.2 (D-034): register NPC-jev po svetovih in kanal rwfar; brez HELLO klienta in z
+        // RwFarView=0 se ne poslje nic. Klientska stran prek refleksije, kot harness spodaj.
+        MinecraftForge.EVENT_BUS.register(FarRegistry.createEventHandler());
+        FarServer.init();
+        if (ev.getSide().isClient()) {
+            try {
+                Class.forName("noppes.npcs.rework.far.FarClient").getMethod("install").invoke(null);
+            } catch (ReflectiveOperationException e) {
+                LogWriter.error("RWFAR klient ni namescen", e);
+            }
+        }
         MinecraftForge.EVENT_BUS.register((Object)new ServerEventsHandler());
         MinecraftForge.EVENT_BUS.register((Object)new ServerTickHandler());
         MinecraftForge.EVENT_BUS.register((Object)new CustomEntities());
@@ -423,6 +441,9 @@ public class CustomNpcs {
         // M5.13 (S7): prejemniki utripa oci; /rwblink jih med tekom preklopi.
         event.registerServerCommand((ICommand)new CommandRwBlink());
         AssociatedPlayers.setMode(RwBlinkRecipients);
+        // M5-V.2: posiljanje nadomestkov oddaljenih NPC-jev; /rwfar ga med tekom preklopi.
+        event.registerServerCommand((ICommand)new CommandRwFar());
+        FarServer.start(RwFarView, RwFarRange);
         // M4.14: formacije. Brez ukaza (ali klica iz skripte) paket ni prijavljen na event
         // bus in ne doda nobenega AI taska, zato je obnasanje brez ukaza enako originalu.
         event.registerServerCommand((ICommand)new CommandRwSquad());
