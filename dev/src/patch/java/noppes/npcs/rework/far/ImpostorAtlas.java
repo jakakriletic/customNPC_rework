@@ -130,10 +130,20 @@ public final class ImpostorAtlas {
 
     /** UV okvirja {@code k}: {@code {u0, v0, u1, v1}}; {@code v0} je zgornji rob slike. */
     public float[] uv(Entry e, int k) {
+        float[] out = new float[4];
+        uvInto(e, k, out);
+        return out;
+    }
+
+    /** Kot {@link #uv}, v podano polje (izris L3 brez dodeljevanja). */
+    public void uvInto(Entry e, int k, float[] out) {
         int x = ImpostorFrames.slotX(e.slot, this.size) + k * ImpostorFrames.CELL_W + ImpostorFrames.frameX(e.tw);
         int y = ImpostorFrames.slotY(e.slot, this.size) + ImpostorFrames.frameY(e.th);
         float s = this.size;
-        return new float[] {x / s, y / s, (x + e.tw) / s, (y + e.th) / s};
+        out[0] = x / s;
+        out[1] = y / s;
+        out[2] = (x + e.tw) / s;
+        out[3] = (y + e.th) / s;
     }
 
     void delete() {

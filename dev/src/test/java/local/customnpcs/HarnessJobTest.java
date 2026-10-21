@@ -108,6 +108,17 @@ public class HarnessJobTest {
     }
 
     @Test
+    public void farDrawInSeamPrivzetoIzklopljena() {
+        assertEquals("M5-V.5: brez kljuca ni A/B pikslov izrisa L3", false, HarnessJob.parse(base()).farDrawCheck);
+        assertEquals("M5-V.5: brez kljuca ni prehoda cez mejo", false, HarnessJob.parse(base()).seamCheck);
+        Properties p = base();
+        p.setProperty("farDrawCheck", "1");
+        p.setProperty("seamCheck", "1");
+        assertEquals(true, HarnessJob.parse(p).farDrawCheck);
+        assertEquals(true, HarnessJob.parse(p).seamCheck);
+    }
+
+    @Test
     public void createSeedMatchesDedicatedServer() {
         Properties p = base();
         assertEquals(null, HarnessJob.parse(p).createSeed);

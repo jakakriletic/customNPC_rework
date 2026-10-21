@@ -6,9 +6,10 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * M5.15 (D-031): transformer CNPC reworka. Infrastrukturo (manifest, nalagalni vticnik, imena
- * SRG/MCP) je postavil M5.15, ko je bil transformer prazen; od M5.16 ima en poseg:
- * {@link CollisionBoxesPatch} v {@code net.minecraft.world.World}. Vsi drugi razredi gredo skozi
- * nespremenjeni.
+ * SRG/MCP) je postavil M5.15, ko je bil transformer prazen; od M5.16 ima poseg
+ * {@link CollisionBoxesPatch} v {@code net.minecraft.world.World}, od M5-V.5 se klientski
+ * {@link RenderEntitiesPatch} v {@code net.minecraft.client.renderer.RenderGlobal}. Vsi drugi razredi
+ * gredo skozi nespremenjeni.
  *
  * <p>Steje razrede, ki so sla skozi, in jih vsakih {@value #REPORT_EVERY} objavi v sistemski
  * lastnosti {@code rwcore.classes}, da jih vidi tudi koda moda (drug nalagalnik razredov).
@@ -35,6 +36,9 @@ public class RwTransformer implements IClassTransformer {
         }
         if (basicClass != null && CollisionBoxesPatch.TARGET_CLASS.equals(transformedName)) {
             return CollisionBoxesPatch.apply(basicClass);
+        }
+        if (basicClass != null && RenderEntitiesPatch.TARGET_CLASS.equals(transformedName)) {
+            return RenderEntitiesPatch.apply(basicClass);
         }
         return basicClass;
     }

@@ -20,20 +20,25 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.multiplayer.GuiConnecting;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.GameType;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
+import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.rework.core.RenderEntitiesPatch;
 import noppes.npcs.rework.far.FarClient;
+import noppes.npcs.rework.far.FarRender;
 import noppes.npcs.rework.far.ImpostorBaker;
 import noppes.npcs.rework.render.HeadwearSkip;
 import noppes.npcs.rework.render.EyesList;
@@ -68,10 +73,15 @@ import noppes.npcs.rework.render.LabelCache;
  * <p>M5-V.2: po koncu merjenja in zapisu JSON klient na dediciranem strezniku ostane povezan, dokler
  * skripta ne poslje {@code say RWHARNESS-IZHOD} (najvec 120 s), da streznik stevce na igralca
  * ({@code /rwfar}, {@code /rwdiag vd}) izpise, ko je igralec se prijavljen.
+ *
+ * <p>M5-V.5: {@code farDrawCheck=1} po ogrevanju izvede A/B pikslov sonde ({@link FarDrawCheck}, kamera usmerjena
+ * vanjo, FOV 10, nato nazaj in 2 s pred merjenjem); {@code seamCheck=1} po merjenju zgradi JSON merjenja, 5 s
+ * miruje (skripta prebere streznik) in v fazi {@code SEAM} kamero s hitrostjo hoje premakne nazaj in naprej cez
+ * mejo sledilnika ({@link FarDrawCheck.Seam}); izid prehoda se doda JSON-u.
  */
 @SideOnly(Side.CLIENT)
 public final class ClientHarness {
-    private enum Phase { MENU, JOINING, SCENE, PRELOAD, COMMANDS, SETTLE, WARMUP, MEASURE, DONE }
+    private enum Phase { MENU, JOINING, SCENE, PRELOAD, COMMANDS, SETTLE, WARMUP, MEASURE, SEAM, DONE }
 
     private static final int MAX_FRAMES = 1 << 20;
     private static final long JOIN_TIMEOUT_NS = 180L * 1000000000L;
@@ -82,6 +92,8 @@ public final class ClientHarness {
     /** M5-V.2: skripta je prebrala strezniske stevce; klient se lahko ugasne. */
     static final String EXIT_MARKER = "RWHARNESS-IZHOD";
     private static final long EXIT_TIMEOUT_NS = 120L * 1000000000L;
+    /** M5-V.5: tickov mirovanja na zacetku faze SEAM. */
+    private static final int SEAM_HOLD_TICKS = 100;
 
     private final HarnessJob job;
     private Phase phase = Phase.MENU;
@@ -114,6 +126,13 @@ public final class ClientHarness {
     private EyesCheck eyesCheck;
     /** M5-V.4: izid primerjave impostor - model. */
     private ImpostorCheck impostorCheck;
+    /** M5-V.5: A/B pikslov sonde (V23) in prehod cez mejo po merjenju (V24). */
+    private FarDrawCheck farDraw;
+    private FarDrawCheck.Seam seam;
+    private int seamTick;
+    /** M5-V.5: JSON merjenja, zgrajen ob koncu MEASURE (prehod cez mejo spremeni stevce klienta). */
+    private String jsonBody;
+    private long farDrawDoneNs;
     private final List<String> errors = new ArrayList<String>();
     /** M5-V.1: klientski tick (START..END) med merjenjem in zicni bajti s streznika. */
     private final long[] ticks = new long[MAX_FRAMES];
@@ -270,7 +289,18 @@ public final class ClientHarness {
                             || (this.job.impostorCheck && this.impostorCheck == null))) {
                         // M5-K K14b: preverba v naslednjem RenderWorldLastEvent, merjenje po njej.
                         this.headwearCheckPending = true;
-                    } else if (secondsInPhase() >= this.job.warmupSeconds) {
+                    } else if (secondsInPhase() >= this.job.warmupSeconds && this.job.farDrawCheck
+                            && (this.farDraw == null || !this.farDraw.done)) {
+                        // M5-V.5: A/B pikslov sonde v treh zaporednih slicicah (onRenderWorldLastFar).
+                        if (this.farDraw == null) {
+                            this.farDraw = new FarDrawCheck();
+                            this.farDraw.start(mc);
+                            mc.gameSettings.fovSetting = FarDrawCheck.FOV;
+                            pinCamera(mc, false);
+                            System.out.println("RWHARNESS-DALEC zacetek sonda=" + this.farDraw.probeId);
+                        }
+                    } else if (secondsInPhase() >= this.job.warmupSeconds
+                            && (this.farDraw == null || System.nanoTime() - this.farDrawDoneNs >= 2000000000L)) {
                         this.npcLoaded = countNpcs(mc);
                         this.maxPosDrift = 0.0;
                         this.maxAngleDrift = 0.0;
@@ -284,6 +314,7 @@ public final class ClientHarness {
                         this.bytesAtMeasure = this.bytesIn.get();
                         this.farAtMeasure = FarClient.size();
                         this.farBytesAtMeasure = FarClient.payloadBytes;
+                        FarRender.resetStats();
                         this.measureStartNs = System.nanoTime();
                         if (this.job.sampleMs > 0) {
                             // ClientTickEvent tece na render niti, zato je currentThread() prava nit.
@@ -299,7 +330,28 @@ public final class ClientHarness {
                         this.measureEndNs = System.nanoTime();
                         this.bytesAtEnd = this.bytesIn.get();
                         this.farBytesAtEnd = FarClient.payloadBytes;
+                        if (this.job.seamCheck && this.errors.isEmpty()) {
+                            // M5-V.5: JSON merjenja zdaj; skripta ob fazi SEAM prebere streznik.
+                            this.jsonBody = buildJson(mc, Phase.MEASURE);
+                            this.seam = new FarDrawCheck.Seam(Math.min(384, (this.job.renderDistance - 1) * 16));
+                            this.seam.deadHiddenAtStart = FarRender.deadHidden;
+                            // 5 s mirovanja: skripta v tem casu prebere streznik (merilno okno ostane mirno).
+                            this.seamTick = -SEAM_HOLD_TICKS;
+                            FarRender.trackIds = true;
+                            enter(Phase.SEAM);
+                        } else {
+                            finish(mc);
+                        }
+                    }
+                    break;
+                case SEAM:
+                    if (this.seamTick < 0) {
+                        pinCamera(mc, false);
+                        ++this.seamTick;
+                    } else if (this.seamTick >= FarDrawCheck.Seam.ticks()) {
                         finish(mc);
+                    } else {
+                        moveCamera(mc, FarDrawCheck.Seam.offset(this.seamTick++));
                     }
                     break;
                 case DONE:
@@ -391,8 +443,38 @@ public final class ClientHarness {
         }
     }
 
+    /** M5-V.5: po izrisu L3 te slicice (rezerva FarRender ima najvisjo prednost). */
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onRenderWorldLastFar(RenderWorldLastEvent ev) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (this.farDraw != null && !this.farDraw.done) {
+            this.farDraw.onFrame(mc);
+            if (this.farDraw.done) {
+                // Nazaj na FOV in kot merjenja; merjenje se zacne sele 2 s pozneje.
+                mc.gameSettings.fovSetting = this.job.fov;
+                this.farDrawDoneNs = System.nanoTime();
+                System.out.println("RWHARNESS-DALEC ok=" + this.farDraw.ok() + " " + this.farDraw);
+            }
+        }
+        if (this.phase == Phase.SEAM && this.seam != null) {
+            this.seam.onFrame(mc);
+        }
+    }
+
+    /** M5-V.5: zive entitete NPC, narisane v tej slicici (prehod cez mejo). */
+    @SubscribeEvent
+    public void onRenderLivingPost(RenderLivingEvent.Post<EntityLivingBase> ev) {
+        if (this.phase == Phase.SEAM && this.seam != null && ev.getEntity() instanceof EntityNPCInterface) {
+            this.seam.liveRendered.add(ev.getEntity().getEntityId());
+        }
+    }
+
     @SubscribeEvent
     public void onRenderTick(TickEvent.RenderTickEvent ev) {
+        if (ev.phase == TickEvent.Phase.START && this.phase == Phase.SEAM && this.seam != null) {
+            this.seam.liveRendered.clear();
+            FarRender.DRAWN_IDS.clear();
+        }
         if (ev.phase != TickEvent.Phase.START || this.phase != Phase.MEASURE) {
             return;
         }
@@ -484,10 +566,30 @@ public final class ClientHarness {
             float da = Math.abs(wrap(p.rotationYaw - this.job.camYaw)) + Math.abs(p.rotationPitch - this.job.camPitch);
             this.maxAngleDrift = Math.max(this.maxAngleDrift, da);
         }
+        // M5-V.5: med preverbo vidnosti je kamera usmerjena v sondo (FarDrawCheck), polozaj ostane.
+        boolean aim = this.farDraw != null && !this.farDraw.done;
+        float yaw = aim ? this.farDraw.aimYaw : this.job.camYaw;
+        float pitch = aim ? this.farDraw.aimPitch : this.job.camPitch;
         p.motionX = 0.0;
         p.motionY = 0.0;
         p.motionZ = 0.0;
-        p.setPositionAndRotation(this.job.camX, this.job.camY, this.job.camZ, this.job.camYaw, this.job.camPitch);
+        p.setPositionAndRotation(this.job.camX, this.job.camY, this.job.camZ, yaw, pitch);
+        p.prevRotationYaw = yaw;
+        p.prevRotationPitch = pitch;
+    }
+
+    /** M5-V.5: kamera {@code off} blokov nazaj od pribite tocke (vodoravno, nasproti pogleda), isti koti. */
+    private void moveCamera(Minecraft mc, double off) {
+        Entity p = mc.player;
+        if (p == null) {
+            return;
+        }
+        double yaw = Math.toRadians(this.job.camYaw);
+        p.motionX = 0.0;
+        p.motionY = 0.0;
+        p.motionZ = 0.0;
+        p.setPositionAndRotation(this.job.camX + Math.sin(yaw) * off, this.job.camY, this.job.camZ - Math.cos(yaw) * off,
+                this.job.camYaw, this.job.camPitch);
         p.prevRotationYaw = this.job.camYaw;
         p.prevRotationPitch = this.job.camPitch;
     }
@@ -529,6 +631,13 @@ public final class ClientHarness {
     }
 
     private void fail(String why) {
+        if (this.phase == Phase.SEAM && this.seam != null) {
+            // M5-V.5: napaka prehoda je izid V24, merjenje je ze zapisano.
+            this.seam.error = why;
+            System.out.println("RWHARNESS-NAPAKA prehod: " + why);
+            finish(Minecraft.getMinecraft());
+            return;
+        }
         this.errors.add(why);
         System.out.println("RWHARNESS-NAPAKA " + why);
         finish(Minecraft.getMinecraft());
@@ -538,7 +647,12 @@ public final class ClientHarness {
         if (this.phase == Phase.DONE) {
             return;
         }
-        Phase reached = this.phase;
+        Phase reached = this.phase == Phase.SEAM ? Phase.MEASURE : this.phase;
+        FarRender.trackIds = false;
+        if (this.seam != null) {
+            this.seam.deadHidden = FarRender.deadHidden - this.seam.deadHiddenAtStart;
+            System.out.println("RWHARNESS-SIV ok=" + this.seam.ok() + " " + this.seam);
+        }
         enter(Phase.DONE);
         if (this.sampler != null) {
             this.sampler.stop();
@@ -563,6 +677,44 @@ public final class ClientHarness {
     }
 
     private void writeJson(Minecraft mc, Phase reached) throws Exception {
+        StringBuilder b = new StringBuilder(this.jsonBody != null ? this.jsonBody : buildJson(mc, reached));
+        FarDrawCheck.Seam sm = this.seam;
+        num(b, "sivPreverba", sm == null ? -1 : (sm.ok() ? 1 : 0));
+        if (sm != null) {
+            num(b, "sivSlicic", sm.frames);
+            num(b, "sivVrzeli", sm.gaps);
+            num(b, "sivZivDoImpostorja", sm.liveToImpostor);
+            num(b, "sivImpostorDoZivega", sm.impostorToLive);
+            num(b, "sivDvojnih", sm.doubles);
+            num(b, "sivIzPasu", sm.leftBand);
+            num(b, "sivIzvenFrustuma", sm.culledExcused);
+            num(b, "sivNajvecNarisanih", sm.maxWatched);
+            kv(b, "sivOpis", sm.toString());
+        }
+        b.append("  \"cam\": [").append(this.job.camX).append(", ").append(this.job.camY).append(", ")
+                .append(this.job.camZ).append(", ").append(this.job.camYaw).append(", ").append(this.job.camPitch).append("]\n");
+        b.append("}\n");
+        File out = new File(this.job.out);
+        File tmp = new File(out.getPath() + ".tmp");
+        if (out.getParentFile() != null) {
+            out.getParentFile().mkdirs();
+        }
+        Writer w = new OutputStreamWriter(new FileOutputStream(tmp), StandardCharsets.UTF_8);
+        try {
+            w.write(b.toString());
+        } finally {
+            w.close();
+        }
+        if (out.exists() && !out.delete()) {
+            throw new IllegalStateException("ne morem prepisati " + out);
+        }
+        if (!tmp.renameTo(out)) {
+            throw new IllegalStateException("ne morem preimenovati " + tmp);
+        }
+    }
+
+    /** JSON brez sklepne vrstice {@code cam} (M5-V.5: polja prehoda cez mejo se dodajo za njim). */
+    private String buildJson(Minecraft mc, Phase reached) {
         FrameStats st = FrameStats.of(this.frames, this.frameCount);
         long[] gc = gcTotals();
         double serverMs = -1.0;
@@ -668,6 +820,28 @@ public final class ClientHarness {
         num(b, "impBrezFbo", ImpostorBaker.noFbo ? 1 : 0);
         num(b, "impPekaMsPovp", ImpostorBaker.baked > 0 ? ImpostorBaker.bakeNs / 1.0e6 / ImpostorBaker.baked : -1.0);
         num(b, "impPekaMsMax", ImpostorBaker.bakeNsMax / 1.0e6);
+        // M5-V.5: izris L3 v merilnem oknu (FarRender.resetStats ob zacetku merjenja).
+        num(b, "farPoseg", RenderEntitiesPatch.patched() ? 1 : 0);
+        num(b, "farIzrisSlicic", FarRender.statFrames);
+        num(b, "farIzrisRezerva", FarRender.statFallback);
+        num(b, "farIzrisNarisanihMin", FarRender.statFrames == 0 ? -1 : FarRender.statDrawnMin);
+        num(b, "farIzrisNarisanihMax", FarRender.statDrawnMax);
+        num(b, "farIzrisZivihMax", FarRender.statLiveMax);
+        num(b, "farIzrisIzvenFrustumaMax", FarRender.statCulledMax);
+        num(b, "farIzrisBrezPekeMax", FarRender.statUnbakedMax);
+        num(b, "farIzrisNajdlje", FarRender.statMaxDist);
+        num(b, "farIzrisUsPovp", FarRender.statFrames == 0 ? -1.0 : FarRender.statNs / 1000.0 / FarRender.statFrames);
+        num(b, "farIzrisUsMax", FarRender.statNsMax / 1000.0);
+        FarDrawCheck fd = this.farDraw;
+        num(b, "dalecPreverba", fd == null ? -1 : (fd.ok() ? 1 : 0));
+        if (fd != null) {
+            num(b, "dalecRazdalja", fd.probeDist);
+            num(b, "dalecSpremenjenih", fd.changed);
+            num(b, "dalecNajvecRazlika", fd.maxDiff);
+            num(b, "dalecKontrola", fd.control);
+            num(b, "dalecPoskusov", fd.attempts);
+            kv(b, "dalecOpis", fd.toString());
+        }
         ImpostorCheck ic = this.impostorCheck;
         num(b, "impPreverba", ic == null ? -1 : (ic.ok() ? 1 : 0));
         if (ic != null) {
@@ -725,26 +899,7 @@ public final class ClientHarness {
         num(b, "sirina", mc.displayWidth);
         num(b, "visina", mc.displayHeight);
         num(b, "heapMaxMb", Runtime.getRuntime().maxMemory() / (1024L * 1024L));
-        b.append("  \"cam\": [").append(this.job.camX).append(", ").append(this.job.camY).append(", ")
-                .append(this.job.camZ).append(", ").append(this.job.camYaw).append(", ").append(this.job.camPitch).append("]\n");
-        b.append("}\n");
-        File out = new File(this.job.out);
-        File tmp = new File(out.getPath() + ".tmp");
-        if (out.getParentFile() != null) {
-            out.getParentFile().mkdirs();
-        }
-        Writer w = new OutputStreamWriter(new FileOutputStream(tmp), StandardCharsets.UTF_8);
-        try {
-            w.write(b.toString());
-        } finally {
-            w.close();
-        }
-        if (out.exists() && !out.delete()) {
-            throw new IllegalStateException("ne morem prepisati " + out);
-        }
-        if (!tmp.renameTo(out)) {
-            throw new IllegalStateException("ne morem preimenovati " + tmp);
-        }
+        return b.toString();
     }
 
     private static void kv(StringBuilder b, String k, String v) {

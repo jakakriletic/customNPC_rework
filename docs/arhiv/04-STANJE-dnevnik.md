@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 106 → 1)
+# Arhiv: dnevnik sej (vnosi 107 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,49 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-21 (107) — M5-V.3: opis videza (`FarLook`, id videza, `REQ`/`LOOK`) — zaključeno
+
+**Paket:** M5-V.3 · **Stanje:** **zaključeno** — vseh 5 zahtevanih testov zelenih na kodi `57ac59cc…`: `unit`, `build`,
+`package`, `v3-far-24-64-5000`, `v3-far-10-64-1000` (V0–V19 zeleni v obeh zagonih).
+
+**Narejeno (D-045):**
+- `FarLook` (opis = podmnožica spawn NBT po beli listi, brez imena/naslova/`ShowName`/vlog; kanonična oblika,
+  FNV-1a 64 + mešanje, nikoli 0), `FarLooks` (strežniška tabela hash → kratek id, deljen med kloni, LRU 256
+  nedejavnih), `FarRequests` (`REQ` samo za prejete id-je, vsak id enkrat do novega `HELLO`, vrsta ≤ 1.024,
+  ≤ 8 odgovorov na tick na igralca). `FarCodec.VERSION` 2 (`REQ`, `LOOK` z GZIP opisom). `FarServer`: največ
+  64 opisov na tick ob koncu ticka, `UPDATE_NPC` (`EntityNPCInterface.updateClient`) → `invalidateLook`, čas opisov
+  v `usNaTickNaIgralca`. `FarClient`: id → hash na svet, hash → opis v LRU 512, preverba hasha po razpakiranju,
+  ponovna zahteva po 10 s; `FarClient.description(id)` za M5-V.4.
+- Harness: polja `farVidez*`/`farBrezVideza` v JSON klienta; `v-run.ps1 -Far 1` z merilom V19
+  ([scenarij](../scenariji/M5-V.1-dalec.md#m5-v3-opis-videza-v19-isti--far-1)).
+- JUnit: `FarLookTest` (6: kloni isti hash, sprememba videza nov hash, ime/naslov ne vplivata …), `FarLooksTest` (3),
+  `FarRequestsTest` (4); izključeni iz `testOriginal`.
+
+**Izid v svetu (ena ponovitev na celico, `-Far 1`, nočni upravljalnik):**
+
+| Celica | Pas / nadomestkov klient | Videzov v rabi (strežnik) | Izračunov skupaj | Klient: opisov / zahtevanih id / odgovorov / napak / brez opisa | rwfar µs/tick/igralca (max krog) | Sličica p50 / p95 ms | B/s | MSPT p50 / p95 ms |
+|---|---|---|---|---|---|---|---|---|
+| vd 24, domet 64, 5.000 | 4870 / 4870 | **1** | 4870 | 1 / 1 / 1 / 0 / **0** | **93,373** (2,42 ms) | 7,37 / 11,84 (FPS 126,3) | 933 | 57,672 / 73,4 |
+| vd 10, domet 64, 1.000 | 175 / 175 | **1** | 175 | 1 / 1 / 1 / 0 / **0** | **6,180** (0,18 ms) | 1,20 / 1,83 (FPS 785,7) | 171 | 1,245 / 1,769 |
+
+- 4870 klonov `PERF_Idle` deli **en** videz; klient je za vse nadomestke prejel en opis z enim `REQ`, hash preverjen,
+  0 zavrnjenih zahtev, 0 prevelikih opisov. Na žici videz stane en `LOOK` na igralca, ne na NPC.
+- Vsi opisi so bili izračunani pred `rwfar reset` (v merilnem oknu `nsVidez=0`, `izracunov=0`, `cakaVidez=0`), zato
+  čas izračuna opisov v oknu ni izmerjen — okno meri stalno stanje. Prvi krog pri 4870 NPC-jih se razdeli na
+  ~77 tickov po 64 opisov.
+- V18 drži tudi z opisi: 93,4 µs proti 89,2 µs v M5-V.2 (ena ponovitev, razlika ni dokazana). Sličica/MSPT brez A/B,
+  primerjava z originalom je M5-V.8.
+- Surovi izidi: git-ignored `audit/v-24-64-5000-far-2026-10-21-124436*`, `audit/v-10-64-1000-far-2026-10-21-124827*`.
+
+**Znana omejitev (za M5-V.8):** NPC, ki kliče `updateClient` vsak tick, vsak tick pride v vrsto in porabi del proračuna
+64 izračunov na tick; mirujoči/statični NPC-ji tega ne sprožijo.
+
+**Spremembe obnašanja moda:** nobene pri privzetih nastavitvah (`RwFarView=0`; `invalidateLook` brez prijavljenih
+igralcev `rwfar` ne naredi nič). **Minecraft meritve:** 2 zagona `-Far 1`.
+
+**Naslednji korak:** **M5-V.4** (peka impostorjev na klientu, opis iz `FarClient.description(id)`). Neodvisno: čistilni
+korak K3, M4.14b/M4.16; Q30 odprt.
 
 ### 2026-10-21 (106) — M5-V.2: strežnik `rwfar` (register, pas, delta, kanal) — zaključeno
 

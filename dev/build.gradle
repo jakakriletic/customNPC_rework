@@ -210,6 +210,10 @@ task testOriginal(type: Test) {
     exclude '**/FarRequestsTest.class'
     exclude '**/ImpostorFramesTest.class'
     exclude '**/ImpostorSlotsTest.class'
+    // M5-V.5: izris L3 in poseg v RenderGlobal.
+    exclude '**/FarInterpTest.class'
+    exclude '**/FarDrawCheckTest.class'
+    exclude '**/RenderEntitiesPatchTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

@@ -121,6 +121,11 @@ public final class ImpostorBaker {
         return atlas;
     }
 
+    /** Trenutni atlas ali {@code null}, ce se ni nic peceno (izris L3 ga ne ustvari). */
+    public static ImpostorAtlas current() {
+        return atlas;
+    }
+
     /** Pecenih videzov v atlasu (0 brez atlasa). */
     public static int inAtlas() {
         return atlas == null ? 0 : atlas.count();

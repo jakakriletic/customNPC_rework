@@ -39,6 +39,10 @@ import java.util.Properties;
  *                             shramba nadomestkov); -1 = iz konfiguracije
  * impostorCheck=0             M5-V.4: 1 = po ogrevanju speci testne videze in primerjaj piksle impostor - model pri 56 blokih
  *                             ({@link ImpostorCheck}); potrebuje opis videza s kanala rwfar (farView=1)
+ * farDrawCheck=0              M5-V.5: 1 = po ogrevanju A/B pikslov najbolj oddaljenega nadomestka v pravi slicici
+ *                             (izris L3 vklopljen / izklopljen / vklopljen; {@link FarDrawCheck})
+ * seamCheck=0                 M5-V.5: 1 = po merjenju kamera hodi nazaj in naprej cez mejo sledilnika; vsako slicico se
+ *                             preveri, da je vsak prej viden NPC narisan kot ziva entiteta ali impostor ({@link FarDrawCheck.Seam})
  * connect=127.0.0.1:25565     M5-V.1: namesto integriranega sveta se poveze na dedicirani streznik; ukazov cmd.* ne
  *                             izvaja (prizorisce postavi skripta prek konzole) in pred stetjem NPC-jev caka na
  *                             sporocilo {@code RWHARNESS-SCENA} v klepetu
@@ -90,6 +94,10 @@ public final class HarnessJob {
     public final int farView;
     /** M5-V.4: primerjava pikslov impostor - model ({@link ImpostorCheck}). */
     public final boolean impostorCheck;
+    /** M5-V.5: A/B pikslov izrisa L3 v pravi slicici ({@link FarDrawCheck}). */
+    public final boolean farDrawCheck;
+    /** M5-V.5: prehod cez mejo sledilnika po merjenju ({@link FarDrawCheck.Seam}). */
+    public final boolean seamCheck;
     /** M5-V.1: gostitelj dediciranega streznika ali {@code null} (integrirani svet). */
     public final String connectHost;
     public final int connectPort;
@@ -138,6 +146,8 @@ public final class HarnessJob {
         this.lodStart = intValue(p, "lodStart", -1);
         this.farView = intValue(p, "farView", -1);
         this.impostorCheck = intValue(p, "impostorCheck", 0) != 0;
+        this.farDrawCheck = intValue(p, "farDrawCheck", 0) != 0;
+        this.seamCheck = intValue(p, "seamCheck", 0) != 0;
         String connect = p.getProperty("connect");
         if (connect == null || connect.trim().isEmpty()) {
             this.connectHost = null;

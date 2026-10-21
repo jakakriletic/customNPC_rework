@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-21** (seja 108) — **M5-V.4 zaključen**: peka impostorjev na klientu (lažna entiteta, 8 kotov v FBO, obrez, okvirji ≤ 32 × 64, atlas `RwImpostorAtlas` 2048 z mipmapi z ohranjeno pokritostjo alfe, LRU, en videz na sličico), D-046; vseh 5 zahtevanih testov zelenih na kodi `86da496c…` (piksli impostor ↔ model pri 56 blokih: IoU 0,884–0,926, razlika 4,2–22,0, občutljivost 95,5; peka 9–12 ms povp.) |
-| Trenutni milestone | **M5 — Performance**: M5-S (strežnik) zaključen 16. 10. (M5.8: idle 10×, boj 1,5×, nedosegljiva 1,4× pri p95 ≤ 25 ms); M5-K (klient): K.0 in K.1 zaključena, K14 zavržen, K14b v kodi (privzeto 0, Q30) in K4 (privzeto 1) 19. 10., K3 zavržen 21. 10. (A/B brez koristi), K5 L1 v kodi 21. 10. (privzeto 0, D-039); M5-V.1 zaključen 21. 10. (varianta A zavrnjena, D-043), M5-V.2 (strežnik `rwfar`) zaključen 21. 10. (privzeto 0, D-044), M5-V.3 (opis videza) zaključen 21. 10. (D-045), M5-V.4 (peka impostorjev) zaključen 21. 10. (D-046). M3 (jedro entitete) zaključen do M3.9 (GUI za hitbox način M3.8b v klientu odprt); M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | **M5-V.5** (nadomestki in izris L3), nato V.6 … V.8 (vidnost NPC-jev do 24 chunkov, D-034/D-035; Q30 vklop K14b še odprt), K12, ostali K-paketi. Pred izdajo **Q22** (pravi Forge strežnik: jar od M5.16 privzeto spreminja vanilla bajtkodo, produkcijska pot je preverjena samo statično). **M4.0** narejen 20. 10. (D-038); od M4 se lahko vrineta **M4.14b** (formacije v svetu, samo zagon) in **M4.16** (scenarij letenja), ko računalnik ni v rabi. Odprto: PR `codex/m7-cnpc-integration` → `main` |
+| Zadnja posodobitev | **2026-10-21** (seja 109) — **M5-V.5 zaključen**: izris L3 (impostorji iz atlasa v enem `BufferBuilder`, billboard, lightmap, megla, interpolacija, šiv po `entityId`, coremod v `RenderGlobal.renderEntities`), D-047; vseh 5 zahtevanih testov zelenih na kodi `92f1a22b…` (vd 24/5000: 4831 impostorjev v vsaki sličici, najdlje 368 blokov, sonda na 368 vidna; hoja čez mejo 64 brez vrzeli) |
+| Trenutni milestone | **M5 — Performance**: M5-S (strežnik) zaključen 16. 10. (M5.8: idle 10×, boj 1,5×, nedosegljiva 1,4× pri p95 ≤ 25 ms); M5-K (klient): K.0 in K.1 zaključena, K14 zavržen, K14b v kodi (privzeto 0, Q30) in K4 (privzeto 1) 19. 10., K3 zavržen 21. 10. (A/B brez koristi), K5 L1 v kodi 21. 10. (privzeto 0, D-039); M5-V.1 zaključen 21. 10. (varianta A zavrnjena, D-043), M5-V.2 (strežnik `rwfar`) zaključen 21. 10. (privzeto 0, D-044), M5-V.3 (opis videza) zaključen 21. 10. (D-045), M5-V.4 (peka impostorjev) zaključen 21. 10. (D-046), M5-V.5 (izris L3) zaključen 21. 10. (D-047). M3 (jedro entitete) zaključen do M3.9 (GUI za hitbox način M3.8b v klientu odprt); M2 zaključen (baseline M2.6 zelen 5. 10.) |
+| Naslednji paketi | **M5-V.6** (L2: sledeni oddaljeni NPC-ji kot impostorji), nato V.7, V.8 (vidnost NPC-jev do 24 chunkov, D-034/D-035; Q30 vklop K14b še odprt), K12, ostali K-paketi. Pred izdajo **Q22** (pravi Forge strežnik: jar od M5.16 privzeto spreminja vanilla bajtkodo, produkcijska pot je preverjena samo statično). **M4.0** narejen 20. 10. (D-038); od M4 se lahko vrineta **M4.14b** (formacije v svetu, samo zagon) in **M4.16** (scenarij letenja), ko računalnik ni v rabi. Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **173** datotek `.java` v `src/patch` (21. 10.; +5 M5-V.4: 4 `rework/far`, 1 `rework/diag`), od tega **108** v `noppes/npcs/rework/…` (`ai` 5, `core` 9, `data` 5, `diag` 24, `entity` 13, `far` 15, `formation` 15, `nav` 12, `net` 3, `render` 7) in 3 dostopni razredi v `net/minecraft/…`; `verify-package`: **71** vnosov (70 razredov originala + manifest coremoda) |
-| Testi | **356 JUnit** (metod `@Test`, preštetih z grep 21. 10.; +13 M5-V.4) v 61 datotekah — zeleni na kodi `86da496c…` + **40 primerjalnih testov originala** (`:testOriginal` proti nespremenjenemu binarju). Dodatno **20** preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.ponovitve-samotest.ps1`, M2.5c) |
+| Prevedljivih razredov | **178** datotek `.java` v `src/patch` (21. 10.; +5 M5-V.5: 3 `rework/far`, 1 `rework/core`, 1 `rework/diag`), od tega **113** v `noppes/npcs/rework/…` (`ai` 5, `core` 10, `data` 5, `diag` 25, `entity` 13, `far` 18, `formation` 15, `nav` 12, `net` 3, `render` 7) in 3 dostopni razredi v `net/minecraft/…`; `verify-package`: **71** vnosov (70 razredov originala + manifest coremoda) |
+| Testi | **375 JUnit** (metod `@Test`, preštetih z grep 21. 10.; +19 M5-V.5) v 64 datotekah — zeleni na kodi `92f1a22b…` + **40 primerjalnih testov originala** (`:testOriginal` proti nespremenjenemu binarju). Dodatno **20** preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.ponovitve-samotest.ps1`, M2.5c) |
 | Odprti pojavi | nobenega blokirnega; P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6, Q8, Q10, Q12, Q14 in Q31 odprta; specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Seja teče na uporabnikovem Windows računalniku (DESKTOP-SN494C0) s PowerShellom, Gradlom in JDK 8 — **sama poganja build, `verify-package` in scenarije v svetu**. Pred zagonom scenarija odstrani `NoDefaultCurrentDirectoryInExePath` (glej `OKOLJE.md`). Python ni nameščen (node je) |
@@ -39,7 +39,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M2 Diagnostika | **zaključeno 5. 10.** (razen M2.4r render, prestavljen v M5-K) | M2.1–M2.7 preverjeni v svetu; baseline M2.6 zelen 5. 10. — [baseline](meritve/baseline-2026-10-05.md) |
 | M3 Jedro entitete | **zaključeno do M3.9** | M3.1–M3.5 (R1 reproduciran, popravljen pod `RwMountSteering=1`), M3.6 (D-020, `RwAttackPriority`), M3.7, M3.8 (`RwHitbox`), M3.9 (7. 10.). Odprto: M3.8b GUI v klientu (z igralcem), Q15 → D-028 |
 | M4 Gibanje | **M4.0 zaključen 20. 10.**; M4.14a v kodi (izven vrstnega reda) | [raziskava M4.0](raziskave/M4.0-gibanje-in-letenje.md), D-038: vrstni red M4.14b → M4.16 (scenarij) → M4.10 → M4.17 → M4.2/M4.3 → (M4.5) → M4.6 → M4.7; M4.13 → (M4.11) in M4.15 neodvisno; M4.1/M4.4/M4.9/M4.12 zavrženi ali združeni. Formacije v svetu še ne — [zasnova](06-FORMACIJE.md); M4.15 (D-036); Q6, Q31 |
-| M5 Performance | **M5-S zaključen 16. 10.**; M5-K.0 (16. 10.) in M5-K.1 (18. 10.) zaključena, K14 zavržen, K14b v kodi (19. 10., `RwHeadwearSkip` privzeto 0, Q30: −25 % idle-500), K4 (19. 10., `RwLabelCache=1`, −7 % idle-200), K3 zavržen (21. 10., A/B brez koristi, `RwEyesList=0`), K5 L1 (21. 10., `RwLodStart=0`, D-039: idle-500 −24 % pri vklopu); M5-V.1 zaključen 21. 10. (D-043), M5-V.2 (D-044), M5-V.3 (D-045) in M5-V.4 (D-046) zaključeni 21. 10.; naprej M5-V.5 (D-034, D-035) | M5-S: S1, S2, S14b, S4, S7, S5 (D-037, `RwPathNegCache=1`), S14c, S16, M5.15 (coremod), M5.16 (`RwMoveBoxes`) vsi privzeto vklopljeni po D-032; M5.2 zavržen. Podrobnosti po paketih: [arhiv, tabele §2](arhiv/04-STANJE-tabele.md); razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
+| M5 Performance | **M5-S zaključen 16. 10.**; M5-K.0 (16. 10.) in M5-K.1 (18. 10.) zaključena, K14 zavržen, K14b v kodi (19. 10., `RwHeadwearSkip` privzeto 0, Q30: −25 % idle-500), K4 (19. 10., `RwLabelCache=1`, −7 % idle-200), K3 zavržen (21. 10., A/B brez koristi, `RwEyesList=0`), K5 L1 (21. 10., `RwLodStart=0`, D-039: idle-500 −24 % pri vklopu); M5-V.1 zaključen 21. 10. (D-043), M5-V.2 (D-044), M5-V.3 (D-045), M5-V.4 (D-046) in M5-V.5 (D-047) zaključeni 21. 10.; naprej M5-V.6 (D-034, D-035) | M5-S: S1, S2, S14b, S4, S7, S5 (D-037, `RwPathNegCache=1`), S14c, S16, M5.15 (coremod), M5.16 (`RwMoveBoxes`) vsi privzeto vklopljeni po D-032; M5.2 zavržen. Podrobnosti po paketih: [arhiv, tabele §2](arhiv/04-STANJE-tabele.md); razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
@@ -55,8 +55,52 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 106 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 107 → 1, novejši zgoraj).*
 
+
+### 2026-10-21 (109) — M5-V.5: nadomestki in izris L3 — zaključeno
+
+**Paket:** M5-V.5 · **Stanje:** **zaključeno** — vseh 5 zahtevanih testov zelenih na kodi `92f1a22b…`: `unit`, `build`,
+`package`, `v5-izris-24-64-5000`, `v5-izris-10-64-1000` (V0–V24 zeleni v obeh zagonih).
+
+**Narejeno (D-047):**
+- `FarRender` (en `BufferBuilder` za vse nadomestke, pol-vidni v drugem z alfo 0,15; cilindrični billboard, okvir po
+  kotu `ImpostorFrames.frameFor`, alfa test 0,1, lightmap kraja `World.getCombinedLight`, megla; šiv po `entityId`,
+  mrtva entiteta z nadomestkom se ne nariše), `FarInterp` (premik v 1 s od prikazanega položaja, skok nad 16 blokov),
+  coremod `RenderEntitiesPatch` (`RenderGlobal.renderEntities` pred `"blockentities"`, prehod 0; rezerva
+  `RenderWorldLastEvent`), ukaz `/rwimpostor`. `FarBand.PREFETCH`: strežnik videz izračuna 16 blokov pred notranjo
+  mejo, da je ob prehodu že pečen.
+- `FarDrawCheck` (harness): sonda na robu pasu, A/B/C pikslov v pravi sličici s FOV 10; faza `SEAM` s hitrostjo hoje.
+  `v-run.ps1 -Izris 1` z merili V22–V24
+  ([scenarij](scenariji/M5-V.1-dalec.md#m5-v5-izris-l3-v22v24--far-1--impostor-1--izris-1)).
+- JUnit: `FarInterpTest` (9), `RenderEntitiesPatchTest` (4, prave bajte Forge 1.12.2), `FarDrawCheckTest` (4),
+  `FarBandTest` (+1), `HarnessJobTest` (+1); izključeni iz `testOriginal`.
+
+**Izid v svetu (ena ponovitev na celico, `-Far 1 -Impostor 1 -Izris 1`, nočni upravljalnik):**
+
+| Celica | Narisanih min/max (pričakovano) | Živih v šivu | Najdlje | Izris povp. / max | V23 sonda | V24 vrzeli / dvojnih / prehodov | Sličica p50 / p95 ms | B/s | MSPT p50 / p95 ms |
+|---|---|---|---|---|---|---|---|---|---|
+| vd 24, domet 64, 5.000 | 4831 / 4831 (4820..4841) | 40 | **368,0** | 1.305,6 / 18.404 µs | 368 blokov: 114 px, razlika 165, kontrola 0 | **0 / 0** / 170 + 150 | 9,42 / 14,45 (FPS 99,9) | 887 | 58,72 / 71,303 |
+| vd 10, domet 64, 1.000 | 176 / 176 (170..176) | 0 | 168,8 | 53,1 / 160,5 µs | 148 blokov: 810 px, razlika 98, kontrola 0 | **0 / 0** / 25 + 25 | 1,23 / 2,10 (FPS 761,8) | 170 | 1,245 / 1,704 |
+
+- Poseg coremoda uspel v obeh zagonih, 0 sličic prek rezerve; 0 izven frustuma, 0 nadomestkov brez peke.
+- Pot do zelenega: prvi zagon (`9c004fa8…`) je dal v V24 15 vrzeli (videz 0 v prvem krogu → nepečen ob prehodu) in
+  400 dvojnih (mrtva entiteta v chunku do ticka) — popravljeno s predpasom videza in skrivanjem mrtve entitete.
+  Drugi (`1538c62d…`) je pri vd 10 dal 0 pikslov sonde na 168,8 bloka (za koncem megle 160, neviden tudi v
+  originalu) — sonda je odslej najbolj oddaljen nadomestek ≥ 12 blokov pred koncem megle; merilo pri vd 24 ostane 368.
+- Sličica pri vd 24/5000: p50 9,42 ms proti 7,47 ms v M5-V.4 brez izrisa (ena ponovitev, ne A/B) — izris 4831
+  impostorjev stane ~1,3 ms na sličico, kar se ujema s števcem `FarRender`. Primerjava z originalom je M5-V.8.
+- Surovi izidi: git-ignored `audit/v-24-64-5000-izris-2026-10-21-141027*`, `audit/v-10-64-1000-izris-2026-10-21-141445*`.
+
+**Spremembe obnašanja moda:** pri privzetih nastavitvah nobene vidne; coremod spremeni bajtkodo
+`RenderGlobal.renderEntities` (klic, ki se pri `RwFarView=0` takoj vrne — registrirano v 04-REGISTRI).
+**Minecraft meritve:** 6 zagonov `-Izris 1` (2 zelena na končni kodi).
+
+**Za M5-V.8:** `FarRender` riše tudi nadomestke za koncem megle (`RD · 16`), kar je odvečno delo; hitrejše premikanje
+od ~8 blokov/s lahko na meji pusti vrzel do ~1 s.
+
+**Naslednji korak:** **M5-V.6** (L2: sledeni oddaljeni NPC-ji kot impostorji, `RwFarView=2`). Neodvisno: čistilni
+korak K3, M4.14b/M4.16; Q30 odprt.
 
 ### 2026-10-21 (108) — M5-V.4: peka impostorjev na klientu — zaključeno
 
@@ -110,49 +154,6 @@ ustvari). **Minecraft meritve:** 2 zagona `-Far 1 -Impostor 1`.
 
 **Naslednji korak:** **M5-V.5** (nadomestki in izris L3 iz atlasa). Neodvisno: čistilni korak K3, M4.14b/M4.16;
 Q30 odprt.
-
-### 2026-10-21 (107) — M5-V.3: opis videza (`FarLook`, id videza, `REQ`/`LOOK`) — zaključeno
-
-**Paket:** M5-V.3 · **Stanje:** **zaključeno** — vseh 5 zahtevanih testov zelenih na kodi `57ac59cc…`: `unit`, `build`,
-`package`, `v3-far-24-64-5000`, `v3-far-10-64-1000` (V0–V19 zeleni v obeh zagonih).
-
-**Narejeno (D-045):**
-- `FarLook` (opis = podmnožica spawn NBT po beli listi, brez imena/naslova/`ShowName`/vlog; kanonična oblika,
-  FNV-1a 64 + mešanje, nikoli 0), `FarLooks` (strežniška tabela hash → kratek id, deljen med kloni, LRU 256
-  nedejavnih), `FarRequests` (`REQ` samo za prejete id-je, vsak id enkrat do novega `HELLO`, vrsta ≤ 1.024,
-  ≤ 8 odgovorov na tick na igralca). `FarCodec.VERSION` 2 (`REQ`, `LOOK` z GZIP opisom). `FarServer`: največ
-  64 opisov na tick ob koncu ticka, `UPDATE_NPC` (`EntityNPCInterface.updateClient`) → `invalidateLook`, čas opisov
-  v `usNaTickNaIgralca`. `FarClient`: id → hash na svet, hash → opis v LRU 512, preverba hasha po razpakiranju,
-  ponovna zahteva po 10 s; `FarClient.description(id)` za M5-V.4.
-- Harness: polja `farVidez*`/`farBrezVideza` v JSON klienta; `v-run.ps1 -Far 1` z merilom V19
-  ([scenarij](scenariji/M5-V.1-dalec.md#m5-v3-opis-videza-v19-isti--far-1)).
-- JUnit: `FarLookTest` (6: kloni isti hash, sprememba videza nov hash, ime/naslov ne vplivata …), `FarLooksTest` (3),
-  `FarRequestsTest` (4); izključeni iz `testOriginal`.
-
-**Izid v svetu (ena ponovitev na celico, `-Far 1`, nočni upravljalnik):**
-
-| Celica | Pas / nadomestkov klient | Videzov v rabi (strežnik) | Izračunov skupaj | Klient: opisov / zahtevanih id / odgovorov / napak / brez opisa | rwfar µs/tick/igralca (max krog) | Sličica p50 / p95 ms | B/s | MSPT p50 / p95 ms |
-|---|---|---|---|---|---|---|---|---|
-| vd 24, domet 64, 5.000 | 4870 / 4870 | **1** | 4870 | 1 / 1 / 1 / 0 / **0** | **93,373** (2,42 ms) | 7,37 / 11,84 (FPS 126,3) | 933 | 57,672 / 73,4 |
-| vd 10, domet 64, 1.000 | 175 / 175 | **1** | 175 | 1 / 1 / 1 / 0 / **0** | **6,180** (0,18 ms) | 1,20 / 1,83 (FPS 785,7) | 171 | 1,245 / 1,769 |
-
-- 4870 klonov `PERF_Idle` deli **en** videz; klient je za vse nadomestke prejel en opis z enim `REQ`, hash preverjen,
-  0 zavrnjenih zahtev, 0 prevelikih opisov. Na žici videz stane en `LOOK` na igralca, ne na NPC.
-- Vsi opisi so bili izračunani pred `rwfar reset` (v merilnem oknu `nsVidez=0`, `izracunov=0`, `cakaVidez=0`), zato
-  čas izračuna opisov v oknu ni izmerjen — okno meri stalno stanje. Prvi krog pri 4870 NPC-jih se razdeli na
-  ~77 tickov po 64 opisov.
-- V18 drži tudi z opisi: 93,4 µs proti 89,2 µs v M5-V.2 (ena ponovitev, razlika ni dokazana). Sličica/MSPT brez A/B,
-  primerjava z originalom je M5-V.8.
-- Surovi izidi: git-ignored `audit/v-24-64-5000-far-2026-10-21-124436*`, `audit/v-10-64-1000-far-2026-10-21-124827*`.
-
-**Znana omejitev (za M5-V.8):** NPC, ki kliče `updateClient` vsak tick, vsak tick pride v vrsto in porabi del proračuna
-64 izračunov na tick; mirujoči/statični NPC-ji tega ne sprožijo.
-
-**Spremembe obnašanja moda:** nobene pri privzetih nastavitvah (`RwFarView=0`; `invalidateLook` brez prijavljenih
-igralcev `rwfar` ne naredi nič). **Minecraft meritve:** 2 zagona `-Far 1`.
-
-**Naslednji korak:** **M5-V.4** (peka impostorjev na klientu, opis iz `FarClient.description(id)`). Neodvisno: čistilni
-korak K3, M4.14b/M4.16; Q30 odprt.
 
 ---
 

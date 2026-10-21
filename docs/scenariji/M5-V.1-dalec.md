@@ -141,3 +141,43 @@ impostorja pri 56 blokih za vseh 8 kotov. Klient izpiše vrstico `RWHARNESS-IMPO
 | V21 | za vsak od 8 videzov (združeno čez 8 kotov) IoU silhuete ≥ **0,70** in povprečna razlika barve v preseku ≤ **32**/255; občutljivost (enobarvni skin proti modelu osnove) > **64**; vseh 8 videzov izmerjenih. Merila so določena pred prvo meritvijo |
 
 Testa upravljalnika: `v4-imp-24-64-5000`, `v4-imp-10-64-1000` (`v-run.ps1 -Far 1 -Impostor 1`).
+
+## M5-V.5: izris L3 (V22–V24, `-Far 1 -Impostor 1 -Izris 1`)
+
+Z `-Izris 1` (samo skupaj z `-Impostor 1`) klient nadomestke riše kot impostorje (`FarRender`, D-047): en
+`BufferBuilder` na sličico v `RenderGlobal.renderEntities` pred `"blockentities"` (poseg coremoda
+`RenderEntitiesPatch`), rezerva `RenderWorldLastEvent`. Prizorišče dobi **sondo**: en `PERF_Idle` naravnost pred
+kamero na zunanjem robu pasu, `(vd − 1) · 16` blokov (pri vd 24 **368**, pri vd 10 144; Chebyshev = evklidska
+razdalja, ker je `dx = 0`); N prizorišča je zato N + 1. Harness dobi `farDrawCheck=1` in `seamCheck=1`.
+
+- **V23 (po ogrevanju):** harness kamero usmeri v sondo in nastavi FOV **10** (pri 480 vrsticah je NPC na 368 blokih
+  pri FOV 70 ~1 × 2 piksla, pod mejo zanesljive rasterizacije; pri 10 ~7 × 14). Megla je odvisna od razdalje, ne od
+  FOV, zato ostane igrina (pri 368 od 384 blokov ~83 % megle). Po 20 sličicah prebere okno okoli pravokotnika sonde
+  (+3 px) v treh zaporednih sličicah: A z izrisom L3, B brez, C z njim. Nato FOV in kot nazaj, merjenje 2 s pozneje.
+  Sonda je najbolj oddaljen nadomestek, ki je še vsaj 12 blokov pred koncem megle (`RD · 16`): pri vd 10 je
+  diagonalni NPC gruče na 168,8 bloka za koncem megle (160) in povsem v njeni barvi, neviden tudi v originalu
+  (prvi zagon 2026-10-21: 0 spremenjenih pikslov). Meja pri vd 24 je 372 ≥ 368, merilo ostane nespremenjeno.
+- **V22 (merjenje):** vsako sličico isti izris; števci `FarRender` od začetka merjenja.
+- **V24 (po merjenju):** JSON merjenja se zgradi ob koncu merjenja, klient 5 s miruje (skripta takrat prebere
+  `rwdiag dump`, `rwdiag vd` in `rwfar` — merilno okno strežnika ostane mirno), nato faza `SEAM`: kamera se s
+  **hitrostjo hoje** (0,2158 bloka/tick) premakne 48 blokov nazaj in nazaj na začetek (447 tickov). Vsako sličico se
+  zbere množica narisanih NPC-jev (živa entiteta prek `RenderLivingEvent.Post`, impostor iz `FarRender.DRAWN_IDS`).
+
+JSON klienta: `farPoseg`, `farIzrisSlicic`, `farIzrisRezerva`, `farIzrisNarisanihMin/Max`, `farIzrisZivihMax`,
+`farIzrisIzvenFrustumaMax`, `farIzrisBrezPekeMax`, `farIzrisNajdlje`, `farIzrisUsPovp/Max`, `dalecPreverba`,
+`dalecRazdalja`, `dalecSpremenjenih`, `dalecNajvecRazlika`, `dalecKontrola`, `dalecPoskusov`, `dalecOpis`,
+`sivPreverba`, `sivSlicic`, `sivVrzeli`, `sivZivDoImpostorja`, `sivImpostorDoZivega`, `sivDvojnih`, `sivIzPasu`,
+`sivIzvenFrustuma`, `sivNajvecNarisanih`, `sivOpis`. Vrstice dnevnika `RWHARNESS-DALEC`, `RWHARNESS-SIV`.
+
+| Merilo | Pogoj |
+|---|---|
+| V22 | poseg coremoda uspel (`farPoseg = 1`), 0 sličic rezerve, izris v vsaki sličici merjenja (≥ sličic − 2); narisanih min = max, v mejah nadomestkov v pasu `(64, rob]` (±1 blok); živih (šiv) v mejah `(56, 64]`; narisani + živi = nadomestki v klientu; 0 izven frustuma, 0 brez pečenega videza |
+| V23 | sonda je najbolj oddaljen nadomestek, razdalja ≥ rob pasu − 0,5 (vd 24: **≥ 367,5**); A ≠ B v ≥ **1** pikslu za ≥ 3/255 v kakšnem kanalu; kontrola A = C (0 pikslov; sicer do 5 poskusov) |
+| V24 | 0 vrzeli (NPC, narisan v prejšnji sličici, v tej ni narisan ne živ ne kot impostor; izvzeto: ni ga več nikjer in je bil ≤ 4 bloke od zunanjega roba pasu, ali živ izven frustuma), 0 dvojnih (živ in impostor v isti sličici), ≥ 1 prehod živ → impostor in ≥ 1 impostor → živ |
+
+Testa upravljalnika: `v5-izris-24-64-5000`, `v5-izris-10-64-1000` (`v-run.ps1 -Far 1 -Impostor 1 -Izris 1`).
+
+**Omejitev V24:** prekrivanje pasu je 8 blokov, kadenca strežnika ~1 Hz. Pri hoji (4,3 bloka/s) nadomestek pride
+~1,9 s pred uničenjem žive entitete; pri hitrosti nad ~8 blokov/s (letenje v ustvarjalnem načinu 10,9, gledalec) lahko
+NPC na meji izgine za do ~1 s. Scenarij meri hojo; hitrejše premikanje je kandidat za M5-V.8 (4 Hz v bližnjem pasu,
+raziskava M5-V.0 §5.1).

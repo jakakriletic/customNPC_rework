@@ -17,6 +17,11 @@ package noppes.npcs.rework.far;
 public final class FarBand {
     /** Prekrivanje pasu s sledilnikom v blokih (sav nadomestka in zive entitete). */
     public static final int OVERLAP = 8;
+    /**
+     * M5-V.5: toliko blokov pred notranjo mejo streznik videz NPC-ja izracuna vnaprej; sicer NPC, ki med hojo
+     * sele vstopi v pas, prvi krog dobi videz 0 in ob unicenju zive entitete nima pecenega impostorja (siv).
+     */
+    public static final int PREFETCH = 16;
 
     private FarBand() {
     }
@@ -36,5 +41,11 @@ public final class FarBand {
     public static boolean inBand(double dx, double dz, int inner, int outer) {
         double c = chebyshev(dx, dz);
         return c > inner && c <= outer;
+    }
+
+    /** M5-V.5: NPC tik pred pasom ({@code inner - PREFETCH < c <= inner}), ki mu streznik ze izracuna videz. */
+    public static boolean inPrefetch(double dx, double dz, int inner) {
+        double c = chebyshev(dx, dz);
+        return c > inner - PREFETCH && c <= inner;
     }
 }

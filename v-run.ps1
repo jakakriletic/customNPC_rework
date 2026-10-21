@@ -32,6 +32,12 @@
     piksle impostor - model pri 56 blokih (ImpostorCheck). V20: vsak nadomestek z opisom ima pecen videz, brez napak
     peke, framebuffer na voljo. V21: primerjava pikslov (IoU >= 0,70, razlika barve <= 32 za 8 videzov x 8 kotov,
     obcutljivost > 64).
+    M5-V.5: -Izris 1 (samo z -Impostor 1): izris L3 (FarRender, poseg coremoda v RenderGlobal.renderEntities). Prizorisce
+    dobi eno sondo PERF_Idle naravnost pred kamero na zunanjem robu pasu ((vd - 1) * 16 blokov). V22: v merjenju vsako
+    slicico narisani vsi nadomestki onkraj sledilnika (64), nobeden izven frustuma ali brez peke, prek coremoda (brez
+    rezerve). V23: po ogrevanju A/B pikslov sonde v pravi slicici (kamera usmerjena vanjo, FOV 10, izris vklopljen /
+    izklopljen / vklopljen; razlika >= 1 piksel, kontrola 0). V24: po merjenju kamera hodi s hitrostjo hoje 48 blokov nazaj
+    in nazaj; nobena slicica ne izgubi prej narisanega NPC-ja (ziv ali impostor), prehodi v obe smeri.
 
     Merila V0-V15 (in V16-V19 z -Far 1) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
 #>
@@ -43,6 +49,8 @@ param(
     [ValidateSet(0, 1)][int]$Far = 0,
     # M5-V.4: 1 = peka impostorjev in primerjava pikslov impostor - model (samo z -Far 1).
     [ValidateSet(0, 1)][int]$Impostor = 0,
+    # M5-V.5: 1 = izris L3 in preverbi V22-V24 (samo z -Impostor 1).
+    [ValidateSet(0, 1)][int]$Izris = 0,
     [int]$Warmup = 30,
     [int]$Measure = 60,
     [int]$Fov = 70,
@@ -92,6 +100,14 @@ for ($k = 0; $k -lt $gruc; $k++) {
 # Polozaji NPC-jev: sredina bloka (CmdClone.grid postavi NPC na x + i, z + j).
 $npcPos = New-Object System.Collections.ArrayList
 foreach ($c in $gruce) { for ($i = -2; $i -le 2; $i++) { for ($j = -2; $j -le 2; $j++) { [void]$npcPos.Add(@(($c[0] + $i + 0.5), ($c[1] + $j + 0.5))) } } }
+# M5-V.5: sonda - en NPC naravnost pred kamero (yaw 180 = -Z) na zunanjem robu pasu rwfar, Chebyshev (vd - 1) * 16.
+$sonda = $null
+if ($Izris -eq 1) {
+    $sonda = @([int][math]::Floor($camX), [int][math]::Floor($camZ - ($Vd - 1) * 16))
+    foreach ($c in $gruce) { if ([math]::Max([math]::Abs($c[0] - $sonda[0]), [math]::Abs($c[1] - $sonda[1])) -lt 6) { throw 'sonda se prekriva z gruco' } }
+    [void]$npcPos.Add(@(($sonda[0] + 0.5), ($sonda[1] + 0.5)))
+}
+$nVseh = $npcPos.Count
 function Get-Sledenih([int]$R) {
     $n = 0
     foreach ($p in $npcPos) { if (([math]::Abs($p[0] - $camX) -le $R) -and ([math]::Abs($p[1] - $camZ) -le $R)) { $n++ } }
@@ -115,6 +131,7 @@ $daljnji = 0.0; $najblizji = 1e9
 foreach ($p in $npcPos) { $d = [math]::Sqrt([math]::Pow($p[0] - $camX, 2) + [math]::Pow($p[1] - $camZ, 2)); $daljnji = [math]::Max($daljnji, $d); $najblizji = [math]::Min($najblizji, $d) }
 if ($Far -eq 1 -and $Domet -ne 64) { throw '-Far 1 je mogoc samo z -Domet 64 (pas rwfar se zacne pri sledilniku).' }
 if ($Impostor -eq 1 -and $Far -ne 1) { throw '-Impostor 1 potrebuje -Far 1 (opis videza pride po kanalu rwfar).' }
+if ($Izris -eq 1 -and $Impostor -ne 1) { throw '-Izris 1 potrebuje -Impostor 1 (izris L3 rise pecene impostorje).' }
 # M5-V.2: pas rwfar (FarBand): (min(64, meja) - 8, min(RwFarRange 384, zeleni domet klienta RD * 16, meja)], meja = (vd - 1) * 16,
 # samo NPC-ji v chunkih, ki jih igralec gleda (kvadrat vd chunkov). NPC tocno na meji je lahko v ali izven, zato +-1 blok.
 $farMeja = ($Vd - 1) * 16
@@ -131,14 +148,20 @@ function Get-Pas([double]$Lo, [double]$Hi) {
 }
 $pasMin = Get-Pas ($farNotr + 1) ($farZun - 1)
 $pasMax = Get-Pas ($farNotr - 1) ($farZun + 1)
+# M5-V.5: narisani impostorji so nadomestki onkraj sledilnika (64); med (64 - 8, 64] ima klient zivo entiteto (siv).
+$izrMin = Get-Pas ([math]::Min(64, $farMeja) + 1) ($farZun - 1)
+$izrMax = Get-Pas ([math]::Min(64, $farMeja) - 1) ($farZun + 1)
+$sivMin = Get-Pas ($farNotr + 1) ([math]::Min(64, $farMeja) - 1)
+$sivMax = Get-Pas ($farNotr - 1) ([math]::Min(64, $farMeja) + 1)
 $renderWeight = if ($Domet -gt 64) { 6.0 } else { 0.0 }
 $pricWeight = if ($renderWeight -gt 0) { $renderWeight } else { [math]::Min(2.5, [math]::Max(1.0, $Vd / 8.0)) }
 
 Step 1 'Parametri in priprava'
 Write-Host ("  celica: vd {0}, domet {1} (sledilnik {2}), N {3} v {4} gruckah, NPC od {5:N1} do {6:N1} blokov" -f $Vd, $Domet, $Rsl, $N, $gruc, $najblizji, $daljnji)
 if ($Far -eq 1) { Write-Host ("  rwfar: pas ({0}, {1}], pricakovanih nadomestkov {2}..{3}" -f $farNotr, $farZun, $pasMin, $pasMax) }
+if ($Izris -eq 1) { Write-Host ("  izris L3: sonda pri ({0}, {1}), pricakovanih impostorjev {2}..{3}, zivih v pasu {4}..{5}" -f ($sonda[0] + 0.5), ($sonda[1] + 0.5), $izrMin, $izrMax, $sivMin, $sivMax) }
 Write-Host ("  pricakovano: nalozenih pri 24 {0}, pri {1} {2}; v klientu (sledenih) {3}..{4}" -f $nal24, $Vd, $nalVd, $slMin, $slMax)
-Check ("V0a: vsi NPC-ji prizorisca so znotraj 24 chunkov ({0} od {1})" -f $nal24, $N) ($nal24 -eq $N)
+Check ("V0a: vsi NPC-ji prizorisca so znotraj 24 chunkov ({0} od {1})" -f $nal24, $nVseh) ($nal24 -eq $nVseh)
 $zaklep = Enter-ScenarijZaklep -Pot (Join-Path $root '.scenarij.lock') -Kdo 'v-run'
 Check 'zaklep scenarija (.scenarij.lock)' $true
 $tuji0 = @(Get-TujiJava)
@@ -160,7 +183,7 @@ Check ("server.properties: online-mode=false (dev klient nima prijave), vrata {0
 if (-not $offline) { throw 'online-mode mora biti false.' }
 
 $stamp = Get-Date -Format 'yyyy-MM-dd-HHmmss'
-$tag = if ($Impostor -eq 1) { "v-$Vd-$Domet-$N-imp-$stamp" } elseif ($Far -eq 1) { "v-$Vd-$Domet-$N-far-$stamp" } else { "v-$Vd-$Domet-$N-$stamp" }
+$tag = if ($Izris -eq 1) { "v-$Vd-$Domet-$N-izris-$stamp" } elseif ($Impostor -eq 1) { "v-$Vd-$Domet-$N-imp-$stamp" } elseif ($Far -eq 1) { "v-$Vd-$Domet-$N-far-$stamp" } else { "v-$Vd-$Domet-$N-$stamp" }
 $svet = 'rwv-dalec'
 $svetDir = Join-Path $run $svet
 # Svez svet vsak zagon (D-016). Mapa je nasa (predpona rwv-), ustvari jo samo ta skripta.
@@ -280,6 +303,7 @@ try {
              'settle=5', "warmup=$Warmup", "measure=$Measure", ('out=' + ($out -replace '\\', '/')))
     if ($Far -eq 1) { $job += 'farView=1' }
     if ($Impostor -eq 1) { $job += 'impostorCheck=1' }
+    if ($Izris -eq 1) { $job += 'farDrawCheck=1'; $job += 'seamCheck=1' }
     [System.IO.File]::WriteAllLines($jobPath, $job, (New-Object System.Text.UTF8Encoding($false)))
     & (Join-Path $root 'prepare-assets.ps1') | ForEach-Object { Write-Host "    $_" }
     $psc = New-Object System.Diagnostics.ProcessStartInfo
@@ -314,12 +338,13 @@ try {
     $cakanjeChunkov = ((Get-Date) - $t0).TotalSeconds
     Check ("V3: chunki okoli igralca pri 24 nalozeni ({0} >= {1} = 49 x 49, pred vstopom skupaj {2}, {3:N0} s; {4})" -f $chunki24, $cilj, $chunkiPred, $cakanjeChunkov, $vdOdg) ($chunki24 -ge $cilj)
     foreach ($c in $gruce) { Send-Command $srv ('noppes clone grid PERF_Idle 1 5 5 {0},{1},{2}' -f ($c[0] - 2), $tla, ($c[1] - 2)) }
+    if ($sonda) { Send-Command $srv ('noppes clone grid PERF_Idle 1 1 1 {0},{1},{2}' -f $sonda[0], $tla, $sonda[1]) }
     $meja = (Get-Date).AddSeconds(180)
     do {
         Start-Sleep -Seconds 2
         $npc24 = Get-Polje (Send-Query $srv 'rwdiag vd' 'RWDIAG-VD') 'npc'
-    } while ($npc24 -lt $N -and (Get-Date) -lt $meja)
-    Check ("V4: na strezniku je {0} NPC-jev pri razdalji 24 (pricakovano {1})" -f $npc24, $N) ($npc24 -eq $N)
+    } while ($npc24 -lt $nVseh -and (Get-Date) -lt $meja)
+    Check ("V4: na strezniku je {0} NPC-jev pri razdalji 24 (pricakovano {1})" -f $npc24, $nVseh) ($npc24 -eq $nVseh)
     if ($Vd -ne 24) {
         $vdOdg = Send-Query $srv ("rwdiag vd {0}" -f $Vd) 'RWDIAG-VD'
         Write-Host ("  {0}" -f $vdOdg)
@@ -346,6 +371,7 @@ try {
     $meja = (Get-Date).AddSeconds(600 + $Warmup + $Measure)
     $rwOn = $false
     $rwDump = $false
+    $izhod = $false
     while (-not $cli.HasExited) {
         if ((Get-Date) -gt $meja) { Write-Host '  ! klient se ni koncal pravocasno; ubijam drevo procesov'; Stop-Drevo $cli; break }
         $kt = Get-LogText $kliLog
@@ -358,7 +384,8 @@ try {
             if ($Far -eq 1) { Send-Command $srv 'rwfar reset' }
             $rwOn = $true
         }
-        if ($rwOn -and -not $rwDump -and "$kt" -match 'RWHARNESS-FAZA DONE') {
+        # M5-V.5: s -Izris 1 sledi merjenju faza SEAM (kamera hodi); streznik se prebere ob njenem zacetku.
+        if ($rwOn -and -not $rwDump -and "$kt" -match 'RWHARNESS-FAZA (SEAM|DONE)') {
             $dumpOdg = Send-Query $srv ("rwdiag dump {0}" -f $tag) 'RWDIAG-DUMP' 30
             Send-Command $srv 'rwdiag off'
             $rwDump = $true
@@ -370,8 +397,11 @@ try {
             }
             $vdKonec = Send-Query $srv 'rwdiag vd' 'RWDIAG-VD'
             if ($Far -eq 1) { $farKonec = Send-Query $srv 'rwfar' 'RWFAR nacin=' }
+        }
+        if ($rwDump -and -not $izhod -and "$kt" -match 'RWHARNESS-FAZA DONE') {
             # M5-V.2: klient po DONE caka povezan (stevci na igralca so brani, ko je se prijavljen).
             Send-Command $srv 'say RWHARNESS-IZHOD'
+            $izhod = $true
         }
         if ("$kt" -match 'RWHARNESS-NAPAKA') {
             # Harness po napaki zapise JSON in se ugasne sam; pocakamo ga.
@@ -443,6 +473,12 @@ if ($Impostor -eq 1 -and $r) {
     Check ('V20: peka impostorjev - pecenih {0}, v atlasu {1}, nadomestkov brez peke {2}, napak {3}, odlozenih {4}, obrezanih {5}, brez FBO {6}; peka povp. {7:N2} ms, najvec {8:N2} ms' -f $r.impPeceno, $r.impVAtlasu, $r.impBrezPeke, $r.impNapak, $r.impOdlozenih, $r.impObrezanih, $r.impBrezFbo, $r.impPekaMsPovp, $r.impPekaMsMax) (($r.impPeceno -ge 1) -and ($r.impBrezPeke -eq 0) -and ($r.impNapak -eq 0) -and ($r.impBrezFbo -eq 0) -and ($r.farVKlientu -gt 0))
     Check ('V21: piksli impostor - model pri 56 blokih (8 videzov x 8 kotov, IoU >= 0,70, razlika <= 32, obcutljivost > 64): preverba {0}, videzov {1}, obcutljivost {2:N1}; {3} {4}' -f $r.impPreverba, $r.impVidezov, $r.impObcutljivost, $r.impSerije, $r.impNapaka) ($r.impPreverba -eq 1)
 }
+if ($Izris -eq 1 -and $r) {
+    # M5-V.5: izris L3 v merilnem oknu, vidnost sonde na robu pasu, siv ob prehodu cez mejo sledilnika.
+    Check ('V22: izris L3 - poseg coremoda {0}, slicic z izrisom {1} od {2}, rezerva {3}; narisanih min/max {4}/{5} (pricakovano {6}..{7}), zivih (siv) max {8} ({9}..{10}), izven frustuma {11}, brez peke {12}; najdlje {13:N1} blokov; izris povp. {14:N1} us, najvec {15:N1} us' -f $r.farPoseg, $r.farIzrisSlicic, $r.slicic, $r.farIzrisRezerva, $r.farIzrisNarisanihMin, $r.farIzrisNarisanihMax, $izrMin, $izrMax, $r.farIzrisZivihMax, $sivMin, $sivMax, $r.farIzrisIzvenFrustumaMax, $r.farIzrisBrezPekeMax, $r.farIzrisNajdlje, $r.farIzrisUsPovp, $r.farIzrisUsMax) (($r.farPoseg -eq 1) -and ($r.farIzrisRezerva -eq 0) -and ($r.farIzrisSlicic -ge $r.slicic - 2) -and ($r.farIzrisNarisanihMin -eq $r.farIzrisNarisanihMax) -and ($r.farIzrisNarisanihMin -ge $izrMin) -and ($r.farIzrisNarisanihMax -le $izrMax) -and ($r.farIzrisZivihMax -ge $sivMin) -and ($r.farIzrisZivihMax -le $sivMax) -and ($r.farIzrisNarisanihMin + $r.farIzrisZivihMax -eq $r.farVKlientu) -and ($r.farIzrisIzvenFrustumaMax -eq 0) -and ($r.farIzrisBrezPekeMax -eq 0))
+    Check ('V23: sonda vidna v pravi slicici - preverba {0}, razdalja {1:N1} (rob pasu {2}), spremenjenih pikslov {3}, najvecja razlika {4}, kontrola {5}, poskusov {6}; {7}' -f $r.dalecPreverba, $r.dalecRazdalja, $farMeja, $r.dalecSpremenjenih, $r.dalecNajvecRazlika, $r.dalecKontrola, $r.dalecPoskusov, $r.dalecOpis) (($r.dalecPreverba -eq 1) -and ($r.dalecRazdalja -ge $farMeja - 0.5))
+    Check ('V24: prehod cez mejo sledilnika - preverba {0}; {1}' -f $r.sivPreverba, $r.sivOpis) ($r.sivPreverba -eq 1)
+}
 if ($vdKonec -ne '') { Write-Host ("  ob koncu: {0}" -f $vdKonec) }
 
 if ($r) {
@@ -462,13 +498,15 @@ if ($r) {
         if ($Far -eq 1) { $odtis['far'] = 1; $odtis['pasMin'] = $pasMin; $odtis['pasMax'] = $pasMax }
         if ($Far -eq 1) { $vel['far.klient'] = $r.farVKlientu; $vel['far.us.tick'] = $farUs; $vel['far.bajti.s'] = $farBs; $vel['far.bajtov'] = $r.farBajtov
                           $vel['far.videzov'] = $vVidezov; $vel['far.izracunov'] = $vIzracunov; $vel['far.klient.opisov'] = $r.farVidezov; $vel['far.klient.zahtev'] = $r.farVidezZahtev }
+        if ($Izris -eq 1) { $odtis['izris'] = 1; $odtis['sonda'] = $farMeja; $vel['izris.narisanih'] = $r.farIzrisNarisanihMax; $vel['izris.us.povp'] = $r.farIzrisUsPovp; $vel['izris.us.max'] = $r.farIzrisUsMax
+                            $vel['dalec.spremenjenih'] = $r.dalecSpremenjenih; $vel['dalec.razlika'] = $r.dalecNajvecRazlika; $vel['siv.slicic'] = $r.sivSlicic; $vel['siv.prehodov'] = $r.sivZivDoImpostorja + $r.sivImpostorDoZivega }
         if ($Impostor -eq 1) { $odtis['impostor'] = 1; $vel['imp.peceno'] = $r.impPeceno; $vel['imp.atlas'] = $r.impVAtlasu; $vel['imp.peka.ms.povp'] = $r.impPekaMsPovp; $vel['imp.peka.ms.max'] = $r.impPekaMsMax; $vel['imp.obcutljivost'] = $r.impObcutljivost }
         if ($tick) { $vel['mspt.p50'] = & $msP $tick.p50; $vel['mspt.p95'] = & $msP $tick.p95; $vel['mspt.p99'] = & $msP $tick.p99; $vel['mspt.povp'] = & $msP ($tick.sum / [math]::Max(1, $tick.count)) }
-        $null = Write-MeritevJson -Path $JsonPath -Paket $(if ($Impostor -eq 1) { 'M5-V.4' } elseif ($Far -eq 1) { 'M5-V.3' } else { 'M5-V.1' }) -Scenarij ("dalec vd{0}-d{1}-{2}{3}" -f $Vd, $Domet, $N, $(if ($Impostor -eq 1) { '-imp' } elseif ($Far -eq 1) { '-far' } else { '' })) -Odtis $odtis -Velicine $vel -Uspeh ($failures.Count -eq 0) -Padle $failures
+        $null = Write-MeritevJson -Path $JsonPath -Paket $(if ($Izris -eq 1) { 'M5-V.5' } elseif ($Impostor -eq 1) { 'M5-V.4' } elseif ($Far -eq 1) { 'M5-V.3' } else { 'M5-V.1' }) -Scenarij ("dalec vd{0}-d{1}-{2}{3}" -f $Vd, $Domet, $N, $(if ($Izris -eq 1) { '-izris' } elseif ($Impostor -eq 1) { '-imp' } elseif ($Far -eq 1) { '-far' } else { '' })) -Odtis $odtis -Velicine $vel -Uspeh ($failures.Count -eq 0) -Padle $failures
     }
 }
 $zaklep.Close()
 Write-Host ''
 if ($failures.Count -gt 0) { Write-Host ("M5-V.1 PADLO: {0} meril" -f $failures.Count); exit 1 }
-Write-Host $(if ($Impostor -eq 1) { 'M5-V.4 V0-V21 USPESNO.' } elseif ($Far -eq 1) { 'M5-V.3 V0-V19 USPESNO.' } else { 'M5-V.1 V0-V15 USPESNO.' })
+Write-Host $(if ($Izris -eq 1) { 'M5-V.5 V0-V24 USPESNO.' } elseif ($Impostor -eq 1) { 'M5-V.4 V0-V21 USPESNO.' } elseif ($Far -eq 1) { 'M5-V.3 V0-V19 USPESNO.' } else { 'M5-V.1 V0-V15 USPESNO.' })
 exit 0

@@ -50,4 +50,14 @@ public class FarBandTest {
             assertFalse(FarBand.inBand(d, 0.0, 40, outer));
         }
     }
+
+    @Test
+    public void predpasZaVnaprejsnjiVidez() {
+        // M5-V.5: inner 56 -> predpas (40, 56], ki se s pasom ne prekriva.
+        assertTrue(FarBand.inPrefetch(56.0, 0.0, 56));
+        assertTrue(FarBand.inPrefetch(10.0, -40.001, 56));
+        assertFalse(FarBand.inPrefetch(40.0, 0.0, 56));
+        assertFalse(FarBand.inPrefetch(56.001, 0.0, 56));
+        assertFalse(FarBand.inPrefetch(5.0, 5.0, 56));
+    }
 }

@@ -58,7 +58,7 @@ public class RwCoreMod implements IFMLLoadingPlugin {
             System.setProperty(PROP_CLASSES, "0");
         }
         LOG.info(MARKER + " coremod nalozen, runtimeDeobf=" + (deobf ? 1 : 0)
-                + " (imena " + (deobf ? "SRG" : "MCP") + "), poseg: World.getCollisionBoxes");
+                + " (imena " + (deobf ? "SRG" : "MCP") + "), posega: World.getCollisionBoxes, RenderGlobal.renderEntities (klient)");
     }
 
     @Override

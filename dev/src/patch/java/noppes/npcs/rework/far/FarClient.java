@@ -1,8 +1,10 @@
 package noppes.npcs.rework.far;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -10,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -26,8 +29,7 @@ import noppes.npcs.CustomNpcs;
  * {@code HELLO} z zelenim dometom {@code renderDistanceChunks * 16}; ob izklopu stikala poslje
  * {@code BYE}. Prejeti posnetki se na glavni niti klienta zapisejo v shrambo
  * {@code entityId -> (x, y, z v 1/8 bloka, yaw, videz, zastavice)}; ob novem svetu ali {@code CLEAR}
- * se shramba izprazni. Izris (L3) je M5-V.5; ta paket shrambo samo vodi in steje (harness
- * {@code v-run.ps1 -Far 1}). Z {@code RwFarView=0} klient ne poslje nicesar in streznik mu ne poslje
+ * se shramba izprazni. Z {@code RwFarView=0} klient ne poslje nicesar in streznik mu ne poslje
  * nicesar.
  *
  * <p>M5-V.3: za id videza, ki ga klient se ne pozna, poslje {@code REQ} (ponovno sele po
@@ -35,11 +37,18 @@ import noppes.npcs.CustomNpcs;
  * ga shrani: id -&gt; hash za ta svet, hash -&gt; opis v LRU ({@link #DESC_CAP}) cez svetove (hash je
  * vsebinski).
  *
+ * <p>M5-V.5: vnos hrani se zacetek premika in cas posnetka; {@link FarRender} ga narise kot impostor (L3).
+ *
  * <p>M5-V.4: vsak nov opis (in vsak vnos z znanim, a se nepecenim videzom) gre v vrsto peke
  * {@link ImpostorBaker} (en videz na slicico); ob izklopu stikala se atlas sprosti.
  */
 @SideOnly(Side.CLIENT)
 public final class FarClient {
+    /**
+     * Shramba nadomestkov {@code entityId -> int[]}: x, y, z (1/8 bloka), yaw (bajt), id videza, zastavice,
+     * zacetek premika x, y, z ({@link FarInterp#E_PX}..), cas posnetka v ms ({@link FarInterp#E_T}), svetloba ({@link FarInterp#E_LIGHT},
+     * -1 = se ni prebrana).
+     */
     static final Map<Integer, int[]> STORE = new HashMap<Integer, int[]>();
     /** Najvec opisov videza v LRU. */
     public static final int DESC_CAP = 512;
@@ -75,6 +84,8 @@ public final class FarClient {
         FarServer.channel().register(c);
         MinecraftForge.EVENT_BUS.register(c);
         ImpostorBaker.install();
+        FarRender.install();
+        ClientCommandHandler.instance.registerCommand(new CommandRwImpostor());
     }
 
     public static int size() {
@@ -96,6 +107,17 @@ public final class FarClient {
             }
         }
         return n;
+    }
+
+    /** Id-ji nadomestkov (pogled samo za branje; harness M5-V.5). */
+    public static Set<Integer> ids() {
+        return Collections.unmodifiableSet(STORE.keySet());
+    }
+
+    /** Ciljni polozaj nadomestka v blokih {@code {x, y, z}} ali {@code null} (harness M5-V.5). */
+    public static double[] position(int id) {
+        int[] e = STORE.get(id);
+        return e == null ? null : new double[] {e[0] / 8.0, e[1] / 8.0, e[2] / 8.0};
     }
 
     /** Opis videza za id iz vnosa ali {@code null} (M5-V.4). */
@@ -159,8 +181,8 @@ public final class FarClient {
             @Override
             public void entry(int id, int qx24, int qy24, int qz24, int yaw, int look, int flags) {
                 ++upserts;
-                STORE.put(id, new int[] {FarCodec.unwrap24(qx24, rx), FarCodec.unwrap24(qy24, ry),
-                        FarCodec.unwrap24(qz24, rz), yaw, look, flags});
+                STORE.put(id, FarInterp.entryOf(STORE.get(id), FarCodec.unwrap24(qx24, rx), FarCodec.unwrap24(qy24, ry),
+                        FarCodec.unwrap24(qz24, rz), yaw, look, flags, (int) now));
                 Long known = look == 0 ? null : LOOK_IDS.get(look);
                 if (known != null) {
                     ImpostorBaker.want(known);

@@ -50,7 +50,7 @@ import noppes.npcs.entity.EntityNPCInterface;
  * vnos z 0 in v vrsto {@link #PENDING}; vrsta se prazni ob koncu streznikovega ticka, najvec
  * {@link #LOOKS_PER_TICK} opisov ({@link FarLook}; hash se ne racuna na tick), naslednji krog vnos z novim
  * id-jem poslje znova. Ob {@code UPDATE_NPC} ({@link #invalidateLook}) gre NPC v vrsto za ponoven izracun,
- * ob odstranitvi iz sveta se videz pozabi. Na {@code REQ} streznik odgovori z {@code LOOK} samo za id-je, ki jih je igralec prejel
+ * ob odstranitvi iz sveta se videz pozabi. M5-V.5: v vrsto gre tudi NPC tik pred pasom ({@link FarBand#PREFETCH}). Na {@code REQ} streznik odgovori z {@code LOOK} samo za id-je, ki jih je igralec prejel
  * ({@link FarRequests}), najvec {@link #REPLIES_PER_TICK} na tick na igralca.
  */
 public final class FarServer {
@@ -332,6 +332,10 @@ public final class FarServer {
             double dx = npc.posX - px;
             double dz = npc.posZ - pz;
             if (!FarBand.inBand(dx, dz, inner, outer) || npc.display.getVisible() == 1) {
+                // M5-V.5: videz NPC-ja tik pred pasom vnaprej, da ob vstopu ne pride z 0 (siv, D-047).
+                if (FarBand.inPrefetch(dx, dz, inner) && npc.display.getVisible() != 1 && LOOKS.get(npc) == null) {
+                    PENDING.add(npc);
+                }
                 continue;
             }
             boolean killed = npc.isKilled();
