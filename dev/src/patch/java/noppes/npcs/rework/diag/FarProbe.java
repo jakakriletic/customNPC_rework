@@ -1,6 +1,7 @@
 package noppes.npcs.rework.diag;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -12,6 +13,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
@@ -27,7 +30,8 @@ import noppes.npcs.entity.EntityNPCInterface;
  *   <li>{@code vd <n>}: {@code PlayerList.setViewDistance} med tekom, kot ga vanilla klice ob
  *       spremembi nastavitve; posodobi {@code PlayerChunkMap} in mejo sledilnika
  *       ({@code EntityTracker.setViewDistance}: {@code (n - 1) * 16}). Prizorisce se zato spawna
- *       pri 24 in nato zmanjsa na celico, chunki onkraj se izpraznijo kot na pravem strezniku;</li>
+ *       pri 24 in nato zmanjsa na celico; chunki onkraj se izpraznijo takoj in v celoti
+ *       ({@link #dropOutsideView}, D-042), tako da je nalozeni prizor enak kot ob zagonu pri n;</li>
  *   <li>{@code track <bloki>}: <b>varianta A</b> - domet sledilnika NPC-jev (CNPC registrira
  *       {@code 64}) v {@code EntityRegistration} za vse razrede NPC-jev; velja za entitete, ki se
  *       zacnejo slediti po ukazu, {@code 0} vrne izvirne vrednosti;</li>
@@ -49,7 +53,42 @@ public final class FarProbe {
             return "RWDIAG-VD-NAPAKA razdalja izven 3..32: " + vd;
         }
         server.getPlayerList().setViewDistance(vd);
-        return viewStatus(server);
+        int dropped = dropOutsideView(server);
+        return viewStatus(server) + " izpraznjenih=" + dropped;
+    }
+
+    /**
+     * Izprazni nalozene chunke zunaj {@code PlayerChunkMap} takoj, v tem ticku (D-042).
+     *
+     * <p>Vanilla jih samo uvrsti v vrsto ({@code queueUnload}), {@code ChunkProviderServer.tick}
+     * pa izprazni najvec 100 na tick; vsak {@code getLoadedChunk} (npr. {@code isAreaLoaded} pri
+     * posodobitvi entitete ob robu) jih iz vrste spet umakne. Po zmanjsanju razdalje zato ostane
+     * nakljucen pas chunkov z NPC-ji nalozen in nalozeni prizor ni ponovljiv. Tu se vrsta obdela
+     * brez vmesnih posodobitev entitet; chunki spawna ({@code canDropChunk}) in vsiljeni ostanejo.
+     */
+    static int dropOutsideView(MinecraftServer server) {
+        int dropped = 0;
+        for (WorldServer w : server.worlds) {
+            if (w == null || w.disableLevelSaving) {
+                continue;
+            }
+            ChunkProviderServer cp = w.getChunkProvider();
+            int before = cp.getLoadedChunkCount();
+            for (Chunk c : new ArrayList<Chunk>(cp.getLoadedChunks())) {
+                if (!w.getPlayerChunkMap().contains(c.x, c.z)) {
+                    cp.queueUnload(c);
+                }
+            }
+            for (int i = 0; i < 1000; i++) {
+                int n = cp.getLoadedChunkCount();
+                cp.tick();
+                if (cp.getLoadedChunkCount() == n) {
+                    break;
+                }
+            }
+            dropped += before - cp.getLoadedChunkCount();
+        }
+        return dropped;
     }
 
     public static String viewStatus(MinecraftServer server) {

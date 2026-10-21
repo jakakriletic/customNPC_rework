@@ -286,7 +286,8 @@ try {
         $vdOdg = Send-Query $srv ("rwdiag vd {0}" -f $Vd) 'RWDIAG-VD'
         Write-Host ("  {0}" -f $vdOdg)
     }
-    # Pri manjsi razdalji se chunki onkraj izpraznijo v nekaj tickih (ChunkProviderServer, do 100 na tick).
+    # Pri manjsi razdalji rwdiag vd chunke onkraj izprazni takoj (D-042: vanilla vrsta jih ob robu nakljucno
+    # obdrzi); entitete izginejo iz seznama v naslednjem ticku.
     $meja = (Get-Date).AddSeconds(120)
     do {
         Start-Sleep -Seconds 2
