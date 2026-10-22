@@ -12,7 +12,7 @@
         .\k-run.ps1 -Variant idle -N 50 -Warmup 10 -Measure 20      # hiter preizkus harnessa
         .\ponovitve-run.ps1 -Scenarij klient -Dodatno @('-Variant','idle','-N','200')
 
-    Merila (K1-K8, z -PreveriPokrivalo K9, s -Pokrivalo K10, z -PreveriNapise K11, z -Napisi K12, z -PreveriOci K13, z -Oci K14, z -Lod K15, s -Far K16, s -Posebni K17) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
+    Merila (K1-K8, z -PreveriPokrivalo K9, s -Pokrivalo K10, z -PreveriNapise K11, z -Napisi K12, z -PreveriOci K13, z -Oci K14, z -Lod K15, s -Far K16, s -Posebni K17, s -Posebni in -RenderBox K18) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
 
     -Jfr (M5-K.1): v merilnem oknu snema JFR klientskega JVM-ja (jcmd JFR.start, nastavitve 'profile')
     v audit\jfr\k-<varianta>-<N>-<stamp>.jfr in napise povzetek niti 'Client thread' z nativnimi
@@ -58,7 +58,10 @@ param(
     # M5-V.7: 1 = poleg mreze se 9 posebnih NPC-jev (RWV7_*: velik, pol-viden, neviden, brez hitboxa, jahac in
     # nosilec, ubit, morf, URL skin z lokalnega streznika z zamikom) v vrsti 4 bloke za mrezo; merilo K17.
     # Potrebuje -Dalec 1 in -Far 2.
-    [ValidateRange(0, 1)][int]$Posebni = 0
+    [ValidateRange(0, 1)][int]$Posebni = 0,
+    # M5-K K12: RwRenderBox za ta zagon (0 = hitbox, 1 = okvir modela); -1 = iz CustomNpcs.cfg. S -Posebni 1 doda
+    # NPC RWV7_Mec (diamantni mec v roki) in merilo K18 (okvir objame hitbox in pecen obris modela, domet brez hitboxa).
+    [ValidateRange(-1, 1)][int]$RenderBox = -1
 )
 
 $ErrorActionPreference = 'Stop'
@@ -128,6 +131,10 @@ $posebniNpc = [ordered]@{
     'RWV7_Mrtev'    = @{ x = 64; zamenjaj = @(,@('"RespawnTime": 20,', '"RespawnTime": 100000,')) }
     'RWV7_Morf'     = @{ x = 67; zamenjaj = @(,@('"NpcModelData": {', '"NpcModelData": {"EntityClass": "net.minecraft.entity.passive.EntityPig",')) }
     'RWV7_Url'      = @{ x = 70; zamenjaj = @(@('"UsingSkinUrl": 0b', '"UsingSkinUrl": 2b'), @('"SkinUrl": ""', ('"SkinUrl": "' + $skinUrl + '"'))) }
+}
+if ($RenderBox -ge 0) {
+    # M5-K K12: predmet v roki sega cez roke (okvir HELD_HALF); samo s -RenderBox, da M5-V.7 (v7-posebni) ostane isti.
+    $posebniNpc['RWV7_Mec'] = @{ x = 73; zamenjaj = @(,@('(?m)"Weapons": \[\s*\]', '"Weapons": [{"Slot": 0b, "id": "minecraft:diamond_sword", "Count": 1b, "Damage": 0s}]')) }
 }
 $zPosebni = $gridZ - 4
 $skinProc = $null
@@ -210,7 +217,7 @@ $jobPath = Join-Path $audit "k-$Variant-$N-$stamp.job"
 $job = @("world=$world", 'createSeed=customnpc-rework', "expectNpc=$pricakovano", "expectNpcMin=$pricakovanoMin",
          # Invariantna kultura: v sl-SI bi -f dal decimalne vejice in HarnessJob kamere ne bi prebral.
          [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, 'cam={0},{1},{2},180,{3}', $camX, $camY, $camZ, $pitch),
-         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci", "headwearSkip=$Pokrivalo", ('headwearCheck={0}' -f [int][bool]$PreveriPokrivalo), "labelCache=$Napisi", ('labelCheck={0}' -f [int][bool]$PreveriNapise), "eyesList=$Oci", ('eyesCheck={0}' -f [int][bool]$PreveriOci), "lodStart=$Lod", "farView=$Far", "impostorStart=$ImpostorStart", ('specialPrefix={0}' -f $(if ($Posebni -eq 1) { 'RWV7_' } else { '' })), ('settle={0}' -f (3 + [int]($N / 250))),
+         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci", "headwearSkip=$Pokrivalo", ('headwearCheck={0}' -f [int][bool]$PreveriPokrivalo), "labelCache=$Napisi", ('labelCheck={0}' -f [int][bool]$PreveriNapise), "eyesList=$Oci", ('eyesCheck={0}' -f [int][bool]$PreveriOci), "lodStart=$Lod", "farView=$Far", "impostorStart=$ImpostorStart", "renderBox=$RenderBox", ('specialPrefix={0}' -f $(if ($Posebni -eq 1) { 'RWV7_' } else { '' })), ('settle={0}' -f (3 + [int]($N / 250))),
          "warmup=$Warmup", "measure=$Measure", ('out=' + ($out -replace '\\', '/')))
 for ($i = 0; $i -lt $cmds.Count; $i++) { $job += ('cmd.{0}={1}' -f ($i + 1), $cmds[$i]) }
 [System.IO.File]::WriteAllLines($jobPath, $job, (New-Object System.Text.UTF8Encoding($false)))
@@ -353,8 +360,9 @@ if ($r -and $Far -ge 0) {
         $opis = 'brez L2'
     } else {
         $opis = 'L2 na slicico min/max {0}/{1}, izven dometa {2}, preklicev {3}, brez peke v oknu {4}, videzov {5}, napak {6}' -f $r.l2NarisanihMin, $r.l2NarisanihMax, $r.l2IzvenDometaMax, $r.l2Preklicev, $r.l2BrezPeke, $r.l2Videzov, $r.l2VidezNapak
-        # M5-V.7 (-Posebni): NPC brez hitboxa (RWV7_Kip) je izven vanilla dometa upodobitve, zato natanko 1.
-        $izvenPric = if ($Posebni -eq 1) { 1 } else { 0 }
+        # M5-V.7 (-Posebni): NPC brez hitboxa (RWV7_Kip) je izven vanilla dometa upodobitve, zato natanko 1;
+        # z RwRenderBox 1 (M5-K K12) ima domet, kot bi ga imel s hitboxom, in je preklican L2 kot ostali.
+        $izvenPric = if ($Posebni -eq 1 -and $r.rwRenderBox -ne 1) { 1 } else { 0 }
         $ok = $ok -and ($r.l2BrezPeke -eq 0) -and ($r.l2VidezNapak -eq 0) -and ($r.l2IzvenDometaMax -eq $izvenPric) -and ($r.farPoseg -eq 1) -and ($r.farIzrisRezerva -eq 0)
         if ($Variant -eq 'idle' -or $Variant -eq 'skripte') {
             $vL2 = 0
@@ -367,6 +375,8 @@ if ($r -and $Far -ge 0) {
             # M5-V.7: L2 posebnih NPC-jev na slicico: velik, pol-viden, kip (izven dometa), morf, URL = 5
             # (neviden, jahac, nosilec in ubit ostanejo model ali niso narisani).
             if ($Posebni -eq 1) { $vL2 += 5 }
+            # M5-K K12: RWV7_Mec stoji onkraj praga.
+            if ($Posebni -eq 1 -and $RenderBox -ge 0) { $vL2 += 1 }
             $tol = [math]::Max(2, [int][math]::Ceiling($N * 0.02))
             $ok = $ok -and ($vL2 -gt 0) -and ([math]::Abs($r.l2NarisanihMin - $vL2) -le $tol) -and ([math]::Abs($r.l2NarisanihMax - $vL2) -le $tol)
             $opis += (', pricakovano {0} od {1} (+-{2}, prag {3})' -f $vL2, $N, $tol, $prag)
@@ -393,7 +403,12 @@ if ($Posebni -eq 1) {
     Check 'K17b: RWV7_Velik (Size 15) je impostor' (SpOk 'RWV7_Velik' $impostor)
     Check 'K17c: RWV7_Polviden (NpcVisible 2) je pol-prozoren impostor' (SpOk 'RWV7_Polviden' { param($c) (& $impostor $c) -and ($c.pol -gt 0) })
     Check 'K17d: RWV7_Nevidni (NpcVisible 1) ni impostor' (SpOk 'RWV7_Nevidni' $model)
-    Check 'K17e: RWV7_Kip (brez hitboxa, izven vanilla dometa) je impostor do konca megle' (SpOk 'RWV7_Kip' { param($c) ($c.pon -eq 0) -and ($c.izven -gt 0) })
+    if ($r -and $r.rwRenderBox -eq 1) {
+        # M5-K K12: z okvirjem modela je NPC brez hitboxa v dometu vanille in preklican L2 (kot NPC s hitboxom).
+        Check 'K17e: RWV7_Kip (brez hitboxa, RwRenderBox 1) je v dometu vanille in impostor L2' (SpOk 'RWV7_Kip' { param($c) (& $impostor $c) -and ($c.pon -gt 0) -and ($c.izven -eq 0) })
+    } else {
+        Check 'K17e: RWV7_Kip (brez hitboxa, izven vanilla dometa) je impostor do konca megle' (SpOk 'RWV7_Kip' { param($c) ($c.pon -eq 0) -and ($c.izven -gt 0) })
+    }
     Check 'K17f: RWV7_Jahac in RWV7_Nosilec jahata in ostaneta model' ((SpOk 'RWV7_Jahac' { param($c) ($c.jah -gt 0) -and ($c.jah -eq $c.pon) -and (& $model $c) }) -and (SpOk 'RWV7_Nosilec' { param($c) ($c.jah -gt 0) -and ($c.jah -eq $c.pon) -and (& $model $c) }))
     Check 'K17g: RWV7_Mrtev (ubit) ni impostor' (SpOk 'RWV7_Mrtev' $model)
     Check 'K17h: RWV7_Morf (model prasica) je impostor' (SpOk 'RWV7_Morf' $impostor)
@@ -408,6 +423,36 @@ if ($Posebni -eq 1) {
     Check ("K17i: RWV7_Url je impostor s prenesenim skinom (barva okvirja {0}, cakanj na prenos {1}, zahtev streznika {2})" -f $urlRgb, $(if ($r) { $r.impPrenosCakanj } else { '-' }), $zahtev) ((SpOk 'RWV7_Url' $impostor) -and $magenta -and ($null -ne $r) -and ($r.impPrenosCakanj -gt 0) -and ($zahtev -ge 1))
     if ($r) {
         Check ("K17j: brez OptiFine je zdruzljivost neaktivna (optifine {0}, sencila {1}, izklopljenih slicic {2}, sencnih preskokov {3})" -f $r.farOptifine, $r.farSencila, $r.farSencilaIzklop, $r.farSencniPreskok) (($r.farOptifine -eq 0) -and ($r.farSencila -eq 0) -and ($r.farSencilaIzklop -eq 0) -and ($r.farSencniPreskok -eq 0))
+    }
+}
+if ($Posebni -eq 1 -and $RenderBox -ge 0) {
+    # M5-K K12: okvir upodobitve ob koncu merjenja (RenderBoxAudit): npc, niVsebuje, izvenDometa, brezHitboxa, videzov,
+    # videzIzven (presezek pecenega obrisa modela cez okvir > 0,05 x Size/5), najvecPresega; posebni domet/vsebuje/presega.
+    $ok = @{}
+    $okSp = @{}
+    if ($r) {
+        foreach ($del in ("$($r.okvir)" -split ';')) {
+            if ($del -match '^(RWV7_\w+)=([01])/([01])/(-|-?[0-9.]+)$') { $okSp[$Matches[1]] = @{ domet = [int]$Matches[2]; vsebuje = [int]$Matches[3]; presega = $Matches[4] } }
+            elseif ($del -match '^(\w+)=(-|-?[0-9.]+)$') { $ok[$Matches[1]] = $Matches[2] }
+        }
+        Write-Host ("    okvir: {0}" -f $r.okvir)
+    }
+    function OkNum([string]$K) { if ($ok.ContainsKey($K) -and $ok[$K] -ne '-') { return [double]::Parse($ok[$K], [System.Globalization.CultureInfo]::InvariantCulture) }; return [double]::NaN }
+    function SpPresega([string]$Ime) { if ($okSp.ContainsKey($Ime) -and $okSp[$Ime].presega -ne '-') { return [double]::Parse($okSp[$Ime].presega, [System.Globalization.CultureInfo]::InvariantCulture) }; return [double]::NaN }
+    $sObris = @('RWV7_Velik', 'RWV7_Polviden', 'RWV7_Kip', 'RWV7_Morf', 'RWV7_Url', 'RWV7_Mec')
+    $brezObrisa = @($sObris | Where-Object { [double]::IsNaN((SpPresega $_)) })
+    Check ("K18a: RwRenderBox {0} (zahtevano {1}), NPC-jev {2}, brez hitboxa {3}" -f $(if ($r) { $r.rwRenderBox } else { '-' }), $RenderBox, (OkNum 'npc'), (OkNum 'brezHitboxa')) (($null -ne $r) -and ($r.rwRenderBox -eq $RenderBox) -and ((OkNum 'npc') -ge $pricakovanoMin) -and ((OkNum 'brezHitboxa') -ge 1))
+    Check ("K18b: okvir upodobitve objame hitbox pri vseh NPC-jih (ne objame {0})" -f (OkNum 'niVsebuje')) ((OkNum 'niVsebuje') -eq 0)
+    Check ("K18c: pecen obris modela za {0} posebnih NPC-jev (brez obrisa: {1}), videzov skupaj {2}" -f ($sObris.Count - $brezObrisa.Count), ($brezObrisa -join ', '), (OkNum 'videzov')) ($brezObrisa.Count -eq 0)
+    $kip = if ($okSp.ContainsKey('RWV7_Kip')) { $okSp['RWV7_Kip'] } else { $null }
+    $obrisi = ($sObris | ForEach-Object { '{0} {1}' -f ($_ -replace '^RWV7_', ''), $(if ($okSp.ContainsKey($_)) { $okSp[$_].presega } else { '-' }) }) -join ', '
+    if ($RenderBox -eq 1) {
+        Check ("K18d: z okvirjem modela je vsak sledeni NPC v dometu upodobitve (izven {0}; Kip domet {1})" -f (OkNum 'izvenDometa'), $(if ($kip) { $kip.domet } else { '-' })) (((OkNum 'izvenDometa') -eq 0) -and ($null -ne $kip) -and ($kip.domet -eq 1))
+        Check ("K18e: pecen obris ne sega cez okvir (cez mejo {0}, najvec {1} bloka; {2})" -f (OkNum 'videzIzven'), (OkNum 'najvecPresega'), $obrisi) (((OkNum 'videzIzven') -eq 0) -and ((OkNum 'videzov') -ge $sObris.Count))
+    } else {
+        # Obcutljivost: hitbox originala je ozji od rok (0,3 proti ~0,47), crta NPC-ja brez hitboxa pa skoraj nic.
+        Check ("K18d: brez okvirja modela je NPC brez hitboxa izven dometa (izven {0}; Kip domet {1})" -f (OkNum 'izvenDometa'), $(if ($kip) { $kip.domet } else { '-' })) (((OkNum 'izvenDometa') -ge 1) -and ($null -ne $kip) -and ($kip.domet -eq 0))
+        Check ("K18e: obcutljivost - obris modela sega cez hitbox originala (cez mejo {0}, Kip {1} bloka; {2})" -f (OkNum 'videzIzven'), $(if ($kip) { $kip.presega } else { '-' }), $obrisi) (((OkNum 'videzIzven') -ge 1) -and ((SpPresega 'RWV7_Kip') -gt 0.3))
     }
 }
 if ($r -and $PreveriOci) {
@@ -458,6 +503,7 @@ if ($r) {
         if ($ImpostorStart -ge 0) { $odtis['rwImpostorStart'] = $ImpostorStart }
         if ($Dalec -ne 0) { $odtis['dalec'] = $Dalec }
         if ($Posebni -ne 0) { $odtis['posebni'] = $Posebni }
+        if ($RenderBox -ge 0) { $odtis['rwRenderBox'] = $RenderBox }
         $vel = @{ 'frame.p50' = $r.frameMsP50; 'frame.p95' = $r.frameMsP95; 'frame.p99' = $r.frameMsP99; 'frame.max' = $r.frameMsMax;
                   'fps' = $r.fps; 'fps.low1' = $r.fpsLow1; 'fps.low01' = $r.fpsLow01; 'gc.stevilo' = $r.gcStevilo; 'gc.ms' = $r.gcMs;
                   'upodobljeno.min' = $r.upodobljenoMin; 'streznik.ms' = $r.integriraniStreznikMsPovp }

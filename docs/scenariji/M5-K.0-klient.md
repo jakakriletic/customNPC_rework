@@ -98,6 +98,21 @@ Nastavitve: VSync izklopljen, `limitFramerate` 260 (neomejeno), brez view bobbin
   brez OptiFine `FarCompat` neaktiven (0 izklopljenih sličic, 0 senčnih preskokov). K16 prišteje geometriji mreže 5 L2
   na sličico (velik, pol-viden, kip izven dometa, morf, URL) in pričakuje izven dometa 1.
 
+### M5-K K12: okvir upodobitve (`-Posebni 1 -RenderBox 0|1`, merilo K18)
+
+```
+.k-run.ps1 -Variant idle -N 50 -RenderDistance 10 -Dalec 1 -Far 2 -ImpostorStart 56 -Posebni 1 -RenderBox 1
+```
+
+- `-RenderBox` nastavi `RwRenderBox` za zagon (`renderBox` v poslu; -1 = iz configa) in doda NPC `RWV7_Mec` (diamantni
+  meč v roki); brez `-RenderBox` ostane prizorišče M5-V.7 nespremenjeno. Harness ob koncu merjenja zapiše `okvir`
+  (`RenderBoxAudit`): za vse NPC-je ali okvir objame hitbox, ali je NPC v dometu od kamere, in koliko pečen obris
+  modela iz atlasa L2 sega čez okvir (meja 0,05 × Size/5 bloka).
+- **K18a–e** pri 1: okvir objame hitbox pri vseh; obris za 6 posebnih; izven dometa 0 (`Kip` v dometu); obris ne sega
+  čez okvir. Pri 0 (občutljivost): izven dometa ≥ 1 (`Kip` izven), obris `Kip` sega > 0,3 bloka čez hitbox.
+  K16/K17e se prilagodita: pri 1 je `Kip` v dometu vanille in preklican L2 (izven dometa 0).
+- A/B cene: `ponovitve-run.ps1 -Scenarij klient -Ponovitev 3 -Dodatno -Variant,idle,-N,500,-RenderBox,0|1`.
+
 ## Omejitve (znane)
 
 - Integrirani strežnik teče v istem procesu; njegov MSPT se zapiše (`integriraniStreznikMsPovp`),

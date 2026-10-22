@@ -218,6 +218,9 @@ task testOriginal(type: Test) {
     exclude '**/ImpostorL2Test.class'
     // M5-V.7: zdruzljivost.
     exclude '**/FarCompatTest.class'
+    // M5-K K12: okvir upodobitve.
+    exclude '**/RenderBoxTest.class'
+    exclude '**/RenderBoxAuditTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

@@ -157,6 +157,9 @@ import noppes.npcs.rework.entity.RiderState;
 import noppes.npcs.rework.entity.RwHitbox;
 import noppes.npcs.rework.far.FarServer;
 import noppes.npcs.rework.nav.RwNavBackend;
+import noppes.npcs.rework.render.RenderBox;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import noppes.npcs.ai.EntityAIAmbushTarget;
 import noppes.npcs.ai.EntityAIAnimation;
 import noppes.npcs.ai.EntityAIAttackTarget;
@@ -1199,6 +1202,23 @@ IAnimals {
             World.MAX_ENTITY_RADIUS = this.width / 2.0f;
         }
         this.setPosition(this.posX, this.posY, this.posZ);
+    }
+
+    /** M5-K K12 (D-052): okvir za frustum in Entity Culling objame model; nikoli manjsi od hitboxa. */
+    @SideOnly(Side.CLIENT)
+    @Override
+    public AxisAlignedBB getRenderBoundingBox() {
+        return CustomNpcs.RwRenderBox == 1 ? RenderBox.box(this) : super.getRenderBoundingBox();
+    }
+
+    /** M5-K K12 (D-052): NPC brez hitboxa in lezec NPC imata domet upodobitve, kot bi ga imela stoje s hitboxom. */
+    @SideOnly(Side.CLIENT)
+    @Override
+    public boolean isInRangeToRenderDist(double distance) {
+        if (CustomNpcs.RwRenderBox == 1 && RenderBox.ownRange(this)) {
+            return RenderBox.inRange(this, distance);
+        }
+        return super.isInRangeToRenderDist(distance);
     }
 
     public void onDeathUpdate() {

@@ -39,6 +39,8 @@ import java.util.Properties;
  *                             shramba nadomestkov); -1 = iz konfiguracije
  * impostorStart=-1           M5-V.6: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwImpostorStart} (bloki, prag L2 pri
  *                             farView=2); -1 = iz konfiguracije
+ * renderBox=-1               M5-K K12: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwRenderBox} (0 = hitbox, 1 = okvir modela);
+ *                             -1 = iz konfiguracije
  * specialPrefix=             M5-V.7: neprazno = med merjenjem stej izrise L2 po NPC-jih, katerih ime se zacne s to predpono
  *                             ({@code FarRender.SPECIAL}, posebni NPC-ji); izid v JSON ({@code posebni})
  * impostorCheck=0             M5-V.4: 1 = po ogrevanju speci testne videze in primerjaj piksle impostor - model pri 56 blokih
@@ -103,6 +105,8 @@ public final class HarnessJob {
     public final int farView;
     /** M5-V.6: RwImpostorStart za zagon (bloki), -1 = iz konfiguracije. */
     public final int impostorStart;
+    /** M5-K K12: RwRenderBox za zagon, -1 = iz konfiguracije. */
+    public final int renderBox;
     /** M5-V.7: predpona imen posebnih NPC-jev za stevce L2 ali {@code null}. */
     public final String specialPrefix;
     /** M5-V.4: primerjava pikslov impostor - model ({@link ImpostorCheck}). */
@@ -163,6 +167,7 @@ public final class HarnessJob {
         this.lodStart = intValue(p, "lodStart", -1);
         this.farView = intValue(p, "farView", -1);
         this.impostorStart = intValue(p, "impostorStart", -1);
+        this.renderBox = intValue(p, "renderBox", -1);
         String special = p.getProperty("specialPrefix");
         this.specialPrefix = special == null || special.trim().isEmpty() ? null : special.trim();
         this.impostorCheck = intValue(p, "impostorCheck", 0) != 0;
@@ -209,8 +214,8 @@ public final class HarnessJob {
         if (this.measureSeconds < 1 || this.warmupSeconds < 0 || this.settleSeconds < 0 || this.sampleMs < 0
                 || this.headwearSkip < -1 || this.headwearSkip > 1 || this.labelCache < -1 || this.labelCache > 1
                 || this.eyesList < -1 || this.eyesList > 1 || this.lodStart < -1 || this.lodStart > 512 || this.farView < -1 || this.farView > 2
-                || this.impostorStart < -1 || this.impostorStart > 512) {
-            throw new IllegalArgumentException("casi morajo biti nenegativni, measure >= 1, headwearSkip, labelCache in eyesList -1..1, lodStart -1..512, farView -1..2, impostorStart -1..512");
+                || this.impostorStart < -1 || this.impostorStart > 512 || this.renderBox < -1 || this.renderBox > 1) {
+            throw new IllegalArgumentException("casi morajo biti nenegativni, measure >= 1, headwearSkip, labelCache in eyesList -1..1, lodStart -1..512, farView -1..2, impostorStart -1..512, renderBox -1..1");
         }
     }
 

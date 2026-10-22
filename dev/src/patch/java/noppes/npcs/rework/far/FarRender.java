@@ -242,6 +242,13 @@ public final class FarRender {
         return b.toString();
     }
 
+    /** Harness M5-K K12: pecen videz L2 tega NPC-ja (obris modela iz peke) ali {@code null}. */
+    public static ImpostorAtlas.Entry bakedLook(EntityNPCInterface npc) {
+        long[] s = L2_STATE.get(npc.getEntityId());
+        ImpostorAtlas atlas = ImpostorBaker.current();
+        return s == null || s[0] == 0L || atlas == null ? null : atlas.get(s[0]);
+    }
+
     /** Stevci posebnega NPC-ja ali {@code null} (brez sledenja ali drugo ime). */
     static long[] special(EntityNPCInterface npc) {
         if (specialPrefix == null) {

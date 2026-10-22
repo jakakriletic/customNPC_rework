@@ -108,6 +108,14 @@ public class HarnessJobTest {
     }
 
     @Test
+    public void renderBoxPrivzetoIzKonfiguracije() {
+        assertEquals("M5-K K12: brez kljuca okvir iz konfiguracije", -1, HarnessJob.parse(base()).renderBox);
+        Properties p = base();
+        p.setProperty("renderBox", "1");
+        assertEquals(1, HarnessJob.parse(p).renderBox);
+    }
+
+    @Test
     public void specialPrefixPrivzetoBrezSledenja() {
         assertEquals("M5-V.7: brez kljuca brez sledenja posebnih NPC-jev", null, HarnessJob.parse(base()).specialPrefix);
         Properties p = base();
@@ -180,6 +188,8 @@ public class HarnessJobTest {
             {"farView", "-2"},
             {"impostorStart", "-2"},
             {"impostorStart", "513"},
+            {"renderBox", "-2"},
+            {"renderBox", "2"},
             {"snap.1", "64,1,2"},
             {"snap.1", "-1,1,2,3"},
             {"connect", ":25565"},

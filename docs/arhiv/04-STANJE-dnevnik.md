@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 112 → 1)
+# Arhiv: dnevnik sej (vnosi 113 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,32 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-22 (113) — M5-V.8: sprejem vidnosti na daljavo — zaključeno (vklop v kodi M5-V.8b)
+
+**Paket:** M5-V.8 · **Stanje:** **zaključeno** — vseh 15 zahtevanih testov zelenih na kodi `9f9125b0…`: `unit`, `build`,
+`package` in 12 serij `v8-{10,24}-{1000,5000}-f{0,1,2}` (3 ponovitve, V0–V26 in T1–T6 zelene v 36 zagonih).
+
+**Narejeno:** harness sprejema — `HarnessJob` `walk` in `snap.N`, `ClientHarness` hoja po merjenju (žični in `rwfar`
+bajti) in posnetki pri FOV merjenja in 10, `FarRender.DRAWN_IDS` vsebuje tudi L2 (V24 preveri mejo model ↔ L2);
+`v-run.ps1 -Sprejem 1 -Far 0|1|2` (V25, V26), `ponovitve-run.ps1 -Scenarij sprejem`; `HarnessJobTest` +1;
+[scenarij](../scenariji/M5-V.1-dalec.md).
+
+**Izid** ([zapis](../meritve/2026-10-22-M5-V.8-sprejem.md)): vd 24 / 5.000 sličica p95 9,188 ms (0) → **8,893** (2, v
+šumu) / **10,873** (1, +1,685, ločeno); vd 10 / 5.000 4,936 → 3,658 (2); `rwfar` 88–92 µs/tick/igralca; `rwfar`
+0 B/s mirovanje, 513 B/s hoja, žica brez spremembe; V24 0 vrzeli / 0 dvojnih; sonda vidna na 368 blokih; VRAM
+≈ 21,6 MiB [K]. Cilji D-035 izpolnjeni pri **2** → **D-051**: privzeto `RwFarView=2`. L3 sam (1) cilja sličice ne
+izpolni — zapisano; na prizorišču brez sledenih onkraj 56 bi L2 ne kompenziral (~+1,7 ms).
+
+**Odločitev o razdelitvi:** sprememba privzete vrednosti v kodi bi spremenila odtis in razveljavila 12 serij meritev,
+zato je ločen paket **M5-V.8b** (koda + komentar + vrstice obnašanja, `unit`/`build`/`package`), kot pri Q30.
+
+**Spremembe obnašanja moda:** pri privzetih nastavitvah še nobene (`RwFarView=0` do M5-V.8b).
+**Minecraft meritve:** 36 zagonov sprejema (+ 3 starejše serije `0837/0847/0857` na prejšnji kodi, niso v presoji).
+
+**Naslednji korak:** **M5-V.8b** (privzeto `RwFarView=2`), nato K12 in ostali K-paketi (K13, K10 ponovno oceniti;
+kandidati iz M5-V.8: cena izrisa L3, pas `rwfar` po chunkih, PBO peka). Neodvisno: čistilni korak K3, M4.14b/M4.16;
+ročna preverba z OptiFine.
 
 ### 2026-10-22 (112) — M5-V.7: združljivost izrisa L2/L3 — zaključeno
 

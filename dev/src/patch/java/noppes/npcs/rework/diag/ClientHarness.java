@@ -576,6 +576,9 @@ public final class ClientHarness {
         if (this.job.impostorStart >= 0) {
             CustomNpcs.RwImpostorStart = this.job.impostorStart;
         }
+        if (this.job.renderBox >= 0) {
+            CustomNpcs.RwRenderBox = this.job.renderBox;
+        }
         // M5-V.7: stevci L2 po posebnih NPC-jih (FarRender.resetStats jih ob zacetku merjenja pocisti).
         FarRender.specialPrefix = this.job.specialPrefix;
         mc.gameSettings.renderDistanceChunks = this.job.renderDistance;
@@ -924,6 +927,9 @@ public final class ClientHarness {
         num(b, "farSencniPreskok", FarCompat.shadowSkips);
         num(b, "impPrenosCakanj", ImpostorBaker.downloadWaits);
         kv(b, "posebni", FarRender.specialSummary(mc.world));
+        // M5-K K12: okvir upodobitve ob koncu merjenja (vsi NPC-ji v svetu klienta).
+        num(b, "rwRenderBox", CustomNpcs.RwRenderBox);
+        kv(b, "okvir", RenderBoxAudit.summary(mc.world, mc.getRenderViewEntity(), FarRender.specialPrefix));
         FarDrawCheck fd = this.farDraw;
         num(b, "dalecPreverba", fd == null ? -1 : (fd.ok() ? 1 : 0));
         if (fd != null) {
