@@ -14,9 +14,9 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-22** (seja 115) — **M5-K K12 zaključen**: okvir upodobitve NPC-ja = hitbox ∪ model (Entity Culling ga bere), NPC brez hitboxa in ležeč NPC z dometom stoječega; `RwRenderBox` privzeto **1** (Q33 → D-052); K18 zelen, A/B idle-500 v šumu, vseh 7 testov na kodi `a435cbb9…` ([zapis](meritve/2026-10-22-M5-K-K12-okvir.md)). Pred tem (seja 114): **M5-V.8b zaključen**: `RwFarView` privzeto **2** v kodi (D-051; `dev/run` ostane 0), dokaz `unit`/`build`/`package`. Pred tem (seja 113): **M5-V.8 zaključen**: sprejem vidnosti na daljavo, 12 serij × 3 zelenih na kodi `9f9125b0…`; vd 24 / 5.000 sličica p95 9,188 → 8,893 ms pri `RwFarView` 2 (10,873 pri 1), `rwfar` 91,5 µs/tick/igralca, 0 B/s mirovanje → D-051 privzeto 2, sprememba v kodi je M5-V.8b ([zapis](meritve/2026-10-22-M5-V.8-sprejem.md)). Pred tem (seja 112): **M5-V.7 zaključen**: združljivost L2/L3 (D-050): senčila OptiFine → samodejni izklop (`RwFarShaders` privzeto 0), senčni prehod brez impostorjev, peka čaka na prenos URL skina, popravek pol-vidnih NPC-jev v L2; `v7-posebni` K17a–j in regresija V0–V24 zelena na kodi `a369f197…`; OptiFine, Entity Culling in `customNPC_entities_mod` samo statično. Pred tem (seja 111): **Q30 odločen**: K14b `RwHeadwearSkip` privzeto **1** (D-049, odločitev lastnika, brez novih meritev). Pred tem (seja 110): **M5-V.6 zaključen**: L2 (sledeni NPC-ji onkraj `RwImpostorStart` 56 kot impostorji, preklic `RenderLivingEvent.Pre`), D-048; vseh 8 zahtevanih testov zelenih na kodi `6db12833…` (A/B 3 + 3, RD 10, prizorišče `-Dalec 1`: idle-200 p50 4,886 → 2,013 ms, idle-500 11,591 → 2,331 ms; L2 137/200 in 437/500 = geometrija); privzeto `RwFarView=0` |
-| Trenutni milestone | **M5 — Performance**: M5-S (strežnik) zaključen 16. 10. (M5.8: idle 10×, boj 1,5×, nedosegljiva 1,4× pri p95 ≤ 25 ms); M5-K (klient): K.0 in K.1 zaključena, K14 zavržen, K14b v kodi (privzeto 1 od 21. 10., D-049) in K4 (privzeto 1) 19. 10., K3 zavržen 21. 10. (A/B brez koristi), K5 L1 v kodi 21. 10. (privzeto 0, D-039); M5-V.1 zaključen 21. 10. (varianta A zavrnjena, D-043), M5-V.2 (strežnik `rwfar`) zaključen 21. 10. (privzeto 0, D-044), M5-V.3 (opis videza) zaključen 21. 10. (D-045), M5-V.4 (peka impostorjev) zaključen 21. 10. (D-046), M5-V.5 (izris L3) zaključen 21. 10. (D-047), M5-V.6 (L2) zaključen 21. 10. (D-048), M5-V.7 (združljivost) zaključen 22. 10. (D-050), M5-V.8 (sprejem, D-051) in M5-V.8b (`RwFarView` privzeto 2) 22. 10. — **M5-V zaključen**; K12 (okvir upodobitve, `RwRenderBox` privzeto 1, D-052) 22. 10. M3 (jedro entitete) zaključen do M3.9 (GUI za hitbox način M3.8b v klientu odprt); M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | Ostali K-paketi: **K13 in K10 ponovno oceniti** (K12 zaključen 22. 10.; kandidati iz M5-V.8: cena izrisa L3, pas `rwfar` po chunkih, PBO peka). Pred izdajo **Q22** (pravi Forge strežnik: jar od M5.16 privzeto spreminja vanilla bajtkodo, produkcijska pot je preverjena samo statično). **M4.0** narejen 20. 10. (D-038); od M4 se lahko vrineta **M4.14b** (formacije v svetu, samo zagon) in **M4.16** (scenarij letenja), ko računalnik ni v rabi. Odprto: PR `codex/m7-cnpc-integration` → `main` |
+| Zadnja posodobitev | **2026-10-22** (seja 116) — **ponovna ocena K13/K10** (D-053, [raziskava](raziskave/M5-K-K13-K10-ponovna-ocena.md)), brez kode in novih meritev: K13 zavržen kot samostojen paket, K10 odložen izven M5 (premisa »manj klicev« z K14/K3 delno ovržena, po D-051 so modeli samo znotraj 56 blokov), K2/K11 zavržena. Naslednja: K3c (čistilni korak) in M5-K.2 (sprejem klienta, izhodni kriterij M5). |
+| Trenutni milestone | **M5 — Performance**: M5-S (strežnik) zaključen 16. 10. (M5.8: idle 10×, boj 1,5×, nedosegljiva 1,4× pri p95 ≤ 25 ms); M5-K (klient): K.0 in K.1 zaključena, K14 zavržen, K14b v kodi (privzeto 1 od 21. 10., D-049) in K4 (privzeto 1) 19. 10., K3 zavržen 21. 10. (A/B brez koristi), K5 L1 v kodi 21. 10. (privzeto 0, D-039); M5-V.1 zaključen 21. 10. (varianta A zavrnjena, D-043), M5-V.2 (strežnik `rwfar`) zaključen 21. 10. (privzeto 0, D-044), M5-V.3 (opis videza) zaključen 21. 10. (D-045), M5-V.4 (peka impostorjev) zaključen 21. 10. (D-046), M5-V.5 (izris L3) zaključen 21. 10. (D-047), M5-V.6 (L2) zaključen 21. 10. (D-048), M5-V.7 (združljivost) zaključen 22. 10. (D-050), M5-V.8 (sprejem, D-051) in M5-V.8b (`RwFarView` privzeto 2) 22. 10. — **M5-V zaključen**; K12 (okvir upodobitve, `RwRenderBox` privzeto 1, D-052) 22. 10.; ponovna ocena K13/K10 (D-053: K13 zavržen, K10 odložen) 22. 10. M3 (jedro entitete) zaključen do M3.9 (GUI za hitbox način M3.8b v klientu odprt); M2 zaključen (baseline M2.6 zelen 5. 10.) |
+| Naslednji paketi | **K3c** (odstranitev kode poskusa `RwEyesList`, popravek besedila `RwRenderBox`), nato **M5-K.2** (sprejem klienta, izhodni kriterij M5) — D-053; K13 zavržen, K10 odložen izven M5. Pred izdajo **Q22** (pravi Forge strežnik: jar od M5.16 privzeto spreminja vanilla bajtkodo, produkcijska pot je preverjena samo statično). **M4.0** narejen 20. 10. (D-038); od M4 se lahko vrineta **M4.14b** (formacije v svetu, samo zagon) in **M4.16** (scenarij letenja), ko računalnik ni v rabi. Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **183** datotek `.java` v `src/patch` (22. 10.; +2 K12: `rework/render/RenderBox`, `rework/diag/RenderBoxAudit`), od tega **118** v `noppes/npcs/rework/…` (`ai` 5, `core` 10, `data` 5, `diag` 26, `entity` 13, `far` 21, `formation` 15, `nav` 12, `net` 3, `render` 8) in 3 dostopni razredi v `net/minecraft/…`; `verify-package`: **71** vnosov (70 razredov originala + manifest coremoda) |
 | Testi | **399 JUnit** (metod `@Test`, preštetih z grep 22. 10.; +12 K12) v 68 datotekah — zeleni na kodi `a435cbb9…` + **40 primerjalnih testov originala** (`:testOriginal` proti nespremenjenemu binarju). Dodatno **20** preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.ponovitve-samotest.ps1`, M2.5c) |
@@ -39,7 +39,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M2 Diagnostika | **zaključeno 5. 10.** (razen M2.4r render, prestavljen v M5-K) | M2.1–M2.7 preverjeni v svetu; baseline M2.6 zelen 5. 10. — [baseline](meritve/baseline-2026-10-05.md) |
 | M3 Jedro entitete | **zaključeno do M3.9** | M3.1–M3.5 (R1 reproduciran, popravljen pod `RwMountSteering=1`), M3.6 (D-020, `RwAttackPriority`), M3.7, M3.8 (`RwHitbox`), M3.9 (7. 10.). Odprto: M3.8b GUI v klientu (z igralcem), Q15 → D-028 |
 | M4 Gibanje | **M4.0 zaključen 20. 10.**; M4.14a v kodi (izven vrstnega reda) | [raziskava M4.0](raziskave/M4.0-gibanje-in-letenje.md), D-038: vrstni red M4.14b → M4.16 (scenarij) → M4.10 → M4.17 → M4.2/M4.3 → (M4.5) → M4.6 → M4.7; M4.13 → (M4.11) in M4.15 neodvisno; M4.1/M4.4/M4.9/M4.12 zavrženi ali združeni. Formacije v svetu še ne — [zasnova](06-FORMACIJE.md); M4.15 (D-036); Q6, Q31 |
-| M5 Performance | **M5-S zaključen 16. 10.**; M5-K.0 (16. 10.) in M5-K.1 (18. 10.) zaključena, K14 zavržen, K14b (19. 10., `RwHeadwearSkip` privzeto 1 od 21. 10., D-049: −25 % idle-500), K4 (19. 10., `RwLabelCache=1`, −7 % idle-200), K3 zavržen (21. 10., A/B brez koristi, `RwEyesList=0`), K5 L1 (21. 10., `RwLodStart=0`, D-039: idle-500 −24 % pri vklopu); M5-V.1 zaključen 21. 10. (D-043), M5-V.2 (D-044), M5-V.3 (D-045), M5-V.4 (D-046), M5-V.5 (D-047) in M5-V.6 (D-048, L2: idle-500 −80 % pri vklopu) zaključeni 21. 10., M5-V.7 (D-050, združljivost) in M5-V.8 (D-051, sprejem) in M5-V.8b (`RwFarView` privzeto 2) 22. 10., K12 (`RwRenderBox` privzeto 1, D-052) 22. 10. | M5-S: S1, S2, S14b, S4, S7, S5 (D-037, `RwPathNegCache=1`), S14c, S16, M5.15 (coremod), M5.16 (`RwMoveBoxes`) vsi privzeto vklopljeni po D-032; M5.2 zavržen. Podrobnosti po paketih: [arhiv, tabele §2](arhiv/04-STANJE-tabele.md); razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
+| M5 Performance | **M5-S zaključen 16. 10.**; M5-K.0 (16. 10.) in M5-K.1 (18. 10.) zaključena, K14 zavržen, K14b (19. 10., `RwHeadwearSkip` privzeto 1 od 21. 10., D-049: −25 % idle-500), K4 (19. 10., `RwLabelCache=1`, −7 % idle-200), K3 zavržen (21. 10., A/B brez koristi, `RwEyesList=0`), K5 L1 (21. 10., `RwLodStart=0`, D-039: idle-500 −24 % pri vklopu); M5-V.1 zaključen 21. 10. (D-043), M5-V.2 (D-044), M5-V.3 (D-045), M5-V.4 (D-046), M5-V.5 (D-047) in M5-V.6 (D-048, L2: idle-500 −80 % pri vklopu) zaključeni 21. 10., M5-V.7 (D-050, združljivost) in M5-V.8 (D-051, sprejem) in M5-V.8b (`RwFarView` privzeto 2) 22. 10., K12 (`RwRenderBox` privzeto 1, D-052) 22. 10., ponovna ocena K13/K10 (D-053) 22. 10. | M5-S: S1, S2, S14b, S4, S7, S5 (D-037, `RwPathNegCache=1`), S14c, S16, M5.15 (coremod), M5.16 (`RwMoveBoxes`) vsi privzeto vklopljeni po D-032; M5.2 zavržen. Podrobnosti po paketih: [arhiv, tabele §2](arhiv/04-STANJE-tabele.md); razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
@@ -55,8 +55,28 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 113 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 114 → 1, novejši zgoraj).*
 
+
+### 2026-10-22 (116) — M5-K: ponovna ocena K13 in K10 — zaključeno
+
+**Paket:** ponovna ocena K13/K10 po D-035 (3) (D-053) · **Stanje:** **zaključeno** — raziskava brez produkcijske kode in
+brez novih zagonov; vhodi so obstoječe meritve ([raziskava](raziskave/M5-K-K13-K10-ponovna-ocena.md)).
+
+**Ugotovitve:** K14 in K3 sta izmerila, da manj klicev pri isti geometriji ne pomaga (strošek so oglišča v gonilniku),
+zato je premisa K10 »nič klicev na NPC« delno ovržena; po D-051 so modeli samo znotraj 56 blokov, L2 pa je že izmerjena
+zgornja meja »instanciranega« izrisa (idle-500 −80 %). Vezava teksture (K13) v profilu M5-K.1 ni merljiva.
+
+**Odločitve (D-053):** K13 zavržen kot samostojen paket; K10 odložen izven M5 (ponovno odprtje: ≥ 300 modelov znotraj
+56 blokov s p95 > 16,7 ms ob privzetih stikalih, tedaj najprej poskus K10a z VBO); K2 in K11 zavržena; K1, K6–K9 odloženi
+do prizorišča, ki jih vsebuje; cena izrisa L3 zavržena kot paket; pas `rwfar` po chunkih in PBO peka odložena s pogojem.
+
+**Spremembe obnašanja:** nobene. **Minecraft meritve:** nobene.
+
+**Naslednji korak:** **K3c** — odstranitev kode poskusa `RwEyesList` in popravek besedila `RwRenderBox`/`RenderBox`
+(64/38,4 blokov pri RD 8, 1,0/80 pri RD 10), dokaz `unit`/`build`/`package`; nato **M5-K.2** (sprejem klienta,
+izhodni kriterij M5: original proti vsem privzetim stikalom, idle-200/500 in `-Dalec 1`, p95 in 1 % low).
+Neodvisno: M4.14b/M4.16; ročna preverba z OptiFine in Entity Culling; Q22.
 
 ### 2026-10-22 (115) — M5-K K12: okvir upodobitve in Entity Culling — zaključeno
 
@@ -86,24 +106,6 @@ nariše, kjer ga je original odrezal; NPC brez hitboxa in ležeč NPC imata dome
 pas `rwfar` po chunkih, PBO peka). Ob naslednji spremembi kode popraviti besedilo komentarja `RwRenderBox` in javadoc
 `RenderBox` (64/38,4 blokov pri RD 8, ne 66/40). Neodvisno: čistilni korak K3, M4.14b/M4.16; ročna preverba z
 OptiFine in Entity Culling.
-
-### 2026-10-22 (114) — M5-V.8b: `RwFarView` privzeto 2 — zaključeno
-
-**Paket:** M5-V.8b (D-051) · **Stanje:** **zaključeno** — zahtevani `unit`, `build`, `package` zeleni na kodi
-`5c4754b8…` (22. 10. 2026; brez novih meritev v svetu; sprejem je M5-V.8 na kodi `9f9125b0…`).
-
-**Narejeno:** `CustomNpcs.RwFarView` privzeto **2** (prej 0) in komentar konfiguracije z izidom sprejema (vrednost 1 na
-klientu ni priporočena); komentar `FarServer`; vrstice obnašanja `RwFarView`, `RwFarRange`, `RwImpostorStart`,
-`RwImpostorAtlas`, `RwFarShaders` in coremoda `RenderGlobal` v 04-REGISTRI kažejo privzeto 2; README, 03-FAZE.
-
-**Spremembe obnašanja moda:** z novim configom (ali brez ključa) strežnik pošilja nadomestke po kanalu `rwfar`
-klientom s `HELLO`, klient riše L2 (sledeni onkraj 56 blokov) in L3 (onkraj sledilnika do `RwFarRange`/vd). Obstoječi
-configi s ključem obdržijo vrednost; `dev/run/config/CustomNpcs.cfg` ima `RwFarView=0` (merilni pogoji nespremenjeni),
-`dev/run-m7` ključa nima in dobi 2. Stari klient ali klient z 0 ne pošlje `HELLO` in ne dobi nič.
-**Minecraft meritve:** nobene.
-
-**Naslednji korak:** **K12**, nato ostali K-paketi (K13, K10 ponovno oceniti; kandidati iz M5-V.8: cena izrisa L3,
-pas `rwfar` po chunkih, PBO peka). Neodvisno: čistilni korak K3, M4.14b/M4.16; ročna preverba z OptiFine.
 
 ---
 
@@ -147,7 +149,7 @@ pa še razlage in ni ločen od možne napake scenarija, zato je tu in ne med bug
 
 | Vsebina | Datoteka | Kdaj ga odpreš |
 |---|---|---|
-| Dnevnik sej: vnosi od seje 113 (22. 10.) nazaj do seje 1 (11. 9., postavitev načrta) | [`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) | `grep` po paketu (npr. `M5.16`), seji ali ključni besedi |
+| Dnevnik sej: vnosi od seje 114 (22. 10.) nazaj do seje 1 (11. 9., postavitev načrta) | [`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) | `grep` po paketu (npr. `M5.16`), seji ali ključni besedi |
 | Polna tabela "Trenutno stanje" (18. 10.), polna tabela milestonov, M1/M2 po paketih, **vsa** vprašanja Q1–Q33 (odločena), **Znane omejitve** (pasti scenarijev, pravila merjenja, okolje) | [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) | `grep`; pred pisanjem novega scenarija preglej §5 Znane omejitve |
 | **Sprejete spremembe obnašanja**, **Prevzeta koda**, **Meritve** (živi registri; nove vrstice se dodajo tam) | [`04-REGISTRI.md`](04-REGISTRI.md) | ko dodajaš stikalo, prevzeto kodo ali meritev; `grep` po stikalu (`Rw…`) |
 | Polni zapisi meritev | [`meritve/`](meritve/) | po povezavi iz registra |

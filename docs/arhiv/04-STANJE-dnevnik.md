@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 113 → 1)
+# Arhiv: dnevnik sej (vnosi 114 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,24 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-22 (114) — M5-V.8b: `RwFarView` privzeto 2 — zaključeno
+
+**Paket:** M5-V.8b (D-051) · **Stanje:** **zaključeno** — zahtevani `unit`, `build`, `package` zeleni na kodi
+`5c4754b8…` (22. 10. 2026; brez novih meritev v svetu; sprejem je M5-V.8 na kodi `9f9125b0…`).
+
+**Narejeno:** `CustomNpcs.RwFarView` privzeto **2** (prej 0) in komentar konfiguracije z izidom sprejema (vrednost 1 na
+klientu ni priporočena); komentar `FarServer`; vrstice obnašanja `RwFarView`, `RwFarRange`, `RwImpostorStart`,
+`RwImpostorAtlas`, `RwFarShaders` in coremoda `RenderGlobal` v 04-REGISTRI kažejo privzeto 2; README, 03-FAZE.
+
+**Spremembe obnašanja moda:** z novim configom (ali brez ključa) strežnik pošilja nadomestke po kanalu `rwfar`
+klientom s `HELLO`, klient riše L2 (sledeni onkraj 56 blokov) in L3 (onkraj sledilnika do `RwFarRange`/vd). Obstoječi
+configi s ključem obdržijo vrednost; `dev/run/config/CustomNpcs.cfg` ima `RwFarView=0` (merilni pogoji nespremenjeni),
+`dev/run-m7` ključa nima in dobi 2. Stari klient ali klient z 0 ne pošlje `HELLO` in ne dobi nič.
+**Minecraft meritve:** nobene.
+
+**Naslednji korak:** **K12**, nato ostali K-paketi (K13, K10 ponovno oceniti; kandidati iz M5-V.8: cena izrisa L3,
+pas `rwfar` po chunkih, PBO peka). Neodvisno: čistilni korak K3, M4.14b/M4.16; ročna preverba z OptiFine.
 
 ### 2026-10-22 (113) — M5-V.8: sprejem vidnosti na daljavo — zaključeno (vklop v kodi M5-V.8b)
 

@@ -126,6 +126,7 @@ Prenosljiva ideja je **»nič klicev na entiteto«** → K10 (instancing), K13 (
 (impostor). Da GPU instancing na 1.12 deluje, kaže Brute force Rendering Culling (GL 3.3)
 ([CurseForge](https://www.curseforge.com/minecraft/mc-mods/brute-force-rendering-culling)).
 Predlagan vrstni red M5-K: **K0 → K5 → K12 → K13 → K10**; K10 je največji vzvod in največje tveganje.
+**Dopolnitev 22. 10. 2026 (D-053):** po K14/K3 (strošek so oglišča v gonilniku, ne klici) in D-051 (modeli samo znotraj 56 blokov) je K13 zavržen kot samostojen paket, K10 odložen izven M5; [ponovna ocena](raziskave/M5-K-K13-K10-ponovna-ocena.md).
 
 **Zniževanje ločljivosti tekstur pri veliki gostoti NPC-jev — ocenjeno in zavrženo kot ukrep za FPS [H, iz
 kode in arhitekture].** Skin je 64×64 (≈16 KB), oddaljen NPC zavzame malo pikslov, zato vzorčenje teksture in
