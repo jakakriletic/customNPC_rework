@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 111 → 1)
+# Arhiv: dnevnik sej (vnosi 112 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,40 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-22 (112) — M5-V.7: združljivost izrisa L2/L3 — zaključeno
+
+**Paket:** M5-V.7 · **Stanje:** **zaključeno** — vseh 5 zahtevanih testov zelenih na kodi `a369f197…`: `unit`, `build`,
+`package`, `v7-posebni` (K1–K8, K16, K17a–j) in regresija L3 `v5-izris-10-64-1000` (V0–V24).
+
+**Narejeno (D-050):**
+- `FarCompat`: OptiFine prek refleksije; aktiven paket senčil + `RwFarShaders=0` (privzeto) → original (brez L2/L3,
+  peke in skrivanja mrtvih), senčni prehod → brez impostorjev; stanje v `/rwimpostor` in JSON (`far*`).
+- `SkinDownload` + `ImpostorBaker`: peka počaka na prenos URL skina / skina igralca (≤ 30 s, `downloadWaits`).
+- `FarRender.l2()` brez `isInvisible()`: pol-viden NPC (`NpcVisible 2`) je v L2 pol-prozoren impostor — ista
+  latentna napaka je bila v M5-V.6 (pol-vidni so v L2 ostali model).
+- Harness: števci posebnih NPC-jev po imenu (`specialPrefix`), barva pečenega okvirja; `k-run.ps1 -Posebni 1`
+  (9 klonov `RWV7_*`, `dev/tools/skin-streznik.js` z zamikom 4 s), merilo K17
+  ([scenarij](../scenariji/M5-K.0-klient.md#m5-v7-posebni-npc-ji--posebni-1-merilo-k17)).
+- JUnit: `FarCompatTest` (4, izključen iz `testOriginal`), `ImpostorFramesTest` +1, `HarnessJobTest` +1.
+
+**Izid** ([zapis](../meritve/2026-10-21-M5-V.7-zdruzljivost.md)): velik (`Size 15`), morf (prašič), URL skin (okvir
+`BB00BB` = preneseni magenta skin, 1.927 čakanj na prenos) in pol-viden (pol-prozoren) so impostor; neviden, ubit,
+jahač in nosilec ostanejo model ali skriti; NPC brez hitboxa izven dometa vanille je impostor (`l2IzvenDometa` 1 —
+veja, ki je M5-V.6 ni izmeril). Brez OptiFine je `FarCompat` neaktiven. Prvi zagon `v7-posebni` je padel na K17c
+(pol-viden = model) → popravek zgoraj.
+- **Samo statično [K]:** OptiFine 1.12.2 HD U G5 (sidro `"blockentities"` enkrat; s senčili `Shaders.endEntities`/
+  `beginBlockEntities` pred njim in drugi klic v senčnem prehodu → samodejni izklop), Entity Culling 6.5.0 +
+  RenderLib 1.4.5 (zakriti NPC ne sproži `RenderLivingEvent.Pre` → skladno), `customNPC_entities_mod` (peka ustvari
+  pravi razred → njihov renderer). Tuji modi niso nameščeni v razvojnem klientu, zato meritve z njimi ni.
+
+**Spremembe obnašanja moda:** pri privzetih nastavitvah nobene (`RwFarView=0`); novo stikalo `RwFarShaders`
+(privzeto 0), registrirano v 04-REGISTRI.
+**Minecraft meritve:** 3 zagoni `v7-posebni` (prvi ustavljen v upravljalniku pred meritvijo, drugi K17c padel, tretji
+zelen) + 1 `-Izris 1`.
+
+**Naslednji korak:** **M5-V.8** (sprejem: A/B celic M5-V.1 z `RwFarView` 0/1/2, posnetki pri 64/128/256/368
+blokih). Neodvisno: čistilni korak K3, M4.14b/M4.16; ročna preverba z OptiFine/senčili v instanci uporabnika.
 
 ### 2026-10-21 (111) — Q30: K14b `RwHeadwearSkip` privzeto 1 — zaključeno
 

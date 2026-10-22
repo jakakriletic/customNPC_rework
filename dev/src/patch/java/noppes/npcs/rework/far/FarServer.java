@@ -40,7 +40,7 @@ import noppes.npcs.entity.EntityNPCInterface;
  * NPC: v pasu, {@code isPlayerWatchingChunk} (klient ima teren), ni neviden ({@code display.visible
  * == 1} se nikoli ne poslje), ni mrtev s skritim truplom.
  *
- * <p>{@code RwFarView=0} (privzeto do M5-V.8) ne poslje nicesar; stari klient ali klient z
+ * <p>{@code RwFarView=0} (privzeto do M5-V.8b, od tedaj 2, D-051) ne poslje nicesar; stari klient ali klient z
  * izklopljenim stikalom ne poslje {@code HELLO} in ne dobi nicesar. AI, frekvenca ticka in vanilla
  * sledilnik so nespremenjeni (R5). Cas obdelave se meri na igralca (D-043: strezniski cilj
  * +&lt;= 0,1 ms na igralca se iz MSPT ne razloci), izpis {@code /rwfar}. Stanje bere in pise samo

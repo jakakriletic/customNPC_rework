@@ -14,9 +14,9 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-22** (seja 113) — **M5-V.8 zaključen**: sprejem vidnosti na daljavo, 12 serij × 3 zelenih na kodi `9f9125b0…`; vd 24 / 5.000 sličica p95 9,188 → 8,893 ms pri `RwFarView` 2 (10,873 pri 1), `rwfar` 91,5 µs/tick/igralca, 0 B/s mirovanje → D-051 privzeto 2, sprememba v kodi je M5-V.8b ([zapis](meritve/2026-10-22-M5-V.8-sprejem.md)). Pred tem (seja 112): **M5-V.7 zaključen**: združljivost L2/L3 (D-050): senčila OptiFine → samodejni izklop (`RwFarShaders` privzeto 0), senčni prehod brez impostorjev, peka čaka na prenos URL skina, popravek pol-vidnih NPC-jev v L2; `v7-posebni` K17a–j in regresija V0–V24 zelena na kodi `a369f197…`; OptiFine, Entity Culling in `customNPC_entities_mod` samo statično. Pred tem (seja 111): **Q30 odločen**: K14b `RwHeadwearSkip` privzeto **1** (D-049, odločitev lastnika, brez novih meritev). Pred tem (seja 110): **M5-V.6 zaključen**: L2 (sledeni NPC-ji onkraj `RwImpostorStart` 56 kot impostorji, preklic `RenderLivingEvent.Pre`), D-048; vseh 8 zahtevanih testov zelenih na kodi `6db12833…` (A/B 3 + 3, RD 10, prizorišče `-Dalec 1`: idle-200 p50 4,886 → 2,013 ms, idle-500 11,591 → 2,331 ms; L2 137/200 in 437/500 = geometrija); privzeto `RwFarView=0` |
-| Trenutni milestone | **M5 — Performance**: M5-S (strežnik) zaključen 16. 10. (M5.8: idle 10×, boj 1,5×, nedosegljiva 1,4× pri p95 ≤ 25 ms); M5-K (klient): K.0 in K.1 zaključena, K14 zavržen, K14b v kodi (privzeto 1 od 21. 10., D-049) in K4 (privzeto 1) 19. 10., K3 zavržen 21. 10. (A/B brez koristi), K5 L1 v kodi 21. 10. (privzeto 0, D-039); M5-V.1 zaključen 21. 10. (varianta A zavrnjena, D-043), M5-V.2 (strežnik `rwfar`) zaključen 21. 10. (privzeto 0, D-044), M5-V.3 (opis videza) zaključen 21. 10. (D-045), M5-V.4 (peka impostorjev) zaključen 21. 10. (D-046), M5-V.5 (izris L3) zaključen 21. 10. (D-047), M5-V.6 (L2) zaključen 21. 10. (D-048), M5-V.7 (združljivost) zaključen 22. 10. (D-050). M3 (jedro entitete) zaključen do M3.9 (GUI za hitbox način M3.8b v klientu odprt); M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | **M5-V.8b** (privzeto `RwFarView=2`, D-051; `unit`/`build`/`package`), nato K12, ostali K-paketi. Pred izdajo **Q22** (pravi Forge strežnik: jar od M5.16 privzeto spreminja vanilla bajtkodo, produkcijska pot je preverjena samo statično). **M4.0** narejen 20. 10. (D-038); od M4 se lahko vrineta **M4.14b** (formacije v svetu, samo zagon) in **M4.16** (scenarij letenja), ko računalnik ni v rabi. Odprto: PR `codex/m7-cnpc-integration` → `main` |
+| Zadnja posodobitev | **2026-10-22** (seja 114) — **M5-V.8b zaključen**: `RwFarView` privzeto **2** v kodi (D-051; `dev/run` ostane 0), dokaz `unit`/`build`/`package`. Pred tem (seja 113): **M5-V.8 zaključen**: sprejem vidnosti na daljavo, 12 serij × 3 zelenih na kodi `9f9125b0…`; vd 24 / 5.000 sličica p95 9,188 → 8,893 ms pri `RwFarView` 2 (10,873 pri 1), `rwfar` 91,5 µs/tick/igralca, 0 B/s mirovanje → D-051 privzeto 2, sprememba v kodi je M5-V.8b ([zapis](meritve/2026-10-22-M5-V.8-sprejem.md)). Pred tem (seja 112): **M5-V.7 zaključen**: združljivost L2/L3 (D-050): senčila OptiFine → samodejni izklop (`RwFarShaders` privzeto 0), senčni prehod brez impostorjev, peka čaka na prenos URL skina, popravek pol-vidnih NPC-jev v L2; `v7-posebni` K17a–j in regresija V0–V24 zelena na kodi `a369f197…`; OptiFine, Entity Culling in `customNPC_entities_mod` samo statično. Pred tem (seja 111): **Q30 odločen**: K14b `RwHeadwearSkip` privzeto **1** (D-049, odločitev lastnika, brez novih meritev). Pred tem (seja 110): **M5-V.6 zaključen**: L2 (sledeni NPC-ji onkraj `RwImpostorStart` 56 kot impostorji, preklic `RenderLivingEvent.Pre`), D-048; vseh 8 zahtevanih testov zelenih na kodi `6db12833…` (A/B 3 + 3, RD 10, prizorišče `-Dalec 1`: idle-200 p50 4,886 → 2,013 ms, idle-500 11,591 → 2,331 ms; L2 137/200 in 437/500 = geometrija); privzeto `RwFarView=0` |
+| Trenutni milestone | **M5 — Performance**: M5-S (strežnik) zaključen 16. 10. (M5.8: idle 10×, boj 1,5×, nedosegljiva 1,4× pri p95 ≤ 25 ms); M5-K (klient): K.0 in K.1 zaključena, K14 zavržen, K14b v kodi (privzeto 1 od 21. 10., D-049) in K4 (privzeto 1) 19. 10., K3 zavržen 21. 10. (A/B brez koristi), K5 L1 v kodi 21. 10. (privzeto 0, D-039); M5-V.1 zaključen 21. 10. (varianta A zavrnjena, D-043), M5-V.2 (strežnik `rwfar`) zaključen 21. 10. (privzeto 0, D-044), M5-V.3 (opis videza) zaključen 21. 10. (D-045), M5-V.4 (peka impostorjev) zaključen 21. 10. (D-046), M5-V.5 (izris L3) zaključen 21. 10. (D-047), M5-V.6 (L2) zaključen 21. 10. (D-048), M5-V.7 (združljivost) zaključen 22. 10. (D-050), M5-V.8 (sprejem, D-051) in M5-V.8b (`RwFarView` privzeto 2) 22. 10. — **M5-V zaključen**. M3 (jedro entitete) zaključen do M3.9 (GUI za hitbox način M3.8b v klientu odprt); M2 zaključen (baseline M2.6 zelen 5. 10.) |
+| Naslednji paketi | **K12** (okluzija, združljivost z Entity Culling), nato ostali K-paketi (K13, K10 ponovno oceniti; kandidati iz M5-V.8: cena izrisa L3, pas `rwfar` po chunkih, PBO peka). Pred izdajo **Q22** (pravi Forge strežnik: jar od M5.16 privzeto spreminja vanilla bajtkodo, produkcijska pot je preverjena samo statično). **M4.0** narejen 20. 10. (D-038); od M4 se lahko vrineta **M4.14b** (formacije v svetu, samo zagon) in **M4.16** (scenarij letenja), ko računalnik ni v rabi. Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **181** datotek `.java` v `src/patch` (22. 10.; +2 M5-V.7: `rework/far/FarCompat`, `SkinDownload`), od tega **116** v `noppes/npcs/rework/…` (`ai` 5, `core` 10, `data` 5, `diag` 25, `entity` 13, `far` 21, `formation` 15, `nav` 12, `net` 3, `render` 7) in 3 dostopni razredi v `net/minecraft/…`; `verify-package`: **71** vnosov (70 razredov originala + manifest coremoda) |
 | Testi | **387 JUnit** (metod `@Test`, preštetih z grep 22. 10.; +1 M5-V.8) v 66 datotekah — zeleni na kodi `9f9125b0…` + **40 primerjalnih testov originala** (`:testOriginal` proti nespremenjenemu binarju). Dodatno **20** preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.ponovitve-samotest.ps1`, M2.5c) |
@@ -39,7 +39,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M2 Diagnostika | **zaključeno 5. 10.** (razen M2.4r render, prestavljen v M5-K) | M2.1–M2.7 preverjeni v svetu; baseline M2.6 zelen 5. 10. — [baseline](meritve/baseline-2026-10-05.md) |
 | M3 Jedro entitete | **zaključeno do M3.9** | M3.1–M3.5 (R1 reproduciran, popravljen pod `RwMountSteering=1`), M3.6 (D-020, `RwAttackPriority`), M3.7, M3.8 (`RwHitbox`), M3.9 (7. 10.). Odprto: M3.8b GUI v klientu (z igralcem), Q15 → D-028 |
 | M4 Gibanje | **M4.0 zaključen 20. 10.**; M4.14a v kodi (izven vrstnega reda) | [raziskava M4.0](raziskave/M4.0-gibanje-in-letenje.md), D-038: vrstni red M4.14b → M4.16 (scenarij) → M4.10 → M4.17 → M4.2/M4.3 → (M4.5) → M4.6 → M4.7; M4.13 → (M4.11) in M4.15 neodvisno; M4.1/M4.4/M4.9/M4.12 zavrženi ali združeni. Formacije v svetu še ne — [zasnova](06-FORMACIJE.md); M4.15 (D-036); Q6, Q31 |
-| M5 Performance | **M5-S zaključen 16. 10.**; M5-K.0 (16. 10.) in M5-K.1 (18. 10.) zaključena, K14 zavržen, K14b (19. 10., `RwHeadwearSkip` privzeto 1 od 21. 10., D-049: −25 % idle-500), K4 (19. 10., `RwLabelCache=1`, −7 % idle-200), K3 zavržen (21. 10., A/B brez koristi, `RwEyesList=0`), K5 L1 (21. 10., `RwLodStart=0`, D-039: idle-500 −24 % pri vklopu); M5-V.1 zaključen 21. 10. (D-043), M5-V.2 (D-044), M5-V.3 (D-045), M5-V.4 (D-046), M5-V.5 (D-047) in M5-V.6 (D-048, L2: idle-500 −80 % pri vklopu) zaključeni 21. 10., M5-V.7 (D-050, združljivost) in M5-V.8 (D-051, sprejem: privzeto 2, koda M5-V.8b) 22. 10. | M5-S: S1, S2, S14b, S4, S7, S5 (D-037, `RwPathNegCache=1`), S14c, S16, M5.15 (coremod), M5.16 (`RwMoveBoxes`) vsi privzeto vklopljeni po D-032; M5.2 zavržen. Podrobnosti po paketih: [arhiv, tabele §2](arhiv/04-STANJE-tabele.md); razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
+| M5 Performance | **M5-S zaključen 16. 10.**; M5-K.0 (16. 10.) in M5-K.1 (18. 10.) zaključena, K14 zavržen, K14b (19. 10., `RwHeadwearSkip` privzeto 1 od 21. 10., D-049: −25 % idle-500), K4 (19. 10., `RwLabelCache=1`, −7 % idle-200), K3 zavržen (21. 10., A/B brez koristi, `RwEyesList=0`), K5 L1 (21. 10., `RwLodStart=0`, D-039: idle-500 −24 % pri vklopu); M5-V.1 zaključen 21. 10. (D-043), M5-V.2 (D-044), M5-V.3 (D-045), M5-V.4 (D-046), M5-V.5 (D-047) in M5-V.6 (D-048, L2: idle-500 −80 % pri vklopu) zaključeni 21. 10., M5-V.7 (D-050, združljivost) in M5-V.8 (D-051, sprejem) in M5-V.8b (`RwFarView` privzeto 2) 22. 10. | M5-S: S1, S2, S14b, S4, S7, S5 (D-037, `RwPathNegCache=1`), S14c, S16, M5.15 (coremod), M5.16 (`RwMoveBoxes`) vsi privzeto vklopljeni po D-032; M5.2 zavržen. Podrobnosti po paketih: [arhiv, tabele §2](arhiv/04-STANJE-tabele.md); razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
@@ -55,8 +55,26 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 111 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 112 → 1, novejši zgoraj).*
 
+
+### 2026-10-22 (114) — M5-V.8b: `RwFarView` privzeto 2 — zaključeno
+
+**Paket:** M5-V.8b (D-051) · **Stanje:** **zaključeno** — zahtevani `unit`, `build`, `package` zeleni na kodi
+`5c4754b8…` (22. 10. 2026; brez novih meritev v svetu; sprejem je M5-V.8 na kodi `9f9125b0…`).
+
+**Narejeno:** `CustomNpcs.RwFarView` privzeto **2** (prej 0) in komentar konfiguracije z izidom sprejema (vrednost 1 na
+klientu ni priporočena); komentar `FarServer`; vrstice obnašanja `RwFarView`, `RwFarRange`, `RwImpostorStart`,
+`RwImpostorAtlas`, `RwFarShaders` in coremoda `RenderGlobal` v 04-REGISTRI kažejo privzeto 2; README, 03-FAZE.
+
+**Spremembe obnašanja moda:** z novim configom (ali brez ključa) strežnik pošilja nadomestke po kanalu `rwfar`
+klientom s `HELLO`, klient riše L2 (sledeni onkraj 56 blokov) in L3 (onkraj sledilnika do `RwFarRange`/vd). Obstoječi
+configi s ključem obdržijo vrednost; `dev/run/config/CustomNpcs.cfg` ima `RwFarView=0` (merilni pogoji nespremenjeni),
+`dev/run-m7` ključa nima in dobi 2. Stari klient ali klient z 0 ne pošlje `HELLO` in ne dobi nič.
+**Minecraft meritve:** nobene.
+
+**Naslednji korak:** **K12**, nato ostali K-paketi (K13, K10 ponovno oceniti; kandidati iz M5-V.8: cena izrisa L3,
+pas `rwfar` po chunkih, PBO peka). Neodvisno: čistilni korak K3, M4.14b/M4.16; ročna preverba z OptiFine.
 
 ### 2026-10-22 (113) — M5-V.8: sprejem vidnosti na daljavo — zaključeno (vklop v kodi M5-V.8b)
 
@@ -83,40 +101,6 @@ zato je ločen paket **M5-V.8b** (koda + komentar + vrstice obnašanja, `unit`/`
 **Naslednji korak:** **M5-V.8b** (privzeto `RwFarView=2`), nato K12 in ostali K-paketi (K13, K10 ponovno oceniti;
 kandidati iz M5-V.8: cena izrisa L3, pas `rwfar` po chunkih, PBO peka). Neodvisno: čistilni korak K3, M4.14b/M4.16;
 ročna preverba z OptiFine.
-
-### 2026-10-22 (112) — M5-V.7: združljivost izrisa L2/L3 — zaključeno
-
-**Paket:** M5-V.7 · **Stanje:** **zaključeno** — vseh 5 zahtevanih testov zelenih na kodi `a369f197…`: `unit`, `build`,
-`package`, `v7-posebni` (K1–K8, K16, K17a–j) in regresija L3 `v5-izris-10-64-1000` (V0–V24).
-
-**Narejeno (D-050):**
-- `FarCompat`: OptiFine prek refleksije; aktiven paket senčil + `RwFarShaders=0` (privzeto) → original (brez L2/L3,
-  peke in skrivanja mrtvih), senčni prehod → brez impostorjev; stanje v `/rwimpostor` in JSON (`far*`).
-- `SkinDownload` + `ImpostorBaker`: peka počaka na prenos URL skina / skina igralca (≤ 30 s, `downloadWaits`).
-- `FarRender.l2()` brez `isInvisible()`: pol-viden NPC (`NpcVisible 2`) je v L2 pol-prozoren impostor — ista
-  latentna napaka je bila v M5-V.6 (pol-vidni so v L2 ostali model).
-- Harness: števci posebnih NPC-jev po imenu (`specialPrefix`), barva pečenega okvirja; `k-run.ps1 -Posebni 1`
-  (9 klonov `RWV7_*`, `dev/tools/skin-streznik.js` z zamikom 4 s), merilo K17
-  ([scenarij](scenariji/M5-K.0-klient.md#m5-v7-posebni-npc-ji--posebni-1-merilo-k17)).
-- JUnit: `FarCompatTest` (4, izključen iz `testOriginal`), `ImpostorFramesTest` +1, `HarnessJobTest` +1.
-
-**Izid** ([zapis](meritve/2026-10-21-M5-V.7-zdruzljivost.md)): velik (`Size 15`), morf (prašič), URL skin (okvir
-`BB00BB` = preneseni magenta skin, 1.927 čakanj na prenos) in pol-viden (pol-prozoren) so impostor; neviden, ubit,
-jahač in nosilec ostanejo model ali skriti; NPC brez hitboxa izven dometa vanille je impostor (`l2IzvenDometa` 1 —
-veja, ki je M5-V.6 ni izmeril). Brez OptiFine je `FarCompat` neaktiven. Prvi zagon `v7-posebni` je padel na K17c
-(pol-viden = model) → popravek zgoraj.
-- **Samo statično [K]:** OptiFine 1.12.2 HD U G5 (sidro `"blockentities"` enkrat; s senčili `Shaders.endEntities`/
-  `beginBlockEntities` pred njim in drugi klic v senčnem prehodu → samodejni izklop), Entity Culling 6.5.0 +
-  RenderLib 1.4.5 (zakriti NPC ne sproži `RenderLivingEvent.Pre` → skladno), `customNPC_entities_mod` (peka ustvari
-  pravi razred → njihov renderer). Tuji modi niso nameščeni v razvojnem klientu, zato meritve z njimi ni.
-
-**Spremembe obnašanja moda:** pri privzetih nastavitvah nobene (`RwFarView=0`); novo stikalo `RwFarShaders`
-(privzeto 0), registrirano v 04-REGISTRI.
-**Minecraft meritve:** 3 zagoni `v7-posebni` (prvi ustavljen v upravljalniku pred meritvijo, drugi K17c padel, tretji
-zelen) + 1 `-Izris 1`.
-
-**Naslednji korak:** **M5-V.8** (sprejem: A/B celic M5-V.1 z `RwFarView` 0/1/2, posnetki pri 64/128/256/368
-blokih). Neodvisno: čistilni korak K3, M4.14b/M4.16; ročna preverba z OptiFine/senčili v instanci uporabnika.
 
 ---
 
