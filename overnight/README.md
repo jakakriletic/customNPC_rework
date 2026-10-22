@@ -33,6 +33,11 @@ celico je treba izvesti znova. Zaprtje ali padec upravljalnika brez Stop pusti l
 proces, da dokonča trenutno operacijo. Naslednji Start prevzame isti rezultat brez dvojnega
 zagona. Windows mutex prepreči dva upravljalnika oziroma dva lokalna frontend strežnika.
 
+`launch` na Windows zažene frontend prek `Win32_Process.Create`, torej izven job objekta
+procesa, ki ga je zagnal (Claude/Codex aplikacija, IDE, terminal). 22. 10. 2026 je samodejna
+posodobitev aplikacije Claude ob 09:12 ubila frontend, upravljalnik in Minecraft sredi celice
+`v8-10-5000-f0`, ker je bil `launch` zagnan iz Claude seje. `--attached` ohrani stari način.
+
 Če AI ugotovi, da ni več izvedljivega dela v dogovorjenem obsegu, vrne `idle`. Upravljalnik
 ostane prižgan, počaka do ene ure oziroma do spremembe merilnih vhodov ter znova preveri
 plan. Dodan cilj se obravnava ob naslednjem preverjanju vrste. Ne ustvarja navideznega dela.

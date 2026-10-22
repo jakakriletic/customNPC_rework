@@ -125,6 +125,18 @@ export async function createDashboard(c, configFile, port = 0) {
   writeJson(uiFile, { pid: process.pid, url: origin, startedAt: now() });
   return { server, url: origin, close: () => new Promise(resolve => server.close(resolve)) };
 }
+// Windows: detached:true ne izstopi iz job objekta starsa. Ce launch zazene aplikacija (Claude,
+// IDE, terminal) s kill-on-close jobom, njen izhod ali posodobitev ubije strežnik, runner in
+// Minecraft (22. 10. 2026 ob posodobitvi Claude). Win32_Process.Create ustvari proces izven joba.
+function launchOutsideJob(c, configFile, logFile) {
+  const q = s => `"${s}"`;
+  const command = `cmd.exe /d /c "${q(process.execPath)} ${q(path.join(toolDirectory, 'dashboard.mjs'))} serve --config ${q(configFile)} >> ${q(logFile)} 2>&1"`;
+  const script = '$si = New-CimInstance -ClassName Win32_ProcessStartup -ClientOnly -Property @{ ShowWindow = [uint16]0 }; '
+    + '$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = $env:RW_LAUNCH_CMD; CurrentDirectory = $env:RW_LAUNCH_CWD; ProcessStartupInformation = $si }; '
+    + 'if ($r.ReturnValue -ne 0) { [Console]::Error.WriteLine("Win32_Process.Create: " + $r.ReturnValue); exit 1 }';
+  const r = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script], { windowsHide: true, encoding: 'utf8', env: { ...process.env, RW_LAUNCH_CMD: command, RW_LAUNCH_CWD: c.projectRoot } });
+  if (r.status !== 0) throw new Error(`Vmesnika ni bilo mogoce zagnati izven joba: ${(r.stderr || r.error?.message || '').trim()}`);
+}
 async function main() {
   const args = process.argv.slice(2); const command = args[0] || 'launch';
   const value = key => args.includes(key) ? args[args.indexOf(key) + 1] : undefined;
@@ -144,9 +156,13 @@ async function main() {
   }
   let url = await existing();
   if (!url) {
-    const log = fs.openSync(path.join(c.stateDirectory, 'dashboard.log'), 'a');
-    try { const child = spawn(process.execPath, [path.join(toolDirectory, 'dashboard.mjs'), 'serve', '--config', configFile], { cwd: c.projectRoot, detached: true, windowsHide: true, stdio: ['ignore', log, log] }); child.on('error', e => console.error(e.message)); child.unref(); }
-    finally { fs.closeSync(log); }
+    const logFile = path.join(c.stateDirectory, 'dashboard.log');
+    if (process.platform === 'win32' && !args.includes('--attached')) launchOutsideJob(c, configFile, logFile);
+    else {
+      const log = fs.openSync(logFile, 'a');
+      try { const child = spawn(process.execPath, [path.join(toolDirectory, 'dashboard.mjs'), 'serve', '--config', configFile], { cwd: c.projectRoot, detached: true, windowsHide: true, stdio: ['ignore', log, log] }); child.on('error', e => console.error(e.message)); child.unref(); }
+      finally { fs.closeSync(log); }
+    }
     for (let i = 0; i < 50 && !url; i++) { await delay(100); url = await existing(); }
     if (!url) throw new Error('Vmesnik se ni zagnal; preveri .overnight/dashboard.log');
   }
