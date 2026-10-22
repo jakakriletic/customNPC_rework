@@ -46,7 +46,7 @@ Nastavitve: VSync izklopljen, `limitFramerate` 260 (neomejeno), brez view bobbin
 | K6 | VSync 0, limit ≥ 260, RD in FOV kot zahtevano |
 | K7 | vsaj 10 sličic/s in trajanje merjenja ±2 s |
 | K8 | med ogrevanjem in merjenjem ni tekel tuj java proces |
-| K16 | (s `-Far`, M5-V.6) L2 po geometriji prizorišča, brez nepečenih in napak — glej spodaj |
+| K16 | (s `-Far`, M5-V.6) L2 po geometriji prizorišča, brez nepečenih in napak — glej spodaj (M5-K.2: brez `-Dalec 1` natanko 0) |
 
 ## Uporaba
 
@@ -112,6 +112,24 @@ Nastavitve: VSync izklopljen, `limitFramerate` 260 (neomejeno), brez view bobbin
   čez okvir. Pri 0 (občutljivost): izven dometa ≥ 1 (`Kip` izven), obris `Kip` sega > 0,3 bloka čez hitbox.
   K16/K17e se prilagodita: pri 1 je `Kip` v dometu vanille in preklican L2 (izven dometa 0).
 - A/B cene: `ponovitve-run.ps1 -Scenarij klient -Ponovitev 3 -Dodatno -Variant,idle,-N,500,-RenderBox,0|1`.
+
+### M5-K.2: sprejem klienta (original proti vsem sprejetim privzetim stikalom)
+
+```
+.\k-run.ps1 -Variant idle -N 500 -Pokrivalo 0 -Napisi 0 -Far 0 -RenderBox 0                       # original
+.\k-run.ps1 -Variant idle -N 500 -Pokrivalo 1 -Napisi 1 -Far 2 -ImpostorStart 56 -RenderBox 1     # privzeto
+# prizorisce M5-V.6: dodaj -Dalec 1 -RenderDistance 10
+```
+
+- `dev/run/config/CustomNpcs.cfg` ostane nespremenjen (vsa stikala 0, original). Obe strani nastavita **vsa** klientska
+  stikala z odločitvijo o privzeti vrednosti eksplicitno prek posla (`headwearSkip`, `labelCache`, `farView`,
+  `impostorStart`, `renderBox`), zato K10, K12 in K16 v vsakem zagonu potrdijo, da je bila vrednost res uporabljena.
+  `RwLodStart` (privzeto 0 = original, D-039) in `RwImpostorAtlas`/`RwFarShaders` (privzeto = vrednost v configu) ostanejo
+  iz configa. Strežniška stikala M5-S integriranega strežnika ostanejo 0 (sprejeta so z M5.8; tu se meri klient).
+- **K12** pri `-Napisi 1` in idle: pričakovanje napisov iz geometrije (`renderName` riše ime samo do √512 = 22,6 bloka);
+  v idle-500 in `-Dalec 1` je vsa mreža dlje, zato 0 napisov z listom. Pas ±1 blok okoli meje sprejme oboje.
+- **K16** pri `-Far 2` brez `-Dalec 1`: vsa mreža je bliže od praga 56, zato natanko 0 L2; z `-Dalec 1` mora biti L2 > 0.
+- Test ID-ji: `k2-{200,500}-{orig,priv}` in `k2-dalec-{200,500}-{orig,priv}` (vsak `ponovitve-run -Scenarij klient`, 3 zagoni).
 
 ## Omejitve (znane)
 

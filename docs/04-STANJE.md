@@ -14,9 +14,9 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-22** (seja 117) — **K3c** (čistilni korak K3, D-053): odstranjena koda zavrženega poskusa `RwEyesList` (`EyesList`, `EyesCheck`, harness, `k-run -Oci`), popravljeno besedilo `RwRenderBox`/`RenderBox` (64/38,4 bloka pri RD 8); brez spremembe obnašanja, `unit`/`build`/`package` zeleni na `241416ca…`. Naslednji: M5-K.2 (sprejem klienta, izhodni kriterij M5). |
-| Trenutni milestone | **M5 — Performance**: M5-S (strežnik) zaključen 16. 10. (M5.8: idle 10×, boj 1,5×, nedosegljiva 1,4× pri p95 ≤ 25 ms); M5-K (klient): K.0 in K.1 zaključena, K14 zavržen, K14b v kodi (privzeto 1 od 21. 10., D-049) in K4 (privzeto 1) 19. 10., K3 zavržen 21. 10. (A/B brez koristi), K5 L1 v kodi 21. 10. (privzeto 0, D-039); M5-V.1 zaključen 21. 10. (varianta A zavrnjena, D-043), M5-V.2 (strežnik `rwfar`) zaključen 21. 10. (privzeto 0, D-044), M5-V.3 (opis videza) zaključen 21. 10. (D-045), M5-V.4 (peka impostorjev) zaključen 21. 10. (D-046), M5-V.5 (izris L3) zaključen 21. 10. (D-047), M5-V.6 (L2) zaključen 21. 10. (D-048), M5-V.7 (združljivost) zaključen 22. 10. (D-050), M5-V.8 (sprejem, D-051) in M5-V.8b (`RwFarView` privzeto 2) 22. 10. — **M5-V zaključen**; K12 (okvir upodobitve, `RwRenderBox` privzeto 1, D-052) 22. 10.; ponovna ocena K13/K10 (D-053: K13 zavržen, K10 odložen) 22. 10.; K3c (čistilni korak) 22. 10. M3 (jedro entitete) zaključen do M3.9 (GUI za hitbox način M3.8b v klientu odprt); M2 zaključen (baseline M2.6 zelen 5. 10.) |
-| Naslednji paketi | **M5-K.2** (sprejem klienta, izhodni kriterij M5) — D-053; K13 zavržen, K10 odložen izven M5. Pred izdajo **Q22** (pravi Forge strežnik: jar od M5.16 privzeto spreminja vanilla bajtkodo, produkcijska pot je preverjena samo statično). **M4.0** narejen 20. 10. (D-038); od M4 se lahko vrineta **M4.14b** (formacije v svetu, samo zagon) in **M4.16** (scenarij letenja), ko računalnik ni v rabi. Odprto: PR `codex/m7-cnpc-integration` → `main` |
+| Zadnja posodobitev | **2026-10-22** (seja 118) — **M5-K.2** (sprejem klienta, D-054): original proti vsem privzetim klientskim stikalom, p95 idle-200 7,10 → 5,36 ms, idle-500 12,83 → 9,82, dalec-500 13,02 → 2,94, 1 % low povsod boljši (razponi ločeni), brez regresije; K10 ostane odložen. Klientski del M5 zaprt; M5 se zapre po **M5.Z** (Q34). |
+| Trenutni milestone | **M5 — Performance**: M5-S (strežnik) zaključen 16. 10. (M5.8: idle 10×, boj 1,5×, nedosegljiva 1,4× pri p95 ≤ 25 ms); M5-K (klient): K.0 in K.1 zaključena, K14 zavržen, K14b v kodi (privzeto 1 od 21. 10., D-049) in K4 (privzeto 1) 19. 10., K3 zavržen 21. 10. (A/B brez koristi), K5 L1 v kodi 21. 10. (privzeto 0, D-039); M5-V.1 zaključen 21. 10. (varianta A zavrnjena, D-043), M5-V.2 (strežnik `rwfar`) zaključen 21. 10. (privzeto 0, D-044), M5-V.3 (opis videza) zaključen 21. 10. (D-045), M5-V.4 (peka impostorjev) zaključen 21. 10. (D-046), M5-V.5 (izris L3) zaključen 21. 10. (D-047), M5-V.6 (L2) zaključen 21. 10. (D-048), M5-V.7 (združljivost) zaključen 22. 10. (D-050), M5-V.8 (sprejem, D-051) in M5-V.8b (`RwFarView` privzeto 2) 22. 10. — **M5-V zaključen**; K12 (okvir upodobitve, `RwRenderBox` privzeto 1, D-052) 22. 10.; ponovna ocena K13/K10 (D-053: K13 zavržen, K10 odložen) 22. 10.; K3c (čistilni korak) 22. 10.; **M5-K.2 (sprejem klienta, D-054) 22. 10. — klientski del zaprt**, ostane M5.Z (regresijski prehod). M3 (jedro entitete) zaključen do M3.9 (GUI za hitbox način M3.8b v klientu odprt); M2 zaključen (baseline M2.6 zelen 5. 10.) |
+| Naslednji paketi | **M5.Z** (regresijski prehod `matrika-run.ps1` + M2.7 timerji/script trace, zaprtje M5) — D-054 / Q34; nato M4 po D-038. Pred izdajo **Q22** (pravi Forge strežnik: jar od M5.16 privzeto spreminja vanilla bajtkodo, produkcijska pot je preverjena samo statično). **M4.0** narejen 20. 10. (D-038); od M4 se lahko vrineta **M4.14b** (formacije v svetu, samo zagon) in **M4.16** (scenarij letenja), ko računalnik ni v rabi. Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **181** datotek `.java` v `src/patch` (22. 10.; −2 K3c: `rework/render/EyesList`, `rework/diag/EyesCheck`), od tega **116** v `noppes/npcs/rework/…` (`ai` 5, `core` 10, `data` 5, `diag` 25, `entity` 13, `far` 21, `formation` 15, `nav` 12, `net` 3, `render` 7) in 3 dostopni razredi v `net/minecraft/…`; `verify-package`: **71** vnosov (70 razredov originala + manifest coremoda) |
 | Testi | **395 JUnit** (metod `@Test`, preštetih z grep 22. 10.; −4 K3c: `EyesListTest`) v 67 datotekah — zeleni na kodi `241416ca…` + **40 primerjalnih testov originala** (`:testOriginal` proti nespremenjenemu binarju). Dodatno **20** preverb dedicated-server smoka (M0.5) in **16 trditev samotesta protokola ponovitev** (`.ponovitve-samotest.ps1`, M2.5c) |
@@ -39,7 +39,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M2 Diagnostika | **zaključeno 5. 10.** (razen M2.4r render, prestavljen v M5-K) | M2.1–M2.7 preverjeni v svetu; baseline M2.6 zelen 5. 10. — [baseline](meritve/baseline-2026-10-05.md) |
 | M3 Jedro entitete | **zaključeno do M3.9** | M3.1–M3.5 (R1 reproduciran, popravljen pod `RwMountSteering=1`), M3.6 (D-020, `RwAttackPriority`), M3.7, M3.8 (`RwHitbox`), M3.9 (7. 10.). Odprto: M3.8b GUI v klientu (z igralcem), Q15 → D-028 |
 | M4 Gibanje | **M4.0 zaključen 20. 10.**; M4.14a v kodi (izven vrstnega reda) | [raziskava M4.0](raziskave/M4.0-gibanje-in-letenje.md), D-038: vrstni red M4.14b → M4.16 (scenarij) → M4.10 → M4.17 → M4.2/M4.3 → (M4.5) → M4.6 → M4.7; M4.13 → (M4.11) in M4.15 neodvisno; M4.1/M4.4/M4.9/M4.12 zavrženi ali združeni. Formacije v svetu še ne — [zasnova](06-FORMACIJE.md); M4.15 (D-036); Q6, Q31 |
-| M5 Performance | **M5-S zaključen 16. 10.**; M5-K.0 (16. 10.) in M5-K.1 (18. 10.) zaključena, K14 zavržen, K14b (19. 10., `RwHeadwearSkip` privzeto 1 od 21. 10., D-049: −25 % idle-500), K4 (19. 10., `RwLabelCache=1`, −7 % idle-200), K3 zavržen (21. 10., A/B brez koristi, `RwEyesList=0`), K5 L1 (21. 10., `RwLodStart=0`, D-039: idle-500 −24 % pri vklopu); M5-V.1 zaključen 21. 10. (D-043), M5-V.2 (D-044), M5-V.3 (D-045), M5-V.4 (D-046), M5-V.5 (D-047) in M5-V.6 (D-048, L2: idle-500 −80 % pri vklopu) zaključeni 21. 10., M5-V.7 (D-050, združljivost) in M5-V.8 (D-051, sprejem) in M5-V.8b (`RwFarView` privzeto 2) 22. 10., K12 (`RwRenderBox` privzeto 1, D-052) 22. 10., ponovna ocena K13/K10 (D-053) 22. 10., K3c (čistilni korak) 22. 10. | M5-S: S1, S2, S14b, S4, S7, S5 (D-037, `RwPathNegCache=1`), S14c, S16, M5.15 (coremod), M5.16 (`RwMoveBoxes`) vsi privzeto vklopljeni po D-032; M5.2 zavržen. Podrobnosti po paketih: [arhiv, tabele §2](arhiv/04-STANJE-tabele.md); razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
+| M5 Performance | **M5-S zaključen 16. 10.**; M5-K.0 (16. 10.) in M5-K.1 (18. 10.) zaključena, K14 zavržen, K14b (19. 10., `RwHeadwearSkip` privzeto 1 od 21. 10., D-049: −25 % idle-500), K4 (19. 10., `RwLabelCache=1`, −7 % idle-200), K3 zavržen (21. 10., A/B brez koristi, `RwEyesList=0`), K5 L1 (21. 10., `RwLodStart=0`, D-039: idle-500 −24 % pri vklopu); M5-V.1 zaključen 21. 10. (D-043), M5-V.2 (D-044), M5-V.3 (D-045), M5-V.4 (D-046), M5-V.5 (D-047) in M5-V.6 (D-048, L2: idle-500 −80 % pri vklopu) zaključeni 21. 10., M5-V.7 (D-050, združljivost) in M5-V.8 (D-051, sprejem) in M5-V.8b (`RwFarView` privzeto 2) 22. 10., K12 (`RwRenderBox` privzeto 1, D-052) 22. 10., ponovna ocena K13/K10 (D-053) 22. 10., K3c (čistilni korak) 22. 10., **M5-K.2** (sprejem klienta, D-054) 22. 10.; ostane M5.Z | M5-S: S1, S2, S14b, S4, S7, S5 (D-037, `RwPathNegCache=1`), S14c, S16, M5.15 (coremod), M5.16 (`RwMoveBoxes`) vsi privzeto vklopljeni po D-032; M5.2 zavržen. Podrobnosti po paketih: [arhiv, tabele §2](arhiv/04-STANJE-tabele.md); razdelitev M5-S/M5-K v [09](09-PERFORMANCE-RAZISKAVA.md) |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
@@ -55,8 +55,33 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 115 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 116 → 1, novejši zgoraj).*
 
+
+### 2026-10-22 (118) — M5-K.2: sprejem klienta — zaključeno
+
+**Paket:** M5-K.2 (izhodni kriterij M5 za klient, D-054, Q34) · **Stanje:** **zaključeno** — vseh 8 zahtevanih serij
+(`k2-{200,500}-{orig,priv}`, `k2-dalec-{200,500}-{orig,priv}`, 3 ponovitve) zelenih na kodi `332af8c4…`: T1–T6 v vseh
+serijah, K1–K16 v vseh 24 zagonih ([zapis](meritve/2026-10-22-M5-K.2-sprejem-klienta.md)).
+
+**Narejeno:** `k-run.ps1` — K12 pri `-Napisi 1` in idle pričakuje napise iz geometrije (`renderName` do 22,6 bloka,
+pas ±1 blok), K16 pri `-Far 2` brez `-Dalec 1` zahteva natanko 0 L2; razdelek M5-K.2 v scenariju M5-K.0. Obe strani
+nastavita vsa štiri klientska stikala eksplicitno prek posla, `dev/run/config/CustomNpcs.cfg` ostane 0.
+
+**Izid (mediane, original → privzeto, vsi razponi ločeni):** p95 idle-200 7,095 → 5,356 ms, idle-500 12,825 → 9,817,
+dalec-200 5,405 → 1,851, dalec-500 13,017 → 2,942; 1 % low 102,5 → 139,8 / 54,4 → 67,0 / 134,9 → 364,6 /
+50,2 → 259,6 FPS; p50 −24,7 do −82,5 %, p99 −19,6 do −80,6 %. Regresije na privzeti strani ni (strežnik enak, GC v
+dalec-500 +6 % absolutno pri 5,7× več sličicah). Original se ujema z baselineom M5-K.1 in M5-V.6.
+
+**Odločitve:** D-054 — klientski del izhodnega kriterija M5 izpolnjen; K10 ostane odložen (idle-500: 500 modelov
+znotraj ~42 blokov, p95 9,817 ms < 16,7). Q34 (samostojno): M5 še ni zaprt — funkcionalna matrika §6 in timerji/script
+trace od 17. 9. niso bili ponovljeni na kodi s privzetimi stikali → nov paket **M5.Z**.
+
+**Spremembe obnašanja:** nobene (samo harness). **Minecraft meritve:** 24 zagonov klienta.
+
+**Naslednji korak:** **M5.Z** — regresijski prehod `matrika-run.ps1` (build, package, testworld, rwdiag, r1, r2) in
+primerjava M2.7 (timerji, script trace) na trenutni kodi; registrirati test ID-je. Nato M4 (M4.14b → M4.16 → …, D-038).
+Neodvisno: Q22; ročna preverba z OptiFine in Entity Culling (odvisna od uporabnika).
 
 ### 2026-10-22 (117) — M5-K K3c: čistilni korak K3 — zaključeno
 
@@ -80,26 +105,6 @@ ponovitev K3 je mogoča samo na commitu 49bd247. Ostanek ključa `RwEyesList` v 
 privzetimi vrednostmi kode brez spreminjanja `dev/run/config/CustomNpcs.cfg`. Neodvisno: M4.14b/M4.16; Q22; ročna
 preverba z OptiFine in Entity Culling.
 
-### 2026-10-22 (116) — M5-K: ponovna ocena K13 in K10 — zaključeno
-
-**Paket:** ponovna ocena K13/K10 po D-035 (3) (D-053) · **Stanje:** **zaključeno** — raziskava brez produkcijske kode in
-brez novih zagonov; vhodi so obstoječe meritve ([raziskava](raziskave/M5-K-K13-K10-ponovna-ocena.md)).
-
-**Ugotovitve:** K14 in K3 sta izmerila, da manj klicev pri isti geometriji ne pomaga (strošek so oglišča v gonilniku),
-zato je premisa K10 »nič klicev na NPC« delno ovržena; po D-051 so modeli samo znotraj 56 blokov, L2 pa je že izmerjena
-zgornja meja »instanciranega« izrisa (idle-500 −80 %). Vezava teksture (K13) v profilu M5-K.1 ni merljiva.
-
-**Odločitve (D-053):** K13 zavržen kot samostojen paket; K10 odložen izven M5 (ponovno odprtje: ≥ 300 modelov znotraj
-56 blokov s p95 > 16,7 ms ob privzetih stikalih, tedaj najprej poskus K10a z VBO); K2 in K11 zavržena; K1, K6–K9 odloženi
-do prizorišča, ki jih vsebuje; cena izrisa L3 zavržena kot paket; pas `rwfar` po chunkih in PBO peka odložena s pogojem.
-
-**Spremembe obnašanja:** nobene. **Minecraft meritve:** nobene.
-
-**Naslednji korak:** **K3c** — odstranitev kode poskusa `RwEyesList` in popravek besedila `RwRenderBox`/`RenderBox`
-(64/38,4 blokov pri RD 8, 1,0/80 pri RD 10), dokaz `unit`/`build`/`package`; nato **M5-K.2** (sprejem klienta,
-izhodni kriterij M5: original proti vsem privzetim stikalom, idle-200/500 in `-Dalec 1`, p95 in 1 % low).
-Neodvisno: M4.14b/M4.16; ročna preverba z OptiFine in Entity Culling; Q22.
-
 ---
 
 ## Odprta vprašanja za uporabnika
@@ -107,7 +112,7 @@ Neodvisno: M4.14b/M4.16; ročna preverba z OptiFine in Entity Culling; Q22.
 Samo **odprta** vprašanja (in Q1 kot trajna blokada). Ko je vprašanje odločeno, se vrstica
 **prestavi** v [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §4 (tam so vsa vprašanja
 Q1–Q29 s stanjem na 2026-10-19; odločitev se zapiše tam in v `01-ARHITEKTURA.md` §9).
-Nova vprašanja dobijo naslednjo prosto številko (zadnja uporabljena: **Q33**, odločena 22. 10. → D-052; Q32 → D-039; Q30 odločen 21. 10. → D-049).
+Nova vprašanja dobijo naslednjo prosto številko (zadnja uporabljena: **Q34**, odločena 22. 10. → D-054; Q33 → D-052; Q32 → D-039; Q30 odločen 21. 10. → D-049).
 
 | # | Vprašanje | Vpliva na | Stanje |
 |---|---|---|---|
@@ -143,6 +148,6 @@ pa še razlage in ni ločen od možne napake scenarija, zato je tu in ne med bug
 | Vsebina | Datoteka | Kdaj ga odpreš |
 |---|---|---|
 | Dnevnik sej: vnosi od seje 114 (22. 10.) nazaj do seje 1 (11. 9., postavitev načrta) | [`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) | `grep` po paketu (npr. `M5.16`), seji ali ključni besedi |
-| Polna tabela "Trenutno stanje" (18. 10.), polna tabela milestonov, M1/M2 po paketih, **vsa** vprašanja Q1–Q33 (odločena), **Znane omejitve** (pasti scenarijev, pravila merjenja, okolje) | [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) | `grep`; pred pisanjem novega scenarija preglej §5 Znane omejitve |
+| Polna tabela "Trenutno stanje" (18. 10.), polna tabela milestonov, M1/M2 po paketih, **vsa** vprašanja Q1–Q34 (odločena), **Znane omejitve** (pasti scenarijev, pravila merjenja, okolje) | [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) | `grep`; pred pisanjem novega scenarija preglej §5 Znane omejitve |
 | **Sprejete spremembe obnašanja**, **Prevzeta koda**, **Meritve** (živi registri; nove vrstice se dodajo tam) | [`04-REGISTRI.md`](04-REGISTRI.md) | ko dodajaš stikalo, prevzeto kodo ali meritev; `grep` po stikalu (`Rw…`) |
 | Polni zapisi meritev | [`meritve/`](meritve/) | po povezavi iz registra |

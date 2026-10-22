@@ -308,7 +308,27 @@ if ($r -and $Pokrivalo -ge 0) {
 }
 if ($r -and $Napisi -ge 0) {
     # Prvi izris niza je original, drugi posname list; v 60 s so skoraj vsi izrisi z listom.
-    Check ("K12: RwLabelCache {0} (zahtevano {1}), napisov z listom {2}, original {3}, prevodov {4}" -f $r.rwLabelCache, $Napisi, $r.napisiZListom, $r.napisiOriginal, $r.napisiPrevodov) (($r.rwLabelCache -eq $Napisi) -and ($PreveriNapise -or (($Napisi -eq 0) -eq ($r.napisiZListom -eq 0))))
+    # M5-K.2: RenderNPCInterface.renderName ime izrise samo do 22,6 bloka (d0 <= 512); v idle-500 in -Dalec 1 je
+    # vsa mreza dlje, zato z 1 napisov ni. Pri idle/skripte se pricakovanje izracuna iz geometrije (kot K16),
+    # pas +-1 blok okoli meje sprejme oboje.
+    $napisiOk = ($Napisi -eq 0) -eq ($r.napisiZListom -eq 0)
+    $napisiOpis = ''
+    if ($Napisi -eq 1 -and ($Variant -eq 'idle' -or $Variant -eq 'skripte')) {
+        $imenGotovo = 0; $imenMorda = 0
+        for ($vr = 0; $vr -lt [int]($N / $gridW); $vr++) {
+            for ($st = 0; $st -lt $gridW; $st++) {
+                $dx = $gridX + $st + 0.5 - $camX; $dy = 4 - $camY; $dz = $gridZ + $vr + 0.5 - $camZ
+                $d = [math]::Sqrt($dx * $dx + $dy * $dy + $dz * $dz)
+                if ($d -le [math]::Sqrt(512) - 1) { $imenGotovo++ }
+                if ($d -le [math]::Sqrt(512) + 1) { $imenMorda++ }
+            }
+        }
+        if ($imenGotovo -gt 0) { $napisiOk = $r.napisiZListom -gt 0 }
+        elseif ($imenMorda -eq 0) { $napisiOk = $r.napisiZListom -eq 0 }
+        else { $napisiOk = $true }
+        $napisiOpis = ', NPC-jev v dometu imen {0}..{1}' -f $imenGotovo, $imenMorda
+    }
+    Check ("K12: RwLabelCache {0} (zahtevano {1}), napisov z listom {2}, original {3}, prevodov {4}{5}" -f $r.rwLabelCache, $Napisi, $r.napisiZListom, $r.napisiOriginal, $r.napisiPrevodov, $napisiOpis) (($r.rwLabelCache -eq $Napisi) -and ($PreveriNapise -or $napisiOk))
 }
 if ($r -and $PreveriNapise) {
     foreach ($ser in ("$($r.napisiSerije)" -split ' \| ')) { Write-Host ("    napisi {0}" -f $ser) }
@@ -370,7 +390,10 @@ if ($r -and $Far -ge 0) {
             # M5-K K12: RWV7_Mec stoji onkraj praga.
             if ($Posebni -eq 1 -and $RenderBox -ge 0) { $vL2 += 1 }
             $tol = [math]::Max(2, [int][math]::Ceiling($N * 0.02))
-            $ok = $ok -and ($vL2 -gt 0) -and ([math]::Abs($r.l2NarisanihMin - $vL2) -le $tol) -and ([math]::Abs($r.l2NarisanihMax - $vL2) -le $tol)
+            # M5-K.2: v prizoriscu M5-K.1 (-Dalec 0) je vsa mreza blizje od praga, zato L2 ni (natanko 0);
+            # prizorisce -Dalec 1 mora L2 imeti.
+            if ($vL2 -eq 0) { $ok = $ok -and ($Dalec -ne 1) -and ($r.l2NarisanihMax -eq 0) }
+            else { $ok = $ok -and ([math]::Abs($r.l2NarisanihMin - $vL2) -le $tol) -and ([math]::Abs($r.l2NarisanihMax - $vL2) -le $tol) }
             $opis += (', pricakovano {0} od {1} (+-{2}, prag {3})' -f $vL2, $N, $tol, $prag)
         }
     }

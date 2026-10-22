@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 115 → 1)
+# Arhiv: dnevnik sej (vnosi 116 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,26 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-22 (116) — M5-K: ponovna ocena K13 in K10 — zaključeno
+
+**Paket:** ponovna ocena K13/K10 po D-035 (3) (D-053) · **Stanje:** **zaključeno** — raziskava brez produkcijske kode in
+brez novih zagonov; vhodi so obstoječe meritve ([raziskava](../raziskave/M5-K-K13-K10-ponovna-ocena.md)).
+
+**Ugotovitve:** K14 in K3 sta izmerila, da manj klicev pri isti geometriji ne pomaga (strošek so oglišča v gonilniku),
+zato je premisa K10 »nič klicev na NPC« delno ovržena; po D-051 so modeli samo znotraj 56 blokov, L2 pa je že izmerjena
+zgornja meja »instanciranega« izrisa (idle-500 −80 %). Vezava teksture (K13) v profilu M5-K.1 ni merljiva.
+
+**Odločitve (D-053):** K13 zavržen kot samostojen paket; K10 odložen izven M5 (ponovno odprtje: ≥ 300 modelov znotraj
+56 blokov s p95 > 16,7 ms ob privzetih stikalih, tedaj najprej poskus K10a z VBO); K2 in K11 zavržena; K1, K6–K9 odloženi
+do prizorišča, ki jih vsebuje; cena izrisa L3 zavržena kot paket; pas `rwfar` po chunkih in PBO peka odložena s pogojem.
+
+**Spremembe obnašanja:** nobene. **Minecraft meritve:** nobene.
+
+**Naslednji korak:** **K3c** — odstranitev kode poskusa `RwEyesList` in popravek besedila `RwRenderBox`/`RenderBox`
+(64/38,4 blokov pri RD 8, 1,0/80 pri RD 10), dokaz `unit`/`build`/`package`; nato **M5-K.2** (sprejem klienta,
+izhodni kriterij M5: original proti vsem privzetim stikalom, idle-200/500 in `-Dalec 1`, p95 in 1 % low).
+Neodvisno: M4.14b/M4.16; ročna preverba z OptiFine in Entity Culling; Q22.
 
 ### 2026-10-22 (115) — M5-K K12: okvir upodobitve in Entity Culling — zaključeno
 
