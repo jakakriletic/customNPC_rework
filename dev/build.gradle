@@ -98,6 +98,11 @@ afterEvaluate {
         if (project.hasProperty('rwNavBackend')) {
             tasks.getByName(taskName).systemProperty 'rwnavbackend', project.property('rwNavBackend')
         }
+        // M5.Z (D-055): -PrwPrivzeto=1 zazene z vrednostmi stikal Rw*, ki jih doloca koda, ne config;
+        // -PrwPrivzeto=0 samo izpise vrednosti iz configa (sled-run.ps1, matrika-run.ps1 -Privzeto)
+        if (project.hasProperty('rwPrivzeto')) {
+            tasks.getByName(taskName).systemProperty 'rwprivzeto', project.property('rwPrivzeto')
+        }
         // M5-K.0: -PrwHarness=<navodilo> vklopi klientski merilni harness (k-run.ps1)
         if (taskName == 'runClient' && project.hasProperty('rwHarness')) {
             tasks.getByName(taskName).systemProperty 'rwharness', project.property('rwHarness')
@@ -213,6 +218,8 @@ task testOriginal(type: Test) {
     exclude '**/FarInterpTest.class'
     exclude '**/FarDrawCheckTest.class'
     exclude '**/RenderEntitiesPatchTest.class'
+    // M5.Z: preglasitev privzetih vrednosti stikal za regresijski prehod.
+    exclude '**/ConfigDefaultsTest.class'
     // M5-V.6: L2.
     exclude '**/ImpostorL2Test.class'
     // M5-V.7: zdruzljivost.

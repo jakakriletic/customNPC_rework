@@ -17,12 +17,21 @@
         .\matrika-run.ps1 -AcceptEula     # prvic, ce dev\run\eula.txt se ni sprejet
         .\matrika-run.ps1 -ContinueOnFail # pozeni vse stopnje kljub padcu
         .\matrika-run.ps1 -Only r1        # samo ena stopnja (build,package,testworld,rwdiag,r1,r2)
+        .\matrika-run.ps1 -Privzeto 1     # M5.Z: stikala Rw* na privzetih vrednostih kode (D-055)
+
+    M5.Z (D-055): dev\run\config\CustomNpcs.cfg drzi vsa stikala Rw* na 0 (merilni pogoj
+    originala). -Privzeto 1 postavi okoljsko spremenljivko ORG_GRADLE_PROJECT_rwPrivzeto=1,
+    ki jo podedujejo vsi zagoni serverja v stopnjah; mod tedaj stikala vrne na vrednosti iz
+    kode, ne da bi pisal config. -Privzeto 0 samo izpise vrednosti iz configa. Vsaka stopnja z
+    zagonom serverja mora imeti v logu vrstico 'RWPRIVZETO <n>', sicer je rdeca - sicer bi
+    stopnja tiho tekla v drugem nacinu, kot ga porocilo navaja.
 #>
 param(
     [switch]$SkipBuild,
     [switch]$AcceptEula,
     [switch]$ContinueOnFail,
-    [string[]]$Only
+    [string[]]$Only,
+    [ValidateSet(-1, 0, 1)][int]$Privzeto = -1
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,6 +41,11 @@ if (-not (Test-Path $audit)) { New-Item -ItemType Directory -Path $audit | Out-N
 
 $stamp  = Get-Date -Format 'yyyy-MM-dd-HHmm'
 $report = Join-Path $audit ("m07-matrika-{0}.md" -f $stamp)
+
+$prejsnjiPrivzeto = $env:ORG_GRADLE_PROJECT_rwPrivzeto
+if ($Privzeto -ge 0) { $env:ORG_GRADLE_PROJECT_rwPrivzeto = [string]$Privzeto }
+else { Remove-Item Env:ORG_GRADLE_PROJECT_rwPrivzeto -ErrorAction SilentlyContinue }
+$nacin = switch ($Privzeto) { 1 { 'privzete vrednosti kode (-Privzeto 1)' } 0 { 'config dev\run (-Privzeto 0)' } default { 'config dev\run (brez preglasitve)' } }
 
 # --- kontekst zagona ---------------------------------------------------------
 
@@ -56,17 +70,18 @@ $jarPath = Join-Path $root 'dev\build\libs\CustomNPCs_1.12.2-01Oct19-workspace.j
 # spremeni tudi tabela v docs\scenariji\M0.7-integracijska-matrika.md.
 
 $stages = @(
-    @{ Key='build';     Naziv='Gradle build';            Vrstice='(pogoj)';                 Log='m07-build.log';
+    @{ Key='build';     Naziv='Gradle build';            Vrstice='(pogoj)';                 Log='m07-build.log'; Logi=@();
        Akcija={ & (Join-Path $root 'dev.ps1') build } },
-    @{ Key='package';   Naziv='verify-package';          Vrstice='(pogoj)';                 Log='m07-package.log';
+    @{ Key='package';   Naziv='verify-package';          Vrstice='(pogoj)';                 Log='m07-package.log'; Logi=@();
        Akcija={ & (Join-Path $root 'verify-package.ps1') } },
     @{ Key='testworld'; Naziv='M0.6 testni svet W1-W8';  Vrstice='IN1, IN2, IN4, IN6, IS1, IL1'; Log='m06-testworld-c.log';
+       Logi=@('m06-testworld-a.log', 'm06-testworld-b.log', 'm06-testworld-c.log');
        Akcija={ if ($AcceptEula) { & (Join-Path $root 'testworld-run.ps1') -AcceptEula } else { & (Join-Path $root 'testworld-run.ps1') } } },
-    @{ Key='rwdiag';    Naziv='M2.1 diagnostika D1-D7, C1-C6'; Vrstice='IL7';               Log='m21-rwdiag.log';
+    @{ Key='rwdiag';    Naziv='M2.1 diagnostika D1-D7, C1-C6'; Vrstice='IL7';               Log='m21-rwdiag.log'; Logi=@('m21-rwdiag.log');
        Akcija={ if ($AcceptEula) { & (Join-Path $root 'rwdiag-run.ps1') -AcceptEula } else { & (Join-Path $root 'rwdiag-run.ps1') } } },
-    @{ Key='r1';        Naziv='M2.2 reprodukcija R1 E1-E6'; Vrstice='IA7';                  Log='m22-r1.log';
+    @{ Key='r1';        Naziv='M2.2 reprodukcija R1 E1-E6'; Vrstice='IA7';                  Log='m22-r1.log'; Logi=@('m22-r1.log');
        Akcija={ if ($AcceptEula) { & (Join-Path $root 'r1-run.ps1') -AcceptEula } else { & (Join-Path $root 'r1-run.ps1') } } },
-    @{ Key='r2';        Naziv='M2.3 reprodukcija R2 L1-L8'; Vrstice='IA4 (zid)';            Log='m23-r2.log';
+    @{ Key='r2';        Naziv='M2.3 reprodukcija R2 L1-L8'; Vrstice='IA4 (zid)';            Log='m23-r2.log'; Logi=@('m23-r2.log');
        Akcija={ if ($AcceptEula) { & (Join-Path $root 'r2-run.ps1') -AcceptEula } else { & (Join-Path $root 'r2-run.ps1') } } }
 )
 
@@ -81,6 +96,7 @@ Write-Host '=== M0.7 prehod 1 integracijske matrike ==='
 Write-Host ("Zagon:  {0}" -f $stamp)
 Write-Host ("Commit: {0}" -f (Get-GitInfo))
 Write-Host ("Stopnje: {0}" -f (($stages | ForEach-Object { $_.Key }) -join ', '))
+Write-Host ("Stikala: {0}" -f $nacin)
 Write-Host ''
 
 $results = @()
@@ -116,10 +132,33 @@ foreach ($stage in $stages) {
     }
 
     $sec  = [int]((Get-Date) - $t0).TotalSeconds
+
+    # M5.Z: dokaz nacina stikal v vsakem logu serverja te stopnje; kopija loga ostane po zagonu.
+    $kopije = @()
+    foreach ($ime in $stage.Logi) {
+        $pot = Join-Path $audit $ime
+        if (-not (Test-Path $pot) -or (Get-Item $pot).LastWriteTime -lt $t0) {
+            if ($Privzeto -ge 0) { $code = 1; $err += (" log {0} ni iz tega zagona;" -f $ime) }
+            continue
+        }
+        $kopija = ("m07-matrika-{0}-{1}" -f $stamp, $ime)
+        Copy-Item $pot (Join-Path $audit $kopija) -Force
+        $kopije += $kopija
+        if ($Privzeto -ge 0) {
+            $vrstica = Select-String -LiteralPath $pot -SimpleMatch ("RWPRIVZETO {0} " -f $Privzeto) | Select-Object -First 1
+            if (-not $vrstica) {
+                $code = 1
+                $err += (" v {0} ni vrstice 'RWPRIVZETO {1}' (stikala niso v zahtevanem nacinu);" -f $ime, $Privzeto)
+            } else {
+                Write-Host ("  {0}: {1}" -f $ime, ($vrstica.Line -replace '^.*(RWPRIVZETO)', '$1'))
+            }
+        }
+    }
     $izid = if ($code -eq 0) { 'zeleno' } else { 'rdece' }
 
+    $logOpis = if ($kopije.Count -gt 0) { ($kopije -join ', ') } else { $stage.Log }
     $results += [pscustomobject]@{ Key=$stage.Key; Naziv=$stage.Naziv; Vrstice=$stage.Vrstice;
-                                   Izid=$izid; Koda=$code; Sekunde=$sec; Log=$stage.Log; Napaka=$err }
+                                   Izid=$izid; Koda=$code; Sekunde=$sec; Log=$logOpis; Napaka=$err }
 
     Write-Host ("--- {0}: {1} ({2} s)" -f $stage.Naziv, $izid.ToUpper(), $sec)
     Write-Host ''
@@ -142,6 +181,7 @@ $lines += '|---|---|'
 $lines += ("| Zagon | $stamp |")
 $lines += ("| Commit | {0} |" -f (Get-GitInfo))
 $lines += ("| Jar SHA-256 | ``{0}`` |" -f (Get-JarHash $jarPath))
+$lines += ("| Stikala | {0} |" -f $nacin)
 $lines += ("| Izid | {0} zeleno, {1} rdece, {2} preskoceno |" -f $zeleno, $rdece, $presk)
 $lines += ''
 $lines += '## Stopnje'
@@ -166,6 +206,9 @@ $lines += ''
 $lines += 'Vrstica, ki ni bila izvedena, se ne steje za uspeh.'
 
 [System.IO.File]::WriteAllLines($report, $lines, (New-Object System.Text.UTF8Encoding($false)))
+
+if ($null -ne $prejsnjiPrivzeto) { $env:ORG_GRADLE_PROJECT_rwPrivzeto = $prejsnjiPrivzeto }
+else { Remove-Item Env:ORG_GRADLE_PROJECT_rwPrivzeto -ErrorAction SilentlyContinue }
 
 Write-Host '=== POVZETEK ==='
 $results | Format-Table Naziv, Izid, Koda, Sekunde -AutoSize | Out-Host

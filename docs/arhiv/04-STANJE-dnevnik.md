@@ -1,9 +1,33 @@
-# Arhiv: dnevnik sej (vnosi 116 → 1)
+# Arhiv: dnevnik sej (vnosi 117 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
 V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarejši od teh dveh
 prestavi **na vrh** te datoteke (pod ta uvod).
+
+---
+
+### 2026-10-22 (117) — M5-K K3c: čistilni korak K3 — zaključeno
+
+**Paket:** M5-K K3c (D-053) · **Stanje:** **zaključeno** — zahtevani `unit`, `build`, `package` zeleni na kodi
+`241416ca…`. Brez novih Minecraft meritev (brez spremembe obnašanja).
+
+**Narejeno:** odstranjena koda zavrženega poskusa K3 (`RwEyesList` je bil privzeto 0): `rework/render/EyesList`,
+`rework/diag/EyesCheck`, `EyesListTest` (4 testi) in izločitev v `build.gradle`, `CustomNpcs.RwEyesList` s ključem
+configa, veja v `LayerEyes` (spet 1:1 z 7881e50 + K5 `Lod.far`), `eyesList`/`eyesCheck` v `HarnessJob` in
+`ClientHarness` (polja JSON `rwEyesList`, `oci*`), `k-run.ps1 -Oci`/`-PreveriOci` in merili K13/K14. Popravljeno
+besedilo komentarja `RwRenderBox` in javadoc `RenderBox`: 64 namesto 38,4 bloka pri RD 8 (Size 5), 1,0 / 80 blokov pri RD 10.
+`verify-package` ostane 71 vnosov (`LayerEyes` je še popravljen zaradi K5).
+
+**Posledica:** zgodovinski test ID-ji `k3-200/500-off/on` in `audit/m5k3-ab.ps1` ne delujejo več (parameter `-Oci`);
+ponovitev K3 je mogoča samo na commitu 49bd247. Ostanek ključa `RwEyesList` v obstoječih configih Forge ignorira.
+
+**Spremembe obnašanja:** nobene. **Minecraft meritve:** nobene.
+
+**Naslednji korak:** **M5-K.2** — sprejem klienta (izhodni kriterij M5): A/B 3 + 3 idle-200/500 (prizorišče M5-K.1) in
+`-Dalec 1`, original proti vsem sprejetim privzetim stikalom, p50/p95/p99 in 1 % low; harness potrebuje način s
+privzetimi vrednostmi kode brez spreminjanja `dev/run/config/CustomNpcs.cfg`. Neodvisno: M4.14b/M4.16; Q22; ročna
+preverba z OptiFine in Entity Culling.
 
 ---
 

@@ -126,6 +126,7 @@ import noppes.npcs.rework.entity.DataShadow;
 import noppes.npcs.rework.nav.PathFollowCache;
 import noppes.npcs.rework.ai.TargetPrefilter;
 import noppes.npcs.rework.diag.CommandRwDiag;
+import noppes.npcs.rework.diag.ConfigDefaults;
 import noppes.npcs.rework.diag.DiagChunkLoader;
 import noppes.npcs.rework.diag.DiagEventCollector;
 import noppes.npcs.rework.entity.CommandRwHitbox;
@@ -259,8 +260,15 @@ public class CustomNpcs {
         ChannelPlayer = NetworkRegistry.INSTANCE.newEventDrivenChannel("CustomNPCsPlayer");
         Dir = new File(new File(ev.getModConfigurationDirectory(), ".."), MODID);
         Dir.mkdir();
+        // M5.Z (D-055): privzete vrednosti stikal kode, preden jih prepise config; -Drwprivzeto=1
+        // jih po nalaganju vrne (regresijski prehod), datoteke ne spremeni.
+        ConfigDefaults rwDefaults = ConfigDefaults.capture(CustomNpcs.class);
         Config = new ConfigLoader(this.getClass(), ev.getModConfigurationDirectory(), "CustomNpcs");
         Config.loadConfig();
+        String rwDefaultsLine = rwDefaults.apply(System.getProperty(ConfigDefaults.PROPERTY));
+        if (rwDefaultsLine != null) {
+            LogWriter.info(rwDefaultsLine);
+        }
         if (NpcNavRange < 16) {
             NpcNavRange = 16;
         }
