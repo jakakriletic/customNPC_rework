@@ -46,7 +46,6 @@ import noppes.npcs.rework.far.FarCompat;
 import noppes.npcs.rework.far.FarRender;
 import noppes.npcs.rework.far.ImpostorBaker;
 import noppes.npcs.rework.render.HeadwearSkip;
-import noppes.npcs.rework.render.EyesList;
 import noppes.npcs.rework.render.Lod;
 import noppes.npcs.rework.render.LabelCache;
 import org.lwjgl.BufferUtils;
@@ -134,7 +133,6 @@ public final class ClientHarness {
     private boolean headwearCheckPending;
     private HeadwearCheck headwearCheck;
     private LabelCheck labelCheck;
-    private EyesCheck eyesCheck;
     /** M5-V.4: izid primerjave impostor - model. */
     private ImpostorCheck impostorCheck;
     /** M5-V.5: A/B pikslov sonde (V23) in prehod cez mejo po merjenju (V24). */
@@ -312,7 +310,6 @@ public final class ClientHarness {
                     pinCamera(mc, false);
                     if (secondsInPhase() >= this.job.warmupSeconds && ((this.job.headwearCheck && this.headwearCheck == null)
                             || (this.job.labelCheck && this.labelCheck == null)
-                            || (this.job.eyesCheck && this.eyesCheck == null)
                             || (this.job.impostorCheck && this.impostorCheck == null))) {
                         // M5-K K14b: preverba v naslednjem RenderWorldLastEvent, merjenje po njej.
                         this.headwearCheckPending = true;
@@ -473,15 +470,6 @@ public final class ClientHarness {
             System.out.println("RWHARNESS-NAPISI ok=" + r.ok() + " npc=" + r.npcs + " vDometu=" + r.labelled + " obcutljivost=" + r.sensitivity + s + " " + r.error);
             this.labelCheck = r;
         }
-        if (this.job.eyesCheck) {
-            EyesCheck r = EyesCheck.run(Minecraft.getMinecraft(), ev.getPartialTicks());
-            StringBuilder s = new StringBuilder();
-            for (EyesCheck.Series x : r.series) {
-                s.append(" | ").append(x);
-            }
-            System.out.println("RWHARNESS-OCI ok=" + r.ok() + " npc=" + r.npcs + " obcutljivost=" + r.sensitivity + "/" + r.sensitivityZoom + s + " " + r.error);
-            this.eyesCheck = r;
-        }
         if (this.job.impostorCheck) {
             ImpostorCheck r = ImpostorCheck.run(Minecraft.getMinecraft());
             StringBuilder s = new StringBuilder();
@@ -562,9 +550,6 @@ public final class ClientHarness {
         }
         if (this.job.labelCache >= 0) {
             CustomNpcs.RwLabelCache = this.job.labelCache;
-        }
-        if (this.job.eyesList >= 0) {
-            CustomNpcs.RwEyesList = this.job.eyesList;
         }
         if (this.job.lodStart >= 0) {
             CustomNpcs.RwLodStart = this.job.lodStart;
@@ -864,10 +849,6 @@ public final class ClientHarness {
         num(b, "pokrivaloDelovNic", HeadwearSkip.partsNone);
         num(b, "pokrivaloDelovNekaj", HeadwearSkip.partsSome);
         num(b, "pokrivaloDelovVse", HeadwearSkip.partsAll);
-        num(b, "rwEyesList", CustomNpcs.RwEyesList);
-        num(b, "ociZListom", EyesList.drawsList);
-        num(b, "ociOriginal", EyesList.drawsOriginal);
-        num(b, "ociPrevodov", EyesList.compiles);
         num(b, "rwLodStart", CustomNpcs.RwLodStart);
         num(b, "lodDalec", Lod.farDraws);
         num(b, "lodBlizu", Lod.nearDraws);
@@ -951,19 +932,6 @@ public final class ClientHarness {
             }
             kv(b, "impSerije", is.toString());
             kv(b, "impNapaka", ic.error);
-        }
-        EyesCheck ec = this.eyesCheck;
-        num(b, "ociPreverba", ec == null ? -1 : (ec.ok() ? 1 : 0));
-        if (ec != null) {
-            num(b, "ociNpc", ec.npcs);
-            num(b, "ociObcutljivost", ec.sensitivity);
-            num(b, "ociObcutljivostPovecava", ec.sensitivityZoom);
-            StringBuilder es = new StringBuilder();
-            for (EyesCheck.Series x : ec.series) {
-                es.append(es.length() == 0 ? "" : " | ").append(x);
-            }
-            kv(b, "ociSerije", es.toString());
-            kv(b, "ociNapaka", ec.error);
         }
         num(b, "rwLabelCache", CustomNpcs.RwLabelCache);
         num(b, "napisiZListom", LabelCache.drawsList);

@@ -119,4 +119,6 @@ Nastavitve: VSync izklopljen, `limitFramerate` 260 (neomejeno), brez view bobbin
   a deli CPU s klientom. Celice z dediciranim strežnikom so M5-V.1.
 - Različice videza (oklep, ime, oblački, delci, URL skini) iz opisa paketa še niso v fixturah;
   dodajo se v M5-K.1, ko profil pokaže, katere so pomembne.
+- Parametra `-Oci`/`-PreveriOci` (merili K13/K14, M5-K K3) sta odstranjena v K3c 22. 10.; zgodovinski zagoni z
+  `-Oci` se ne dajo ponoviti na sedanji kodi (za to je commit 49bd247).
 - Ločljivost okna je privzeta (854 × 480) in se zapiše v JSON (`sirina`, `visina`).

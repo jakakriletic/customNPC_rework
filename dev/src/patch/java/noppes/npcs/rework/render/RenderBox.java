@@ -15,13 +15,13 @@ import noppes.npcs.entity.EntityNPCInterface;
  * <p>CNPC ne prepise {@code getRenderBoundingBox} ne {@code isInRangeToRenderDist}, zato vanilla frustum
  * ({@code Render.shouldRender}) in okluzija Entity Culling (RenderLib {@code IBoundingBoxCache}) uporabljata
  * hitbox. Ta je ozji od modela (0,6 proti ~1,0 z rokami pri Size 5, lezec NPC 0,8 proti dolzini telesa), NPC brez
- * hitboxa pa ima sirino 1e-5: okvir je navpicna crta, domet upodobitve (povprecni rob x 64) pa 0,63 namesto 1,03
- * (~40 namesto ~66 blokov pri RD 8).
+ * hitboxa pa ima sirino 1e-5: okvir je navpicna crta, domet upodobitve (povprecni rob x 64) pa 0,60 namesto 1,0
+ * (38,4 namesto 64 blokov pri RD 8).
  *
  * <p>Okvir upodobitve je unija hitboxa in okvira modela, zato vanilla ne izloci nicesar, kar je izlocil original.
  * Domet: stojec NPC s hitboxom ima isti domet kot v originalu (isti izracun); NPC brez hitboxa dobi domet sirine, ki
  * bi jo imel s hitboxom ({@code updateHitbox} brez {@code getHasHitbox}); lezec (ali ubit) NPC, ki ni morf, dobi domet
- * stojecega: hitbox 0,8 x 0,4 da domet 0,67 (~53 blokov pri RD 10), model pa je dolg kot stojec NPC (1,03, ~82 blokov).
+ * stojecega: hitbox 0,8 x 0,4 da domet 0,67 (~53,3 bloka pri RD 10), model pa je dolg kot stojec NPC (1,0, 80 blokov).
  */
 public final class RenderBox {
     /** Sirina pod to mejo pomeni "brez hitboxa" ({@code updateHitbox} postavi 1e-5). */
@@ -51,7 +51,7 @@ public final class RenderBox {
      */
     public static double rangeWidth(float width, int size, boolean lying, float morphWidth) {
         if (lying && morphWidth < 0.0f) {
-            // updateHitbox da lezecemu 0,8 x Size / 5; stoje bi imel 0,6 (domet stojecega 1,03 > lezecega 0,67).
+            // updateHitbox da lezecemu 0,8 x Size / 5; stoje bi imel 0,6 (domet stojecega 1,0 > lezecega 0,67).
             return 0.6f / 5.0f * size;
         }
         if (width >= NO_HITBOX) {

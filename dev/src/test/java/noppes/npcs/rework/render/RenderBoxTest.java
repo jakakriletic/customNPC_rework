@@ -37,7 +37,7 @@ public class RenderBoxTest {
         assertEquals("stoji", 1.9, RenderBox.rangeHeight(1.9f, 5, false, -1.0f, 1.9f), 1e-6);
         assertEquals("morf ne lezi", 0.9, RenderBox.rangeWidth(0.9f, 5, true, 0.9f), 1e-6);
         assertEquals("morf ne lezi", 0.4, RenderBox.rangeHeight(0.4f, 5, true, 0.9f, 1.9f), 1e-6);
-        // RD 10 (utez 1,25): kamera K18 je od RWV7_Mrtev ~58,5 bloka; hitbox lezecega ~53,3, stojec ~82.
+        // RD 10 (utez 1,25): kamera K18 je od RWV7_Mrtev ~58,5 bloka; hitbox lezecega ~53,3, stojec 80.
         assertFalse(RenderBox.inRange(58.5 * 58.5, 0.8, 0.4, 1.25));
         assertTrue(RenderBox.inRange(58.5 * 58.5, RenderBox.rangeWidth(0.8f, 5, true, -1.0f),
                 RenderBox.rangeHeight(0.4f, 5, true, -1.0f, 1.9f), 1.25));

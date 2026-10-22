@@ -169,7 +169,6 @@ task testOriginal(type: Test) {
     exclude '**/StackSamplerTest.class'
     exclude '**/HeadwearSkipTest.class'
     exclude '**/LabelCacheTest.class'
-    exclude '**/EyesListTest.class'
     exclude '**/LodTest.class'
     exclude '**/FarProbeTest.class'
     exclude '**/DiagSnapshotTest.class'

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 114 → 1)
+# Arhiv: dnevnik sej (vnosi 115 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,35 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-22 (115) — M5-K K12: okvir upodobitve in Entity Culling — zaključeno
+
+**Paket:** M5-K K12 (D-052, Q33) · **Stanje:** **zaključeno** — vseh 7 zahtevanih testov zelenih na kodi `a435cbb9…`:
+`unit`, `build`, `package`, `k12-okvir-on`, `k12-okvir-off` (K1–K8, K16, K17a–j, K18a–e) in A/B `k12-500-off`/`-on`
+(3 + 3, T1–T6). Prvi `k12-okvir-on` na `0db45ac6…` je padel na K18d (ubit `RWV7_Mrtev` z dometom ležečega hitboxa
+53,3 bloka, kamera ~58,5) → ležeč/ubit NPC dobi domet stoječega.
+
+**Raziskava** ([zapis](meritve/2026-10-22-M5-K-K12-okvir.md) §1): CNPC ne prepiše `getRenderBoundingBox` ne
+`isInRangeToRenderDist`; Entity Culling 6.5.0 / RenderLib 1.4.5 okluzijo računa na predpomnjenem
+`getRenderBoundingBox` [K, jar]. Lastna okluzija zavržena.
+
+**Narejeno:** `rework/render/RenderBox` (okvir = hitbox ∪ model; domet brez hitboxa in ležečih), prepisa v
+`EntityNPCInterface` (klient), `CustomNpcs.RwRenderBox` (privzeto **1**); harness `HarnessJob.renderBox`,
+`RenderBoxAudit` (okvir, domet, pečen obris L2 proti okvirju), `FarRender.bakedLook`, `k-run.ps1 -RenderBox` +
+`RWV7_Mec` + K18; JUnit +12 (`RenderBoxTest` 8, `RenderBoxAuditTest` 3, `HarnessJobTest` +1).
+
+**Izid:** z okvirjem izven dometa 0, obris čez okvir 0 (največ 0,091 bloka); brez okvirja izven dometa 2, obris čez
+hitbox do 0,747 bloka (meč). idle-500 p50 11,492 → 11,483, p95 12,849 → 12,907 ms (prekrivanje) → cena v šumu.
+
+**Spremembe obnašanja moda:** z novim configom (ali brez ključa) se NPC na robu zaslona/za oviro (Entity Culling)
+nariše, kjer ga je original odrezal; NPC brez hitboxa in ležeč NPC imata domet stoječega (Size 5, RD 8: 64 namesto
+38,4 / 42,7 bloka). `dev/run/config/CustomNpcs.cfg` ima `RwRenderBox=0` (merilni pogoji nespremenjeni).
+**Minecraft meritve:** 2 + 1 (padel) zagona `k12-okvir`, 6 zagonov A/B. Entity Culling in OptiFine v svetu nista izmerjena.
+
+**Naslednji korak:** ostali K-paketi — **K13 in K10 ponovno oceniti** (D-035; kandidati iz M5-V.8: cena izrisa L3,
+pas `rwfar` po chunkih, PBO peka). Ob naslednji spremembi kode popraviti besedilo komentarja `RwRenderBox` in javadoc
+`RenderBox` (64/38,4 blokov pri RD 8, ne 66/40). Neodvisno: čistilni korak K3, M4.14b/M4.16; ročna preverba z
+OptiFine in Entity Culling.
 
 ### 2026-10-22 (114) — M5-V.8b: `RwFarView` privzeto 2 — zaključeno
 
