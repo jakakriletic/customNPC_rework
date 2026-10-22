@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 109 → 1)
+# Arhiv: dnevnik sej (vnosi 110 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,43 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-21 (110) — M5-V.6: stopnja L2 (sledeni oddaljeni NPC-ji kot impostorji) — zaključeno
+
+**Paket:** M5-V.6 · **Stanje:** **zaključeno** — vseh 8 zahtevanih testov zelenih na kodi `6db12833…`: `unit`, `build`,
+`package`, `v6-200-off`, `v6-200-on`, `v6-500-off`, `v6-500-on` (3 + 3 ponovitve, T1–T6 in K16 zeleni v 12 zagonih) in
+regresija L3 `v5-izris-10-64-1000` (V0–V24).
+
+**Narejeno (D-048):**
+- `ImpostorL2` (prag `RwImpostorStart` 8..512, histereza 4 bloke). `FarRender`: `RenderLivingEvent.Pre` (`LOWEST`,
+  prehod 0) prekliče izris sledenega NPC-ja onkraj praga (stoj, viden, živ, ne jaha, pečen videz) in ga nariše v
+  medpomnilniku L3; videz iz `FarLook.describe(writeSpawnData())` na klientu (≤ 16/sličico, znova po
+  `EntityNPCInterface.rwLookVersion`); sledeni NPC izven dometa upodobitve vanille se nariše do konca megle.
+  Števci L2 v `/rwimpostor` in JSON klienta. `CustomNpcs.RwImpostorStart` (56).
+- Harness: ključ posla `impostorStart`, polja `l2*`; `k-run.ps1 -Dalec 1 -Far -ImpostorStart`, merilo K16
+  ([scenarij](../scenariji/M5-K.0-klient.md#m5-v6-l2--dalec-1--far-02--impostorstart-56-merilo-k16)).
+- JUnit: `ImpostorL2Test` (4), `HarnessJobTest` (+1); izključena iz `testOriginal`.
+
+**Izid A/B** (`-Variant idle -Dalec 1 -RenderDistance 10`, `-Far 0` proti `-Far 2 -ImpostorStart 56`, mediane 3 ponovitev,
+razponi povsod ločeni; [zapis](../meritve/2026-10-21-M5-V.6-L2.md)):
+
+| Celica | L2 / NPC (pričakovano) | p50 ms | p95 ms | p99 ms | FPS |
+|---|---|---|---|---|---|
+| idle-200 | 137 / 200 (137) | 4,886 → **2,013 (−58,8 %)** | 5,414 → 2,348 | 6,005 → 2,632 | 200,6 → 485,4 |
+| idle-500 | 437 / 500 (437) | 11,591 → **2,331 (−79,9 %)** | 13,865 → 3,357 | 19,121 → 3,949 | 83,1 → 411,4 |
+
+- 0 brez peke, 0 napak videza, en pečen videz za vse klone; izris L2 v `FarRender` povp. 56 / 164 µs na sličico;
+  integrirani strežnik in GC brez spremembe.
+- Ni izmerjeno v svetu: veja izven dometa vanille (NPC brez hitboxa) — v prizorišču je števec 0 (za M5-V.7/V.8).
+- Surovi izidi: git-ignored `audit/m25c-klient-2026-10-21-1437.md`, `-1443.md`, `-1450.md`, `-1456.md`.
+
+**Spremembe obnašanja moda:** pri privzetih nastavitvah nobene (`RwFarView=0`); z `RwFarView=2` NPC onkraj praga
+izgubi animacijo udov, oči in ime — zato privzeto 0 do M5-V.8 (registrirano v 04-REGISTRI).
+**Minecraft meritve:** 12 zagonov klienta (A/B) + 1 `-Izris 1`.
+
+**Naslednji korak:** **M5-V.7** (združljivost: OptiFine, Entity Culling, `customNPC_entities_mod`, posebni NPC-ji —
+tu tudi preverba NPC-ja brez hitboxa). Neodvisno: čistilni korak K3, M4.14b/M4.16; Q30 je uporabnik odločil
+21. 10. (K14b privzeto 1, v vrsti kot svoj paket).
 
 ### 2026-10-21 (109) — M5-V.5: nadomestki in izris L3 — zaključeno
 

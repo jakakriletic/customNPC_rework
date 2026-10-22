@@ -159,4 +159,13 @@ public class ImpostorFramesTest {
         assertEquals(0, img[2] & 0xFFFFFF);
         assertEquals(0, img[0] >>> 24);
     }
+
+    @Test
+    public void povprecnaBarva_samoTekslovNadAlfaPragom() {
+        // M5-V.7: harness primerja barvo pecenega okvirja (npr. skin z URL-ja) - prozorni teksli ne stejejo.
+        int[] img = {0xFFFF00FF, 0xFF7F007F, 0x19FFFFFF, 0x00000000};
+        assertEquals(0xBF00BF, ImpostorFrames.averageOpaque(img));
+        assertEquals("brez vidnih tekslov", -1, ImpostorFrames.averageOpaque(new int[] {0x19FFFFFF, 0}));
+        assertEquals(0x102030, ImpostorFrames.averageOpaque(new int[] {0x1A102030}));
+    }
 }

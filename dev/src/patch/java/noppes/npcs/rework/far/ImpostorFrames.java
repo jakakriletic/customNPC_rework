@@ -90,6 +90,26 @@ public final class ImpostorFrames {
     }
 
     /** Unija pravokotnikov {@link #alphaBounds}; {@code null} je prazen. */
+    /**
+     * M5-V.7 (harness): povprecna barva {@code 0xRRGGBB} tekslov, vidnih po alfa testu ({@link #ALPHA_REF}),
+     * ali -1 brez vidnih tekslov.
+     */
+    public static int averageOpaque(int[] img) {
+        long r = 0L, g = 0L, b = 0L, n = 0L;
+        for (int p : img) {
+            if ((p >>> 24) >= ALPHA_REF) {
+                r += (p >> 16) & 0xFF;
+                g += (p >> 8) & 0xFF;
+                b += p & 0xFF;
+                ++n;
+            }
+        }
+        if (n == 0L) {
+            return -1;
+        }
+        return (int) ((r / n) << 16 | (g / n) << 8 | (b / n));
+    }
+
     public static int[] union(int[] a, int[] b) {
         if (a == null) {
             return b == null ? null : b.clone();

@@ -43,7 +43,8 @@ import org.lwjgl.opengl.GL12;
  *
  * <p>Proracun: najvec <b>en videz na slicico</b> ({@code RenderTickEvent} START, pred izrisom sveta).
  * Brez podpore za framebuffer se peka izklopi ({@link #noFbo}). Pri skinu igralca ali URL se peka odlozi,
- * dokler renderer ne pozna teksture. Samo z {@code RwFarView >= 1}; z 0 se ne zgodi nic.
+ * dokler renderer ne pozna teksture in (M5-V.7, D-050) dokler se tekstura prenasa ({@link SkinDownload}, najvec
+ * {@link #MAX_DOWNLOAD_WAIT_NS}). Samo z {@code RwFarView >= 1}; z 0 se ne zgodi nic.
  */
 @SideOnly(Side.CLIENT)
 public final class ImpostorBaker {
@@ -51,10 +52,15 @@ public final class ImpostorBaker {
     public static final int FB_H = 256;
     /** Najvec slicic, ko se peka caka na teksturo skina; nato se speče s tem, kar renderer ima. */
     static final int MAX_WAITS = 600;
+    /** M5-V.7: najdlje cakanje na prenos skina; nato se speče s tem, kar renderer ima (kot model). */
+    static final long MAX_DOWNLOAD_WAIT_NS = 30000000000L;
 
     static final LinkedHashSet<Long> QUEUE = new LinkedHashSet<Long>();
     static final Set<Long> FAILED = new HashSet<Long>();
     static final Map<Long, Integer> WAITS = new HashMap<Long, Integer>();
+    static final Map<Long, Long> DOWNLOAD_SINCE = new HashMap<Long, Long>();
+    /** Harness M5-V.7: povprecna barva okvirja 0 po videzu (samo s sledenjem posebnih NPC-jev). */
+    public static final Map<Long, Integer> BAKED_RGB = new HashMap<Long, Integer>();
     private static ImpostorAtlas atlas;
     private static Framebuffer fb;
     private static IntBuffer pixels;
@@ -64,6 +70,8 @@ public final class ImpostorBaker {
     public static long bakeNsMax;
     public static long failures;
     public static long deferred;
+    /** M5-V.7: odlozitve peke, ker se skin se prenasa. */
+    public static long downloadWaits;
     public static long clipped;
     public static long retries;
     public static boolean noFbo;
@@ -87,6 +95,7 @@ public final class ImpostorBaker {
     static void release() {
         QUEUE.clear();
         WAITS.clear();
+        DOWNLOAD_SINCE.clear();
         if (atlas != null) {
             atlas.delete();
             atlas = null;
@@ -153,6 +162,10 @@ public final class ImpostorBaker {
         if (ev.phase != TickEvent.Phase.START || CustomNpcs.RwFarView < 1 || QUEUE.isEmpty()) {
             return;
         }
+        // M5-V.7: s paketom senčil in RwFarShaders=0 se impostorji ne rišejo, zato se tudi ne pečejo.
+        if (FarCompat.mode(CustomNpcs.RwFarShaders) == FarCompat.OFF) {
+            return;
+        }
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.world == null || mc.player == null || !available()) {
             return;
@@ -208,8 +221,23 @@ public final class ImpostorBaker {
                         return null;
                     }
                 }
+                if (mayWait && npc.display.skinType != 0 && npc.textureLocation != null
+                        && SkinDownload.pending(mc.getTextureManager().getTexture(npc.textureLocation))) {
+                    long now = System.nanoTime();
+                    Long since = DOWNLOAD_SINCE.get(hash);
+                    if (since == null) {
+                        since = now;
+                        DOWNLOAD_SINCE.put(hash, now);
+                    }
+                    if (now - since < MAX_DOWNLOAD_WAIT_NS) {
+                        QUEUE.add(hash);
+                        ++downloadWaits;
+                        return null;
+                    }
+                }
             }
             WAITS.remove(hash);
+            DOWNLOAD_SINCE.remove(hash);
             if (fb == null) {
                 fb = new Framebuffer(FB_W, FB_H, true);
                 fb.setFramebufferColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -247,6 +275,9 @@ public final class ImpostorBaker {
                 fail(hash);
                 return null;
             }
+            if (FarRender.specialPrefix != null) {
+                BAKED_RGB.put(hash, ImpostorFrames.averageOpaque(imgs[0]));
+            }
             int[] crop = ImpostorFrames.symmetricCrop(bounds, FB_W / 2);
             int[] size = ImpostorFrames.frameSize(crop[2], crop[3]);
             double ppb = FB_H / viewH;
@@ -282,6 +313,7 @@ public final class ImpostorBaker {
         ++failures;
         FAILED.add(hash);
         WAITS.remove(hash);
+        DOWNLOAD_SINCE.remove(hash);
     }
 
     /** Lazna entiteta iz opisa (ni v svetu), na mestu kamere (stopnja L0, K5), brez imena. */

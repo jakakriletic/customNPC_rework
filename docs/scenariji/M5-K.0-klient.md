@@ -80,6 +80,24 @@ Nastavitve: VSync izklopljen, `limitFramerate` 260 (neomejeno), brez view bobbin
   poseg coremoda uspel in 0 sličic prek rezerve.
 - A/B (D-016): 3 + 3 ponovitve na N, primerjava p50/p95/p99 in FPS; izid v `docs/meritve/`.
 
+### M5-V.7: posebni NPC-ji (`-Posebni 1`, merilo K17)
+
+```
+.\k-run.ps1 -Variant idle -N 50 -RenderDistance 10 -Dalec 1 -Far 2 -ImpostorStart 56 -Posebni 1
+```
+
+- Potrebuje `-Dalec 1 -Far 2`. Poleg mreže 9 klonov `RWV7_*` v vrsti 4 bloke za mrežo (vsi onkraj praga 56):
+  `Velik` (`Size 15`), `Polviden` (`NpcVisible 2`), `Nevidni` (`NpcVisible 1`), `Kip` (`IsStatue`, brez hitboxa →
+  izven dometa upodobitve vanille), `Jahac` na `Nosilec` (`rwhitbox mount`), `Mrtev` (ubit, `RespawnTime` 100000),
+  `Morf` (`EntityClass` prašič), `Url` (URL skin z lokalnega `dev/tools/skin-streznik.js` na 127.0.0.1:18731, odgovor
+  šele po 4 s, magenta `FF00FF`). Harness šteje po imenu (`specialPrefix=RWV7_`): ponujen, preklican L2,
+  pol-viden, izven dometa, med jahanjem; povprečna barva pečenega okvirja 0.
+- **K17a–j**: vsi v svetu; velik, morf in URL so impostor; pol-viden pol-prozoren impostor; neviden, ubit,
+  jahač in nosilec niso impostor; `Kip` se ne ponudi, a se nariše kot impostor izven dometa; URL okvir magenta
+  (R in B vsaj 2·G + 40), peka je čakala na prenos (`impPrenosCakanj` > 0), strežnik skina dobil ≥ 1 zahtevo;
+  brez OptiFine `FarCompat` neaktiven (0 izklopljenih sličic, 0 senčnih preskokov). K16 prišteje geometriji mreže 5 L2
+  na sličico (velik, pol-viden, kip izven dometa, morf, URL) in pričakuje izven dometa 1.
+
 ## Omejitve (znane)
 
 - Integrirani strežnik teče v istem procesu; njegov MSPT se zapiše (`integriraniStreznikMsPovp`),

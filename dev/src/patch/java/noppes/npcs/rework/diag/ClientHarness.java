@@ -38,6 +38,7 @@ import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.rework.core.RenderEntitiesPatch;
 import noppes.npcs.rework.far.FarClient;
+import noppes.npcs.rework.far.FarCompat;
 import noppes.npcs.rework.far.FarRender;
 import noppes.npcs.rework.far.ImpostorBaker;
 import noppes.npcs.rework.render.HeadwearSkip;
@@ -522,6 +523,8 @@ public final class ClientHarness {
         if (this.job.impostorStart >= 0) {
             CustomNpcs.RwImpostorStart = this.job.impostorStart;
         }
+        // M5-V.7: stevci L2 po posebnih NPC-jih (FarRender.resetStats jih ob zacetku merjenja pocisti).
+        FarRender.specialPrefix = this.job.specialPrefix;
         mc.gameSettings.renderDistanceChunks = this.job.renderDistance;
         mc.gameSettings.enableVsync = false;
         mc.gameSettings.viewBobbing = false;
@@ -844,6 +847,14 @@ public final class ClientHarness {
         num(b, "l2BrezPeke", FarRender.statL2Unbaked);
         num(b, "l2Videzov", FarRender.l2Hashes);
         num(b, "l2VidezNapak", FarRender.l2HashErrors);
+        // M5-V.7: zdruzljivost (OptiFine/senčila) in posebni NPC-ji.
+        num(b, "rwFarShaders", CustomNpcs.RwFarShaders);
+        num(b, "farOptifine", FarCompat.optifine() ? 1 : 0);
+        num(b, "farSencila", FarCompat.shaderPack() ? 1 : 0);
+        num(b, "farSencilaIzklop", FarCompat.offFrames);
+        num(b, "farSencniPreskok", FarCompat.shadowSkips);
+        num(b, "impPrenosCakanj", ImpostorBaker.downloadWaits);
+        kv(b, "posebni", FarRender.specialSummary(mc.world));
         FarDrawCheck fd = this.farDraw;
         num(b, "dalecPreverba", fd == null ? -1 : (fd.ok() ? 1 : 0));
         if (fd != null) {

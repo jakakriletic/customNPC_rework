@@ -74,6 +74,10 @@ import org.lwjgl.opengl.GL11;
  * slicico, znova po vsakem branju spawn podatkov ({@code rwLookVersion}). Dokler videz ni pecen, vanilla
  * narise model. Sledeni NPC, ki ga vanilla zaradi dometa upodobitve ne ponudi ({@code isInRangeToRender3d},
  * npr. NPC brez hitboxa onkraj ~38 blokov pri RD 8), se narise kot impostor do konca megle, ne glede na prag.
+ *
+ * <p><b>Senčila</b> (M5-V.7, D-050): {@link FarCompat} - z aktivnim paketom senčil OptiFine in {@code RwFarShaders=0}
+ * klient rise original (brez preklica L2, brez impostorjev in brez skrivanja mrtvih), v senčnem prehodu se
+ * impostorji ne risejo.
  */
 @SideOnly(Side.CLIENT)
 public final class FarRender {
@@ -143,6 +147,19 @@ public final class FarRender {
     /** Harness: id-ji, narisani v zadnji slicici (samo s {@link #trackIds}). */
     public static boolean trackIds;
     public static final Set<Integer> DRAWN_IDS = new HashSet<Integer>();
+    /**
+     * Harness M5-V.7: predpona imen posebnih NPC-jev ({@code null} = brez sledenja) in njihovi stevci od
+     * {@link #resetStats}: ime -&gt; {ponujen v prehodu 0, preklican L2, narisan pol-viden, narisan izven dometa vanille,
+     * ponujen med jahanjem, preklican med jahanjem}.
+     */
+    public static String specialPrefix;
+    public static final Map<String, long[]> SPECIAL = new java.util.TreeMap<String, long[]>();
+    public static final int SP_OFFERED = 0;
+    public static final int SP_CANCELLED = 1;
+    public static final int SP_HALF = 2;
+    public static final int SP_RANGE = 3;
+    public static final int SP_RIDING = 4;
+    public static final int SP_RIDING_CANCELLED = 5;
 
     private static final Map<Integer, ImpostorAtlas.Entry> LOOKS = new HashMap<Integer, ImpostorAtlas.Entry>();
     private static final List<Object[]> HALF = new ArrayList<Object[]>();
@@ -185,6 +202,61 @@ public final class FarRender {
         statL2RangeMax = -1;
         statL2Cancelled = 0L;
         statL2Unbaked = 0L;
+        SPECIAL.clear();
+    }
+
+    /**
+     * Harness: {@code ime=ponujen/preklican/polViden/izvenDometa/jahanje/jahanjePreklican@RRGGBB;...} za vse posebne
+     * NPC-je v svetu (tudi tiste brez stevcev) ali prazen niz brez sledenja; {@code @RRGGBB} je povprecna barva
+     * pecenega okvirja 0 videza L2 ({@code @-}: brez videza L2 ali brez peke).
+     */
+    public static String specialSummary(WorldClient world) {
+        if (specialPrefix == null) {
+            return "";
+        }
+        Map<String, String> rgb = new HashMap<String, String>();
+        if (world != null) {
+            for (Entity en : world.loadedEntityList) {
+                if (en instanceof EntityNPCInterface && special((EntityNPCInterface) en) != null) {
+                    long[] s = L2_STATE.get(en.getEntityId());
+                    Integer c = s == null ? null : ImpostorBaker.BAKED_RGB.get(s[0]);
+                    if (c != null && c >= 0) {
+                        rgb.put(((EntityNPCInterface) en).display.getName(), String.format("%06X", c));
+                    }
+                }
+            }
+        }
+        StringBuilder b = new StringBuilder();
+        for (Map.Entry<String, long[]> me : SPECIAL.entrySet()) {
+            if (b.length() > 0) {
+                b.append(";");
+            }
+            b.append(me.getKey()).append("=");
+            long[] c = me.getValue();
+            for (int i = 0; i < c.length; ++i) {
+                b.append(i == 0 ? "" : "/").append(c[i]);
+            }
+            String col = rgb.get(me.getKey());
+            b.append("@").append(col == null ? "-" : col);
+        }
+        return b.toString();
+    }
+
+    /** Stevci posebnega NPC-ja ali {@code null} (brez sledenja ali drugo ime). */
+    static long[] special(EntityNPCInterface npc) {
+        if (specialPrefix == null) {
+            return null;
+        }
+        String name = npc.display.getName();
+        if (name == null || !name.startsWith(specialPrefix)) {
+            return null;
+        }
+        long[] c = SPECIAL.get(name);
+        if (c == null) {
+            c = new long[6];
+            SPECIAL.put(name, c);
+        }
+        return c;
     }
 
     @SubscribeEvent
@@ -211,8 +283,17 @@ public final class FarRender {
         if (MinecraftForgeClient.getRenderPass() != 0) {
             return;
         }
+        int compat = FarCompat.mode(CustomNpcs.RwFarShaders);
+        if (compat == FarCompat.SKIP) {
+            ++FarCompat.shadowSkips;
+            return;
+        }
         hookFrame = frameNo;
         if (!active() || view == null) {
+            return;
+        }
+        if (compat == FarCompat.OFF) {
+            ++FarCompat.offFrames;
             return;
         }
         ++hookFrames;
@@ -227,7 +308,14 @@ public final class FarRender {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onRenderLivingPre(RenderLivingEvent.Pre<EntityLivingBase> ev) {
         EntityLivingBase e = ev.getEntity();
-        if (e.isDead && CustomNpcs.RwFarView >= 1 && FarClient.STORE.containsKey(e.getEntityId())) {
+        if (CustomNpcs.RwFarView < 1) {
+            return;
+        }
+        int compat = FarCompat.mode(CustomNpcs.RwFarShaders);
+        if (compat == FarCompat.OFF) {
+            return;
+        }
+        if (e.isDead && FarClient.STORE.containsKey(e.getEntityId())) {
             ++deadHidden;
             ev.setCanceled(true);
             return;
@@ -237,10 +325,28 @@ public final class FarRender {
             Minecraft mc = Minecraft.getMinecraft();
             Entity view = mc.getRenderViewEntity();
             EntityNPCInterface npc = (EntityNPCInterface) e;
+            long[] sp = compat == FarCompat.DRAW ? special(npc) : null;
+            boolean riding = sp != null && (npc.isRiding() || npc.isBeingRidden());
+            if (sp != null) {
+                ++sp[SP_OFFERED];
+                if (riding) {
+                    ++sp[SP_RIDING];
+                }
+            }
             if (view != null && l2(mc, npc, npc.getDistanceSq(view), false) != null) {
                 ev.setCanceled(true);
+                if (compat == FarCompat.SKIP) {
+                    // Senčni prehod: impostor se ne narise, model tudi ne (senčna mapa brez oddaljenih NPC-jev).
+                    return;
+                }
                 L2.add(npc);
                 ++statL2Cancelled;
+                if (sp != null) {
+                    ++sp[SP_CANCELLED];
+                    if (riding) {
+                        ++sp[SP_RIDING_CANCELLED];
+                    }
+                }
             }
         }
     }
@@ -274,7 +380,8 @@ public final class FarRender {
                 return null;
             }
         }
-        if (npc.isKilled() || npc.display.getVisible() == 1 || npc.isInvisible() || npc.currentAnimation != 0
+        // Ne isInvisible(): CNPC ga vrne za vsak NpcVisible != 0, pol-viden (2) pa je pol-prozoren impostor (HALF).
+        if (npc.isKilled() || npc.display.getVisible() == 1 || npc.currentAnimation != 0
                 || npc.isRiding() || npc.isBeingRidden()) {
             return null;
         }
@@ -326,7 +433,7 @@ public final class FarRender {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onRenderWorldLast(RenderWorldLastEvent ev) {
-        if (hookFrame == frameNo || !active()) {
+        if (hookFrame == frameNo || !active() || FarCompat.mode(CustomNpcs.RwFarShaders) != FarCompat.DRAW) {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();
@@ -489,6 +596,10 @@ public final class FarRender {
                     begun = l2Quad(b, atlas, ae, npc, pt, cx, cy, cz, begun);
                     ++l2;
                     ++l2Range;
+                    long[] sp = special(npc);
+                    if (sp != null) {
+                        ++sp[SP_RANGE];
+                    }
                 }
             }
         }
@@ -557,6 +668,10 @@ public final class FarRender {
         double y0 = y + ae.bottom;
         double y1 = y0 + ae.height;
         if (npc.display.getVisible() == 2) {
+            long[] sp = special(npc);
+            if (sp != null) {
+                ++sp[SP_HALF];
+            }
             HALF.add(new Object[] {ae, new double[] {dx, y0, y1, dz, yaw, light}});
             return begun;
         }
@@ -653,6 +768,7 @@ public final class FarRender {
                 RenderEntitiesPatch.patched() ? 1 : 0, hookFrames, fallbackFrames,
                 lastDrawn, lastLive, lastCulled, lastUnbaked, lastHalf, lastMaxDist,
                 statFrames, statFrames == 0 ? 0.0 : statNs / 1000.0 / statFrames, statNsMax / 1000.0,
-                ImpostorL2.start(CustomNpcs.RwImpostorStart), lastL2, lastL2Range, statL2Cancelled, statL2Unbaked, l2Hashes, l2HashErrors);
+                ImpostorL2.start(CustomNpcs.RwImpostorStart), lastL2, lastL2Range, statL2Cancelled, statL2Unbaked, l2Hashes, l2HashErrors)
+                + " " + FarCompat.status(CustomNpcs.RwFarShaders);
     }
 }

@@ -39,6 +39,8 @@ import java.util.Properties;
  *                             shramba nadomestkov); -1 = iz konfiguracije
  * impostorStart=-1           M5-V.6: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwImpostorStart} (bloki, prag L2 pri
  *                             farView=2); -1 = iz konfiguracije
+ * specialPrefix=             M5-V.7: neprazno = med merjenjem stej izrise L2 po NPC-jih, katerih ime se zacne s to predpono
+ *                             ({@code FarRender.SPECIAL}, posebni NPC-ji); izid v JSON ({@code posebni})
  * impostorCheck=0             M5-V.4: 1 = po ogrevanju speci testne videze in primerjaj piksle impostor - model pri 56 blokih
  *                             ({@link ImpostorCheck}); potrebuje opis videza s kanala rwfar (farView=1)
  * farDrawCheck=0              M5-V.5: 1 = po ogrevanju A/B pikslov najbolj oddaljenega nadomestka v pravi slicici
@@ -96,6 +98,8 @@ public final class HarnessJob {
     public final int farView;
     /** M5-V.6: RwImpostorStart za zagon (bloki), -1 = iz konfiguracije. */
     public final int impostorStart;
+    /** M5-V.7: predpona imen posebnih NPC-jev za stevce L2 ali {@code null}. */
+    public final String specialPrefix;
     /** M5-V.4: primerjava pikslov impostor - model ({@link ImpostorCheck}). */
     public final boolean impostorCheck;
     /** M5-V.5: A/B pikslov izrisa L3 v pravi slicici ({@link FarDrawCheck}). */
@@ -150,6 +154,8 @@ public final class HarnessJob {
         this.lodStart = intValue(p, "lodStart", -1);
         this.farView = intValue(p, "farView", -1);
         this.impostorStart = intValue(p, "impostorStart", -1);
+        String special = p.getProperty("specialPrefix");
+        this.specialPrefix = special == null || special.trim().isEmpty() ? null : special.trim();
         this.impostorCheck = intValue(p, "impostorCheck", 0) != 0;
         this.farDrawCheck = intValue(p, "farDrawCheck", 0) != 0;
         this.seamCheck = intValue(p, "seamCheck", 0) != 0;

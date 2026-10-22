@@ -12,7 +12,7 @@
         .\k-run.ps1 -Variant idle -N 50 -Warmup 10 -Measure 20      # hiter preizkus harnessa
         .\ponovitve-run.ps1 -Scenarij klient -Dodatno @('-Variant','idle','-N','200')
 
-    Merila (K1-K8, z -PreveriPokrivalo K9, s -Pokrivalo K10, z -PreveriNapise K11, z -Napisi K12, z -PreveriOci K13, z -Oci K14, z -Lod K15, s -Far K16) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
+    Merila (K1-K8, z -PreveriPokrivalo K9, s -Pokrivalo K10, z -PreveriNapise K11, z -Napisi K12, z -PreveriOci K13, z -Oci K14, z -Lod K15, s -Far K16, s -Posebni K17) so na koncu; izhodna koda 0 samo, ce so vsa zelena.
 
     -Jfr (M5-K.1): v merilnem oknu snema JFR klientskega JVM-ja (jcmd JFR.start, nastavitve 'profile')
     v audit\jfr\k-<varianta>-<N>-<stamp>.jfr in napise povzetek niti 'Client thread' z nativnimi
@@ -54,7 +54,11 @@ param(
     [ValidateRange(-1, 512)][int]$ImpostorStart = -1,
     # M5-V.6: 1 = prizorisce "dalec": kamera 40 blokov nad tlemi, najblizja vrsta 36 blokov vodoravno, da je vecina
     # NPC-jev onkraj praga L2 (56) in vsi znotraj sledilnika (Chebyshev <= 60) in dometa upodobitve (RD 10: 80).
-    [ValidateRange(0, 1)][int]$Dalec = 0
+    [ValidateRange(0, 1)][int]$Dalec = 0,
+    # M5-V.7: 1 = poleg mreze se 9 posebnih NPC-jev (RWV7_*: velik, pol-viden, neviden, brez hitboxa, jahac in
+    # nosilec, ubit, morf, URL skin z lokalnega streznika z zamikom) v vrsti 4 bloke za mrezo; merilo K17.
+    # Potrebuje -Dalec 1 in -Far 2.
+    [ValidateRange(0, 1)][int]$Posebni = 0
 )
 
 $ErrorActionPreference = 'Stop'
@@ -109,6 +113,48 @@ Copy-Item -Path (Join-Path $seed 'customnpcs\*') -Destination (Join-Path $save '
 $nKlonov = @(Get-ChildItem (Join-Path $save 'customnpcs\clones\1') -Filter 'PERF_*.json').Count
 Check ("fixture PERF_* namescene v svet ({0})" -f $nKlonov) ($nKlonov -ge 4)
 
+# M5-V.7: posebni NPC-ji so kloni PERF_Idle z eno spremembo, zapisani samo v svez svet tega zagona (fixture
+# dev\testworld ostane nespremenjen). Ime se zacne z RWV7_, harness steje izrise L2 po imenu (specialPrefix).
+# Zamenjava: [iskani niz, nadomestek]; iskani niz z (?m) je regex, sicer dobeseden.
+$skinPort = 18731
+$skinUrl = "http://127.0.0.1:$skinPort/rwv7.png"
+$posebniNpc = [ordered]@{
+    'RWV7_Velik'    = @{ x = 49; zamenjaj = @(,@('(?m)^(\s*)"Size": 5,', '$1"Size": 15,')) }
+    'RWV7_Polviden' = @{ x = 52; zamenjaj = @(,@('"NpcVisible": 0', '"NpcVisible": 2')) }
+    'RWV7_Nevidni'  = @{ x = 55; zamenjaj = @(,@('"NpcVisible": 0', '"NpcVisible": 1')) }
+    'RWV7_Kip'      = @{ x = 58; zamenjaj = @(,@('"IsStatue": 0b', '"IsStatue": 1b')) }
+    'RWV7_Nosilec'  = @{ x = 61; zamenjaj = @() }
+    'RWV7_Jahac'    = @{ x = 61; zamenjaj = @() }
+    'RWV7_Mrtev'    = @{ x = 64; zamenjaj = @(,@('"RespawnTime": 20,', '"RespawnTime": 100000,')) }
+    'RWV7_Morf'     = @{ x = 67; zamenjaj = @(,@('"NpcModelData": {', '"NpcModelData": {"EntityClass": "net.minecraft.entity.passive.EntityPig",')) }
+    'RWV7_Url'      = @{ x = 70; zamenjaj = @(@('"UsingSkinUrl": 0b', '"UsingSkinUrl": 2b'), @('"SkinUrl": ""', ('"SkinUrl": "' + $skinUrl + '"'))) }
+}
+$zPosebni = $gridZ - 4
+$skinProc = $null
+$skinLog = ''
+if ($Posebni -eq 1) {
+    if ($Dalec -ne 1 -or $Far -ne 2) { throw '-Posebni 1 potrebuje -Dalec 1 in -Far 2' }
+    $vzor = [System.IO.File]::ReadAllText((Join-Path $save 'customnpcs\clones\1\PERF_Idle.json'))
+    foreach ($ime in $posebniNpc.Keys) {
+        $t = $vzor.Replace('"Name": "PERF_Idle"', ('"Name": "' + $ime + '"'))
+        foreach ($z in $posebniNpc[$ime].zamenjaj) {
+            $novo = if ($z[0].StartsWith('(?m)')) { [regex]::Replace($t, $z[0], $z[1]) } else { $t.Replace($z[0], $z[1]) }
+            if ($novo -eq $t) { throw "klon $ime : vzorec '$($z[0])' ni v PERF_Idle.json" }
+            $t = $novo
+        }
+        [System.IO.File]::WriteAllText((Join-Path $save "customnpcs\clones\1\$ime.json"), $t, (New-Object System.Text.UTF8Encoding($false)))
+    }
+    Check ("M5-V.7: {0} posebnih klonov RWV7_* zapisanih v svet" -f $posebniNpc.Count) $true
+    # Streznik skina odgovori sele po 4 s: peka impostorja mora naleteti na prenos v teku (merilo K17i).
+    $skinLog = Join-Path $audit "k-$Variant-$N-$stamp-skin.txt"
+    $node = Get-Command node -ErrorAction SilentlyContinue
+    if (-not $node) { throw 'node ni na voljo (streznik skina za -Posebni)' }
+    $skinProc = Start-Process -FilePath $node.Source -ArgumentList @(('"{0}"' -f (Join-Path $root 'dev\tools\skin-streznik.js')), $skinPort, ('"{0}"' -f $skinLog), 4000, 'FF00FF') -WindowStyle Hidden -PassThru
+    $skinCas = (Get-Date).AddSeconds(10)
+    while (((-not (Test-Path $skinLog)) -or ("$(Get-Content $skinLog -Raw -ErrorAction SilentlyContinue)" -notmatch 'POSLUSA')) -and (Get-Date) -lt $skinCas) { Start-Sleep -Milliseconds 200 }
+    Check ("M5-V.7: lokalni streznik skina poslusa na 127.0.0.1:{0} (zamik 4000 ms)" -f $skinPort) ((Test-Path $skinLog) -and ("$(Get-Content $skinLog -Raw)" -match 'POSLUSA'))
+}
+
 # Kamera: juzno od mreze, nad njo, pogled proti severu (yaw 180) na sredino. NPC-ji morajo biti
 # znotraj dometa sledilnika (64 blokov, tracker(64, 3, true)), sicer jih streznik klientu ne poslje.
 $globina = if ($Variant -eq 'boj' -or $Variant -eq 'nedosegljiva') { [int](($N / 2) / $gridW) * 2 + $bojGap } else { [int]($N / $gridW) }
@@ -149,6 +195,14 @@ if ($Variant -eq 'boj' -or $Variant -eq 'nedosegljiva') {
 }
 # Boj: NPC-ji umirajo ze med umiritvijo (streznik to steje kot ranjene), zato je meja 90 % kot pri K4.
 $pricakovanoMin = if ($Variant -eq 'boj' -or $Variant -eq 'nedosegljiva') { [int][math]::Floor($N * 0.9) } else { $pricakovano }
+if ($Posebni -eq 1) {
+    foreach ($ime in $posebniNpc.Keys) { $cmds += ('noppes clone spawn {0} 1 {1},4,{2}' -f $ime, $posebniNpc[$ime].x, $zPosebni) }
+    $cmds += 'rwhitbox mount RWV7_Jahac RWV7_Nosilec'
+    $cmds += 'kill @e[type=customnpcs:customnpc,name=RWV7_Mrtev]'
+    $pricakovano += $posebniNpc.Count
+    # Neviden NPC (NpcVisible 1) morda ni poslan klientu; K17a to preveri posebej.
+    $pricakovanoMin += $posebniNpc.Count - 1
+}
 $cmds += 'rwdiag chunks on 1'
 
 $out = if ($JsonPath -ne '') { $JsonPath -replace '\.json$', '-klient.json' } else { Join-Path $audit "k-$Variant-$N-$stamp-klient.json" }
@@ -156,7 +210,7 @@ $jobPath = Join-Path $audit "k-$Variant-$N-$stamp.job"
 $job = @("world=$world", 'createSeed=customnpc-rework', "expectNpc=$pricakovano", "expectNpcMin=$pricakovanoMin",
          # Invariantna kultura: v sl-SI bi -f dal decimalne vejice in HarnessJob kamere ne bi prebral.
          [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, 'cam={0},{1},{2},180,{3}', $camX, $camY, $camZ, $pitch),
-         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci", "headwearSkip=$Pokrivalo", ('headwearCheck={0}' -f [int][bool]$PreveriPokrivalo), "labelCache=$Napisi", ('labelCheck={0}' -f [int][bool]$PreveriNapise), "eyesList=$Oci", ('eyesCheck={0}' -f [int][bool]$PreveriOci), "lodStart=$Lod", "farView=$Far", "impostorStart=$ImpostorStart", ('settle={0}' -f (3 + [int]($N / 250))),
+         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci", "headwearSkip=$Pokrivalo", ('headwearCheck={0}' -f [int][bool]$PreveriPokrivalo), "labelCache=$Napisi", ('labelCheck={0}' -f [int][bool]$PreveriNapise), "eyesList=$Oci", ('eyesCheck={0}' -f [int][bool]$PreveriOci), "lodStart=$Lod", "farView=$Far", "impostorStart=$ImpostorStart", ('specialPrefix={0}' -f $(if ($Posebni -eq 1) { 'RWV7_' } else { '' })), ('settle={0}' -f (3 + [int]($N / 250))),
          "warmup=$Warmup", "measure=$Measure", ('out=' + ($out -replace '\\', '/')))
 for ($i = 0; $i -lt $cmds.Count; $i++) { $job += ('cmd.{0}={1}' -f ($i + 1), $cmds[$i]) }
 [System.IO.File]::WriteAllLines($jobPath, $job, (New-Object System.Text.UTF8Encoding($false)))
@@ -215,6 +269,9 @@ while (-not $proc.HasExited) {
         Write-Host ("  JFR (PID {0}): {1}" -f $javaPid, $jfrIzpis.Trim())
     }
     Start-Sleep -Seconds $(if ($Jfr -and $jfrIzpis -eq '') { 1 } else { 5 })
+}
+if ($skinProc) {
+    try { if (-not $skinProc.HasExited) { Stop-Process -Id $skinProc.Id -Force } } catch { }
 }
 $tekst = if (Test-Path $log) { Get-Content $log -Raw } else { '' }
 foreach ($m in [regex]::Matches("$tekst", 'RWHARNESS-[A-Z]+[^\r\n]*')) { if ($m.Value -notmatch '^RWHARNESS-UKAZ') { Write-Host "  $($m.Value)" } }
@@ -296,7 +353,9 @@ if ($r -and $Far -ge 0) {
         $opis = 'brez L2'
     } else {
         $opis = 'L2 na slicico min/max {0}/{1}, izven dometa {2}, preklicev {3}, brez peke v oknu {4}, videzov {5}, napak {6}' -f $r.l2NarisanihMin, $r.l2NarisanihMax, $r.l2IzvenDometaMax, $r.l2Preklicev, $r.l2BrezPeke, $r.l2Videzov, $r.l2VidezNapak
-        $ok = $ok -and ($r.l2BrezPeke -eq 0) -and ($r.l2VidezNapak -eq 0) -and ($r.l2IzvenDometaMax -eq 0) -and ($r.farPoseg -eq 1) -and ($r.farIzrisRezerva -eq 0)
+        # M5-V.7 (-Posebni): NPC brez hitboxa (RWV7_Kip) je izven vanilla dometa upodobitve, zato natanko 1.
+        $izvenPric = if ($Posebni -eq 1) { 1 } else { 0 }
+        $ok = $ok -and ($r.l2BrezPeke -eq 0) -and ($r.l2VidezNapak -eq 0) -and ($r.l2IzvenDometaMax -eq $izvenPric) -and ($r.farPoseg -eq 1) -and ($r.farIzrisRezerva -eq 0)
         if ($Variant -eq 'idle' -or $Variant -eq 'skripte') {
             $vL2 = 0
             for ($vr = 0; $vr -lt [int]($N / $gridW); $vr++) {
@@ -305,12 +364,51 @@ if ($r -and $Far -ge 0) {
                     if (($dx * $dx + $dy * $dy + $dz * $dz) -gt ($prag * $prag)) { $vL2++ }
                 }
             }
+            # M5-V.7: L2 posebnih NPC-jev na slicico: velik, pol-viden, kip (izven dometa), morf, URL = 5
+            # (neviden, jahac, nosilec in ubit ostanejo model ali niso narisani).
+            if ($Posebni -eq 1) { $vL2 += 5 }
             $tol = [math]::Max(2, [int][math]::Ceiling($N * 0.02))
             $ok = $ok -and ($vL2 -gt 0) -and ([math]::Abs($r.l2NarisanihMin - $vL2) -le $tol) -and ([math]::Abs($r.l2NarisanihMax - $vL2) -le $tol)
             $opis += (', pricakovano {0} od {1} (+-{2}, prag {3})' -f $vL2, $N, $tol, $prag)
         }
     }
     Check ("K16: RwFarView {0} (zahtevano {1}), RwImpostorStart {2}, {3}" -f $r.rwFarView, $Far, $r.rwImpostorStart, $opis) $ok
+}
+if ($Posebni -eq 1) {
+    # M5-V.7: posebni NPC-ji v merilnem oknu; stevci ponujen/preklican/polViden/izvenDometa/jahanje/jahanjePreklican@RGB.
+    $sp = @{}
+    if ($r) {
+        foreach ($del in ("$($r.posebni)" -split ';')) {
+            if ($del -match '^(RWV7_\w+)=(\d+)/(\d+)/(\d+)/(\d+)/(\d+)/(\d+)@([0-9A-F]{6}|-)$') {
+                $sp[$Matches[1]] = @{ pon = [long]$Matches[2]; prek = [long]$Matches[3]; pol = [long]$Matches[4]; izven = [long]$Matches[5]; jah = [long]$Matches[6]; jahPrek = [long]$Matches[7]; rgb = $Matches[8] }
+            }
+        }
+        Write-Host ("    posebni: {0}" -f $r.posebni)
+    }
+    function SpOk([string]$Ime, [scriptblock]$Pogoj) { if (-not $sp.ContainsKey($Ime)) { return $false }; return [bool](& $Pogoj $sp[$Ime]) }
+    # Impostor (L2): preklican model v vsaki ponujeni slicici (toleranca 2) ali narisan izven vanilla dometa.
+    $impostor = { param($c) (($c.prek -gt 0) -and ($c.prek -ge $c.pon - 2)) -or (($c.pon -eq 0) -and ($c.izven -gt 0)) }
+    $model = { param($c) ($c.prek -eq 0) -and ($c.izven -eq 0) }
+    Check ("K17a: vseh {0} posebnih NPC-jev je v svetu klienta ({1})" -f $posebniNpc.Count, (@($sp.Keys | Sort-Object) -join ', ')) ($sp.Count -eq $posebniNpc.Count)
+    Check 'K17b: RWV7_Velik (Size 15) je impostor' (SpOk 'RWV7_Velik' $impostor)
+    Check 'K17c: RWV7_Polviden (NpcVisible 2) je pol-prozoren impostor' (SpOk 'RWV7_Polviden' { param($c) (& $impostor $c) -and ($c.pol -gt 0) })
+    Check 'K17d: RWV7_Nevidni (NpcVisible 1) ni impostor' (SpOk 'RWV7_Nevidni' $model)
+    Check 'K17e: RWV7_Kip (brez hitboxa, izven vanilla dometa) je impostor do konca megle' (SpOk 'RWV7_Kip' { param($c) ($c.pon -eq 0) -and ($c.izven -gt 0) })
+    Check 'K17f: RWV7_Jahac in RWV7_Nosilec jahata in ostaneta model' ((SpOk 'RWV7_Jahac' { param($c) ($c.jah -gt 0) -and ($c.jah -eq $c.pon) -and (& $model $c) }) -and (SpOk 'RWV7_Nosilec' { param($c) ($c.jah -gt 0) -and ($c.jah -eq $c.pon) -and (& $model $c) }))
+    Check 'K17g: RWV7_Mrtev (ubit) ni impostor' (SpOk 'RWV7_Mrtev' $model)
+    Check 'K17h: RWV7_Morf (model prasica) je impostor' (SpOk 'RWV7_Morf' $impostor)
+    # Skin z URL-ja: peka je cakala na prenos (impPrenosCakanj > 0), pecen okvir ima barvo prenesenega skina (magenta).
+    $urlRgb = if ($sp.ContainsKey('RWV7_Url')) { $sp['RWV7_Url'].rgb } else { '-' }
+    $magenta = $false
+    if ($urlRgb -match '^[0-9A-F]{6}$') {
+        $cr = [Convert]::ToInt32($urlRgb.Substring(0, 2), 16); $cg = [Convert]::ToInt32($urlRgb.Substring(2, 2), 16); $cb = [Convert]::ToInt32($urlRgb.Substring(4, 2), 16)
+        $magenta = ($cr -ge 2 * $cg + 40) -and ($cb -ge 2 * $cg + 40)
+    }
+    $zahtev = if ($skinLog -and (Test-Path $skinLog)) { @(Get-Content $skinLog | Where-Object { $_ -match ' GET /rwv7.png ' }).Count } else { 0 }
+    Check ("K17i: RWV7_Url je impostor s prenesenim skinom (barva okvirja {0}, cakanj na prenos {1}, zahtev streznika {2})" -f $urlRgb, $(if ($r) { $r.impPrenosCakanj } else { '-' }), $zahtev) ((SpOk 'RWV7_Url' $impostor) -and $magenta -and ($null -ne $r) -and ($r.impPrenosCakanj -gt 0) -and ($zahtev -ge 1))
+    if ($r) {
+        Check ("K17j: brez OptiFine je zdruzljivost neaktivna (optifine {0}, sencila {1}, izklopljenih slicic {2}, sencnih preskokov {3})" -f $r.farOptifine, $r.farSencila, $r.farSencilaIzklop, $r.farSencniPreskok) (($r.farOptifine -eq 0) -and ($r.farSencila -eq 0) -and ($r.farSencilaIzklop -eq 0) -and ($r.farSencniPreskok -eq 0))
+    }
 }
 if ($r -and $PreveriOci) {
     foreach ($ser in ("$($r.ociSerije)" -split ' \| ')) { Write-Host ("    oci {0}" -f $ser) }
@@ -359,6 +457,7 @@ if ($r) {
         if ($Far -ge 0) { $odtis['rwFarView'] = $Far }
         if ($ImpostorStart -ge 0) { $odtis['rwImpostorStart'] = $ImpostorStart }
         if ($Dalec -ne 0) { $odtis['dalec'] = $Dalec }
+        if ($Posebni -ne 0) { $odtis['posebni'] = $Posebni }
         $vel = @{ 'frame.p50' = $r.frameMsP50; 'frame.p95' = $r.frameMsP95; 'frame.p99' = $r.frameMsP99; 'frame.max' = $r.frameMsMax;
                   'fps' = $r.fps; 'fps.low1' = $r.fpsLow1; 'fps.low01' = $r.fpsLow01; 'gc.stevilo' = $r.gcStevilo; 'gc.ms' = $r.gcMs;
                   'upodobljeno.min' = $r.upodobljenoMin; 'streznik.ms' = $r.integriraniStreznikMsPovp }

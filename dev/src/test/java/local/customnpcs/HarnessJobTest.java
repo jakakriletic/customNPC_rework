@@ -108,6 +108,16 @@ public class HarnessJobTest {
     }
 
     @Test
+    public void specialPrefixPrivzetoBrezSledenja() {
+        assertEquals("M5-V.7: brez kljuca brez sledenja posebnih NPC-jev", null, HarnessJob.parse(base()).specialPrefix);
+        Properties p = base();
+        p.setProperty("specialPrefix", "  ");
+        assertEquals("prazna predpona = brez sledenja", null, HarnessJob.parse(p).specialPrefix);
+        p.setProperty("specialPrefix", " RWV7_ ");
+        assertEquals("RWV7_", HarnessJob.parse(p).specialPrefix);
+    }
+
+    @Test
     public void impostorCheckPrivzetoIzklopljen() {
         assertEquals("M5-V.4: brez kljuca ni primerjave impostor - model", false, HarnessJob.parse(base()).impostorCheck);
         Properties p = base();
