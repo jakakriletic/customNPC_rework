@@ -137,6 +137,25 @@ public class HarnessJobTest {
     }
 
     @Test
+    public void walkInSnapPrivzetoBrez() {
+        HarnessJob j = HarnessJob.parse(base());
+        assertEquals("M5-V.8: brez kljuca ni hoje po merjenju", false, j.walk);
+        assertEquals("M5-V.8: brez kljucev ni posnetkov", 0, j.snaps.size());
+        Properties p = base();
+        p.setProperty("walk", "1");
+        p.setProperty("snap.1", "64, 0.5, 4.9, 2936.5");
+        p.setProperty("snap.2", "368,1.5,4.9,2632.5");
+        p.setProperty("snap.4", "999,0,0,0");
+        j = HarnessJob.parse(p);
+        assertEquals(true, j.walk);
+        assertEquals("posnetki po vrsti od 1, vrzel konca seznam", 2, j.snaps.size());
+        assertEquals(64.0, j.snaps.get(0)[0], 0.0);
+        assertEquals(2936.5, j.snaps.get(0)[3], 0.0);
+        assertEquals(368.0, j.snaps.get(1)[0], 0.0);
+        assertEquals(1.5, j.snaps.get(1)[1], 0.0);
+    }
+
+    @Test
     public void createSeedMatchesDedicatedServer() {
         Properties p = base();
         assertEquals(null, HarnessJob.parse(p).createSeed);
@@ -161,6 +180,8 @@ public class HarnessJobTest {
             {"farView", "-2"},
             {"impostorStart", "-2"},
             {"impostorStart", "513"},
+            {"snap.1", "64,1,2"},
+            {"snap.1", "-1,1,2,3"},
             {"connect", ":25565"},
             {"connect", "localhost:0"},
             {"connect", "localhost:x"},

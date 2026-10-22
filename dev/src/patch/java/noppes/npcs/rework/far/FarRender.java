@@ -144,7 +144,7 @@ public final class FarRender {
     /** Pravokotnik sonde v pikslih okna {@code {x0, y0, x1, y1}} (izvor spodaj levo) ali {@code null}. */
     public static float[] probeRect;
     public static double probeDist;
-    /** Harness: id-ji, narisani v zadnji slicici (samo s {@link #trackIds}). */
+    /** Harness: id-ji impostorjev (L3 in od M5-V.8 tudi L2), narisanih v zadnji slicici (samo s {@link #trackIds}). */
     public static boolean trackIds;
     public static final Set<Integer> DRAWN_IDS = new HashSet<Integer>();
     /**
@@ -567,6 +567,9 @@ public final class FarRender {
                 if (ae != null) {
                     begun = l2Quad(b, atlas, ae, npc, pt, cx, cy, cz, begun);
                     ++l2;
+                    if (trackIds) {
+                        DRAWN_IDS.add(npc.getEntityId());
+                    }
                 }
             }
             double fogEnd = mc.gameSettings.renderDistanceChunks * 16.0;
@@ -595,6 +598,9 @@ public final class FarRender {
                 if (in) {
                     begun = l2Quad(b, atlas, ae, npc, pt, cx, cy, cz, begun);
                     ++l2;
+                    if (trackIds) {
+                        DRAWN_IDS.add(npc.getEntityId());
+                    }
                     ++l2Range;
                     long[] sp = special(npc);
                     if (sp != null) {

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 110 → 1)
+# Arhiv: dnevnik sej (vnosi 111 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,27 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-21 (111) — Q30: K14b `RwHeadwearSkip` privzeto 1 — zaključeno
+
+**Paket:** Q30 (odločitev lastnika) · **Stanje:** **zaključeno** — sprememba privzete vrednosti; zahtevani testi
+`unit`, `build`, `package` na novi kodi (upravljalnik).
+
+**Odločitev (D-049):** uporabnik 21. 10.: »Ja, Q30: K14b (RwHeadwearSkip=1) naj bo privzeto vklopljen. Zapisi
+odlocitev.« `CustomNpcs.RwHeadwearSkip` je privzeto **1** (komentar konfiguracije dopolnjen), 0 vrne original;
+varovala (OptiFine, ne-`SimpleTexture`/URL skini, `.mcmeta`, brez alfa testa → original) nespremenjena. Q30 zaprt
+(arhiv §4), vrstica v 04-REGISTRI, 03-FAZE in [meritveni zapis](../meritve/2026-10-19-M5-K-K14b-pokrivalo-brez-prozornih.md)
+posodobljeni.
+
+**Dokaz:** brez novih meritev — A/B in preverba pikslov 19. 10. (idle-500 p50 −25 %, idle-200 −18 %, 0 razlik v 7
+serijah). `dev/run/config/CustomNpcs.cfg` ima izrecno `RwHeadwearSkip=0` (obstoječi config obdrži vrednost), zato
+merilni pogoji scenarijev ostanejo nespremenjeni.
+
+**Spremembe obnašanja moda:** nova namestitev riše pokrivalo brez prozornih štirikotnikov (registrirano).
+**Minecraft meritve:** nobene.
+
+**Naslednji korak:** **M5-V.7** (združljivost). Neodvisno: čistilni korak K3, M4.14b/M4.16.
+
 
 ### 2026-10-21 (110) — M5-V.6: stopnja L2 (sledeni oddaljeni NPC-ji kot impostorji) — zaključeno
 

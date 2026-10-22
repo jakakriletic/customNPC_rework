@@ -1,16 +1,19 @@
 package noppes.npcs.rework.diag;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
+import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
+import javax.imageio.ImageIO;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -19,6 +22,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.multiplayer.GuiConnecting;
+import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.server.MinecraftServer;
@@ -45,6 +49,9 @@ import noppes.npcs.rework.render.HeadwearSkip;
 import noppes.npcs.rework.render.EyesList;
 import noppes.npcs.rework.render.Lod;
 import noppes.npcs.rework.render.LabelCache;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 
 /**
  * Klientski merilni harness M2.4r (M5-K.0).
@@ -82,7 +89,7 @@ import noppes.npcs.rework.render.LabelCache;
  */
 @SideOnly(Side.CLIENT)
 public final class ClientHarness {
-    private enum Phase { MENU, JOINING, SCENE, PRELOAD, COMMANDS, SETTLE, WARMUP, MEASURE, SEAM, DONE }
+    private enum Phase { MENU, JOINING, SCENE, PRELOAD, COMMANDS, SETTLE, WARMUP, MEASURE, SEAM, SNAP, DONE }
 
     private static final int MAX_FRAMES = 1 << 20;
     private static final long JOIN_TIMEOUT_NS = 180L * 1000000000L;
@@ -95,6 +102,9 @@ public final class ClientHarness {
     private static final long EXIT_TIMEOUT_NS = 120L * 1000000000L;
     /** M5-V.5: tickov mirovanja na zacetku faze SEAM. */
     private static final int SEAM_HOLD_TICKS = 100;
+    /** M5-V.8: slicic po usmeritvi kamere in FOV pred posnetkom; FOV drugega posnetka (povecava). */
+    private static final int SNAP_FRAMES = 40;
+    private static final float SNAP_ZOOM_FOV = 10.0f;
 
     private final HarnessJob job;
     private Phase phase = Phase.MENU;
@@ -151,6 +161,22 @@ public final class ClientHarness {
     private int farAtMeasure = -1;
     private long farBytesAtMeasure = -1L;
     private long farBytesAtEnd = -1L;
+    /** M5-V.8: hoja po merjenju (zicni in rwfar bajti, cas). */
+    private long walkBytes0 = -1L;
+    private long walkBytes1 = -1L;
+    private long walkFar0 = -1L;
+    private long walkFar1 = -1L;
+    private long walkNs0;
+    private long walkNs1;
+    /** M5-V.8: posnetki - indeks cilja, posnetek (0 = FOV merjenja, 1 = povecava), slicice cakanja, smer kamere. */
+    private int snapIndex;
+    private int snapShot;
+    private int snapWait;
+    private boolean snapAim;
+    private float snapYaw;
+    private float snapPitch;
+    private final List<String> snapFiles = new ArrayList<String>();
+    private String snapErrors = "";
 
     private ClientHarness(HarnessJob job) {
         this.job = job;
@@ -331,15 +357,21 @@ public final class ClientHarness {
                         this.measureEndNs = System.nanoTime();
                         this.bytesAtEnd = this.bytesIn.get();
                         this.farBytesAtEnd = FarClient.payloadBytes;
-                        if (this.job.seamCheck && this.errors.isEmpty()) {
+                        if ((this.job.seamCheck || this.job.walk) && this.errors.isEmpty()) {
                             // M5-V.5: JSON merjenja zdaj; skripta ob fazi SEAM prebere streznik.
                             this.jsonBody = buildJson(mc, Phase.MEASURE);
-                            this.seam = new FarDrawCheck.Seam(Math.min(384, (this.job.renderDistance - 1) * 16));
-                            this.seam.deadHiddenAtStart = FarRender.deadHidden;
+                            if (this.job.seamCheck) {
+                                this.seam = new FarDrawCheck.Seam(Math.min(384, (this.job.renderDistance - 1) * 16));
+                                this.seam.deadHiddenAtStart = FarRender.deadHidden;
+                                FarRender.trackIds = true;
+                            }
                             // 5 s mirovanja: skripta v tem casu prebere streznik (merilno okno ostane mirno).
                             this.seamTick = -SEAM_HOLD_TICKS;
-                            FarRender.trackIds = true;
                             enter(Phase.SEAM);
+                        } else if (!this.job.snaps.isEmpty() && this.errors.isEmpty()) {
+                            // M5-V.8: posnetki ne spremenijo merjenja; skripta ob fazi SNAP prebere streznik.
+                            this.jsonBody = buildJson(mc, Phase.MEASURE);
+                            startSnaps(mc);
                         } else {
                             finish(mc);
                         }
@@ -350,10 +382,27 @@ public final class ClientHarness {
                         pinCamera(mc, false);
                         ++this.seamTick;
                     } else if (this.seamTick >= FarDrawCheck.Seam.ticks()) {
-                        finish(mc);
+                        this.walkBytes1 = this.bytesIn.get();
+                        this.walkFar1 = FarClient.payloadBytes;
+                        this.walkNs1 = System.nanoTime();
+                        if (!this.job.snaps.isEmpty() && this.errors.isEmpty()) {
+                            // M5-V.8: brez sledenja prehodu (posnetki ne sodijo v V24).
+                            FarRender.trackIds = false;
+                            startSnaps(mc);
+                        } else {
+                            finish(mc);
+                        }
                     } else {
+                        if (this.seamTick == 0) {
+                            this.walkBytes0 = this.bytesIn.get();
+                            this.walkFar0 = FarClient.payloadBytes;
+                            this.walkNs0 = System.nanoTime();
+                        }
                         moveCamera(mc, FarDrawCheck.Seam.offset(this.seamTick++));
                     }
+                    break;
+                case SNAP:
+                    pinCamera(mc, false);
                     break;
                 case DONE:
                     if (this.exitPending && (this.exitReady || System.nanoTime() - this.phaseStart > EXIT_TIMEOUT_NS)) {
@@ -476,6 +525,10 @@ public final class ClientHarness {
             this.seam.liveRendered.clear();
             FarRender.DRAWN_IDS.clear();
         }
+        if (ev.phase == TickEvent.Phase.END && this.phase == Phase.SNAP) {
+            onSnapFrame(Minecraft.getMinecraft());
+            return;
+        }
         if (ev.phase != TickEvent.Phase.START || this.phase != Phase.MEASURE) {
             return;
         }
@@ -574,8 +627,8 @@ public final class ClientHarness {
         }
         // M5-V.5: med preverbo vidnosti je kamera usmerjena v sondo (FarDrawCheck), polozaj ostane.
         boolean aim = this.farDraw != null && !this.farDraw.done;
-        float yaw = aim ? this.farDraw.aimYaw : this.job.camYaw;
-        float pitch = aim ? this.farDraw.aimPitch : this.job.camPitch;
+        float yaw = aim ? this.farDraw.aimYaw : this.snapAim ? this.snapYaw : this.job.camYaw;
+        float pitch = aim ? this.farDraw.aimPitch : this.snapAim ? this.snapPitch : this.job.camPitch;
         p.motionX = 0.0;
         p.motionY = 0.0;
         p.motionZ = 0.0;
@@ -653,7 +706,8 @@ public final class ClientHarness {
         if (this.phase == Phase.DONE) {
             return;
         }
-        Phase reached = this.phase == Phase.SEAM ? Phase.MEASURE : this.phase;
+        Phase reached = this.phase == Phase.SEAM || this.phase == Phase.SNAP ? Phase.MEASURE : this.phase;
+        this.snapAim = false;
         FarRender.trackIds = false;
         if (this.seam != null) {
             this.seam.deadHidden = FarRender.deadHidden - this.seam.deadHiddenAtStart;
@@ -697,6 +751,19 @@ public final class ClientHarness {
             num(b, "sivNajvecNarisanih", sm.maxWatched);
             kv(b, "sivOpis", sm.toString());
         }
+        boolean walked = this.walkNs1 > this.walkNs0 && this.walkBytes0 >= 0L;
+        num(b, "hojaPreverba", walked ? 1 : 0);
+        if (walked) {
+            double ws = (this.walkNs1 - this.walkNs0) / 1.0e9;
+            num(b, "hojaSekund", ws);
+            num(b, "hojaBajtov", this.walkBytes1 - this.walkBytes0);
+            num(b, "hojaBajtovNaS", (this.walkBytes1 - this.walkBytes0) / ws);
+            num(b, "hojaFarBajtov", this.walkFar1 - this.walkFar0);
+            num(b, "hojaFarBajtovNaS", (this.walkFar1 - this.walkFar0) / ws);
+        }
+        num(b, "posnetkov", this.snapFiles.size());
+        kv(b, "posnetki", String.join(";", this.snapFiles));
+        kv(b, "posnetkiNapake", this.snapErrors);
         b.append("  \"cam\": [").append(this.job.camX).append(", ").append(this.job.camY).append(", ")
                 .append(this.job.camZ).append(", ").append(this.job.camYaw).append(", ").append(this.job.camPitch).append("]\n");
         b.append("}\n");
@@ -826,6 +893,8 @@ public final class ClientHarness {
         num(b, "impBrezFbo", ImpostorBaker.noFbo ? 1 : 0);
         num(b, "impPekaMsPovp", ImpostorBaker.baked > 0 ? ImpostorBaker.bakeNs / 1.0e6 / ImpostorBaker.baked : -1.0);
         num(b, "impPekaMsMax", ImpostorBaker.bakeNsMax / 1.0e6);
+        // M5-V.8: stranica atlasa (VRAM = vsota stopenj mipmap x 4 B + FBO peke ImpostorBaker.FB_W x FB_H).
+        num(b, "impAtlasStran", ImpostorBaker.current() == null ? -1 : ImpostorBaker.current().size);
         // M5-V.5: izris L3 v merilnem oknu (FarRender.resetStats ob zacetku merjenja).
         num(b, "farPoseg", RenderEntitiesPatch.patched() ? 1 : 0);
         num(b, "farIzrisSlicic", FarRender.statFrames);
@@ -923,6 +992,79 @@ public final class ClientHarness {
         num(b, "visina", mc.displayHeight);
         num(b, "heapMaxMb", Runtime.getRuntime().maxMemory() / (1024L * 1024L));
         return b.toString();
+    }
+
+    /** M5-V.8: zacetek posnetkov (kamera na mestu merjenja, usmerjena v prvi cilj). */
+    private void startSnaps(Minecraft mc) {
+        this.snapIndex = 0;
+        this.snapShot = 0;
+        aimSnap(mc);
+        enter(Phase.SNAP);
+    }
+
+    private void aimSnap(Minecraft mc) {
+        double[] t = this.job.snaps.get(this.snapIndex);
+        double eye = mc.player == null ? 1.62 : mc.player.getEyeHeight();
+        double dx = t[1] - this.job.camX;
+        double dy = t[2] - (this.job.camY + eye);
+        double dz = t[3] - this.job.camZ;
+        this.snapYaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
+        this.snapPitch = (float) -Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
+        this.snapAim = true;
+        mc.gameSettings.fovSetting = this.snapShot == 0 ? this.job.fov : SNAP_ZOOM_FOV;
+        this.snapWait = 0;
+        pinCamera(mc, false);
+    }
+
+    /** Konec slicice v fazi SNAP: po {@link #SNAP_FRAMES} slicicah preberi framebuffer in shrani PNG. */
+    private void onSnapFrame(Minecraft mc) {
+        if (++this.snapWait < SNAP_FRAMES) {
+            return;
+        }
+        double[] t = this.job.snaps.get(this.snapIndex);
+        int fov = Math.round(mc.gameSettings.fovSetting);
+        File f = new File(this.job.out.replaceAll("\\.json$", "") + "-posnetek-" + (int) t[0] + "-fov" + fov + ".png");
+        try {
+            writeFrame(mc, f);
+            this.snapFiles.add(f.getName());
+            System.out.println("RWHARNESS-POSNETEK " + f.getName());
+        } catch (Exception e) {
+            this.snapErrors += (this.snapErrors.isEmpty() ? "" : "; ") + f.getName() + ": " + e;
+        }
+        if (++this.snapShot > 1) {
+            this.snapShot = 0;
+            ++this.snapIndex;
+        }
+        if (this.snapIndex >= this.job.snaps.size()) {
+            mc.gameSettings.fovSetting = this.job.fov;
+            finish(mc);
+            return;
+        }
+        aimSnap(mc);
+    }
+
+    /** Celotna slicica iz glavnega framebufferja (konec RenderTickEvent: svet in GUI sta narisana) v PNG. */
+    private static void writeFrame(Minecraft mc, File f) throws Exception {
+        Framebuffer fb = mc.getFramebuffer();
+        int w = fb.framebufferWidth;
+        int h = fb.framebufferHeight;
+        fb.bindFramebuffer(false);
+        IntBuffer buf = BufferUtils.createIntBuffer(w * h);
+        GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 4);
+        GL11.glPixelStorei(GL11.GL_PACK_ROW_LENGTH, 0);
+        GL11.glReadPixels(0, 0, w, h, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, buf);
+        int[] px = new int[w * h];
+        buf.get(px);
+        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                img.setRGB(x, h - 1 - y, px[y * w + x] & 0xFFFFFF);
+            }
+        }
+        if (f.getParentFile() != null) {
+            f.getParentFile().mkdirs();
+        }
+        ImageIO.write(img, "png", f);
     }
 
     private static void kv(StringBuilder b, String k, String v) {

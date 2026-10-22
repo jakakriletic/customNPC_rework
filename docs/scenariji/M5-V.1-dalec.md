@@ -181,3 +181,29 @@ Testa upravljalnika: `v5-izris-24-64-5000`, `v5-izris-10-64-1000` (`v-run.ps1 -F
 ~1,9 s pred uničenjem žive entitete; pri hitrosti nad ~8 blokov/s (letenje v ustvarjalnem načinu 10,9, gledalec) lahko
 NPC na meji izgine za do ~1 s. Scenarij meri hojo; hitrejše premikanje je kandidat za M5-V.8 (4 Hz v bližnjem pasu,
 raziskava M5-V.0 §5.1).
+
+## M5-V.8: sprejemni A/B (V25–V26, `-Sprejem 1 -Far 0|1|2`)
+
+Sprejem D-035 (plan M5-V.8): celice M5-V.1 z dometom 64 (vd 10 / 24 × N 1.000 / 5.000) v treh variantah na **istem**
+prizorišču, tri ponovitve vsaka (`ponovitve-run.ps1 -Scenarij sprejem`, paket `M5-V.8`, predpona `m5v8-sprejem`).
+
+| `-Far` | strežnik | klient `RwFarView` | kaj se riše onkraj 56 / 64 blokov |
+|---|---|---|---|
+| 0 | brez `rwfar` | 0 | original: sledeni modeli do 64, dlje nič |
+| 1 | `rwfar 1`, domet 384 | 1 | modeli do 64, L3 impostorji 64..`(vd − 1)·16` |
+| 2 | `rwfar 1`, domet 384 | 2, `RwImpostorStart` 56 | modeli do 56, L2 56..64, L3 dlje |
+
+- Prizorišče je v vseh treh variantah enako: gruče M5-V.1 **in** sonda na `(vd − 1)·16` (N + 1 NPC-jev; pri M5-V.1 sonde
+  ni bilo, zato so izhodišče te celice in ne stare številke).
+- Merilno okno (30 s ogrevanja, 60 s merjenja, kamera fiksna) je enako kot pri M5-V.1. Pri `-Far 1/2` je pred merjenjem
+  A/B pikslov sonde (V23, kamera se po njem vrne in 2 s miruje), po merjenju pa hoja V24.
+- **V25 (vse variante):** po merjenju in 5 s mirovanja kamera hodi s hitrostjo hoje 48 blokov nazaj in nazaj (≈ 22 s);
+  harness zapiše žične bajte (`hojaBajtovNaS`) in koristne bajte `rwfar` (`hojaFarBajtovNaS`). Merilo veljavnosti:
+  hoja izvedena, ≥ 20 s. Cilj D-035 (hoja ≤ 20 KB/s, idle ≤ 1 KB/s na igralca) se presodi v zapisu meritve iz A/B.
+- **V26 (vse variante):** po hoji kamera z mesta merjenja pogleda v NPC, ki je vodoravno najbližje 64 / 128 / 256 / 368
+  blokom (samo cilji znotraj `(vd − 1)·16`: pri vd 10 samo 64 in 128), in shrani sličico pri FOV 70 in FOV 10
+  (`…-klient-posnetek-<d>-fov<f>.png` ob JSON-u). Merilo: vsi posnetki zapisani.
+- Pri `-Far 2` V24 šteje tudi impostorje L2 kot narisane (`FarRender.DRAWN_IDS` od M5-V.8 vsebuje L2), zato preveri
+  tudi mejo model ↔ L2 pri 56/52 blokih.
+- Ciljne vrednosti (sličica p95 +≤ 1,0 ms pri 5.000, MSPT oziroma čas `rwfar` ≤ 100 µs na tick na igralca, omrežje,
+  VRAM ≤ 32 MB) niso merila zagona, ampak sprejema; presodijo se iz median treh ponovitev.

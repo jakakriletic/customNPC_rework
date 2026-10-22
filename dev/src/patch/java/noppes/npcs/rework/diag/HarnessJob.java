@@ -47,6 +47,11 @@ import java.util.Properties;
  *                             (izris L3 vklopljen / izklopljen / vklopljen; {@link FarDrawCheck})
  * seamCheck=0                 M5-V.5: 1 = po merjenju kamera hodi nazaj in naprej cez mejo sledilnika; vsako slicico se
  *                             preveri, da je vsak prej viden NPC narisan kot ziva entiteta ali impostor ({@link FarDrawCheck.Seam})
+ * walk=0                      M5-V.8: 1 = po merjenju ista hoja kamere kot pri seamCheck tudi brez preverbe (A/B z originalom);
+ *                             zicni in rwfar bajti med hojo v JSON ({@code hoja*})
+ * snap.1=64,0.5,4.9,2936.5    M5-V.8: po merjenju (in hoji) kamera z mesta {@code cam} pogleda v tocko x,y,z in shrani posnetek
+ *                             slicice pri FOV merjenja in pri FOV 10 ({@code out} brez .json + -posnetek-&lt;oznaka&gt;-fov&lt;f&gt;.png);
+ *                             oznaka (prvo polje) je celo stevilo, po vrsti od 1
  * connect=127.0.0.1:25565     M5-V.1: namesto integriranega sveta se poveze na dedicirani streznik; ukazov cmd.* ne
  *                             izvaja (prizorisce postavi skripta prek konzole) in pred stetjem NPC-jev caka na
  *                             sporocilo {@code RWHARNESS-SCENA} v klepetu
@@ -106,6 +111,10 @@ public final class HarnessJob {
     public final boolean farDrawCheck;
     /** M5-V.5: prehod cez mejo sledilnika po merjenju ({@link FarDrawCheck.Seam}). */
     public final boolean seamCheck;
+    /** M5-V.8: hoja kamere po merjenju tudi brez preverbe prehoda. */
+    public final boolean walk;
+    /** M5-V.8: posnetki po merjenju, vsak {@code {oznaka, x, y, z}}. */
+    public final List<double[]> snaps;
     /** M5-V.1: gostitelj dediciranega streznika ali {@code null} (integrirani svet). */
     public final String connectHost;
     public final int connectPort;
@@ -159,6 +168,20 @@ public final class HarnessJob {
         this.impostorCheck = intValue(p, "impostorCheck", 0) != 0;
         this.farDrawCheck = intValue(p, "farDrawCheck", 0) != 0;
         this.seamCheck = intValue(p, "seamCheck", 0) != 0;
+        this.walk = intValue(p, "walk", 0) != 0;
+        List<double[]> snaps = new ArrayList<double[]>();
+        for (int i = 1; p.containsKey("snap." + i); i++) {
+            String[] s = p.getProperty("snap." + i).split(",");
+            if (s.length != 4) {
+                throw new IllegalArgumentException("snap." + i + " mora biti oznaka,x,y,z: " + p.getProperty("snap." + i));
+            }
+            int label = Integer.parseInt(s[0].trim());
+            if (label < 0) {
+                throw new IllegalArgumentException("oznaka posnetka mora biti nenegativna: " + label);
+            }
+            snaps.add(new double[] {label, Double.parseDouble(s[1].trim()), Double.parseDouble(s[2].trim()), Double.parseDouble(s[3].trim())});
+        }
+        this.snaps = Collections.unmodifiableList(snaps);
         String connect = p.getProperty("connect");
         if (connect == null || connect.trim().isEmpty()) {
             this.connectHost = null;
