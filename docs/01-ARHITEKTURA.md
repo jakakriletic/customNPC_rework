@@ -572,3 +572,41 @@ F1–F12 so ročni test z igralcem in ostanejo odprti (odvisno od uporabnika).
 odtis. FA1/2 in FA4 sta lastnosti meril/geometrije, ne napake, ki bi jo M4.14d ali M4.16
 rešil; o morebitni spremembi meril odloča samo nova utemeljena odločitev, ne ta paket.
 [Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+### D-080 — M4.14d: člani ob skupni poti ji sledijo (način TRACK) namesto iskanja (2026-10-26, Q63)
+
+**Vprašanje (Q63):** kdaj član v PATH sledi skupni poti enote namesto `tryMoveToXYZ`, kako
+daleč od poti sme biti in kaj je varovalka, če sledenje ne uspe?
+
+**Odločitev:** planer doda način **`TRACK`** (3). Kadar bi bil član po starem pravilu v PATH
+(napaka > `STEER_MAX` ali kazen opravičila `pathUntil`), **ni** pa v kazni obtičanja
+(`stuckUntil`, nov števec, nastavi ga samo `detectStuck`), in sta **član in njegov cilj
+največ `TRACK_JOIN` = 4,0 bloka** vodoravno od skupne poti, dobi TRACK: `Squad` sestavi pot iz
+točk skupne poti od projekcije člana do projekcije cilja (`PathTrack.between`, tudi nazaj),
+doda cilj in jo preda navigatorju z ponastavljeno časovno mejo (D-077). Pot ostane, dokler jo
+navigator ima in se cilj ne premakne za več kot `TRACK_REBUILD` = 1 blok; potem se sestavi
+znova, spet brez iskanja. Pravo iskanje ostane za: obtičanje (tudi v TRACK — `detectStuck`
+zdaj velja za STEER **in** TRACK), člana ali cilj dlje od 4 blokov od poti, enoto brez poti
+(`brez_poti`, ravna nadomestna črta ni prehodna pot) in replan. Nedokončan obvoz iz iskanja ima
+prednost (kot pri STEER). Nov števec `sledenj=` v `RWSQUAD` šteje sestavljene poti TRACK; v
+`iskanj` se ne šteje.
+
+**Razlog:** D-078 je pokazal, da ima 13 od 15 nedovoljenih iskanj G cilj na že poiskani skupni
+poti (06-FORMACIJE §1, M5.6). Meja 4 bloke: v sledi 984dc27a so bili vsi člani G ob teh
+iskanjih ≤ 3,4 bloka od poti (bočni odmik LEGIJE je 3 bloke), končna mesta ≤ 3,2 bloka od konca
+poti; ravni priključek ≤ 4 je krajši od STEER dosega (6), ki ga planer že šteje za ravno hojo.
+Varovalka obtičanja v TRACK nadomesti dosedanjo predpostavko, da iskanje vedno uspe; FA5 meja
+(1 + obnove + obtičanja) ostane ista. Formacije so nova koda brez originala, zato brez stikala
+(enako kot M4.14a). Merila, scena in config se ne spremenijo. Unit reprodukcije:
+`SquadPlannerTest` (+7) in `SquadAdapterTest` (+7).
+
+**Dopolnitev (seja 150, Q64):** navigator sled na ae8a889f… (popolna, 8.960) je FA5 G
+znižala 19 → 15, meja pa je 7 (`obtical=6`). Razčlenitev 14 iskanj po članu/ticku: 6 jih je
+ob obtičanjih (6@61; 0, 2, 5@151; 4, 6@181), **8 je ponovitev med kaznijo obtičanja**
+(`iskanj_premik`: 6@201, 4@202, 2@204, 0@205, 4/6@208, 2@209, 0@210) — `stuckUntil` je
+60 tickov silil PATH in vsak premik cilja nad 3 bloke je sprožil novo iskanje, čeprav so bili
+vsi ti člani in cilji ≤ 3,2 bloka od skupne poti. Popravek: obtičanje dovoli **eno** pravo
+iskanje — `Squad` po izdanem iskanju pokliče `SquadPlanner.searched(i)`, ki počisti
+`stuckUntil` (kazen `pathUntil` ostane). Član nato prehodi obvoz (ima prednost) in potem
+sledi skupni poti; dlje od 4 blokov od poti ostane PATH kot prej. Nova obtičanja se še vedno
+štejejo in vsako dovoli eno iskanje, kar je točno FA5 meja. Unit: `SquadPlannerTest` +2.

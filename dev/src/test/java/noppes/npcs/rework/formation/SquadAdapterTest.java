@@ -443,6 +443,132 @@ public class SquadAdapterTest {
         assertTrue("a stalled route must still time out", nav.noPath());
     }
 
+    /**
+     * M4.14d: TRACK as the planner publishes it. The member and target arcs are
+     * projections on the current shared path, exactly as SquadPlanner.alongTrack.
+     */
+    private void followTrack(double tx, double tz) {
+        planner.mode[0] = SquadPlanner.TRACK;
+        planner.targetX[0] = tx;
+        planner.targetZ[0] = tz;
+        PathTrack track = planner.track();
+        planner.trackFrom[0] = track.nearestS(npc.posX, npc.posZ);
+        planner.trackTo[0] = track.nearestS(tx, tz);
+    }
+
+    @Test
+    public void columnTargetOnSharedPathIsFollowedWithoutSearch() throws Exception {
+        // D-078, first column search (G/7@25): the column point lies on the
+        // shared path behind the member. 984dc27a called tryMoveToXYZ here.
+        planner.trailing[0] = true;
+        followTrack(-9.5, 65.661600);
+        adapterTick(25);
+        squad.drive(0);
+        assertEquals("following the shared path is not a search", 0, nav.requests);
+        Path path = nav.getPath();
+        assertEquals(71, path.getPathPointFromIndex(0).z);
+        assertEquals(65, path.getFinalPathPoint().z);
+        for (int k = 0; k < path.getCurrentPathLength(); k++) {
+            assertEquals("stay on the shared path", -10, path.getPathPointFromIndex(k).x);
+        }
+    }
+
+    @Test
+    public void trackFollowerPassesThroughTheSharedDoorPoint() throws Exception {
+        // The shared path bends to the door at x=-10, z=72; the follower's route
+        // must keep those vertices instead of a straight cut.
+        double[] xs = {-12.5, -11.5, -10.5, -9.5, -9.5, -9.5, -9.5, -9.5, -9.5, -9.5, -9.5, -9.5, -9.5};
+        double[] zs = {66.5, 67.5, 68.5, 69.5, 70.5, 71.5, 72.5, 73.5, 74.5, 75.5, 76.5, 77.5, 78.5};
+        double[] ys = new double[xs.length];
+        java.util.Arrays.fill(ys, 4);
+        field(SquadPlanner.class, "track").set(planner, new PathTrack(xs, ys, zs));
+        npc.posX = -12.4;
+        npc.posZ = 68.0;
+        planner.trailing[0] = true;
+        followTrack(-9.5, 76.5);
+        adapterTick(100);
+        squad.drive(0);
+        assertEquals(0, nav.requests);
+        Path path = nav.getPath();
+        boolean door = false;
+        for (int k = 0; k < path.getCurrentPathLength(); k++) {
+            door |= path.getPathPointFromIndex(k).equals(new PathPoint(-10, 4, 72));
+        }
+        assertTrue("the route must pass the door point of the shared path", door);
+        assertEquals(new PathPoint(-11, 4, 68), path.getPathPointFromIndex(1));
+        assertEquals(new PathPoint(-10, 4, 76), path.getFinalPathPoint());
+    }
+
+    @Test
+    public void movedColumnTargetRebuildsFromSharedPathWithoutSearch() throws Exception {
+        // D-078, column point moved > 3 blocks (G/1,4@200, 2@201, 0@202).
+        planner.trailing[0] = true;
+        followTrack(-9.5, 65.661600);
+        adapterTick(200);
+        squad.drive(0);
+        Path first = nav.getPath();
+        followTrack(-9.5, 65.661600 + 3.5);
+        adapterTick(201);
+        squad.drive(0);
+        assertEquals("a moved column point is still on the shared path", 0, nav.requests);
+        assertNotSame(first, nav.getPath());
+        assertEquals(69, nav.getPath().getFinalPathPoint().z);
+    }
+
+    @Test
+    public void slightlyMovedTrackTargetKeepsRouteAndProgress() throws Exception {
+        planner.trailing[0] = true;
+        followTrack(-9.5, 65.661600);
+        adapterTick(200);
+        squad.drive(0);
+        Path route = nav.getPath();
+        route.setCurrentPathIndex(1);
+        followTrack(-9.5, 65.661600 + 0.5);
+        adapterTick(201);
+        squad.drive(0);
+        assertSame(route, nav.getPath());
+        assertEquals(1, route.getCurrentPathIndex());
+        assertEquals(0, nav.requests);
+    }
+
+    @Test
+    public void trackKeepsUnfinishedRecoveryDetour() throws Exception {
+        Path route = beginRecovery(120, -9.5, 65.661600);
+        followTrack(-9.5, 65.661600);
+        adapterTick(121);
+        squad.drive(0);
+        assertSame("TRACK must not cut across a detour found after a stuck event", route, nav.getPath());
+        assertEquals(1, route.getCurrentPathIndex());
+        assertEquals(1, nav.requests);
+    }
+
+    @Test
+    public void settlingSlotBesidePathEndIsReachedFromSharedPath() throws Exception {
+        // D-078, transition to SETTLING (G/1-4@206, 0@207): the final slot is
+        // three blocks beside the end of the shared path, behind the door.
+        field(SquadPlanner.class, "phase").set(planner, SquadPlanner.Phase.SETTLING);
+        followTrack(-12.5, 77.5);
+        adapterTick(206);
+        squad.drive(0);
+        assertEquals(0, nav.requests);
+        Path path = nav.getPath();
+        int len = path.getCurrentPathLength();
+        assertEquals(new PathPoint(-10, 4, 77), path.getPathPointFromIndex(len - 2));
+        assertEquals(new PathPoint(-13, 4, 77), path.getFinalPathPoint());
+    }
+
+    @Test
+    public void pathlessSquadStillSearchesInsteadOfFollowingStraightFallback() throws Exception {
+        // Without a leader path the shared "path" is a straight fallback line,
+        // not a walkable route; TRACK then keeps the real search.
+        field(Squad.class, "pathless").setBoolean(squad, true);
+        followTrack(-9.5, 65.661600);
+        nav.searchResult = new Path(new PathPoint[] {new PathPoint(-10, 4, 70), new PathPoint(-10, 4, 65)});
+        adapterTick(31);
+        squad.drive(0);
+        assertEquals(1, nav.requests);
+    }
+
     private static Field field(Class<?> type, String name) throws Exception {
         Field field = type.getDeclaredField(name);
         field.setAccessible(true);

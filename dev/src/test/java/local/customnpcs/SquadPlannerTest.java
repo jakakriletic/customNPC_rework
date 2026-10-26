@@ -459,4 +459,152 @@ public class SquadPlannerTest {
         }
         assertEquals(Phase.DONE, p.phase());
     }
+
+    // M4.14d: clan ob skupni poti ji sledi (TRACK) namesto pravega iskanja (PATH).
+    // Skupine iz razclenitve D-078 (navigator sled 984dc27a, proga G).
+
+    private static SquadPlanner single(Slot slot, PathTrack track, double gx, double gz, boolean formFirst) {
+        return new SquadPlanner(new Slot[] {slot}, uniform(1, 0.606375), track, true,
+                gx, GROUND, gz, 0, new Terrain.Flat(GROUND), formFirst, true);
+    }
+
+    @Test
+    public void distantMemberBesideSharedPathFollowsItInsteadOfSearching() {
+        // Prvo iskanje kolone (G/7@25): napaka > STEER_MAX, clan 2,9 bloka od poti,
+        // cilj na poti. To ni obticanje in ne potrebuje novega A*.
+        PathTrack track = PathTrack.straight(0.5, GROUND, 0.5, 0.5, GROUND, 80.5);
+        SquadPlanner p = single(new Slot(0, 0), track, 0.5, 80.5, true);
+        p.update(new double[] {2.5}, new double[] {GROUND}, new double[] {8.5}, new boolean[] {true});
+        assertTrue("fixture: error beyond steering", p.error[0] > SquadPlanner.STEER_MAX);
+        assertEquals(SquadPlanner.TRACK, p.mode[0]);
+        assertEquals(8.0, p.trackFrom[0], 1.0E-9);
+        assertEquals(0.0, p.trackTo[0], 1.0E-9);
+    }
+
+    @Test
+    public void memberFarFromSharedPathStillSearches() {
+        PathTrack track = PathTrack.straight(0.5, GROUND, 0.5, 0.5, GROUND, 80.5);
+        SquadPlanner p = single(new Slot(0, 0), track, 0.5, 80.5, true);
+        p.update(new double[] {0.5 + SquadPlanner.TRACK_JOIN + 1}, new double[] {GROUND}, new double[] {8.5},
+                new boolean[] {true});
+        assertEquals(SquadPlanner.PATH, p.mode[0]);
+        assertTrue(Double.isNaN(p.trackFrom[0]));
+    }
+
+    @Test
+    public void settlingTransitionToFinalSlotBesidePathEndFollowsPath() {
+        // Prehod v SETTLING (G/1-4@206): cilj skoci s tocke kolone na koncno mesto
+        // tri bloke od konca skupne poti; clan stoji na poti.
+        PathTrack track = PathTrack.straight(0.5, GROUND, 0.5, 0.5, GROUND, 80.5);
+        SquadPlanner p = single(new Slot(3, 0), track, 0.5, 80.5, false);
+        assertEquals(Phase.SETTLING, p.phase());
+        p.update(new double[] {0.5}, new double[] {GROUND}, new double[] {60.5}, new boolean[] {true});
+        assertEquals(SquadPlanner.TRACK, p.mode[0]);
+        assertEquals(track.length(), p.trackTo[0], 1.0E-9);
+    }
+
+    @Test
+    public void finalSlotFarFromPathEndStillSearches() {
+        PathTrack track = PathTrack.straight(0.5, GROUND, 0.5, 0.5, GROUND, 80.5);
+        SquadPlanner p = single(new Slot(SquadPlanner.TRACK_JOIN + 2, 0), track, 0.5, 80.5, false);
+        p.update(new double[] {0.5}, new double[] {GROUND}, new double[] {60.5}, new boolean[] {true});
+        assertEquals(SquadPlanner.PATH, p.mode[0]);
+    }
+
+    /** Clan 0 zaostaja 4,5 bloka, a se premika: po WAIT_LIMIT je opravicen, ne obtical. */
+    private static Sim excusedLaggard() {
+        SquadPlanner p = new SquadPlanner(new Slot[] {new Slot(0, 0), new Slot(2, 0)},
+                uniform(2, 0.606375),
+                PathTrack.straight(0.5, GROUND, 0.5, 0.5, GROUND, 80.5), true,
+                0.5, GROUND, 80.5, 0, new Terrain.Flat(GROUND), true, true);
+        Sim sim = new Sim(p, new double[] {0.5, -1.5}, new double[] {0.5, 0.5}, uniform(2, 0.606375));
+        p.update(sim.x, sim.y, sim.z, sim.eligible);
+        assertEquals("fixture must begin marching", Phase.MARCHING, p.phase());
+        for (int t = 0; t < 4 * SquadPlanner.WAIT_LIMIT && !p.excused[0]; t++) {
+            sim.x[0] = p.targetX[0];
+            sim.z[0] = p.targetZ[0] - 4.5;
+            sim.x[1] = p.targetX[1];
+            sim.z[1] = p.targetZ[1];
+            p.update(sim.x, sim.y, sim.z, sim.eligible);
+        }
+        assertTrue("fixture must excuse the laggard", p.excused[0]);
+        assertEquals("fixture: a moving laggard is not stuck", 0, p.stuckEvents());
+        return sim;
+    }
+
+    @Test
+    public void excusedLaggardOnSharedPathFollowsItInsteadOfSearching() {
+        // Opravicilo (G/7@170, G/1@193): kazen pathUntil je prej pomenila A* k tocki
+        // kolone na ze poiskani poti.
+        Sim sim = excusedLaggard();
+        SquadPlanner p = sim.planner;
+        assertEquals(SquadPlanner.TRACK, p.mode[0]);
+        assertTrue("target is ahead along the path", p.trackTo[0] > p.trackFrom[0]);
+    }
+
+    @Test
+    public void stalledTrackFollowerIsStuckAndSearches() {
+        // Varovalka: sledenje skupni poti brez napredka je obticanje kot pri STEER;
+        // sele to sprozi pravo iskanje (dovoljeno po FA5).
+        Sim sim = excusedLaggard();
+        SquadPlanner p = sim.planner;
+        for (int t = 0; t < 2 * SquadPlanner.STUCK_WINDOW + 2 && p.stuckEvents() == 0; t++) {
+            sim.x[1] = p.targetX[1];
+            sim.z[1] = p.targetZ[1];
+            p.update(sim.x, sim.y, sim.z, sim.eligible);
+        }
+        assertEquals(1, p.stuckEvents());
+        assertEquals(SquadPlanner.PATH, p.mode[0]);
+    }
+
+    @Test
+    public void stuckEpisodeAllowsOneSearchThenFollowsSharedPath() {
+        // Navigator sled ae8a889f (G/6@201, 4@202, 2@204, 0@205, 4/6@208, 2@209, 0@210):
+        // med kaznijo obticanja je vsak premik cilja nad 3 bloke sprozil novo iskanje.
+        // Po enem iskanju epizode clan ob skupni poti ji sledi.
+        Sim sim = excusedLaggard();
+        SquadPlanner p = sim.planner;
+        for (int t = 0; t < 2 * SquadPlanner.STUCK_WINDOW + 2 && p.stuckEvents() == 0; t++) {
+            sim.x[1] = p.targetX[1];
+            sim.z[1] = p.targetZ[1];
+            p.update(sim.x, sim.y, sim.z, sim.eligible);
+        }
+        assertEquals(SquadPlanner.PATH, p.mode[0]);
+        p.searched(0);
+        sim.x[1] = p.targetX[1];
+        sim.z[1] = p.targetZ[1];
+        p.update(sim.x, sim.y, sim.z, sim.eligible);
+        assertEquals(1, p.stuckEvents());
+        assertEquals(SquadPlanner.TRACK, p.mode[0]);
+    }
+
+    @Test
+    public void stuckMemberFarFromSharedPathKeepsSearchingAfterOneSearch() {
+        SquadPlanner p = single(new Slot(0, 0), PathTrack.straight(0.5, GROUND, 0.5, 0.5, GROUND, 80.5),
+                0.5, 80.5, true);
+        double[] x = {0.5 + SquadPlanner.TRACK_JOIN + 1};
+        p.update(x, new double[] {GROUND}, new double[] {8.5}, new boolean[] {true});
+        assertEquals(SquadPlanner.PATH, p.mode[0]);
+        p.searched(0);
+        p.update(x, new double[] {GROUND}, new double[] {8.5}, new boolean[] {true});
+        assertEquals(SquadPlanner.PATH, p.mode[0]);
+    }
+
+    @Test
+    public void trackSegmentRunsForwardAndBackwardThroughVertices() {
+        PathTrack track = new PathTrack(new double[] {0.5, 0.5, 4.5}, new double[] {GROUND, GROUND, GROUND},
+                new double[] {0.5, 10.5, 10.5});
+        assertEquals(5.0, track.nearestS(2.0, 5.5), 1.0E-9);
+        assertEquals(12.0, track.nearestS(2.5, 13.0), 1.0E-9);
+        assertEquals(1.5, track.distance(2.0, 5.5), 1.0E-9);
+        PathTrack forward = track.between(5.0, 12.0);
+        assertEquals(3, forward.size());
+        assertEquals(10.5, forward.pointZ(1), 1.0E-9);
+        assertEquals(2.5, forward.pointX(2), 1.0E-9);
+        PathTrack back = track.between(12.0, 5.0);
+        assertEquals(3, back.size());
+        assertEquals(2.5, back.pointX(0), 1.0E-9);
+        assertEquals(0.5, back.pointX(1), 1.0E-9);
+        assertEquals(5.5, back.pointZ(2), 1.0E-9);
+    }
 }
