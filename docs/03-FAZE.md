@@ -30,7 +30,7 @@ za milestone, ki že teče (M5), M5.0 velja pred naslednjim paketom.
 | ~~**M8**~~ | ~~Migracija funkcij iz CustomNPC+~~ — **izločeno iz plana** (D-023) | R3 | — |
 | **M9** | Chatbot | R8 | M |
 | **M10** | Release kandidat | — | M |
-| **M11** | Poveljevanje skupinam prek zemljevida — **zadnja faza**, ko je vse ostalo večinoma narejeno (D-026) | R10 | L |
+| **M11** | Vojske in poveljevanje prek zemljevida (Xaero) in poveljniške palice — **zadnja faza**, ko je vse ostalo večinoma narejeno (D-026) | R10 | L |
 | **M12** | Nalaganje skinov prek URL-ja: omejen prenos, timeouti, diskovni predpomnilnik, omejitev velikosti — na koncu, za M11 (zahteva uporabnika 26. 10.) | R5 | M |
 
 ---
@@ -569,34 +569,45 @@ uspešna rollback vaja.
 
 ---
 
-## M11 — Poveljevanje skupinam prek zemljevida
+## M11 — Vojske in poveljevanje prek zemljevida
 
-**Cilj:** skupina NPC-jev (npr. 200 istoimenskih) je na zemljevidu ena oznaka; igralec jo izbere,
-klikne cilj in skupina gre tja v formaciji. Zahteva R10.
+**Cilj:** NPC-ji z isto vojsko (`RwArmy`, nastavljeno v GUI NPC-ja ali s poveljniško palico) se
+na zemljevidu pokažejo kot ena oznaka s številom; igralec jo izbere, klikne cilj in vojska gre
+tja skupaj — v formaciji, pohodu ali roju, pasivno ali z napadom. Isto prek palice: vojske v
+okolici s ciljem iz pogleda (žarek) in seznam vseh vojsk. Zahteva R10, dopolnjena 26. 10.
+**Raziskava M11.0 (26. 10.):** [zapis](raziskave/M11.0-vojske-prek-zemljevida.md) — ime vojske
+z lastnikom namesto gole številke, grozd z nastavljivim pragom, vojska iz čet (obstoječi `Squad`),
+zemljevid prek obstoječega `xaerofleetcommand` iz `ladja_mod` (predlog odgovora na Q14).
 
-**Vhodni pogoj:** M4.14b in M4.10 zaključena; M5 dovolj, da 200+ NPC-jev v pohodu ne preseže
-proračuna ticka; odgovor na Q14 (kateri zemljevid). Po odločitvi uporabnika (D-026) se faza
-začne šele, ko je vse ostalo večinoma narejeno.
+**Vhodni pogoj:** M4.14d, M4.14c (cena 50/200 članov) in M4.10 zaključeni; M5 dovolj, da 200+
+NPC-jev v pohodu ne preseže proračuna ticka. Po odločitvi uporabnika (D-026) se faza začne šele,
+ko je vse ostalo večinoma narejeno.
 
 ### Paketi
 
 | ID | Paket | Vel. |
 |---|---|---|
-| M11.1 | Določitev skupine: po imenu ali oznaki (`RwSquadId` NBT, privzeto brez); povezava z `Squad` iz M4.14a | S |
-| M11.2 | Strežnik → klient: periodičen povzetek skupine (ime, središče, število, stanje) prek **ločenega kanala** `rework` | S |
-| M11.3 | Adapter zemljevida (glej Q14): ena ikona na skupino, izbira | S–M |
-| M11.4 | Klient → strežnik: ukaz »pohod na (x, z)«; preverba pravic (lastnik / op) | S |
-| M11.5 | Dolg pohod: razrez poti sidra na vmesne točke (gradi na M4.10). Če meritev pokaže slabe poti vodje tudi po M4.10, oceni vodjo na Baritonu ([07 §4](07-BARITONE-OZADJE.md), ocena 26. 10.) | M |
-| M11.6 | Odločitev in izvedba za neaktivne chunke: potujoč chunk ticket ali abstraktni pohod (nova odločitev D-0NN, ker se dotika »uspavanja oddaljenih NPC-jev«) | M–L |
-| M11.7 | Robni primeri: voda, prepadi, grla, obtičali člani, obnašanje na cilju | M |
-| M11.8 | Meritev: pohod 200 NPC-jev proti baselinu M2.6 (MSPT, alokacija) | S |
+| ~~M11.0~~ | Raziskava izvedbe — **narejeno 26. 10.** ([zapis](raziskave/M11.0-vojske-prek-zemljevida.md)); ob začetku M11 se preveri proti tedanjemu stanju M4 | S |
+| M11.1 | Register vojsk (`WorldSavedData`: ime, lastnik igralec/frakcija, barva, privzeta oblika in drža, zadnja znana lega) in NBT `RwArmy` na NPC-ju (privzeto brez = original); ukaz `/rwarmy`, skriptni API | S–M |
+| M11.2 | Grozdi in posnetek: NPC-ji iste vojske po razdalji (radij, prag v configu), glavni grozd + zaostali; povzetek strežnik → klient prek ločenega kanala `rework`, osvežitev samo ob odprtem zemljevidu/GUI | S |
+| M11.3 | Vojska iz čet: razrez na čete (privzeto do 16–24 članov), ena pot vojske, makro formacija čet, vsaka četa obstoječi `Squad`; zaostali dobijo »pridruži se« | M |
+| M11.4 | Načini in drža: formacija / pohod / **roj** (brez mest, ohlapen odmik) in **pasivno / napad** (boj med pohodom, vrnitev v četo) | M |
+| M11.5 | Dolg pohod: razrez poti vojske na vmesne točke (gradi na M4.10). Če meritev pokaže slabe poti vodje tudi po M4.10, oceni vodjo na Baritonu ([07 §4](07-BARITONE-OZADJE.md), ocena 26. 10.) | M |
+| M11.6 | Nenaloženi chunki: najprej chunk ticket, ki potuje z vojsko, z omejitvijo hkratnih pohodov v configu; abstraktni pohod samo, če meritev ticketa pokaže nesprejemljivo ceno (nova odločitev D-0NN) | M–L |
+| M11.7 | Zemljevid: most CNPC → `xaerofleetcommand` (`ladja_mod`; odsev, fail-closed, kot `DavincisFleetBridge`), marker prapora s številom, izbira načina/drže ob ukazu, preverba pravic (lastnik / op), omejitev paketov. Ladje in vojske v istem vmesniku | M |
+| M11.8 | GUI: polje vojske v nastavitvah NPC-ja; **poveljniška palica** — desni klik na NPC (pokaži/nastavi), množična dodelitev v svetu, zavihka *V okolici* (cilj z žarkom iz pogleda, doseg naloženih blokov) in *Vse vojske* (lega, število, stanje, ustavi/vrni) | M |
+| M11.9 | Robni primeri: voda, prepadi, grla, obtičali člani, obnašanje na cilju, smrt/odhod članov, ponovno nalaganje sveta med pohodom | M |
+| M11.10 | Meritev: pohod 200 NPC-jev (vojska iz čet) proti baselinu M2.6 (MSPT, alokacija), cena ticketov M11.6; preverba v klientu z igralcem (zemljevid, palica, GUI) | S–M |
 
-**Izhodni kriterij:** 200 NPC-jev doseže cilj, izbran na zemljevidu, na prizorišču z grlom in na
-razdalji čez `NpcNavRange`; brez stikala je obnašanje enako originalu; MSPT p95 med pohodom
-izmerjen in v dogovorjenem pasu.
+**Izhodni kriterij:** 200 NPC-jev ene vojske doseže cilj, izbran na zemljevidu in s palico, na
+prizorišču z grlom in na razdalji čez `NpcNavRange`, tudi čez nenaložene chunke; ukaz preživi
+shranjevanje; brez `RwArmy` je obnašanje enako originalu; MSPT p95 med pohodom izmerjen in v
+dogovorjenem pasu.
 
-**Tveganja:** neaktivni chunki (M11.6) so največja neznanka; abstraktni pohod potrebuje varno
-shranjevanje stanja ob izklopu strežnika.
+**Tveganja:** nenaloženi chunki (M11.6) so največja neznanka; kohezija formacij še ne izpolni FA
+(D-079), zato vojska iz čet ostane v preverjeni velikosti enote; Xaero adapter je vezan na verzijo
+1.37.8 in ali je Xaero v uporabnikovem modpacku, je neznano (Q1); GUI in zemljevid se dokončno
+preverita samo ročno v klientu.
 
 ---
 

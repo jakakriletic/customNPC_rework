@@ -1002,6 +1002,12 @@ ubežnih narekovajev v ključu.
 > Uporabnik 2026-10-06 (povzeto): vojska npr. 200 istoimenskih NPC-jev (ali NPC-jev z isto
 > oznako) se na zemljevidu prikaže kot **ena oznaka**; kot pri ladjah jo izbereš, klikneš
 > točko na zemljevidu in NPC-ji začnejo pohod tja.
+>
+> **Dopolnitev 26. 10. 2026 (uporabnik):** vsak NPC ima v GUI polje *army ID*; dovolj NPC-jev
+> iste vojske v nekem radiu je na zemljevidu ena točka; kot kapitane DaVinci's Vessels jih vodiš
+> s klikom na zemljevid, z izbiro formacije, roja ipd. Dodatno orodje z GUI: vojske v okolici
+> (izbor in cilj z žarkom iz pogleda) in seznam vseh vojsk v svetu. Raziskava in popravljena
+> zasnova: [M11.0](raziskave/M11.0-vojske-prek-zemljevida.md).
 
 **Faza:** M11 (zadnja faza, po M10 — na izrecno željo uporabnika, D-026) · **Velikost:** L ·
 **Tveganje:** srednje · **Prioriteta:** nizka do zaključka ostalih faz
