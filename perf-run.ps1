@@ -141,6 +141,16 @@
 # mesanica nacinov.
 #     .\perf-run.ps1 -Variants idle -Counts 500 -RwTarget 2 -RwBlinkAB 0,1 -RwBlinkCas
 #
+# Varianti 'leteci' in 'leteci-boj' (M4.16b, 26. 10., D-081): cena letenja. 'leteci' je N letecih
+# NPC-jev PERF_Leteci (MovementType 1, tava v WalkingRange 16 = patrulja, frakcija 0), postavljenih
+# kot 'idle'; 'leteci-boj' je N/2 PERF_LetA (frakcija 1) in N/2 PERF_LetB (frakcija 2), postavljenih
+# kot 'boj'. Fixture so iste spremembe predloge T_Flyer kot PERF_Idle/PERF_BojA/B predloge T_Stand
+# (perf-fixture.py). Merila: L1 (vsi NPC-ji celice letijo, letecih = N), L2 (patrulja je tekla:
+# brez cilja in ranjenih, vsaj N/4 vec kot 1 blok od doma ob koncu), pri 'leteci-boj' P5 kot pri
+# 'boj'. Celica dobi let.letecih, let.vZraku in let.odDoma (stanje ob koncnem izpisu krmilnika).
+#     .\perf-run.ps1 -Variants leteci,leteci-boj -Counts 200
+#     .\ponovitve-run.ps1 -Scenarij perf -Dodatno @('-Variants','leteci,leteci-boj','-Counts','200')
+#
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
 # pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
 # (merilo P9), in ob sesutju serverja takoj konca z vzrokom iz loga.
@@ -170,7 +180,9 @@ $gridZ     = -12     # severni rob mreze
 $gridW     = 25      # NPC-jev v vrsti (os x); N mora biti veckratnik 2*gridW = 50
 $bojGap    = 4       # prazne vrste med skupinama A in B (AggroRange 16 jih pokrije)
 $kontrolaAt = '60,4,30'
-$znaneVariante = @('idle', 'boj', 'skripte', 'nedosegljiva')
+$znaneVariante = @('idle', 'boj', 'skripte', 'nedosegljiva', 'leteci', 'leteci-boj')
+# Varianti z dvema sovraznima skupinama (A od $gridZ, B za $bojGap praznimi vrstami).
+$dvoSkupinske = @('boj', 'nedosegljiva', 'leteci-boj')
 # -Razprseno: skupina po 5 NPC-jev na ukaz, ukazi ~7 tickov narazen. 7 je tuje 10, zato
 # zaporedni ukazi padejo v vse faze 'ticksExisted % 10' (EntityNPCInterface.java:358).
 $razKos   = 5
@@ -470,13 +482,17 @@ function Get-Prop([string]$File, [string]$Key) {
 # Zadnji izpis PERF-KONTROLA -> psobject; $null, ce ga ni.
 function Read-Kontrola([string]$LogPath) {
     $m = [regex]::Matches((Get-MarkerText $LogPath),
-        'PERF-KONTROLA idle=(\d+) bojA=(\d+) bojB=(\d+) skripte=(\d+) drugi=(\d+) cilj=(\d+) ranjenih=(\d+) skriptTickov=(\d+)')
+        'PERF-KONTROLA idle=(\d+) bojA=(\d+) bojB=(\d+) skripte=(\d+) drugi=(\d+) cilj=(\d+) ranjenih=(\d+) skriptTickov=(\d+)(?: leteci=(\d+) letA=(\d+) letB=(\d+) letecih=(\d+) vZraku=(\d+) odDoma=(\d+))?')
     if ($m.Count -eq 0) { return $null }
     $g = $m[$m.Count - 1].Groups
+    # M4.16b: polja letecih so na koncu izpisa; krmilnik pred M4.16b jih ne izpise (-1).
+    $lv = { param($i) if ($g[$i].Success) { [int]$g[$i].Value } else { -1 } }
     return [pscustomobject]@{
         Idle = [int]$g[1].Value; BojA = [int]$g[2].Value; BojB = [int]$g[3].Value
         Skripte = [int]$g[4].Value; Drugi = [int]$g[5].Value; Cilj = [int]$g[6].Value
         Ranjenih = [int]$g[7].Value; SkriptTickov = [long]$g[8].Value
+        Leteci = (& $lv 9); LetA = (& $lv 10); LetB = (& $lv 11)
+        Letecih = (& $lv 12); VZraku = (& $lv 13); OdDoma = (& $lv 14)
     }
 }
 
@@ -592,16 +608,18 @@ function Get-SpawnCommands([string]$Variant, [int]$N) {
     # M5.8: pas ciscenja mora pokriti **cel** obseg celice, ne fiksnih 32 vrst (pri N > 900 bi
     # ostanek ograje prejsnje celice 'nedosegljiva' ostal pod NPC-ji in tiho spremenil prizorisce).
     $cRows = [int]($N / $gridW)
-    $cGlobina = if ($Variant -eq 'boj' -or $Variant -eq 'nedosegljiva') { [int](($N / 2) / $gridW) * 2 + $bojGap + 6 } else { $cRows + 4 }
+    $cGlobina = if ($dvoSkupinske -contains $Variant) { [int](($N / 2) / $gridW) * 2 + $bojGap + 6 } else { $cRows + 4 }
     $cmds += ('fill {0} 4 {1} {2} 4 {3} minecraft:air' -f ($gridX - 4), ($gridZ - 4), ($gridX + $gridW + 3), ($gridZ + $cGlobina))
-    if ($Variant -eq 'boj' -or $Variant -eq 'nedosegljiva') {
+    if ($dvoSkupinske -contains $Variant) {
         $rows = [int](($N / 2) / $gridW)
         $zB = $gridZ + $rows + $bojGap
         if ($Variant -eq 'nedosegljiva') { $cmds += Get-FenceCommands $rows $zB 'minecraft:fence' }
-        $cmds += Get-GroupCommands 'PERF_BojA' ($N / 2) $gridZ
-        $cmds += Get-GroupCommands 'PERF_BojB' ($N / 2) $zB
+        $imeA = if ($Variant -eq 'leteci-boj') { 'PERF_LetA' } else { 'PERF_BojA' }
+        $imeB = if ($Variant -eq 'leteci-boj') { 'PERF_LetB' } else { 'PERF_BojB' }
+        $cmds += Get-GroupCommands $imeA ($N / 2) $gridZ
+        $cmds += Get-GroupCommands $imeB ($N / 2) $zB
     } else {
-        $ime = if ($Variant -eq 'idle') { 'PERF_Idle' } else { 'PERF_Skripte' }
+        $ime = switch ($Variant) { 'idle' { 'PERF_Idle' } 'leteci' { 'PERF_Leteci' } default { 'PERF_Skripte' } }
         $cmds += Get-GroupCommands $ime $N $gridZ
     }
     return $cmds
@@ -732,7 +750,8 @@ try {
         Copy-Item $f.FullName -Destination $dstClones -Force
         $copied++
     }
-    Check ("pet PERF fixture datotek je v svetu (kopiranih {0})" -f $copied) ($copied -eq 5)
+    # M4.16b: +3 letece fixture (PERF_Leteci, PERF_LetA, PERF_LetB).
+    Check ("osem PERF fixture datotek je v svetu (kopiranih {0})" -f $copied) ($copied -eq 8)
     if ($failures.Count -gt 0) { throw "Fixture manjkajo v $srcClones. Pozeni 'python3 dev/testworld/perf-fixture.py'." }
 
     Step 2 'Zagon A: pribij world spawn na 0 4 0'
@@ -916,15 +935,21 @@ try {
         Check 'P1: PERF_Kontrola se je oglasil (zacetek)' $okK
         if (-not $okK) { throw 'PERF_Kontrola se ni oglasil; brez tega ni dokaza, kaj je v svetu.' }
         $k0 = Read-Kontrola $srv.Log
-        $want = @{ Idle = 0; BojA = 0; BojB = 0; Skripte = 0 }
+        $want = @{ Idle = 0; BojA = 0; BojB = 0; Skripte = 0; Leteci = 0; LetA = 0; LetB = 0 }
         if ($v -eq 'idle')    { $want.Idle = $N }
         if ($v -eq 'skripte') { $want.Skripte = $N }
+        if ($v -eq 'leteci')  { $want.Leteci = $N }
         if ($v -eq 'boj' -or $v -eq 'nedosegljiva') { $want.BojA = $N / 2; $want.BojB = $N / 2 }
+        if ($v -eq 'leteci-boj') { $want.LetA = $N / 2; $want.LetB = $N / 2 }
         $spawnOk = ($k0.Idle -eq $want.Idle) -and ($k0.BojA -eq $want.BojA) -and ($k0.BojB -eq $want.BojB) -and `
-                   ($k0.Skripte -eq $want.Skripte) -and ($k0.Drugi -eq 0)
-        Check ("P1: v svetu je natanko obremenitev celice (idle={0} bojA={1} bojB={2} skripte={3} drugi={4})" -f `
-            $k0.Idle, $k0.BojA, $k0.BojB, $k0.Skripte, $k0.Drugi) $spawnOk
-        if ($v -eq 'boj' -or $v -eq 'nedosegljiva') { Check 'P1: frakciji 1 in 2 sta sovrazni druga drugi' (Read-Frakcije $srv.Log) }
+                   ($k0.Skripte -eq $want.Skripte) -and ($k0.Drugi -eq 0) -and `
+                   ($k0.Leteci -eq $want.Leteci) -and ($k0.LetA -eq $want.LetA) -and ($k0.LetB -eq $want.LetB)
+        Check ("P1: v svetu je natanko obremenitev celice (idle={0} bojA={1} bojB={2} skripte={3} leteci={4} letA={5} letB={6} drugi={7})" -f `
+            $k0.Idle, $k0.BojA, $k0.BojB, $k0.Skripte, $k0.Leteci, $k0.LetA, $k0.LetB, $k0.Drugi) $spawnOk
+        if ($dvoSkupinske -contains $v) { Check 'P1: frakciji 1 in 2 sta sovrazni druga drugi' (Read-Frakcije $srv.Log) }
+        # M4.16b / L1: nacin gibanja vseh NPC-jev celice (letece fixture niso tiho kopenske in obratno).
+        $wantLet = if ($v -eq 'leteci' -or $v -eq 'leteci-boj') { $N } else { 0 }
+        Check ("L1: letecih NPC-jev v celici {0} (pricakovano {1})" -f $k0.Letecih, $wantLet) ($k0.Letecih -eq $wantLet)
         # Krmilnik se odstrani sam; pocakamo, da ga ni vec, preden se zacne ogrevanje.
         Start-Sleep -Seconds 2
 
@@ -1199,6 +1224,23 @@ try {
                 Check ("P5: boj je tekel (s ciljem {0} od {1}, ranjenih {2})" -f $k1.Cilj, $N, $k1.Ranjenih) (($k1.Cilj -ge ($N / 2)) -and ($k1.Ranjenih -gt 0))
                 $vel['boj.sCiljem'] = $k1.Cilj
                 $vel['boj.ranjenih'] = $k1.Ranjenih
+            }
+            if ($v -eq 'leteci-boj') {
+                Check ("P5: leteci boj je tekel (s ciljem {0} od {1}, ranjenih {2})" -f $k1.Cilj, $N, $k1.Ranjenih) (($k1.Cilj -ge ($N / 2)) -and ($k1.Ranjenih -gt 0))
+                $vel['boj.sCiljem'] = $k1.Cilj
+                $vel['boj.ranjenih'] = $k1.Ranjenih
+            }
+            if ($v -eq 'leteci') {
+                # L2: patrulja brez boja, in NPC-ji se res premikajo (ne mirujejo na mestu spawna).
+                $minOdDoma = [int]($N / 4)
+                Check ("L2: patrulja je tekla brez boja (cilj={0}, ranjenih={1}, odDoma={2}, pricakovano vsaj {3})" -f $k1.Cilj, $k1.Ranjenih, $k1.OdDoma, $minOdDoma) `
+                    (($k1.Cilj -eq 0) -and ($k1.Ranjenih -eq 0) -and ($k1.OdDoma -ge $minOdDoma))
+            }
+            if ($v -eq 'leteci' -or $v -eq 'leteci-boj') {
+                Check ("L1: ob koncu letijo vsi NPC-ji celice (letecih={0}, pricakovano {1})" -f $k1.Letecih, $N) ($k1.Letecih -eq $N)
+                $vel['let.letecih'] = $k1.Letecih
+                $vel['let.vZraku'] = $k1.VZraku
+                $vel['let.odDoma'] = $k1.OdDoma
             }
             if ($v -eq 'nedosegljiva') {
                 # U1: tarca je vidna (NPC-ji jo imajo za cilj). U2: ni dosegljiva (nihce ni ranjen).

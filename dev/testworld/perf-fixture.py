@@ -6,13 +6,17 @@ predloge razlikuje v nekaj poljih. Rocna kopija bi tiho zanesla razliko, ki je n
 opazi, meritev pa bi merila drug NPC, kot pise v scenariju. Tu je vsaka razlika od predloge
 zapisana, vsaka zamenjava pa mora zadeti natanko enkrat - sicer generator pade.
 
-Predloge (nespremenjene): T_Stand (mirujoc, brez skripte) in T_Scripted (skriptiran).
+Predloge (nespremenjene): T_Stand (mirujoc, brez skripte), T_Scripted (skriptiran) in
+T_Flyer (leteci, MovementType 1, tava v WalkingRange 16, MovingState 1).
 
     PERF_Idle      T_Stand     mirujoc, frakcija 0                         obremenitev idle
     PERF_BojA      T_Stand     frakcija 1, napada druge frakcije, 100000 HP  obremenitev boj
     PERF_BojB      T_Stand     frakcija 2, napada druge frakcije, 100000 HP  obremenitev boj
     PERF_Skripte   T_Scripted  skripta perf-skripte.js                     obremenitev skripte
     PERF_Kontrola  T_Scripted  skripta perf-kontrola.js                    krmilnik, ni merjen
+    PERF_Leteci    T_Flyer     leteci, tava (patrulja), frakcija 0         M4.16b leteci
+    PERF_LetA      T_Flyer     leteci, kot PERF_BojA (frakcija 1)          M4.16b leteci-boj
+    PERF_LetB      T_Flyer     leteci, kot PERF_BojB (frakcija 2)          M4.16b leteci-boj
 
 Zakaj 100000 HP, udarec 1 in Invulnerable 0b: boj mora trajati ves cas meritve in mora
 deliti skodo. Ce bi NPC-ji umirali, bi se
@@ -58,6 +62,12 @@ NPCJI = [
      BOJ + [('"FactionID": 0,', '"FactionID": 2,')], None),
     ('PERF_Skripte', 'T_Scripted', 'M2.4 obremenitev: skripte', [], 'perf-skripte.js'),
     ('PERF_Kontrola', 'T_Scripted', 'M2.4 krmilnik (ni merjen)', [], 'perf-kontrola.js'),
+    # M4.16b (26. 10.): cena letenja. Iste spremembe kot boj, predloga je leteci T_Flyer.
+    ('PERF_Leteci', 'T_Flyer', 'M4.16b obremenitev: leteci, patrulja', [], None),
+    ('PERF_LetA', 'T_Flyer', 'M4.16b obremenitev: leteci boj, frakcija 1',
+     BOJ + [('"FactionID": 0,', '"FactionID": 1,')], None),
+    ('PERF_LetB', 'T_Flyer', 'M4.16b obremenitev: leteci boj, frakcija 2',
+     BOJ + [('"FactionID": 0,', '"FactionID": 2,')], None),
 ]
 
 SKRIPTA = re.compile(r'("Script": ")(.*?)(",\n)', re.S)

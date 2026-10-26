@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 149 → 1)
+# Arhiv: dnevnik sej (vnosi 150 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,20 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-26 (150) — M4.14d poskus 1 (TRACK) izmerjen in zavrnjen
+
+**Paket:** M4.14d (D-080, Q63–Q65) · **Stanje:** **odprt, odložen; poskus 1 ni sprejet**.
+[Dokazi](../meritve/2026-10-26-M4.14d-sledenje-poti.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Način TRACK (člana ob skupni poti vodi pot iz njenih točk, eno iskanje na obtičanje). Na
+61bf7d8f… unit/build/package/navigator-harness-v3 zeleni; navigator-trace-v3 (8.960) in ab-v1
+padeta samo na FA1/2 in FA4 (G 6,932 / 10,609, O 6,428), FA5 G formalno uspe (11 ≤ 11,
+12 ≤ 15). A meja raste z obtičanji, ki jih TRACK povzroči: G 3–6 → 10–14, G DONE 233–246 →
+318/348 tickov; obtičanja so ob zidu bočno od vrat (gneča na sredinski črti, hipoteza). Q65:
+ni sprejet; koda v `884175d`, produkcija in testi povrnjeni na `cbad3c3` (= 984dc27a…),
+števci nespremenjeni (422 @Test v 69 datotekah). Nov poskus mora ohraniti G DONE ≤ 246 in
+obtičanja ≤ 6. Naslednji M4.16. Pragovi, scena in config isti.
 
 ### 2026-10-26 (149) — M4.14b zaključen kot preverba, ne izboljšava
 

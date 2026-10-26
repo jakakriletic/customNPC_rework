@@ -11,6 +11,10 @@
 // 2 Presteje NPC-je po imenu in izpise PERF-KONTROLA. Stevec perfSkript v tempdata sveta
 //   povecuje vsak PERF_Skripte ob svojem ticku; razlika med zacetnim in koncnim izpisom
 //   dokaze, da so skripte tekle ves cas meritve.
+// 3 M4.16b (26. 10.): leteci NPC-ji celic 'leteci' in 'leteci-boj' se stejejo posebej
+//   (leteci, letA, letB). Za vse NPC-je se presteje se: letecih (nacin gibanja 1 =
+//   letenje), vZraku (vec kot pol bloka nad mestom spawna) in odDoma (vodoravno vec kot
+//   1 blok od doma). Polja so na koncu izpisa, zato starejsi bralci izpisa ostanejo veljavni.
 
 var FRAKCIJA_A = 1;
 var FRAKCIJA_B = 2;
@@ -40,6 +44,12 @@ function tick(e) {
     var drugi = 0;
     var cilj = 0;
     var ranjenih = 0;
+    var leteci = 0;
+    var letA = 0;
+    var letB = 0;
+    var letecih = 0;
+    var vZraku = 0;
+    var odDoma = 0;
     var jaz = e.npc.getUUID();
     var vsi = e.npc.getWorld().getAllEntities(2);
     for (var i = 0; i < vsi.length; i++) {
@@ -56,6 +66,12 @@ function tick(e) {
             bojB++;
         } else if (ime == 'PERF_Skripte') {
             skripte++;
+        } else if (ime == 'PERF_Leteci') {
+            leteci++;
+        } else if (ime == 'PERF_LetA') {
+            letA++;
+        } else if (ime == 'PERF_LetB') {
+            letB++;
         } else {
             drugi++;
         }
@@ -65,6 +81,17 @@ function tick(e) {
         if (n.getHealth() < n.getMaxHealth()) {
             ranjenih++;
         }
+        if (n.getAi().getNavigationType() == 1) {
+            letecih++;
+        }
+        if (n.getY() > n.getHomeY() + 1.5) {
+            vZraku++;
+        }
+        var dx = n.getX() - (n.getHomeX() + 0.5);
+        var dz = n.getZ() - (n.getHomeZ() + 0.5);
+        if (dx * dx + dz * dz > 1) {
+            odDoma++;
+        }
     }
     var w = e.npc.getWorld().getTempdata();
     var skriptTickov = w.has('perfSkript') ? w.get('perfSkript') : 0;
@@ -72,6 +99,7 @@ function tick(e) {
     e.npc.executeCommand('/say PERF-FRAKCIJE a>b=' + fa.hasHostile(FRAKCIJA_B) + ' b>a=' + fb.hasHostile(FRAKCIJA_A));
     e.npc.executeCommand('/say PERF-KONTROLA idle=' + idle + ' bojA=' + bojA + ' bojB=' + bojB
         + ' skripte=' + skripte + ' drugi=' + drugi + ' cilj=' + cilj + ' ranjenih=' + ranjenih
-        + ' skriptTickov=' + Math.round(skriptTickov));
+        + ' skriptTickov=' + Math.round(skriptTickov) + ' leteci=' + leteci + ' letA=' + letA
+        + ' letB=' + letB + ' letecih=' + letecih + ' vZraku=' + vZraku + ' odDoma=' + odDoma);
     e.npc.despawn();
 }

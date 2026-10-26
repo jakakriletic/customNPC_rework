@@ -644,3 +644,35 @@ načina merjenja. Vrstni red D-038 se ne spremeni: M4.16b je pred prvim posegom 
 bloka, hitrost iz `navigateTo` ne velja (0,97). Pragovi izhodnega kriterija M4 ostanejo: 6/6 je
 pri ničelnem razponu strogo merilo, drsenje ≤ 0,25 ostane **[H]** do meritve Hover (M4.3).
 [Dokazi](meritve/2026-10-26-M4.16-letenje.md).
+
+### D-082 — M4.16b: celica `leteci-200` kot dve varianti `perf-run.ps1` (2026-10-26, Q69, Q70)
+
+**Vprašanji:** (Q69) »patrulja in boj« v eni celici ali v dveh? (Q70) kako dokazati, da je
+patrulja res tekla (brez tega bi celica merila mirujoče leteče NPC-je)?
+
+**Odločitev:** dve varianti scenarija M2.4, isti protokol (ogrevanje 120 s, merjenje 300 s, merila
+P1–P9): **`leteci`** (N × `PERF_Leteci`, tava v `WalkingRange 16`, frakcija 0, postavitev kot
+`idle`) in **`leteci-boj`** (N/2 `PERF_LetA` + N/2 `PERF_LetB`, frakciji 1↔2, 100.000 HP,
+postavitev kot `boj`). Fixture so iste zamenjave predloge `T_Flyer` kot obstoječe
+`PERF_Idle`/`PERF_BojA/B` predloge `T_Stand` (`perf-fixture.py`), torej se od kopenskih razlikujejo
+samo v `MovementType 1`, `MovingState 1` (tavanje) in `WalkingRange 16`. Krmilnik `PERF_Kontrola`
+na koncu izpisa doda `leteci/letA/letB`, `letecih` (način gibanja 1), `vZraku` in `odDoma`.
+Novi merili: **L1** letecih = N v letečih celicah (0 v ostalih), **L2** pri `leteci` brez cilja in
+ranjenih ter ob koncu `odDoma ≥ N/4`. Vsaka varianta ima svoj test ID (`ponovitve-run.ps1` dovoli
+eno celico na ponovitev): `m416b-leteci-v1`, `m416b-letboj-v1`, tri ponovitve originala.
+
+**Razlog:** mešana celica (patrulja, ki preide v boj) bi imela fazo prehoda znotraj merilnega okna
+in vrednost, ki ni ne ena ne druga obremenitev. Ločeni celici sta primerljivi z obstoječima
+kopenskima `idle-200`/`boj-200` (ista mreža, isti HP, isti udarec), M4.17 pa doda ceno ravno na
+sledenje poti (patrulja) in lovljenje tarče (boj). N/4 je spodnja meja, ki jo tavanje z dosegom
+16 in premori med premiki brez težav preseže, mirujoča ali obtičala celica pa ne. Ostali kopenski
+izpisi ostanejo veljavni (nova polja so na koncu, bralec jih sprejme kot neobvezna).
+
+**Izid (2026-10-26, seja 152, Q71):** na `34b3574d…` sta `m416b-leteci-v1` in `m416b-letboj-v1`
+zelena (T1–T6, v vsakem zagonu P1–P9 in L1, L2 oz. P5). `leteci-200`: MSPT p50 1,475
+(1,475–1,606), p95 8,651 (8,651–9,175), p99 10,224, `npc.us` 17,16 (16,82–18,06), 65 MB/s,
+`odDoma` 197–200. `leteci-boj-200`: p50 1,507, p95 2,228 (2,228–2,294), p99 2,753, `npc.us` 7,62
+(7,53–7,75), 12,4 MB/s, s ciljem in ranjenih 200/200. Proti kopenskima celicama M2.6 (drug dan
+in koda, okvirno, Q71): patrulja letečih dražja od stoječega `idle-200` (p95 +40 %, vsebuje
+ceno tavanja), leteči boj cenejši od `boj-200` (p95 −43 %, µs/NPC −52 %). To je izhodišče cene
+za M4.17 in M4.3. [Dokazi](meritve/2026-10-26-M4.16b-leteci-200.md).
