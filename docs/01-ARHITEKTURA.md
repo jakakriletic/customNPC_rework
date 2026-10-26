@@ -620,3 +620,27 @@ vrat, pogosto v TRACK s ciljem kolone za članom (hipoteza: gneča na sredinski 
 `cbad3c3` (= izmerjeni 984dc27a…). M4.14d ostane odprt; nov poskus mora poleg FA5 ohraniti
 G DONE ≤ 246 tickov in obtičanja G ≤ 6. Pragovi, scena in config isti.
 [Dokazi](meritve/2026-10-26-M4.14d-sledenje-poti.md).
+
+### D-081 — M4.16: ločen harness letenja, cena `leteci-200` v M4.16b (2026-10-26, Q66, Q67)
+
+**Vprašanji:** (Q66) ali M4.16 obsega proge in celico `leteci-200` v enem paketu? (Q67) ali se
+proge *vogal*, *daleč* in *labirint* dodajo v `r2-run.ps1`, kot pravi vrstica v 03-FAZE?
+
+**Odločitev:** M4.16 se razdeli: **M4.16** so proge in veličine kakovosti letenja (zid, vogal,
+labirint, daleč leteči in kopenski, prosta kontrola; faze en klic / osvežen / polovična
+hitrost), **M4.16b** je celica `leteci-200` (patrulja in boj) v `perf-run.ps1`. Proge dobijo
+**lasten harness** `letenje-run.ps1` (svež svet `-PrwWorld` na zagon, config nespremenjen in
+preverjen s SHA, tri ponovitve prek `ponovitve-run.ps1 -Scenarij letenje`); `r2-run.ps1` ostane
+nespremenjen. Scenarij: [`scenariji/M4.16-letenje.md`](scenariji/M4.16-letenje.md).
+
+**Razlog:** `r2-run.ps1` je stopnja `r2` integracijske matrike, na kateri je M5 zaprt (M5.Z,
+D-055); sprememba bi spremenila že izmerjeno merilo. Celica `perf-run.ps1` ima svoj protokol
+(lestvica, ogrevanje, MSPT, P-merila) in drug izid (cena, ne kakovost); en paket bi mešal dva
+načina merjenja. Vrstni red D-038 se ne spremeni: M4.16b je pred prvim posegom v letenje
+(M4.17), ker meri ceno, ki jo M4.17 doda. Brez produkcijske kode.
+
+**Izid (26. 10., Q68):** na `2882787d…` tri ponovitve, vseh 180 veličin razpon 0; original z enim
+`navigateTo` na zid/vogal/labirint/daleč 0/6, osvežen zid 6/6, drsenje po prihodu ≥ 1,76/2,38
+bloka, hitrost iz `navigateTo` ne velja (0,97). Pragovi izhodnega kriterija M4 ostanejo: 6/6 je
+pri ničelnem razponu strogo merilo, drsenje ≤ 0,25 ostane **[H]** do meritve Hover (M4.3).
+[Dokazi](meritve/2026-10-26-M4.16-letenje.md).

@@ -27,7 +27,7 @@
 # Skripta sama NE zazene Minecrafta; to naredi merilna skripta, ki jo poklice.
 
 param(
-    [ValidateSet('nav', 'rwdiag', 'perf', 'klient', 'dalec', 'sprejem')][string]$Scenarij = 'nav',
+    [ValidateSet('nav', 'rwdiag', 'perf', 'klient', 'dalec', 'sprejem', 'letenje')][string]$Scenarij = 'nav',
     [int]$Ponovitev = 3,
     [double]$PragSum = 0.20,
     [switch]$BrezResetaSveta,
@@ -62,9 +62,12 @@ $znani = @{
     dalec  = [pscustomobject]@{ Skripta = 'v-run.ps1';      Paket = 'M5-V.1'; Predpona = 'm5v1-dalec' }
     # M5-V.8: sprejemni A/B na prizoriscu M5-V.1, npr. -Dodatno @('-Vd','24','-N','5000','-Far','2','-Sprejem','1').
     sprejem = [pscustomobject]@{ Skripta = 'v-run.ps1';     Paket = 'M5-V.8'; Predpona = 'm5v8-sprejem' }
+    # M4.16: scenarij letenja in dometa. letenje-run.ps1 vsak zagon ustvari svoj svez svet dev\run\rwlet-<cas>
+    # (-PrwWorld), testnega sveta dev\run\world ne uporablja.
+    letenje = [pscustomobject]@{ Skripta = 'letenje-run.ps1'; Paket = 'M4.16'; Predpona = 'm416-letenje' }
 }
 $izbrani = $znani[$Scenarij]
-if ($Scenarij -eq 'klient' -or $Scenarij -eq 'dalec' -or $Scenarij -eq 'sprejem') { $BrezResetaSveta = [switch]$true }
+if ($Scenarij -eq 'klient' -or $Scenarij -eq 'dalec' -or $Scenarij -eq 'sprejem' -or $Scenarij -eq 'letenje') { $BrezResetaSveta = [switch]$true }
 if ($Skripta -ne '') {
     $izbrani = [pscustomobject]@{
         Skripta  = $Skripta

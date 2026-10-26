@@ -14,9 +14,9 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-26** (seja 150) — **M4.14d poskus 1 (TRACK) zavrnjen** (Q65): FA5 G formalno uspe, a obtičanja G 3–6 → 10–14 in G DONE 233–246 → 318/348; produkcija povrnjena na `cbad3c3`, M4.14d odložen do novega pristopa. Prej (seja 149): **M4.14b zaključen kot preverba, ne izboljšava** (D-079/Q62): na zamrznjenem 984dc27a… imajo vsi ID-ji D-078 rezultat; harness-i, unit, build in package uspejo, sledi popolne (trace-v1 1.664, recovery in navigator 8.960, `iskanj_izgub` G 0). Padejo samo FA1/2 (merilo skupnega cilja proti 8 mestom; 8/8 mest OK), FA4 G 7,571–8,592 / O 6,42 (geometrija kolone skozi vrata) in FA5 G 19 > 4 (člani ne sledijo skupni poti → M4.14d). Pragovi isti, F1–F12 odprti (ročno, uporabnik). |
+| Zadnja posodobitev | **2026-10-26** (seja 151) — **M4.16 zaključen** (D-081, Q68): original na štirih progah z enim `navigateTo` 0/6, osvežen zid 6/6, drsenje po prihodu ≥ 1,76/2,38, hitrost iz `navigateTo` ne velja; razpon 0. Prej (seja 150): **M4.14d poskus 1 (TRACK) zavrnjen** (Q65): FA5 G formalno uspe, a obtičanja G 3–6 → 10–14 in G DONE 233–246 → 318/348; produkcija povrnjena na `cbad3c3`, M4.14d odložen do novega pristopa. Prej (seja 149): **M4.14b zaključen kot preverba, ne izboljšava** (D-079/Q62): na zamrznjenem 984dc27a… imajo vsi ID-ji D-078 rezultat; harness-i, unit, build in package uspejo, sledi popolne (trace-v1 1.664, recovery in navigator 8.960, `iskanj_izgub` G 0). Padejo samo FA1/2 (merilo skupnega cilja proti 8 mestom; 8/8 mest OK), FA4 G 7,571–8,592 / O 6,42 (geometrija kolone skozi vrata) in FA5 G 19 > 4 (člani ne sledijo skupni poti → M4.14d). Pragovi isti, F1–F12 odprti (ročno, uporabnik). |
 | Trenutni milestone | **M4 — Gibanje in navigacija** po D-038; raziskava M4.0 že opravljena 20. 10. **M5 zaključen 22. 10.**: strežnik M5.8, klient M5-K.2, daljna vidnost M5-V.8 in regresija M5.Z. M3 do M3.9 (GUI M3.8b odprt); M2 zaključen 5. 10. |
-| Naslednji paketi | **M4.16** (scenarij letenja) → M4.14d (poskus 1 zavrnjen, Q65; nov pristop proti gneči ob vratih) → M4.10 → M4.17 → Hover (D-038, raziskava M4.0 že narejena). Neodvisno in pred izdajo **Q22** (pravi Forge/SRG pot zapakiranega coremoda); M3.8b ter preverba OptiFine/Entity Culling v nameščenem okolju. Odprto: PR `codex/m7-cnpc-integration` → `main` |
+| Naslednji paketi | **M4.16b** (celica `leteci-200`, D-081) → M4.14d (poskus 1 zavrnjen, Q65; nov pristop proti gneči ob vratih) → M4.10 → M4.17 → Hover (D-038, raziskava M4.0 že narejena). Neodvisno in pred izdajo **Q22** (pravi Forge/SRG pot zapakiranega coremoda); M3.8b ter preverba OptiFine/Entity Culling v nameščenem okolju. Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **182** datotek `.java` v `src/patch` (22. 10.; +1 M5.Z: `rework/diag/ConfigDefaults`), od tega **117** v `noppes/npcs/rework/…` (`ai` 5, `core` 10, `data` 5, `diag` 26, `entity` 13, `far` 21, `formation` 15, `nav` 12, `net` 3, `render` 7) in 3 dostopni razredi v `net/minecraft/…`; `verify-package`: **71** vnosov (70 razredov originala + manifest coremoda) |
 | Testi | **422 JUnit** metod `@Test` v **69** datotekah (26. 10.; +2 D-077) + **40 primerjalnih testov originala**. Na 984dc27a… unit/build/package in vsi trije formacijski harness-i uspejo; FA sprejem M4.14b pade (D-079). Dodatno **20** preverb dedicated-server smoka in **16** trditev samotesta protokola ponovitev |
@@ -38,7 +38,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | **zaključeno 5. 10.** (razen M2.4r render, prestavljen v M5-K) | M2.1–M2.7 preverjeni v svetu; baseline M2.6 zelen 5. 10. — [baseline](meritve/baseline-2026-10-05.md) |
 | M3 Jedro entitete | **zaključeno do M3.9** | M3.1–M3.5 (R1 reproduciran, popravljen pod `RwMountSteering=1`), M3.6 (D-020, `RwAttackPriority`), M3.7, M3.8 (`RwHitbox`), M3.9 (7. 10.). Odprto: M3.8b GUI v klientu (z igralcem), Q15 → D-028 |
-| M4 Gibanje | **M4.0 zaključen; M4.14b zaključen 26. 10. kot preverba (D-079)** | [dokazi](meritve/2026-10-22-M4.14b-formacije.md): FA1/2, FA4 G/O in FA5 G padejo z zapisanimi vzroki, pragovi isti; F1–F12 odprti. M4.14d poskus 1 zavrnjen (Q65, [zapis](meritve/2026-10-26-M4.14d-sledenje-poti.md)). Naslednji M4.16 → M4.14d → M4.10 → M4.17 → Hover; M4.15 neodvisno |
+| M4 Gibanje | **M4.0 in M4.16 zaključena; M4.14b zaključen 26. 10. kot preverba (D-079)** | [dokazi](meritve/2026-10-22-M4.14b-formacije.md): FA1/2, FA4 G/O in FA5 G padejo z zapisanimi vzroki, pragovi isti; F1–F12 odprti. M4.14d poskus 1 zavrnjen (Q65, [zapis](meritve/2026-10-26-M4.14d-sledenje-poti.md)). M4.16 zaključen 26. 10. ([zapis](meritve/2026-10-26-M4.16-letenje.md)). Naslednji M4.16b → M4.14d → M4.10 → M4.17 → Hover; M4.15 neodvisno |
 | M5 Performance | **zaključeno 22. 10. (D-055)** | M5-S: kapaciteta M5.8; M5-K: sprejem M5-K.2; M5-V: sprejem M5-V.8 in privzeti vklop V.8b; M5.Z: obe matriki in sled zeleni. [Regresija](meritve/2026-10-22-M5.Z-regresija.md); nepokrita release preverjanja ostanejo M10 |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
@@ -55,8 +55,29 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 140 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 149 → 1, novejši zgoraj).*
 
+
+### 2026-10-26 (151) — M4.16: harness scenarija letenja in dometa
+
+**Paket:** M4.16 (D-081, Q66–Q68) · **Stanje:** **zaključeno**.
+[Scenarij](scenariji/M4.16-letenje.md), [zapis](meritve/2026-10-26-M4.16-letenje.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Brez produkcijske kode. Ločen `letenje-run.ps1` (svež svet `-PrwWorld` na zagon, config
+nespremenjen, SHA preverjen), `ponovitve-run.ps1 -Scenarij letenje`, `letenje-lib.ps1`,
+krmilnik `letenje-control.js`, postavitev, fixture `LET_*` in samotest nad ponarejenim
+svetom (node). Šest prog (zid, vogal, labirint, daleč leteči/kopenski, prosta kontrola) × tri
+faze (en klic, osvežen, hitrost 0,5), merila veljavnosti LT1–LT9. Celica `leteci-200` je
+M4.16b (Q66). Zahtevani ID-ji: `m416-samotest-v1`, nato `m416-letenje-v1` (3 ponovitve).
+Na 163de09a… samotest zelen; `m416-letenje-v1` p1 padel na LT4 (postavitev): 1.12.2 `fill`
+ne sprejme `hollow` brez podatkovne vrednosti (»'hollow' is not a state«), labirint ni bil
+postavljen. Popravek ukaza v `minecraft:stone 0 hollow`; preverba LT4 nespremenjena.
+Na 2882787d… `m416-samotest-v1`, `m416-letenje-v1` (LT1–LT9, T1–T6), unit, build in package
+zeleni; vseh 180 veličin v treh ponovitvah razpon 0. Original z enim `navigateTo`: zid, vogal,
+labirint in daleč 0/6 (daleč `navig0` 0/6 tudi kopenski; labirint brez premika), prosta
+kontrola 6/6; osvežen zid 6/6 (215/270 tickov), vogal 0/6. Drsenje po prihodu 2,375/1,758
+(max/mediana, spodnja meja; M4.0 ocena ~3,5 previsoka), hitrost 0,5 : 1,0 = 0,97 (ne velja).
+Q68: pragovi izhodnega kriterija M4 isti. Naslednji M4.16b (`leteci-200`).
 
 ### 2026-10-26 (150) — M4.14d poskus 1 (TRACK) izmerjen in zavrnjen
 
@@ -71,19 +92,6 @@ padeta samo na FA1/2 in FA4 (G 6,932 / 10,609, O 6,428), FA5 G formalno uspe (11
 ni sprejet; koda v `884175d`, produkcija in testi povrnjeni na `cbad3c3` (= 984dc27a…),
 števci nespremenjeni (422 @Test v 69 datotekah). Nov poskus mora ohraniti G DONE ≤ 246 in
 obtičanja ≤ 6. Naslednji M4.16. Pragovi, scena in config isti.
-
-### 2026-10-26 (149) — M4.14b zaključen kot preverba, ne izboljšava
-
-**Paket:** M4.14b (D-079/Q62) · **Stanje:** **zaključeno; FA niso izpolnjeni, pragovi isti**.
-[Dokazi](meritve/2026-10-22-M4.14b-formacije.md). AI ni zaganjal testov/builda/Minecrafta.
-
-Na zamrznjenem 984dc27a… ima vsak ID D-078 rezultat: harness-v1, recovery-harness-v2,
-navigator-harness-v3, unit, build in package uspejo. ab-v1, trace-v1 (1.664),
-recovery-trace-v2 (8.960, `iskanj_izgub` G 0) in navigator-trace-v3 (8.960) padejo samo na FA:
-FA1/2 (merilo skupnega cilja proti 8 mestom; 8/8 mest OK), FA4 G 7,571–8,592 in O 6,42
-(geometrija kolone skozi vrata, idealni premer LEGIJE 6,325) ter FA5 G 19 > 4 (člani v PATH
-ne sledijo skupni poti → M4.14d). FA3/6 in FA5 O uspejo. F1–F12 ostanejo ročni test z
-igralcem. Commit vključuje celoten paket M4.14b (koda, testi, harness, zapis).
 
 
 ---

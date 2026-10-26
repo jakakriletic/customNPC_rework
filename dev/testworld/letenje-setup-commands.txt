@@ -1,0 +1,105 @@
+# M4.16 - postavitev prizorisca letenja in dometa. Ukaze poslje .\letenje-run.ps1 na
+# standardni vhod serverja (M0.6, past 1). Razlaga: docs/scenariji/M4.16-letenje.md
+#
+# Superflat, povrsina y=3, entitete stojijo na y=4. Vse proge tecejo vzdolz -Z od
+# z=-48 (labirint z=-50), znotraj +-128 blokov okoli spawna (0,4,0), zato so chunki ob
+# postavitvi nalozeni (World.isSpawnChunk). Vsak zagon ima svoj svez svet (-PrwWorld).
+#
+#   proga Z   (x -75..-65)  zid z=-56, y 4..7, x -106..-34      cilj (-70,4,-64)
+#   proga V   (x -20..-10)  L-zid y 4..19: krak z=-54 x -27..-8,  cilj (-14,4,-60)
+#                           krak x=-27 z -53..-44
+#   proga L   (x  15..25)   zaprt labirint x 13..27, z -61..-49   cilj (20,4,-60)
+#   proga DF  (x  45..55)   prosto, 48 blokov                     cilj (50,4,-96)
+#   proga DW  (x  70..80)   prosto, 48 blokov, kopenski           cilj (75,4,-96)
+#   proga P   (x  95..105)  prosto, 16 blokov (kontrola)          cilj (100,4,-64)
+
+# --- determinizem ---
+gamerule doDaylightCycle false
+gamerule doWeatherCycle false
+gamerule doMobSpawning false
+gamerule doFireTick false
+gamerule mobGriefing false
+gamerule randomTickSpeed 0
+gamerule announceAdvancements false
+gamerule spectatorsGenerateChunks false
+time set 6000
+weather clear 1000000
+
+# --- ocisti (svet je svez, ukaz je samo varovalka) ---
+noppes slay npcs
+
+# --- proga Z: zid cez vso sirino (kot M2.3) ---
+# Visok 4 bloke; obhod okoli konca je dalec cez NpcNavRange 32 (sosedi, ki so od cilja
+# dlje kot 32, so zavrnjeni), pot cez vrh pa ~24 blokov.
+fill -106 4 -56 -34 7 -56 minecraft:stone
+
+# --- proga V: L-zid, visok 16 blokov ---
+# Pot okoli desnega konca kraka z=-54 je 16-26 blokov na isti visini, pot cez vrh ~42.
+# Drugi krak (x=-27) zapre kratek obhod po levi. Ravna crta start-cilj gre skozi zid.
+fill -27 4 -54 -8 19 -54 minecraft:stone
+fill -27 4 -53 -27 19 -44 minecraft:stone
+
+# --- proga L: zaprt labirint ---
+# Lupina s stropom (y 3..7, notranjost y 4..6, x 14..26, z -60..-50), nato tri stene
+# z izmenicnimi odprtinami sirine 3: desno, levo, desno. Cez vrh ne gre; pot ~32 blokov.
+fill 13 3 -61 27 7 -49 minecraft:stone 0 hollow
+fill 14 4 -52 23 6 -52 minecraft:stone
+fill 17 4 -55 26 6 -55 minecraft:stone
+fill 14 4 -58 23 6 -58 minecraft:stone
+
+# --- leteci (MovementType 1), po 6 na progo, korak 2 ---
+noppes clone spawn LET_Flyer 1 -75,4,-48
+noppes clone spawn LET_Flyer 1 -73,4,-48
+noppes clone spawn LET_Flyer 1 -71,4,-48
+noppes clone spawn LET_Flyer 1 -69,4,-48
+noppes clone spawn LET_Flyer 1 -67,4,-48
+noppes clone spawn LET_Flyer 1 -65,4,-48
+
+noppes clone spawn LET_Flyer 1 -20,4,-48
+noppes clone spawn LET_Flyer 1 -18,4,-48
+noppes clone spawn LET_Flyer 1 -16,4,-48
+noppes clone spawn LET_Flyer 1 -14,4,-48
+noppes clone spawn LET_Flyer 1 -12,4,-48
+noppes clone spawn LET_Flyer 1 -10,4,-48
+
+noppes clone spawn LET_Flyer 1 15,4,-50
+noppes clone spawn LET_Flyer 1 17,4,-50
+noppes clone spawn LET_Flyer 1 19,4,-50
+noppes clone spawn LET_Flyer 1 21,4,-50
+noppes clone spawn LET_Flyer 1 23,4,-50
+noppes clone spawn LET_Flyer 1 25,4,-50
+
+noppes clone spawn LET_Flyer 1 45,4,-48
+noppes clone spawn LET_Flyer 1 47,4,-48
+noppes clone spawn LET_Flyer 1 49,4,-48
+noppes clone spawn LET_Flyer 1 51,4,-48
+noppes clone spawn LET_Flyer 1 53,4,-48
+noppes clone spawn LET_Flyer 1 55,4,-48
+
+noppes clone spawn LET_Flyer 1 95,4,-48
+noppes clone spawn LET_Flyer 1 97,4,-48
+noppes clone spawn LET_Flyer 1 99,4,-48
+noppes clone spawn LET_Flyer 1 101,4,-48
+noppes clone spawn LET_Flyer 1 103,4,-48
+noppes clone spawn LET_Flyer 1 105,4,-48
+
+# --- kopenski (MovementType 0), proga DW ---
+noppes clone spawn LET_Walker 1 70,4,-48
+noppes clone spawn LET_Walker 1 72,4,-48
+noppes clone spawn LET_Walker 1 74,4,-48
+noppes clone spawn LET_Walker 1 76,4,-48
+noppes clone spawn LET_Walker 1 78,4,-48
+noppes clone spawn LET_Walker 1 80,4,-48
+
+# --- cilji, po eden na progo; skripta jih razvrsti po x ---
+noppes clone spawn LET_Target 1 -70,4,-64
+noppes clone spawn LET_Target 1 -14,4,-60
+noppes clone spawn LET_Target 1 20,4,-60
+noppes clone spawn LET_Target 1 50,4,-96
+noppes clone spawn LET_Target 1 75,4,-96
+noppes clone spawn LET_Target 1 100,4,-64
+
+save-all flush
+
+# LET_Control tu NI: .\letenje-run.ps1 ga spawna sele po prisilnem nalaganju chunkov
+# in ogrevanju, ker skripta zacne steti ob spawnu.

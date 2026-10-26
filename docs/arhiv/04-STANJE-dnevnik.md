@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 147 → 1)
+# Arhiv: dnevnik sej (vnosi 149 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,19 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-26 (149) — M4.14b zaključen kot preverba, ne izboljšava
+
+**Paket:** M4.14b (D-079/Q62) · **Stanje:** **zaključeno; FA niso izpolnjeni, pragovi isti**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Na zamrznjenem 984dc27a… ima vsak ID D-078 rezultat: harness-v1, recovery-harness-v2,
+navigator-harness-v3, unit, build in package uspejo. ab-v1, trace-v1 (1.664),
+recovery-trace-v2 (8.960, `iskanj_izgub` G 0) in navigator-trace-v3 (8.960) padejo samo na FA:
+FA1/2 (merilo skupnega cilja proti 8 mestom; 8/8 mest OK), FA4 G 7,571–8,592 in O 6,42
+(geometrija kolone skozi vrata, idealni premer LEGIJE 6,325) ter FA5 G 19 > 4 (člani v PATH
+ne sledijo skupni poti → M4.14d). FA3/6 in FA5 O uspejo. F1–F12 ostanejo ročni test z
+igralcem. Commit vključuje celoten paket M4.14b (koda, testi, harness, zapis).
 
 ### 2026-10-26 (147) — M4.14b: D-077 potrjen, koda zamrznjena, FA5 v M4.14d
 
