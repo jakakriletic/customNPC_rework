@@ -32,6 +32,7 @@ za milestone, ki že teče (M5), M5.0 velja pred naslednjim paketom.
 | **M10** | Release kandidat | — | M |
 | **M11** | Vojske in poveljevanje prek zemljevida (Xaero) in poveljniške palice — **zadnja faza**, ko je vse ostalo večinoma narejeno (D-026) | R10 | L |
 | **M12** | Nalaganje skinov prek URL-ja: omejen prenos, timeouti, diskovni predpomnilnik, omejitev velikosti — na koncu, za M11 (zahteva uporabnika 26. 10.) | R5 | M |
+| **M13** | Urejanje več NPC-jev hkrati: popravljeni in razširjeni povezani NPC-ji (Linked NPC), več izbir v seznamu palice — neodvisen, po M4 (zahteva uporabnika 26. 10.) | — | M |
 
 ---
 
@@ -646,6 +647,39 @@ Vse pod stikali, privzeto original; privzeti vklop po D-032 (dokazano enako + iz
 **Izhodni kriterij:** na scenariju M12.1 brez visečih niti ob mrtvem URL-ju, ponovni zagon klienta
 ne prenese že shranjenih skinov, prevelik skin ne preseže omejitve, zatikanje ob nalaganju
 izmerjeno proti originalu (3 ponovitve, D-016); prikaz skinov enak originalu.
+
+---
+
+## M13 — Urejanje več NPC-jev hkrati (povezani NPC-ji)
+
+**Cilj:** sprememba enega NPC-ja (skin, statistike, AI, inventar …) se prenese na vse »iste«
+NPC-je v svetu, tudi na nenaložene, brez ponovnega postavljanja; v seznamu palice (desni klik v
+zrak) se da izbrati in urejati več NPC-jev. Zahteva uporabnika 26. 10. 2026.
+**Raziskava M13.0 (26. 10.):** [zapis](raziskave/M13.0-mnozicno-urejanje.md) — CNPC to že ima
+kot skrite »Linked NPC« (`LinkedNpcController`), ki pa prepišejo dom in usmerjenost vseh
+povezanih NPC-jev, prenesejo vse ali nič, ne prenesejo skript in zahtevajo povezovanje enega po
+enega. Zasnova popravi in razširi ta mehanizem namesto novega identifikatorja.
+
+**Vhodni pogoj:** nič iz M4–M11. **Vrstni red:** neodvisen; izvede se po M4, pred M6
+(uporabnik ga lahko prestavi).
+
+### Paketi
+
+| ID | Paket | Vel. |
+|---|---|---|
+| ~~M13.0~~ | Raziskava — **narejeno 26. 10.** ([zapis](raziskave/M13.0-mnozicno-urejanje.md)); ob začetku preveri na kodi v `src/patch` | S |
+| M13.1 | Reprodukcija in popravek: povezani NPC-ji ohranijo svoj dom, usmerjenost, pot, lego, `RwArmy`, `RwNavBackend` (stikalo, privzeto original, D-007); scenarij z dvema povezanima NPC-jema na različnih mestih | S |
+| M13.2 | Kategorije prenosa na skupino (videz, ime in naslov, statistike, AI, inventar, advanced, skripte, transform), skripte nova kategorija; razveljavitev zadnje spremembe (`.json_prev`); postopen prenos pri velikem številu naloženih članov | M |
+| M13.3 | Seznam palice z več izbirami: Shift/Ctrl-klik, filter po imenu, »vsi z istim imenom v radiu«; dejanja: poveži s skupino, kopiraj nastavitve z izbranega NPC-ja (enkratno, s kategorijami), izbriši, ponastavi; prikaz skupine in števila članov | M |
+| M13.4 | Kloner »postavi kot povezan«; obvestilo »posodobljeno N NPC-jev«; preverba v klientu z igralcem (GUI, nenaloženi chunki, ponovno nalaganje sveta, dedicirani strežnik) | S |
+
+**Izhodni kriterij:** sprememba enega povezanega NPC-ja se prenese na vse povezane, tudi v
+nenaloženih chunkih ob nalaganju, samo v izbranih kategorijah; dom in lega vsakega ostaneta
+njegova; 100 že postavljenih NPC-jev se poveže z eno izbiro v seznamu; razveljavitev vrne
+prejšnje stanje; brez stikala obnašanje enako originalu.
+
+**Tveganja:** obstoječi svetovi s povezanimi NPC-ji (popravek doma pod stikalom); prenos na
+stotine naloženih NPC-jev hkrati (cena, paketi); GUI se dokončno preveri samo ročno.
 
 ---
 
