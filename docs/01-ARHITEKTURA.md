@@ -676,3 +676,49 @@ zelena (T1–T6, v vsakem zagonu P1–P9 in L1, L2 oz. P5). `leteci-200`: MSPT p
 in koda, okvirno, Q71): patrulja letečih dražja od stoječega `idle-200` (p95 +40 %, vsebuje
 ceno tavanja), leteči boj cenejši od `boj-200` (p95 −43 %, µs/NPC −52 %). To je izhodišče cene
 za M4.17 in M4.3. [Dokazi](meritve/2026-10-26-M4.16b-leteci-200.md).
+
+### D-083 — M4.14d poskus 2: iskanje samo ob dokazu, TRACK samo naprej in samo ob zaprti ravni črti (2026-10-26, Q72)
+
+**Vprašanje (Q72):** kakšen nov pristop k M4.14d, ki zmanjša prava iskanja G brez porasta
+obtičanj in časa do DONE (dodatno merilo Q65: G DONE ≤ 246 tickov, obtičanja G ≤ 6), ne da bi
+ponovil zavrnjeni poskus 1 (D-080)?
+
+**Odločitev:** pravo iskanje (`tryMoveToXYZ`) samo ob **dokazu**, da ravna hoja ne gre:
+1. **Opravičilo ne vsili iskanja.** `lagTicks > WAIT_LIMIT` nastavi le `excused` in točko kolone
+   (`trailUntil`), ne več `pathUntil`. Zaostanek ni dokaz zaprte črte; tega da `detectStuck`.
+2. **Preverba ravne črte** (`SquadPlanner.straightWalkable`): v korakih 0,4 bloka po sredini in na
+   obeh robovih (polširina 0,29, tik pod 0,3 NPC-ja) mora biti `Terrain.standY` stojno z največ
+   enim blokom višinske razlike med koraki. Rezultat velja do 10 tickov, če se član in cilj ne
+   premakneta za 0,3. Do napake 1,5 bloka se ne preverja; dlje od `STRAGGLER` (14) šteje kot
+   neznano (ne prosto).
+3. **Način člana:** kazen obtičanja → PATH (eno iskanje; `Squad` po izdanem iskanju pokliče
+   `searched(i)`, ki kazen počisti — kot dopolnitev Q64). Sicer: črta zaprta **in** član in cilj
+   ≤ 4 bloke od skupne poti **in** cilj vsaj 0,5 bloka **pred** članom vzdolž poti → **TRACK**
+   (pot iz točk skupne poti od projekcije člana do projekcije cilja in cilj, brez iskanja; samo
+   naprej, nikoli nazaj). Sicer napaka ≤ `STEER_MAX` → STEER kot prej; dlje: točka kolone po
+   prosti črti → STEER, vse ostalo → PATH.
+4. TRACK v `Squad`: pot ostane, dokler jo navigator ima in se cilj ne premakne za več kot
+   `TRACK_REBUILD` = 3 bloke (ista meja kot ponovno iskanje PATH); nova pot dobi ponastavljeno
+   vanilla časovno mejo (D-077). Nedokončan obvoz iz iskanja ima prednost. `detectStuck` velja za
+   STEER in TRACK. Enota brez poti (`brez_poti`) TRACK ne uporablja (pade v PATH). Nov števec
+   `sledenj=` v `RWSQUAD`; v `iskanj` se ne šteje.
+
+**Razlika od poskusa 1:** poskus 1 je TRACK dal vsakemu članu, ki bi bil po starem pravilu v PATH
+(tudi po opravičilu in s ciljem **za** članom), zato je člane ob zidu vlekel nazaj po sredinski
+črti in povzročil gnečo (obtičanja 3–6 → 10–14). Poskus 2 pusti STEER, kjer je črta prosta (tudi
+bočno ob vratih, ko je cilj že poravnan z odprtino), TRACK samo naprej skozi ozko grlo in nazaj
+samo pravo iskanje.
+
+**Razlog:** razčlenitev D-078 in Q64: 9 iskanj G v tickih 193–207 je bilo ob kazni opravičila,
+vsi člani ≤ 4,6 bloka od cilja; 8 ponovitev `iskanj_premik` med kaznijo obtičanja. Podpis obtičanj
+poskusa 1 (Q65) so TRACK cilji za članom (151, 181, 193, 211). Formacije so nova koda brez
+originala, zato brez stikala (kot M4.14a). FA pragovi, scena, config in meje Q65 ostanejo iste.
+Unit reprodukcije: `SquadPlannerTest` +9, `SquadAdapterTest` +4. Obstoječi test M4.14b
+`acquiredSlotStillNeedsPathAfterDistantDisplacement` je zahteval PATH zunaj `STEER_MAX` tudi na
+prosti ravni črti, kar je v nasprotju s pravilom 3; njegov namen (prihod na mesto ne sme ukiniti
+iskanja zunaj dosega) zdaj preverja z zidom med članom in mestom, nov test pa STEER po prosti
+črti (Q73).
+
+**Sprejem:** unit, build, package, `m414b-navigator-harness-v3`, `m414b-navigator-trace-v3`,
+`m414b-ab-v1` na istem odtisu; FA5 G ≤ 1 + obnove + obtičanja, G DONE ≤ 246, obtičanja G ≤ 6.
+Če katero od teh pade, poskus 2 ni sprejet (kot Q65) in produkcija se povrne na `cbad3c3`.

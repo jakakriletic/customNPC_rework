@@ -74,6 +74,44 @@ public final class PathTrack {
         return xs.length;
     }
 
+    /** Lok tocke crte, ki je vodoravno najblizja ({@code x}, {@code z}). */
+    public double nearestS(double x, double z) {
+        double bestS = 0;
+        double best = (xs[0] - x) * (xs[0] - x) + (zs[0] - z) * (zs[0] - z);
+        for (int i = 1; i < xs.length; i++) {
+            double dx = xs[i] - xs[i - 1];
+            double dz = zs[i] - zs[i - 1];
+            double len2 = dx * dx + dz * dz;
+            double t = len2 < 1.0E-12 ? 0 : ((x - xs[i - 1]) * dx + (z - zs[i - 1]) * dz) / len2;
+            t = Math.max(0, Math.min(1, t));
+            double cx = xs[i - 1] + dx * t - x;
+            double cz = zs[i - 1] + dz * t - z;
+            double d = cx * cx + cz * cz;
+            if (d < best) {
+                best = d;
+                bestS = cumulative[i - 1] + (cumulative[i] - cumulative[i - 1]) * t;
+            }
+        }
+        return bestS;
+    }
+
+    /** Oglisce {@code i} (0 .. {@link #size()} - 1) in njegov lok. */
+    public double pointX(int i) {
+        return xs[i];
+    }
+
+    public double pointY(int i) {
+        return ys[i];
+    }
+
+    public double pointZ(int i) {
+        return zs[i];
+    }
+
+    public double pointS(int i) {
+        return cumulative[i];
+    }
+
     public double x(double s) {
         return interpolate(xs, s);
     }
