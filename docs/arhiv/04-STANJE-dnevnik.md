@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 151 → 1)
+# Arhiv: dnevnik sej (vnosi 153 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,33 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-26 (153) — M4.14d poskus 2 izmerjen in zavrnjen
+
+**Paket:** M4.14d (D-083, Q72–Q74) · **Stanje:** **zavrnjeno, odloženo**.
+[Zapis](../meritve/2026-10-26-M4.14d-poskus2.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Poskus 2: opravičilo ne vsili iskanja, preverba ravne črte (`straightWalkable`), TRACK samo
+naprej ob zaprti črti, eno iskanje na obtičanje; unit +12 (Q73: M4.14b test prilagojen z zidom).
+Na 6f39a760… unit, build, package in navigator-harness-v3 zeleni; navigator-trace-v3 izhod 1:
+G `iskanj` 18 → 4 (+8 TRACK), obtičanja 3 (≤ 6), a **G DONE 288 > 246**, **FA5 G 5 > 4**,
+FA4 G 9,326. Q74: ni sprejet; koda v `bf02674`, produkcija in testi povrnjeni na `cbad3c3`
+(422 JUnit v 69 datotekah, 182 razredov, po grep). M4.14d odložen do per-članske analize zamude
+ob vratih. Naslednji M4.10.
+
+### 2026-10-26 (152) — M4.16b: celica `leteci-200` izmerjena
+
+**Paket:** M4.16b (D-082, Q69–Q71) · **Stanje:** **zaključeno**.
+[Zapis](../meritve/2026-10-26-M4.16b-leteci-200.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Brez produkcijske kode. Varianti `leteci` (N × `PERF_Leteci`, tava v `WalkingRange 16`) in
+`leteci-boj` (`PERF_LetA/LetB`, frakciji 1↔2) v `perf-run.ps1`; krmilnik izpiše `letecih`,
+`vZraku`, `odDoma`, merili L1/L2. Na 34b3574d… unit/build/package, `m416b-leteci-v1` in
+`m416b-letboj-v1` zeleni (T1–T6; v vsakem zagonu P1–P9, L1, L2 oz. P5). Patrulja: p50 1,475,
+p95 8,651 (8,651–9,175), p99 10,224 ms, `npc.us` 17,16, 65 MB/s, `odDoma` 197–200. Boj: p50 1,507,
+p95 2,228 (2,228–2,294), p99 2,753 ms, `npc.us` 7,62, 12,4 MB/s, s ciljem/ranjenih 200/200.
+Okvirno proti M2.6 (Q71, drug dan in koda): patrulja dražja od stoječega `idle-200` (p95 +40 %,
+vsebuje tavanje), leteči boj cenejši od `boj-200` (p95 −43 %). Naslednji M4.14d (nov pristop).
 
 ### 2026-10-26 (151) — M4.16: harness scenarija letenja in dometa
 

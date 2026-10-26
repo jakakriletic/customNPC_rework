@@ -22,7 +22,8 @@ import noppes.npcs.LogWriter;
  * pobrise tudi te stevce.
  *
  * <p>Nacin se prebere ob vsakem klicu {@code isDirectPathBetweenPoints}, zato preklop velja
- * takoj. Odgovor gre tudi v log z markerjem {@code RWPATH}, da ga prebere skripta meritve.
+ * takoj. M4.10: {@code /rwpath nadaljuj 0|1} preklopi {@link PathResume} (stikalo {@code RwPathResume});
+ * odgovor dobi {@code nadaljuj=} in stevce nadaljevanja. Odgovor gre tudi v log z markerjem {@code RWPATH}, da ga prebere skripta meritve.
  */
 public class CommandRwPath extends CommandBase {
     /** M5.10: tick streznika ob zadnjem {@code reset}; razlika da tickov v merilnem oknu. */
@@ -35,7 +36,7 @@ public class CommandRwPath extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/rwpath [0|1|2|reset|cas N|iskanje N|neg N|negttl T|negtol B|negdelne N|memo N]";
+        return "/rwpath [0|1|2|reset|cas N|iskanje N|neg N|negttl T|negtol B|negdelne N|memo N|nadaljuj N]";
     }
 
     @Override
@@ -53,6 +54,7 @@ public class CommandRwPath extends CommandBase {
                 PathSearch.reset();
                 NegativePathCache.reset();
                 PathSearchMemo.reset();
+                PathResume.reset();
             } else if ("cas".equals(args[0])) {
                 if (args.length < 2 || !("0".equals(args[1]) || "1".equals(args[1]))) {
                     throw new WrongUsageException(getUsage(sender));
@@ -72,6 +74,11 @@ public class CommandRwPath extends CommandBase {
                     throw new WrongUsageException(getUsage(sender));
                 }
                 PathSearchMemo.setMode(requestedMemo);
+            } else if ("nadaljuj".equals(args[0])) {
+                if (args.length < 2 || !("0".equals(args[1]) || "1".equals(args[1]))) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+                PathResume.setMode(Integer.parseInt(args[1]));
             } else if ("neg".equals(args[0])) {
                 if (args.length < 2) {
                     throw new WrongUsageException(getUsage(sender));
@@ -147,7 +154,8 @@ public class CommandRwPath extends CommandBase {
                 + " negNeujemanj=" + NegativePathCache.mismatches()
                 + " memo=" + PathSearchMemo.mode() + " memoIskanj=" + PathSearchMemo.searches()
                 + " memoOcen=" + PathSearchMemo.lookups() + " memoIzracunov=" + PathSearchMemo.misses()
-                + " memoNeujemanj=" + PathSearchMemo.mismatches();
+                + " memoNeujemanj=" + PathSearchMemo.mismatches()
+                + " nadaljuj=" + PathResume.mode() + " " + PathResume.counters();
         sender.sendMessage(new TextComponentString(msg));
         LogWriter.info(msg);
     }

@@ -134,6 +134,7 @@ import noppes.npcs.rework.entity.HitboxTrack;
 import noppes.npcs.rework.entity.CommandRwMount;
 import noppes.npcs.rework.nav.CommandRwNav;
 import noppes.npcs.rework.nav.NegativePathCache;
+import noppes.npcs.rework.nav.PathResume;
 import noppes.npcs.rework.nav.PathSearchMemo;
 import noppes.npcs.rework.entity.RiderState;
 import noppes.npcs.rework.formation.CommandRwSquad;
@@ -201,6 +202,8 @@ public class CustomNpcs {
     public static int RwPathSearchMemo = 1;
     @ConfigProp(info="Rework M5.6 (S5): after a path search that found no complete path to the target, the same NPC does not search for (almost) the same target again for 20 ticks. M5.9 measured that a visible but unreachable target costs 51 percent of the tick in path searching, 180 microseconds per search, because the vanilla A* spends its whole 200 node budget when it cannot reach the goal. This CHANGES BEHAVIOUR: if a path opens in the meantime, the NPC reacts up to 20 ticks later, so it is a behaviour switch (D-007). 0 = original, 1 = skip repeated failed searches, 2 = verify (searches anyway, answers with the original, counts how often the cached answer would have differed). Default 1 since 2026-10-16 by user decision (Q21, D-037): nedosegljiva-500 MSPT average 17.854 to 14.462 ms, allocation 292 to 135 MB/s")
     public static int RwPathNegCache = 1;
+    @ConfigProp(info="Rework M4.10 (D-084): continue a partial path and reach a goal beyond the navigation range for walking and flying NPCs. The vanilla path search accepts only nodes whose path from the NPC is shorter than the range (FOLLOW_RANGE = NpcNavRange, 32), so a goal 48 blocks away gets no path at all, and an NPC that walks to the end of a partial path stops there. With 1 the navigator searches towards a point on the line to the goal (range minus 4 blocks, Manhattan) when the goal is out of range, and when a path that did not end at the goal is finished it searches again from where the NPC stands; it stops when a path ends at the goal, when a new path does not end at least 1 block closer to the goal, after 16 resumes per command, or when the path is cleared (stuck, script, attack target). The negative path cache (RwPathNegCache) is not applied to a resume search. This CHANGES BEHAVIOUR: a command that ended without a path or before the goal now brings the NPC to the goal. 0 = original, 1 = continue. Default 0")
+    public static int RwPathResume = 0;
     @ConfigProp(info="Rework M5.12 (S4): an NPC without enabled scripts skips the collide area query (every 4th tick) when nothing listens for NpcEvent.CollideEvent on the CustomNPCs event bus; with no script and no listener the original query has no effect. Listeners are checked on every call. 0 = original, 1 = skip without an observer, 2 = verify (original, counts calls and events that would be skipped). Default 1 since 2026-10-09 (D-032)")
     public static int RwCollideSkip = 1;
     @ConfigProp(info="Rework M5.13 (S7): recipients of the eye blink packet (every NPC blinks about once every 140 ticks) are found by walking world.playerEntities with the same selection the vanilla area query makes, instead of scanning every loaded chunk in a 160 block cube (about 441 chunks). Same recipients. 0 = original, 1 = walk playerEntities, 2 = verify (runs both, sends by the original list, counts mismatches; double cost, for test scenarios only). Default 1 since 2026-10-10 (D-032)")
@@ -451,6 +454,7 @@ public class CustomNpcs {
         CollisionGate.setMode(RwMoveBoxes);
         PathFollowCache.setMode(RwPathFollowCache);
         NegativePathCache.setMode(RwPathNegCache);
+        PathResume.setMode(RwPathResume);
         PathSearchMemo.setMode(RwPathSearchMemo);
         // M5.13 (S7): prejemniki utripa oci; /rwblink jih med tekom preklopi.
         event.registerServerCommand((ICommand)new CommandRwBlink());

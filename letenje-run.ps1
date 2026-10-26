@@ -15,9 +15,20 @@
 #     .\letenje-run.ps1
 #     .\letenje-run.ps1 -JsonPath audit\m416-letenje-p1.json   # zapis zagona (M2.5c)
 # Tri ponovitve:  .\ponovitve-run.ps1 -Scenarij letenje
+#
+# M4.10 (D-084): -Nadaljevanje 1 pred scenarijem poslje 'rwpath nadaljuj 1' (stikalo
+# RwPathResume med tekom; config se ne spremeni) in po LET-SUM zapise stevce nadaljevanja.
+# -Nadaljevanje 0 stikalo izrecno izklopi; brez parametra (-1) velja config (original).
+#     .\ponovitve-run.ps1 -Scenarij letenje -Dodatno @('-Nadaljevanje','1')
+#
+# Q78: -TrajanjeFaze N (server ticki, veckratnik 20, privzeto 600 = M4.16) podaljsa vse tri
+# faze; kopenski NPC (0,066 b/t) za 48 blokov proge DW potrebuje ~735 tickov. Odtis ima
+# trajanjeFaze, zato se serije z razlicnim trajanjem ne zdruzijo.
+#     .\ponovitve-run.ps1 -Scenarij letenje -Dodatno @('-Nadaljevanje','1','-TrajanjeFaze','1200')
 
 param([string]$JsonPath = '', [switch]$AcceptEula, [int]$ChunkRadius = 2, [int]$WarmupSeconds = 10,
-      [int]$ScenarioTimeoutSec = 300)
+      [int]$ScenarioTimeoutSec = 300, [ValidateSet(-1, 0, 1)][int]$Nadaljevanje = -1,
+      [ValidateRange(200, 3000)][int]$TrajanjeFaze = 600)
 
 $ErrorActionPreference = 'Stop'
 $root  = $PSScriptRoot
@@ -26,6 +37,8 @@ $audit = Join-Path $root 'audit'
 $seed  = Join-Path $root 'dev\testworld'
 . (Join-Path $root 'meritve-lib.ps1')
 . (Join-Path $root 'letenje-lib.ps1')
+if ($TrajanjeFaze % 20 -ne 0) { throw 'TrajanjeFaze mora biti veckratnik 20 server tickov.' }
+$script:LetTrajanjeFaze = $TrajanjeFaze
 New-Item -ItemType Directory -Force -Path $audit | Out-Null
 $stamp  = Get-Date -Format 'yyyy-MM-dd-HHmmss'
 $world  = "rwlet-$stamp"
@@ -161,8 +174,8 @@ try {
         Copy-Item -LiteralPath (Join-Path $seed "customnpcs\clones\1\$name") -Destination $clones
     }
     $scriptLen = Install-LetController (Join-Path $seed 'customnpcs\clones\1\LET_Control.json') `
-                     (Join-Path $seed 'letenje-control.js') (Join-Path $clones 'LET_Control.json')
-    Write-Host ("  krmilnik namescen ({0} znakov skripte)" -f $scriptLen)
+                     (Join-Path $seed 'letenje-control.js') (Join-Path $clones 'LET_Control.json') $TrajanjeFaze
+    Write-Host ("  krmilnik namescen ({0} znakov skripte, faza {1} server tickov)" -f $scriptLen, $TrajanjeFaze)
 
     Step 3 'Zagon B: prizorisce'
     $srv = Start-Server 'b'
@@ -197,6 +210,13 @@ try {
     Start-Sleep -Seconds $WarmupSeconds
     Send-Command $srv 'rwdiag on'
     Check 'merjenje vklopljeno' (Wait-Marker $srv 'RWDIAG vklopljen')
+    $nadVrstica = ''
+    if ($Nadaljevanje -ge 0) {
+        Send-Command $srv 'rwpath reset'
+        Send-Command $srv ("rwpath nadaljuj {0}" -f $Nadaljevanje)
+        Check ("M4.10: stikalo RwPathResume={0} je vklopljeno med tekom" -f $Nadaljevanje) `
+            (Wait-Marker $srv (" nadaljuj={0} " -f $Nadaljevanje) 1 30)
+    }
 
     Step 5 'Scenarij'
     Send-Command $srv 'noppes clone spawn LET_Control 1 0,4,-40'
@@ -207,6 +227,21 @@ try {
         Check ("faza {0} se je koncala" -f $f.Id) (Wait-Marker $srv ("LET-{0}-END" -f $f.Id) 1 $ScenarioTimeoutSec)
     }
     Check 'LT1: scenarij je prisel do konca (LET-SUM)' (Wait-Marker $srv 'LET-SUM' 1 60)
+    if ($Nadaljevanje -ge 0) {
+        $pred = [regex]::Matches((Get-LetMarkerText (Get-Log $srv.Log)), 'RWPATH nacin=').Count
+        Send-Command $srv 'rwpath'
+        Check 'M4.10: stevci nadaljevanja zapisani' (Wait-Marker $srv 'RWPATH nacin=' ($pred + 1) 30)
+        $nad = [regex]::Matches((Get-LetMarkerText (Get-Log $srv.Log)), 'nadaljuj=(\d) (nadZacetih=\S+(?: nad\w+=\S+)*)')
+        if ($nad.Count -gt 0) {
+            $zadnji = $nad[$nad.Count - 1]
+            $nadVrstica = ('nadaljuj={0} {1}' -f $zadnji.Groups[1].Value, $zadnji.Groups[2].Value)
+            Write-Host ("  {0}" -f $nadVrstica)
+            Check ("M4.10: stikalo je bilo do konca {0} ({1})" -f $Nadaljevanje, $nadVrstica) `
+                ($zadnji.Groups[1].Value -eq [string]$Nadaljevanje)
+        } else {
+            Check 'M4.10: vrstica stevcev nadaljevanja je berljiva' $false
+        }
+    }
 
     Step 6 'Posnetek meritve in ustavitev'
     Send-Command $srv 'rwdiag dump m416-letenje'
@@ -244,7 +279,7 @@ try {
     $head = @()
     $head += ("# M4.16 - scenarij letenja in dometa, zagon {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm'))
     $head += ''
-    $head += 'Scenarij: `docs/scenariji/M4.16-letenje.md`. Svet: `dev/run/' + $world + '`. Original (config dev/run, vsa stikala Rw* kot v configu).'
+    $head += 'Scenarij: `docs/scenariji/M4.16-letenje.md`. Svet: `dev/run/' + $world + '`. ' + $(if ($Nadaljevanje -ge 0) { ('Config dev/run, med tekom RwPathResume={0} (M4.10).' -f $Nadaljevanje) } else { 'Original (config dev/run, vsa stikala Rw* kot v configu).' })
     $head += ''
     $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'LT1-LT9 zelena' } else { ("padlo {0}" -f $failures.Count) }))
     $head += ''
@@ -254,6 +289,7 @@ try {
     $head += $tabela
     $head += ''
     $head += ('Fill: {0}; chunki={1}, NPC={2}; config SHA-256 {3}; stikala: {4}' -f ($fills -join ', '), $nChunk, $nNpc, $configHash, ($rw -join ' '))
+    if ($nadVrstica) { $head += ''; $head += ('Stevci M4.10: {0}' -f $nadVrstica) }
     if ($failures.Count -gt 0) {
         $head += ''
         $head += '## Padle preverbe'
@@ -276,6 +312,7 @@ try {
         ogrevanje = $WarmupSeconds
         config = $configHash
     }
+    if ($Nadaljevanje -ge 0) { $odtis['nadaljuj'] = $Nadaljevanje }
     if ($null -ne $setup) {
         foreach ($p in $script:LetProge) { if ($null -ne $setup[$p.Id]) { $odtis["d0.$($p.Id)"] = ('{0:N2}' -f $setup[$p.Id].D0) } }
     }

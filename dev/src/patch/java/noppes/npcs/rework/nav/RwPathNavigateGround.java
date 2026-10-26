@@ -1,11 +1,13 @@
 package noppes.npcs.rework.nav;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import noppes.npcs.LogWriter;
@@ -35,6 +37,15 @@ public class RwPathNavigateGround extends PathNavigateGround {
     private int memoZ;
     private int memoTick;
 
+    // M4.10 (D-084): nadaljevanje delne poti in vmesni cilj; pri RwPathResume=0 neaktivno.
+    private final PathResume resume = new PathResume();
+    /** Pot, ki jo je vrnil zadnji ukaz; {@link #setPath} z drugo potjo nadaljevanje prekine. */
+    private Path commandPath;
+    /** Iskanje obnove: mimo ukaza in mimo negativnega predpomnilnika (S5). */
+    private boolean resumeSearch;
+    /** Klic znotraj vanilla (pot do entitete, {@code updatePath}): ni ukaz, predpomnilnik velja. */
+    private boolean passThrough;
+
     public RwPathNavigateGround(EntityLiving entity, World world) {
         super(entity, world);
     }
@@ -63,10 +74,100 @@ public class RwPathNavigateGround extends PathNavigateGround {
      * {@code EntityAIAttackTarget.shouldExecute} ostane {@code false} - to je sprememba obnasanja,
      * ki jo nacin {@link NegativePathCache#VERIFY} izmeri.
      *
+     * <p>M4.10 (D-084): pri {@link PathResume#ON} je zunanji klic ukaz: cilj se zapomni, pri cilju
+     * izven dometa se isce do vmesnega cilja ({@link PathResume}).
+     *
      * <p>V nacinu 0 brez merjenja je to natanko {@code super.getPathToPos(pos)}.
      */
     @Override
     public Path getPathToPos(BlockPos pos) {
+        if (!PathResume.on() || this.resumeSearch || this.passThrough) {
+            return this.searchCounted(pos);
+        }
+        int[] t = this.resume.command(MathHelper.floor(this.entity.posX), MathHelper.floor(this.entity.posY),
+                MathHelper.floor(this.entity.posZ), pos.getX(), pos.getY(), pos.getZ(), this.getPathSearchRange());
+        BlockPos search = t[0] == pos.getX() && t[1] == pos.getY() && t[2] == pos.getZ() ? pos : new BlockPos(t[0], t[1], t[2]);
+        Path path = this.searchCounted(search);
+        PathPoint end = path == null ? null : path.getFinalPathPoint();
+        this.resume.commandResult(end != null, end == null ? 0 : end.x, end == null ? 0 : end.y, end == null ? 0 : end.z);
+        this.commandPath = path;
+        return path;
+    }
+
+    /** M4.10: pot do entitete ni ukaz do bloka; nadaljevanje se prekine. */
+    @Override
+    public Path getPathToEntityLiving(Entity entityIn) {
+        this.resume.cancel();
+        boolean outer = this.passThrough;
+        this.passThrough = true;
+        try {
+            return super.getPathToEntityLiving(entityIn);
+        } finally {
+            this.passThrough = outer;
+        }
+    }
+
+    /** M4.10: vanilla ponovno iskanje do istega bloka ({@code targetPos}) ni nov ukaz. */
+    @Override
+    public void updatePath() {
+        boolean outer = this.passThrough;
+        this.passThrough = true;
+        try {
+            super.updatePath();
+        } finally {
+            this.passThrough = outer;
+        }
+    }
+
+    /** M4.10: tuja pot (ne tista iz zadnjega ukaza) nadaljevanje prekine. */
+    @Override
+    public boolean setPath(Path pathentityIn, double speedIn) {
+        if (!this.resumeSearch && pathentityIn != this.commandPath) {
+            this.resume.cancel();
+        }
+        return super.setPath(pathentityIn, speedIn);
+    }
+
+    /**
+     * M4.10: po vanilla posodobitvi, ce je pot ukaza prehojena in ni koncala pri cilju, poisce
+     * naslednjo. Ob {@code clearPath} (obticanje, iztek, skripta) se nadaljevanje prekine.
+     */
+    @Override
+    public void onUpdateNavigation() {
+        super.onUpdateNavigation();
+        if (this.resume.active()) {
+            this.continuePath();
+        }
+    }
+
+    private void continuePath() {
+        if (!PathResume.on() || this.currentPath == null) {
+            this.resume.cancel();
+            return;
+        }
+        if (!this.currentPath.isFinished() || !this.canNavigate()) {
+            return;
+        }
+        int[] t = this.resume.next(MathHelper.floor(this.entity.posX), MathHelper.floor(this.entity.posY),
+                MathHelper.floor(this.entity.posZ), this.getPathSearchRange());
+        if (t == null) {
+            return;
+        }
+        this.resumeSearch = true;
+        try {
+            Path path = this.getPathToPos(new BlockPos(t[0], t[1], t[2]));
+            PathPoint end = path == null ? null : path.getFinalPathPoint();
+            if (this.resume.resumeResult(end != null, end == null ? 0 : end.x, end == null ? 0 : end.y, end == null ? 0 : end.z)) {
+                this.commandPath = path;
+                this.setPath(path, this.speed);
+            }
+        } finally {
+            this.resumeSearch = false;
+        }
+    }
+
+    /** Iskanje z merjenjem, negativnim predpomnilnikom in pomnjenjem (M5.6, M5.9, M5.17). */
+    private Path searchCounted(BlockPos pos) {
         int neg = NegativePathCache.mode();
         if (neg == NegativePathCache.ORIGINAL && !PathSearch.timing()
                 && PathSearchMemo.mode() == PathSearchMemo.ORIGINAL) {
@@ -75,7 +176,7 @@ public class RwPathNavigateGround extends PathNavigateGround {
         int now = (int) this.world.getTotalWorldTime();
         boolean memoApplies = NegativePathCache.applies(this.memoHasFail, now - this.memoTick,
                 this.memoDistance(pos));
-        if (neg == NegativePathCache.ON && memoApplies) {
+        if (neg == NegativePathCache.ON && memoApplies && !this.resumeSearch) {
             ++NegativePathCache.skipped;
             return null;
         }

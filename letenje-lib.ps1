@@ -36,8 +36,27 @@ function Get-LetMinifiedScript([string]$JsPath) {
 
 # Vstavi minificirano skripto v kopijo LET_Control.json. Vir je vedno
 # dev\testworld\letenje-control.js, zato se fixture in skripta ne moreta razici.
-function Install-LetController([string]$CloneJson, [string]$JsPath, [string]$Destination) {
+#
+# M4.10 (Q78): -TrajanjeFaze (server ticki, veckratnik 20) zamenja v minificirani skripti
+# PHASE_LEN, zacetke faz B in C ter SUM_AT (razmik 4 skriptne ticke ostane). Pri 600 se
+# skripta ne spremeni (merilni pogoj M4.16).
+function Install-LetController([string]$CloneJson, [string]$JsPath, [string]$Destination, [int]$TrajanjeFaze = 600) {
     $mini = Get-LetMinifiedScript $JsPath
+    if ($TrajanjeFaze -ne 600) {
+        if ($TrajanjeFaze % 20 -ne 0) { throw 'TrajanjeFaze mora biti veckratnik 20 server tickov.' }
+        $len = [int]($TrajanjeFaze / 10)
+        $zamenjave = @(
+            @('var PHASE_LEN = 60;', ("var PHASE_LEN = {0};" -f $len)),
+            @('start: 70,', ("start: {0}," -f (6 + ($len + 4)))),
+            @('start: 134,', ("start: {0}," -f (6 + 2 * ($len + 4)))),
+            @('var SUM_AT = 198;', ("var SUM_AT = {0};" -f (6 + 3 * ($len + 4))))
+        )
+        foreach ($z in $zamenjave) {
+            $n = [regex]::Matches($mini, [regex]::Escape($z[0])).Count
+            if ($n -ne 1) { throw ("Skripta krmilnika: '{0}' se pojavi {1}-krat, pricakovano 1." -f $z[0], $n) }
+            $mini = $mini.Replace($z[0], $z[1])
+        }
+    }
     $encoded = $mini.Replace('\', '\\').Replace('"', '\"')
     $clone = [IO.File]::ReadAllText($CloneJson)
     $pattern = '"Script"\s*:\s*"(?:\\.|[^"\\])*"'

@@ -729,3 +729,56 @@ iskanja zunaj dosega) zdaj preverja z zidom med članom in mestom, nov test pa S
 Poskus 2 ni sprejet; koda v `bf02674`, produkcija in testi povrnjeni na `cbad3c3`. M4.14d
 odložen do per-članske analize zamude ob vratih; naslednji M4.10.
 [Dokazi](meritve/2026-10-26-M4.14d-poskus2.md).
+
+### D-084 — M4.10: nadaljevanje delne poti in vmesni cilj izven dometa pod `RwPathResume` (2026-10-26, Q75–Q77)
+
+**Vprašanje:** kako NPC pride do cilja, ki ga vanilla iskalnik ne doseže v enem iskanju (M4.16:
+proga *daleč* 48 blokov `navig0` 0/6 za leteče in kopenske; *zid* 0/6, ker NPC obstane na koncu
+delne poti 9 blokov pred ciljem), brez lastnega A\* (M4.12 zavržen, D-038) in brez spremembe
+originala pri izklopljenem stikalu?
+
+**Raziskava:** M4.0 §1 točka 2 in §5 (vrstica M4.10) zadostujeta; nove raziskave ni bilo treba.
+Iz kode 1.12.2 **[K]**: `PathFinder.findPath` sprejme vozlišče samo pri `distanceFromOrigin <
+maxDistance`, kjer je `distanceFromOrigin` vsota manhattanskih korakov; zato cilj, ki je od NPC-ja
+manhattansko ≥ domet (`FOLLOW_RANGE` = `NpcNavRange` = 32), nikoli ne dobi cele poti.
+
+**Odločitev:** nov razred `rework/nav/PathResume` (pravilo brez sveta) in navigatorja
+`RwPathNavigateGround` (obstoječ) ter nov `RwPathNavigateFlying` (podrazred `PathNavigateFlying`,
+v `EntityNPCInterface` namesto vanilla razreda; tja pride tudi M4.17). Pri `RwPathResume=1`:
+1. **Ukaz** je vsak zunanji `getPathToPos` (`tryMoveToXYZ`, `navigateTo`, AI taski). Cilj se
+   zapomni. Če je manhattansko ≥ domet, se išče do **vmesnega cilja** na črti proti cilju,
+   manhattansko domet − 4 (= 28; pri dometu < 8 polovica), celoštevilsko zaokroženo proti NPC-ju.
+2. Ko je pot ukaza **prehojena** (`isFinished`) in ni končala ≤ 1,5 bloka od cilja (leteči cilj
+   je blok višje), navigator v istem `onUpdateNavigation` poišče novo pot od mesta, kjer NPC je
+   (spet z vmesnim ciljem, če je treba). AI taski zato vmesnega konca ne vidijo kot `noPath`.
+3. **Konec:** pot konča pri cilju; nova pot ne konča vsaj 1 blok bliže cilju kot vse dosedanje
+   ali je ni (cilj je od tam dokazano nedosegljiv); 16 obnov na ukaz; `clearPath` (vanilla
+   obtičanje/iztek ostane, skripta), pot do entitete, `setPath` s tujo potjo ali nov ukaz.
+4. Iskanje obnove gre **mimo** negativnega predpomnilnika S5 (`RwPathNegCache`): ta bi delno pot
+   do istega cilja zavrnil 20 tickov (M4.0). `updatePath` in pot do entitete nista ukaz (S5 velja).
+5. Stikalo med tekom: `/rwpath nadaljuj 0|1`; odgovor `RWPATH` ima števce `nadZacetih`,
+   `nadVmesnih`, `nadObnov`, `nadPrispelih`, `nadBrezNapredka`, `nadMeja`, `nadPrekinjenih`.
+
+**Razlog:** najmanjši poseg, ki pokrije obe polovici premise M4.0 (delna pot in cilj izven
+dometa) za kopenske in leteče, ne da bi spreminjal iskalnik (proračun 200 vozlišč, filter
+dometa) ali sledilnik. Pri 0 je vsaka metoda `super` in stanje se ne vklopi (izhodni kriterij
+M4: »obstoječi NPC-ji z izklopljenimi stikali se obnašajo enako kot prej«). To je sprememba
+obnašanja (D-007), zato stikalo, **privzeto 0**; o privzetem vklopu odloči meritev in Q77.
+
+**Sprejem (Q76):** unit (`PathResumeTest`, 12 reprodukcij na geometriji M4.16), build, package;
+`m416-letenje-v1` na novi kodi s stikalom 0 mora dati iste veličine kot M4.16 (razpon 0);
+`m410-letenje-nad-v1` (isti scenarij, `-Nadaljevanje 1`) mora na *daleč* (DF in DW) dati
+`prispeli` 6/6 v fazi A z enim `navigateTo`, LT1–LT9 in T1–T6 zeleni; proga P (kontrola) ne sme
+biti slabša. M2.7 (`m410-nav-orig-v1` proti `m410-nav-nad-v1`): nobena veličina se ne sme
+poslabšati čez šumni pas. `m414b-*` na isti kodi zaradi spremenjenega kopenskega navigatorja
+(pri 0 pričakovano enako `cbad3c3`; FA neuspehi D-079 ostanejo).
+
+**Izid (26. 10., seja 155, odtis `b53a0638…`):** stikalo 0 da vseh 180 median M4.16 (razpon 0).
+Z nadaljevanjem v fazi A: DF 0/6 → **6/6** (220/230 tickov), Z 0/6 → **6/6** (205/250), P
+enako, V in L ostaneta 0/6 (M4.17). DW pri 600 tickih 0/6, ker kopenski NPC pri 0,066 b/t 48
+blokov ne prehodi v fazi (Q78; `navig0` 6/6, na poti); pri 1200 tickih (`-TrajanjeFaze 1200`)
+**6/6** v 710/720 tickih, original pri 1200 ostane `navig0` 0/6. M2.7: vseh 12 `pot.*` enakih,
+razlike samo v µs stolpcih znotraj šuma. `m414b-navigator-trace-v3` pade na istih FA kot D-079.
+Merila Q76 so izpolnjena z izjemo DW pri 600, ki jo pojasni Q78. **M4.10 sprejet pod stikalom,
+privzeto 0** (Q77): sprememba obnašanja, cena na `leteci-200` ni izmerjena; o privzetem vklopu
+odloči kasnejši sprejem M4 skupaj z M4.17. [Zapis](meritve/2026-10-26-M4.10-nadaljevanje.md).

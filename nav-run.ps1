@@ -43,13 +43,17 @@
 #
 # M7.10 (korak 3): -Umik vklopi v knjiznici cakanje v gneci (-PnpcbCrowdYield=true,
 # config movement.crowdYield). Samo z -Ozadje baritone; odtis dobi ozadje=baritone-umik.
+#
+# M4.10 (D-084): -Nadaljevanje 1 pred krmilnikom poslje 'rwpath nadaljuj 1' (stikalo RwPathResume
+# med tekom, config se ne spremeni); odtis dobi nadaljuj=1. Brez parametra velja config.
+#     .ponovitve-run.ps1 -Scenarij nav -Dodatno @('-Nadaljevanje','1')
 
 param([switch]$AcceptEula, [int]$ChunkRadius = 2, [int]$WarmupSeconds = 10,
       [int]$ScenarioTimeoutSec = 180, [int]$SweepRepeats = 8, [int]$OgrevalnihPometanj = 2,
       [string]$JsonPath = '',
       [ValidateSet('vanilla', 'baritone')][string]$Ozadje = 'vanilla',
       [string]$BaritoneRoot = '',
-      [switch]$Sled, [switch]$Umik)
+      [switch]$Sled, [switch]$Umik, [ValidateSet(-1, 0, 1)][int]$Nadaljevanje = -1)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -794,6 +798,10 @@ try {
           (Wait-ForCount $s 'RWNAV-POMET ' (($OgrevalnihPometanj + 1) * $lanes.Count) 60)
 
     Step 6 'Scenarij, faza A'
+    if ($Nadaljevanje -ge 0) {
+        Send-Command $s ("rwpath nadaljuj {0}" -f $Nadaljevanje)
+        Check ("M4.10: stikalo RwPathResume={0} je vklopljeno med tekom" -f $Nadaljevanje) (Wait-ForMarker $s (" nadaljuj={0} " -f $Nadaljevanje) 30)
+    }
     if ($baritone) {
         # M7.6: stevci knjiznice od tu naprej = samo fazi A in B (brez pometanj sonde)
         Send-Command $s 'npcb perf reset'
@@ -1134,6 +1142,7 @@ try {
                           -PometanjPon $SweepRepeats -OgrevalnaPometanja $OgrevalnihPometanj `
                           -Perf $perf -Ozadje $ozadjeOdtis -PathSamples $pathSamples
     $odtis = $zapis.Odtis
+    if ($Nadaljevanje -ge 0) { $odtis['nadaljuj'] = $Nadaljevanje }
     $vel   = $zapis.Velicine
 
     $zapisPot = Write-MeritevJson -Path $JsonPath -Paket 'M2.7' -Scenarij 'nav' `

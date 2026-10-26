@@ -838,7 +838,8 @@ IAnimals {
         net.minecraft.world.RwWorldAccess.pathListener(this.world).onEntityRemoved((Entity)this);
         if (this.ais.movementType == 1) {
             this.moveHelper = new FlyingMoveHelper(this);
-            this.navigator = new PathNavigateFlying((EntityLiving)this, this.world);
+            // M4.10: podrazred PathNavigateFlying; pri RwPathResume=0 se obnasa kot original.
+            this.navigator = new noppes.npcs.rework.nav.RwPathNavigateFlying((EntityLiving)this, this.world);
         } else if (this.ais.movementType == 2) {
             this.moveHelper = new FlyingMoveHelper(this);
             this.navigator = new PathNavigateSwimmer((EntityLiving)this, this.world);
