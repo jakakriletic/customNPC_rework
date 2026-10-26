@@ -54,6 +54,12 @@ ponovno odprtje:** meritev sprejema klienta (M5-K.2) ali poročilo uporabnika po
 korak ni polni K10, temveč poceni odločilni poskus **K10a**: deli modela iz VBO namesto display listov
 (fiksna pot, ista slika), ki loči "oglišča v gonilniku" od "oglišča sploh" **[H]**.
 
+**Dopolnitev 26. 10. 2026 — odločitev lastnika:** razlike, ki s prostim očesom niso vidne, so
+sprejemljive; K10 naj se naredi in vklopi. Merilo za K10 je zato **vizualno enako** namesto
+piksel-enako (izjema od D-032 samo za K10), pogoj za ponovno odprtje odpade. Izvedba v novem
+milestonu **M14** (`03-FAZE.md`): najprej K10a, nato K10 s senčilnikom, samodejni povratek pri
+senčilniških paketih in nepodprtih modelih.
+
 ## 4. Ostali K-paketi in kandidati iz M5-V.8
 
 | Paket | Odločitev | Razlog |

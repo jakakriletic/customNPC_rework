@@ -33,6 +33,7 @@ za milestone, ki že teče (M5), M5.0 velja pred naslednjim paketom.
 | **M11** | Vojske in poveljevanje prek zemljevida (Xaero) in poveljniške palice — **zadnja faza**, ko je vse ostalo večinoma narejeno (D-026) | R10 | L |
 | **M12** | Nalaganje skinov prek URL-ja: omejen prenos, timeouti, diskovni predpomnilnik, omejitev velikosti — na koncu, za M11 (zahteva uporabnika 26. 10.) | R5 | M |
 | **M13** | Urejanje več NPC-jev hkrati: popravljeni in razširjeni povezani NPC-ji (Linked NPC), več izbir v seznamu palice — neodvisen, po M4 (zahteva uporabnika 26. 10.) | — | M |
+| **M14** | Instanciran izris bližnjih NPC-jev: K10a (VBO, ista slika) → K10 (senčilnik, merilo vizualno enako, odločitev lastnika 26. 10.) — po M13, pred M6 | R5 | L |
 
 ---
 
@@ -320,7 +321,7 @@ meritvijo.
 | ~~M5-K K5~~ | **L1 zaključen 21. 10.** ([zapis](meritve/2026-10-21-M5-K-K5-lod-L1.md)) — `rework/render/Lod`, `RwLodStart` (bloki, privzeto **0**, D-039 / Q32): onkraj praga brez oči, ploščato pokrivalo modela namesto 3D, brez imena; idle-500 pri 32 blokih p50 −24 %, p95/p99 −21 %, idle-200 v šumu; K15 potrdi delež L1 60,6 %. Ni narejeno (ponovna ocena po M5-V): največje število upodobljenih, prekrivne teksture/delci, histereza praga. Prej: LOD in proračun upodobitve po razdalji — stopnja **L1** (model brez oči, glinta, prekrivne teksture, delcev, imen) in največje število upodobljenih NPC-jev. **Impostor (zadnja stopnja) je od 14. 10. v M5-V** (L2/L3, skupen atlas in izris). Spremeni videz → stikalo, privzeto original | M |
 | ~~M5-K K12~~ | **zaključeno 22. 10.** ([zapis](meritve/2026-10-22-M5-K-K12-okvir.md), D-052 / Q33) — ~~Okluzija: najprej združljivost z Entity Culling (render bounding box velikih NPC-jev, `isInRangeToRenderDist`), lastna izvedba samo, če ne zadošča~~. `RwRenderBox` (privzeto **1**): okvir upodobitve = hitbox ∪ okvir modela (Entity Culling ga bere prek RenderLib), NPC brez hitboxa in ležeč NPC dobita domet stoječega; K18 zeleno, A/B idle-500 v šumu. **Lastna okluzija zavržena** (Entity Culling zadošča in bere naš okvir) | S |
 | ~~M5-K K13~~ | **zavrženo kot samostojen paket 22. 10.** (D-053, [ponovna ocena](raziskave/M5-K-K13-K10-ponovna-ocena.md)): vezava teksture v profilu M5-K.1 ni merljiva, zgornja meja ~1–2 % pod šumom; L2/L3 imata lasten atlas. Ostane le kot podkorak K10. Prej: Skini v teksturnem nizu/atlasu — ena vezava teksture za vse NPC-je; pogoj za K10 | M |
-| ~~M5-K K10~~ | **odloženo izven M5 22. 10.** (D-053): premisa »manj klicev« z K14/K3 delno ovržena (strošek so oglišča v gonilniku), po D-051 so modeli samo znotraj 56 blokov, lasten GLSL za fiksno pot ne bo piksel-enak. Ponovno odprtje, če M5-K.2 ali poročilo pokaže ≥ 300 modelov znotraj 56 blokov s p95 > 16,7 ms ob privzetih stikalih; prvi korak tedaj poskus **K10a** (deli modela iz VBO, fiksna pot). Prej: Instanced renderer: vsi vidni NPC-ji istega modela v en klic; največji vzvod pri tisočih vidnih in največje tveganje (OptiFine, senčilniki, `customNPC_entities_mod`) | L |
+| ~~M5-K K10~~ | **26. 10.: prestavljeno v M14** (odločitev lastnika: merilo vizualno enako, vklop). **Odloženo izven M5 22. 10.** (D-053): premisa »manj klicev« z K14/K3 delno ovržena (strošek so oglišča v gonilniku), po D-051 so modeli samo znotraj 56 blokov, lasten GLSL za fiksno pot ne bo piksel-enak. Ponovno odprtje, če M5-K.2 ali poročilo pokaže ≥ 300 modelov znotraj 56 blokov s p95 > 16,7 ms ob privzetih stikalih; prvi korak tedaj poskus **K10a** (deli modela iz VBO, fiksna pot). Prej: Instanced renderer: vsi vidni NPC-ji istega modela v en klic; največji vzvod pri tisočih vidnih in največje tveganje (OptiFine, senčilniki, `customNPC_entities_mod`) | L |
 | ~~M5-K K3c~~ | **zaključeno 22. 10.** — ~~**Čistilni korak K3** (D-053): odstrani kodo zavrženega poskusa `RwEyesList` (`EyesList`, `EyesCheck`, ključ harnessa `eyesList`, veja v `LayerEyes`); popravi besedilo komentarja `RwRenderBox` in javadoc `RenderBox` (64/38,4 blokov pri RD 8, 1,0/80 pri RD 10). Brez spremembe obnašanja (`RwEyesList` je bil privzeto 0); dokaz `unit`/`build`/`package`~~ Odstranjeni tudi `EyesListTest`, izločitev v `build.gradle`, parametra `k-run.ps1 -Oci`/`-PreveriOci` in merili K13/K14; `LayerEyes` je spet 1:1 z 7881e50 + K5 (`Lod.far`). Zgodovinski test ID-ji `k3-*` in `audit/m5k3-ab.ps1` ne delujejo več (parameter `-Oci` odstranjen) | S |
 | ~~M5-K.2~~ | **zaključeno 22. 10.** ([zapis](meritve/2026-10-22-M5-K.2-sprejem-klienta.md), D-054 / Q34) — p95 idle-200 7,095 → **5,356 ms**, idle-500 12,825 → **9,817**, dalec-200 5,405 → **1,851**, dalec-500 13,017 → **2,942**; 1 % low 102,5 → 139,8 / 54,4 → 67,0 / 134,9 → 364,6 / 50,2 → 259,6 FPS; vsi razponi ločeni, brez regresije; pogoj K10 ni izpolnjen (500 modelov, p95 9,8 ms). Harness: vsa stikala eksplicitno prek posla (`dev/run` ostane 0), K12 iz geometrije, K16 natanko 0 brez `-Dalec 1`. Prvotni opis: ~~**Sprejem klienta (izhodni kriterij M5, D-053):** A/B 3 + 3 idle-200 in idle-500 (prizorišče M5-K.1) in `-Dalec 1` (prizorišče M5-V.6), original proti vsem sprejetim privzetim stikalom (`RwHeadwearSkip`, `RwLabelCache`, `RwFarView=2`, `RwRenderBox`); zapis p50/p95/p99 in 1 % low~~ | S–M |
 | ~~M5-K K4~~ | **zaključeno 19. 10.** ([zapis](meritve/2026-10-19-M5-K-K4-napisi-display-list.md)) — `RwLabelCache`, **privzeto 1** (D-032): ime in naslov iz display lista od drugega izrisa niza; preverba pikslov 0 razlik, idle-200 p50 −7,0 %, idle-50 −6,4 % (razponi ločeni). Dobitek ~⅓ stroška napisov; ostanek je izvajanje ~34 znakov v gonilniku | S |
@@ -681,6 +682,39 @@ prejšnje stanje; brez stikala obnašanje enako originalu.
 
 **Tveganja:** obstoječi svetovi s povezanimi NPC-ji (popravek doma pod stikalom); prenos na
 stotine naloženih NPC-jev hkrati (cena, paketi); GUI se dokončno preveri samo ročno.
+
+---
+
+## M14 — Instanciran izris bližnjih NPC-jev (K10a → K10)
+
+**Cilj:** model NPC-ja znotraj dometa impostorjev (56 blokov) ne stane več ~10 µs na NPC, ampak
+blizu cene impostorja (~0,2 µs, M5-V.6). Ocena **[H]**: pri 500 bližnjih NPC-jih p95 ~9,8 →
+~5–6 ms. Pomaga samo gneči modelov blizu (bitke, mesta, tabori).
+
+**Odločitev lastnika (26. 10. 2026):** za K10 velja merilo **vizualno enako** namesto piksel-enako
+(izjema od D-032 samo za ta milestone): razlike, ki jih s prostim očesom ne vidiš, ne preprečijo
+privzetega vklopa. Lastnik je zahteval vklop. Ozadje: lasten senčilnik mora ponoviti fiksno pot
+1.12 (luč, lightmap, megla, alfa test, rdeč blisk udarca, prekrivne teksture, glint), kar da drobne
+razlike zaokroževanja. [Ponovna ocena K10](raziskave/M5-K-K13-K10-ponovna-ocena.md) §3.
+
+**Vhodni pogoj:** nič; pogoj za ponovno odprtje iz D-053 nadomesti odločitev lastnika.
+**Vrstni red:** po M13, pred M6.
+
+### Paketi
+
+| ID | Paket | Vel. |
+|---|---|---|
+| M14.1 | **K10a** — deli modela iz VBO namesto display listov, fiksna pot, **ista slika** (piksel-enakost kot doslej). A/B idle-200/500 na prizorišču M5-K.1, 3 ponovitve; loči »oglišča v gonilniku« od »oglišč sploh«. Če je hitreje, privzeto vklopljeno po D-032 | S–M |
+| M14.2 | **K10** — instanciran izris z lastnim senčilnikom: vsi enaki deli/modeli v enem klicu, poza v senčilniku, ponovljena fiksna pot. Merilo **vizualno enako**: primerjava posnetkov na vseh prizoriščih M5-K in M5-V.7 (prag razlike na kanal in delež pikslov določi paket vnaprej, preden vidi rezultat) + ročni ogled lastnika v klientu; A/B kot M14.1 | L |
+| M14.3 | Združljivost in povratek: OptiFine s senčilniškim paketom → samodejno original (kot `FarCompat`, D-050); nepodprti modeli in sloji (lastni deli, MorePlayerModels, oklep, morf, rdeč blisk, glint) → original za tega NPC-ja; stikalo za izklop | M |
+| M14.4 | Sprejem: original proti vsem privzetim stikalom (kot M5-K.2) z M14 vklopljenim, regresija M5.Z | S |
+
+**Izhodni kriterij:** p95 pri idle-500 izmerljivo nižji od M5-K.2 (9,817 ms) z ločenima razponoma;
+lastnik razlike v klientu ne vidi; s senčilniškim paketom in pri nepodprtih modelih slika enaka
+originalu; stikalo vrne original.
+
+**Tveganja:** obseg ponovitve fiksne poti; raznolikost CNPC modelov; gonilniki (Intel/AMD/NVIDIA);
+če K10a ne pokaže koristi, je dobitek M14.2 še vedno samo ocena.
 
 ---
 
