@@ -610,3 +610,13 @@ iskanje — `Squad` po izdanem iskanju pokliče `SquadPlanner.searched(i)`, ki p
 `stuckUntil` (kazen `pathUntil` ostane). Član nato prehodi obvoz (ima prednost) in potem
 sledi skupni poti; dlje od 4 blokov od poti ostane PATH kot prej. Nova obtičanja se še vedno
 štejejo in vsako dovoli eno iskanje, kar je točno FA5 meja. Unit: `SquadPlannerTest` +2.
+
+**Zavrnitev (seja 150, Q65):** na 61bf7d8f… navigator sled (8.960) in ab-v1 FA5 G formalno
+uspeta (11 ≤ 11, 12 ≤ 15), a meja raste z obtičanji, ki jih TRACK sam povzroči: obtičanja G
+3–6 → 10–14, G DONE 233–246 → 318/348 tickov, FA4 G 6,932 / 10,609 (M4.14b 7,571–8,592).
+Vsota iskanj in obtičanj se ne zmanjša, gibanje je počasnejše. Obtičanja so ob zidu bočno od
+vrat, pogosto v TRACK s ciljem kolone za članom (hipoteza: gneča na sredinski črti). Poskus
+**ni sprejet**: koda ostane v zgodovini (`884175d`), produkcija in testi povrnjeni na
+`cbad3c3` (= izmerjeni 984dc27a…). M4.14d ostane odprt; nov poskus mora poleg FA5 ohraniti
+G DONE ≤ 246 tickov in obtičanja G ≤ 6. Pragovi, scena in config isti.
+[Dokazi](meritve/2026-10-26-M4.14d-sledenje-poti.md).

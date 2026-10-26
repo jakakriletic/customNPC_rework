@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 140 → 1)
+# Arhiv: dnevnik sej (vnosi 147 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,23 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+
+### 2026-10-26 (147) — M4.14b: D-077 potrjen, koda zamrznjena, FA5 v M4.14d
+
+**Paket:** M4.14b (D-078/Q61) · **Stanje:** **delno; preostali ID-ji na zamrznjenem odtisu**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Na 984dc27a… uspejo unit (tudi `SquadAdapterTest`, `MountGuardTest`), build, package in
+navigator-harness-v3. Navigator sled ima 8.960 zapisov brez `FORM-NAVERR`: izničenj je 17
+(prej 28), vsa v tickih 7–26, nobene izgube obvoza G; `iskanj_izgub` G 7 → 0, `iskanj` 28 → 18.
+FA5 G še pade (19 > 4), prav tako FA1/2 in FA4 G/O 8,041/6,417 >6.
+
+Razčlenitev 18 zahtev: 3 obtičanja, 4 prva iskanja kolone, 2 opravičili, 4 premiki točke
+kolone, 5 prehod v SETTLING. Pri 13 od 15 nedovoljenih je cilj na že poiskani skupni poti.
+D-078: koda ostane na 984dc27a, na istem odtisu se zaženejo harness-v1, ab-v1, trace-v1,
+recovery-harness-v2 in recovery-trace-v2. Sledenje skupni poti gre v nov paket M4.14d.
+Pragovi isti, F1–F12 odprti.
 
 
 ### 2026-10-22 (140) — M4.14b: v1 popoln, zahtevana recovery prehoda

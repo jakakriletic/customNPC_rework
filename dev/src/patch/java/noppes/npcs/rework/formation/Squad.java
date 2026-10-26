@@ -26,11 +26,9 @@ import noppes.npcs.entity.EntityNPCInterface;
  *       clana. Iskanja poti ni; vanilla {@code PathNavigate} in {@code EntityMoveHelper}
  *       poskrbita za hojo, skok na stopnico in animacijo, CustomNPCs pa vidi
  *       {@code Walking = 1}, kot pri vsaki drugi poti.</li>
- *   <li>{@code TRACK}: clan je dalec ali opravicen, a sta on in njegov cilj ob skupni
- *       poti enote; dobi pot iz njenih tock, brez iskanja (M4.14d).</li>
- *   <li>{@code PATH}: clan je obtical, dalec od skupne poti ali enota nima poti, zato dobi
- *       pravo iskanje poti ({@code tryMoveToXYZ}), najvec {@link #PATH_BUDGET} na enoto na
- *       tick in najvec enkrat na {@link #PATH_INTERVAL} tickov na clana.</li>
+ *   <li>{@code PATH}: clan je dalec ali obtical, zato dobi pravo iskanje poti
+ *       ({@code tryMoveToXYZ}), najvec {@link #PATH_BUDGET} na enoto na tick in najvec
+ *       enkrat na {@link #PATH_INTERVAL} tickov na clana.</li>
  * </ul>
  */
 public final class Squad {
@@ -48,8 +46,6 @@ public final class Squad {
      * {@code moveForward} in {@code AIMoveSpeed} na isto vrednost), trenje tal 0,546.
      */
     public static final double GROUND_SPEED_COEFF = 2.2;
-    /** Premik cilja TRACK, nad katerim se pot iz skupne poti sestavi znova (brez iskanja). */
-    public static final double TRACK_REBUILD = 1.0;
     /** Razdalja, do katere se zadnja tocka poti steje za cilj (ista meja kot v D-015). */
     public static final double GOAL_REACHED = 2.0;
     /** Konec poti zadnjega iskanja, blizji cilju od tega, pomeni uspesno iskanje. */
@@ -76,10 +72,6 @@ public final class Squad {
     /** Pot zadnjega pravega iskanja (PATH): obvoz, ki ga clan morda se ni prehodil. */
     private final Path[] recovery;
     private final double[] lastFace;
-    /** Pot TRACK, ki jo je clan nazadnje dobil, in cilj, za katerega je bila sestavljena. */
-    private final Path[] trackRoute;
-    private final double[] trackX;
-    private final double[] trackZ;
 
     private int ticks;
     private int pathBudget;
@@ -95,8 +87,6 @@ public final class Squad {
     private int byLost;
     private int inSettling;
     private int beyondSteer;
-    /** Sestavljene poti TRACK (brez iskanja, M4.14d); ne steje v {@code iskanj}. */
-    private int trackRoutes;
     private int alive;
     private boolean finished;
     private final boolean pathless;
@@ -124,9 +114,6 @@ public final class Squad {
         this.lastPathZ = new double[n];
         this.recovery = new Path[n];
         this.lastFace = new double[n];
-        this.trackRoute = new Path[n];
-        this.trackX = new double[n];
-        this.trackZ = new double[n];
         java.util.Arrays.fill(lastPathTick, -PATH_INTERVAL);
         java.util.Arrays.fill(lastFace, Double.NaN);
         for (int i = 0; i < n; i++) {
@@ -387,15 +374,6 @@ public final class Squad {
         double ty = planner.targetY[i];
         double tz = planner.targetZ[i];
         boolean detour = activeRecovery(i, nav);
-        if (mode == SquadPlanner.TRACK && !pathless) {
-            if (detour) {
-                // Nedokoncan obvoz iz iskanja ob obticanju ima prednost, kot pri STEER.
-                nav.setSpeed(speedIn);
-                return;
-            }
-            follow(i, nav, tx, ty, tz, speedIn);
-            return;
-        }
         if (mode == SquadPlanner.STEER) {
             if (detour) {
                 // Nedokoncan obvoz ohranimo tudi ob novem STEER cilju: blizina
@@ -449,7 +427,6 @@ public final class Squad {
                 RwNavigatorAccess.restartTimeout(nav);
             }
             recovery[i] = nav.getPath();
-            planner.searched(i);
         } else {
             nav.setSpeed(speedIn);
         }
@@ -482,50 +459,6 @@ public final class Squad {
             return false;
         }
         return Math.hypot(tx - npc.posX, tz - npc.posZ) <= SquadPlanner.STEER_MAX;
-    }
-
-    /**
-     * TRACK: pot iz tock skupne poti enote od clana do cilja, brez iskanja (M4.14d).
-     * Ista pot ostane, dokler je navigator ima in se cilj ne premakne za vec kot
-     * {@link #TRACK_REBUILD}; potem se sestavi znova, spet brez iskanja.
-     */
-    private void follow(int i, PathNavigate nav, double tx, double ty, double tz, double speedIn) {
-        Path current = trackRoute[i];
-        if (current != null && nav.getPath() == current && !current.isFinished()
-                && Math.hypot(tx - trackX[i], tz - trackZ[i]) <= TRACK_REBUILD) {
-            nav.setSpeed(speedIn);
-            return;
-        }
-        PathTrack part = planner.track().between(planner.trackFrom[i], planner.trackTo[i]);
-        java.util.List<PathPoint> points = new java.util.ArrayList<PathPoint>();
-        for (int k = 0; k < part.size(); k++) {
-            add(points, part.pointX(k), part.pointY(k), part.pointZ(k));
-        }
-        add(points, tx, ty, tz);
-        Path route = new Path(points.toArray(new PathPoint[points.size()]));
-        if (nav.getPath() != null && nav.getPath().isFinished()) {
-            nav.clearPath();
-        }
-        if (nav.setPath(route, speedIn)) {
-            // Svoje okno vanilla casovne meje, kot nova pot iskanja (D-077).
-            RwNavigatorAccess.restartTimeout(nav);
-        }
-        nav.setSpeed(speedIn);
-        // setPath obdrzi trenutno pot, ce ima iste tocke; hrani tisto, ki jo navigator res ima.
-        trackRoute[i] = nav.getPath();
-        trackX[i] = tx;
-        trackZ[i] = tz;
-        // Opusceni ali koncani obvoz se ne steje vec kot izgubljen (iskanj_izgub).
-        recovery[i] = null;
-        trackRoutes++;
-    }
-
-    /** Doda tocko bloka, ce ni enaka zadnji. */
-    private static void add(java.util.List<PathPoint> points, double x, double y, double z) {
-        PathPoint p = new PathPoint((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z));
-        if (points.isEmpty() || !points.get(points.size() - 1).equals(p)) {
-            points.add(p);
-        }
     }
 
     /** Pot z eno tocko; iskanja ni. */
@@ -702,12 +635,10 @@ public final class Squad {
                 "RWSQUAD enota=%d ime=%s oblika=%s faza=%s clanov=%d/%d ostane=%.1f hitrost=%.3f/%.3f"
                         + " zaostali=%d opraviceni=%d kolona=%d na_mestu=%d iskanj=%d obnov=%d obtical=%d"
                         + " brez_poti=%s cilj_nedosegljiv=%s neporavnani=%d tick=%d"
-                        + " iskanj_rok=%d iskanj_premik=%d iskanj_izgub=%d iskanj_postav=%d iskanj_dalec=%d"
-                        + " sledenj=%d",
+                        + " iskanj_rok=%d iskanj_premik=%d iskanj_izgub=%d iskanj_postav=%d iskanj_dalec=%d",
                 id, label, order.shape, planner.phase(), alive, members.length, planner.remaining(),
                 planner.anchorSpeed(), planner.cruise(), stragglers, excused, trailing, settled, pathRequests,
                 planner.replans(), planner.stuckEvents(), pathless, planner.goalUnreachable(),
-                planner.unsettledAtEnd(), ticks, byInterval, byMove, byLost, inSettling, beyondSteer,
-                trackRoutes);
+                planner.unsettledAtEnd(), ticks, byInterval, byMove, byLost, inSettling, beyondSteer);
     }
 }

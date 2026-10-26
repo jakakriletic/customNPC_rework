@@ -40,13 +40,6 @@ public final class SquadPlanner {
     public static final int STEER = 1;
     /** Clan je predalec ali obtical: potrebuje pravo iskanje poti. */
     public static final int PATH = 2;
-    /**
-     * Clan je ob skupni poti in njegov cilj tudi: sledi ze poiskani poti enote od
-     * {@link #trackFrom} do {@link #trackTo}, brez iskanja (M4.14d, 06-FORMACIJE §1).
-     */
-    public static final int TRACK = 3;
-    /** Clan in cilj, blizja skupni poti od tega, ji sledita namesto iskanja (M4.14d). */
-    public static final double TRACK_JOIN = 4.0;
 
     /** Blizje od tega je clan na mestu. */
     public static final double SETTLED = 0.4;
@@ -122,8 +115,6 @@ public final class SquadPlanner {
     private final double[] finalZ;
     private final int[] trailUntil;
     private final int[] pathUntil;
-    /** Kazen obticanja: do tega ticka pravo iskanje, tudi ob skupni poti (M4.14d). */
-    private final int[] stuckUntil;
     private final double[] checkX;
     private final double[] checkZ;
     private final int[] checkTick;
@@ -142,9 +133,6 @@ public final class SquadPlanner {
     public final boolean[] straggler;
     public final boolean[] trailing;
     public final double[] error;
-    /** Pri {@link #TRACK}: lok skupne poti ob clanu in ob cilju. */
-    public final double[] trackFrom;
-    public final double[] trackTo;
 
     /**
      * @param slots       mesto za vsakega clana, ze dodeljeno ({@code slots[i]} je clan i)
@@ -184,7 +172,6 @@ public final class SquadPlanner {
         finalZ = new double[n];
         trailUntil = new int[n];
         pathUntil = new int[n];
-        stuckUntil = new int[n];
         checkX = new double[n];
         checkZ = new double[n];
         checkTick = new int[n];
@@ -201,12 +188,8 @@ public final class SquadPlanner {
         straggler = new boolean[n];
         trailing = new boolean[n];
         error = new double[n];
-        trackFrom = new double[n];
-        trackTo = new double[n];
         Arrays.fill(faceYaw, Double.NaN);
         Arrays.fill(error, Double.NaN);
-        Arrays.fill(trackFrom, Double.NaN);
-        Arrays.fill(trackTo, Double.NaN);
 
         if (!formFirst || track.length() < FORM_SKIP) {
             enterSettling();
@@ -382,9 +365,8 @@ public final class SquadPlanner {
             return;
         }
         double moved = horizontal(x - checkX[i], z - checkZ[i]);
-        if ((mode[i] == STEER || mode[i] == TRACK) && e > 1.0 && moved < STUCK_MOVE) {
+        if (mode[i] == STEER && e > 1.0 && moved < STUCK_MOVE) {
             pathUntil[i] = tick + STUCK_PENALTY;
-            stuckUntil[i] = tick + STUCK_PENALTY;
             trailUntil[i] = tick + STUCK_PENALTY;
             stuckEvents++;
         }
@@ -434,8 +416,6 @@ public final class SquadPlanner {
         double fz = FormationMath.forwardZ(yaw);
         for (int i = 0; i < n; i++) {
             faceYaw[i] = Double.NaN;
-            trackFrom[i] = Double.NaN;
-            trackTo[i] = Double.NaN;
             if (!eligible[i]) {
                 mode[i] = HOLD;
                 speed[i] = 0;
@@ -458,22 +438,12 @@ public final class SquadPlanner {
                 // Acquiring the slot ends this recovery episode. Keep the column
                 // target (trailUntil), but do not force PATH when the anchor resumes.
                 pathUntil[i] = 0;
-                stuckUntil[i] = 0;
                 mode[i] = HOLD;
                 speed[i] = 0;
                 faceYaw[i] = slots[i].faceOutward ? outwardYaw(i) : yaw;
                 continue;
             }
-            if (tick < stuckUntil[i]) {
-                // Obticanje dokaze, da ravna crta ali skupna pot tu ne zadosca.
-                mode[i] = PATH;
-            } else if (e > STEER_MAX || tick < pathUntil[i]) {
-                // Dalec ali opravicen: ob skupni poti ji sledi, sicer pravo iskanje
-                // (M4.14d; D-078: 13 od 15 iskanj je imelo cilj na ze poiskani poti).
-                mode[i] = alongTrack(i, px[i], pz[i]) ? TRACK : PATH;
-            } else {
-                mode[i] = STEER;
-            }
+            mode[i] = e > STEER_MAX || tick < pathUntil[i] ? PATH : STEER;
             double v;
             if (phase == Phase.MARCHING) {
                 double along = dx * fx + dz * fz;
@@ -483,24 +453,6 @@ public final class SquadPlanner {
             }
             speed[i] = Math.max(MIN_SPEED, Math.min(vmax[i], v));
         }
-    }
-
-    /**
-     * Ali sta clan in njegov cilj najvec {@link #TRACK_JOIN} od skupne poti. Ce sta,
-     * zapise loka za {@link #TRACK}.
-     */
-    private boolean alongTrack(int i, double x, double z) {
-        double from = track.nearestS(x, z);
-        if (Math.hypot(x - track.x(from), z - track.z(from)) > TRACK_JOIN) {
-            return false;
-        }
-        double to = track.nearestS(targetX[i], targetZ[i]);
-        if (Math.hypot(targetX[i] - track.x(to), targetZ[i] - track.z(to)) > TRACK_JOIN) {
-            return false;
-        }
-        trackFrom[i] = from;
-        trackTo[i] = to;
-        return true;
     }
 
     private double outwardYaw(int i) {
@@ -652,21 +604,6 @@ public final class SquadPlanner {
 
     public int size() {
         return n;
-    }
-
-    /**
-     * Squad je za clana {@code i} izdal pravo iskanje. Obticanje dovoli eno iskanje
-     * (FA5): ostanek kazni ({@code pathUntil}) clan prehodi obvoz in nato sledi skupni
-     * poti, ce je ob njej, namesto novega iskanja ob vsakem premiku cilja (M4.14d;
-     * navigator sled ae8a889f: 8 od 14 iskanj G ponovljenih med kaznijo).
-     */
-    public void searched(int i) {
-        stuckUntil[i] = 0;
-    }
-
-    /** Trenutna skupna pot enote. */
-    public PathTrack track() {
-        return track;
     }
 
     public double anchorX() {
