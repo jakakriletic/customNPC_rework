@@ -589,19 +589,20 @@ ko je vse ostalo večinoma narejeno.
 |---|---|---|
 | ~~M11.0~~ | Raziskava izvedbe — **narejeno 26. 10.** ([zapis](raziskave/M11.0-vojske-prek-zemljevida.md)); ob začetku M11 se preveri proti tedanjemu stanju M4 | S |
 | M11.1 | Register vojsk (`WorldSavedData`: ime, lastnik igralec/frakcija, barva, privzeta oblika in drža, zadnja znana lega) in NBT `RwArmy` na NPC-ju (privzeto brez = original); ukaz `/rwarmy`, skriptni API | S–M |
+| M11.1b | **Dovoljenja drugim igralcem** (zahteva lastnika 26. 10.): lastnik (za svoje) ali op (za vse) igralcu dodeli *vidi* in *upravlja* — izbrane vojske ali **vse** (tudi kasneje ustvarjene); upravlja vključuje vidi. Seznam prijavljenih in že videnih igralcev (`usercache`), shranjen UUID. Posnetek pošlje samo vidne vojske, vsak ukaz se preveri na strežniku; odvzem velja ob naslednji osvežitvi, nov ukaz zavrnjen. `/rwarmy grant/revoke`; GUI v M11.8. [M11.0 §3.5a](raziskave/M11.0-vojske-prek-zemljevida.md) | S–M |
 | M11.2 | Grozdi in posnetek: NPC-ji iste vojske po razdalji (radij, prag v configu), glavni grozd + zaostali; povzetek strežnik → klient prek ločenega kanala `rework`, osvežitev samo ob odprtem zemljevidu/GUI | S |
 | M11.3 | Vojska iz čet: razrez na čete (privzeto do 16–24 članov), ena pot vojske, makro formacija čet, vsaka četa obstoječi `Squad`; zaostali dobijo »pridruži se« | M |
 | M11.4 | Načini in drža: formacija / pohod / **roj** (brez mest, ohlapen odmik) in **pasivno / napad** (boj med pohodom, vrnitev v četo) | M |
 | M11.5 | Dolg pohod: razrez poti vojske na vmesne točke (gradi na M4.10). Če meritev pokaže slabe poti vodje tudi po M4.10, oceni vodjo na Baritonu ([07 §4](07-BARITONE-OZADJE.md), ocena 26. 10.) | M |
 | M11.6 | Nenaloženi chunki: najprej chunk ticket, ki potuje z vojsko, z omejitvijo hkratnih pohodov v configu; abstraktni pohod samo, če meritev ticketa pokaže nesprejemljivo ceno (nova odločitev D-0NN) | M–L |
 | M11.7 | Zemljevid: most CNPC → `xaerofleetcommand` (`ladja_mod`; odsev, fail-closed, kot `DavincisFleetBridge`), marker prapora s številom, izbira načina/drže ob ukazu, preverba pravic (lastnik / op), omejitev paketov. Ladje in vojske v istem vmesniku | M |
-| M11.8 | GUI: polje vojske v nastavitvah NPC-ja; **poveljniška palica** — desni klik na NPC (pokaži/nastavi), množična dodelitev v svetu, zavihka *V okolici* (cilj z žarkom iz pogleda, doseg naloženih blokov) in *Vse vojske* (lega, število, stanje, ustavi/vrni) | M |
+| M11.8 | GUI: polje vojske v nastavitvah NPC-ja; **poveljniška palica** — desni klik na NPC (pokaži/nastavi), množična dodelitev v svetu, zavihka *V okolici* (cilj z žarkom iz pogleda, doseg naloženih blokov) in *Vse vojske* (lega, število, stanje, ustavi/vrni) ter *Dovoljenja* (igralci, vidi/upravlja: nič / izbrane / vse, M11.1b) | M |
 | M11.9 | Robni primeri: voda, prepadi, grla, obtičali člani, obnašanje na cilju, smrt/odhod članov, ponovno nalaganje sveta med pohodom | M |
 | M11.10 | Meritev: pohod 200 NPC-jev (vojska iz čet) proti baselinu M2.6 (MSPT, alokacija), cena ticketov M11.6; preverba v klientu z igralcem (zemljevid, palica, GUI) | S–M |
 
 **Izhodni kriterij:** 200 NPC-jev ene vojske doseže cilj, izbran na zemljevidu in s palico, na
 prizorišču z grlom in na razdalji čez `NpcNavRange`, tudi čez nenaložene chunke; ukaz preživi
-shranjevanje; brez `RwArmy` je obnašanje enako originalu; MSPT p95 med pohodom izmerjen in v
+shranjevanje; igralec brez dovoljenja vojske ne vidi in ne more ukazovati; brez `RwArmy` je obnašanje enako originalu; MSPT p95 med pohodom izmerjen in v
 dogovorjenem pasu.
 
 **Tveganja:** nenaloženi chunki (M11.6) so največja neznanka; kohezija formacij še ne izpolni FA
