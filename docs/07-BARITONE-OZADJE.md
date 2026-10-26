@@ -122,3 +122,32 @@ Oznake: **OK** — deluje enako ali bolje; **razlika** — dokumentirano drugač
 `dev/src/patch` (M3.1, `396b607`), zato je M7.4 (veja v `updateTasks()`) izvedljiv. Vrstni red:
 knjižnični del U2–U6 (API 2), nato M7.2 (most samo prek API in `Loader.isModLoaded`), M7.3
 (globalno stikalo), M7.4 (`updateTasks`, U2, U7).
+
+---
+
+## 4. Ocena 26. 10. 2026: Baritone za vodjo formacije — zdaj ne
+
+**Vprašanje lastnika:** ali bi Baritone (zmogljivo iskanje poti) pomagal formacijam in ali naj se
+doda A/B »vodja na Baritonu« v scenarij M4.14? Lastnik je odločitev prepustil raziskavi.
+
+**Odločitev: ne dodamo zdaj; ponovna ocena ob M11.5.** Razlogi:
+
+1. **Neuspehi formacij niso v kakovosti iskanja poti [M].** Po D-079 vodja pot najde (G/O DONE,
+   8/8 končnih mest). Padajo FA1/2 (merilo skupnega cilja proti 8 različnim mestom), FA4
+   (geometrija kolone skozi dvoblokovna vrata) in FA5 G (člani ne sledijo skupni poti → M4.14d,
+   D-080). Nobenega od teh boljša pot vodje ne spremeni.
+2. **API knjižnice poti ne izda [K].** `Squad` iz poti vodje (`getPathToXYZ`) zgradi skupno pot
+   `PathTrack`, ki ji sledijo vsi člani (D-080 TRACK). `INpcNavigator` (API 2) ima samo
+   `goTo`/`follow`/`stop`/`state`; Baritone entiteto vodi sam, pot je razsekana na segmente in se
+   asinhrono preračunava. Za skupno pot bi knjižnica rabila nov API (posnetek poti + dogodek ob
+   zamenjavi segmenta), `Squad` pa skupno pot, ki se med pohodom podaljšuje in menja — delo v
+   dveh repozitorijih, ocena L, brez izmerjenega problema, ki bi ga rešilo.
+3. **Poceni A/B ne obstaja [K].** `RwNavBackend.selected` izključi vsakega člana enote
+   (`!inSquad`), tudi vodjo — strožje od U7. Varianta zahteva zgornjo spremembo, ne samo stikala.
+4. **Zunanja odvisnost:** formacije bi brez `npcbaritone` v `mods/` delovale drugače kot z njim.
+
+**Kdaj se splača ponovno odpreti:** dolg pohod M11 (cilj daleč čez `NpcNavRange`, zahteven teren).
+Najprej ga rešujeta M4.10 (nadaljevanje delne poti, za vse NPC-je brez odvisnosti) in M11.5
+(razrez poti sidra). Če meritev M11.5/M11.8 po M4.10 pokaže, da vodja ne najde ali najde slabo
+pot (delež celih poti, razmerje dolžine, čas do cilja po M2.7), se oceni »vodja na Baritonu« z
+API 3 knjižnice. Odločitev nima D-številke, ker ne spreminja kode ali obstoječih paketov.

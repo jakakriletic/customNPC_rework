@@ -586,7 +586,7 @@ začne šele, ko je vse ostalo večinoma narejeno.
 | M11.2 | Strežnik → klient: periodičen povzetek skupine (ime, središče, število, stanje) prek **ločenega kanala** `rework` | S |
 | M11.3 | Adapter zemljevida (glej Q14): ena ikona na skupino, izbira | S–M |
 | M11.4 | Klient → strežnik: ukaz »pohod na (x, z)«; preverba pravic (lastnik / op) | S |
-| M11.5 | Dolg pohod: razrez poti sidra na vmesne točke (gradi na M4.10) | M |
+| M11.5 | Dolg pohod: razrez poti sidra na vmesne točke (gradi na M4.10). Če meritev pokaže slabe poti vodje tudi po M4.10, oceni vodjo na Baritonu ([07 §4](07-BARITONE-OZADJE.md), ocena 26. 10.) | M |
 | M11.6 | Odločitev in izvedba za neaktivne chunke: potujoč chunk ticket ali abstraktni pohod (nova odločitev D-0NN, ker se dotika »uspavanja oddaljenih NPC-jev«) | M–L |
 | M11.7 | Robni primeri: voda, prepadi, grla, obtičali člani, obnašanje na cilju | M |
 | M11.8 | Meritev: pohod 200 NPC-jev proti baselinu M2.6 (MSPT, alokacija) | S |
