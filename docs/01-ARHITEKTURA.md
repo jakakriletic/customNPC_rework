@@ -272,9 +272,303 @@ Odločitve se ne brišejo — če se preglasi, se doda nova, ki staro označi za
 | D-053 | 2026-10-22 | **Ponovna ocena K13 in K10 po M5-V.8 (D-035 (3)): K13 zavržen kot samostojen paket, K10 odložen izven M5 v zalogo, K2 in K11 zavržena; naslednja paketa sta čistilni korak K3 in M5-K.2 (sprejem klienta, izhodni kriterij M5).** (1) K13: vezava teksture v profilu M5-K.1 ni merljiva skupina, ena menjava je en GL klic proti ~30 µs izrisa NPC-ja → zgornja meja ~1–2 %, pod šumom; L2/L3 imata lasten atlas. Ostane le kot podkorak K10. (2) K10: premisa »nič klicev na NPC« je z K14 in K3 delno ovržena (manj klicev pri isti geometriji ne pomaga, strošek je sorazmeren ogliščem v gonilniku); po D-051 so modeli samo znotraj 56 blokov, zato K10 pospeši samo bližnjo gnečo; zahteva lasten GLSL za fiksno pot in skoraj zagotovo ni piksel-enak (D-032 → ostal bi izklopljen); izhodni kriterij M5 ga ne zahteva. Ponovno odprtje: M5-K.2 ali poročilo pokaže ≥ 300 modelov znotraj 56 blokov s p95 > 16,7 ms ob privzetih stikalih; prvi korak tedaj poskus K10a (deli modela iz VBO, fiksna pot). (3) K1, K6–K9 odloženi do prizorišča, ki jih vsebuje; cena izrisa L3 (~0,26 µs/impostor) zavržena kot paket; pas `rwfar` po chunkih in PBO peka odložena s pogojem (meja 100 µs presežena / zatikanje izmerjeno) | Odločeno samostojno po pooblastilu lastnika (seja 116) iz obstoječih meritev, brez novih zagonov. [Raziskava](raziskave/M5-K-K13-K10-ponovna-ocena.md). Protokol §2: kandidat, ki ne preseže šuma, se zavrže; L-paket z visokim tveganjem in dobitkom samo v redki bližnji gneči ni upravičen pred zaključkom M5 in M4 |
 | D-054 | 2026-10-22 | **M5-K.2 (sprejem klienta) je zaključen: klientski del izhodnega kriterija M5 (D-033) je izpolnjen; M5 kot celota se zapre šele po regresijskem paketu M5.Z.** A/B 3 + 3 original (vsa klientska stikala 0) proti vsem sprejetim privzetim stikalom (`RwHeadwearSkip` 1, `RwLabelCache` 1, `RwFarView` 2 z `RwImpostorStart` 56, `RwRenderBox` 1) v prizorišču M5-K.1 (RD 8) in M5-V.6 (`-Dalec 1`, RD 10): p95 idle-200 7,095 → 5,356 ms (−24,5 %), idle-500 12,825 → 9,817 (−23,5 %), dalec-200 5,405 → 1,851 (−65,8 %), dalec-500 13,017 → 2,942 (−77,4 %); 1 % low 102,5 → 139,8, 54,4 → 67,0, 134,9 → 364,6, 50,2 → 259,6 FPS; p50 in p99 enako, vsi razponi ločeni, regresije na privzeti strani ni. Pogoj ponovnega odprtja K10 (D-053) ni izpolnjen: 500 modelov znotraj ~42 blokov ima p95 9,817 ms (< 16,7). Ostali točki izhodnega kriterija M5 (funkcionalna matrika `PLAN_IMPLEMENTACIJE.md` §6, timerji in script trace proti referenci) od M5 nista bili ponovljeni na kodi s privzetimi stikali → nov paket **M5.Z** (prehod `matrika-run.ps1` in primerjava M2.7 na trenutni kodi) | Odločeno samostojno po pooblastilu lastnika (Q34, seja 118). Izhodni kriterij M5 je konjunkcija; od zadnjega prehoda matrike (17. 9.) so privzeto vklopljena stikala M5-S in M5-K (D-032, D-037, D-049, D-051, D-052), zato zaprtje M5 brez regresijskega prehoda ne bi bilo dokazano. Dokaz: 8 serij × 3 na `332af8c4…`, T1–T6 in K1–K16 zeleni v vseh 24 zagonih. [Zapis](meritve/2026-10-22-M5-K.2-sprejem-klienta.md) |
 | D-055 | 2026-10-22 | **M5.Z zaključen, M5 zaprt v načrtovanem obsegu regresijskih dokazov (Q35, Q36).** Q35: diagnostična JVM lastnost `rwprivzeto` (Gradle `rwPrivzeto`): 0 samo izpiše config, 1 po `loadConfig()` obnovi pred nalaganjem zajete vrednosti statičnih `@ConfigProp Rw*`; brez lastnosti vrednosti ostanejo iz configa. Datoteke configa in merilni pogoji ostanejo nespremenjeni; 23 polj, 12 razlik. Matrika preveri način v vsakem svežem logu. Q36: M2.7 meri navigacijo in nima timer sledi, zato napačno oznako v M5.Z nadomesti nov scenarij `sled-run.ps1`: referenca je isti popravljeni jar s stikali iz configa (0), kandidat s privzetimi vrednostmi kode. Nespremenjeni binar se preverja ločeno s `testOriginal`. Ohranjen B3 (razmik timerja 7 po restartu 8 tickov v obeh krakih), brez popravka izven obsega. Naslednji paket M4.14b → M4.16 po D-038 | Samostojno po pooblastilu lastnika (seja 119). Vseh šest zahtevanih testov zelenih na `c3e19fe4…`: unit, build, package (71 vnosov), sled in obe matriki (5/5 stopenj vsaka). Sled 97/75 dogodkov ter 19 razmikov po 8 tickov enaki; optimizirana collide pot potrjena (60 preskokov). Prvi neuspeh v obeh krakih je bil absolutna starost po restartu; faza 2 sedaj meri od init. Brez regresije v izvedeni pokritosti; nepokrite vrstice M0.7, Q1/Q22 in nameščeni render dodatki ostajajo za M10 oziroma ločene preverbe. [Zapis](meritve/2026-10-22-M5.Z-regresija.md) |
+| D-056 | 2026-10-22 | **M4.14b: prva preverba brez spreminjanja produkcijskega planerja ali sprejemnih pragov (Q37/Q38).** Q37: izolirana osnovna kopija sveta in dva kraka prek `-PrwWorld`, oba s privzetimi stikali kode (`-PrwPrivzeto=1`); config in uporabnikov svet ostaneta ista, klici navigacije se razlikujejo samo v fazi B. Q38: ohranjena prvotna merila FA1–FA6, dodatna meritev unikatnih zasedenih mest (<0,4 bloka), ker oddaljenost <2 od skupnega cilja ne zajame zunanjih stolpcev. Razpon ≤6 se še vedno preverja, čeprav je idealni premer legije 4×2 že 6,325. FA5 šteje začetno iskanje (+1 k obstoječemu števcu), ne identitet `Path`. Noben sklep o sprejemu pred controller rezultati in dimnim delom F1–F12 | Samostojno po pooblastilu lastnika, seji 120/121. **Q39:** prvi A/B pade pred meritvijo na deljenju stdout datoteke; popravimo samo bralnik (`FileShare.ReadWrite`), dodamo regresijsko pogodbo z odprtim zapisovalnikom in zahtevamo sveže controller rezultate. To ni dokaz napake formacij. Stara merila in geometrija niso skladni; to je razlog za dvojni izpis in razlago neuspehov, ne za prikaz lažnega uspeha. Izoliran `formacije-run.ps1` omogoča prvo reprodukcijo brez posega v stare merilne vhode; pogodbo preverja ločen samotest. [Priprava, brez meritev](meritve/2026-10-22-M4.14b-formacije.md) |
+| D-057 | 2026-10-22 | **M4.14b po prvem izmerjenem neuspehu: reprodukcija pred popravkom (Q40).** Ohranimo vse pragove, geometrijo in merilne vhode; FA1/2 in FA4 ostanejo neuspešni tudi ob znanem neskladju s širino legije. Ne ponavljamo istega A/B brez novega pristopa. Najprej controller `unit` z dvema novima reprodukcijama: nova pridobitev mesta ob prehodu MARCHING → SETTLING in smer kroga ob neposrednem zaključku DONE. Šele nato ciljan popravek, nova celotna preverba in dimni del F1–F12. Nobene spremembe produkcijskega planerja v tej seji | Samostojno po pooblastilu lastnika (seja 122). Na `360f3f60…` harness/unit/build/package uspejo; A/B ne: G 0/8, obstane 7,2 bloka pred koncem poti, 117 iskanj proti meji 36; O doseže 8 mest pri ticku 40, nato napaka naraste na 0,555 bloka. Ti podatki ne dokazujejo še vzroka. Novi reprodukciji sta pripravljeni, ne izvedeni; pričakovani rdeči rezultat ni sprejem paketa. [Izmerjeni neuspeh in naslednja preverba](meritve/2026-10-22-M4.14b-formacije.md) |
+| D-058 | 2026-10-22 | **M4.14b: po potrjeni reprodukciji omejimo popravek na dokazani napaki faz (Q41).** `enterSettling` počisti `settled`, da se mora član na novem končnem mestu ponovno ustaviti znotraj 0,4 bloka; DONE ob prehodu objavi HOLD in pravilni `faceYaw` tudi za krog, preden ga adapter uporabi za sidranje. Vsi pragovi, geometrija, hitrosti, adapter in merilni vhodi ostanejo isti. Zahtevamo sveže harness/unit/build/package/A/B; zastoja pri vratih in drsenja po zaključku ne razglasimo za odpravljena brez meritve | Samostojno po pooblastilu lastnika (seja 123). Controller `unit` na `dcbd1219…` ob 13:41 UTC izvede 402 primera, od tega padeta natanko `settlingRequiresNewArrivalWhenTheFinalSlotChanges` (prezgodnji DONE) in `completionPublishesOutwardFacingForEveryRingMember` (manjkajoči yaw); ostalih 400 uspe. Popravek še nima controller rezultatov; F1–F12 in celotni sprejem ostanejo odprti. [Dokaz in nadaljevanje](meritve/2026-10-22-M4.14b-formacije.md) |
+| D-059 | 2026-10-22 | **M4.14b: po zelenih reprodukcijah in neuspešnem A/B ločena bralna sled adapterja (Q42).** Pred nadaljnjim posegom v produkcijo `formacije-run.ps1 -Trace` v krak FORMACIJA vgradi ločen overlay, ki beleži položaje, motion, gibalni vhod/helper, planerjeve cilje/zastavice in navigator. Reference ohrani po DONE. Poseben prefix `m414b-trace-*`, pokritost 16 × 104 vzorcev; vsi stari FA preizkusi ostanejo aktivni. Dodatno zapisovanje pomeni diagnostični, ne sprejemni/performance zagon; po ciljanem popravku ostane obvezen običajni A/B. Timer samo na krmilniku uporablja interval 0 zaradi originalnega B3; produkcijski planer/adapter, geometrija, hitrosti in pragovi nespremenjeni | Samostojno po pooblastilu lastnika (seja 124). Na `a99e030c…` harness/unit/build/package uspejo, obe novi reprodukciji zeleni, vendar G ostane 7,2 bloka pred koncem s 116 pravimi iskanji proti meji 35; O DONE pri 38, nato napaka 0,555. To ne dokazuje vzroka. Pred novim popravkom opazujemo predtek članov kolone in preostalo gibanje po čiščenju poti. Zahtevan novi `m414b-trace-v1` in razširjeni samotest, še ne izvedena; brez trditve o odpravi ali sprejemu. [Dokazi in načrt](meritve/2026-10-22-M4.14b-formacije.md) |
+| D-060 | 2026-10-22 | **M4.14b: sled prevedemo v reprodukcije dejanskega adapterja pred popravkom (Q43).** Po popolni sledi zahtevamo controller `unit` s šestimi `SquadAdapterTest` primeri: HOLD in finish ustavita horizontalno vztrajnost/vhod/helper brez teleportacije ali spremembe gravitacije; STEER ne dodaja predteka točki kolone ali mirujočega sidra. Kontroli ohranita predtek pri premikajočem se sidru in odsotnost predteka v SETTLING. Test uporablja pravo Squad; navigator samo beleži setPath, brez sveta. Produkcije v tej seji ne spreminjamo. Po vsebinski reprodukciji ciljan popravek in svež običajni sprejem, vključno s F1–F12 | Samostojno po pooblastilu lastnika (seja 125). Na `c6d7fe1c…` controller harness uspe, diagnostična sled zajame 1.664 veljavnih zapisov, FA še padejo. O/0 po odstranitvi poti brez vhoda drsi z motionZ 0,146174 in trenjem 0,546; G dobi predtek proti zidu tudi ob cilju za članom in hitrosti sidra 0. To ne dokazuje vseh vzrokov G ali uspeha popravka. Štiri vsebinske reprodukcije naj bi padle, dve kontroli uspeli; še neizvedeno. [Analiza in načrt](meritve/2026-10-22-M4.14b-formacije.md) |
+| D-061 | 2026-10-22 | **M4.14b: po potrjeni reprodukciji omejimo popravek na zaustavitev in predtek adapterja (Q44).** HOLD in upravičen član ob finish počistita pot, helper postavita na WAIT ter ustavita AI hitrost, vhod naprej/stran in motionX/Z; položaj, gravitacija in motionY ostanejo isti. LEAD=2 velja samo v MARCHING pri premikajočem sidru za običajno mesto; kolona in mirujoče sidro dobita cilj brez predteka. Šest testov adapterja, geometrija, merilni vhodi in sprejemni pragovi ostanejo isti. Pred zaključkom zahtevamo sveže harness/unit/build/package, običajni A/B in diagnostično sled ter F1–F12 | Samostojno po pooblastilu lastnika (seja 126). Controller unit na `fba333de…` ob 14:23:36 UTC izvede 408 primerov, natanko štiri nove vsebinske reprodukcije padejo, obe kontroli uspeta; brez napake fixture. Cilji 71/72 namesto 69/70 ter motionX 0,012 in motionZ 0,146174 namesto 0 potrdijo obe poti adapterja. Popravek še ni preverjen in ne dokazuje prehoda vrat ali FA5. [Izidi in obseg popravka](meritve/2026-10-22-M4.14b-formacije.md) |
+| D-062 | 2026-10-22 | **M4.14b: po preverjenem popravku adapterja najprej manjkajoča sled iste kode (Q45).** Na `9c3650a7…` harness/unit/build/package in vseh šest testov adapterja uspejo; običajni A/B potrdi stabilnih 8/8 mest G/O in DONE (234/40 tickov), vendar FA1/2, FA4 in FA5 G ostanejo neuspešni. Pred novim posegom zahtevamo `m414b-trace-v1` na istem odtisu za članski kontekst preostalih zahtev PATH in preklopov STEER/PATH. Produkcije, števca in sprejemnih meril ne spreminjamo; že zelenih testov brez novih vhodov ne ponavljamo. Nato vsebinske reprodukcije pred ciljnim popravkom in ločen dimni del F1–F12 | Samostojno po pooblastilu lastnika (seja 127). G doseže 8 mest pri vzorcu 240, pri 560 napaka 0,384; O od 40 do 560 napaka 0,240. Premer MARCHING 6,540/6,428 >6, FA5 G 57 >5. Števec je število zahtev adapterja, sam zase ne dokazuje toliko izvedb A*: vanilla lahko vrne trenutno pot, S5 zahtevo preskoči. To je razlog za diagnozo, ne za znižanje števca ali opustitev neuspelega testa. V tej seji samo dokumentacija; paket ostane odprt, brez commita/pusha pred sprejemom. [Dokazi](meritve/2026-10-22-M4.14b-formacije.md) |
+| D-063 | 2026-10-22 | **M4.14b: pred popravkom življenjske dobe poti dve reprodukciji in štiri kontrole (Q46).** Popolna sled na `9c3650a7…` pokaže periodično zahtevo ob aktivni poti/istem cilju ter prekinitev večtočkovnega obvoza ob PATH → STEER. `SquadAdapterTest` zahteva ohranitev aktivne poti brez periodične zahteve, zadržanje obvoza k istemu cilju tudi ob STEER ter ohranitev korekcije po zaključku, novega cilja in ponovitve po izgubi ali neuspehu poti. Najprej controller unit z dvema pričakovanima vsebinskima neuspehoma; produkcija, števec, harness in pogoji ostanejo isti. Po potrjeni reprodukciji ciljan popravek in svež sprejem | Samostojno po pooblastilu lastnika (seja 128). Controller sled ob 14:42:50 UTC: 1.664/1.664 veljavnih zapisov, G/O DONE in stabilnih 8/8 mest, FA5 G 55 proti meji 5; FA1/2 in FA4 še padeta. G/7 pri 51 znova zahteva pot s ciljem −9,5/65,661600 in indeksom 1/10; G/2 med 120 in 140 ob istem cilju preklopi z 9 na 1 točko. To ne dokazuje toliko izvedb A* ali odprave FA5. Kontrole preprečijo slepo zatiranje vseh zahtev. Preverba fizike/vrat in F1–F12 ostane zahtevana; brez spremembe hitrosti ali pragov. [Dokazi in pogodbe](meritve/2026-10-22-M4.14b-formacije.md) |
+| D-064 | 2026-10-22 | **M4.14b: adapter ohrani nedokončan obvoz zadnjega iskanja (Q47).** Unit na `63f20805…` potrdi obe reprodukciji D-063 (`activeRecoveryDoesNotRepeatRequestJustBecauseIntervalElapsed`, `steerNearTargetKeepsUnfinishedRecoveryDetour`), štiri kontrole uspejo; 414 testov, 2 neuspešna. `Squad` si zapomni pot zadnjega `tryMoveToXYZ` člana. Dokler je ista pot v navigatorju, ni končana in se cilj od iskanja ni premaknil za več kot 3 bloke, PATH ne sproži periodične zahteve, STEER pa obvoza ne zamenja z enotočkovno potjo (samo posodobi hitrost). Nova zahteva ostane ob `noPath` (izgubljena/končana/očiščena pot), premiku cilja >3 ali neuspehu po cooldownu | Samostojno po pooblastilu lastnika (seja 129). Prag 3 bloke je isti kot obstoječi `moved > 3.0` za novo zahtevo, zato ni novega parametra. Obtičanje obravnava vanilla `checkForStuck`, ki pot pobriše → `noPath`. Števca, hitrosti, pragov FA, harnessa in pogojev ne spreminjamo. Učinek na FA5/FA1/2/FA4 ni dokazan, dokler ni svežih controller testov; F1–F12 ostanejo odprti. [Dokazi](meritve/2026-10-22-M4.14b-formacije.md) |
+| D-065 | 2026-10-22 | **M4.14b: uspešno končano iskanje se ne ponavlja; ostanek prevozi STEER (Q48).** Na `637ad98f…` (D-064) so harness/unit/build/package zeleni, A/B pade samo še na FA1/2 (skupni cilj), FA4 6,458/6,403 in FA5 G 36 proti meji 5; G 21 od 35 zahtev v oknu 200–220 ob prehodu v SETTLING pri štirih upravičenih članih. V PATH je `nav.noPath()` resničen tudi za **končano** pot, zato član v kazni obtičanja (`pathUntil`, 60 tickov) zahteva isto točko vsakih 5 tickov. Popravek: če je pot zadnjega iskanja prehojena, se konča ≤ `ARRIVED` = 1,5 bloka od cilja, cilj ni premaknjen >3 in je član v dosegu `STEER_MAX`, adapter postavi enotočkovno pot brez iskanja. Takojšnja ponovitev samo za opuščeno nedokončano pot; neuspešno ali delno iskanje počaka `PATH_INTERVAL` | Samostojno po pooblastilu lastnika (seja 130). Dva nova testa adapterja (`completedRecoveryAtTargetSteersInsteadOfRepeatingSearch`, `completedPartialRecoveryRetriesOnlyAfterInterval`) sta po statični analizi [K] na `637ad98f…` rdeča (pogoj `noPath && ticks-last>=5`), controller pa ju izvede samo na kodi s popravkom: odstopanje od reda D-063 zavestno, ker sprožilec iz kode ni dvoumen in vsak cikel stane celoten prehod. Novi parameter `ARRIVED` (1,5 < `GOAL_REACHED` 2). Pragovi FA, števec, hitrosti, geometrija in merilni vhodi isti. FA1/2 in FA4 sta neskladni z geometrijo legije 4×2 (D-056) in ostaneta zapisana neuspeha; F1–F12 odprti. [Dokazi](meritve/2026-10-22-M4.14b-formacije.md) |
+| D-066 | 2026-10-22 | **M4.14b: razlogi članskih iskanj v `RWSQUAD`, brez spremembe obnašanja (Q49).** Na `31c1fb2b…` (D-065) A/B: FA5 G 32 (prej 36) proti meji 5, 17 zahtev v oknu 200–220 ob prehodu v SETTLING. Hipoteza: člani s kaznijo `pathUntil` ponovno iščejo ob premiku cilja >3 bloke, ob SETTLING pa vsak član v PATH še enkrat. Pred posegom v adapter `Squad` šteje vsako člansko zahtevo v en razlog (`iskanj_rok`/`iskanj_premik`/`iskanj_izgub`) ter `iskanj_postav` (SETTLING) in `iskanj_dalec` (napaka > `STEER_MAX`). Števec `iskanj`, merila FA in pragovi nespremenjeni. [Dokazi](meritve/2026-10-22-M4.14b-formacije.md) |
+
+**D-066/Q49, nadaljevanje (seja 132):** na `44f3390b…` harness/unit/build/package uspejo;
+A/B `audit/m414b-2026-10-22-205327` izmeri 31 članskih zahtev G: rok 1, premik 20,
+opuščena pot 10, od tega 8 v SETTLING. FA5 G z začetnim iskanjem 32 > 6; FA1/2 in FA4
+še neuspešni. Agregat ne pove, kdo je pot zamenjal, zato pred popravkom zahtevamo samo
+manjkajoči `m414b-trace-v1` na isti kodi. Že zelenih testov brez novih vhodov ne ponavljamo;
+produkcija, števec in merila nespremenjeni. [Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
 
 **Izid D-022 (28. 9. 2026).** [M7.8 A/B](meritve/2026-09-28-M7.8-zakljucek.md) je dal 8/8 celih poti pri obeh ozadjih, zato vrata V4 niso prestana. Globalni `RwNavBackend` ostane privzeto 0; Baritone se ne sprejme kot CNPC privzeto ozadje. R1 je dodatno pokazal, da adapter na nosilcu z jahačem obstane, ker `MountGuard` ne obnovi njegovega zasebnega stanja; zato sta iz Baritona izključena tako jahač kot nosilec s potnikom.
 
 **Popravek vrat V4 (28. 9. 2026, knjižnica D-043).** Veličina 1 je bila pri vanilli že 8/8, zato »izboljša veličine 1–3« ni bilo izpolnljivo. Od zdaj: veličina 1 ni slabša; veličini 2 in 3 imata boljšo mediano **in** Baritonov najslabši zagon ni slabši od vanille; Baritone najmanj 5 ponovitev. Veličini 5–6 štejeta šele, ko obe ozadji merita isti dogodek. Izid M7.8 se s tem ne spremeni (grlo B najslabši 4/8 proti 6/8). Vzrok nestabilnosti grla B išče M7.9 (sled knjižnice, `nav-run.ps1 -Sled`).
 
 **Sprejem V4 (28. 9. 2026).** Po M7.9 (vzrok nestabilnosti grla je gneča) in M7.10c (knjižnica: čakanje v gneči, `crowdYield`) je Baritone v 5 zagonih prispel 8/8 na grlu A (vanilla 1/8), 8/8 na grlu B (vanilla 6/8) in 8/8 na odprtem, z razponom 0 ([meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md)). Uporabnik je V4 sprejel z znano omejitvijo: pri več NPC-jih na istem ciljnem bloku zadnji prispe 2–6 s kasneje. Baritone z `crowdYield` ostane **izbirno** ozadje; `RwNavBackend` in `crowdYield` sta privzeto izklopljena, brez njiju je obnašanje nespremenjeno.
+
+### D-067 — M4.14b: po popolni sledi reprodukcija zaključka recovery (2026-10-22, Q50)
+
+**Vprašanje:** ali po sledi na `44f3390b…` znova popravljati adapter ali najprej
+preveriti, ali HOLD res zaključi planerjevo zahtevo PATH?
+
+**Odločitev:** najprej controller `unit` s tremi novimi javno opazljivimi prehodi v
+`SquadPlannerTest`: doseženo mesto HOLD → premik sidra zahteva STEER; nedoseženo mesto
+ostane PATH; odriv nad STEER_MAX tudi po HOLD zahteva PATH. Fixture sproži obtičanje
+z dejanskim planerjevim detektorjem, brez vpisovanja zasebnih polj. Pričakovan je en
+vsebinski neuspeh in dve zeleni kontroli, kar še ni izvedeno. Produkcija je nespremenjena.
+
+**Razlog:** controller sled `audit/m414b-trace-2026-10-22-210115` ima 1.664/1.664 zapisov
+brez vrzeli; G/5 pri 180 drži mesto (HOLD, pot null), kazen PATH pa ostane do 211 in pri
+200 znova vodi v PATH. Koda v veji HOLD ne zaključi `pathUntil`. To je ožji dokazljiv
+problem od poskusa razložiti vseh 31 zahtev. Med 200–220 sled vzorči le robova, ne identitet
+`recovery` in vzroka vsake zamenjave, zato 7 zahtev zaradi izgube ne pripišemo izključno
+HOLD ali drugemu AI-ju. Po potrjeni reprodukciji ciljan popravek in sveži zahtevani testi;
+FA merila, geometrija, hitrosti, merilni config in F1–F12 ostanejo nespremenjeni/odprti.
+[Podrobni dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+### D-068 — M4.14b: pridobljeni HOLD zaključi kazen PATH (2026-10-22, Q51)
+
+**Vprašanje:** kaj po potrjeni reprodukciji D-067 izničiti ob pridobitvi mesta?
+
+**Odločitev:** v veji HOLD planer nastavi samo `pathUntil[i] = 0`. `trailUntil`
+ostane nespremenjen: član ohrani kolono skozi ozko grlo. Adapter še vedno ohrani
+nedokončan aktivni obvoz; pogoj `e > STEER_MAX` še vedno zahteva PATH po večjem odrivu.
+Ne spreminjamo harnessa, geometrije, hitrosti, FA pragov ali merilnega configa.
+
+**Razlog:** controller unit na `cc58e6dc…` (operacija `c8f7c280…`, 19:10:58 UTC)
+izvede 419 primerov, natanko eden pade: `acquiredRecoverySlotResumesWithSteerWhenAnchorMoves`
+pričakuje STEER (1), dobi PATH (2). Vse predhodne trditve fixture uspejo, kontroli
+`unrecoveredBlockedMemberStillNeedsPath` in `acquiredSlotStillNeedsPathAfterDistantDisplacement`
+prav tako. To potrdi ozek vzrok, ne celotnega FA5. Tri reprodukcije ostanejo nespremenjene.
+Popravek zahteva sveže controller rezultate za vseh šest sprejemnih ID-jev; dosedanji
+neuspehi FA1/2/4/5 in odprti F1–F12 niso odpravljeni ali oproščeni s to odločitvijo.
+[Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+### D-069 — M4.14b: po D-068 zahtevamo manjkajočo sled iste kode (2026-10-22, Q52)
+
+**Vprašanje:** ali po zelenem unit in neuspešnem A/B znova spreminjati produkcijo ali
+najprej dokončati že zahtevano diagnostiko?
+
+**Odločitev:** samo `m414b-trace-v1` na nespremenjenih izvornih/testnih vhodih
+`e225e880…`. Že zeleni harness/unit/build/package in običajni A/B se ne ponavljajo.
+Sled mora ohraniti vseh 1.664 zapisov, prvotna FA merila in prehod HOLD → premik
+sidra. V tej seji spreminjamo samo dokumentacijo; ne zatiramo zahtev PATH brez dokaza.
+
+**Razlog:** controller na tem odtisu potrdi reprodukcijo D-067 po popravku in obe
+kontroli. Običajni A/B `audit/m414b-2026-10-22-211704` pa še pade: G/O DONE 244/40,
+8/8 končnih mest, FA5 G 30 >5, FA4 6,540/6,416 >6 ter FA1/2 neuspešni.
+Od 29 članskih zahtev G jih je 19 zaradi premika cilja in 10 zaradi opuščene poti;
+8 v SETTLING, 6 nad STEER_MAX. Agregati ne dokazujejo trenutka ali povzročitelja
+vsake izgube. Manjkajoča sled je nov diagnostični dokaz, ne ponavljanje blokiranega
+paketa ali sprejem. F1–F12 in celotni M4.14b ostanejo odprti.
+[Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+### D-070 — M4.14b: gosta diagnostika identitet obvoza pred novim popravkom (2026-10-22, Q53)
+
+**Vprašanje:** ali popolna sled D-069 pojasni preostalih 19 premikov in 10 izgub poti
+ali pred posegom potrebujemo opazovanje med 20-tickovnimi vzorci?
+
+**Odločitev:** nov ločen `m414b-recovery-trace-v2` (`-TraceRecovery`) in pripadajoči
+`m414b-recovery-harness-v2`; produkcija ostane. Diagnostika mora dati 8.960 zapisov,
+vsak član vsak tick do 560, ter ločeni stabilni identiteti trenutne poti in shranjenega
+obvoza, njegovo napredovanje/končanost, zadnji iskalni tick/cilj in razloge zahtev.
+Običajni A/B in v1 ohranita svoje pogoje; vsi FA pragovi ostanejo aktivni. Novih rezultatov
+še ni. Pred popravkom se iz novih podatkov izbere ciljno reprodukcijo; sledi sama ne
+uporabljamo kot performance ali sprejemni dokaz.
+
+**Razlog:** controller na e225e880… potrdi 1.664/1.664 zapisov brez vrzeli in G/5
+HOLD s `pathUntil=0` pri 180 → STEER pri 200. FA5 G pa ostane 30 >5. Med 200 in 220
+naraste 13 → 29 članskih zahtev; obstoječa sled vmes ne vzorči in ne beleži identitete
+`recovery`. Njene izgube zato ni mogoče pripisati zgolj vanilli, drugemu AI-ju ali HOLD.
+Zbiralnik prek lastne `IdentityHashMap` le bere objekte, ne spreminja poti ali vhodov.
+S tem dobimo nov dokaz namesto ponovitve istega neuspešnega testa ali špekulativnega
+zatiranja PATH. F1–F12 in M4.14b ostanejo odprti; po spremembah harnessa so novi
+diagnostični testi še zahtevani, stari odtis jih ne potrjuje.
+[Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+### D-071 — M4.14b: reprodukcija prekinitve obvoza ob novem STEER cilju (2026-10-22, Q54)
+
+**Vprašanje:** kateri naslednji poseg podpirajo podatki popolne recovery sledi, ne da bi
+ugibali o vseh desetih izgubah poti ali sprostili FA5?
+
+**Odločitev:** najprej controller `unit` z novo reprodukcijo
+`changedSteerTargetDoesNotCutAcrossUnfinishedRecovery` in kontrolo
+`changedSteerTargetDoesNotResurrectClearedRecovery`. Produkcijska koda v tej seji
+ostane ista. Pogodba: STEER ohrani še aktiven nedokončan obvoz tudi ob premiku cilja;
+spremenjeni PATH sme izrecno zahtevati zamenjavo (obstoječa kontrola), končane ali
+počiščene poti se ne obuja. Popravek šele po izmerjenem neuspehu reprodukcije.
+
+**Razlog:** na `1f792335…` harness uspe, recovery sled je popolna (8.960 zapisov),
+vendar sprejem pade. G/7 pri 165 še hodi po recovery 180 (indeks 4/10), pri 166
+je STEER z nav 387 dolžine 1, recovery pa še vedno 180/4/10. Cilj se ob izteku
+kolone premakne prek zidu. `activeRecovery` vrne false zaradi premika nad 3 bloke,
+veja STEER pa sama ustvari ravno pot. Pri 201 član stoji pred zidom, pri 202 PATH
+zahteva novo iskanje, razvrščeno kot izguba stare poti. To je določen mehanizem,
+ne razlaga vseh zahtev. G/4 pri 203 in G/7 pri 208 ločeno izgubita navigatorjevo
+pot (`navId=0`); vzrok tega ostane nedokazan. Vsa FA merila in F1–F12 ostanejo odprta.
+[Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+### D-072 — M4.14b: STEER ohrani aktiven obvoz tudi ob novem cilju (2026-10-22, Q55)
+
+**Vprašanje:** kako po potrjeni reprodukciji D-071 preprečiti ravno prečkanje ovire,
+ne da bi preprečili izrecno novo iskanje v PATH ali obujali neveljavne poti?
+
+**Odločitev:** `activeRecovery` preveri samo identiteto poti v navigatorju in njeno
+nedokončanost. STEER taki poti posodobi hitrost in je ne zamenja. V PATH obstoječi
+pogoj premika cilja nad 3 bloke še vedno izrecno zahteva novo iskanje z istim
+proračunom in cooldownom. Končane, počiščene ali zamenjane poti niso aktivni obvozi.
+Reprodukcija in kontrole, harness, geometrija, hitrosti in FA pragovi ostanejo isti.
+
+**Razlog:** controller `unit` na `59d50662…`, operacija `62d567fc-22b1-4c8d-b40f-018a1d663eb6`
+(19:48:49 UTC), izvede 421 primerov z natanko enim vsebinskim neuspehom:
+`changedSteerTargetDoesNotCutAcrossUnfinishedRecovery` pri trditvi o identiteti poti.
+Kontrola za počiščeno pot in vseh 14 drugih adapterjevih testov uspejo, vključno z
+izrecno zamenjavo v PATH. To podpira ozek popravek, ne trditve o odpravi vseh FA5
+zahtev. Popravek še nima rezultatov; zahtevana je sveža controller validacija vseh
+osmih ID-jev. F1–F12 in M4.14b ostanejo odprti, commit/push po zaključeni validaciji.
+[Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+### D-073 — M4.14b: dokončanje diagnostike D-072 pred novim posegom (2026-10-22, Q56)
+
+**Vprašanje:** ali po zelenem unit in še neuspešnem A/B spreminjati adapter ali
+najprej dokončati manjkajoče diagnostične prehode na isti kodi?
+
+**Odločitev:** zahtevamo samo še `m414b-trace-v1`, `m414b-recovery-harness-v2` in
+`m414b-recovery-trace-v2`. Produkcija, testi, harness in vsi merilni pogoji ostanejo
+isti; že zelenih testov in običajnega A/B ne ponavljamo. Sledi ohranita zahtevi
+1.664/8.960 zapisov in vse FA preizkuse. Tudi popolna sled ni uspešen sprejem.
+
+**Razlog:** na `c9edad1b…` uspejo harness/unit/build/package, vseh 16 adapterjevih
+testov je zelenih. Običajni A/B pa pokaže G/O DONE 237/40 in 8/8 končnih mest,
+FA5 G 29 >5 (20 premikov, 8 izgub) ter FA4 G 9,564 >6. Ohranjanje obvoza torej
+še ni dokaz ohranitve skupine ali odprave vseh iskanj. Agregat ne pove, katere
+poti se izgubijo ali predolgo ohranijo; nov poseg brez goste sledi bi bil ugibanje.
+FA1/2, FA4, FA5 G in F1–F12 ostanejo odprti, brez spremembe pragov ali trditve
+o zaključku paketa. [Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+**Nadaljevanje 22. 10., seja 140 (Q56):** controller v1 na istem c9edad1b…
+(`d38f2386-f016-4036-a368-eb632ee521ce`, 20:08:04 UTC) da 1.664 popolnih zapisov,
+a sprejem še pade (FA1/2/4, FA5 G 29 >5). Pri 200 je premer 9,563664 med G/1 in
+G/7 že v MARCHING; pri 200–220 nastane še 14 zahtev. V1 nima identitet poti in
+vmesnih tickov, zato ne dokazuje avtorjev izgub ali ohranitve istega obvoza G/7.
+Odločitev ostaja: brez novega posega, zahtevana samo še recovery-harness-v2 in
+recovery-trace-v2 na isti kodi z 8.960 zapisi in nespremenjenimi FA merili.
+Že izvedenih testov ne ponavljamo. [Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+### D-074 — M4.14b: ločena diagnostika vanilla izgube poti (2026-10-22, Q57)
+
+**Vprašanje:** kaj po popolni recovery sledi še manjka za utemeljen popravek FA5?
+
+**Odločitev:** nov, ločen `formacije-run.ps1 -TraceNavigator` in ID-ja
+`m414b-navigator-harness-v3` / `m414b-navigator-trace-v3`. Bralni dodatek k recovery
+overlayju beleži zasebno stanje `PathNavigate`: tickovno in stensko časovno omejitev,
+zadnjo preverjeno pozicijo/vozlišče, odloženo obnovo in predpomnjeni cilj. Bralnik zahteva
+8.960 popolnih zapisov in izpiše prehode aktivna pot → null z obema posnetkoma ter
+podpisom izničenja treh timeout polj. To je podpis stanja, ne zajet klicni sklad.
+Vsi FA preizkusi ostanejo; produkcijska koda, geometrija, hitrosti, okna in config isti.
+Obstoječa načina trace/recovery dodatka ne vključita. Nova testa še nista izvedena.
+
+**Razlog:** recovery na c9edad1b… je popoln (8.960), vendar FA5 G še 29 >5.
+G/7 pri 165–166 ohrani isti obvoz 172/4/10; pri 170 ga izrecni PATH zamenja.
+Pri 182 navigator postane null ob STEER, recovery 387/8/11 ostane nedokončan.
+Izgube brez HOLD so vidne tudi pri G/4 (151, 202), G/6 (199) in G/0 (212).
+Vzrok ni zajet. `javap -c -p` mapirane vanille potrdi, da `checkForStuck`
+pred `clearPath` v stenski timeout veji izniči node/timer/limit, navadni `clearPath`
+pa samo currentPath. To je nova preverljiva hipoteza, ne dovoljenje za izklop zaščite
+ali obujanje invalidiranih poti. Gostejši izpis sam vpliva na stenski čas, zato niti
+potrjen podpis ne nadomesti reprodukcije in običajnega A/B po morebitnem popravku.
+F1–F12 in M4.14b ostanejo odprti. [Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+### D-075 — M4.14b: navigator dodatek ne sme ugasniti krmilnika (2026-10-26, Q58)
+
+**Vprašanje:** vsi trije zagoni `-TraceNavigator` so padli z `script errored` ob prvem
+vzorcu, sklad ni ohranjen, statična in `jjs` proba pa napake ne ponovita. Ponoviti isti
+zagon, opustiti navigator diagnostiko ali spremeniti dodatek?
+
+**Odločitev:** dodatek ujame vsako napako branja, zapiše `FORM-NAVERR step=<polje>`
+(največ 3) in v zapis `navError=<polje>`; krmilnik teče naprej. Bralnik vsak
+`FORM-NAVERR` zavrne (fail closed). ID-ja ostaneta `m414b-navigator-harness-v3`/
+`-trace-v3` (definiciji nespremenjeni, nov odtis). Produkcija in FA merila isti.
+
+**Razlog:** isti zagon brez spremembe bi dal isti neinformativni izid; opustitev bi pustila
+FA5 brez dokaza o avtorju izgub. Ujeta napaka pokaže točno polje in izjemo in hkrati ohrani
+FA izide istega zagona. Diagnostika ostane diagnostika, ne sprejem. [Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+### D-076 — M4.14b: Vec3d v navigator dodatku samo z refleksijo (2026-10-26, Q59)
+
+**Vprašanje:** po D-075 zagon `m414b-navigator-trace-v3` (odtis 21a3b9a3…) teče do konca,
+a vsak vzorec zapiše `FORM-NAVERR step=lastPosCheck error=java.lang.NoClassDefFoundError:
+net/minecraft/util/math/Vec2f`. Kaj popraviti?
+
+**Odločitev:** komponente `Vec3d` (`lastPosCheck`, `timeoutCachedNode`) dodatek bere samo
+z refleksijskimi `Field` objekti tipa polja (`getDeclaredField('lastPosCheck').getType()`),
+nikoli z `value.x`. Pogodbeni test dobi `Vec3d` dvojnik, ki ob neposrednem dostopu vrže isto
+napako. ID-ja ostaneta `-v3` (definiciji nespremenjeni, nov odtis). Produkcija in FA merila ista.
+
+**Razlog:** forgeSrc 2847 potrdi: `Vec2f` je `@SideOnly(CLIENT)` in na dedicated strežniku
+odstranjen, `Vec3d.fromPitchYawVector(Vec2f)` pa ni. Nashorn ob prvem dostopu do člana
+introspektira vse metode razreda in pade; `jjs` na `forgeBin` (s klientskimi razredi) tega ne
+ponovi, kar pojasni D-075. `BlockPos`/`Vec3i` takih podpisov nimata. [Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+### D-077 — M4.14b: novo iskanje člana začne svoje okno vanilla časovne meje (2026-10-26, Q60)
+
+**Vprašanje:** navigator sled na 4a7a6623… je popolna (8.960 zapisov, brez `FORM-NAVERR`).
+Kdo izniči nedokončane obvoze G in kaj popraviti?
+
+**Ugotovitev [M/K]:** vseh pet izgub obvoza (G/7@182, G/1@200, G/4@202, G/0@212, G/3@214;
+poti 11/–/4/11/13 točk, `byInterval=1`) ima podpis vanilla izteka `checkForStuck`
+(vozlišče `ZERO`, čas 0, meja 0 v istem ticku). Vsak obvoz se je začel s podedovanim
+`timeoutTimer` **6.748/5.020/1.996/5.714/9.113 ms** (G/1: novo iskanje 402 pade že v ticku 200): forgeSrc 2847 čas ponastavi samo ob
+izteku, ne ob novem vozlišču ali novi poti, STEER pot z eno točko pa ga vsak tick polni.
+Ob prvi menjavi na bližnje vozlišče se meja (`3 × razdalja / AIMoveSpeed`) izračuna majhna in
+pot pade. Ostalih 14 podpisanih izničenj (tick 12–25 obeh prog, G/4@151) so STEER poti z eno
+točko, ki jih Squad naslednji tick spet postavi (brez iskanja). Izničenja brez podpisa so
+lastni `clearPath` (SETTLING HOLD na zadnji točki, zamenjava obvoza) ali konec 1-točkovne poti.
+
+**Odločitev:** po uspešnem `tryMoveToXYZ` člana Squad pokliče
+`RwNavigatorAccess.restartTimeout`, ki nastavi isto stanje, kot ga vanilla nastavi po svojem
+izteku (vozlišče `ZERO`, čas 0, meja 0; refleksija MCP/SRG `field_188557_k/_188558_l/_188560_n`).
+Časovna meja ostane aktivna za novo pot in preverba premika na 100 tickov ostane nespremenjena;
+STEER, `replan` in neuspela iskanja se ne dotaknejo. Unit reprodukcija (G/7@170 s 6.748 ms)
+in kontrola, da zastala pot še vedno poteče. FA pragovi, scena, hitrosti in config isti.
+
+**Razlog:** podpis je potrjen v vseh petih primerih in pojasni `byLost` (7 izgub v
+recovery sledi); ne izklopi zaščite in ne obuja izničenih poti. Pričakovano zmanjša samo
+FA5 izgube; FA5 G ima še 20 zahtev zaradi premika cilja, FA1/2 in FA4 imata geometrijska
+neskladja (§ Ugotovitve iz kode) in ostaneta merjena brez spremembe praga.
+[Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+### D-078 — M4.14b: zamrznitev kode po D-077, sledenje skupni poti v nov paket M4.14d (2026-10-26, Q61)
+
+**Vprašanje:** navigator sled na 984dc27a… potrdi D-077 (`iskanj_izgub` 7 → 0, izničenj 28 → 17,
+nobene izgube obvoza G). FA5 G še pade z 18 zahtevami `iskanj_premik` (meja 4). Popraviti
+naprej v M4.14b ali kodo zamrzniti in zaključiti preostale ID-je?
+
+**Ugotovitev [M]:** od 18 zahtev so 3 obtičanja (dovoljena), 4 prva iskanja kolone za zidom,
+2 opravičila zaostanka (`excused` ne šteje kot obtičanje), 4 premiki točke kolone >3 bloke in
+5 prehod v SETTLING. 13 od 15 nedovoljenih ima cilj na skupni poti enote, ki je že poiskana;
+06-FORMACIJE §1 pravi, da člani tej poti sledijo, Squad pa za PATH vedno pokliče
+`tryMoveToXYZ`. To je manjkajoč del zasnove, ne napaka s podpisom.
+
+**Odločitev:** koda M4.14b ostane na 984dc27a; na istem odtisu se zaženejo še
+`m414b-harness-v1`, `m414b-ab-v1`, `m414b-trace-v1`, `m414b-recovery-harness-v2` in
+`m414b-recovery-trace-v2`, neuspeli FA se zapišejo z vzroki in M4.14b se ne razglasi za
+izboljšavo. Nov paket **M4.14d**: pot člana v PATH iz točk skupne poti, kadar sta član in cilj
+ob njej; pravo iskanje ostane za obtičanje, člana daleč od poti in replan. Najprej unit
+reprodukcije skupin iz razčlenitve. FA pragovi, scena in config nespremenjeni.
+
+**Razlog:** en dokazan popravek na paket. Sledenje skupni poti spremeni vedenje vseh
+članov v koloni, zato potrebuje svoje reprodukcije in svoj A/B. FA1/2 in FA4 imata ločena
+geometrijska vzroka, ki ju M4.14d ne reši. F1–F12 so ročni dimni test v klientu z
+igralcem in ostanejo odprti. [Dokazi](meritve/2026-10-22-M4.14b-formacije.md).
+
+### D-079 — M4.14b: zaključek kot preverba, ne izboljšava (2026-10-26, Q62)
+
+**Vprašanje:** na zamrznjenem odtisu 984dc27a… imajo vsi ID-ji D-078 rezultat. Harness-i,
+unit, build in package uspejo; ab-v1, trace-v1, recovery-trace-v2 (8.960 zapisov,
+`iskanj_izgub` G 0) in navigator-trace-v3 padejo samo na FA1/2, FA4 G/O in FA5 G. Ali M4.14b
+zapreti, čeprav FA niso izpolnjeni?
+
+**Odločitev:** M4.14b se zapre kot **opravljena preverba v svetu, ne kot izboljšava** (pravilo
+scenarija: merilo, ki pade, se zapiše in paket se ne razglasi za izboljšavo). Neuspehi z vzroki:
+FA1/2 — merilo M2.7 šteje bližino skupnemu cilju, formacija pa postavi člane na 8 različnih
+mest (nadomestna preverba 8/8 mest uspe G in O); FA4 — geometrija kolone skozi dvoblokovna
+vrata (G 7,571–8,592), O 6,42 je idealni premer LEGIJE 6,325 + odstopanje članov od mest; FA5 G — člani ne
+sledijo skupni poti, gre v **M4.14d**. Pragovi, scena in config ostanejo; meril ne mehčamo.
+F1–F12 so ročni test z igralcem in ostanejo odprti (odvisno od uporabnika).
+
+**Razlog:** dodatno popravljanje v M4.14b bi mešalo pakete; dokazi so popolni in vezani na en
+odtis. FA1/2 in FA4 sta lastnosti meril/geometrije, ne napake, ki bi jo M4.14d ali M4.16
+rešil; o morebitni spremembi meril odloča samo nova utemeljena odločitev, ne ta paket.
+[Dokazi](meritve/2026-10-22-M4.14b-formacije.md).

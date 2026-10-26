@@ -4,9 +4,11 @@ import java.util.List;
 
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAITasks;
+import net.minecraft.entity.ai.EntityMoveHelper;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathNavigate;
 import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.pathfinding.RwNavigatorAccess;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import noppes.npcs.entity.EntityNPCInterface;
@@ -36,7 +38,7 @@ public final class Squad {
     public static final int REPLAN_INTERVAL = 20;
     /** Clan, ki se toliko tickov ni posodobil, je izven nalozenih chunkov in izpade. */
     public static final int STALE_LIMIT = 40;
-    /** Tocka, proti kateri clan hodi med pohodom, je toliko pred njegovim mestom. */
+    /** Predtek premikajocega se mesta; ne velja za kolono ali mirujoce sidro. */
     public static final double LEAD = 2.0;
     /**
      * Terminalna hitrost na tleh je priblizno {@code 2,2 * (atribut * speedIn)^2} blokov na
@@ -46,6 +48,8 @@ public final class Squad {
     public static final double GROUND_SPEED_COEFF = 2.2;
     /** Razdalja, do katere se zadnja tocka poti steje za cilj (ista meja kot v D-015). */
     public static final double GOAL_REACHED = 2.0;
+    /** Konec poti zadnjega iskanja, blizji cilju od tega, pomeni uspesno iskanje. */
+    public static final double ARRIVED = 1.5;
 
     private final int id;
     private final World world;
@@ -65,12 +69,24 @@ public final class Squad {
     private final int[] lastPathTick;
     private final double[] lastPathX;
     private final double[] lastPathZ;
+    /** Pot zadnjega pravega iskanja (PATH): obvoz, ki ga clan morda se ni prehodil. */
+    private final Path[] recovery;
     private final double[] lastFace;
 
     private int ticks;
     private int pathBudget;
     private int replanCooldown;
     private int pathRequests;
+    /**
+     * Razlogi clanskih iskanj (diagnostika FA5, D-066): rok {@link #PATH_INTERVAL},
+     * premik cilja nad 3 bloke, opuscena pot; ter iskanja v SETTLING in nad STEER_MAX.
+     * Vsako clansko iskanje steje v natanko en razlog (prednost: opuscena, premik, rok).
+     */
+    private int byInterval;
+    private int byMove;
+    private int byLost;
+    private int inSettling;
+    private int beyondSteer;
     private int alive;
     private boolean finished;
     private final boolean pathless;
@@ -96,6 +112,7 @@ public final class Squad {
         this.lastPathTick = new int[n];
         this.lastPathX = new double[n];
         this.lastPathZ = new double[n];
+        this.recovery = new Path[n];
         this.lastFace = new double[n];
         java.util.Arrays.fill(lastPathTick, -PATH_INTERVAL);
         java.util.Arrays.fill(lastFace, Double.NaN);
@@ -345,9 +362,7 @@ public final class Squad {
         PathNavigate nav = npc.getNavigator();
         int mode = planner.mode[i];
         if (mode == SquadPlanner.HOLD) {
-            if (!nav.noPath()) {
-                nav.clearPath();
-            }
+            stopHorizontal(npc);
             double face = planner.faceYaw[i];
             if (!Double.isNaN(face)) {
                 face(npc, (float) face, false);
@@ -358,39 +373,125 @@ public final class Squad {
         double tx = planner.targetX[i];
         double ty = planner.targetY[i];
         double tz = planner.targetZ[i];
+        boolean detour = activeRecovery(i, nav);
         if (mode == SquadPlanner.STEER) {
-            if (planner.phase() == SquadPlanner.Phase.MARCHING) {
+            if (detour) {
+                // Nedokoncan obvoz ohranimo tudi ob novem STEER cilju: blizina
+                // novega mesta ne dokazuje proste crte (G/7 na 1f792335).
+                nav.setSpeed(speedIn);
+                return;
+            }
+            if (planner.phase() == SquadPlanner.Phase.MARCHING
+                    && planner.anchorSpeed() > 0 && !planner.trailing[i]) {
                 tx += FormationMath.forwardX(planner.yaw()) * LEAD;
                 tz += FormationMath.forwardZ(planner.yaw()) * LEAD;
             }
-            PathPoint point = new PathPoint((int) Math.floor(tx), (int) Math.floor(ty), (int) Math.floor(tz));
-            Path current = nav.getPath();
-            if (current != null && current.isFinished()) {
-                // Pot z isto tocko bi setPath obdrzal kot ze koncano; zato jo najprej pocisti.
-                nav.clearPath();
-            }
-            nav.setPath(new Path(new PathPoint[] {point}), speedIn);
-            nav.setSpeed(speedIn);
+            steer(nav, tx, ty, tz, speedIn);
+            return;
+        }
+        double moved = Math.hypot(tx - lastPathX[i], tz - lastPathZ[i]);
+        if (recoveryArrived(i, npc, tx, tz, moved)) {
+            // Iskanje je uspelo in clan je na koncu poti ob istem cilju: ostanek prevozi
+            // naravnost. Novo iskanje do iste tocke bi vrnilo le ze prehojeno pot, vsakih
+            // 5 tickov, dokler traja kazen obticanja (FA5 G na 637ad98f: 36 iskanj).
+            steer(nav, tx, ty, tz, speedIn);
             return;
         }
         boolean due = ticks - lastPathTick[i] >= PATH_INTERVAL;
-        double moved = Math.hypot(tx - lastPathX[i], tz - lastPathZ[i]);
-        if ((due || moved > 3.0 || nav.noPath()) && pathBudget > 0 && ticks - lastPathTick[i] >= 5) {
+        // Takoj (po 5 tickih) samo, ce je navigator opustil nedokoncano pot zadnjega
+        // iskanja; neuspelo ali delno iskanje se ponovi sele po PATH_INTERVAL.
+        Path route = recovery[i];
+        boolean lost = route != null && !route.isFinished() && nav.getPath() != route;
+        if (((due && !detour) || moved > 3.0 || lost) && pathBudget > 0 && ticks - lastPathTick[i] >= 5) {
             pathBudget--;
             pathRequests++;
+            if (lost) {
+                byLost++;
+            } else if (moved > 3.0) {
+                byMove++;
+            } else {
+                byInterval++;
+            }
+            if (planner.phase() == SquadPlanner.Phase.SETTLING) {
+                inSettling++;
+            }
+            if (planner.error[i] > SquadPlanner.STEER_MAX) {
+                beyondSteer++;
+            }
             lastPathTick[i] = ticks;
             lastPathX[i] = tx;
             lastPathZ[i] = tz;
-            nav.tryMoveToXYZ(tx, ty, tz, speedIn);
+            if (nav.tryMoveToXYZ(tx, ty, tz, speedIn)) {
+                // Nova pot dobi svoje okno vanilla casovne meje, ne stenskega casa
+                // prejsnjih STEER poti (D-077; navigator sled 4a7a6623, 5 izgub G).
+                RwNavigatorAccess.restartTimeout(nav);
+            }
+            recovery[i] = nav.getPath();
         } else {
             nav.setSpeed(speedIn);
         }
+    }
+
+    /**
+     * Ali clan se hodi po nedokoncani poti zadnjega iskanja. STEER je ne sme
+     * zamenjati z ravno potjo niti ob premiku cilja. PATH lahko izrecno zahteva
+     * zamenjavo ob premiku nad 3 bloke; periodicni rok sam je ne prekine.
+     * Koncane, pociscene ali zamenjane poti ne obujamo.
+     */
+    private boolean activeRecovery(int i, PathNavigate nav) {
+        Path route = recovery[i];
+        return route != null && nav.getPath() == route && !route.isFinished();
+    }
+
+    /**
+     * Ali je clan prehodil celotno pot zadnjega iskanja, ta se konca ob cilju
+     * (najvec {@link #ARRIVED} bloka vodoravno), cilj se ni premaknil za vec kot 3 bloke
+     * in clan je v dosegu ravne hoje ({@link SquadPlanner#STEER_MAX}). Delna pot,
+     * ki se konca dalec od cilja, ne steje.
+     */
+    private boolean recoveryArrived(int i, EntityNPCInterface npc, double tx, double tz, double moved) {
+        Path route = recovery[i];
+        if (route == null || !route.isFinished() || route.getCurrentPathLength() == 0 || moved > 3.0) {
+            return false;
+        }
+        PathPoint end = route.getFinalPathPoint();
+        if (Math.hypot(end.x + 0.5 - tx, end.z + 0.5 - tz) > ARRIVED) {
+            return false;
+        }
+        return Math.hypot(tx - npc.posX, tz - npc.posZ) <= SquadPlanner.STEER_MAX;
+    }
+
+    /** Pot z eno tocko; iskanja ni. */
+    private static void steer(PathNavigate nav, double tx, double ty, double tz, double speedIn) {
+        PathPoint point = new PathPoint((int) Math.floor(tx), (int) Math.floor(ty), (int) Math.floor(tz));
+        Path current = nav.getPath();
+        if (current != null && current.isFinished()) {
+            // Pot z isto tocko bi setPath obdrzal kot ze koncano; zato jo najprej pocisti.
+            nav.clearPath();
+        }
+        nav.setPath(new Path(new PathPoint[] {point}), speedIn);
+        nav.setSpeed(speedIn);
     }
 
     private double speedIn(int i, double blocksPerTick) {
         double max = order.speed * SquadOrder.SCRIPT_SPEED_FACTOR;
         double s = Math.sqrt(Math.max(0, blocksPerTick) / GROUND_SPEED_COEFF) / attr[i];
         return Math.max(0.05, Math.min(max, s));
+    }
+
+    /**
+     * clearPath alone leaves the previous input, queued helper action and
+     * horizontal inertia intact. HOLD and completion must stop at the acquired
+     * position; do not teleport or cancel gravity / vertical movement.
+     */
+    private static void stopHorizontal(EntityNPCInterface npc) {
+        npc.getNavigator().clearPath();
+        npc.getMoveHelper().action = EntityMoveHelper.Action.WAIT;
+        npc.setAIMoveSpeed(0);
+        npc.setMoveForward(0);
+        npc.setMoveStrafing(0);
+        npc.motionX = 0;
+        npc.motionZ = 0;
     }
 
     private static void face(EntityNPCInterface npc, float yaw, boolean persist) {
@@ -464,6 +565,7 @@ public final class Squad {
             if (!eligible[i]) {
                 continue;
             }
+            stopHorizontal(npc);
             double yaw = Double.isNaN(lastFace[i]) ? planner.finalYaw() : lastFace[i];
             if (order.anchor) {
                 npc.ais.setStartPos(new BlockPos(planner.targetX[i], planner.targetY[i], planner.targetZ[i]));
@@ -532,10 +634,11 @@ public final class Squad {
         return String.format(java.util.Locale.ROOT,
                 "RWSQUAD enota=%d ime=%s oblika=%s faza=%s clanov=%d/%d ostane=%.1f hitrost=%.3f/%.3f"
                         + " zaostali=%d opraviceni=%d kolona=%d na_mestu=%d iskanj=%d obnov=%d obtical=%d"
-                        + " brez_poti=%s cilj_nedosegljiv=%s neporavnani=%d tick=%d",
+                        + " brez_poti=%s cilj_nedosegljiv=%s neporavnani=%d tick=%d"
+                        + " iskanj_rok=%d iskanj_premik=%d iskanj_izgub=%d iskanj_postav=%d iskanj_dalec=%d",
                 id, label, order.shape, planner.phase(), alive, members.length, planner.remaining(),
                 planner.anchorSpeed(), planner.cruise(), stragglers, excused, trailing, settled, pathRequests,
                 planner.replans(), planner.stuckEvents(), pathless, planner.goalUnreachable(),
-                planner.unsettledAtEnd(), ticks);
+                planner.unsettledAtEnd(), ticks, byInterval, byMove, byLost, inSettling, beyondSteer);
     }
 }

@@ -416,7 +416,7 @@ public final class SquadPlanner {
         double fz = FormationMath.forwardZ(yaw);
         for (int i = 0; i < n; i++) {
             faceYaw[i] = Double.NaN;
-            if (!eligible[i] || phase == Phase.DONE) {
+            if (!eligible[i]) {
                 mode[i] = HOLD;
                 speed[i] = 0;
                 continue;
@@ -425,12 +425,19 @@ public final class SquadPlanner {
             double dz = targetZ[i] - pz[i];
             double e = horizontal(dx, dz);
             boolean hold;
-            if (phase == Phase.MARCHING) {
+            if (phase == Phase.DONE) {
+                // Squad consumes the final facing on this same tick, even if
+                // every member arrived together without an earlier HOLD tick.
+                hold = true;
+            } else if (phase == Phase.MARCHING) {
                 hold = e < SETTLED && anchorSpeed == 0;
             } else {
                 hold = settled[i] && e < UNSETTLE;
             }
             if (hold) {
+                // Acquiring the slot ends this recovery episode. Keep the column
+                // target (trailUntil), but do not force PATH when the anchor resumes.
+                pathUntil[i] = 0;
                 mode[i] = HOLD;
                 speed[i] = 0;
                 faceYaw[i] = slots[i].faceOutward ? outwardYaw(i) : yaw;
@@ -467,6 +474,9 @@ public final class SquadPlanner {
 
     private void enterSettling() {
         setPhase(Phase.SETTLING);
+        // Moving slots and snapped final slots are different targets. Arrival
+        // must be acquired again, without the previous slot's hysteresis.
+        Arrays.fill(settled, false);
         anchorS = track.length();
         yaw = finalYaw;
         double cx;

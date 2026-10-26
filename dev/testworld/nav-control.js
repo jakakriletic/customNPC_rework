@@ -32,6 +32,11 @@ var GOAL_X_G = -10;
 var GOAL_X_O = 15;
 var DOOR_X = -10;
 var SPEED = 1.0;
+// M4.14b: opt-in only; formacije-run installs a generated clone in its own world.
+// The ordinary nav-run clone and both lanes in phase A keep the original behaviour.
+var NAV_MODE = 'NAVIGATE';
+var formAllTick = {};
+var formLastSlots = {};
 
 // Pot velja za celo, ce je zadnja tocka poti blizje cilju od te meje. Meja ni 0, ker so
 // tocke poti blokovne koordinate, cilj pa sredina bloka. Ista meja je v NavProbe.java.
@@ -307,6 +312,52 @@ function navigateAll() {
     driveNavigate(laneO, GOAL_X_O);
 }
 
+function formationAll(npc) {
+    var api = Java.type('noppes.npcs.rework.formation.FormationApi');
+    say(npc, 'FORM-START proga=G ' + api.legija(Java.to(laneG, 'java.lang.Object[]'),
+        GOAL_X_G, GOAL_Y, GOAL_Z, 4, 0, 3, ''));
+    say(npc, 'FORM-START proga=O ' + api.legija(Java.to(laneO, 'java.lang.Object[]'),
+        GOAL_X_O, GOAL_Y, GOAL_Z, 4, 0, 3, ''));
+}
+
+// Independent observation: unique occupied final slots, without reading the planner's
+// settled flags. Keep NAV-CAS (distance to the common goal) as well: a four-column
+// formation is wider than that metric's two-block arrival radius.
+function sampleFormation(npc, lane, list, gx) {
+    var shape = Java.type('noppes.npcs.rework.formation.FormationShape').legion(list.length, 4);
+    var used = {};
+    var maxError = 0;
+    for (var i = 0; i < list.length; i++) {
+        var best = 1e9;
+        var slot = -1;
+        for (var j = 0; j < shape.length; j++) {
+            var x = Math.floor(gx - shape[j].side) + 0.5;
+            var z = Math.floor(GOAL_Z - shape[j].back) + 0.5;
+            var d = Math.sqrt(Math.pow(list[i].getX() - x, 2)
+                + Math.pow(list[i].getY() - GOAL_Y, 2) + Math.pow(list[i].getZ() - z, 2));
+            if (d < best) { best = d; slot = j; }
+        }
+        if (best < 0.4) { used[slot] = true; }
+        maxError = Math.max(maxError, best);
+    }
+    var n = Object.keys(used).length;
+    formLastSlots[lane] = n;
+    var elapsed = (t - phaseStart) * TICKS_PER_SCRIPT_TICK;
+    if (n === list.length && formAllTick[lane] === undefined) { formAllTick[lane] = elapsed; }
+    var status = String(Java.type('noppes.npcs.rework.formation.FormationApi').status()).split('\n');
+    var line = 'RWSQUAD ni aktivne enote';
+    for (var k = 0; k < status.length; k++) {
+        if (status[k].indexOf('ime=NAV_Walk' + lane + ' ') >= 0) { line = status[k]; }
+    }
+    say(npc, 'FORM-S proga=' + lane + ' tick=' + elapsed + ' mesta=' + n + '/' + list.length
+        + ' napakaMax=' + maxError.toFixed(3) + ' razpon=' + spread(list).toFixed(3) + ' ' + line);
+}
+
+function sampleFormations(npc) {
+    sampleFormation(npc, 'G', laneG, GOAL_X_G);
+    sampleFormation(npc, 'O', laneO, GOAL_X_O);
+}
+
 function startPhase(npc, name, marker) {
     phase = name;
     phaseStart = t;
@@ -323,6 +374,16 @@ function endPhase(npc, marker) {
     sampleAll(npc);
     timeLine(npc, 'G', laneG);
     timeLine(npc, 'O', laneO);
+    if (NAV_MODE === 'FORMACIJA' && phase === 'B') {
+        sampleFormations(npc);
+        var api = Java.type('noppes.npcs.rework.formation.FormationApi');
+        for (var i = 0; i < 2; i++) {
+            var lane = i === 0 ? 'G' : 'O';
+            say(npc, 'FORM-CAS proga=' + lane + ' mesta=' + formLastSlots[lane] + '/8 vsiTick='
+                + (formAllTick[lane] === undefined ? -1 : formAllTick[lane]));
+        }
+        say(npc, api.stop(Java.to(laneG.concat(laneO), 'java.lang.Object[]')));
+    }
     say(npc, marker);
     stopAll(laneG);
     stopAll(laneO);
@@ -334,6 +395,7 @@ function endPhase(npc, marker) {
 function init(e) {
     t = 0;
     say(e.npc, 'NAV-INIT skriptni tick = ' + TICKS_PER_SCRIPT_TICK + ' server tickov');
+    say(e.npc, 'FORM-MODE ' + NAV_MODE);
 }
 
 function tick(e) {
@@ -352,7 +414,11 @@ function tick(e) {
     if (t === A_START) { startPhase(npc, 'A', 'NAV-A-START navigateTo en sam klic'); navigateAll(); return; }
     if (t === A_END)   { endPhase(npc, 'NAV-A-END'); return; }
 
-    if (t === B_START) { startPhase(npc, 'B', 'NAV-B-START navigateTo osvezen ob vsakem vzorcu'); navigateAll(); return; }
+    if (t === B_START) {
+        startPhase(npc, 'B', 'NAV-B-START ' + NAV_MODE);
+        if (NAV_MODE === 'FORMACIJA') { formationAll(npc); } else { navigateAll(); }
+        return;
+    }
     if (t === B_END) {
         endPhase(npc, 'NAV-B-END');
         say(npc, 'NAV-SUM progaG=' + laneG.length + ' progaO=' + laneO.length);
@@ -363,5 +429,7 @@ function tick(e) {
     if (t % SAMPLE_EVERY !== 0) { return; }
 
     sampleAll(npc);
-    if (phase === 'B') { navigateAll(); }
+    if (phase === 'B') {
+        if (NAV_MODE === 'FORMACIJA') { sampleFormations(npc); } else { navigateAll(); }
+    }
 }

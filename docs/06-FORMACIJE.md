@@ -9,8 +9,8 @@ Zasnova paketa `noppes.npcs.rework.formation`. Dokument opisuje, **zakaj** paket
 | Zahteva | ni R1–R9; najbližje R5 (performance pri veliko NPC-jih) in kopenski del M4 |
 | Odločitev | [D-021](01-ARHITEKTURA.md) |
 | Koda | `dev/src/patch/java/noppes/npcs/rework/formation/` (15 datotek) |
-| Testi | `FormationGeometryTest` (14), `SquadPlannerTest` (7) — 21 zelenih v seji |
-| Stanje | **koda in testi narejeni (M4.14a); v svetu še ni bilo pognano (M4.14b)** |
+| Testi | `FormationGeometryTest` (14), `SquadPlannerTest` (13), `SquadAdapterTest` (16). Na c9edad1b… harness/unit/build/package uspejo, vseh 16 adapterjevih testov zelenih. A/B še pade: FA1/2, FA4 G/O 9,564/6,416 >6, FA5 G 29 >5. D-073: trace-v1 popoln (1.664), sprejem še pade; manjkajoča recovery harness/trace pred novim posegom; FA pogoji/pragovi isti, F1–F12 odprti |
+| Stanje | **M4.14a v kodi; M4.14b delno (22. 10.): A/B neuspešen, F1–F12 odprti**. [Meritev in reprodukciji](meritve/2026-10-22-M4.14b-formacije.md) |
 
 ---
 
@@ -68,8 +68,8 @@ Tega se v JavaScriptu s timerji ne da popraviti, v Javi pa je to nekaj vrstic.
 
 | Ukaz | Kdaj | Izvedba |
 |---|---|---|
-| `HOLD` | na mestu | počisti pot, obrne se v smer formacije (krog: stran od središča) |
-| `STEER` | do 6 blokov od cilja | navigator dobi **pot z eno samo točko**, med pohodom 2 bloka pred mestom. Iskanja ni. Hojo, skok na stopnico in animacijo naredita vanilla `PathNavigate` in `EntityMoveHelper`; CustomNPCs vidi `Walking = 1` kot pri vsaki poti |
+| `HOLD` | na mestu | počisti pot, ustavi helper, vhod in vodoravno vztrajnost brez teleportacije ali spremembe gravitacije (D-061; unit in stabilen konec G/O potrjena); obrne se v smer formacije (krog: stran od središča). D-068 zaključi kazen PATH ob pridobitvi mesta, kolona ostane; unit zelen, FA5 G še neuspešen |
+| `STEER` | do 6 blokov od cilja | navigator dobi **pot z eno samo točko**, pri premikajočem sidru med pohodom 2 bloka pred običajnim mestom; kolona in mirujoče sidro brez predteka (D-061; šest testov adapterja zelenih). Iskanja ni. Hojo, skok na stopnico in animacijo naredita vanilla `PathNavigate` in `EntityMoveHelper`; CustomNPCs vidi `Walking = 1` kot pri vsaki poti |
 | `PATH` | dlje od 6 blokov, obtičal (< 0,5 bloka premika v 30 tickih) ali opravičen | pravo iskanje poti `tryMoveToXYZ`; največ 4 na enoto na tick in največ enkrat na 20 tickov na člana |
 
 Hitrost: planer računa v blokih na tick, navigator pa hoče množitelj atributa. Na tleh je

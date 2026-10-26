@@ -181,6 +181,7 @@ task testOriginal(type: Test) {
     // M4.14: formacije so nov paket, v originalu ga ni.
     exclude '**/FormationGeometryTest.class'
     exclude '**/SquadPlannerTest.class'
+    exclude '**/SquadAdapterTest.class'
     exclude '**/RwNavBackendTest.class'
     exclude '**/NavPathSampleTest.class'
     exclude '**/HitboxWeightsTest.class'

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 117 → 1)
+# Arhiv: dnevnik sej (vnosi 140 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,464 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+
+### 2026-10-22 (140) — M4.14b: v1 popoln, zahtevana recovery prehoda
+
+**Paket:** M4.14b (D-073/Q56) · **Stanje:** **delno; diagnostika še ni končana**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Controller trace-v1 na c9edad1b… ima 1.664/1.664 zapisov, brez vrzeli; izhod 1.
+FA1/2, FA4 G/O 9,564/6,428 >6 in FA5 G 29 >5 še padejo. G/O DONE 237/40,
+8/8 končnih mest, FA3/6 in FA5 O uspejo. Pri 200 je G premer 9,563664 med
+članoma 1/7 že v MARCHING; med 200 in 220 nastane še 14 zahtev. V1 nima
+identitet in vmesnih tickov, zato ne dokazuje ohranitve istega obvoza ali avtorjev izgub.
+
+Po D-073 zahtevana samo še recovery-harness-v2 in recovery-trace-v2 na isti kodi,
+8.960 zapisov in vsi FA pogoji/pragovi isti. Produkcija in merilni vhodi nespremenjeni;
+urejena samo dokumentacija in analiza že zbranih podatkov. F1–F12 odprti;
+commit/push po zaključeni validaciji, nepovezane predhodne spremembe ohranjene.
+
+### 2026-10-22 (139) — M4.14b: D-072 unit zelen, A/B še neuspešen
+
+**Paket:** M4.14b (D-073/Q56) · **Stanje:** **delno; manjkajoči diagnostični prehodi**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Na c9edad1b… harness/unit/build/package uspejo, vseh 16 adapterjevih testov zelenih.
+A/B G/O DONE 237/40 in 8/8 končnih mest; G jih ohrani od vzorca 240 do 560
+(napaka 0,399). FA1/2 skupni cilj 5/8 in 3/8, FA4 G/O 9,564/6,416 >6 in
+FA5 G 29 >5 še padejo. G ima 28 članskih zahtev: 0 rok, 20 premik, 8 izguba;
+8 v SETTLING in 6 nad STEER_MAX. FA3/6 in FA5 O uspejo, config hash isti.
+
+Zahtevani samo manjkajoči trace-v1, recovery-harness-v2 in recovery-trace-v2 na isti
+kodi pred novim posegom; zeleni testi in običajni A/B se ne ponavljajo. Zahtevani
+pokritosti 1.664/8.960 in vsa FA merila ostanejo. Agregat ne dokazuje povzročitelja
+izgub ali večjega razpona G. Urejena samo dokumentacija, produkcija in vsi merilni
+vhodi/pogoji/pragovi isti. F1–F12 odprti; commit/push po zaključeni validaciji,
+nepovezane predhodne spremembe ohranjene.
+
+### 2026-10-22 (138) — M4.14b: potrjena reprodukcija, ohranitev obvoza v STEER
+
+**Paket:** M4.14b (D-072/Q55) · **Stanje:** **delno; zahtevana sveža validacija**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Controller unit na 59d50662… izvede 421 primerov: samo reprodukcija
+changedSteerTargetDoesNotCutAcrossUnfinishedRecovery pade, ostalih 15 adapterjevih
+testov uspe, tudi počiščena pot in izrecna zamenjava v PATH.
+
+Ciljni popravek: activeRecovery preveri samo identiteto in nedokončanost poti.
+STEER obvoz ohrani tudi ob novem cilju; PATH ga še lahko izrecno zamenja zaradi
+premika cilja nad 3 bloke. Počiščenih in končanih poti ne obuja. Reprodukcije,
+harness, geometrija, hitrosti in FA pogoji/pragovi isti. Za novo kodo še ni
+rezultatov; zahtevanih vseh osem controller ID-jev. F1–F12 in M4.14b odprti;
+commit/push po zaključeni validaciji, nepovezane predhodne spremembe ohranjene.
+
+### 2026-10-22 (137) — M4.14b: recovery sled popolna, nova reprodukcija adapterja
+
+**Paket:** M4.14b (D-071/Q54) · **Stanje:** **delno; zahtevan unit pred popravkom**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Na 1f792335… recovery harness uspe, sled 8.960/8.960; FA1/2/4/5 G še padejo.
+G/7 pri 166 zamenja nedokončan obvoz180/4/10 z ravno STEER potjo387/1 ob premiku
+cilja prek zidu. Pri 201 spet stoji pred zidom, pri 202 zahteva nov obvoz.
+G/4 pri 203 in G/7 pri 208 ločeno izgubita pot; vzrok teh izbrisov še nedokazan.
+
+Dodani ciljni reprodukcija in kontrola za preklicano pot v SquadAdapterTest;
+obstoječa kontrola še zahteva zamenjavo pri spremenjenem PATH cilju. Najprej unit
+pred popravkom. Produkcija in FA pogoji/pragovi isti; F1–F12 odprti. Brez
+commita/pusha nedokončanega paketa; nepovezane spremembe ohranjene.
+
+
+### 2026-10-22 (136) — M4.14b: sled popolna, gosta diagnostika identitet poti
+
+**Paket:** M4.14b (D-070/Q53) · **Stanje:** **delno; zahtevana nova recovery harness in trace ID-ja**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). AI ni izvajal testov/builda/Minecrafta.
+
+Controller sled na e225e880… ima 1.664/1.664 zapisov brez vrzeli, G/5 pri 180 HOLD
+s pathUntil=0 → STEER pri 200. FA1/2/4/5 G še padejo: DONE 244/40, 8/8 mest;
+G 30 >5, 19 premikov in 10 izgub, med 200–220 16 članskih zahtev.
+
+Nov -TraceRecovery samo v diagnostičnem kraku FORMACIJA beleži vsak tick do 560:
+8.960 zapisov, navId/recoveryId, napredovanje obvoza, zadnji iskalni tick/cilj in razloge.
+Samotest preveri tudi identitete enake geometrije in okvarjene podatke. Nova ID-ja
+m414b-recovery-harness-v2 in m414b-recovery-trace-v2 še brez rezultatov; prejšnji
+odtis ne potrjuje spremenjenih testnih vhodov. Produkcija in FA pogoji/pragovi isti,
+F1–F12 odprti; brez commita/pusha nedokončanega paketa, nepovezane spremembe ohranjene.
+
+### 2026-10-22 (135) — M4.14b: unit D-068 zelen, manjkajoča sled iste kode
+
+**Paket:** M4.14b (D-069/Q52) · **Stanje:** **delno; zahtevan samo m414b-trace-v1**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). AI ni izvajal testov/builda/Minecrafta.
+
+Na e225e880… harness/unit/build/package uspejo; reprodukcija D-067 in obe kontroli
+po D-068 zeleni. A/B G/O DONE 244/40, 8/8 končnih mest, FA3/6 in FA5 O uspejo.
+FA1/2 in FA4 6,540/6,416 >6 ter FA5 G 30 >5 še padejo. Od 29 članskih zahtev G
+je 19 zaradi premika in 10 zaradi izgube; 8 v SETTLING, 6 nad STEER_MAX.
+
+Zahtevan samo manjkajoči trace iste kode, 1.664 zapisov. Urejena samo dokumentacija;
+produkcija, testi in vsi pogoji/pragovi isti. F1–F12 odprti, paket še brez commita/pusha
+pred zaključeno validacijo; nepovezane predhodne datoteke ohranjene.
+
+
+### 2026-10-22 (134) — M4.14b: reprodukcija potrjena, HOLD zaključi kazen PATH
+
+**Paket:** M4.14b (D-068/Q51) · **Stanje:** **delno; zahtevani sveži controller testi**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). AI ni izvajal testov/builda/Minecrafta.
+
+Controller unit na cc58e6dc… izvede 419 primerov z natanko enim neuspehom:
+pridobljeni HOLD ob premiku sidra vrne PATH namesto STEER. Vse trditve fixture in obe
+kontroli uspeta. Produkcijska veja HOLD zdaj izniči samo `pathUntil`; `trailUntil`,
+aktivni obvozi in PATH pri odmiku nad STEER_MAX ostanejo. Testi D-067 nespremenjeni.
+
+Za novo kodo še ni rezultatov; zahtevani harness/unit/build/package, običajni A/B in
+diagnostična sled. FA1/2/4/5 zadnjič neuspešni, F1–F12 odprti, pogoji/pragovi isti.
+Paket ostane nedokončan in še brez commita/pusha. Nepovezane spremembe ohranjene.
+
+### 2026-10-22 (133) — M4.14b: popolna sled in reprodukcija stare kazni po HOLD
+
+**Paket:** M4.14b (D-067/Q50) · **Stanje:** **delno; zahtevan samo unit pred popravkom**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). AI ni izvajal testov/builda/Minecrafta.
+
+Controller sled na 44f3390b…: **1.664/1.664** zapisov brez vrzeli; zagon vrne 1 zaradi
+FA1/2, FA4 6,477/6,403 in FA5 G 32 >6. G/O DONE 237/39, FA3/6, FA5 O in 8/8 mest uspejo.
+Med 200–220 ostane 16 zahtev (9 premik, 7 izguba), 8 v SETTLING; redko vzorčenje ne
+razloči vseh izvorov zamenjave poti. G/5 pri 180 že HOLD, a kazen PATH do 211; pri 200
+PATH ob napaki približno 1,29. D-064 ohranja večtočkovni obvoz G/4 in G/7 tudi v STEER.
+
+Dodane tri preverbe planerja: pridobljeni HOLD naj ob premiku sidra nadaljuje s STEER;
+nedoseženi cilj in odriv nad STEER_MAX ohranita PATH. Fixture uporabi dejanski detektor
+obtičanja brez zasebnih vpisov. Predviden en vsebinski neuspeh in dve kontroli, še
+neizvedeno. Produkcija, harness in merilni pogoji nespremenjeni; novi testi zahtevajo
+nov odtis. Najprej controller unit; nato ciljan popravek in sveža validacija. FA pragovi
+isti, F1–F12 odprti. Brez commita/pusha nedokončanega paketa; nepovezano delo ohranjeno.
+
+
+### 2026-10-22 (132) — M4.14b: izmerjeni razlogi zahtev, manjkajoča članska sled
+
+**Paket:** M4.14b (nadaljevanje D-066/Q49) · **Stanje:** **delno; zahtevan samo m414b-trace-v1**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). AI ni izvajal testov/builda/Minecrafta.
+
+**Controller na 44f3390b…:** harness/unit/build/package zeleni. A/B
+audit/m414b-2026-10-22-205327 neuspešen: G/O 8/8 mest, DONE 237/39, FA3/6 in FA5 O uspeta;
+FA1/2, FA4 6,477/6,403 >6 in FA5 G **32 >6** padejo.
+
+**Razčlenitev:** 31 članskih zahtev = rok 1 + premik 20 + opuščena pot 10; od tega 8 v
+SETTLING in 6 z napako nad STEER_MAX. V oknu 200–220 16 zahtev (9 premik, 7 izguba).
+Prvi trije razlogi so izključujoči; SETTLING in razdalja sta dodatna prereza.
+Izguba pomeni drugo pot v navigatorju ob še nedokončani recovery, ne dokazanega izvora
+zamenjave. Nadaljevanje Q49: pred posegom članski kontekst iz manjkajoče sledi iste kode.
+
+**Naslednje:** samo m414b-trace-v1; posebej preveriti popolnost 1.664 zapisov, saj FA
+preverbe ostanejo aktivne in lahko zagon vrne 1 tudi ob veljavni sledi. Že zelenih testov
+in običajnega A/B brez novih vhodov ne ponavljamo. V tej operaciji samo dokumentacija;
+produkcija, testi, harness in merilni pogoji isti. F1–F12 odprti. Brez commita/pusha pred
+preostalimi preverjanji oziroma dokumentiranim zaključkom paketa; nepovezano delo ohranjeno.
+
+### 2026-10-22 (131) — M4.14b: A/B po D-065, diagnostika razlogov iskanj
+
+**Paket:** M4.14b (D-066, Q49) · **Stanje:** **delno; zahtevani sveži controller testi**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). AI ni izvajal testov/builda/Minecrafta.
+
+**Controller na `31c1fb2b…`:** harness/unit/build/package zeleni. Prvi A/B zavrnjen (vnos na
+namizju), drugi `audit/m414b-2026-10-22-203728`: G/O 8/8 mest, FA3/FA6 uspeta; FA1/2, FA4
+6,54/6,425 in FA5 G **32** (prej 36) >5 padejo. 17 zahtev G v oknu 200–220 (prehod v SETTLING).
+
+**D-066:** brez spremembe obnašanja `RWSQUAD` doda razloge članskih iskanj (`iskanj_rok`,
+`iskanj_premik`, `iskanj_izgub`, `iskanj_postav`, `iskanj_dalec`), da se hipoteza (premik
+cilja člana v kazni + skok ciljev ob SETTLING) izmeri, preden se poseže v adapter.
+
+**Nadaljevanje iteracija 11:** pregledan diff in controller log zadnjega veljavnega A/B;
+produkcija, testi in merilni vhodi nespremenjeni. Na `44f3390b…` ni rezultatov. Zahtevan
+tudi `m414b-trace-v1`, da poleg skupnih razlogov dobimo posamezne poti in cilje članov.
+
+**Naslednje:** unit/build/package/harness/A/B/sled; po razčlenitvi ciljni popravek ali zapis FA5
+G kot neuspeha z vzrokom. F1–F12 odprti; commit/push po sprejemu ali zapisanem zaključku.
+
+### 2026-10-22 (130) — M4.14b: A/B po D-064, ponovljena iskanja po končani poti
+
+**Paket:** M4.14b (D-065, Q48) · **Stanje:** **delno; zahtevani sveži controller testi**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). AI ni izvajal testov/builda/Minecrafta.
+
+**Controller na `637ad98f…`:** harness/unit/build/package zeleni (obe reprodukciji D-063 zeleni).
+A/B `audit/m414b-2026-10-22-200920`: G/O stabilnih 8/8 mest, DONE 246/38, FA3/FA6 uspeta;
+padejo FA1/2 (skupni cilj), FA4 6,458/6,403 >6 in FA5 G **36** (prej 57) proti meji 5.
+21 zahtev G v oknu 200–220 (prehod v SETTLING, 4 upravičeni člani).
+
+**Popravek D-065:** v PATH `noPath()` velja tudi za prehojeno pot; član v kazni je zato isto
+točko zahteval vsakih 5 tickov. Po uspešno prehojeni poti (konec ≤1,5 od cilja, cilj ±3,
+član ≤6) zdaj STEER brez iskanja; delna/neuspešna pot se ponovi po 20 tickih. +2 testa adapterja.
+
+**Naslednje:** harness/unit/build/package/A/B/sled. FA1/2 in FA4 ostajata neuspeha zaradi
+geometrije (pragovi isti); F1–F12 odprti; commit/push po sprejemu ali zapisanem zaključku.
+
+---
+
+### 2026-10-22 (129) — M4.14b: reprodukciji potrjeni, popravek zadržanja obvoza
+
+**Paket:** M4.14b (D-064, Q47) · **Stanje:** **delno; zahtevani sveži controller testi**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). Delni diff pregledan, nepovezane datoteke
+ohranjene. AI ni izvajal testov/builda/Minecrafta.
+
+**Controller unit na `63f20805…`:** 414 testov, natanko pričakovana 2 neuspeha
+(`activeRecoveryDoesNotRepeatRequestJustBecauseIntervalElapsed`,
+`steerNearTargetKeepsUnfinishedRecoveryDetour`); štiri kontrole zelene, fixture pravilna.
+
+**Popravek:** `Squad` hrani pot zadnjega iskanja člana; dokler je v navigatorju, ni končana
+in cilj ni premaknjen >3 bloke, PATH ne zahteva periodično, STEER pa je ne zamenja.
+Ostali sprožilci (`noPath`, premik >3, cooldown) nespremenjeni.
+
+**Naslednje:** harness/unit/build/package/A/B/sled na novi kodi; ob zelenem A/B dimni del
+F1–F12. Commit/push čaka na sprejem; paket ni zaključen.
+
+### 2026-10-22 (128) — M4.14b: sled ponovnih zahtev in prekinitve obvoza
+
+**Paket:** M4.14b (D-063, Q46) · **Stanje:** **delno; zahtevan controller `unit` pred popravkom**.
+[Članski dokazi in pogodbe](meritve/2026-10-22-M4.14b-formacije.md). Delni diff pregledan,
+nepovezane datoteke ohranjene, ob pregledu ni živih Java procesov. AI ni izvajal
+testov/builda/Minecrafta.
+
+**Controller sled na `9c3650a7…`:** ob 14:42:50 UTC izhod 1, pokritost 1.664/1.664
+brez vrzeli. G/O ohranita 8/8 mest in DONE pri 241/38, G FA5 55 proti meji 5. FA1/2,
+FA4 še padeta; to ni običajni sprejemni A/B. G/7 pri ticku 51 znova zahteva pot ob istem
+cilju in še aktivni poti, G/2 med 120 in 140 preklopi PATH → STEER ter izgubi večtočkovni
+obvoz ob istem cilju. Iz sledi ne določamo točnega ticka drugega preklopa ali števila A*.
+
+**Pripravljeno:** šest dodatnih testov dejanskega adapterja: dve reprodukciji za aktivno
+pot brez periodične zahteve in ohranitev obvoza po preklopu STEER; štiri kontrole za
+zaključeno/izbrisano pot, spremenjen cilj in neuspešno zahtevo. Še neizvedeno; pričakovani
+dve vsebinski napaki. Produkcija, harness, nav vhodi, config in pragovi nespremenjeni.
+
+**Naslednje:** controller `unit`; najprej izločiti napako fixture, nato po potrjenih
+reprodukcijah ciljan popravek življenjske dobe poti in sveži vsi zahtevani testi.
+F1–F12 ostanejo odprti. Commit/push čaka na sprejem; paket ni zaključen.
+
+### 2026-10-22 (127) — M4.14b: stabilen konec G/O, preostali FA5
+
+**Paket:** M4.14b (D-062, Q45) · **Stanje:** **delno; zahtevana manjkajoča sled iste kode**.
+[Dokazi in ohranjene vrednosti](../meritve/2026-10-22-M4.14b-formacije.md). Delne spremembe
+pregledane in ohranjene, ob pregledu ni živih Java procesov. AI ni zaganjal testov,
+builda ali Minecrafta; v tej seji spreminja samo dokumentacijo.
+
+**Controller na `9c3650a7…`:** harness/unit/build/package uspejo; šest testov adapterja
+in deset planerja zelenih. Običajni A/B še pade. G DONE pri 234, vseh 8 mest pri vzorcu
+240 in še pri 560 (napaka 0,384); O DONE pri 40, 8/8 mest do 560 (napaka 0,240).
+Popravek D-061 je torej preverjen, celotni paket ni sprejet: FA1/2 skupni cilj 5/8 in 3/8,
+FA4 premer 6,540/6,428 >6, FA5 G 57 zahtev proti meji 5. FA3 in FA6 uspeta.
+
+**Odločitev:** pred naslednjim posegom manjkajoči `m414b-trace-v1` na isti kodi za
+članski kontekst ponovnih zahtev PATH in preklopov STEER/PATH. Števec zahtev sam ne dokazuje
+števila izvedb A*; ne spreminjamo ga za zelen izid. Prav tako ohranimo vsa neuspešna merila
+in pogoje. Zelene teste ponovimo šele ob novih vhodih; stare sledi ne pripisujemo novi kodi.
+
+**Naslednje:** controller sled, nato iz dokazov reprodukcije pred ciljnim popravkom.
+F1–F12 še zahtevajo dimni del. Paket ni zaključen ali commit/pushan pred sprejemom;
+nepovezane predhodne datoteke ohranjene.
+
+### 2026-10-22 (126) — M4.14b: reprodukcije adapterja potrjene, ciljan popravek
+
+**Paket:** M4.14b (D-061, Q44) · **Stanje:** **delno; zahtevani sveži controller testi**.
+[Dokazi in obseg](../meritve/2026-10-22-M4.14b-formacije.md). Delne spremembe pregledane in
+nadaljevane; ob pregledu ni živih Java procesov. AI ni izvajal testov/builda/Minecrafta.
+
+**Controller na `fba333de…`:** `unit` ob 14:23:36 UTC izvede 408 primerov s štirimi
+neuspehi. Vse štiri nove reprodukcije dosežejo vsebinsko trditev; obe kontroli uspeta.
+Ni napake fixture. Dokazana cilja predteka sta 71/72 namesto 69/70, preostalo gibanje
+motionX 0,012 pri HOLD in motionZ 0,146174 pri finish.
+
+**Spremenjeno:** HOLD in upravičeni člani ob finish ustavijo pot/helper, vhod in vodoravno
+vztrajnost brez teleportacije ali spremembe motionY/gravitacije. Predtek ostane pri
+premikajočem sidru za običajno mesto; kolona in mirujoče sidro brez predteka. Šest testov
+ostane istih, prav tako geometrija, merilni config, hitrosti in prvotni FA pragovi.
+
+**Naslednje:** sveži harness/unit/build/package, običajni A/B in ločena diagnostična sled.
+Popravek še ni preverjen; ne dokazuje odprave vseh zastojev G ali FA5. F1–F12 ostajajo
+odprti, potreben dimni del. Paket ni zaključen ali commit/pushan pred sprejemom;
+nepovezane predhodne datoteke ohranjene.
+
+### 2026-10-22 (125) — M4.14b: popolna sled, vztrajnost O in cilji G
+
+**Paket:** M4.14b (D-060, Q43) · **Stanje:** **delno; zahtevan controller `unit` pred popravkom**.
+[Analiza in ključne vrednosti sledi](../meritve/2026-10-22-M4.14b-formacije.md). Delne spremembe
+pregledane in ohranjene; ni živih Java procesov. AI ni izvajal testov/builda/Minecrafta.
+
+**Controller na `c6d7fe1c…`:** razširjeni harness uspe; diagnostični `m414b-trace-v1` pade
+na ohranjenih FA merilih, pokritost pa uspe (1.664/1.664, brez napak). O/0 pri ticku 38
+že nima poti/vhoda in ima helper WAIT, vendar motionZ 0,146174. Po DONE se po vztrajnosti
+premakne še 0,317311 bloka na napako 0,545629; brez ponovnega ukaza za hojo. G adapter
+doda predtek tudi koloni in mirujočemu sidru, kar da cilj proč od dodeljenega mesta.
+To samo še ne dokazuje vseh vzrokov vratnega zastoja ali številnih iskanj.
+
+**Pripravljeno:** šest `SquadAdapterTest` primerov nad dejanskima `drive`/`finish` in cilji
+navigatorja; pričakujemo štiri vsebinske neuspehe pred popravkom (še ne izmerjeno).
+Fixture sledi `MountGuardTest`; ne zaganja sveta. Produkcija, geometrija, config,
+merilni vhodi, hitrosti in prvotni FA pragovi ostanejo isti. Števci: 407 metod v 69 datotekah.
+
+**Naslednje:** controller `unit`; najprej ločiti napako fixture od vsebinske reprodukcije.
+Po potrditvi omejen popravek zaustavitve/predteka, nato sveži harness/unit/build/package,
+običajni A/B in dimni F1–F12. Paket ni zaključen ali commit/pushan; nepovezano delo ohranjeno.
+
+### 2026-10-22 (124) — M4.14b: popravek faz zelen, ločena sled adapterja
+
+**Paket:** M4.14b (D-059, Q42) · **Stanje:** **delno; zahtevana samotest in diagnostična sled**.
+[Dokazi in naslednji koraki](../meritve/2026-10-22-M4.14b-formacije.md). Pregledane in ohranjene
+delne spremembe; ob pregledu ni živih Java procesov. AI ni zagnal testov/builda/Minecrafta.
+
+**Controller na `a99e030c…`:** harness/unit/build/package uspejo; obe reprodukciji D-058
+PASSED, `SquadPlannerTest` 10/10. A/B ob 13:51 UTC ostaja neuspešen: G MARCHING 7,2 bloka
+pred koncem in 116 iskanj proti meji 35, O DONE pri ticku 38, vendar 0/8 mest pri 40–560,
+napaka 0,507 → 0,555 bloka. FA1/2, FA3, FA4, mesta in G FA5/6 še padajo.
+
+**Nov pristop (Q42):** samo ločeni `-Trace` overlay za FORMACIJA, ki ohrani reference po
+DONE ter bere položaje/motion, vhod/helper, cilje/zastavice in pot navigatorja. 1.664 zapisov,
+preverba pokritosti/starosti/identitet, prefix `m414b-trace-*`. Vsi prvotni FA testi ostanejo
+aktivni; zaradi dodatnega zapisovanja to ni sprejemni/performance dokaz. Samotest razširjen
+z dejanskim minificiranim overlayjem in negativnimi pogodbami; še ni izveden. Produkcijska
+koda, običajni nav vhodi, pragovi in config v tej seji nespremenjeni.
+
+**Naslednji korak:** controller `m414b-harness-v1`, nato novi `m414b-trace-v1`; razčleniti
+prvi zastoj G in fiziko O pri DONE, dokazani vzrok reproducirati pred popravkom. Nato sveži
+običajni harness/unit/build/package/A/B ter F1–F12. Paket še ni zaključen ali commit/pushan;
+sprejem je neuspešen. Predhodne nepovezane datoteke ohranjene.
+
+### 2026-10-22 (123) — M4.14b: potrjeni reprodukciji, ciljni popravek faz
+
+**Paket:** M4.14b (D-058, Q41) · **Stanje:** **delno, zahtevani sveži controller testi**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). Predhodne spremembe pregledane in ohranjene;
+ob pregledu ni živih Java procesov. AI ni zaganjal testov, builda ali Minecrafta.
+
+**Reprodukcija:** `unit` na `dcbd1219…` neuspešen ob 13:41 UTC: 402 izvedbi, padeta natanko
+`settlingRequiresNewArrivalWhenTheFinalSlotChanges` (prezgodnji DONE) in
+`completionPublishesOutwardFacingForEveryRingMember` (manjka končna smer). Ostalih 400 uspe.
+
+**Sprememba:** samo `SquadPlanner`: ob novih končnih mestih reset `settled`, pri prehodu v
+DONE tudi končna smer (krog navzven), HOLD in hitrost 0. Reprodukciji nespremenjeni. Brez
+spreminjanja adapterja, pragov, geometrije, hitrosti, configa in merilnih vhodov. Q41 omeji
+sklep na ti dve napaki; G in odmik O po koncu še nimata potrjenega vzroka.
+
+**Naslednji korak:** `m414b-harness-v1`, `unit`, `build`, `package`, `m414b-ab-v1` na novi kodi;
+nato razčleniti preostale neuspehe in pripraviti dimni del F1–F12. M4.14b ni zaključen ali
+commit/pushan, saj veljavna preverba popravka še manjka. Nepovezane datoteke ohranjene.
+
+### 2026-10-22 (122) — M4.14b: izmerjeni neuspeh in ciljni reprodukciji
+
+**Paket:** M4.14b (D-056/D-057, Q40) · **Stanje:** **delno, zahtevan controller `unit` pred popravkom**.
+[Meritev in načrt nadaljevanja](../meritve/2026-10-22-M4.14b-formacije.md). Delne spremembe so pregledane
+in ohranjene. Nobenega testa, builda ali Minecrafta AI ni zagnal; config in merilni vhodi nespremenjeni.
+
+**Dokazi na `360f3f60…`:** harness/unit/build/package uspejo, A/B neuspešen. Referenca G 6/8,
+O 8/8 (zadnji 220 tickov); formacija G 0/8 in ostane v MARCHING z 7,2 bloka poti ter 117 iskanji
+proti meji 36. O doseže 8/8 mest pri ticku 40, od ticka 60 ima napako 0,555 bloka in 0/8 mest
+znotraj 0,4. FA1/2 in FA4 prav tako neuspešni (premer G 6,566 / O 6,338 proti meji 6).
+Scenarijske predpostavke, kontrolna faza A in nespremenjen hash configa potrjeni.
+
+**Narejeno:** dve novi reprodukciji v `SquadPlannerTest` za podedovane zastavice `settled` pri
+prehodu na končna mesta in manjkajočo smer kroga pri neposrednem zaključku. Testa sta pripravljena,
+ne izvedena; produkcijska koda ostane ista do controller reprodukcije. 401 metod v 68 datotekah.
+Ti robni primeri še ne pojasnijo vseh zastojev pri vratih in preostalega gibanja po zaključku.
+
+**Q40:** ohranimo vse pragove/geometrijo, najprej `unit` (predvideni rdeči reprodukciji), nato
+ciljan popravek ter sveži harness/unit/build/package/A/B. F1–F12 še potrebujejo dimni harness.
+Paket ni zaključen ali commit/pushan; nepovezani `audit/*`, baseline 27. 9. in bat ohranjeni.
+
+### 2026-10-22 (121) — M4.14b: popravek branja živega loga
+
+**Paket:** M4.14b (nadaljevanje, D-056, Q39) · **Stanje:** **delno, zahtevan svež controller prehod**.
+[Dokazi](../meritve/2026-10-22-M4.14b-formacije.md). Predhodne spremembe ohranjene; fetch potrdi
+poravnanost z origin pri `ff0ccd9`. Ob pregledu ni živih Java procesov.
+
+**Rezultat starega odtisa:** na `7faf3e03…` so harness/unit/build/package zeleni, A/B pa se je ustavil
+pred meritvijo: `ReadAllText` ne more odpreti stdout loga z odprtim zapisovalnikom. Ustavitev strežnika
+in hash configa sta uspešna. FA1–FA6 zato nimajo rezultata; iz napake ni dovoljeno sklepati o formacijah.
+
+**Popravljeno:** samo `Get-Log` v `formacije-run.ps1` uporablja `FileShare.ReadWrite` in zapre bralnik;
+samotest dejansko bere ob odprtem zapisovalniku, po dodanem markerju in ob manjkajoči datoteki.
+Q39 je razrešen brez spreminjanja scenarija, pragov, sveta ali produkcijske kode. Novi samotest še ni izveden.
+AI ni zaganjal testov, builda ali Minecrafta. Števci Java/JUnit nespremenjeni.
+
+**Naslednji korak:** controller zaporedno `m414b-harness-v1`, `unit`, `build`, `package`, `m414b-ab-v1`.
+Rezultati prejšnjega odtisa niso dokaz spremenjenega harnessa. Nato razlaga FA1–FA6 in dimni del F1–F12;
+šele po dokazih zaključek in commit/push tega paketa. Nepovezane datoteke ostanejo izven commita.
+
+### 2026-10-22 (120) — M4.14b: priprava preverbe formacij
+
+**Paket:** M4.14b (D-038, D-056, Q37/Q38) · **Stanje:** **delno, čaka controller teste**.
+[Zapis priprave](../meritve/2026-10-22-M4.14b-formacije.md). Raziskava M4.0 že opravljena; produkcijska
+koda formacij, originalni jar, config in environment lock nespremenjeni. Pred začetkom ni bilo sledenih
+nedokončanih sprememb, veja je bila po fetchu poravnana z origin (`ff0ccd9`).
+
+**Narejeno:** način `FORMACIJA` v izvorni `nav-control.js` (samo B, dva enkratna ukaza); novi
+`formacije-run.ps1` za A/B nad kopijama istega svežega sveta z obojestranskimi privzetimi stikali kode.
+Ohrani stare metrike, izmeri tudi zasedenost unikatnih mest in bere `RWSQUAD konec` iz ločenega CustomNPCs
+loga. Novi samotest preveri dejanske bralnike logov, SNBT vgradnjo in minificirano skripto v obeh načinih.
+
+**Ugotovitve [K]:** skupni cilj M2.7 (<2 bloka) ne zajame zunanjih stolpcev; idealni premer 4×2 je
+6,325 > prag FA4 6. Prvotni pragovi ostanejo, rezultatov še ni. Status ne šteje začetnega iskanja,
+zato ga FA5 izrecno prišteje. F1–F12 ostanejo odprti; A/B sam ne zaključi paketa.
+
+**Verifikacija:** samo statični pregled in razčlenitev PowerShella; AI ni zaganjal testov, builda ali
+Minecrafta. Zahtevani controller testi: `unit`, `build`, `package`, nova `m414b-harness-v1` in
+`m414b-ab-v1`. Nobenega novega controller rezultata ali trditve o izboljšavi. Števci Java/JUnit nespremenjeni.
+
+**Naslednji korak:** pregledati A/B rezultate in vsako neuspešno merilo; dokončati dimni del F1–F12.
+Šele po ustreznih dokazih zaključek M4.14b in commit/push lastnih datotek. Nepovezani `audit/*`,
+`ZAZENI-BASELINE.bat` ter baseline zapis 27. 9. ostanejo izven commita. Nato M4.16 po D-038.
+
+### 2026-10-22 (119) — M5.Z: regresijski prehod, M5 zaključen
+
+**Paket:** M5.Z (D-054, D-055, Q35/Q36) · **Stanje:** **zaključeno** — zahtevanih šest testov
+(`unit`, `build`, `package`, `m5z-sled`, `m5z-matrika-orig`, `m5z-matrika-priv`) zelenih pri upravljalniku na
+`c3e19fe4607c364e981c698b4c26efa07dcf7e19435ababa0b13c8dd2cb84c99`. Po testih spremenjeni samo dokumenti.
+[Zapis](../meritve/2026-10-22-M5.Z-regresija.md), [scenarij sledi](../scenariji/M5.Z-sled.md).
+
+**Narejeno:** `ConfigDefaults` zajame vrednosti `@ConfigProp Rw*` pred nalaganjem configa in jih pri
+`rwprivzeto=1` obnovi (0 samo izpiše, brez lastnosti običajen config); Gradle prenaša `rwPrivzeto`.
+`matrika-run.ps1 -Privzeto 0/1` preveri način v vseh svežih logih in jih arhivira po kraku; novi `sled-run.ps1`
+primerja sled dogodkov ter timerjev pred/po restartu na dveh svežih kopijah istega sveta. Config in lock nespremenjena.
+Dodani 1 razred in 4 testi; števec 182 razredov (117 rework), 399 metod `@Test` v 68 datotekah (XML 400 izvedb),
+40 primerjalnih testov originala; package ostane 71 vnosov.
+
+**Dokazi:** obe matriki po 5/5 izvedenih stopenj zelenih (build preverjen ločeno). Sledi faz 1/2 imata 97/75 dogodkov,
+enaki znak za znakom; timer 7 ima v obeh krakih 19 razmikov po 8 tickov (znani B3 ohranjen). Krak 1 ima 60
+preskokov collide poizvedbe soseda brez skripte, krak 0 nobenega. R1 ohrani reprodukcijo napake pri načinu 0;
+R2 L1–L12 zeleni, fazi A/B enaki veljavni referenci 21. 9.; brez regresije v izvedenih preverjanjih.
+
+**Odločitvi:** Q35 — ne prepisuj merilnega configa, uporabi začasno JVM preglasitev in dokaz v logih.
+Q36 — M2.7 je navigacijska sonda, zgodovinske timer sledi ni: popravljena napačna povezava v planu,
+referenca nove sledi je isti popravljeni jar s stikali iz configa (0), ne distribucijski original. B3 ni del popravka.
+Prvi sled zagon je padel v obeh krakih: starost po restartu 252 je presegla mejo 200; popravljena faza meri od svojega
+init, merila ostanejo ista, ponovitev zelena na novem odtisu. D-055 zaključi M5.Z in M5 v načrtovanem obsegu.
+
+**Spremembe obnašanja:** samo izrecno zahtevana diagnostična lastnost za scenarije; brez nje običajne vrednosti
+configa. **Ni potrjeno:** nepokrite vrstice M0.7/M10, player/block/item dogodki, Q1/Q22 ter nameščeni OptiFine/Entity
+Culling; klientski sprejem je ločeno dokazan v M5-K.2/V.8. Brez novih performance meritev.
+
+**Naslednji korak:** **M4.14b** (formacije F1–F12 in FA1–FA6), nato **M4.16** (scenarij letenja), po že opravljeni
+raziskavi M4.0 in D-038. Upravljalnik zaganja vse teste in Minecraft. Q22 ostaja ločena preverba pred izdajo.
+
+### 2026-10-22 (118) — M5-K.2: sprejem klienta — zaključeno
+
+**Paket:** M5-K.2 (izhodni kriterij M5 za klient, D-054, Q34) · **Stanje:** **zaključeno** — vseh 8 zahtevanih serij
+(`k2-{200,500}-{orig,priv}`, `k2-dalec-{200,500}-{orig,priv}`, 3 ponovitve) zelenih na kodi `332af8c4…`: T1–T6 v vseh
+serijah, K1–K16 v vseh 24 zagonih ([zapis](../meritve/2026-10-22-M5-K.2-sprejem-klienta.md)).
+
+**Narejeno:** `k-run.ps1` — K12 pri `-Napisi 1` in idle pričakuje napise iz geometrije (`renderName` do 22,6 bloka,
+pas ±1 blok), K16 pri `-Far 2` brez `-Dalec 1` zahteva natanko 0 L2; razdelek M5-K.2 v scenariju M5-K.0. Obe strani
+nastavita vsa štiri klientska stikala eksplicitno prek posla, `dev/run/config/CustomNpcs.cfg` ostane 0.
+
+**Izid (mediane, original → privzeto, vsi razponi ločeni):** p95 idle-200 7,095 → 5,356 ms, idle-500 12,825 → 9,817,
+dalec-200 5,405 → 1,851, dalec-500 13,017 → 2,942; 1 % low 102,5 → 139,8 / 54,4 → 67,0 / 134,9 → 364,6 /
+50,2 → 259,6 FPS; p50 −24,7 do −82,5 %, p99 −19,6 do −80,6 %. Regresije na privzeti strani ni (strežnik enak, GC v
+dalec-500 +6 % absolutno pri 5,7× več sličicah). Original se ujema z baselineom M5-K.1 in M5-V.6.
+
+**Odločitve:** D-054 — klientski del izhodnega kriterija M5 izpolnjen; K10 ostane odložen (idle-500: 500 modelov
+znotraj ~42 blokov, p95 9,817 ms < 16,7). Q34 (samostojno): M5 še ni zaprt — funkcionalna matrika §6 in timerji/script
+trace od 17. 9. niso bili ponovljeni na kodi s privzetimi stikali → nov paket **M5.Z**.
+
+**Spremembe obnašanja:** nobene (samo harness). **Minecraft meritve:** 24 zagonov klienta.
+
+**Naslednji korak:** **M5.Z** — regresijski prehod `matrika-run.ps1` (build, package, testworld, rwdiag, r1, r2) in
+primerjava M2.7 (timerji, script trace) na trenutni kodi; registrirati test ID-je. Nato M4 (M4.14b → M4.16 → …, D-038).
+Neodvisno: Q22; ročna preverba z OptiFine in Entity Culling (odvisna od uporabnika).
 
 ### 2026-10-22 (117) — M5-K K3c: čistilni korak K3 — zaključeno
 

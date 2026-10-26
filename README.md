@@ -15,9 +15,9 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 |---|---|
 | Datum zadnje posodobitve | 2026-10-22 |
 | Trenutna faza | **M4 — Gibanje in navigacija** (R2), raziskava M4.0 opravljena 20. 10. (D-038). M0/M1/M2 zaključeni, M3 do M3.9 (GUI M3.8b odprt), **M5 zaključen 22. 10.** (D-055). Animacijsko jedro M7 v ločenem modu `customNPC_entities_mod` (D-024) |
-| Naslednji korak | **M4.14b** (preverba formacij v svetu), nato **M4.16** (scenarij letenja) → M4.10 → M4.17 → Hover po D-038. **M5.Z zaključen**: unit/build/package ter obe matriki s configom in privzetimi stikali zeleni; timer/script sledi 97/75 dogodkov enaki, B3 ohranjen ([zapis](docs/meritve/2026-10-22-M5.Z-regresija.md)). M5 sprejem: strežnik idle 10× / boj 1,5× (M5.8), klient idle-500 p95 12,83 → 9,82 ms in daleč-500 13,02 → 2,94 ([M5-K.2](docs/meritve/2026-10-22-M5-K.2-sprejem-klienta.md)), NPC viden na 368 blokih ([M5-V.8](docs/meritve/2026-10-22-M5-V.8-sprejem.md)); privzeto `RwHeadwearSkip=1`, `RwLabelCache=1`, `RwFarView=2`, `RwRenderBox=1`. Nepokrite vrstice release matrike, dejanski modpack (Q1), produkcijski Forge (Q22) in nameščeni OptiFine/Entity Culling ostajajo odprti. Dnevnik: [04-STANJE](docs/04-STANJE.md) |
+| Naslednji korak | **M4.14d** (člani v PATH sledijo skupni poti; M4.14b zaključen 26. 10. kot preverba, ne izboljšava, D-079), nato **M4.16** (scenarij letenja) → M4.10 → M4.17 → Hover po D-038. **M5.Z zaključen**: unit/build/package ter obe matriki s configom in privzetimi stikali zeleni; timer/script sledi 97/75 dogodkov enaki, B3 ohranjen ([zapis](docs/meritve/2026-10-22-M5.Z-regresija.md)). M5 sprejem: strežnik idle 10× / boj 1,5× (M5.8), klient idle-500 p95 12,83 → 9,82 ms in daleč-500 13,02 → 2,94 ([M5-K.2](docs/meritve/2026-10-22-M5-K.2-sprejem-klienta.md)), NPC viden na 368 blokih ([M5-V.8](docs/meritve/2026-10-22-M5-V.8-sprejem.md)); privzeto `RwHeadwearSkip=1`, `RwLabelCache=1`, `RwFarView=2`, `RwRenderBox=1`. Nepokrite vrstice release matrike, dejanski modpack (Q1), produkcijski Forge (Q22) in nameščeni OptiFine/Entity Culling ostajajo odprti. Dnevnik: [04-STANJE](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 182 datotek `.java` v `src/patch` (117 rework), 68 testnih datotek (399 metod `@Test`, XML 400 izvedb + 40 primerjalnih testov originala); controller unit/build/package zeleni na `c3e19fe4…` 22. 10.; `verify-package`: 70 razredov originala + manifest coremoda |
+| Prevedljivih razredov | 182 datotek `.java` v `src/patch` (117 rework), 69 testnih datotek (422 metod `@Test` in 40 primerjalnih testov originala). M4.14b zaključen 26. 10. (D-079) na 984dc27a…: harness-i/unit/build/package zeleni, sledi popolne; FA1/2 (skupni cilj proti 8 mestom), FA4 G/O 7,6–8,6/6,42 >6 (kolona skozi vrata) in FA5 G 19 > 4 (→ M4.14d) padejo. Pragovi isti, F1–F12 odprti. |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in
@@ -74,7 +74,7 @@ M0  Temelj                      okolje, build, testi, git            ← zakljuc
 M1  Integriteta podatkov        R9 + B1/B2, atomski zapis, migracija ← zaključeno
 M2  Diagnostika in meritve      reprodukcije, profiling, baseline    ← ~96 %, baseline M2.6 tece 5. 10.
 M3  Jedro entitete              R1 mount, R6 solid hitbox            ← do M3.9, GUI M3.8b odprt
-M4  Gibanje in navigacija       R2 letenje, navigacija                ← naslednji M4.14b, raziskava M4.0 narejena
+M4  Gibanje in navigacija       R2 letenje, navigacija                ← naslednji M4.14d (M4.14b zaključen, D-079), raziskava M4.0 narejena
 M5  Performance AI              R5 strežnik, klient in daljna vidnost ← zaključeno 22. 10., regresija M5.Z, D-055
 M6  Scripting platforma         R7 Java scripting, hook registry
 M7  Animacije + AI okolje       R4 animacijski sistem in avtorsko okolje

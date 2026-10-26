@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-22** (seja 119) — **M5.Z zaključen, M5 zaprt** (D-055, Q35/Q36): unit/build/package, sled in obe matriki zeleni na `c3e19fe4…`; 97/75 dogodkov in 19 razmikov po 8 tickov identični. Dokaz velja za izvedeno pokritost; release matrika in zunanje omejitve ostanejo odprte. |
+| Zadnja posodobitev | **2026-10-26** (seja 149) — **M4.14b zaključen kot preverba, ne izboljšava** (D-079/Q62): na zamrznjenem 984dc27a… imajo vsi ID-ji D-078 rezultat; harness-i, unit, build in package uspejo, sledi popolne (trace-v1 1.664, recovery in navigator 8.960, `iskanj_izgub` G 0). Padejo samo FA1/2 (merilo skupnega cilja proti 8 mestom; 8/8 mest OK), FA4 G 7,571–8,592 / O 6,42 (geometrija kolone skozi vrata) in FA5 G 19 > 4 (člani ne sledijo skupni poti → M4.14d). Pragovi isti, F1–F12 odprti (ročno, uporabnik). |
 | Trenutni milestone | **M4 — Gibanje in navigacija** po D-038; raziskava M4.0 že opravljena 20. 10. **M5 zaključen 22. 10.**: strežnik M5.8, klient M5-K.2, daljna vidnost M5-V.8 in regresija M5.Z. M3 do M3.9 (GUI M3.8b odprt); M2 zaključen 5. 10. |
-| Naslednji paketi | **M4.14b** (formacije v svetu F1–F12 in FA1–FA6) → **M4.16** (scenarij letenja) → M4.10 → M4.17 → Hover (D-038, raziskava M4.0 že narejena). Neodvisno in pred izdajo **Q22** (pravi Forge/SRG pot zapakiranega coremoda); M3.8b ter preverba OptiFine/Entity Culling v nameščenem okolju. Odprto: PR `codex/m7-cnpc-integration` → `main` |
+| Naslednji paketi | **M4.14d** (člani v PATH sledijo skupni poti, FA5 G) → **M4.16** (scenarij letenja) → M4.10 → M4.17 → Hover (D-038, raziskava M4.0 že narejena). Neodvisno in pred izdajo **Q22** (pravi Forge/SRG pot zapakiranega coremoda); M3.8b ter preverba OptiFine/Entity Culling v nameščenem okolju. Odprto: PR `codex/m7-cnpc-integration` → `main` |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **182** datotek `.java` v `src/patch` (22. 10.; +1 M5.Z: `rework/diag/ConfigDefaults`), od tega **117** v `noppes/npcs/rework/…` (`ai` 5, `core` 10, `data` 5, `diag` 26, `entity` 13, `far` 21, `formation` 15, `nav` 12, `net` 3, `render` 7) in 3 dostopni razredi v `net/minecraft/…`; `verify-package`: **71** vnosov (70 razredov originala + manifest coremoda) |
-| Testi | **399 JUnit** metod `@Test` v **68** datotekah (prešteto 22. 10.; +4 `ConfigDefaultsTest`; XML 400 izvedb, ne isto kot število metod) + **40 primerjalnih testov originala**; controller `unit` zelen na `c3e19fe4…` (Gradle cache veljaven). Dodatno **20** preverb dedicated-server smoka in **16** trditev samotesta protokola ponovitev |
+| Testi | **422 JUnit** metod `@Test` v **69** datotekah (26. 10.; +2 D-077) + **40 primerjalnih testov originala**. Na 984dc27a… unit/build/package in vsi trije formacijski harness-i uspejo; FA sprejem M4.14b pade (D-079). Dodatno **20** preverb dedicated-server smoka in **16** trditev samotesta protokola ponovitev |
 | Odprti pojavi | nobenega blokirnega; P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q6, Q8, Q10, Q12, Q14 in Q31 odprta; specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -38,7 +38,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M1 Integriteta podatkov | **zaključeno** | M1.1–M1.3, M1.5, M1.6 in M1.9 narejeni; M1.4/M1.7/M1.8 zavestno odloženi |
 | M2 Diagnostika | **zaključeno 5. 10.** (razen M2.4r render, prestavljen v M5-K) | M2.1–M2.7 preverjeni v svetu; baseline M2.6 zelen 5. 10. — [baseline](meritve/baseline-2026-10-05.md) |
 | M3 Jedro entitete | **zaključeno do M3.9** | M3.1–M3.5 (R1 reproduciran, popravljen pod `RwMountSteering=1`), M3.6 (D-020, `RwAttackPriority`), M3.7, M3.8 (`RwHitbox`), M3.9 (7. 10.). Odprto: M3.8b GUI v klientu (z igralcem), Q15 → D-028 |
-| M4 Gibanje | **M4.0 zaključen 20. 10.**; M4.14a v kodi (izven vrstnega reda) | [raziskava M4.0](raziskave/M4.0-gibanje-in-letenje.md), D-038: vrstni red M4.14b → M4.16 (scenarij) → M4.10 → M4.17 → M4.2/M4.3 → (M4.5) → M4.6 → M4.7; M4.13 → (M4.11) in M4.15 neodvisno; M4.1/M4.4/M4.9/M4.12 zavrženi ali združeni. Formacije v svetu še ne — [zasnova](06-FORMACIJE.md); M4.15 (D-036); Q6, Q31 |
+| M4 Gibanje | **M4.0 zaključen; M4.14b zaključen 26. 10. kot preverba (D-079)** | [dokazi](meritve/2026-10-22-M4.14b-formacije.md): FA1/2, FA4 G/O in FA5 G padejo z zapisanimi vzroki, pragovi isti; F1–F12 odprti. Naslednji M4.14d (FA5 G) → M4.16 → M4.10 → M4.17 → Hover; M4.15 neodvisno |
 | M5 Performance | **zaključeno 22. 10. (D-055)** | M5-S: kapaciteta M5.8; M5-K: sprejem M5-K.2; M5-V: sprejem M5-V.8 in privzeti vklop V.8b; M5.Z: obe matriki in sled zeleni. [Regresija](meritve/2026-10-22-M5.Z-regresija.md); nepokrita release preverjanja ostanejo M10 |
 | M6 Scripting | ni začeto | analiza narejena, glej R7 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
@@ -55,65 +55,37 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 117 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 140 → 1, novejši zgoraj).*
 
 
-### 2026-10-22 (119) — M5.Z: regresijski prehod, M5 zaključen
+### 2026-10-26 (149) — M4.14b zaključen kot preverba, ne izboljšava
 
-**Paket:** M5.Z (D-054, D-055, Q35/Q36) · **Stanje:** **zaključeno** — zahtevanih šest testov
-(`unit`, `build`, `package`, `m5z-sled`, `m5z-matrika-orig`, `m5z-matrika-priv`) zelenih pri upravljalniku na
-`c3e19fe4607c364e981c698b4c26efa07dcf7e19435ababa0b13c8dd2cb84c99`. Po testih spremenjeni samo dokumenti.
-[Zapis](meritve/2026-10-22-M5.Z-regresija.md), [scenarij sledi](scenariji/M5.Z-sled.md).
+**Paket:** M4.14b (D-079/Q62) · **Stanje:** **zaključeno; FA niso izpolnjeni, pragovi isti**.
+[Dokazi](meritve/2026-10-22-M4.14b-formacije.md). AI ni zaganjal testov/builda/Minecrafta.
 
-**Narejeno:** `ConfigDefaults` zajame vrednosti `@ConfigProp Rw*` pred nalaganjem configa in jih pri
-`rwprivzeto=1` obnovi (0 samo izpiše, brez lastnosti običajen config); Gradle prenaša `rwPrivzeto`.
-`matrika-run.ps1 -Privzeto 0/1` preveri način v vseh svežih logih in jih arhivira po kraku; novi `sled-run.ps1`
-primerja sled dogodkov ter timerjev pred/po restartu na dveh svežih kopijah istega sveta. Config in lock nespremenjena.
-Dodani 1 razred in 4 testi; števec 182 razredov (117 rework), 399 metod `@Test` v 68 datotekah (XML 400 izvedb),
-40 primerjalnih testov originala; package ostane 71 vnosov.
+Na zamrznjenem 984dc27a… ima vsak ID D-078 rezultat: harness-v1, recovery-harness-v2,
+navigator-harness-v3, unit, build in package uspejo. ab-v1, trace-v1 (1.664),
+recovery-trace-v2 (8.960, `iskanj_izgub` G 0) in navigator-trace-v3 (8.960) padejo samo na FA:
+FA1/2 (merilo skupnega cilja proti 8 mestom; 8/8 mest OK), FA4 G 7,571–8,592 in O 6,42
+(geometrija kolone skozi vrata, idealni premer LEGIJE 6,325) ter FA5 G 19 > 4 (člani v PATH
+ne sledijo skupni poti → M4.14d). FA3/6 in FA5 O uspejo. F1–F12 ostanejo ročni test z
+igralcem. Commit vključuje celoten paket M4.14b (koda, testi, harness, zapis).
 
-**Dokazi:** obe matriki po 5/5 izvedenih stopenj zelenih (build preverjen ločeno). Sledi faz 1/2 imata 97/75 dogodkov,
-enaki znak za znakom; timer 7 ima v obeh krakih 19 razmikov po 8 tickov (znani B3 ohranjen). Krak 1 ima 60
-preskokov collide poizvedbe soseda brez skripte, krak 0 nobenega. R1 ohrani reprodukcijo napake pri načinu 0;
-R2 L1–L12 zeleni, fazi A/B enaki veljavni referenci 21. 9.; brez regresije v izvedenih preverjanjih.
+### 2026-10-26 (147) — M4.14b: D-077 potrjen, koda zamrznjena, FA5 v M4.14d
 
-**Odločitvi:** Q35 — ne prepisuj merilnega configa, uporabi začasno JVM preglasitev in dokaz v logih.
-Q36 — M2.7 je navigacijska sonda, zgodovinske timer sledi ni: popravljena napačna povezava v planu,
-referenca nove sledi je isti popravljeni jar s stikali iz configa (0), ne distribucijski original. B3 ni del popravka.
-Prvi sled zagon je padel v obeh krakih: starost po restartu 252 je presegla mejo 200; popravljena faza meri od svojega
-init, merila ostanejo ista, ponovitev zelena na novem odtisu. D-055 zaključi M5.Z in M5 v načrtovanem obsegu.
+**Paket:** M4.14b (D-078/Q61) · **Stanje:** **delno; preostali ID-ji na zamrznjenem odtisu**.
+[Dokazi](meritve/2026-10-22-M4.14b-formacije.md). AI ni zaganjal testov/builda/Minecrafta.
 
-**Spremembe obnašanja:** samo izrecno zahtevana diagnostična lastnost za scenarije; brez nje običajne vrednosti
-configa. **Ni potrjeno:** nepokrite vrstice M0.7/M10, player/block/item dogodki, Q1/Q22 ter nameščeni OptiFine/Entity
-Culling; klientski sprejem je ločeno dokazan v M5-K.2/V.8. Brez novih performance meritev.
+Na 984dc27a… uspejo unit (tudi `SquadAdapterTest`, `MountGuardTest`), build, package in
+navigator-harness-v3. Navigator sled ima 8.960 zapisov brez `FORM-NAVERR`: izničenj je 17
+(prej 28), vsa v tickih 7–26, nobene izgube obvoza G; `iskanj_izgub` G 7 → 0, `iskanj` 28 → 18.
+FA5 G še pade (19 > 4), prav tako FA1/2 in FA4 G/O 8,041/6,417 >6.
 
-**Naslednji korak:** **M4.14b** (formacije F1–F12 in FA1–FA6), nato **M4.16** (scenarij letenja), po že opravljeni
-raziskavi M4.0 in D-038. Upravljalnik zaganja vse teste in Minecraft. Q22 ostaja ločena preverba pred izdajo.
-
-### 2026-10-22 (118) — M5-K.2: sprejem klienta — zaključeno
-
-**Paket:** M5-K.2 (izhodni kriterij M5 za klient, D-054, Q34) · **Stanje:** **zaključeno** — vseh 8 zahtevanih serij
-(`k2-{200,500}-{orig,priv}`, `k2-dalec-{200,500}-{orig,priv}`, 3 ponovitve) zelenih na kodi `332af8c4…`: T1–T6 v vseh
-serijah, K1–K16 v vseh 24 zagonih ([zapis](meritve/2026-10-22-M5-K.2-sprejem-klienta.md)).
-
-**Narejeno:** `k-run.ps1` — K12 pri `-Napisi 1` in idle pričakuje napise iz geometrije (`renderName` do 22,6 bloka,
-pas ±1 blok), K16 pri `-Far 2` brez `-Dalec 1` zahteva natanko 0 L2; razdelek M5-K.2 v scenariju M5-K.0. Obe strani
-nastavita vsa štiri klientska stikala eksplicitno prek posla, `dev/run/config/CustomNpcs.cfg` ostane 0.
-
-**Izid (mediane, original → privzeto, vsi razponi ločeni):** p95 idle-200 7,095 → 5,356 ms, idle-500 12,825 → 9,817,
-dalec-200 5,405 → 1,851, dalec-500 13,017 → 2,942; 1 % low 102,5 → 139,8 / 54,4 → 67,0 / 134,9 → 364,6 /
-50,2 → 259,6 FPS; p50 −24,7 do −82,5 %, p99 −19,6 do −80,6 %. Regresije na privzeti strani ni (strežnik enak, GC v
-dalec-500 +6 % absolutno pri 5,7× več sličicah). Original se ujema z baselineom M5-K.1 in M5-V.6.
-
-**Odločitve:** D-054 — klientski del izhodnega kriterija M5 izpolnjen; K10 ostane odložen (idle-500: 500 modelov
-znotraj ~42 blokov, p95 9,817 ms < 16,7). Q34 (samostojno): M5 še ni zaprt — funkcionalna matrika §6 in timerji/script
-trace od 17. 9. niso bili ponovljeni na kodi s privzetimi stikali → nov paket **M5.Z**.
-
-**Spremembe obnašanja:** nobene (samo harness). **Minecraft meritve:** 24 zagonov klienta.
-
-**Naslednji korak:** **M5.Z** — regresijski prehod `matrika-run.ps1` (build, package, testworld, rwdiag, r1, r2) in
-primerjava M2.7 (timerji, script trace) na trenutni kodi; registrirati test ID-je. Nato M4 (M4.14b → M4.16 → …, D-038).
-Neodvisno: Q22; ročna preverba z OptiFine in Entity Culling (odvisna od uporabnika).
+Razčlenitev 18 zahtev: 3 obtičanja, 4 prva iskanja kolone, 2 opravičili, 4 premiki točke
+kolone, 5 prehod v SETTLING. Pri 13 od 15 nedovoljenih je cilj na že poiskani skupni poti.
+D-078: koda ostane na 984dc27a, na istem odtisu se zaženejo harness-v1, ab-v1, trace-v1,
+recovery-harness-v2 in recovery-trace-v2. Sledenje skupni poti gre v nov paket M4.14d.
+Pragovi isti, F1–F12 odprti.
 
 
 ---
@@ -123,7 +95,7 @@ Neodvisno: Q22; ročna preverba z OptiFine in Entity Culling (odvisna od uporabn
 Samo **odprta** vprašanja (in Q1 kot trajna blokada). Ko je vprašanje odločeno, se vrstica
 **prestavi** v [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §4 (tam so vsa vprašanja
 Q1–Q29 s stanjem na 2026-10-19; odločitev se zapiše tam in v `01-ARHITEKTURA.md` §9).
-Nova vprašanja dobijo naslednjo prosto številko (zadnja uporabljena: **Q36**, Q35/Q36 odločeni 22. 10. → D-055; Q34 → D-054; Q33 → D-052).
+Nova vprašanja dobijo naslednjo prosto številko (zadnja uporabljena: **Q62** → D-079; Q61 → D-078; Q60 → D-077; Q59 → D-076; Q58 → D-075; Q57 → D-074; Q56 → D-073; Q55 → D-072; Q54 → D-071; Q53 → D-070; Q52 → D-069; Q51 → D-068; Q50 → D-067; Q49 → D-066; Q48 → D-065; Q47 → D-064; Q46 → D-063; Q45 → D-062; Q44 → D-061; Q43 → D-060; Q42 → D-059; Q41 → D-058; Q40 → D-057; Q37–Q39 → D-056; Q35/Q36 → D-055).
 
 | # | Vprašanje | Vpliva na | Stanje |
 |---|---|---|---|
@@ -158,7 +130,7 @@ pa še razlage in ni ločen od možne napake scenarija, zato je tu in ne med bug
 
 | Vsebina | Datoteka | Kdaj ga odpreš |
 |---|---|---|
-| Dnevnik sej: vnosi od seje 117 (22. 10.) nazaj do seje 1 (11. 9., postavitev načrta) | [`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) | `grep` po paketu (npr. `M5.16`), seji ali ključni besedi |
-| Polna tabela "Trenutno stanje" (18. 10.), polna tabela milestonov, M1/M2 po paketih, **vsa** vprašanja Q1–Q36 (odločena), **Znane omejitve** (pasti scenarijev, pravila merjenja, okolje) | [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) | `grep`; pred pisanjem novega scenarija preglej §5 Znane omejitve |
+| Dnevnik sej: vnosi od seje 140 (22. 10.) nazaj do seje 1 (11. 9., postavitev načrta) | [`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) | `grep` po paketu (npr. `M5.16`), seji ali ključni besedi |
+| Polna tabela "Trenutno stanje" (18. 10.), polna tabela milestonov, M1/M2 po paketih, **vsa** vprašanja Q1–Q56 (odločena), **Znane omejitve** (pasti scenarijev, pravila merjenja, okolje) | [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) | `grep`; pred pisanjem novega scenarija preglej §5 Znane omejitve |
 | **Sprejete spremembe obnašanja**, **Prevzeta koda**, **Meritve** (živi registri; nove vrstice se dodajo tam) | [`04-REGISTRI.md`](04-REGISTRI.md) | ko dodajaš stikalo, prevzeto kodo ali meritev; `grep` po stikalu (`Rw…`) |
 | Polni zapisi meritev | [`meritve/`](meritve/) | po povezavi iz registra |

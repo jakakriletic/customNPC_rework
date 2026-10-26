@@ -126,6 +126,84 @@ public class SquadPlannerTest {
         return out;
     }
 
+    /**
+     * G/5 on 44f3390b holds its column slot at tick 180, but pathUntil=211
+     * still sends it to PATH when the anchor moves at 200. Reproduce the
+     * planner transition without Minecraft physics or private-field writes.
+     */
+    private static Sim stuckMemberRecovery() {
+        SquadPlanner p = new SquadPlanner(new Slot[] {new Slot(0, 0), new Slot(2, 0)},
+                uniform(2, 0.606375),
+                PathTrack.straight(0.5, GROUND, 0.5, 0.5, GROUND, 80.5), true,
+                0.5, GROUND, 80.5, 0, new Terrain.Flat(GROUND), true, true);
+        Sim sim = new Sim(p, new double[] {0.5, -1.5}, new double[] {0.5, 0.5},
+                uniform(2, 0.606375));
+        p.update(sim.x, sim.y, sim.z, sim.eligible);
+        assertEquals("fixture must begin marching", Phase.MARCHING, p.phase());
+        sim.z[0] -= 2.5;
+        for (int t = 0; t < 2 * SquadPlanner.STUCK_WINDOW + 2 && p.stuckEvents() == 0; t++) {
+            // Member 0 does not move; member 1 follows. Only the planner's
+            // own stuck detector may start recovery, never a seeded penalty.
+            sim.x[1] = p.targetX[1];
+            sim.z[1] = p.targetZ[1];
+            p.update(sim.x, sim.y, sim.z, sim.eligible);
+        }
+        assertTrue("fixture must detect the blocked member", p.stuckEvents() > 0);
+        assertEquals("fixture must actually request recovery", SquadPlanner.PATH, p.mode[0]);
+        return sim;
+    }
+
+    private static void acquireRecoverySlotWhileAnchorWaits(Sim sim) {
+        SquadPlanner p = sim.planner;
+        sim.x[0] = p.targetX[0];
+        sim.z[0] = p.targetZ[0];
+        sim.x[1] = p.targetX[1];
+        sim.z[1] = p.targetZ[1] - SquadPlanner.LAG_STOP - 0.5;
+        p.update(sim.x, sim.y, sim.z, sim.eligible);
+        assertEquals("the other member must keep the anchor stopped", 0, p.anchorSpeed(), 0);
+        assertEquals("recovery has acquired the current slot", SquadPlanner.HOLD, p.mode[0]);
+        assertTrue(p.settled[0]);
+        assertEquals(Phase.MARCHING, p.phase());
+    }
+
+    @Test
+    public void acquiredRecoverySlotResumesWithSteerWhenAnchorMoves() {
+        Sim sim = stuckMemberRecovery();
+        SquadPlanner p = sim.planner;
+        acquireRecoverySlotWhileAnchorWaits(sim);
+        sim.x[1] = p.targetX[1];
+        sim.z[1] = p.targetZ[1];
+        p.update(sim.x, sim.y, sim.z, sim.eligible);
+        assertTrue("fixture must restart the anchor", p.anchorSpeed() > 0);
+        double distance = Math.hypot(p.targetX[0] - sim.x[0], p.targetZ[0] - sim.z[0]);
+        assertTrue("the new slot needs motion within steering range",
+                distance > SquadPlanner.SETTLED && distance < SquadPlanner.STEER_MAX);
+        assertEquals("arrival must end the old recovery episode, not restart searches",
+                SquadPlanner.STEER, p.mode[0]);
+    }
+
+    @Test
+    public void unrecoveredBlockedMemberStillNeedsPath() {
+        Sim sim = stuckMemberRecovery();
+        SquadPlanner p = sim.planner;
+        sim.x[1] = p.targetX[1];
+        sim.z[1] = p.targetZ[1];
+        p.update(sim.x, sim.y, sim.z, sim.eligible);
+        assertEquals("an unfinished recovery must not be cancelled indiscriminately",
+                SquadPlanner.PATH, p.mode[0]);
+    }
+
+    @Test
+    public void acquiredSlotStillNeedsPathAfterDistantDisplacement() {
+        Sim sim = stuckMemberRecovery();
+        SquadPlanner p = sim.planner;
+        acquireRecoverySlotWhileAnchorWaits(sim);
+        sim.x[0] += SquadPlanner.STEER_MAX + 1;
+        p.update(sim.x, sim.y, sim.z, sim.eligible);
+        assertEquals("arrival must not suppress recovery outside steering range",
+                SquadPlanner.PATH, p.mode[0]);
+    }
+
     @Test
     public void legionMarchesTogetherAndArrivesOnDistinctBlockCenters() {
         int n = 20;
@@ -279,6 +357,71 @@ public class SquadPlannerTest {
         SquadPlanner p = new SquadPlanner(slots, uniform(3, V), track, true, 0.5, GROUND, 5.5, 90,
                 new Terrain.Flat(GROUND), true, true);
         assertEquals(Phase.SETTLING, p.phase());
+    }
+
+    @Test
+    public void settlingRequiresNewArrivalWhenTheFinalSlotChanges() {
+        // Vanilla may end a complete path up to GOAL_REACHED (2 blocks) from
+        // the requested centre. This one ends one block before the final slot.
+        // A flag acquired at the moving slot must not count as arrival there.
+        SquadPlanner p = new SquadPlanner(FormationShape.legion(1, 1), uniform(1, V),
+                PathTrack.straight(0.5, GROUND, 0.5, 0.5, GROUND, 20.5), true,
+                0.5, GROUND, 21.5, 0, new Terrain.Flat(GROUND), true, true);
+        double[] x = {0.5};
+        double[] y = {GROUND};
+        double[] z = {0.5};
+        boolean[] eligible = {true};
+        // Follow each moving target exactly, without relying on simulated
+        // collision or Minecraft's speed formula. Only phase state is tested.
+        for (int t = 0; t < 1000 && p.phase() != Phase.SETTLING; t++) {
+            p.update(x, y, z, eligible);
+            if (p.phase() != Phase.SETTLING) {
+                x[0] = p.targetX[0];
+                z[0] = p.targetZ[0];
+            }
+        }
+        assertEquals("did not reach the phase boundary", Phase.SETTLING, p.phase());
+        double error = Math.hypot(p.targetX[0] - x[0], p.targetZ[0] - z[0]);
+        assertTrue("fixture must be outside arrival tolerance", error > SquadPlanner.SETTLED);
+        assertTrue("fixture must expose inherited hysteresis", error < SquadPlanner.UNSETTLE);
+
+        p.update(x, y, z, eligible);
+        assertEquals("a moving-slot flag is not final-slot arrival", Phase.SETTLING, p.phase());
+        assertFalse("must reacquire the new slot", p.settled[0]);
+        assertEquals(SquadPlanner.STEER, p.mode[0]);
+        // After acquiring that slot, normal completion must still work.
+        x[0] = p.targetX[0];
+        z[0] = p.targetZ[0];
+        p.update(x, y, z, eligible);
+        assertEquals(Phase.DONE, p.phase());
+        assertEquals(0, p.unsettledAtEnd());
+    }
+
+    @Test
+    public void completionPublishesOutwardFacingForEveryRingMember() {
+        Slot[] slots = FormationShape.ring(8, 5);
+        SquadPlanner p = new SquadPlanner(slots, uniform(slots.length, V),
+                PathTrack.straight(0.5, GROUND, 0.5, 0.5, GROUND, 0.5), true,
+                0.5, GROUND, 0.5, 0, new Terrain.Flat(GROUND), true, true);
+        double[] x = new double[slots.length];
+        double[] y = uniform(slots.length, GROUND);
+        double[] z = new double[slots.length];
+        boolean[] eligible = new boolean[slots.length];
+        java.util.Arrays.fill(eligible, true);
+        // All members acquire their slots on the same tick: there need not be
+        // an earlier HOLD tick from which Squad can remember the final yaw.
+        for (int i = 0; i < slots.length; i++) {
+            x[i] = Math.floor(0.5 - slots[i].side) + 0.5;
+            z[i] = Math.floor(0.5 - slots[i].back) + 0.5;
+        }
+        p.update(x, y, z, eligible);
+        assertEquals(Phase.DONE, p.phase());
+        for (int i = 0; i < slots.length; i++) {
+            assertEquals(SquadPlanner.HOLD, p.mode[i]);
+            assertFalse("final yaw missing for member " + i, Double.isNaN(p.faceYaw[i]));
+            double expected = Math.toDegrees(Math.atan2(-(x[i] - 0.5), z[i] - 0.5));
+            assertEquals(expected, p.faceYaw[i], 1.0E-6);
+        }
     }
 
     @Test
