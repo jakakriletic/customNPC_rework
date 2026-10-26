@@ -31,6 +31,7 @@ za milestone, ki že teče (M5), M5.0 velja pred naslednjim paketom.
 | **M9** | Chatbot | R8 | M |
 | **M10** | Release kandidat | — | M |
 | **M11** | Poveljevanje skupinam prek zemljevida — **zadnja faza**, ko je vse ostalo večinoma narejeno (D-026) | R10 | L |
+| **M12** | Nalaganje skinov prek URL-ja: omejen prenos, timeouti, diskovni predpomnilnik, omejitev velikosti — na koncu, za M11 (zahteva uporabnika 26. 10.) | R5 | M |
 
 ---
 
@@ -596,6 +597,43 @@ izmerjen in v dogovorjenem pasu.
 
 **Tveganja:** neaktivni chunki (M11.6) so največja neznanka; abstraktni pohod potrebuje varno
 shranjevanje stanja ob izklopu strežnika.
+
+---
+
+## M12 — Nalaganje skinov prek URL-ja
+
+**Cilj:** URL skini (skinType 2) se zanesljivo in poceni naložijo tudi pri stotinah NPC-jev z
+različnimi URL-ji. Zahteva uporabnika 26. 10. 2026: uporablja skine iz datotek **in** prek URL-ja,
+URL je zanj pomemben; paket naj se izvede na koncu, za ostalimi milestoni.
+
+**Izhodišče [K]** ([raziskava](raziskave/performance/client_code.md) Q3, `PLAN_IMPLEMENTACIJE.md`
+vrstica »Prenos skinov«): enak URL se že v originalu naloži samo enkrat (`skins/<md5(url)>` v
+`TextureManager`), datotečni skini prek `SimpleTexture` prav tako. Manjka: `ImageDownloadAlt` za
+vsak URL odpre svojo nit brez connect/read timeouta in brez ponovitve ob napaki; ni diskovnega
+predpomnilnika (`cacheFile` je `null`, vsak zagon klienta prenese vse znova); velikost slike ni
+omejena (2048×2048 ≈ 16 MiB GPU + 16 MiB kopa); `BufferedImage` po nalaganju na GPU ostane v
+pomnilniku; skinType 1 brez tekstur vsako sličico znova kliče `loadSkinFromCache`. Atlas skinov
+za bližnje NPC-je je zavržen (K13, D-053); M5-V.7 peka impostorja že čaka na prenos URL skina.
+
+**Vhodni pogoj:** M12.0 raziskava; prizorišče z URL skini (lokalni strežnik skinov iz M5-V.7,
+`k-run.ps1 -Posebni 1`) razširjeno na mnogo različnih URL-jev.
+
+### Paketi
+
+| ID | Paket | Vel. |
+|---|---|---|
+| M12.0 | Raziskava izvedbe (D-029): ponovno branje poti `RenderNPCInterface.getEntityTexture` → `ImageDownloadAlt`, vanilla `SkinManager`, interakcija z impostorji (M5-V.7 `SkinDownload`) in `customNPC_entities_mod` | S |
+| M12.1 | Scenarij in baseline: 50/200/500 NPC-jev z različnimi URL-ji, tudi počasen, mrtev in prevelik URL; veličine: niti, čas do prikaza vseh skinov, zatikanje sličic ob nalaganju na GPU, pomnilnik (kopa + GPU) | S |
+| M12.2 | Omejen izvajalec prenosov s timeouti in ponovitvijo z zamikom; identične sočasne zahteve združene; napaka → privzeti skin brez zastoja | S–M |
+| M12.3 | Diskovni predpomnilnik URL skinov (ključ md5 URL-ja, veljavnost/ETag, varno ob pokvarjeni datoteki) | M |
+| M12.4 | Omejitev velikosti slike in sprostitev `BufferedImage` po nalaganju na GPU; razporeditev nalaganj na GPU čez več sličic | S |
+| M12.5 | skinType 1: oznaka »ni na voljo, poskusi ob ticku T« namesto klica vsako sličico | S |
+
+Vse pod stikali, privzeto original; privzeti vklop po D-032 (dokazano enako + izmerjeno hitreje).
+
+**Izhodni kriterij:** na scenariju M12.1 brez visečih niti ob mrtvem URL-ju, ponovni zagon klienta
+ne prenese že shranjenih skinov, prevelik skin ne preseže omejitve, zatikanje ob nalaganju
+izmerjeno proti originalu (3 ponovitve, D-016); prikaz skinov enak originalu.
 
 ---
 
