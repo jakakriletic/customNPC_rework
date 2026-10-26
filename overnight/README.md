@@ -69,7 +69,7 @@ obstoječemu protokolu dokumentiranja, commit/push samo lastnih datotek in brez 
 
 ## Trije naročniški profili
 
-Vrstni red je `claude-1` → `claude-2` → `codex`. Vsak uporablja svojo native naročnino;
+Vrstni red je `claude-1` → `claude-2` → `codex`. Codex desktop aplikacija ob vsaki posodobitvi premakne `codex.exe` v novo mapo `bin/<hash>/`; upravljalnik zato ob manjkajoči poti (ali `executable: "codex"`) vzame najnovejši `%LOCALAPPDATA%OpenAICodexin*codex.exe` (26. 10. 2026: posodobitev ob 8:56 je Codex tiho izločila iz kroženja). Vsak uporablja svojo native naročnino;
 kvote niso združene. Ob dejanski napaki kvote se ohranijo diff, predaja in rezultati ter
 izbere naslednji razpoložljiv profil. Ko so vsi v cooldownu, se čaka do najzgodnejšega reseta.
 Strojno berljiv reset je točen, sicer je poskus čez 15 minut izrecno označen kot **ocena**.

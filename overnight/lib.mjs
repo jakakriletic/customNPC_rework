@@ -117,8 +117,22 @@ export async function lock(directory, { keepAwake = false } = {}) {
   }
   throw new Error('Zaklepa ni bilo mogoce pridobiti');
 }
+// The Codex desktop app installs codex.exe under bin/<hash>/ and changes the hash on every update.
+export function codexInstalled(binDirectory = path.join(process.env.LOCALAPPDATA || '', 'OpenAI', 'Codex', 'bin')) {
+  let newest = null;
+  try {
+    for (const entry of fs.readdirSync(binDirectory)) {
+      const candidate = path.join(binDirectory, entry, 'codex.exe');
+      try { const time = fs.statSync(candidate).mtimeMs; if (!newest || time > newest.time) newest = { candidate, time }; } catch { /* no codex here */ }
+    }
+  } catch { /* app not installed */ }
+  return newest?.candidate || null;
+}
 export function executable(name) {
-  if (path.isAbsolute(name)) return fs.existsSync(name) ? name : null;
+  if (path.isAbsolute(name)) {
+    if (fs.existsSync(name)) return name;
+    return process.platform === 'win32' && path.basename(name).toLowerCase() === 'codex.exe' ? codexInstalled() : null;
+  }
   for (const directory of (process.env.PATH || '').split(path.delimiter)) {
     for (const extension of process.platform === 'win32' ? ['.exe', ''] : ['']) {
       const candidate = path.join(directory.replace(/^"|"$/g, ''), name + extension);
@@ -137,6 +151,7 @@ export function executable(name) {
       }
     }
   }
+  if (process.platform === 'win32' && name === 'codex') return codexInstalled();
   return null;
 }
 export function nativeEnvironment(profile = {}) {

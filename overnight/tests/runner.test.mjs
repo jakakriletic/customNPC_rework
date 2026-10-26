@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { writeJson, readJson, fingerprint, decision, classifyFailure, parseAgent, quotaReset, resetFromMessage, desktopReason, lock, nativeEnvironment, within, agentArguments } from '../lib.mjs';
+import { writeJson, readJson, fingerprint, decision, classifyFailure, parseAgent, quotaReset, resetFromMessage, desktopReason, lock, nativeEnvironment, within, agentArguments, codexInstalled, executable } from '../lib.mjs';
 import { newState, makeTask, applyAgentResult, applyTestResult, selectProfile, tick, importInbox } from '../runner.mjs';
 import { execute } from '../worker.mjs';
 
@@ -207,4 +207,15 @@ test('detached test finishes after its launching controller exits', async t => {
   const result = path.join(directory, 'result.json'); const deadline = Date.now() + 15000;
   while (!fs.existsSync(result) && Date.now() < deadline) await new Promise(r => setTimeout(r, 100));
   assert.ok(fs.existsSync(result)); assert.equal(readJson(result).success, true); assert.equal(fs.readFileSync(path.join(directory, 'done.txt'), 'utf8'), 'finished');
+});
+
+test('codex executable follows the desktop app to its newest bin hash', t => {
+  const root = temporary(t);
+  for (const [hash, time] of [['old1', 1000], ['new2', 2000]]) {
+    fs.mkdirSync(path.join(root, hash)); const exe = path.join(root, hash, 'codex.exe');
+    fs.writeFileSync(exe, ''); fs.utimesSync(exe, time, time);
+  }
+  fs.mkdirSync(path.join(root, 'tools')); fs.writeFileSync(path.join(root, 'tools', 'rg.exe'), '');
+  assert.equal(codexInstalled(root), path.join(root, 'new2', 'codex.exe'));
+  assert.equal(codexInstalled(path.join(root, 'missing')), null);
 });
