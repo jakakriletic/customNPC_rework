@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 150 → 1)
+# Arhiv: dnevnik sej (vnosi 151 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,27 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-26 (151) — M4.16: harness scenarija letenja in dometa
+
+**Paket:** M4.16 (D-081, Q66–Q68) · **Stanje:** **zaključeno**.
+[Scenarij](../scenariji/M4.16-letenje.md), [zapis](../meritve/2026-10-26-M4.16-letenje.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Brez produkcijske kode. Ločen `letenje-run.ps1` (svež svet `-PrwWorld` na zagon, config
+nespremenjen, SHA preverjen), `ponovitve-run.ps1 -Scenarij letenje`, `letenje-lib.ps1`,
+krmilnik `letenje-control.js`, postavitev, fixture `LET_*` in samotest nad ponarejenim
+svetom (node). Šest prog (zid, vogal, labirint, daleč leteči/kopenski, prosta kontrola) × tri
+faze (en klic, osvežen, hitrost 0,5), merila veljavnosti LT1–LT9. Celica `leteci-200` je
+M4.16b (Q66). Zahtevani ID-ji: `m416-samotest-v1`, nato `m416-letenje-v1` (3 ponovitve).
+Na 163de09a… samotest zelen; `m416-letenje-v1` p1 padel na LT4 (postavitev): 1.12.2 `fill`
+ne sprejme `hollow` brez podatkovne vrednosti (»'hollow' is not a state«), labirint ni bil
+postavljen. Popravek ukaza v `minecraft:stone 0 hollow`; preverba LT4 nespremenjena.
+Na 2882787d… `m416-samotest-v1`, `m416-letenje-v1` (LT1–LT9, T1–T6), unit, build in package
+zeleni; vseh 180 veličin v treh ponovitvah razpon 0. Original z enim `navigateTo`: zid, vogal,
+labirint in daleč 0/6 (daleč `navig0` 0/6 tudi kopenski; labirint brez premika), prosta
+kontrola 6/6; osvežen zid 6/6 (215/270 tickov), vogal 0/6. Drsenje po prihodu 2,375/1,758
+(max/mediana, spodnja meja; M4.0 ocena ~3,5 previsoka), hitrost 0,5 : 1,0 = 0,97 (ne velja).
+Q68: pragovi izhodnega kriterija M4 isti. Naslednji M4.16b (`leteci-200`).
 
 ### 2026-10-26 (150) — M4.14d poskus 1 (TRACK) izmerjen in zavrnjen
 

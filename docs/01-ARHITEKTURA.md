@@ -722,3 +722,10 @@ iskanja zunaj dosega) zdaj preverja z zidom med članom in mestom, nov test pa S
 **Sprejem:** unit, build, package, `m414b-navigator-harness-v3`, `m414b-navigator-trace-v3`,
 `m414b-ab-v1` na istem odtisu; FA5 G ≤ 1 + obnove + obtičanja, G DONE ≤ 246, obtičanja G ≤ 6.
 Če katero od teh pade, poskus 2 ni sprejet (kot Q65) in produkcija se povrne na `cbad3c3`.
+
+**Izid (2026-10-26, seja 153, Q74):** na `6f39a760…` unit, build, package in
+`m414b-navigator-harness-v3` zeleni; `m414b-navigator-trace-v3` izhod 1: G `iskanj` 18 → 4
+(+8 TRACK), obtičanja 3 (≤ 6 velja), a **G DONE 288 > 246** in **FA5 G 5 > 4**, FA4 G 9,326.
+Poskus 2 ni sprejet; koda v `bf02674`, produkcija in testi povrnjeni na `cbad3c3`. M4.14d
+odložen do per-članske analize zamude ob vratih; naslednji M4.10.
+[Dokazi](meritve/2026-10-26-M4.14d-poskus2.md).

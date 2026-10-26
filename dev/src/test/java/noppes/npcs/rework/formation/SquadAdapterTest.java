@@ -443,67 +443,6 @@ public class SquadAdapterTest {
         assertTrue("a stalled route must still time out", nav.noPath());
     }
 
-    // M4.14d poskus 2 (D-083): TRACK sestavi pot iz tock skupne poti, brez iskanja.
-
-    private void trackTarget(double z) {
-        planner.mode[0] = SquadPlanner.TRACK;
-        planner.targetX[0] = -9.5;
-        planner.targetZ[0] = z;
-        planner.trackFrom[0] = npc.posZ - 60.5;
-        planner.trackTo[0] = Math.min(z - 60.5, 18.0);
-    }
-
-    @Test
-    public void trackBuildsRouteFromSharedPathWithoutSearching() throws Exception {
-        trackTarget(75.5);
-        adapterTick(40);
-        squad.drive(0);
-        assertEquals("TRACK must not search", 0, nav.requests);
-        Path route = nav.getPath();
-        assertEquals(2, route.getCurrentPathLength());
-        assertEquals(71, route.getPathPointFromIndex(0).z);
-        assertEquals(-10, route.getPathPointFromIndex(0).x);
-        assertEquals(75, route.getFinalPathPoint().z);
-    }
-
-    @Test
-    public void trackKeepsRouteUntilTargetMovesBeyondRebuildLimit() throws Exception {
-        trackTarget(75.5);
-        adapterTick(40);
-        squad.drive(0);
-        Path first = nav.getPath();
-        trackTarget(75.5 + Squad.TRACK_REBUILD);
-        adapterTick(41);
-        squad.drive(0);
-        assertSame("a target within the rebuild limit keeps the route and its progress", first, nav.getPath());
-        trackTarget(79.0);
-        adapterTick(42);
-        squad.drive(0);
-        assertNotSame(first, nav.getPath());
-        assertEquals(79, nav.getPath().getFinalPathPoint().z);
-        assertEquals("rebuilding is still not a search", 0, nav.requests);
-    }
-
-    @Test
-    public void trackKeepsUnfinishedRecoveryDetour() throws Exception {
-        Path route = beginRecovery(31, -9.5, 65.661600);
-        trackTarget(75.5);
-        adapterTick(32);
-        squad.drive(0);
-        assertSame("a stuck-recovery detour has priority over TRACK", route, nav.getPath());
-        assertEquals(1, nav.requests);
-    }
-
-    @Test
-    public void issuedSearchClearsStuckPenalty() throws Exception {
-        // Obticanje dovoli eno iskanje (FA5); kazen ne sme siliti novih iskanj ob vsakem
-        // premiku cilja (navigator sled ae8a889f, G/6@201 ... G/0@210).
-        int[] pathUntil = (int[]) field(SquadPlanner.class, "pathUntil").get(planner);
-        pathUntil[0] = 1000;
-        beginRecovery(31, -9.5, 65.661600);
-        assertEquals(0, pathUntil[0]);
-    }
-
     private static Field field(Class<?> type, String name) throws Exception {
         Field field = type.getDeclaredField(name);
         field.setAccessible(true);
