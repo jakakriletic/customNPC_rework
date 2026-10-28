@@ -18,12 +18,36 @@ function launchRunner(c, configFile) {
     child.on('error', e => fs.appendFileSync(path.join(c.stateDirectory, 'controller.log'), `\n${e.message}\n`)); child.unref(); return child;
   } finally { fs.closeSync(log); }
 }
-export async function createDashboard(c, configFile, port = 0) {
+export async function createDashboard(c, configFile, port = 0, { watchdogMs = 30000, maxRestarts = 3, restartWindowMs = 15 * 60000 } = {}) {
   fs.mkdirSync(c.stateDirectory, { recursive: true });
   const token = crypto.randomBytes(32).toString('hex');
   let origin; let starting = null; let probing = null; const auth = {};
   const uiFile = path.join(c.stateDirectory, 'ui.json');
   const pauseFile = path.join(c.stateDirectory, 'PAUSE'); const stopFile = path.join(c.stateDirectory, 'STOP');
+  const note = text => fs.appendFileSync(path.join(c.stateDirectory, 'controller.log'), `[${now()}] ${text}\n`);
+  // 27. 10. 2026 the continuous controller vanished without Stop and the night was lost. While
+  // continuous work is wanted and no STOP exists, the dashboard restarts it (bounded, PAUSE kept).
+  const watch = { wanted: Boolean(running(c)?.continuous), pid: running(c)?.pid ?? null, restarts: [], checking: false };
+  async function watchdog() {
+    if (watch.checking || starting) return;
+    watch.checking = true;
+    try {
+      const controller = running(c);
+      if (controller) { if (controller.continuous) { watch.wanted = true; watch.pid = controller.pid; } return; }
+      if (!watch.wanted) return;
+      if (fs.existsSync(stopFile)) { watch.wanted = false; return; }
+      const at = Date.now(); watch.restarts = watch.restarts.filter(v => at - v < restartWindowMs);
+      if (watch.restarts.length >= maxRestarts) {
+        watch.wanted = false;
+        note(`Vmesnik: upravljalnik (pid ${watch.pid ?? '?'}) se je spet ustavil brez Stop; samodejni zagon ustavljen po ${maxRestarts} poskusih v ${Math.round(restartWindowMs / 60000)} min. Preveri dnevnik in zazeni rocno.`);
+        return;
+      }
+      watch.restarts.push(at);
+      note(`Vmesnik: upravljalnik (pid ${watch.pid ?? '?'}) se je ustavil brez Stop; samodejni ponovni zagon ${watch.restarts.length}/${maxRestarts}`);
+      try { await start(true); } catch (e) { note(`Vmesnik: ponovni zagon ni uspel: ${e.message}`); }
+    } finally { watch.checking = false; }
+  }
+  const watchdogTimer = setInterval(() => { watchdog().catch(e => note(`Vmesnik: nadzor upravljalnika ni uspel: ${e.message}`)); }, watchdogMs);
   async function start(preserveStop = false) {
     if (running(c)) return;
     if (starting) return starting;
@@ -47,7 +71,7 @@ export async function createDashboard(c, configFile, port = 0) {
     const loginIds = fs.existsSync(eventDir) ? fs.readdirSync(eventDir).filter(v => v.endsWith('.json')).map(n => readJson(path.join(eventDir, n))).filter(e => ['login', 'verified'].includes(e.type)).map(e => e.id) : [];
     return { ...s, tasks: [...s.tasks, ...pending.filter(t => !s.tasks.some(v => v.id === t.id))], controller, starting: Boolean(starting), paused: fs.existsSync(pauseFile), stopping: Boolean(controller && fs.existsSync(stopFile)), project: c.projectRoot,
       profiles: c.profiles.map(p => ({ id: p.id, kind: p.kind, enabled: p.enabled || s.profiles[p.id]?.enabledOverride || loginIds.includes(p.id), health: s.profiles[p.id] || {}, auth: auth[p.id] || { reason: 'Prijava se preveri pred uporabo' }, isolated: Boolean(p.configDirectory) })),
-      autonomy: c.autonomy, probing: Boolean(probing) };
+      autonomy: c.autonomy, probing: Boolean(probing), autoRestart: { wanted: watch.wanted, restarts: watch.restarts.length } };
   }
   async function body(req) {
     let text = ''; for await (const part of req) { text += part; if (text.length > 20000) throw new Error('Zahteva je prevelika'); }
@@ -79,9 +103,9 @@ export async function createDashboard(c, configFile, port = 0) {
       }
       if (req.method !== 'POST') return json(404, { error: 'Ni najdeno' });
       const data = await body(req);
-      if (url.pathname === '/api/start') { await start(); return json(200, { message: 'Neprekinjeno delo zagnano' }); }
+      if (url.pathname === '/api/start') { await start(); watch.wanted = true; watch.pid = running(c)?.pid ?? watch.pid; watch.restarts = []; return json(200, { message: 'Neprekinjeno delo zagnano' }); }
       if (url.pathname === '/api/stop') {
-        fs.writeFileSync(stopFile, now()); const s = stateOf(c); cancelActive(s);
+        watch.wanted = false; fs.writeFileSync(stopFile, `${now()} vmesnik Ustavi zdaj`); const s = stateOf(c); cancelActive(s);
         if (!running(c) && s.active) await start(true);
         return json(200, { message: 'Prekinitev zahtevana; ustavljam trenutno operacijo' });
       }
@@ -123,7 +147,7 @@ export async function createDashboard(c, configFile, port = 0) {
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); });
   origin = `http://127.0.0.1:${server.address().port}`;
   writeJson(uiFile, { pid: process.pid, url: origin, startedAt: now() });
-  return { server, url: origin, close: () => new Promise(resolve => server.close(resolve)) };
+  return { server, url: origin, close: () => { clearInterval(watchdogTimer); return new Promise(resolve => server.close(resolve)); } };
 }
 // Windows: detached:true ne izstopi iz job objekta starsa. Ce launch zazene aplikacija (Claude,
 // IDE, terminal) s kill-on-close jobom, njen izhod ali posodobitev ubije strežnik, runner in

@@ -33,6 +33,15 @@ celico je treba izvesti znova. Zaprtje ali padec upravljalnika brez Stop pusti l
 proces, da dokonča trenutno operacijo. Naslednji Start prevzame isti rezultat brez dvojnega
 zagona. Windows mutex prepreči dva upravljalnika oziroma dva lokalna frontend strežnika.
 
+**Samodejni ponovni zagon (OPS.8):** 27. 10. 2026 se je neprekinjeni upravljalnik med 20:00 in
+23:28 ustavil brez zapisa v dnevniku, noč je bila izgubljena. Frontend zdaj vsakih 30 s preveri
+upravljalnik. Če je bilo neprekinjeno delo zagnano, upravljalnik pa ne teče in datoteke STOP ni
+(npr. prisilno ubit proces), v `controller.log` zapiše `Vmesnik: upravljalnik (pid N) se je ustavil
+brez Stop` in ga znova zažene. PAUSE ostane, nedokončano operacijo prevzame nov upravljalnik.
+Največ 3 ponovni zagoni v 15 minutah, nato se samodejni zagon ustavi z zapisom v dnevnik.
+Stop iz vmesnika v STOP zapiše vir (`<čas> vmesnik Ustavi zdaj`). Nadzor deluje samo, dokler
+teče frontend; po spremembi `dashboard.mjs` je treba frontend znova zagnati.
+
 `launch` na Windows zažene frontend prek `Win32_Process.Create`, torej izven job objekta
 procesa, ki ga je zagnal (Claude/Codex aplikacija, IDE, terminal). 22. 10. 2026 je samodejna
 posodobitev aplikacije Claude ob 09:12 ubila frontend, upravljalnik in Minecraft sredi celice

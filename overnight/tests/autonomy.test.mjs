@@ -132,3 +132,36 @@ test('local dashboard rejects cross-origin requests and controls a real syntheti
     await until(async () => !(await get()).controller); await app.close();
   }
 });
+test('dashboard restarts a killed continuous controller, logs exit reasons and honours Stop and the restart limit', async t => {
+  const c = config(t); fs.writeFileSync(path.join(c.projectRoot, 'scenario.ps1'), "Write-Output 'synthetic running'\nStart-Sleep -Seconds 60\n");
+  c.tests.synthetic = { script: path.join(c.projectRoot, 'scenario.ps1'), parameters: {}, timeoutSeconds: 120 };
+  const configFile = path.join(c.projectRoot, 'config.json'); writeJson(configFile, c);
+  const state = newState(); state.tasks.push(makeTask('Synthetic only', 'No AI or Minecraft', ['synthetic'])); writeJson(path.join(c.stateDirectory, 'state.json'), state);
+  const app = await createDashboard(loadConfig(configFile), configFile, 0, { watchdogMs: 300, maxRestarts: 1 });
+  const html = await (await fetch(app.url)).text(); const token = html.match(/name="overnight-token" content="([a-f0-9]+)"/)[1];
+  const headers = { 'X-Overnight-Token': token, Origin: app.url, 'Content-Type': 'application/json' };
+  const get = async () => (await fetch(`${app.url}/api/status`, { headers })).json();
+  const post = async route => { const response = await fetch(`${app.url}/api/${route}`, { method: 'POST', headers, body: '{}' }); assert.equal(response.status, 200); };
+  const log = () => fs.readFileSync(path.join(c.stateDirectory, 'controller.log'), 'utf8');
+  const settle = () => new Promise(r => setTimeout(r, 1500));
+  try {
+    // Kill only after the worker claimed its operation; a kill inside spawn leaves a suspended child.
+    await post('start'); await until(async () => { const s = await get(); return s.active && fs.existsSync(path.join(s.active.directory, 'claim.json')); });
+    const first = (await get()).controller.pid; process.kill(first);
+    await until(async () => { const s = await get(); return s.controller && s.controller.pid !== first; });
+    assert.match(log(), new RegExp(`upravljalnik \\(pid ${first}\\) se je ustavil brez Stop; samodejni ponovni zagon 1/1`));
+    // The detached test survived the kill and is adopted by the restarted controller.
+    assert.ok((await get()).active);
+    const second = (await get()).controller.pid; process.kill(second);
+    await until(() => log().includes('samodejni zagon ustavljen po 1 poskusih'));
+    await settle(); assert.equal((await get()).controller, null); assert.equal((await get()).autoRestart.wanted, false);
+    await post('start'); await until(async () => Boolean((await get()).controller));
+    await post('stop'); await until(async () => !(await get()).controller);
+    await settle(); assert.equal((await get()).controller, null);
+    assert.match(fs.readFileSync(path.join(c.stateDirectory, 'STOP'), 'utf8'), /^\S+ vmesnik Ustavi zdaj$/);
+  } finally {
+    fs.writeFileSync(path.join(c.stateDirectory, 'STOP'), 'cleanup');
+    await until(async () => !(await get()).controller); await app.close();
+    const { active } = readJson(path.join(c.stateDirectory, 'state.json')); if (active) fs.writeFileSync(path.join(active.directory, 'CANCEL'), 'cleanup');
+  }
+});
