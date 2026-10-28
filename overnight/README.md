@@ -41,6 +41,9 @@ brez Stop` in ga znova zažene. PAUSE ostane, nedokončano operacijo prevzame no
 Največ 3 ponovni zagoni v 15 minutah, nato se samodejni zagon ustavi z zapisom v dnevnik.
 Stop iz vmesnika v STOP zapiše vir (`<čas> vmesnik Ustavi zdaj`). Nadzor deluje samo, dokler
 teče frontend; po spremembi `dashboard.mjs` je treba frontend znova zagnati.
+Upravljalnik sam v `controller.log` zapiše zagon, zahtevan Stop z virom (vmesnik, `ukaz stop`,
+signal) in razlog konca (`Upravljalnik koncan (pid N): ...`, pri napaki s skladom klicev). Če
+zapisa o koncu ni, je bil proces ubit od zunaj.
 
 `launch` na Windows zažene frontend prek `Win32_Process.Create`, torej izven job objekta
 procesa, ki ga je zagnal (Claude/Codex aplikacija, IDE, terminal). 22. 10. 2026 je samodejna

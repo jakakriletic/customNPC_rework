@@ -282,7 +282,7 @@ export async function main(args = process.argv.slice(2)) {
     const s = fs.existsSync(files(c).state) ? readJson(files(c).state) : newState();
     console.log(JSON.stringify({ ...s, paused: fs.existsSync(files(c).pause), inbox: fs.existsSync(files(c).inbox) ? fs.readdirSync(files(c).inbox).filter(v => v.endsWith('.json')).length : 0 }, null, 2)); return;
   }
-  if (command === 'stop') { fs.mkdirSync(c.stateDirectory, { recursive: true }); fs.writeFileSync(path.join(c.stateDirectory, 'STOP'), now()); console.log('Zahtevana prekinitev trenutne operacije in upravljalnika.'); return; }
+  if (command === 'stop') { fs.mkdirSync(c.stateDirectory, { recursive: true }); fs.writeFileSync(path.join(c.stateDirectory, 'STOP'), `${now()} ukaz stop`); console.log('Zahtevana prekinitev trenutne operacije in upravljalnika.'); return; }
   if (!['run', 'retry'].includes(command)) throw new Error(`Neznan ukaz: ${command}`);
   const release = await lock(c.stateDirectory, { keepAwake: command === 'run' && !options['dry-run'] });
   try {
@@ -309,14 +309,20 @@ export async function main(args = process.argv.slice(2)) {
     writeJson(controllerFile, { pid: process.pid, startedAt: now(), continuous });
     const stopFile = path.join(c.stateDirectory, 'STOP');
     save(c, s);
-    let stopping = false; let lastMessage = ''; let nextTickAt = 0;
-    const stop = () => { fs.writeFileSync(stopFile, now()); };
+    // Every exit reason is logged: a silent stop on 27. 10. 2026 could not be told apart from a kill.
+    console.log(`[${now()}] Upravljalnik zagnan (pid ${process.pid}${continuous ? ', neprekinjeno' : ''})`);
+    let stopping = false; let stopSource = null; let exitReason = 'napaka'; let lastMessage = ''; let nextTickAt = 0;
+    const stop = signal => { fs.writeFileSync(stopFile, `${now()} signal ${signal}`); };
     process.on('SIGINT', stop); process.on('SIGTERM', stop);
     try {
       while (!stopping) {
         importEvents(c, s);
         importInbox(c, s);
         if (fs.existsSync(stopFile)) {
+          if (stopSource === null) {
+            try { stopSource = fs.readFileSync(stopFile, 'utf8').trim() || 'brez vira'; } catch { stopSource = 'brez vira'; }
+            console.log(`[${now()}] Zahtevan Stop: ${stopSource}`);
+          }
           cancelActive(s);
           if (s.active) {
             await tick(c, s); save(c, s);
@@ -338,9 +344,13 @@ export async function main(args = process.argv.slice(2)) {
         // Slow polling keeps the controller out of measured render loops.
         await sleep(2000);
       }
+      exitReason = stopping ? `Stop (${stopSource})` : s.message;
+    } catch (e) {
+      exitReason = `napaka: ${e.stack || e.message}`; throw e;
     } finally {
       process.off('SIGINT', stop); process.off('SIGTERM', stop);
       if (fs.existsSync(controllerFile) && readJson(controllerFile).pid === process.pid) fs.unlinkSync(controllerFile);
+      console.log(`[${now()}] Upravljalnik koncan (pid ${process.pid}): ${exitReason}`);
     }
     if (stopping) { s.message = 'Ustavljeno; napredek shranjen. Zazeni za nadaljevanje.'; save(c, s); }
   } finally { await release(); }

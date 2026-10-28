@@ -16,7 +16,7 @@ const fixtures = fileURLToPath(new URL('./process.mjs', import.meta.url));
 const plan = (action, extra = {}) => ({ action, summary: 'Evidence-based result', handoff: 'Next step', testIds: [], questions: [], testDefinitions: [], verification: 'tests', evidence: [], ...extra });
 function temporary(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'cnpc-autonomy-'));
-  t.after(() => { assert.equal(path.dirname(root), fs.realpathSync(os.tmpdir())); fs.rmSync(root, { recursive: true, force: true }); }); return root;
+  t.after(() => { assert.equal(path.dirname(root), fs.realpathSync(os.tmpdir())); fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }); }); return root;
 }
 function config(t) {
   const projectRoot = temporary(t); fs.writeFileSync(path.join(projectRoot, 'input.txt'), 'stable');
@@ -159,6 +159,9 @@ test('dashboard restarts a killed continuous controller, logs exit reasons and h
     await post('stop'); await until(async () => !(await get()).controller);
     await settle(); assert.equal((await get()).controller, null);
     assert.match(fs.readFileSync(path.join(c.stateDirectory, 'STOP'), 'utf8'), /^\S+ vmesnik Ustavi zdaj$/);
+    assert.match(log(), /Upravljalnik zagnan \(pid \d+, neprekinjeno\)/);
+    assert.match(log(), /Zahtevan Stop: \S+ vmesnik Ustavi zdaj/);
+    assert.match(log(), /Upravljalnik koncan \(pid \d+\): Stop \(\S+ vmesnik Ustavi zdaj\)/);
   } finally {
     fs.writeFileSync(path.join(c.stateDirectory, 'STOP'), 'cleanup');
     await until(async () => !(await get()).controller); await app.close();
