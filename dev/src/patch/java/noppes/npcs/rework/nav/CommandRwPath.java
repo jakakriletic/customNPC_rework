@@ -23,7 +23,8 @@ import noppes.npcs.LogWriter;
  *
  * <p>Nacin se prebere ob vsakem klicu {@code isDirectPathBetweenPoints}, zato preklop velja
  * takoj. M4.10: {@code /rwpath nadaljuj 0|1} preklopi {@link PathResume} (stikalo {@code RwPathResume});
- * odgovor dobi {@code nadaljuj=} in stevce nadaljevanja. Odgovor gre tudi v log z markerjem {@code RWPATH}, da ga prebere skripta meritve.
+ * odgovor dobi {@code nadaljuj=} in stevce nadaljevanja. M4.17: {@code /rwpath vidno 0|1} preklopi
+ * {@link FlightFollow} (stikalo {@code RwFlyLineOfSight}); odgovor dobi {@code vidno=} in stevce preverb. Odgovor gre tudi v log z markerjem {@code RWPATH}, da ga prebere skripta meritve.
  */
 public class CommandRwPath extends CommandBase {
     /** M5.10: tick streznika ob zadnjem {@code reset}; razlika da tickov v merilnem oknu. */
@@ -36,7 +37,7 @@ public class CommandRwPath extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/rwpath [0|1|2|reset|cas N|iskanje N|neg N|negttl T|negtol B|negdelne N|memo N|nadaljuj N]";
+        return "/rwpath [0|1|2|reset|cas N|iskanje N|neg N|negttl T|negtol B|negdelne N|memo N|nadaljuj N|vidno N]";
     }
 
     @Override
@@ -55,6 +56,7 @@ public class CommandRwPath extends CommandBase {
                 NegativePathCache.reset();
                 PathSearchMemo.reset();
                 PathResume.reset();
+                FlightFollow.reset();
             } else if ("cas".equals(args[0])) {
                 if (args.length < 2 || !("0".equals(args[1]) || "1".equals(args[1]))) {
                     throw new WrongUsageException(getUsage(sender));
@@ -79,6 +81,11 @@ public class CommandRwPath extends CommandBase {
                     throw new WrongUsageException(getUsage(sender));
                 }
                 PathResume.setMode(Integer.parseInt(args[1]));
+            } else if ("vidno".equals(args[0])) {
+                if (args.length < 2 || !("0".equals(args[1]) || "1".equals(args[1]))) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+                FlightFollow.setMode(Integer.parseInt(args[1]));
             } else if ("neg".equals(args[0])) {
                 if (args.length < 2) {
                     throw new WrongUsageException(getUsage(sender));
@@ -155,7 +162,8 @@ public class CommandRwPath extends CommandBase {
                 + " memo=" + PathSearchMemo.mode() + " memoIskanj=" + PathSearchMemo.searches()
                 + " memoOcen=" + PathSearchMemo.lookups() + " memoIzracunov=" + PathSearchMemo.misses()
                 + " memoNeujemanj=" + PathSearchMemo.mismatches()
-                + " nadaljuj=" + PathResume.mode() + " " + PathResume.counters();
+                + " nadaljuj=" + PathResume.mode() + " " + PathResume.counters()
+                + " vidno=" + FlightFollow.mode() + " " + FlightFollow.counters();
         sender.sendMessage(new TextComponentString(msg));
         LogWriter.info(msg);
     }

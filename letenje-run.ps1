@@ -25,9 +25,15 @@
 # faze; kopenski NPC (0,066 b/t) za 48 blokov proge DW potrebuje ~735 tickov. Odtis ima
 # trajanjeFaze, zato se serije z razlicnim trajanjem ne zdruzijo.
 #     .\ponovitve-run.ps1 -Scenarij letenje -Dodatno @('-Nadaljevanje','1','-TrajanjeFaze','1200')
+#
+# M4.17 (D-085): -VidnaCrta 1 pred scenarijem poslje 'rwpath vidno 1' (stikalo RwFlyLineOfSight
+# med tekom; config se ne spremeni) in po LET-SUM zapise stevce preverb vidne crte; kombinira se
+# z -Nadaljevanje. -VidnaCrta 0 stikalo izrecno izklopi; brez parametra (-1) velja config.
+#     .\ponovitve-run.ps1 -Scenarij letenje -Dodatno @('-VidnaCrta','1')
+#     .\ponovitve-run.ps1 -Scenarij letenje -Dodatno @('-VidnaCrta','1','-Nadaljevanje','1')
 
 param([string]$JsonPath = '', [switch]$AcceptEula, [int]$ChunkRadius = 2, [int]$WarmupSeconds = 10,
-      [int]$ScenarioTimeoutSec = 300, [ValidateSet(-1, 0, 1)][int]$Nadaljevanje = -1,
+      [int]$ScenarioTimeoutSec = 300, [ValidateSet(-1, 0, 1)][int]$Nadaljevanje = -1, [ValidateSet(-1, 0, 1)][int]$VidnaCrta = -1,
       [ValidateRange(200, 3000)][int]$TrajanjeFaze = 600)
 
 $ErrorActionPreference = 'Stop'
@@ -211,8 +217,14 @@ try {
     Send-Command $srv 'rwdiag on'
     Check 'merjenje vklopljeno' (Wait-Marker $srv 'RWDIAG vklopljen')
     $nadVrstica = ''
+    $vidVrstica = ''
+    if (($Nadaljevanje -ge 0) -or ($VidnaCrta -ge 0)) { Send-Command $srv 'rwpath reset' }
+    if ($VidnaCrta -ge 0) {
+        Send-Command $srv ("rwpath vidno {0}" -f $VidnaCrta)
+        Check ("M4.17: stikalo RwFlyLineOfSight={0} je vklopljeno med tekom" -f $VidnaCrta) `
+            (Wait-Marker $srv (" vidno={0} " -f $VidnaCrta) 1 30)
+    }
     if ($Nadaljevanje -ge 0) {
-        Send-Command $srv 'rwpath reset'
         Send-Command $srv ("rwpath nadaljuj {0}" -f $Nadaljevanje)
         Check ("M4.10: stikalo RwPathResume={0} je vklopljeno med tekom" -f $Nadaljevanje) `
             (Wait-Marker $srv (" nadaljuj={0} " -f $Nadaljevanje) 1 30)
@@ -227,10 +239,27 @@ try {
         Check ("faza {0} se je koncala" -f $f.Id) (Wait-Marker $srv ("LET-{0}-END" -f $f.Id) 1 $ScenarioTimeoutSec)
     }
     Check 'LT1: scenarij je prisel do konca (LET-SUM)' (Wait-Marker $srv 'LET-SUM' 1 60)
-    if ($Nadaljevanje -ge 0) {
+    if (($Nadaljevanje -ge 0) -or ($VidnaCrta -ge 0)) {
         $pred = [regex]::Matches((Get-LetMarkerText (Get-Log $srv.Log)), 'RWPATH nacin=').Count
         Send-Command $srv 'rwpath'
-        Check 'M4.10: stevci nadaljevanja zapisani' (Wait-Marker $srv 'RWPATH nacin=' ($pred + 1) 30)
+        Check 'M4.10/M4.17: stevci stikal poti zapisani' (Wait-Marker $srv 'RWPATH nacin=' ($pred + 1) 30)
+    }
+    if ($VidnaCrta -ge 0) {
+        $vid = [regex]::Matches((Get-LetMarkerText (Get-Log $srv.Log)), 'vidno=(\d) (vidKlicev=(\d+) vidDalec=\d+ vidZaprtih=\d+ vidProstih=\d+)')
+        if ($vid.Count -gt 0) {
+            $zadnjiV = $vid[$vid.Count - 1]
+            $vidVrstica = ('vidno={0} {1}' -f $zadnjiV.Groups[1].Value, $zadnjiV.Groups[2].Value)
+            Write-Host ("  {0}" -f $vidVrstica)
+            Check ("M4.17: stikalo je bilo do konca {0} ({1})" -f $VidnaCrta, $vidVrstica) `
+                ($zadnjiV.Groups[1].Value -eq [string]$VidnaCrta)
+            if ($VidnaCrta -eq 1) {
+                Check ("M4.17: preverba vidne crte je tekla ({0} klicev)" -f $zadnjiV.Groups[3].Value) ([long]$zadnjiV.Groups[3].Value -gt 0)
+            }
+        } else {
+            Check 'M4.17: vrstica stevcev vidne crte je berljiva' $false
+        }
+    }
+    if ($Nadaljevanje -ge 0) {
         $nad = [regex]::Matches((Get-LetMarkerText (Get-Log $srv.Log)), 'nadaljuj=(\d) (nadZacetih=\S+(?: nad\w+=\S+)*)')
         if ($nad.Count -gt 0) {
             $zadnji = $nad[$nad.Count - 1]
@@ -279,7 +308,7 @@ try {
     $head = @()
     $head += ("# M4.16 - scenarij letenja in dometa, zagon {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm'))
     $head += ''
-    $head += 'Scenarij: `docs/scenariji/M4.16-letenje.md`. Svet: `dev/run/' + $world + '`. ' + $(if ($Nadaljevanje -ge 0) { ('Config dev/run, med tekom RwPathResume={0} (M4.10).' -f $Nadaljevanje) } else { 'Original (config dev/run, vsa stikala Rw* kot v configu).' })
+    $head += 'Scenarij: `docs/scenariji/M4.16-letenje.md`. Svet: `dev/run/' + $world + '`. ' + $(if ($Nadaljevanje -ge 0) { ('Config dev/run, med tekom RwPathResume={0} (M4.10).' -f $Nadaljevanje) } elseif ($VidnaCrta -ge 0) { 'Config dev/run.' } else { 'Original (config dev/run, vsa stikala Rw* kot v configu).' })
     $head += ''
     $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'LT1-LT9 zelena' } else { ("padlo {0}" -f $failures.Count) }))
     $head += ''
@@ -290,6 +319,7 @@ try {
     $head += ''
     $head += ('Fill: {0}; chunki={1}, NPC={2}; config SHA-256 {3}; stikala: {4}' -f ($fills -join ', '), $nChunk, $nNpc, $configHash, ($rw -join ' '))
     if ($nadVrstica) { $head += ''; $head += ('Stevci M4.10: {0}' -f $nadVrstica) }
+    if ($VidnaCrta -ge 0) { $head += ''; $head += ('Med tekom RwFlyLineOfSight={0} (M4.17). Stevci: {1}' -f $VidnaCrta, $vidVrstica) }
     if ($failures.Count -gt 0) {
         $head += ''
         $head += '## Padle preverbe'
@@ -313,6 +343,7 @@ try {
         config = $configHash
     }
     if ($Nadaljevanje -ge 0) { $odtis['nadaljuj'] = $Nadaljevanje }
+    if ($VidnaCrta -ge 0) { $odtis['vidno'] = $VidnaCrta }
     if ($null -ne $setup) {
         foreach ($p in $script:LetProge) { if ($null -ne $setup[$p.Id]) { $odtis["d0.$($p.Id)"] = ('{0:N2}' -f $setup[$p.Id].D0) } }
     }

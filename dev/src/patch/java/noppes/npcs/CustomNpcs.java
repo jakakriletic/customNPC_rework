@@ -134,6 +134,7 @@ import noppes.npcs.rework.entity.HitboxTrack;
 import noppes.npcs.rework.entity.CommandRwMount;
 import noppes.npcs.rework.nav.CommandRwNav;
 import noppes.npcs.rework.nav.NegativePathCache;
+import noppes.npcs.rework.nav.FlightFollow;
 import noppes.npcs.rework.nav.PathResume;
 import noppes.npcs.rework.nav.PathSearchMemo;
 import noppes.npcs.rework.entity.RiderState;
@@ -204,6 +205,8 @@ public class CustomNpcs {
     public static int RwPathNegCache = 1;
     @ConfigProp(info="Rework M4.10 (D-084): continue a partial path and reach a goal beyond the navigation range for walking and flying NPCs. The vanilla path search accepts only nodes whose path from the NPC is shorter than the range (FOLLOW_RANGE = NpcNavRange, 32), so a goal 48 blocks away gets no path at all, and an NPC that walks to the end of a partial path stops there. With 1 the navigator searches towards a point on the line to the goal (range minus 4 blocks, Manhattan) when the goal is out of range, and when a path that did not end at the goal is finished it searches again from where the NPC stands; it stops when a path ends at the goal, when a new path does not end at least 1 block closer to the goal, after 16 resumes per command, or when the path is cleared (stuck, script, attack target). The negative path cache (RwPathNegCache) is not applied to a resume search. This CHANGES BEHAVIOUR: a command that ended without a path or before the goal now brings the NPC to the goal. 0 = original, 1 = continue. Default 0")
     public static int RwPathResume = 0;
+    @ConfigProp(info="Rework M4.17 (D-085): line of sight when a flying NPC follows its path. The vanilla flying navigator treats every later path point at the same height as directly reachable (its check never reads a block), so the NPC flies straight at the last point of that height, around a corner or through a wall, and its move helper waits in front of the wall. With 1 a path point counts as directly reachable only when it is at most 6 blocks away and the NPC hitbox (shrunk by 0.05 blocks) moved from where the NPC is to that point in steps of at most 0.5 blocks does not hit a block; otherwise the NPC keeps flying to the earlier path point. This CHANGES BEHAVIOUR: a flying NPC follows its path around obstacles. 0 = original, 1 = line of sight. Default 0")
+    public static int RwFlyLineOfSight = 0;
     @ConfigProp(info="Rework M5.12 (S4): an NPC without enabled scripts skips the collide area query (every 4th tick) when nothing listens for NpcEvent.CollideEvent on the CustomNPCs event bus; with no script and no listener the original query has no effect. Listeners are checked on every call. 0 = original, 1 = skip without an observer, 2 = verify (original, counts calls and events that would be skipped). Default 1 since 2026-10-09 (D-032)")
     public static int RwCollideSkip = 1;
     @ConfigProp(info="Rework M5.13 (S7): recipients of the eye blink packet (every NPC blinks about once every 140 ticks) are found by walking world.playerEntities with the same selection the vanilla area query makes, instead of scanning every loaded chunk in a 160 block cube (about 441 chunks). Same recipients. 0 = original, 1 = walk playerEntities, 2 = verify (runs both, sends by the original list, counts mismatches; double cost, for test scenarios only). Default 1 since 2026-10-10 (D-032)")
@@ -455,6 +458,7 @@ public class CustomNpcs {
         PathFollowCache.setMode(RwPathFollowCache);
         NegativePathCache.setMode(RwPathNegCache);
         PathResume.setMode(RwPathResume);
+        FlightFollow.setMode(RwFlyLineOfSight);
         PathSearchMemo.setMode(RwPathSearchMemo);
         // M5.13 (S7): prejemniki utripa oci; /rwblink jih med tekom preklopi.
         event.registerServerCommand((ICommand)new CommandRwBlink());

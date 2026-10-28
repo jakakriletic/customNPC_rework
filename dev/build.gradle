@@ -228,8 +228,9 @@ task testOriginal(type: Test) {
     // M5-K K12: okvir upodobitve.
     exclude '**/RenderBoxTest.class'
     exclude '**/RenderBoxAuditTest.class'
-    // M4.10: nadaljevanje poti (rework/nav/PathResume).
+    // M4.10: nadaljevanje poti (rework/nav/PathResume); M4.17: vidna crta (FlightFollow).
     exclude '**/PathResumeTest.class'
+    exclude '**/FlightFollowTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

@@ -151,6 +151,12 @@
 #     .\perf-run.ps1 -Variants leteci,leteci-boj -Counts 200
 #     .\ponovitve-run.ps1 -Scenarij perf -Dodatno @('-Variants','leteci,leteci-boj','-Counts','200')
 #
+# -RwVidno N (M4.17, D-085): po postavitvi sveta poslje '/rwpath vidno N' (stikalo RwFlyLineOfSight,
+# preverba vidne crte pri sledenju poti letecih). Neodvisno od -RwPath. Odtis dobi kljuc rwvidno,
+# celica velicine rwvidno.klicev/dalec/zaprtih/prostih (in klicevNaTick); pri N = 1 merilo V1
+# (preverba je tekla). Brez parametra (-1) se stikala ne dotakne in odtis ostane enak M4.16b.
+#     .\ponovitve-run.ps1 -Scenarij perf -Dodatno @('-Variants','leteci','-Counts','200','-RwVidno','1')
+#
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
 # pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
 # (merilo P9), in ob sesutju serverja takoj konca z vzrokom iz loga.
@@ -163,7 +169,7 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
       [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1,
       [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15, [int]$RwCollide = -1,
-      [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwPathMemo = -1, [int]$RwData = -1, [int]$RwMove = -1, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15)
+      [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwPathMemo = -1, [int]$RwData = -1, [int]$RwMove = -1, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15, [int]$RwVidno = -1)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -307,6 +313,13 @@ function Send-RwPath($Srv, [string]$Cmd) {
         $r['memo'] = [int]$v[1].Value; $r['memoIskanj'] = [long]$v[2].Value
         $r['memoOcen'] = [long]$v[3].Value; $r['memoIzracunov'] = [long]$v[4].Value
         $r['memoNeujemanj'] = [long]$v[5].Value
+    }
+    # M4.17: stevci preverbe vidne crte (starejsi build teh polj ne izpise)
+    $vd = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=\d+ .*? vidno=(\d) vidKlicev=(\d+) vidDalec=(\d+) vidZaprtih=(\d+) vidProstih=(\d+)')
+    if ($vd.Count -gt 0) {
+        $u = $vd[$vd.Count - 1].Groups
+        $r['vidno'] = [int]$u[1].Value; $r['vidKlicev'] = [long]$u[2].Value; $r['vidDalec'] = [long]$u[3].Value
+        $r['vidZaprtih'] = [long]$u[4].Value; $r['vidProstih'] = [long]$u[5].Value
     }
     # M5.11: stevci po nacinu "m:tickov:sledenj:sledenjNs:kandidatov:kandidatNs;..."
     $pn = [regex]::Matches((Get-MarkerText $Srv.Log), 'RWPATH nacin=\d+ .*? poNacinu=([\d:;]*)')
@@ -804,6 +817,10 @@ try {
             Check 'merjenje prejemnikov utripa vklopljeno (rwblink cas 1)' (($null -ne $rb) -and ($rb['cas'] -eq 1))
         }
     }
+    if ($RwVidno -ge 0) {
+        $rv = Send-RwPath $srv ("rwpath vidno {0}" -f $RwVidno)
+        Check ("stikalo RwFlyLineOfSight je {0}" -f $RwVidno) (($null -ne $rv) -and ($rv['vidno'] -eq $RwVidno))
+    }
     if ($RwPath -ge 0) {
         $rp = Send-RwPath $srv ("rwpath {0}" -f $RwPath)
         Check ("stikalo RwPath je {0}" -f $RwPath) (($null -ne $rp) -and ($rp.nacin -eq $RwPath))
@@ -961,7 +978,7 @@ try {
         if ($RwTarget -ge 0) { $null = Send-RwTarget $srv 'rwtarget reset' }
         # M5.11: A/B v istem boju zacne vsako celico v prvem nacinu (prejsnja je lahko koncala v drugem).
         if ($RwPathAB.Count -gt 0) { $null = Send-RwPath $srv ("rwpath {0}" -f $RwPathAB[0]) }
-        if ($RwPath -ge 0) { $null = Send-RwPath $srv 'rwpath reset' }
+        if (($RwPath -ge 0) -or ($RwVidno -ge 0)) { $null = Send-RwPath $srv 'rwpath reset' }
         if ($RwCollide -ge 0) { $null = Send-RwCollide $srv 'rwcollide reset' }
         if ($RwData -ge 0) { $null = Send-RwData $srv 'rwdata reset' }
         if ($RwMove -ge 0) { $null = Send-RwMove $srv 'rwmove reset' }
@@ -1016,6 +1033,19 @@ try {
         if ($RwTarget -ge 0) {
             $predzavrnjenih = Send-RwTarget $srv 'rwtarget'
             Write-Host ("  RwTarget={0}: predzavrnjenih kandidatov med merjenjem {1}, zozenih poizvedb {2}" -f $RwTarget, $predzavrnjenih, $script:rwZozenih)
+        }
+        $rwVidnoStevci = $null
+        if ($RwVidno -ge 0) {
+            $rwVidnoStevci = Send-RwPath $srv 'rwpath'
+            if ($null -ne $rwVidnoStevci) {
+                Write-Host ("  RwVidno={0}: preverb {1}, dlje od 6 blokov {2}, zaprtih {3}, prostih {4}" -f $RwVidno, $rwVidnoStevci['vidKlicev'], $rwVidnoStevci['vidDalec'], $rwVidnoStevci['vidZaprtih'], $rwVidnoStevci['vidProstih'])
+                Check ("stikalo RwFlyLineOfSight je bilo do konca {0}" -f $RwVidno) ($rwVidnoStevci['vidno'] -eq $RwVidno)
+                if ($RwVidno -eq 1) {
+                    Check ("V1: preverba vidne crte je tekla ({0} preverb)" -f $rwVidnoStevci['vidKlicev']) ($rwVidnoStevci['vidKlicev'] -gt 0)
+                }
+            } else {
+                Check 'stevci RwFlyLineOfSight so berljivi' $false
+            }
         }
         $rwPathStevci = $null
         if ($RwPath -ge 0) {
@@ -1284,6 +1314,16 @@ try {
             $odtis['rwpath'] = $RwPath
             if ($null -ne $rwPathStevci) {
                 foreach ($k in @('klicev', 'ocen', 'izracunov', 'primerjav', 'neujemanj')) { $vel['rwpath.' + $k] = $rwPathStevci[$k] }
+            }
+        }
+        if ($RwVidno -ge 0) {
+            $odtis['rwvidno'] = $RwVidno
+            if ($null -ne $rwVidnoStevci) {
+                $vel['rwvidno.klicev'] = $rwVidnoStevci['vidKlicev']; $vel['rwvidno.dalec'] = $rwVidnoStevci['vidDalec']
+                $vel['rwvidno.zaprtih'] = $rwVidnoStevci['vidZaprtih']; $vel['rwvidno.prostih'] = $rwVidnoStevci['vidProstih']
+                if (($null -ne $dump) -and ($dump.ticks -gt 0)) {
+                    $vel['rwvidno.klicevNaTick'] = [math]::Round($rwVidnoStevci['vidKlicev'] / [double]$dump.ticks, 1)
+                }
             }
         }
         if ($RwMove -ge 0) {

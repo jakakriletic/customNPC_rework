@@ -5,8 +5,10 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathNavigateFlying;
 import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**
@@ -17,7 +19,11 @@ import net.minecraft.world.World;
  *
  * <p>Razred je navigator vsakega letecega NPC-ja ne glede na stikalo; pri nacinu 0 (privzeto) se
  * vsaka metoda konca v {@code super}, torej original. {@code instanceof PathNavigateFlying} ostane
- * resnicen. M4.17 (preverba vidne crte pri sledenju) se doda sem.
+ * resnicen.
+ *
+ * <p>M4.17 (D-085): pri {@code RwFlyLineOfSight=1} {@link #isDirectPathBetweenPoints} preveri vidno
+ * crto s premikom hitboxa in preskok omeji na {@link FlightFollow#MAX_SKIP} blokov
+ * ({@link FlightFollow}); pri 0 vanilla, ki vedno vrne {@code true}.
  */
 public class RwPathNavigateFlying extends PathNavigateFlying {
     private final PathResume resume = new PathResume();
@@ -25,6 +31,9 @@ public class RwPathNavigateFlying extends PathNavigateFlying {
     private Path commandPath;
     /** Klic, ki ni ukaz: obnova, pot do entitete, vanilla {@code updatePath}. */
     private boolean passThrough;
+    /** M4.17: trk kvadra z bloki ({@code World.collidesWithAnyBlock}). */
+    private final FlightFollow.BoxTest blocks = (minX, minY, minZ, maxX, maxY, maxZ) ->
+            this.world.collidesWithAnyBlock(new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ));
 
     public RwPathNavigateFlying(EntityLiving entity, World world) {
         super(entity, world);
@@ -76,6 +85,21 @@ public class RwPathNavigateFlying extends PathNavigateFlying {
             this.resume.cancel();
         }
         return super.setPath(pathentityIn, speedIn);
+    }
+
+    /**
+     * M4.17: {@code pathFollow} klice to vsak tick za tocke poti iste visine, od najdaljse proti
+     * trenutni; prva prosta postane trenutna [K]. {@code from} je polozaj NPC-ja
+     * ({@code getEntityPosition}). V nacinu 0 natanko {@code super}.
+     */
+    @Override
+    protected boolean isDirectPathBetweenPoints(Vec3d from, Vec3d to, int sizeX, int sizeY, int sizeZ) {
+        if (!FlightFollow.on()) {
+            return super.isDirectPathBetweenPoints(from, to, sizeX, sizeY, sizeZ);
+        }
+        AxisAlignedBB box = this.entity.getEntityBoundingBox();
+        return FlightFollow.direct(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ,
+                to.x - from.x, to.y - from.y, to.z - from.z, this.blocks);
     }
 
     @Override

@@ -782,3 +782,57 @@ razlike samo v µs stolpcih znotraj šuma. `m414b-navigator-trace-v3` pade na is
 Merila Q76 so izpolnjena z izjemo DW pri 600, ki jo pojasni Q78. **M4.10 sprejet pod stikalom,
 privzeto 0** (Q77): sprememba obnašanja, cena na `leteci-200` ni izmerjena; o privzetem vklopu
 odloči kasnejši sprejem M4 skupaj z M4.17. [Zapis](meritve/2026-10-26-M4.10-nadaljevanje.md).
+
+### D-085 — M4.17: vidna črta pri sledenju poti letečega NPC-ja pod `RwFlyLineOfSight` (2026-10-26, Q79–Q81)
+
+**Vprašanje:** kako leteči NPC z enim `navigateTo` obleti vogal in sledi poti skozi hodnike
+(M4.16: *vogal* 0/6, NPC-ji obstanejo ob steni; *labirint* 0/6 brez premika), ne da bi menjali
+iskalnik (M4.5 je pogojen) in brez spremembe originala pri izklopljenem stikalu?
+
+**Raziskava:** M4.0 §1 točka 1, §2.2 in §4 zadostujejo; nove raziskave ni bilo treba. Iz kode
+1.12.2 **[K]**: `PathNavigate.pathFollow` vsak tick za točke poti na višini `floor(posY)` od
+najdaljše proti trenutni kliče `isDirectPathBetweenPoints(položaj NPC-ja, točka)`; prva, ki vrne
+`true`, postane trenutna. `PathNavigateFlying.isDirectPathBetweenPoints` prehodi celice (DDA), a
+nobene ne prebere in vedno vrne `true` (razen ničelne razdalje). CustomNPC+ (`trimPath`) skoči
+samo na točke ≤ 6 blokov in samo ob prostem žarku; 1.21.1 samo za eno točko ob prostem žarku
+**[K-CNPC+, K-1.21]**.
+
+**Odločitev:** nov razred `rework/nav/FlightFollow` (pravilo brez sveta) in prepis
+`isDirectPathBetweenPoints` v `RwPathNavigateFlying` (D-084). Pri `RwFlyLineOfSight=1` je točka
+neposredno dosegljiva samo, če:
+1. je od NPC-ja evklidsko ≤ **6 blokov** (CustomNPC+; razdalja se preveri pred branjem blokov) in
+2. hitbox NPC-ja, zmanjšan za **0,05 bloka** na vsaki strani, premaknjen od trenutnega položaja do
+   točke v enakih korakih ≤ min(0,5, širina) bloka (najmanj 0,1), v nobenem položaju ne zadane
+   bloka (`World.collidesWithAnyBlock`: samo bloki, brez entitet, kot vanilla `isNotColliding`
+   brez entitetnega dela).
+Sicer ostane prejšnja točka; če ni proste nobene, vanilla zanka indeksa ne spremeni in NPC leti
+k trenutni točki (obtičanje po 100 tickih ostane vanilla). Sledilnik (`pathFollow`), pogoj iste
+višine, napredovanje po razdalji `width/2` (za velike modele je v 1.12 že po razdalji),
+`FlyingMoveHelper` in iskalnik ostanejo nespremenjeni. Stikalo med tekom: `/rwpath vidno 0|1`;
+odgovor `RWPATH` ima `vidno=` in števce `vidKlicev`, `vidDalec`, `vidZaprtih`, `vidProstih`.
+
+**Razlog:** najmanjši poseg, ki odpravi izmerjeni vzrok (skok skozi steno), in edini, ki ga plan
+M4.17 predvideva; premik hitboxa namesto enega žarka, ker žarek po sredini pusti rob hitboxa
+zadeti vogal (reprodukcija `FlightFollowTest.diagonalaCezRobKrakaJeZaprta`). Zmanjšanje 0,05,
+ker NPC po drsenju ali pristanku stoji stotinko v tleh in bi sicer izgubil vse kandidate. Pri 0
+je metoda `super` (izhodni kriterij M4: »z izklopljenimi stikali enako kot prej«). Sprememba
+obnašanja (D-007) → stikalo, **privzeto 0** (Q81).
+
+**Sprejem (Q80):** unit (`FlightFollowTest`), build, package, `m416-samotest-v1`;
+`m416-letenje-v1` s stikalom 0 = M4.16 (180/180); `m417-letenje-vid-v1` (`-VidnaCrta 1`): *vogal*
+v fazi A 6/6 prispelih, *labirint* se premakne (prevoženo > 0), kontrola P in ostale proge ne
+slabše po številu prispelih; `m417-letenje-vidnad-v1` (`-VidnaCrta 1 -Nadaljevanje 1`, končna
+kombinacija M4.10 + M4.17): izid *labirinta* z enim `navigateTo` zapisan (cilj 6/6). Cena:
+`m417-leteci-vid-v1`/`m417-letboj-vid-v1` proti `m416b-leteci-v1`/`m416b-letboj-v1`, oboje na
+isti kodi (Q81), MSPT p95 ≤ razpon originala + 10 % **[H]** (izhodni kriterij M4).
+
+**Izid poskusa 1 (seja 156, odtis `75269123…`, Q82–Q84):** stikalo 0 = M4.16 (180/180).
+Z vidno črto se *labirint* premakne (0 → 0,125 b/t, B 6/6), z M4.10 vred **6/6 z enim
+`navigateTo`**; drsenje na prosti progi 2,375 → 2,057. *Vogal* ostane 0/6 tudi z nadaljevanjem:
+pot se že v originalu konča pred krakom (`cele0` 0/6) — vzrok je iskanje (200 vozlišč), ne
+sledilnik; hipoteza M4.0 §2.2 za vogal ovržena, vogal gre v odločitveno točko **M4.5** (Q82).
+Kombinacija z M4.10 da *zid* 5/6 proti 6/6 samega M4.10 (Q84, vzrok [H]). Cena: patrulja p95
+8,913 = original (meja izpolnjena), **boj p95 2,490 → 3,277 ms (+32 %)**, `npc.us` 9,50 → 12,79,
++20 MB/s — meja + 10 % ni izpolnjena. **Poskus 1 ni sprejet (Q83).** Poskus 2: pred premikom po
+korakih ena preverba unije vseh korakov (če je prosta, je prost vsak korak; sicer nespremenjeni
+koraki) — enak izid z manj klici `collidesWithAnyBlock`. [Zapis](meritve/2026-10-26-M4.17-vidna-crta.md).

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 153 → 1)
+# Arhiv: dnevnik sej (vnosi 154 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,22 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-26 (154) — M4.10: nadaljevanje delne poti in vmesni cilj (koda, čaka A/B)
+
+**Paket:** M4.10 (D-084, Q75–Q77) · **Stanje:** **v teku** — koda in harness narejena, testi
+zahtevani. AI ni zaganjal testov/builda/Minecrafta.
+
+Raziskava ni bila potrebna (M4.0 §1.2 in §5 pokrijeta premiso). Nov `rework/nav/PathResume`
+(pravilo brez sveta), `RwPathNavigateGround` dopolnjen, nov `RwPathNavigateFlying` (namesto
+vanilla `PathNavigateFlying` v `EntityNPCInterface`). Pri `RwPathResume=1` (privzeto 0,
+`/rwpath nadaljuj`): cilj manhattansko ≥ domet → vmesni cilj domet − 4; prehojena pot, ki ni
+končala pri cilju → novo iskanje od tam; konec ob cilju, brez napredka ≥ 1 blok, 16 obnov ali
+`clearPath`; obnova mimo S5. `PathResumeTest` +12 (434 JUnit v 70 datotekah; 184 razredov,
+119 v rework, po grep). `letenje-run.ps1` in `nav-run.ps1` dobita `-Nadaljevanje`. Q75: ključ
+`RwPathResume=0` ročno dopisan v `dev/run/config` (sicer ga nalagalnik dopiše sredi prve meritve).
+Zahtevani: unit, build, package, `m416-letenje-v1`, `m410-letenje-nad-v1`, `m410-nav-orig-v1`,
+`m410-nav-nad-v1` in `m414b-*`.
 
 ### 2026-10-26 (153) — M4.14d poskus 2 izmerjen in zavrnjen
 
