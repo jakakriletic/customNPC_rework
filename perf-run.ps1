@@ -169,7 +169,8 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [switch]$AcceptEula, [string]$JsonPath = '', [switch]$Razprseno, [string]$SerijaDir = '',
       [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1,
       [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15, [int]$RwCollide = -1,
-      [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwPathMemo = -1, [int]$RwData = -1, [int]$RwMove = -1, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15, [int]$RwVidno = -1)
+      [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwPathMemo = -1, [int]$RwData = -1, [int]$RwMove = -1, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15, [int]$RwVidno = -1,
+      [ValidateSet(-1, 0, 1, 2)][int]$FlightMode = -1)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -764,6 +765,13 @@ try {
         $copied++
     }
     # M4.16b: +3 letece fixture (PERF_Leteci, PERF_LetA, PERF_LetB).
+    if ($FlightMode -ge 0) {
+        . (Join-Path $root 'hover-lib.ps1')
+        foreach ($name in @('PERF_Leteci.json', 'PERF_LetA.json', 'PERF_LetB.json')) {
+            Write-HoverFixture (Join-Path $srcClones $name) (Join-Path $dstClones $name) $FlightMode
+        }
+        Add-HoverProof (Join-Path $dstClones 'PERF_Kontrola.json') 'var w = e.npc.getWorld().getTempdata();' 'e.npc' $FlightMode
+    }
     Check ("osem PERF fixture datotek je v svetu (kopiranih {0})" -f $copied) ($copied -eq 8)
     if ($failures.Count -gt 0) { throw "Fixture manjkajo v $srcClones. Pozeni 'python3 dev/testworld/perf-fixture.py'." }
 
@@ -1246,6 +1254,11 @@ try {
         }
 
         # P5: obremenitev je bila res obremenitev celice.
+        if ($FlightMode -ge 0) {
+            $expectedFlyers = if ($v -in @('leteci', 'leteci-boj')) { $N } else { 0 }
+            Check 'H0: saved selection and actual helpers before/after measurement' `
+                (Test-HoverProof (Get-MarkerText $srv.Log) $FlightMode $expectedFlyers 2)
+        }
         if ($null -ne $k1) {
             if ($v -eq 'idle') {
                 Check ("P5: idle NPC-ji se niso borili (cilj={0}, ranjenih={1})" -f $k1.Cilj, $k1.Ranjenih) (($k1.Cilj -eq 0) -and ($k1.Ranjenih -eq 0))
@@ -1304,6 +1317,7 @@ try {
 
         $odtis = @{ razprseno = $(if ($Razprseno) { 1 } else { 0 }); varianta = $v; npc = $N; sekund = $Seconds; ogrevanje = $WarmupSeconds; obroc = $ChunkRadius
                     celica = $idx; celic = $cells.Count; mrezaX = $gridX; mrezaZ = $gridZ; mrezaSirina = $gridW }
+        if ($FlightMode -ge 0) { $odtis['flightMode'] = $FlightMode }
         if ($RwTarget -ge 0) {
             $odtis['rwtarget'] = $RwTarget
             $vel['rwtarget.predzavrnjenih'] = $predzavrnjenih

@@ -34,7 +34,7 @@
 
 param([string]$JsonPath = '', [switch]$AcceptEula, [int]$ChunkRadius = 2, [int]$WarmupSeconds = 10,
       [int]$ScenarioTimeoutSec = 300, [ValidateSet(-1, 0, 1)][int]$Nadaljevanje = -1, [ValidateSet(-1, 0, 1)][int]$VidnaCrta = -1,
-      [ValidateRange(200, 3000)][int]$TrajanjeFaze = 600)
+      [ValidateRange(200, 3000)][int]$TrajanjeFaze = 600, [ValidateSet(-1, 0, 1, 2)][int]$FlightMode = -1)
 
 $ErrorActionPreference = 'Stop'
 $root  = $PSScriptRoot
@@ -43,6 +43,7 @@ $audit = Join-Path $root 'audit'
 $seed  = Join-Path $root 'dev\testworld'
 . (Join-Path $root 'meritve-lib.ps1')
 . (Join-Path $root 'letenje-lib.ps1')
+. (Join-Path $root 'hover-lib.ps1')
 if ($TrajanjeFaze % 20 -ne 0) { throw 'TrajanjeFaze mora biti veckratnik 20 server tickov.' }
 $script:LetTrajanjeFaze = $TrajanjeFaze
 New-Item -ItemType Directory -Force -Path $audit | Out-Null
@@ -179,9 +180,15 @@ try {
     foreach ($name in @('LET_Flyer.json', 'LET_Walker.json', 'LET_Target.json')) {
         Copy-Item -LiteralPath (Join-Path $seed "customnpcs\clones\1\$name") -Destination $clones
     }
+    if ($FlightMode -ge 0) {
+        foreach ($name in @('LET_Flyer.json', 'LET_Walker.json')) {
+            Write-HoverFixture (Join-Path $seed "customnpcs\clones\1\$name") (Join-Path $clones $name) $FlightMode
+        }
+    }
     $scriptLen = Install-LetController (Join-Path $seed 'customnpcs\clones\1\LET_Control.json') `
                      (Join-Path $seed 'letenje-control.js') (Join-Path $clones 'LET_Control.json') $TrajanjeFaze
     Write-Host ("  krmilnik namescen ({0} znakov skripte, faza {1} server tickov)" -f $scriptLen, $TrajanjeFaze)
+    if ($FlightMode -ge 0) { Add-HoverProof (Join-Path $clones 'LET_Control.json') 'rememberHome();' 'npc' $FlightMode }
 
     Step 3 'Zagon B: prizorisce'
     $srv = Start-Server 'b'
@@ -277,15 +284,31 @@ try {
     Check 'posnetek zapisan' (Wait-Marker $srv 'RWDIAG-DUMP ' 1 60)
     Send-Command $srv 'rwdiag off'
     Send-Command $srv 'rwdiag chunks off'
+    if ($FlightMode -eq 1) {
+        Send-Command $srv 'save-all flush'
+        Check 'H4: Hover world saved before restart' (Wait-Marker $srv 'Saved the world' 2 120)
+    }
     Check 'server B se je cisto ustavil' (Stop-Server $srv)
     $logPath = $srv.Log
     $srv = $null
+    $custom = Get-Log (Join-Path $run 'logs\CustomNPCs-latest.log')
+    [IO.File]::WriteAllText("$prefix-customnpcs.log", $custom)
+    if ($FlightMode -eq 1) {
+        $srv = Start-Server 'c'
+        Check 'H4: reloaded controller reports persisted Hover selection and actual helpers' (Wait-Marker $srv 'HOVER-PROOF' 1 90)
+        $reloadRaw = Get-Log $srv.Log
+        $reloaded = Get-LetMarkerText $reloadRaw
+        Check 'H4: all 30 saved flyers reload with Hover; ground remains original' (Test-HoverProof $reloaded 1 30)
+        $reloadCustom = Get-Log (Join-Path $run 'logs\CustomNPCs-latest.log')
+        [IO.File]::WriteAllText("$prefix-restart-customnpcs.log", $reloadCustom)
+        Check 'H4: restart has no mod/script/tick exception' (($reloadRaw + $reloadCustom) -notmatch 'ScriptException|script errored|Exception in server tick loop|ConcurrentModificationException|\bERROR\b.*noppes\.')
+        Check 'H4: restarted server stops cleanly' (Stop-Server $srv)
+        $srv = $null
+    }
 
     Step 7 'LT1: nobene napake iz moda ali skripte'
     $raw = Get-Log $logPath
     $text = Get-LetMarkerText $raw
-    $custom = Get-Log (Join-Path $run 'logs\CustomNPCs-latest.log')
-    [IO.File]::WriteAllText("$prefix-customnpcs.log", $custom)
     $modErrors = @([regex]::Matches($raw, '(?m)^.*\bERROR\b.*noppes\..*$') | ForEach-Object { $_.Value })
     Check ("LT1: brez ERROR vrstic iz noppes.* ({0})" -f $modErrors.Count) ($modErrors.Count -eq 0)
     $modErrors | Select-Object -First 5 | ForEach-Object { Write-Host "      $_" }
@@ -295,6 +318,27 @@ try {
 
     Step 8 'LT3, LT5-LT8: veljavnost meritve'
     foreach ($c in (Test-LetMerila $text)) { Check $c.Ime $c.Ok }
+    if ($FlightMode -ge 0) {
+        Check 'H0: saved selection and actual helper for all 30 flyers; no ground Hover' (Test-HoverProof $text $FlightMode 30)
+    }
+    if ($FlightMode -eq 1) {
+        $hv = Get-LetVelicine $text
+        foreach ($phase in @('A', 'B', 'C')) {
+            Check ("H1: free lane {0} arrives 6/6" -f $phase) ($hv["$phase.P.prispeli"] -eq 6)
+        }
+        $ratio = if ($hv['A.P.hitrost'] -gt 0) { $hv['C.P.hitrost'] / $hv['A.P.hitrost'] } else { 0 }
+        Check ("H2: half navigator speed gives 0.45-0.60 measured speed (ratio {0:N3})" -f $ratio) ($ratio -ge 0.45 -and $ratio -le 0.60)
+        $completed = 0
+        foreach ($phase in @('A', 'C')) {
+            foreach ($lane in @('Z', 'V', 'L', 'DF', 'P')) {
+                if ($hv["$phase.$lane.konecNav"] -gt 0) {
+                    $completed++
+                    Check ("H3: {0}.{1} drift <=0.25 ({2})" -f $phase, $lane, $hv["$phase.$lane.drsenjeMax"]) ($hv["$phase.$lane.drsenjeMax"] -le 0.25)
+                }
+            }
+        }
+        Check 'H3: drift has completed navigation samples in both free-lane phases' ($completed -ge 2 -and $hv['A.P.konecNav'] -eq 6 -and $hv['C.P.konecNav'] -eq 6)
+    }
 
     Step 9 'LT9: merilni pogoji nespremenjeni'
     $configHash2 = (Get-FileHash -LiteralPath $config -Algorithm SHA256).Hash
@@ -308,7 +352,7 @@ try {
     $head = @()
     $head += ("# M4.16 - scenarij letenja in dometa, zagon {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm'))
     $head += ''
-    $head += 'Scenarij: `docs/scenariji/M4.16-letenje.md`. Svet: `dev/run/' + $world + '`. ' + $(if ($Nadaljevanje -ge 0) { ('Config dev/run, med tekom RwPathResume={0} (M4.10).' -f $Nadaljevanje) } elseif ($VidnaCrta -ge 0) { 'Config dev/run.' } else { 'Original (config dev/run, vsa stikala Rw* kot v configu).' })
+    $head += 'Scenarij: `docs/scenariji/M4.16-letenje.md`. Svet: `dev/run/' + $world + '`. ' + $(if ($FlightMode -ge 0) { ('M4.3 RwFlightMode={0} v kopijah NPC-jev, H0-H4 (pri Hover), config nespremenjen.' -f $FlightMode) } elseif ($Nadaljevanje -ge 0) { ('Config dev/run, med tekom RwPathResume={0} (M4.10).' -f $Nadaljevanje) } elseif ($VidnaCrta -ge 0) { 'Config dev/run.' } else { 'Original (config dev/run, vsa stikala Rw* kot v configu).' })
     $head += ''
     $head += ('Merila: {0}' -f $(if ($failures.Count -eq 0) { 'LT1-LT9 zelena' } else { ("padlo {0}" -f $failures.Count) }))
     $head += ''
@@ -344,6 +388,7 @@ try {
     }
     if ($Nadaljevanje -ge 0) { $odtis['nadaljuj'] = $Nadaljevanje }
     if ($VidnaCrta -ge 0) { $odtis['vidno'] = $VidnaCrta }
+    if ($FlightMode -ge 0) { $odtis['flightMode'] = $FlightMode }
     if ($null -ne $setup) {
         foreach ($p in $script:LetProge) { if ($null -ne $setup[$p.Id]) { $odtis["d0.$($p.Id)"] = ('{0:N2}' -f $setup[$p.Id].D0) } }
     }

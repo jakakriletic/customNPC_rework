@@ -295,7 +295,7 @@ IAnimals {
     public boolean updateAI = false;
     /** M7: per-NPC opt-in, persisted only when enabled to preserve old NBT by default. */
     private int rwNavBackend;
-    /** M4.2: saved selection only; helper implementations follow in M4.3/M4.6. */
+    /** M4.2/M4.3: per-NPC flight selection; original is the default. */
     private int rwFlightMode;
     /** M3.8 (R6): nacin hitboxa (HitboxWeights); na klientu ze ucinkovit nacin iz spawn podatkov. */
     private int rwHitboxMode;
@@ -852,7 +852,7 @@ IAnimals {
         this.targetTasks.addTask(4, (EntityAIBase)new EntityAIOwnerHurtTarget(this));
         net.minecraft.world.RwWorldAccess.pathListener(this.world).onEntityRemoved((Entity)this);
         if (this.ais.movementType == 1) {
-            this.moveHelper = new FlyingMoveHelper(this);
+            this.moveHelper = noppes.npcs.rework.movement.HoverMoveHelper.forFlying(this);
             // M4.10: podrazred PathNavigateFlying; pri RwPathResume=0 se obnasa kot original.
             this.navigator = new noppes.npcs.rework.nav.RwPathNavigateFlying((EntityLiving)this, this.world);
         } else if (this.ais.movementType == 2) {

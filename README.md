@@ -15,9 +15,9 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 |---|---|
 | Datum zadnje posodobitve | 2026-10-29 |
 | Trenutna faza | **M4 — Gibanje in navigacija** (R2), raziskava M4.0 opravljena 20. 10. (D-038). M0/M1/M2 zaključeni, M3 do M3.9 (GUI M3.8b odprt), **M5 zaključen 22. 10.** (D-055). Animacijsko jedro M7 v ločenem modu `customNPC_entities_mod` (D-024) |
-| Naslednji korak | **M4.3 → M4.15a/b/c → M3.8b → M6** po [obsegu v1.0 (Q92)](docs/10-OBSEG-V1.md), ki prevlada nad starim planom; nato ostanek M7 in M10. M4.2 zaključen (D-086), 180/180 median = M4.16. Paketi zunaj seznama so v2; pri privzeto 0 cena ni pogoj (ena meritev), največ 2 poskusa na paket. Dnevnik: [04-STANJE](docs/04-STANJE.md) |
+| Naslednji korak | **M4.15a/b/c → M3.8b → M6** po [obsegu v1.0 (Q92)](docs/10-OBSEG-V1.md), nato ostanek M7 in M10. M4.3 zaključen (D-087), privzeto 180/180 = M4.16, Hover H0–H4 zeleni tudi po restartu. Paketi zunaj seznama so v2; pri privzeto 0 cena ni pogoj (ena meritev), največ 2 poskusa na paket. Dnevnik: [04-STANJE](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 186 datotek `.java` v `src/patch` (121 rework), 72 testnih datotek (459 metod `@Test` in 40 primerjalnih testov originala). M4.2: +1 enum in +8 zelenih testov. M4.14b FA merila ostajajo neizpolnjena (D-079), M4.14d odložen (Q65/Q74), pragovi isti. |
+| Prevedljivih razredov | 187 datotek `.java` v `src/patch` (122 rework), 73 testnih datotek (468 metod `@Test` in 40 primerjalnih testov originala). M4.3: +1 helper in +9 zelenih testov. M4.14b FA merila ostajajo neizpolnjena (D-079), M4.14d odložen (Q65/Q74), pragovi isti. |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in
@@ -26,10 +26,10 @@ ki je ob kloniranju v stanju `waiting`, se lahko vrne v `following`. Ker ni pokv
 datotek za obnovo in ima mod pomembnejše težave, se dodatna forenzika R9, migracija ter
 `auditClones` **odložijo**. Že narejenega splošnega popravka ne odstranjujemo.
 
-**M4.2 zaključen (29. 10., D-086):** `RwFlightMode` shrani original/Hover/Momentum (int 0/1/2,
-original brez ključa); helperji ostajajo isti. Controller unit/build/package in regresija 180/180
-zeleni na `d7a9f810…`. Naslednji M4.3; Momentum in GUI M4.2b sta zunaj v1.0 (Q92).
-[Dokazila](docs/meritve/2026-10-29-M4.2-nacin-letenja.md).
+**M4.3 zaključen (29. 10., D-087):** `RwFlightMode=1` izbere Hover, privzeto original;
+upošteva hitrost navigatorja in se ustavi brez drsenja v A/C. Controller sprejem z restartom
+zelen na `3eba45ab…`, privzeto 180/180 = M4.16; omejitve poti ostanejo zapisane.
+[Dokazila](docs/meritve/2026-10-29-M4.3-hover.md). Naslednji M4.15a/b/c po Q92.
 
 ---
 
@@ -79,7 +79,7 @@ M0  Temelj                      okolje, build, testi, git            ← zakljuc
 M1  Integriteta podatkov        R9 + B1/B2, atomski zapis, migracija ← zaključeno
 M2  Diagnostika in meritve      reprodukcije, profiling, baseline    ← ~96 %, baseline M2.6 tece 5. 10.
 M3  Jedro entitete              R1 mount, R6 solid hitbox            ← do M3.9, GUI M3.8b odprt
-M4  Gibanje in navigacija       R2 letenje, navigacija                ← M4.2 zaključen; v1.0 M4.3 in M4.15a/b/c (Q92)
+M4  Gibanje in navigacija       R2 letenje, navigacija                ← M4.3 zaključen; v1.0 M4.15a/b/c (Q92)
 M5  Performance AI              R5 strežnik, klient in daljna vidnost ← zaključeno 22. 10., regresija M5.Z, D-055
 M6  Scripting platforma         R7 Java scripting, hook registry
 M7  Animacije + AI okolje       R4 animacijski sistem in avtorsko okolje

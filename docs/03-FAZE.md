@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. Naslednji M4.3 → M4.15a/b/c → M3.8b → M6 → ostanek M7 → M10. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
+**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. Naslednji M4.15a/b/c → M3.8b → M6 → ostanek M7 → M10. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -202,7 +202,7 @@ vsake 4 ticke, po prihodu do ~3,5 bloka drsenja, **[H]** model); cilj dlje od `N
 poti**, ne delne poti; CustomNPC+ ima isto iskanje kot vanilla 1.12, razlika je v sledenju in krmiljenju.
 M4.1, M4.4, M4.9 in M4.12 zavrženi ali združeni, M4.11 pogojen, dodana M4.16 in M4.17.
 
-**Vrstni red M4 za v1.0 (Q92, prevlada nad D-038):** ~~M4.2~~ (D-086) → M4.3 → M4.15a → b → c; ostali nedokončani paketi spodaj so v2. M4.14b/M4.16/M4.16b/M4.10/M4.17 so že obravnavani; odprta FA merila in Q82/Q84 ostanejo zapisana, ne blokirajo v1.0.
+**Vrstni red M4 za v1.0 (Q92, prevlada nad D-038):** ~~M4.2~~ (D-086) → ~~M4.3~~ (D-087) → M4.15a → b → c; ostali nedokončani paketi spodaj so v2. M4.14b/M4.16/M4.16b/M4.10/M4.17 so že obravnavani; odprta FA merila in Q82/Q84 ostanejo zapisana, ne blokirajo v1.0.
 
 ### Paketi
 
@@ -211,7 +211,7 @@ M4.1, M4.4, M4.9 in M4.12 zavrženi ali združeni, M4.11 pogojen, dodana M4.16 i
 | **M4.0** | **Raziskava izvedbe (D-029), pred vsemi ostalimi paketi M4.** Letenje (CustomNPC+, vanilla `PathNavigateFlying`/`FlyingNodeProcessor`, drugi modi z letečimi entitetami, 3D A* in alternative) in kopenska navigacija (izmerjeno: R2 je zastarela delna pot, M2.3; sledenje poti je v boju 48 % CPU, M5-S P1; Baritone kot izbirno ozadje, D-022). Za vsak paket M4.1–M4.14 odločitev ohrani/spremeni/zavrzi/dodaj, zapis v `docs/raziskave/`, prilagoditev tega razdelka | **narejeno 20. 10.** — [zapis](raziskave/M4.0-gibanje-in-letenje.md), D-038, Q31 |
 | ~~M4.1~~ | ~~Branje CustomNPC+ flying implementacije; odločitev: port ali lasten 3D pathfinder~~ | **zavrženo — opravljeno v M4.0**: `FlyPathFinder` je 1.12 `FlyingNodeProcessor` na 1.7.10 (200 vozlišč, filter dometa, hevristika = kvadrat razdalje); uporabne ideje (žarek pri sledenju ≤ 6 blokov, upoštevana hitrost, zavoj ≤ 20°/tick, višinska meja, spust brez poti) gredo v M4.17, M4.3 in Q31. Brez prenosa kode (D-002) |
 | ~~M4.2~~ | **Zaključeno 29. 10. (D-086, Q6/Q31/Q91):** `FlightMode` + root int `RwFlightMode`, stalni ID-ji 0/1/2, original brez ključa; manjkanje/neznan ID/napačen tip → original. Samo shranjena izbira; unit/build/package in M4.16 180/180 zeleni na `d7a9f810…`. Hover v M4.3; Momentum (M4.6) in GUI M4.2b sta v2 po Q92. [Dokazila](meritve/2026-10-29-M4.2-nacin-letenja.md) | S |
-| M4.3 | `HoverMoveHelper` — creative-style. **Izhodišče vanilla `EntityFlyHelper` (papiga) / 1.21 `FlyingMoveControl`:** hitrost iz navigatorja (danes ignorirana), omejen zavoj, upočasnitev pred točko, da drsenje po prihodu pade pod mero M4.16. `FLYING_SPEED` NPC nima registriranega — samo pri `RwFlightMode` ali iz `MOVEMENT_SPEED` | M → S/M |
+| ~~M4.3~~ | **Zaključeno 29. 10. (D-087, Q93–Q97), poskus 1:** `HoverMoveHelper` pri `RwFlightMode=1`, privzeto original; hitrost navigatorja × `MOVEMENT_SPEED`, yaw ≤20°, ustavljanje A/C drsenje 0, P 6/6 in C/A 0,522; save/restart 30 letečih potrjen. Unit/build/package in štirje sprejemni ID-ji zeleni, privzeto 180/180 = M4.16. Cena enkrat patrulja/boj p95 8,913/2,425 ms, podatek po Q92; poti čez ovire ostajajo omejitev, celoten M4 ni zaključen. `FLYING_SPEED` je že registriran (stara premisa o manjkajočem atributu ovržena). [Dokazila](meritve/2026-10-29-M4.3-hover.md) | S/M |
 | ~~M4.4~~ | ~~Popravek `isNotColliding` — vzorčenje po hitboxu, obhod namesto `WAIT`~~ | **zavrženo kot samostojen paket**: ostanek ghasta; z vidno črto pri sledenju (M4.17) in `move()` v novem helperju ni potreben, v originalnem načinu ostane |
 | M4.5 | **Odločitvena točka (spremenjeno, D-038):** iskanje poti za leteče. Izvede se **samo**, če M4.10 + M4.17 + M4.3 ne izpolnijo meril M4.16. Obseg: podrazred `PathFinder` za leteče po vzoru 1.21.1 (evklidska cena, hevristika ×1,5, proračun `FOLLOW_RANGE·16`, brez filtra dometa do cilja), po potrebi Lazy Theta\*. Brez oktalnega drevesa in **brez asinhronega iskanja** (D-012) | L → M |
 | M4.6 | `MomentumMoveHelper` — inercija, omejen kotni pospešek, minimalna hitrost, dviganje/spuščanje; **zasledovanje točke vnaprej po poti** (»pure pursuit«) in redčenje poti, ker se točke na 1 blok in minimalna hitrost izključujeta. Obseg po Q6/Q31 | M |

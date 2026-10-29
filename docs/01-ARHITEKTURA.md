@@ -893,3 +893,14 @@ pristajanja/višine; samodejni spust nasprotuje lebdenju, dodatki nimajo izmerje
 Q92: v1.0 nadaljuje s Hover M4.3; Momentum/M4.6 in GUI M4.2b sta v2, ID 2 je rezervirana izbira.
 Sprejeto: controller unit/build/package/M4.16 zeleni na `d7a9f810…`, 180/180 median = original.
 [Pogodba, omejitve in dokazila](meritve/2026-10-29-M4.2-nacin-letenja.md).
+
+### D-087 — M4.3: opt-in Hover krmilnik (2026-10-29, Q93–Q97)
+
+Q93: `RwFlightMode=1` izbere Hover samo za leteče, hitrost navigatorja × `MOVEMENT_SPEED`;
+atribut že sledi NPC hitrosti, `FLYING_SPEED` je tudi že registriran, novega ne uvajamo.
+Q94: neposredna hitrost, približevanje ≤ polovica razdalje/tick, yaw ≤20°, brez ukaza stop;
+lastništvo hitrosti zavira tudi zunanje sunke. `travel`, trki in iskanje poti ostanejo isti.
+Q97: poskus 1 sprejet pod izbiro, privzeto original: unit/build/package, 180/180 enakost,
+H0–H4 in restart 30 letečih zeleni; cena enkrat kot podatek po Q92. Omejitve poti in odmik
+ob ponovnih ukazih B ostanejo, celoten M4 ni zaključen. Q95/Q96 sta popravka dokazne kode,
+brez spremembe produkcije ali meril. [Rezultati in razlogi](meritve/2026-10-29-M4.3-hover.md).

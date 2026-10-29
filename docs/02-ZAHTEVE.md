@@ -303,6 +303,10 @@ napačno tipiziran ključ pomeni original. M4.2 izbiro samo shrani, helperja pri
 GUI v M4.2b po M4.3. **Q92:** v1.0 vključuje le Hover M4.3; Momentum/M4.6 in GUI M4.2b sta v2.
 `movementType` ostane nedotaknjen. [Pogodba in dokazila](meritve/2026-10-29-M4.2-nacin-letenja.md).
 
+**M4.3 zaključeno (29. 10., D-087):** pri `RwFlightMode=1` leteči uporablja Hover; hitrost
+navigatorja velja, drsenje A/C 0, save/restart potrjen. Privzeto 180/180 = M4.16; poti čez
+ovire ostanejo omejitev, celoten M4 izhodni kriterij ni izpolnjen. [Dokazila](meritve/2026-10-29-M4.3-hover.md).
+
 1. **Nov enum `FlightMode`** v `rework/movement/`, shranjen v novem NBT ključu
    (`RwFlightMode`). `ais.movementType` ostane nedotaknjen za združljivost; nova vrednost
    se upošteva samo, če je prisotna.

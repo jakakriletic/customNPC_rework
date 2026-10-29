@@ -12,7 +12,7 @@ brišemo jih, ostanejo v `03-FAZE.md` kot plan za v2.
 | # | Paket | Opomba |
 |---|---|---|
 | 1 | ~~M4.2~~ | `FlightMode` + NBT zaključen 29. 10. (D-086); unit/build/package in M4.16 180/180 zeleni |
-| 2 | M4.3 | `HoverMoveHelper` |
+| 2 | ~~M4.3~~ | `HoverMoveHelper` zaključen 29. 10. (D-087); privzeto 180/180 = original, H0–H4 z restartom zeleni, cena enkrat kot podatek |
 | 3 | M4.15a → M4.15b → M4.15c | izbira navigacijskega ozadja v GUI |
 | 4 | M3.8b | GUI za `RwHitboxMode` |
 | 5 | M6.1 → M6.10, M6.12 | Java scripting; M6.6 samo, če je potreben za pravilnost |

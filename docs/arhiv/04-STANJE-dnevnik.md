@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 161 → 1)
+# Arhiv: dnevnik sej (vnosi 162 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,16 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-29 (162) — M4.17 zaključen po odločitvi lastnika
+
+**Paket:** M4.17 (D-085, Q90) · **Stanje:** **zaključen**, sprejet pod stikalom, privzeto 0.
+Lastnik je zahteval sprejem brez ponovne validacije 23 ID-jev (Q88). Dokaz je celotna serija
+poskusa 4 na `b8f98d28…`: 11 obveznih ID-jev zelenih, letenje 180/180 enako poskusom 1–3,
+patrulja p95 9,175 ≤ 10,0925 ms in boj 2,687 ≤ 2,8116 ms. `dev/src` se po 28. 10. 12:38 UTC ni
+spremenil; nov odtis izvira iz popravka controllerja (OPS.9) in ID-ja `m417-mcp-cache-v1`.
+Q87/Q88 zaprti, Q81 (privzeto 0), Q82 (vogal → M4.5) in Q84 ostanejo. Naslednji: M4.2.
+[Zapis](../meritve/2026-10-26-M4.17-vidna-crta.md).
 
 ### 2026-10-29 (161) — M4.17: obnova manjkajočega MCP artefakta pred validacijo
 

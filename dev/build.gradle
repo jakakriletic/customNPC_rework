@@ -233,6 +233,7 @@ task testOriginal(type: Test) {
     exclude '**/FlightFollowTest.class'
     // M4.2: flight selection and its NBT schema are new (no original counterpart).
     exclude '**/FlightModeTest.class'
+    exclude '**/HoverMoveHelperTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 
