@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 163 → 1)
+# Arhiv: dnevnik sej (vnosi 164 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,18 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-29 (164) — M4.3: Hover zaključen
+
+**Paket:** M4.3 (D-087, Q93–Q97) · **Stanje:** **zaključen, poskus 1, privzeto original**.
+`RwFlightMode=1` izbere `HoverMoveHelper`: hitrost navigatorja × MOVEMENT_SPEED,
+približevanje, ustavljanje in yaw ≤20°/tick. Controller unit/build/package zeleni;
+štirje sprejemni ID-ji zeleni na `3eba45ab…`, 180/180 median privzetega načina = M4.16,
+H0–H4 potrjeni tudi po restartu 30 letečih. P 6/6 A/B/C, C/A 0,522; drsenje A/C 0.
+Cena enkrat: patrulja/boj p95 8,913/2,425 ms (podatek po Q92, brez cenovne meje).
+Ovire/domet in aktivno ponovno ukazovanje B ostanejo omejitve; celoten M4 ni sprejet.
+[En zapis dokazil in odločitev](../meritve/2026-10-29-M4.3-hover.md). Testov seja ni zagnala,
+po njih se spreminja le dokumentacija. Naslednji M4.15a/b/c; nepovezane datoteke ohranjene.
 
 ### 2026-10-29 (163) — M4.2: shranjeni način letenja zaključen
 
