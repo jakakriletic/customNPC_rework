@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 180 → 1)
+# Arhiv: dnevnik sej (vnosi 181 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,16 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (181) — M6.11: player/world iz NPC Java skripte
+
+**Paket:** M6.11 (Q188–Q191) · **Stanje:** zaključen, poskus 1.
+V objavljen v1 API pridejo samo `IPlayer` in `IWorld` (51 tipov/606 članov) ter preveden
+`Example_playerWorld` v HOOKS.md; `NpcScript`/runtime ista. Controller **PASS na `e3e30ca1…`**:
+unit/build/package, m69-api-v1 6.761 preverjanj in m611-packaged-v1 12/12 (sled JS = Java iz MC
+stanja, zapis bloka, tempdata, `LossyTime.java:5`/`UnknownPlayer.java:5` brez izvajanja). Ogret
+par kot podatek: JS 8,80 µs, Java 2,07 µs/interact; cold Java compile 287 ms.
+[Dokazi/omejitve](../meritve/2026-10-29-M6.11-player-world.md). Q92 usklajen; M6 v1 zaključen, naslednji ostanek M7.
 
 ### 2026-10-29 (180) — M6.12: Java v obstoječi izbiri jezika
 
