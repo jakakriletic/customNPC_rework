@@ -317,6 +317,8 @@ task testOriginal(type: Test) {
     // M6.5: error source map is new.
     exclude '**/SourceMapTest.class'
     exclude '**/CompileScriptsTest.class'
+    // M6.12: Java entry in the existing language selection is new.
+    exclude '**/JavaLanguageTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

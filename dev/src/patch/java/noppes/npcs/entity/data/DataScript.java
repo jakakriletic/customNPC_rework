@@ -76,6 +76,8 @@ implements IScriptHandler {
             this.javaTabs.run(this.scripts, this, type, event);
             return;
         }
+        // M6.12: another language drops the Java generation; switching back starts a fresh one.
+        this.javaTabs = null;
         for (ScriptContainer script : this.scripts) {
             script.run(type, event);
         }

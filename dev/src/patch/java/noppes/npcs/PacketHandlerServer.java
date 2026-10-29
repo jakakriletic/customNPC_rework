@@ -112,6 +112,7 @@ import noppes.npcs.controllers.data.TransportLocation;
 import noppes.npcs.entity.EntityCustomNpc;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.rework.nav.NavGuiData;
+import noppes.npcs.rework.script.hooks.JavaLanguage;
 import noppes.npcs.entity.data.DataScenes;
 import noppes.npcs.roles.JobSpawner;
 import noppes.npcs.roles.RoleCompanion;
@@ -628,6 +629,7 @@ public class PacketHandlerServer {
             npc.script.lastInited = -1L;
         } else if (type == EnumPacketServer.ScriptDataGet) {
             NBTTagCompound compound = npc.script.writeToNBT(new NBTTagCompound());
+            // M6.12: only the NPC handler lists Java; the other script GUIs use JavaLanguage.withoutJava.
             compound.setTag("Languages", (NBTBase)ScriptController.Instance.nbtLanguages());
             Server.sendData(player, EnumPacketClient.GUI_DATA, compound);
         } else if (type == EnumPacketServer.DimensionsGet) {
@@ -664,12 +666,12 @@ public class PacketHandlerServer {
                 return;
             }
             NBTTagCompound compound = ((TileScripted)tile).getNBT(new NBTTagCompound());
-            compound.setTag("Languages", (NBTBase)ScriptController.Instance.nbtLanguages());
+            compound.setTag("Languages", (NBTBase)JavaLanguage.withoutJava(ScriptController.Instance.nbtLanguages()));
             Server.sendData(player, EnumPacketClient.GUI_DATA, compound);
         } else if (type == EnumPacketServer.ScriptItemDataGet) {
             ItemScriptedWrapper iw = (ItemScriptedWrapper)NpcAPI.Instance().getIItemStack(player.getHeldItemMainhand());
             NBTTagCompound compound = iw.getMCNbt();
-            compound.setTag("Languages", (NBTBase)ScriptController.Instance.nbtLanguages());
+            compound.setTag("Languages", (NBTBase)JavaLanguage.withoutJava(ScriptController.Instance.nbtLanguages()));
             Server.sendData(player, EnumPacketClient.GUI_DATA, compound);
         } else if (type == EnumPacketServer.ScriptItemDataSave) {
             if (!player.isCreative()) {
@@ -686,13 +688,13 @@ public class PacketHandlerServer {
         } else if (type == EnumPacketServer.ScriptForgeGet) {
             ForgeScriptData data = ScriptController.Instance.forgeScripts;
             NBTTagCompound compound = data.writeToNBT(new NBTTagCompound());
-            compound.setTag("Languages", (NBTBase)ScriptController.Instance.nbtLanguages());
+            compound.setTag("Languages", (NBTBase)JavaLanguage.withoutJava(ScriptController.Instance.nbtLanguages()));
             Server.sendData(player, EnumPacketClient.GUI_DATA, compound);
         } else if (type == EnumPacketServer.ScriptForgeSave) {
             ScriptController.Instance.setForgeScripts(Server.readNBT(buffer));
         } else if (type == EnumPacketServer.ScriptPlayerGet) {
             NBTTagCompound compound = ScriptController.Instance.playerScripts.writeToNBT(new NBTTagCompound());
-            compound.setTag("Languages", (NBTBase)ScriptController.Instance.nbtLanguages());
+            compound.setTag("Languages", (NBTBase)JavaLanguage.withoutJava(ScriptController.Instance.nbtLanguages()));
             Server.sendData(player, EnumPacketClient.GUI_DATA, compound);
         } else if (type == EnumPacketServer.ScriptPlayerSave) {
             ScriptController.Instance.setPlayerScripts(Server.readNBT(buffer));
@@ -733,7 +735,7 @@ public class PacketHandlerServer {
                 return;
             }
             NBTTagCompound compound = ((TileScriptedDoor)tile).getNBT(new NBTTagCompound());
-            compound.setTag("Languages", (NBTBase)ScriptController.Instance.nbtLanguages());
+            compound.setTag("Languages", (NBTBase)JavaLanguage.withoutJava(ScriptController.Instance.nbtLanguages()));
             Server.sendData(player, EnumPacketClient.GUI_DATA, compound);
         } else if (type == EnumPacketServer.SchematicsTile) {
             BlockPos pos = new BlockPos(buffer.readInt(), buffer.readInt(), buffer.readInt());

@@ -145,6 +145,7 @@ import noppes.npcs.rework.net.CommandRwBlink;
 import noppes.npcs.rework.far.CommandRwFar;
 import noppes.npcs.rework.far.FarRegistry;
 import noppes.npcs.rework.far.FarServer;
+import noppes.npcs.rework.script.hooks.JavaLanguage;
 
 @Mod(modid="customnpcs", name="CustomNpcs", version="1.12", acceptedMinecraftVersions="1.12, 1.12.1, 1.12.2")
 public class CustomNpcs {
@@ -357,6 +358,8 @@ public class CustomNpcs {
     public void load(FMLInitializationEvent ev) {
         PixelmonHelper.load();
         ScriptController controller = new ScriptController();
+        // M6.12: Java joins the existing language list only with RwJavaClasspath set.
+        JavaLanguage.register(controller.languages, RwJavaClasspath);
         if (EnableScripting && controller.languages.size() > 0) {
             MinecraftForge.EVENT_BUS.register((Object)controller);
             MinecraftForge.EVENT_BUS.register((Object)new ScriptPlayerEventHandler().registerForgeEvents());

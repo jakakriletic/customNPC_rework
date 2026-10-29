@@ -186,6 +186,8 @@ public final class ClientHarness {
             if (HitboxGuiHarness.installIfRequested(path)) { return; }
             // M4.15c is a separate, explicitly requested functional job, never a timing run.
             if (NavGuiHarness.installIfRequested(path)) { return; }
+            // M6.12: script language GUI acceptance, also an explicit functional job.
+            if (ScriptGuiHarness.installIfRequested(path)) { return; }
             HarnessJob job = HarnessJob.load(new File(path));
             MinecraftForge.EVENT_BUS.register(new ClientHarness(job));
             System.out.println("RWHARNESS-INSTALL world=" + job.world + " out=" + job.out);

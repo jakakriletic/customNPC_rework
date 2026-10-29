@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 177 → 1)
+# Arhiv: dnevnik sej (vnosi 178 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,18 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (178) — M6.9: generator API reference
+
+**Paket:** M6.9 (Q177–Q180) · **Stanje:** zaključen, poskus 1.
+Generator iz javac API simbolov in istega hook registry pripravi API.json/API.md/HOOKS.md.
+Izrecni v1 nabor/izključitve, generiki, dedovanje, event polja in 16 Java primerov;
+odsoten Javadoc/imena so označena. Razvojni sourceSet ostane izven moda; runtime isti.
+Controller m69-api-v1 **PASS na `0ff903b4…`**: 5.661 preverjanj, 49 tipov/515 članov,
+16 prevedenih primerov, napačen tip zavrnjen z lokacijo; neodvisni popis in bajtna enakost
+med JVM/obrnjenim odkrivanjem potrjena. Celoten ukaz 7.372,120 ms kot podatek.
+[Dokazi in omejitve](../meritve/2026-10-29-M6.9-api.md); produkcija/zapakirani mod isti,
+brez Minecrafta ali izvajanja primerov. Q92 usklajen; naslednji M6.10, brez ponovitev.
 
 ### 2026-10-29 (177) — M6.8: trusted-only pravice in meje
 
