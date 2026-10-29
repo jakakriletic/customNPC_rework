@@ -42,6 +42,13 @@ Največ 3 ponovni zagoni v 15 minutah, nato se samodejni zagon ustavi z zapisom 
 Stop iz vmesnika v STOP zapiše vir (`<čas> vmesnik Ustavi zdaj`). Nadzor deluje samo, dokler
 teče frontend; po spremembi `dashboard.mjs` je treba frontend znova zagnati.
 
+**Preverjanje pred zagonom (OPS.9):** 29. 10. 2026 je posodobitev Claude premaknila CLI iz
+`~/.local/bin/claude.exe` v npm namestitev, zato je upravljalnik napačno javljal »potrebna
+prijava«. Pred vsakim zagonom zato poženi `node overnight/predzagon.mjs`. Skripta za vsak
+omogočen profil preveri, ali je izvršljiva datoteka najdena, ali CLI vrne verzijo, ali je
+prijava naročniška in ali `--help` še pozna vse zastavice iz `agentArguments`. Izhod 1
+pomeni, da je treba upravljalnik najprej popraviti, šele nato zagnati.
+
 `launch` na Windows zažene frontend prek `Win32_Process.Create`, torej izven job objekta
 procesa, ki ga je zagnal (Claude/Codex aplikacija, IDE, terminal). 22. 10. 2026 je samodejna
 posodobitev aplikacije Claude ob 09:12 ubila frontend, upravljalnik in Minecraft sredi celice
