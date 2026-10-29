@@ -985,3 +985,13 @@ Zaupan mora biti tudi source/vključitev/clone/NBT uvoz. Java teče s pravicami 
 loader/whitelist nista sandbox, ni CPU/heap timeouta ali globalnega SecurityManagerja.
 Controller unit/build/package in 27/27 na `36620163…` potrdi deny/grant/reload in omejen
 file/reflection dostop, ne GUI/login/permission plugina. [Politika in dokazi](meritve/2026-10-29-M6.8-pravice.md).
+
+### D-095 — M7.0: animacije prek mostu `rework/anim`, entities mod nespremenjen (2026-10-29, Q192–Q197)
+
+Rework nima compile odvisnosti od `customNPC_entities_mod`; most v `rework/anim` ga najde z
+refleksijo prek javnega API-ja `EntityAnimatedNpc` in je brez njega neaktiven. Osnova CNPC je
+01Oct19: vsi CNPC člani, ki jih entities mod uporablja, so tam z istimi deskriptorji (javap).
+Script API je `Animators.of(npc)` (brez spremembe `ICustomNpc`, brez `blendTo`); hooki so
+`animationStart/animationEnd/animationEvent` (klipi imajo dogodke, ne frameov), opazovanje pod
+`RwAnimHooks` privzeto 0. M7.8 reload in `blendTo` sta v2. Vrstni red M7.V → M7.9 → M7.5 → M10.
+[Raziskava](raziskave/M7.0-animacije-integracija.md).

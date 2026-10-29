@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0–M6.12 zaključeni (D-090–D-094, Q191); naslednji ostanek M7 (M7.5, M7.8, M7.9, uskladitev verzije CNPC) → M10. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
+**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0–M6.12 zaključeni (D-090–D-094, Q191); naslednji ostanek M7 po raziskavi [M7.0](raziskave/M7.0-animacije-integracija.md) (D-095): M7.V → M7.9 → M7.5 → M10; M7.8 v2. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -463,6 +463,8 @@ Varnostna politika M6.8 velja že od prvega Java opt-in; potrdi se v svojem pake
 > [`08-PREGLED-IN-PLAN.md`](08-PREGLED-IN-PLAN.md) Faza 5.
 
 **Vhodni pogoj:** M6 (API shema, validator, hook registry, hitra povratna zanka).
+
+> **2026-10-29 (M7.0, D-095, Q192–Q197):** v1 = **M7.V** (zagon rework + entities 0.7.0 na 01Oct19, brez produkcijske kode) → **M7.9** `Animators.of(npc)` → **M7.5** hooki `animationStart/animationEnd/animationEvent` (`RwAnimHooks` privzeto 0). Most `rework/anim` z refleksijo, entities mod nespremenjen. M7.8 reload in `blendTo` v2. [Raziskava](raziskave/M7.0-animacije-integracija.md).
 
 ### Paketi
 

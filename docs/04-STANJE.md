@@ -14,9 +14,9 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-29** (seja 181) — **M6.11 zaključen, poskus 1** (Q188–Q191). Controller PASS na `e3e30ca1…`: m611-packaged-v1 12/12 (JS = Java player/world sled, zapis bloka, tipizirani napaki) in m69-api-v1 6.761 preverjanj (51 tipov/606 članov). Ogret par JS 8,80 / Java 2,07 µs; [dokazi in omejitve](meritve/2026-10-29-M6.11-player-world.md). |
-| Trenutni milestone | **M6 — Scripting v1 zaključen (M6.0–M6.12), naslednji ostanek M7** po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
-| Naslednji paketi | **Ostanek M7 (M7.5 hooki, M7.8 reload, M7.9 script API, uskladitev verzije CNPC) → M10** po [Q92](10-OBSEG-V1.md). Uspešnih serij se ne ponavlja (Q90). Privzeto izklopljeno brez cenovne meje, največ 2 poskusa/paket. M4.15a potrditev 2000 nedosegljivih odložena; Q22/OptiFine/Entity Culling za release, M10.3 blokiran (Q1). |
+| Zadnja posodobitev | **2026-10-29** (seja 182) — **M7.0 raziskava zaključena** (D-095, Q192–Q197): entities mod je po javap povezljiv z 01Oct19, integracija prek mostu `rework/anim` brez spremembe entities moda; M7.8 reload in `blendTo` v2. [Raziskava](raziskave/M7.0-animacije-integracija.md). Prej M6.11 (Q191) PASS na `e3e30ca1…`. |
+| Trenutni milestone | **M7 — ostanek integracije animacij** (M7.0 raziskava zaključena, D-095); M6 Scripting v1 zaključen (M6.0–M6.12) po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
+| Naslednji paketi | **M7.V (zagon rework + entities 0.7.0 na 01Oct19) → M7.9 `Animators.of(npc)` → M7.5 hooki → M10** (D-095; M7.8 v2) po [Q92](10-OBSEG-V1.md). Uspešnih serij se ne ponavlja (Q90). Privzeto izklopljeno brez cenovne meje, največ 2 poskusa/paket. M4.15a potrditev 2000 nedosegljivih odložena; Q22/OptiFine/Entity Culling za release, M10.3 blokiran (Q1). |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **216** datotek `.java` v `src/patch` (M6.11: `PlayerWorldProbe`), od tega **146** rework (`script` 18) in 3 dostopni razredi v `net/minecraft/…`; build/package PASS na `e3e30ca1…`: **78** pričakovanih spremenjenih vnosov (77 razredov originala + manifest coremoda) |
 | Testi | **519** metod `@Test` v **82** datotekah; `testOriginal` **45** preverjanj. M6.11 m69-api-v1 6.761 preverjanj in m611 12/12 PASS na `e3e30ca1…`; M6.8 unit/build/package in m68 27/27 PASS na `36620163…`, produkcija ista, brez ponavljanja (Q90/Q92). FA sprejem M4.14b ostaja neuspešen (D-079); smoke/protokol dodatno 20/16 trditev |
@@ -41,7 +41,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M4 Gibanje | **Paketi v1.0 obravnavani z omejitvami** | [M4.15c](meritve/2026-10-29-M4.15c-klient.md) GUI/restart zelen; M4.15a potrditev 2000 nedosegljivih odložena. Celoten M4 izhodni kriterij ni izpolnjen; M4.14b brez FA sprejema (D-079), M4.14d v2, F1–F12 odprti. |
 | M5 Performance | **zaključeno 22. 10. (D-055)** | M5-S: kapaciteta M5.8; M5-K: sprejem M5-K.2; M5-V: sprejem M5-V.8 in privzeti vklop V.8b; M5.Z: obe matriki in sled zeleni. [Regresija](meritve/2026-10-22-M5.Z-regresija.md); nepokrita release preverjanja ostanejo M10 |
 | M6 Scripting | **v1 zaključen (M6.0–M6.12)** | [Player/world](meritve/2026-10-29-M6.11-player-world.md) m611 12/12, `IPlayer`/`IWorld` v API (Q191); [izbira jezika](meritve/2026-10-29-M6.12-izbira-jezika.md) 101 trditev (Q187); modpack classpath ročni (Q184); item/block/quest/dialog/faction v2 |
-| M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
+| M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | [M7.0 raziskava](raziskave/M7.0-animacije-integracija.md) (D-095): M7.V → M7.9 → M7.5; M7.8 reload v2 |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
 | M10 Release | ni začeto | |
@@ -55,7 +55,16 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 179 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 180 → 1, novejši zgoraj).*
+
+### 2026-10-29 (182) — M7.0: raziskava integracije animacij
+
+**Paket:** M7.0 (D-095, Q192–Q197) · **Stanje:** zaključen, raziskava brez produkcijske kode.
+javap: vsi CNPC člani, ki jih uporablja `customNPC_entities_mod` 0.7.0, obstajajo v 01Oct19 z
+istimi deskriptorji; manjka zagon obeh modov (M7.V). Most `rework/anim` z refleksijo, entities
+mod nespremenjen; API `Animators.of(npc)`, hooki `animationStart/animationEnd/animationEvent`
+(`RwAnimHooks` privzeto 0). M7.8 reload in `blendTo` v2.
+[Raziskava](raziskave/M7.0-animacije-integracija.md). Naslednji M7.V → M7.9 → M7.5 → M10.
 
 ### 2026-10-29 (181) — M6.11: player/world iz NPC Java skripte
 
@@ -67,23 +76,4 @@ stanja, zapis bloka, tempdata, `LossyTime.java:5`/`UnknownPlayer.java:5` brez iz
 par kot podatek: JS 8,80 µs, Java 2,07 µs/interact; cold Java compile 287 ms.
 [Dokazi/omejitve](meritve/2026-10-29-M6.11-player-world.md). Q92 usklajen; M6 v1 zaključen, naslednji ostanek M7.
 
-### 2026-10-29 (180) — M6.12: Java v obstoječi izbiri jezika
 
-**Paket:** M6.12 (Q184–Q187) · **Stanje:** zaključen, poskus 1.
-`JavaLanguage` doda `Java` v obstoječi seznam jezikov samo pri nepraznem `RwJavaClasspath`
-(privzeto originalni seznam); samo NPC GUI, ostali skriptni GUI brez Jave. Ne-Java pot v
-`DataScript` zavrže staro Java generacijo. Controller **PASS na `48c60f8e…`**: unit/build/package,
-m612-gui-v1 101 trditev (JS→Java napaka→Java+vključitev→JS→brez compilerja→Java, clone, JVM
-restart, 8 pregledanih PNG) in m62-packaged-v3 16/16. Samodejni modpack classpath v2 (Q184).
-[Dokazi/omejitve](meritve/2026-10-29-M6.12-izbira-jezika.md). Q92 usklajen; naslednji M6.11.
-
-### 2026-10-29 (179) — M6.10: Java 8 IDE predloga
-
-**Paket:** M6.10 (Q181–Q183) · **Stanje:** zaključen, poskus 1.
-`scripts/java/template/`: Gradle Java/IDEA/Eclipse, dejanski API classpath, isti compile-only
-CLI in typed StarterNpc z vključitvijo. Controller **m610-template-v1 PASS na `53ca9c0d…`**:
-53 preverjanj, IDE/CLI exit 0, negativni CLI exit 1 z `WrongHook/WrongType/BrokenCounterText.java:5`
-in compiler kodami; razredi brez inicializacije, isti binder. Ukaz 14.470 ms kot podatek.
-Produkcija/JS/Java runtime isti; brez ponavljanja M6 serij (Q90).
-[Dokazi/omejitve](meritve/2026-10-29-M6.10-predloga.md). IDE uporabniška seja/Forge izvajanje
-ni nov dokaz. Q92 usklajen; naslednji M6.12.

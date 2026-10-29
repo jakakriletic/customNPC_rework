@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 179 → 1)
+# Arhiv: dnevnik sej (vnosi 180 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,16 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (180) — M6.12: Java v obstoječi izbiri jezika
+
+**Paket:** M6.12 (Q184–Q187) · **Stanje:** zaključen, poskus 1.
+`JavaLanguage` doda `Java` v obstoječi seznam jezikov samo pri nepraznem `RwJavaClasspath`
+(privzeto originalni seznam); samo NPC GUI, ostali skriptni GUI brez Jave. Ne-Java pot v
+`DataScript` zavrže staro Java generacijo. Controller **PASS na `48c60f8e…`**: unit/build/package,
+m612-gui-v1 101 trditev (JS→Java napaka→Java+vključitev→JS→brez compilerja→Java, clone, JVM
+restart, 8 pregledanih PNG) in m62-packaged-v3 16/16. Samodejni modpack classpath v2 (Q184).
+[Dokazi/omejitve](../meritve/2026-10-29-M6.12-izbira-jezika.md). Q92 usklajen; naslednji M6.11.
 
 ### 2026-10-29 (179) — M6.10: Java 8 IDE predloga
 
