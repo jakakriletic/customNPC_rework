@@ -15,7 +15,7 @@ brišemo jih, ostanejo v `03-FAZE.md` kot plan za v2.
 | 2 | ~~M4.3~~ | `HoverMoveHelper` zaključen 29. 10. (D-087); privzeto 180/180 = original, H0–H4 z restartom zeleni, cena enkrat kot podatek |
 | 3 | M4.15a (obravnavan z omejitvami) → ~~M4.15b~~ → ~~M4.15c~~ | GUI/pogodba in klient/restart zaključeni (D-089, Q122); 70/70 ×2 + 68/68, 30 PNG pregledanih |
 | 4 | ~~M3.8b~~ | GUI za `RwHitboxMode` zaključen 29. 10. (Q126), 216/216, clone/restart in 18 PNG potrjeni; naslednji M6, najprej raziskava M6.0 (D-029) |
-| 5 | ~~M6.1~~, ~~M6.2~~, ~~M6.3~~, ~~M6.4~~, ~~M6.5~~ → M6.10, M6.12 | Java scripting; [M6.0 raziskava](raziskave/M6.0-java-scripting.md) (D-090) in [M6.1 prevajalnik](meritve/2026-10-29-M6.1-prevajalnik.md) (Q141) in [M6.2 hooki](meritve/2026-10-29-M6.2-hooki.md) (Q147) in [M6.3 pogodba](meritve/2026-10-29-M6.3-pogodba.md) (Q150) in [M6.4 reload](meritve/2026-10-29-M6.4-reload.md) (Q156) ter [M6.5 napake/B5](meritve/2026-10-29-M6.5-napake.md) (Q163) zaključeni; naslednji M6.6 samo po reprodukciji pravilnosti, nato M6.7 |
+| 5 | ~~M6.1~~, ~~M6.2~~, ~~M6.3~~, ~~M6.4~~, ~~M6.5~~, ~~M6.6~~ → M6.7–10, M6.12 | Java scripting; M6.0 raziskava (D-090) in M6.1–M6.5 zaključeni; [M6.6 lastništvo](meritve/2026-10-29-M6.6-context.md) (D-092, Q168) zaključeno po reprodukciji, pet testov PASS na `af46a352…`, 88/88 in regresija 16/16; naslednji M6.7 |
 | 6 | M6.11 | samo najmanjši nabor (player, world); ostalo v v2 |
 | 7 | ostanek M7 | M7.5 hooki, M7.8 reload, M7.9 script API, uskladitev verzije CNPC (D-024) |
 | 8 | M10.1, M10.2, M10.4–M10.7 | soak M10.4 skrajšan na 4 h; M10.3 ostane blokiran (Q1) |

@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0–M6.5 zaključeni (D-090/D-091, Q163); naslednji pogojni M6.6, nato M6.7 → M6 v1.0 → ostanek M7 → M10. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
+**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0–M6.6 zaključeni (D-090–D-092, Q168); naslednji M6.7 → M6 v1.0 → ostanek M7 → M10. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -422,7 +422,7 @@ dokazi so v raziskavi; pri prvem prenosu originalnega razreda velja ločen basel
 | ~~M6.3~~ | **Zaključeno 29. 10. (Q148–Q150), poskus 1:** izbiren osnovni razred `NpcScript` (16 tipiziranih no-op hookov + `log`) na obstoječih `noppes.npcs.api` vmesnikih; tipizirana sled = JS zlati niz, `@Override` napaka z vrstico, 14/14 v zapakiranem Forge. [Dokazila](meritve/2026-10-29-M6.3-pogodba.md) | M |
 | ~~M6.4~~ | ~~Loader/instanca na NPC/tab/generacijo, omejen cache bytecode; atomski reload in invalidacija vključitev/API, brez deljenja static stanja~~ — zaključen 29. 10. ([zapis](meritve/2026-10-29-M6.4-reload.md), Q151–Q156) | M |
 | ~~M6.5~~ | **Zaključeno 29. 10. (Q157–Q163), poskus 2 (harness):** source map JS/Java, runtime stack z izvorom, B5 reprodukcija na originalnih bajtih in obnova po reloadu tudi prej manjkajočega hooka. Šest controller testov PASS na `7ec18d6e…`, m65 15/15, m62 14/14, m64 15/15. [Dokazila](meritve/2026-10-29-M6.5-napake.md) | M |
-| M6.6 | **Samo po reprodukciji pravilnosti:** gnezden context shrani/obnovi lastnika v finally; ohrani binarni `Current`; odstranitev locka ni optimizacijski cilj | — |
+| ~~M6.6~~ | **Zaključeno 29. 10. (D-092, Q164–Q168), poskus 2 (harness):** reprodukcija 48/48; obnova gnezdenega Current v finally, JS tudi CurrentType, binarno polje in lock ostaneta. Pet controller testov PASS na `af46a352…`, 88/88 in JS/Java regresija 16/16. [Dokazila](meritve/2026-10-29-M6.6-context.md) | — |
 | M6.7 | `.\dev.ps1 compileScripts` brez Minecrafta, isti compiler/API/source map, strukturirani izidi; brez izvajanja razredov in annotation procesorjev | S |
 | M6.8 | Trusted-only pravice in preverjena politika omejitev; whitelist/bytecode pregled nista sandbox, brez prisilnega Thread.stop ali globalnega SecurityManagerja | M |
 | M6.9 | Deterministični generator `docs/api/API.json`, `API.md`, `HOOKS.md` iz istega API/registry vira; izrecen v1 nabor in izključitve | M |

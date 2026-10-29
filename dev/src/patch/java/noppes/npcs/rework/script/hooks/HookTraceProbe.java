@@ -89,6 +89,7 @@ public final class HookTraceProbe {
         proof.put("mode", mode); proof.put("checks", checks); proof.put("traces", traces); proof.put("success", false);
         Bus bus = new Bus();
         boolean busRegistered = false;
+        ScriptContainer caller = ScriptContainer.Current;
         try {
             WorldServer world = control.getWorld().getMCWorld();
             FakePlayer player = FakePlayerFactory.getMinecraft(world);
@@ -121,7 +122,14 @@ public final class HookTraceProbe {
             traces.put("throw", trace(thrower)); traces.put("throwConsole", console(thrower));
             check(checks, "runtime-file-line", thrower.script.getScripts().get(0).errored && console(thrower).contains("Throw.java:5"));
             check(checks, "errored-tab-stops", ("1:init:1;" + BUS_ONLY).equals(trace(thrower)));
-            check(checks, "current-cleared", ScriptContainer.Current == null);
+            // This fixture is invoked by a live controller tab. Nested events must return
+            // that exact owner; only a top-level event should return to null (M6.6).
+            check(checks, "current-caller-restored", caller != null
+                    && ((EntityNPCInterface) control.getMCEntity()).script.getScripts().contains(caller)
+                    && ScriptContainer.Current == caller);
+            check(checks, "current-top-level-js-cleared", topLevelCleared(world, "ECMAScript", JS_ONE,
+                    JS_ONE.replace("t(e,'1:tick');", "throw new Error('m62 fixture');")));
+            check(checks, "current-top-level-java-cleared", topLevelCleared(world, ScriptHooks.JAVA, JAVA_ONE, JAVA_THROW));
 
             // A script reload: both languages re-init once before the next event with fresh script state.
             for (EntityNPCInterface npc : new EntityNPCInterface[] { js, java }) { npc.wrappedNPC.getTempdata().remove("t"); }
@@ -142,6 +150,29 @@ public final class HookTraceProbe {
         } finally {
             if (busRegistered) { NpcAPI.Instance().events().unregister(bus); }
             Files.write(Paths.get(output), new GsonBuilder().setPrettyPrinting().create().toJson(proof).getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
+    /** Suspend the fixture's caller to supply the real null entry condition for top-level
+     * dispatch. No production code is bypassed; both normal and throwing tabs run through
+     * EventHooks, and the fixture restores its own caller even if an assertion setup fails.
+     */
+    private static boolean topLevelCleared(WorldServer world, String language, String normal, String throwing) {
+        synchronized ("lock") {
+            ScriptContainer caller = ScriptContainer.Current;
+            try {
+                ScriptContainer.Current = null;
+                EntityNPCInterface npc = npc(world, language, normal);
+                EventHooks.onNPCTick(npc);
+                boolean ok = ScriptContainer.Current == null && !npc.script.getScripts().get(0).errored
+                        && "1:init:1;1:tick;".equals(trace(npc));
+                npc = npc(world, language, throwing);
+                EventHooks.onNPCTick(npc);
+                return ok && ScriptContainer.Current == null && npc.script.getScripts().get(0).errored
+                        && "1:init:1;".equals(trace(npc)) && console(npc).contains("m62 fixture");
+            } finally {
+                ScriptContainer.Current = caller;
+            }
         }
     }
 

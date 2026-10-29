@@ -2,9 +2,11 @@
 # -Package m63: same server, typed NpcScript probe (M6.3); m62 behaviour is unchanged by default.
 # -Package m64: same server, per NPC/tab/generation loader, bytecode cache and atomic reload probe (M6.4).
 # -Package m65: same server, error origins and B5 recovery; JS B5 against the original jar bytes (M6.5).
+# -Package m66 [-ContextFixed]: nested ownership reproduction / fixed context acceptance (M6.6).
 # Same server setup as java-runtime-run.ps1 (M6.1, Q137-Q140); only the fixture and assertions differ.
 param([ValidateSet('dev','packaged')][string]$Mode = 'dev',
-      [ValidateSet('m62','m63','m64','m65')][string]$Package = 'm62')
+      [ValidateSet('m62','m63','m64','m65','m66')][string]$Package = 'm62',
+      [switch]$ContextFixed)
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 . (Join-Path $root 'meritve-lib.ps1')
@@ -144,7 +146,7 @@ try {
         $working=$work
     } else {
         # The dev compile classpath has no patch classes; M6.3 tabs extend NpcScript from runServer's output.
-        $devCp=$cp; if ($Package -in @('m63','m64','m65')) { $devCp=$cp+';'+(Join-Path $root 'dev/build/classes/java/main') }
+        $devCp=$cp; if ($Package -in @('m63','m64','m65','m66')) { $devCp=$cp+';'+(Join-Path $root 'dev/build/classes/java/main') }
         [IO.File]::WriteAllText($classpathFile,$devCp,(New-Object Text.UTF8Encoding $false))
         $exe=Join-Path $root 'dev/gradlew.bat'
         # gradlew.bat requires cmd; Start-JavaPrototypeProcess already provides it.
@@ -156,8 +158,9 @@ try {
     $cfg=Join-Path $work 'config/CustomNpcs.cfg'
     Assert-JavaPrototype (-not ([IO.File]::ReadAllText($cfg) -match '(?m)^RwJavaClasspath=')) 'config copy has no RwJavaClasspath yet'
     [IO.File]::AppendAllText($cfg,("`nRwJavaClasspath="+$classpathFile.Replace('\','/')+"`n"),(New-Object Text.UTF8Encoding $false))
-    $code=[IO.File]::ReadAllText((Join-Path $root $(switch ($Package) { 'm63' { 'dev/testworld/java-typed-control.js' } 'm64' { 'dev/testworld/java-reload-control.js' } 'm65' { 'dev/testworld/java-recovery-control.js' } default { 'dev/testworld/java-hooks-control.js' } })))
+    $code=[IO.File]::ReadAllText((Join-Path $root $(switch ($Package) { 'm63' { 'dev/testworld/java-typed-control.js' } 'm64' { 'dev/testworld/java-reload-control.js' } 'm65' { 'dev/testworld/java-recovery-control.js' } 'm66' { 'dev/testworld/java-context-control.js' } default { 'dev/testworld/java-hooks-control.js' } })))
     $code=$code.Replace('@@OUTPUT@@',($out.Replace('\','/') | ConvertTo-Json -Compress)).Replace('@@MODE@@',($Mode | ConvertTo-Json -Compress)).Replace('@@ORIGINAL@@',($originalJar.Replace('\','/') | ConvertTo-Json -Compress))
+    $code=$code.Replace('@@CONTEXT_FIXED@@',([bool]$ContextFixed).ToString().ToLowerInvariant())
     $codePath=Join-Path $work 'hooks-control.js'; [IO.File]::WriteAllText($codePath,$code,(New-Object Text.UTF8Encoding $false))
     $clone=Join-Path $clones "${tag}_Control.json"
     Install-NavController (Join-Path $root 'dev/testworld/customnpcs/clones/1/PERF_Kontrola.json') $codePath $clone
@@ -182,7 +185,7 @@ try {
     Wait-M61 'Done (' 1000
     Send-M61 'list'
     Wait-M61 'players online' 30
-    if ($Package -in @('m63','m64','m65')) {
+    if ($Package -in @('m63','m64','m65','m66')) {
         $typedBase=if ($Mode -eq 'packaged') { $workspace } else { Join-Path $root 'dev/build/classes/java/main' }
         Assert-JavaPrototype ($(if ($Mode -eq 'packaged') { Test-JavaPrototypeJar $typedBase 'noppes/npcs/rework/script/NpcScript.class' } else { Test-Path -LiteralPath (Join-Path $typedBase 'noppes/npcs/rework/script/NpcScript.class') })) 'NpcScript on the compiler classpath'
     }
@@ -193,7 +196,34 @@ try {
     Assert-JavaPrototype ($text.Contains(('RWCORE coremod nalozen, runtimeDeobf=' + $(if($Mode -eq 'packaged') {'1'} else {'0'})))) 'expected coremod production/development mode'
     $proof=[IO.File]::ReadAllText($out) | ConvertFrom-Json
     Assert-JavaPrototype ($proof.success -eq $true -and $proof.mode -ceq $Mode) 'hook trace proof success'
-    if ($Package -eq 'm65') {
+    if ($Package -eq 'm66') {
+        $expectedChecks=if ($ContextFixed) { 88 } else { 48 }
+        Assert-JavaPrototype (@($proof.checks).Count -eq $expectedChecks -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) "$expectedChecks nested ownership assertions"
+        Assert-JavaPrototype ($proof.expectedFixed -eq [bool]$ContextFixed -and @($proof.cases).Count -eq 8) 'all language pairs with return and throw'
+        foreach ($case in $proof.cases) {
+            Assert-JavaPrototype (@($case.observations).Count -eq 3) 'before, inner, after observations'
+            foreach ($row in @($case.observations | Select-Object -First 2)) {
+                Assert-JavaPrototype ($row.owner -ceq 'expected' -and $row.chest -ceq 'expected' -and $row.projectile -ceq 'expected' -and $row.projectileError -ceq '') 'binary consumers capture the executing owner'
+            }
+            $after=$case.observations[2]
+            if ($ContextFixed) {
+                Assert-JavaPrototype ($after.owner -ceq 'expected' -and $after.chest -ceq 'expected' -and $after.projectile -ceq 'expected' -and $after.projectileError -ceq '') 'previous owner restored after nested call'
+            } else {
+                Assert-JavaPrototype ($after.owner -ceq 'null' -and $after.chest -ceq 'null' -and $after.projectile -ceq 'empty' -and $after.projectileError.Contains('Can only be called during scripts')) 'baseline loss of chest/projectile ownership reproduced'
+            }
+        }
+        if ($ContextFixed) {
+            Assert-JavaPrototype (@($proof.extraCases).Count -eq 8) 'eight repeated/stopped nested calls with outer exception'
+            foreach ($case in $proof.extraCases) {
+                $expectedPhases=if ($case.id.Contains(':stopped-inner:')) { 'before,inner,after,after-second' } else { 'before,inner,after,inner,after-second' }
+                Assert-JavaPrototype (($case.observations.phase -join ',') -ceq $expectedPhases) 'second nested call executes or returns from stopped-tab guard'
+                foreach ($row in $case.observations) {
+                    Assert-JavaPrototype ($row.owner -ceq 'expected' -and $row.chest -ceq 'expected' -and $row.projectile -ceq 'expected' -and $row.projectileError -ceq '') 'all repeated-call consumers retain their expected owner'
+                }
+                Assert-JavaPrototype ($case.outerConsole.Contains('m66 outer fixture')) 'outer exception reported'
+            }
+        }
+    } elseif ($Package -eq 'm65') {
         Assert-JavaPrototype (@($proof.checks).Count -eq 15 -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) '15 recovery/source map assertions'
         # Pinned here too, so a probe edit cannot silently weaken the expectation.
         $pinned=[ordered]@{ javaRuntime=''; javaRecovered='ok;'; javaMissing='tick;timer7;'; javaCompileFixed='p1;'
@@ -207,7 +237,13 @@ try {
             cBroken='c2/2;v2;'; cBrokenAgain='c3/3;v2;'; cFixed='c1/1;v3;'; d=''; aRestored='c1/1;c1/1;' }
         foreach($key in $pinned.Keys) { Assert-JavaPrototype ($proof.traces.$key -ceq $pinned[$key]) "pinned M6.4 trace $key" }
     } else {
-    Assert-JavaPrototype (@($proof.checks).Count -eq 14 -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) '14 hook trace assertions'
+    $hookChecks=if ($Package -eq 'm62') { 16 } else { 14 }
+    Assert-JavaPrototype (@($proof.checks).Count -eq $hookChecks -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) "$hookChecks hook trace assertions"
+    if ($Package -eq 'm62') {
+        foreach ($key in @('current-caller-restored','current-top-level-js-cleared','current-top-level-java-cleared')) {
+            Assert-JavaPrototype (@($proof.checks | Where-Object { $_.key -ceq $key -and $_.ok -eq $true }).Count -eq 1) "pinned M6.6 context contract: $key"
+        }
+    }
     # Golden strings are pinned here too, so a probe edit cannot silently weaken the expectation.
     $golden='1:init:1;2:init;bus:init;1:tick;2:tick;bus:tick;1:tick;2:tick;bus:tick;1:interact:false;2:interact:true;bus:interact:true;ret:true;1:timer:7;2:timer:7;bus:timer;'
     $javaTrace=if ($Package -eq 'm63') { $proof.traces.typed } else { $proof.traces.java }
@@ -224,7 +260,8 @@ try {
     Wait-M61Exit 180
     $proc=$null
     foreach($path in $hashes.Keys) { Assert-JavaPrototype ((Get-M61InputHash $path) -ceq $hashes[$path]) "unchanged protected input $path" }
-    @{ success=$true; package=$Package; mode=$Mode; proof=$out; inputs=$hashes; compilerClasspath=[IO.File]::ReadAllText($classpathFile); fixtureHash=(Get-JavaPrototypeHash $codePath); condition='one functional server; real EventHooks with unspawned NPCs; JS and Java two-tab trace incl. bus order, cancel, timer, reload; Java error cases; no cost gate' } |
+    $condition=if ($Package -eq 'm66') { "one packaged/dev Forge server; real EventHooks with unspawned NPCs; binary chest/projectile ownership; ContextFixed=$([bool]$ContextFixed); no rendered GUI, impact events or async claim" } else { 'one functional server; real EventHooks with unspawned NPCs; JS and Java two-tab trace incl. bus order, cancel, timer, reload; Java error cases; no cost gate' }
+    @{ success=$true; package=$Package; mode=$Mode; proof=$out; inputs=$hashes; compilerClasspath=[IO.File]::ReadAllText($classpathFile); fixtureHash=(Get-JavaPrototypeHash $codePath); condition=$condition } |
         ConvertTo-Json -Depth 8 | Set-Content -LiteralPath "$prefix.json" -Encoding UTF8
     Write-Host "$tag $Mode evidence: $prefix.json"
     $exitCode=0

@@ -24,6 +24,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
+| 2026-10-29 | JS/Java gnezden dogodek v finally obnovi prejšnji Current; JS tudi CurrentType; binarni chest/projectile porabniki in globalni lock ostanejo | M6.6, D-092, Q168 | brez (popravek namena lastništva) | vedno; Java ostane opt-in |
 | 2026-10-29 | Reload obnovi JS tab po napaki in prej manjkajoč hook; Java nova generacija počisti napake, source map poimenuje izvor | M6.5, B5, D-091 | brez (popravek namena reloada) | vedno; Java ostane opt-in |
 | 2026-10-29 | AI → Movement → Backend izbira vanilla/Baritone 0/1 in strežniški posnetek dejanskega navigatorja/razloga; legacy save ohrani izbiro, status samo v odgovoru. Klient/save/restart potrjen v M4.15c (Q122) | M4.15b/c, D-089 | per-NPC `RwNavBackend`, globalni config dovoljenje | **0** (vanilla) |
 | 2026-10-29 | Leteči NPC z izbiro Hover uporablja neposredno 3D hitrost navigatorja × MOVEMENT_SPEED, približevanje, yaw ≤20° in stop brez novega ukaza; zavira tudi zunanje sunke. Hoja/plavanje in original ostanejo isti. H0–H4 z restartom potrjeni, omejitve poti ostanejo | M4.3, D-087, Q93–Q97 | per-NPC `RwFlightMode` | **0** (original); Hover **1**, rezervirani Momentum **2** uporablja original |
@@ -80,6 +81,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-10-29 | M6.6: pet controller testov PASS na `af46a352…`, poskus 2 (harness) | unit/build/package, gnezdeno lastništvo 88/88, JS/Java zlata regresija 16/16; 78 pričakovanih razlik. Brez časovne meritve | [zapis](meritve/2026-10-29-M6.6-context.md) |
 | 2026-10-29 | M6.5: šest controller testov PASS na `7ec18d6e…`, poskus 2 (harness) | unit/build/package, m65 15/15 (originalni B5 proti popravku, JS/Java lokacije/obnova), m62 14/14 in m64 15/15; 78 pričakovanih razlik. Brez časovne meritve ali GUI pregleda | [zapis](meritve/2026-10-29-M6.5-napake.md) |
 | 2026-10-29 | M3.8b: štirje controller testi zeleni na `b2719356…` | unit/build/package, GUI 147/147 + restart 69/69, šest istih UUID, clone vseh načinov, globalno 0/1 in HasHitbox; 18 PNG vizualno pregledanih. Poskus 2 razmik 21 px odpravi odrezano vrstico na istem zaslonu; fizika ista, pogoji isti (Q123–Q126) | [zapis](meritve/2026-10-29-M3.8b-gui.md) |
 | 2026-10-29 | M4.15c: šest controller testov zelenih na `c91ad234…` | unit/build/package, integrirano 70/70 ×2, dedicated 68/68; isti UUID po restartu vseh treh svetov, 30 PNG vizualno pregledanih, config/runtime/options isti, properties/ops obnovljeni. Brez časovne meritve ali spremembe produkcije M4.15b (Q122) | [zapis](meritve/2026-10-29-M4.15c-klient.md) |

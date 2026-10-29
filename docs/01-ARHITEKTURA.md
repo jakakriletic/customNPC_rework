@@ -954,3 +954,14 @@ Diagnostika ohrani obstoječi izpis in doda izvor taba/vključitve ter lokacijo,
 Originalni bajti reproducirajo B5 v istem Forge strežniku; šest sprejemnih testov PASS,
 JS/Java zlata sled in cache/reload regresiji zeleni. Omejitvi ure v ms in JS konzole ostaneta.
 [Merila, rezultati in odločitve](meritve/2026-10-29-M6.5-napake.md).
+
+### D-092 — M6.6: obnova gnezdenega lastnika (2026-10-29, Q166–Q167)
+
+Controller je na `01f08637…` potrdil izgubo Current/chest/projectile lastništva v vseh
+osmih JS/Java kombinacijah z return/throw (48/48 reprodukcijskih trditev).
+Izbran popravek: shrani/obnovi prejšnji Current v finally pod istim globalnim monitorjem;
+JS obnovi tudi zasebni CurrentType. Binarno polje ostane. Analogno D-091 popravek namena
+lastništva nima stikala (izjema D-007); ni nov način izvajanja ali optimizacija.
+Sprejeto v poskusu 2 (harness): vseh pet controller testov PASS na `af46a352…`,
+M6.6 88/88 in M6.2 16/16; brez trditve o hitrosti ali podpori async skript.
+[Merila in rezultati](meritve/2026-10-29-M6.6-context.md).

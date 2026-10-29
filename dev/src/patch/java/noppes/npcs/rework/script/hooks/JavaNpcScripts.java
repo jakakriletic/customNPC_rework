@@ -101,6 +101,7 @@ public final class JavaNpcScripts {
             Method hook = tab.hooks.get(type.function);
             if (hook == null) { continue; }
             synchronized (LOCK) {
+                ScriptContainer previous = ScriptContainer.Current;
                 ScriptContainer.Current = container;
                 try {
                     hook.invoke(tab.instance, event);
@@ -109,7 +110,8 @@ public final class JavaNpcScripts {
                 } catch (Throwable e) {
                     fail(container, handler, SourceMap.runtime(type.function, e, tab.origins), true);
                 } finally {
-                    ScriptContainer.Current = null;
+                    // Same reentrant ownership contract as the JSR-223 container.
+                    ScriptContainer.Current = previous;
                 }
             }
         }

@@ -8,6 +8,14 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 ---
 
 
+### 2026-10-29 (173) — M6.4: loader na NPC/tab/generacijo, bytecode cache, atomski reload
+
+**Paket:** M6.4 (D-090, Q151–Q156) · **Stanje:** zaključen, poskus 1.
+`BytecodeCache` (LRU 64/16 MiB samo bajtov), generacija na handler z lastnim loaderjem/instanco na tab;
+pokvarjen reload pusti zadnjo veljavno generacijo. [Zapis](../meritve/2026-10-29-M6.4-reload.md).
+Na 9490206d… unit (5 `BytecodeCacheTest`), build, package, m64-packaged-v1 15/15, m62-packaged-v2 in
+m63-packaged-v1 14/14 PASS. Izključitev testa iz `testOriginal` je harness (Q156). Naslednji M6.5.
+
 ### 2026-10-29 (172) — M6.3: tipizirana script pogodba `NpcScript`
 
 **Paket:** M6.3 (D-090, Q148–Q150) · **Stanje:** zaključen, poskus 1.

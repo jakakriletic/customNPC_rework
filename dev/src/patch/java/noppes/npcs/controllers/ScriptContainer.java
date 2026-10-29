@@ -152,48 +152,56 @@ public class ScriptContainer {
         }
         String string = lock;
         synchronized (lock) {
+            // M6.6: the monitor is reentrant. A nested script must return ownership to
+            // its caller, including when setup, invocation or console cleanup throws.
+            ScriptContainer previous = Current;
+            String previousType = CurrentType;
             Current = this;
             CurrentType = type;
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            this.engine.getContext().setWriter(pw);
-            this.engine.getContext().setErrorWriter(pw);
             try {
-                if (!this.init) {
-                    this.engine.eval(this.getFullCode());
-                    this.init = true;
-                }
-                if (this.engine.getFactory().getLanguageName().equals("lua")) {
-                    Object ob = this.engine.get(type);
-                    if (ob != null) {
-                        if (luaCoerce == null) {
-                            luaCoerce = Class.forName("org.luaj.vm2.lib.jse.CoerceJavaToLua").getMethod("coerce", Object.class);
-                            luaCall = ob.getClass().getMethod("call", Class.forName("org.luaj.vm2.LuaValue"));
-                        }
-                        luaCall.invoke(ob, luaCoerce.invoke(null, event));
-                    } else {
-                        this.unknownFunctions.add(type);
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                this.engine.getContext().setWriter(pw);
+                this.engine.getContext().setErrorWriter(pw);
+                try {
+                    if (!this.init) {
+                        this.engine.eval(this.getFullCode());
+                        this.init = true;
                     }
-                } else {
-                    ((Invocable)((Object)this.engine)).invokeFunction(type, event);
+                    if (this.engine.getFactory().getLanguageName().equals("lua")) {
+                        Object ob = this.engine.get(type);
+                        if (ob != null) {
+                            if (luaCoerce == null) {
+                                luaCoerce = Class.forName("org.luaj.vm2.lib.jse.CoerceJavaToLua").getMethod("coerce", Object.class);
+                                luaCall = ob.getClass().getMethod("call", Class.forName("org.luaj.vm2.LuaValue"));
+                            }
+                            luaCall.invoke(ob, luaCoerce.invoke(null, event));
+                        } else {
+                            this.unknownFunctions.add(type);
+                        }
+                    } else {
+                        ((Invocable)((Object)this.engine)).invokeFunction(type, event);
+                    }
                 }
-            }
-            catch (NoSuchMethodException e) {
-                this.unknownFunctions.add(type);
-            }
-            catch (Throwable e) {
-                this.errored = true;
-                e.printStackTrace(pw);
-                String source = this.sourceMap.locateScript(e);
-                if (source != null) {
-                    pw.println("Script source: " + source);
+                catch (NoSuchMethodException e) {
+                    this.unknownFunctions.add(type);
                 }
-                NoppesUtilServer.NotifyOPs(this.handler.noticeString() + " script errored", new Object[0]);
-            }
-            finally {
-                this.appandConsole(sw.getBuffer().toString().trim());
-                pw.close();
-                Current = null;
+                catch (Throwable e) {
+                    this.errored = true;
+                    e.printStackTrace(pw);
+                    String source = this.sourceMap.locateScript(e);
+                    if (source != null) {
+                        pw.println("Script source: " + source);
+                    }
+                    NoppesUtilServer.NotifyOPs(this.handler.noticeString() + " script errored", new Object[0]);
+                }
+                finally {
+                    this.appandConsole(sw.getBuffer().toString().trim());
+                    pw.close();
+                }
+            } finally {
+                Current = previous;
+                CurrentType = previousType;
             }
             // ** MonitorExit[var3_3] (shouldn't be in output)
             return;
