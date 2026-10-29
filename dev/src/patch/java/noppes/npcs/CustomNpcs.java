@@ -219,6 +219,8 @@ public class CustomNpcs {
     public static int RwHitboxShieldWeight = 200;
     @ConfigProp(info="Rework M3.8: extra shield items for smart hitbox, comma separated registry names (mod:item). Items extending ItemShield or named *shield*, *buckler*, *pavise* are detected automatically")
     public static String RwHitboxShieldItems = "";
+    @ConfigProp(info="Rework M6.2 (D-090): compiler classpath for NPC scripts with ScriptLanguage=Java (server side, trusted script authors only; needs a JDK 8 with javac). Either a file that holds the classpath or the classpath itself; it must contain the CustomNPCs API and the game classes of this exact runtime. Empty = a Java tab stops with a clear error; JS and the other languages are not affected. Default empty")
+    public static String RwJavaClasspath = "";
     public static long ticks;
     @SidedProxy(clientSide="noppes.npcs.client.ClientProxy", serverSide="noppes.npcs.CommonProxy")
     public static CommonProxy proxy;

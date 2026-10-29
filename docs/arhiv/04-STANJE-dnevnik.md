@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 168 → 1)
+# Arhiv: dnevnik sej (vnosi 169 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,17 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-29 (169) — M6.0: raziskava Java scriptinga zaključena
+
+**Paket:** M6.0 (D-090, Q127–Q131) · **Stanje:** zaključen z raziskavo po D-029.
+Preverjena originalna koda/bytecode, stari profil in primarni viri; vsak M6 paket ocenjen.
+JDK 8 JavaCompiler prvi kandidat, obstoječi typed API/handler in JS privzet; trusted-only,
+cache bajtov z ločenim stanjem, M6.6 samo zaradi pravilnosti. Plan/zahteve usklajeni s Q92.
+[En zapis dokazov, odločitev in meril](../raziskave/M6.0-java-scripting.md).
+Samo dokumentacija: koda/harnessi/configi/lock isti, testov ali Minecrafta nismo zaganjali
+in novih meritev ni. M6.1 mora šele dokazati compiler/Forge povezavo in čase; ni trditve
+o delujočem Java runtime ali prihranku. Naslednji M6.1; nepovezane datoteke ohranjene.
 
 ### 2026-10-29 (168) — M3.8b: GUI, clone in restart zaključeni
 

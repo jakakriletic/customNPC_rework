@@ -26,6 +26,8 @@ import noppes.npcs.controllers.IScriptHandler;
 import noppes.npcs.controllers.ScriptContainer;
 import noppes.npcs.controllers.ScriptController;
 import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.rework.script.hooks.JavaNpcScripts;
+import noppes.npcs.rework.script.hooks.ScriptHooks;
 
 public class DataScript
 implements IScriptHandler {
@@ -34,6 +36,8 @@ implements IScriptHandler {
     private EntityNPCInterface npc;
     private boolean enabled = false;
     public long lastInited = -1L;
+    /** M6.2: Java tabs of this handler; created on first use, unused for every other language. */
+    private JavaNpcScripts javaTabs;
 
     public DataScript(EntityNPCInterface npc) {
         this.npc = npc;
@@ -62,6 +66,16 @@ implements IScriptHandler {
             if (type != EnumScriptType.INIT) {
                 EventHooks.onNPCInit(this.npc);
             }
+        }
+        // M6.2: ScriptLanguage=Java runs the same tabs in the same order through the Java adapter.
+        if (ScriptHooks.JAVA.equals(this.scriptLanguage)) {
+            if (this.javaTabs == null) {
+                this.javaTabs = new JavaNpcScripts();
+            }
+            for (ScriptContainer script : this.scripts) {
+                this.javaTabs.run(script, this, type, event);
+            }
+            return;
         }
         for (ScriptContainer script : this.scripts) {
             script.run(type, event);

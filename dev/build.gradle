@@ -249,6 +249,8 @@ task testOriginal(type: Test) {
     exclude '**/NavGuiDataTest.class'
     // M6.1: new opt-in compiler prototype has no counterpart in the original.
     exclude '**/JdkScriptCompilerTest.class'
+    // M6.2: hook registry and Java binder are new.
+    exclude '**/ScriptHooksTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 
