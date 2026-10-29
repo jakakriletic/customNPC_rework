@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 162 → 1)
+# Arhiv: dnevnik sej (vnosi 163 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,17 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-29 (163) — M4.2: shranjeni način letenja zaključen
+
+**Paket:** M4.2 (D-086, Q6/Q31/Q91) · **Stanje:** **zaključen**.
+`FlightMode` + root int `RwFlightMode` (0/1/2, original brez ključa); helperji ostanejo isti.
+Controller `unit`, `build`, `package`, `m416-letenje-v1` zeleni na `d7a9f810…`; 71 pričakovanih
+vnosov, vseh 180 median = M4.16, razpon 0. Osem novih testov pokrije NBT/clone/setter,
+ne celotnega save/restart entitete ali fizike. [Dokazila in odločitve](../meritve/2026-10-29-M4.2-nacin-letenja.md).
+Q6: samostojni NPC-ji; Q31: samo načini brez dodatkov; Q91: root int po obstoječem vzorcu.
+Naslednji M4.3 → M4.15a/b/c po Q92; Momentum/GUI M4.2b v2. Koda po testih nespremenjena,
+uspešne serije se ne ponavljajo. Nepovezani controller, baseline, ZAZENI-BASELINE in audit ohranjeni.
 
 ### 2026-10-29 (162) — M4.17 zaključen po odločitvi lastnika
 

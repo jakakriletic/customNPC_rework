@@ -157,6 +157,11 @@
 # (preverba je tekla). Brez parametra (-1) se stikala ne dotakne in odtis ostane enak M4.16b.
 #     .\ponovitve-run.ps1 -Scenarij perf -Dodatno @('-Variants','leteci','-Counts','200','-RwVidno','1')
 #
+# M4.15a: -NavBackend 0/1 loads the same optional library on both sides and selects it
+# in disposable PERF clone copies. Reports actual attachments and library main-thread,
+# snapshot/search/queue counters, with unchanged configs/runtime SHA-256 in the record.
+#     .\nav-lestvica-run.ps1 -Backend 0   # once; then 1, data only (Q92)
+#
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
 # pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
 # (merilo P9), in ob sesutju serverja takoj konca z vzrokom iz loga.
@@ -170,7 +175,8 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [switch]$DovoliTuje, [int]$RwTarget = -1, [switch]$Jfr, [int]$RwPath = -1,
       [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15, [int]$RwCollide = -1,
       [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwPathMemo = -1, [int]$RwData = -1, [int]$RwMove = -1, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15, [int]$RwVidno = -1,
-      [ValidateSet(-1, 0, 1, 2)][int]$FlightMode = -1)
+      [ValidateSet(-1, 0, 1, 2)][int]$FlightMode = -1,
+      [ValidateSet(-1, 0, 1)][int]$NavBackend = -1, [string]$BaritoneRoot = '')
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -180,6 +186,23 @@ $seed   = Join-Path $root 'dev\testworld'
 New-Item -ItemType Directory -Force -Path $audit | Out-Null
 
 . (Join-Path $root 'meritve-lib.ps1')
+
+# M4.15a: the optional runtime is identical on both sides, only the global gate differs.
+# Per-NPC selection is installed in disposable clone copies before spawning. Legacy runs
+# without -NavBackend keep their original launch arguments, fixtures and measurement keys.
+$navExtra = ''
+if ($NavBackend -ge 0) {
+    if ($FlightMode -ge 0) { throw 'NavBackend and FlightMode fixture overrides are separate experiments.' }
+    . (Join-Path $root 'nav-meritve-lib.ps1')
+    $navMod = Get-NavModPath $root $BaritoneRoot
+    $env:NPCB_MOD_DIR = $navMod
+    $navRuntimeHash = Get-NavRuntimeHash $navMod
+    $navConfig = Join-Path $run 'config\npcbaritone.cfg'
+    $navCnpcConfig = Join-Path $run 'config\CustomNpcs.cfg'
+    $navConfigHash = (Get-FileHash -LiteralPath $navConfig -Algorithm SHA256).Hash
+    $navCnpcHash = (Get-FileHash -LiteralPath $navCnpcConfig -Algorithm SHA256).Hash
+    $navExtra = " -PnpcBaritoneDev -PrwNavBackend=$NavBackend"
+}
 
 # Prizorisce; iste stevilke so opisane v perf-setup-commands.txt in v scenariju.
 $gridX     = 48      # zahodni rob mreze
@@ -219,6 +242,22 @@ function Get-LogText([string]$LogPath) {
     $c = Get-Content $LogPath -Raw -ErrorAction SilentlyContinue
     if ($null -eq $c) { return '' }
     return $c
+}
+
+function Send-NavStatus($Server) {
+    $before = [regex]::Matches((Get-MarkerText $Server.Log), 'RWNAV global=').Count
+    Send-Command $Server 'rwnav status PERF_'
+    if (-not (Wait-ForCount $Server 'RWNAV global=' ($before + 1) 60)) { throw 'Missing fresh RWNAV status.' }
+    return Read-NavStatus (Get-MarkerText $Server.Log)
+}
+
+function Send-NavPerf($Server, [string]$Command) {
+    $before = [regex]::Matches((Get-MarkerText $Server.Log), 'NPCB-PERF ').Count
+    Send-Command $Server $Command
+    if (-not (Wait-ForCount $Server 'NPCB-PERF ' ($before + 1) 60)) { throw 'Missing fresh NPCB-PERF response.' }
+    $result = Read-NavPerf (Get-MarkerText $Server.Log)
+    if ($null -eq $result) { throw 'Unrecognised NPCB-PERF response.' }
+    return $result
 }
 
 # Odgovor /rwdiag je v logu dvakrat (konzola in [FINE/CustomNPCs]); stejemo samo konzolo.
@@ -426,7 +465,7 @@ function Start-DevServer([string]$Tag = '') {
     if (Test-Path $outLog) { Remove-Item $outLog -Force }
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName         = $env:ComSpec
-    $psi.Arguments        = "/c gradlew.bat runServer --offline --no-daemon --console=plain > `"$outLog`" 2>&1"
+    $psi.Arguments        = "/c gradlew.bat runServer --offline --no-daemon --console=plain$navExtra > `"$outLog`" 2>&1"
     $psi.WorkingDirectory = Join-Path $root 'dev'
     $psi.UseShellExecute  = $false
     $psi.RedirectStandardInput = $true
@@ -764,6 +803,11 @@ try {
         Copy-Item $f.FullName -Destination $dstClones -Force
         $copied++
     }
+    if ($NavBackend -ge 0) {
+        foreach ($f in @(Get-ChildItem -Path $srcClones -Filter 'PERF_*.json' | Where-Object { $_.Name -ne 'PERF_Kontrola.json' })) {
+            Write-NavFixture $f.FullName (Join-Path $dstClones $f.Name)
+        }
+    }
     # M4.16b: +3 letece fixture (PERF_Leteci, PERF_LetA, PERF_LetB).
     if ($FlightMode -ge 0) {
         . (Join-Path $root 'hover-lib.ps1')
@@ -978,6 +1022,13 @@ try {
         # Krmilnik se odstrani sam; pocakamo, da ga ni vec, preden se zacne ogrevanje.
         Start-Sleep -Seconds 2
 
+        if ($NavBackend -ge 0) {
+            $navBefore = Send-NavStatus $srv
+            $navExpected = if ($NavBackend -eq 1 -and $v -notin @('leteci', 'leteci-boj')) { $N } else { 0 }
+            Check 'NB1: actual backend before warmup (all selected, expected attachments)' (Test-NavStatus $navBefore $NavBackend $N $navExpected)
+            if ($failures.Count -gt $cellFailStart) { throw 'Backend/scene proof failed before measurement.' }
+        }
+
         if ($WarmupSeconds -gt 0) {
             Write-Host ("  ogrevanje {0} s" -f $WarmupSeconds)
             Wait-SPreverbo $WarmupSeconds
@@ -993,6 +1044,9 @@ try {
         # M5.13: A/B v istem zagonu zacne vsako celico v prvem nacinu.
         if ($RwBlinkAB.Count -gt 0) { $null = Send-RwBlink $srv ("rwblink {0}" -f $RwBlinkAB[0]) }
         if ($RwBlink -ge 0) { $null = Send-RwBlink $srv 'rwblink reset' }
+        if ($NavBackend -ge 0) {
+            $null = Send-NavPerf $srv 'npcb perf reset'
+        }
         Send-Command $srv 'rwdiag on'
         $nOn++
         Check 'merjenje vklopljeno' (Wait-ForCount $srv 'RWDIAG vklopljen' $nOn 60)
@@ -1165,12 +1219,22 @@ try {
         Send-Command $srv 'rwdiag off'
         $nOff++
         Check 'merjenje izklopljeno' (Wait-ForCount $srv 'RWDIAG izklopljen' $nOff 60)
+        $navPerf = $null
+        if ($NavBackend -ge 0) { $navPerf = Send-NavPerf $srv 'npcb perf' }
 
         Send-Command $srv ('noppes clone spawn PERF_Kontrola 1 {0}' -f $kontrolaAt)
         $nKontrola++
         $okK = Wait-ForCount $srv 'PERF-KONTROLA idle=' $nKontrola 120
         Check 'PERF_Kontrola se je oglasil (konec)' $okK
         $k1 = if ($okK) { Read-Kontrola $srv.Log } else { $null }
+
+        if ($NavBackend -ge 0) {
+            # Controller despawns itself on its tick; do not count it as a measured NPC.
+            Start-Sleep -Seconds 2
+            $navAfter = Send-NavStatus $srv
+            Check 'NB2: actual backend after measurement' (Test-NavStatus $navAfter $NavBackend $N $navExpected)
+            Check 'NB3: library performance counters have measured ticks' ($null -ne $navPerf -and $navPerf['ticks'] -gt 0)
+        }
 
         # --- posnetek ---
         $dumpPath = Read-DumpJsonPath $srv.Log
@@ -1318,6 +1382,19 @@ try {
         $odtis = @{ razprseno = $(if ($Razprseno) { 1 } else { 0 }); varianta = $v; npc = $N; sekund = $Seconds; ogrevanje = $WarmupSeconds; obroc = $ChunkRadius
                     celica = $idx; celic = $cells.Count; mrezaX = $gridX; mrezaZ = $gridZ; mrezaSirina = $gridW }
         if ($FlightMode -ge 0) { $odtis['flightMode'] = $FlightMode }
+        if ($NavBackend -ge 0) {
+            $odtis['navBackend'] = $NavBackend
+            $odtis['npcbRuntime'] = $navRuntimeHash
+            $odtis['npcbConfig'] = $navConfigHash
+            $odtis['cnpcConfig'] = $navCnpcHash
+            $odtis['navFixture'] = 'per-npc-1-v1'
+            if ($null -ne $navAfter) { $vel['nav.attached'] = $navAfter.Attached; $vel['nav.selected'] = $navAfter.Selected }
+            if ($null -ne $navPerf) { foreach ($key in $navPerf.Keys) { $vel['npcb.' + $key] = $navPerf[$key] } }
+            Check 'NB4: library runtime and both configs unchanged' `
+                ((Get-NavRuntimeHash $navMod) -eq $navRuntimeHash -and
+                 (Get-FileHash -LiteralPath $navConfig -Algorithm SHA256).Hash -eq $navConfigHash -and
+                 (Get-FileHash -LiteralPath $navCnpcConfig -Algorithm SHA256).Hash -eq $navCnpcHash)
+        }
         if ($RwTarget -ge 0) {
             $odtis['rwtarget'] = $RwTarget
             $vel['rwtarget.predzavrnjenih'] = $predzavrnjenih
@@ -1591,6 +1668,9 @@ try {
     Check 'P6: brez ERROR vrstic iz noppes.*' ($modErrors.Count -eq 0)
     if ($modErrors.Count -gt 0) { $modErrors | Select-Object -First 5 | ForEach-Object { Write-Host "      $_" } }
     Check 'P6: brez "script errored"' (-not $log.Contains('script errored'))
+    if ($NavBackend -ge 0) {
+        Check 'NB5: no optional library ERROR lines' ($log -notmatch '(?m)^.*\bERROR\b.*(?:si\.ladja\.|npcbaritone)')
+    }
     Check 'server se je cisto ustavil' (Stop-DevServer $srv)
 
     # M5-S P1: povzetki JFR sele zdaj, da 'jfr print' ne tece med merjenjem naslednje celice.

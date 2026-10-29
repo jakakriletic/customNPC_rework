@@ -904,3 +904,17 @@ Q97: poskus 1 sprejet pod izbiro, privzeto original: unit/build/package, 180/180
 H0–H4 in restart 30 letečih zeleni; cena enkrat kot podatek po Q92. Omejitve poti in odmik
 ob ponovnih ukazih B ostanejo, celoten M4 ni zaključen. Q95/Q96 sta popravka dokazne kode,
 brez spremembe produkcije ali meril. [Rezultati in razlogi](meritve/2026-10-29-M4.3-hover.md).
+
+### D-088 — M4.15a: meritve izbirnega ozadja pred GUI (2026-10-29, Q98–Q107)
+
+Q98: podatkovna lestvica 500/1000/2000 boj/nedosegljiva, enkrat 60+120 s/stran (Q92),
+brez cenovne meje ali trditve o potrjeni kapaciteti; privzeto globalno 0.
+Q99: obstoječi compiled runtime knjižnice na obeh straneh; SHA razredov/resources
+in obeh configov v odtisu, izbrani NPC-ji 1 in dejanski priklop pred/po merjenju.
+Q100: `largeEntities=false`; velik NPC vanilla fallback, let/plavanje/montirani izključeni;
+po razmontiranju/rebuild priklop nazaj. Kompatibilnost 18/18 zelena.
+Q106: vseh 12 celic izmerjenih; obe lestvici exit 1 zaradi U1 pri 2000 nedosegljivih,
+potrditev te obremenitve odložena, ne sprejeta. Brez ponavljanja ali spremembe meril.
+Q107: GUI vanilla/Baritone 0/1, globalni config samo dovoljenje; strežniško dejansko
+ozadje/razlog, brez obljube pospešitve/kapacitete. Produkcija ista; naslednji M4.15b.
+[Pogoji, merila in odločitve](meritve/2026-10-29-M4.15a-baritone.md).
