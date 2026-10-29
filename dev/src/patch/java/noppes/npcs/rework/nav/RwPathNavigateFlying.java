@@ -1,6 +1,11 @@
 package noppes.npcs.rework.nav;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathNavigateFlying;
@@ -10,6 +15,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.event.ForgeEventFactory;
 
 /**
  * Navigator letecega NPC-ja ({@code movementType == 1}). Od {@link PathNavigateFlying} se razlikuje
@@ -31,9 +38,56 @@ public class RwPathNavigateFlying extends PathNavigateFlying {
     private Path commandPath;
     /** Klic, ki ni ukaz: obnova, pot do entitete, vanilla {@code updatePath}. */
     private boolean passThrough;
-    /** M4.17: trk kvadra z bloki ({@code World.collidesWithAnyBlock}). */
-    private final FlightFollow.BoxTest blocks = (minX, minY, minZ, maxX, maxY, maxZ) ->
-            this.world.collidesWithAnyBlock(new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ));
+    /** M4.17 poskus 3: seznam skatel in celica za {@link #cells}; samo strezniska nit. */
+    private final List<AxisAlignedBB> boxes = new ArrayList<AxisAlignedBB>();
+    private final BlockPos.MutableBlockPos cell = new BlockPos.MutableBlockPos();
+    private AxisAlignedBB query;
+    /** M4.17 poskus 4: chunk stolpca, ki ga je nazadnje potrdil {@code loaded}. */
+    private Chunk column;
+    /**
+     * Poskus 4 (Q86): chunk se poisce enkrat na stolpec namesto v vsaki celici, zrak se preskoci.
+     * Enakost [K]: {@code World.getBlockState} = {@code getChunkFromChunkCoords(x >> 4, z >> 4)
+     * .getBlockState(x, y, z)} oziroma zrak zunaj y 0-255, kar {@code Chunk.getBlockState} vrne sam;
+     * {@link FlightFollow#scan} pred celicami stolpca vedno poklice {@code loaded} istega stolpca, svet
+     * se med zanko ne spremeni. {@code BlockAir} ima {@code NULL_AABB}, zato v seznam ne doda nicesar.
+     */
+    private final FlightFollow.Cells cells = new FlightFollow.Cells() {
+        @Override
+        public boolean loaded(int x, int z) {
+            World w = RwPathNavigateFlying.this.world;
+            if (!w.isBlockLoaded(RwPathNavigateFlying.this.cell.setPos(x, 64, z))) {
+                return false;
+            }
+            RwPathNavigateFlying.this.column = w.getChunkFromChunkCoords(x >> 4, z >> 4);
+            return true;
+        }
+
+        @Override
+        public boolean blocked(int x, int y, int z) {
+            IBlockState state = RwPathNavigateFlying.this.column.getBlockState(x, y, z);
+            if (state.getBlock() == Blocks.AIR) {
+                return false;
+            }
+            BlockPos.MutableBlockPos pos = RwPathNavigateFlying.this.cell.setPos(x, y, z);
+            state.addCollisionBoxToList(RwPathNavigateFlying.this.world, pos, RwPathNavigateFlying.this.query,
+                    RwPathNavigateFlying.this.boxes, null, false);
+            return !RwPathNavigateFlying.this.boxes.isEmpty();
+        }
+    };
+    /**
+     * M4.17: trk kvadra z bloki, enak {@code World.collidesWithAnyBlock}. Poskus 3 (Q85): dogodek
+     * {@code GetCollisionBoxesEvent} enkrat namesto v vsaki celici ({@link FlightFollow#scan}), seznam
+     * se ponovno uporabi.
+     */
+    private final FlightFollow.BoxTest blocks = (minX, minY, minZ, maxX, maxY, maxZ) -> {
+        AxisAlignedBB bb = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
+        this.boxes.clear();
+        if (!ForgeEventFactory.gatherCollisionBoxes(this.world, null, bb, this.boxes)) {
+            return true;
+        }
+        this.query = bb;
+        return FlightFollow.scan(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, this.cells);
+    };
 
     public RwPathNavigateFlying(EntityLiving entity, World world) {
         super(entity, world);

@@ -835,4 +835,49 @@ Kombinacija z M4.10 da *zid* 5/6 proti 6/6 samega M4.10 (Q84, vzrok [H]). Cena: 
 8,913 = original (meja izpolnjena), **boj p95 2,490 → 3,277 ms (+32 %)**, `npc.us` 9,50 → 12,79,
 +20 MB/s — meja + 10 % ni izpolnjena. **Poskus 1 ni sprejet (Q83).** Poskus 2: pred premikom po
 korakih ena preverba unije vseh korakov (če je prosta, je prost vsak korak; sicer nespremenjeni
-koraki) — enak izid z manj klici `collidesWithAnyBlock`. [Zapis](meritve/2026-10-26-M4.17-vidna-crta.md).
+koraki) — enak izid z manj klici `collidesWithAnyBlock`. **Izid poskusa 2 (`b79530e1…`, Q85):**
+letenje 180/180 enako poskusu 1 (tudi z nadaljevanjem), patrulja v meji, **boj p95 2,556 → 2,818 >
+2,812** (+10,3 %, en korak ločljivosti), `npc.us` 9,69 → 11,02, +7,8 MB/s; vsako prosto preverbo
+odloči unija. Preostala cena je Forge `GetCollisionBoxesEvent` v **vsaki celici** zanke
+`World.getCollisionBoxes` (World:1470). **Poskus 2 ni sprejet.** Poskus 3: dogodek enkrat pred
+zanko, nato `FlightFollow.scan` (prepis zanke originala) — izid enak za vsakega poslušalca, ki je
+funkcija svojih argumentov (vse objave v originalu imajo iste argumente in prazen seznam).
+**Izid poskusa 3 (`346e8b08…`, Q86):** letenje 180/180 enako poskusom 1/2, alokacija boja +7,8 →
++0,6 MB/s, a **boj p95 2,556 (2,425–2,621) → 2,884 > 2,883**; preostanek je ~81 branj celice na
+preverbo (~9.260/tick). **Poskus 3 ni sprejet.** Poskus 4: chunk enkrat na stolpec
+(`Chunk.getBlockState` = `World.getBlockState`), zrak brez verige `addCollisionBoxToList` (`NULL_AABB`)
+— enak izid, cenejša celica. [Zapis](meritve/2026-10-26-M4.17-vidna-crta.md).
+
+**Izid poskusa 4 (29. 10., seja 159, `b8f98d28…`, Q87):** tri primerjave po 180 median
+letenja so enake poskusu 3 (in s tem 1/2 ter pri stikalu 0 M4.16). Cena patrulje p95 9,175 →
+9,175 ≤ 10,0925; boja 2,556 → **2,687 ≤ 2,8116 ms**, `npc.us` 9,97 → 10,57, alokacija
+12,4 → 12,6 MB/s. Enakost in cenovna meja uspeta. **Zaključek še čaka:** vseh 11 ID-jev
+poskusa 4 je zelenih, vendar trenutni obvezni seznam vsebuje tudi 12 ID-jev poskusov 1–3,
+ki še nimajo rezultatov na trenutnem odtisu. Q87: zahtevamo te ID-je brez spremembe kode ali
+parametrov; stari rezultati niso dokaz nove kode, čeprav so parametri teh ID-jev enaki v4.
+Vse dodatne serije ocenimo po istih merilih; morebitne razlike ali presežke raziščemo.
+M4.17 do takrat ostane v teku, brez končnega sprejema. Q81 (privzeto 0), Q82 (vogal → M4.5)
+in Q84 (zid v kombinaciji 5/6, ovira za privzeti vklop) ostanejo nespremenjeni.
+
+**Nadaljevanje validacije (29. 10., seja 160, Q88):** aktivna naloga nima rezultatov,
+controller pa sporoča nov odtis `adf047b4…`. Starih rezultatov na `b8f98d28…` ne prenašamo.
+Zahtevamo vseh 23 ID-jev iz Q87 na trenutnih nespremenjenih vhodih (unit/build/package,
+samotest, original letenja, originala cene ter štiri variante m417 v1–v4). Vsako serijo
+ocenimo; merila in parametri se ne spremenijo. Cenovna meja se izračuna iz originala istega
+odtisa (zgornji rob razpona p95 × 1,1), ne iz stare absolutne številke. Privzeto stikalo 0,
+Q82 in Q84 ter zahtevana enakost 180/180 ostanejo. Pred veljavnimi rezultati ni zaključka
+ali commita paketa.
+
+**Obnova predpomnilnika (29. 10., seja 161, Q89):** na `adf047b4…` je controllerjev
+`unit` uspel, `build --offline` pa je padel pri `extractMcpMappings`: za zaklenjeni
+`de.oceanlabs.mcp:mcp_snapshot:20171003-1.12` ni lokalnega artefakta. To ni rezultat
+sprejemnih meritev in ne razlog za menjavo mappings. Controller naj skozi obstoječi
+`dev.ps1` enkrat izvede `extractMcpMappings` brez `--offline` (nov ID
+`m417-mcp-cache-v1`), nato celotno obvezno validacijo z običajnim offline buildom.
+`environment-lock.json`, koda, config, scene in pragovi ostanejo nespremenjeni.
+Registracija novega ID-ja spremeni controllerjev odtis (katalog je njegov vhod), zato
+se tudi `unit` ponovi na odtisu po registraciji; rezultat na `adf047b4…` ne nadomesti
+novega. Če prenos ne uspe, se razišče njegov konkretni izpis pred meritvami; starega
+jarja ali druge različice mappings ne uporabimo kot nadomestilo.
+
+**Zaključek (29. 10., seja 162):** Q90 (lastnik, 29. 10.): M4.17 je sprejet na podlagi celotne serije poskusa 4 na `b8f98d28…`. Vseh 11 obveznih ID-jev je zelenih, letenje 180/180, obe cenovni meji izpolnjeni. Dodatnih 12 ID-jev poskusov 1–3 (Q87) in ponovne validacije 23 ID-jev (Q88) ne izvajamo. Razlog: lastnik izrecno zahteva hitrejši napredek in manjšo porabo časa in žetonov. Produkcijska koda in harnessi se od te serije niso spremenili (`dev/src` brez sprememb po 28. 10. 12:38 UTC). Nov odtis izvira samo iz popravka controllerja `overnight/lib.mjs` (OPS.9, iskanje `claude.exe`) in kataloškega ID-ja `m417-mcp-cache-v1`. Q87 in Q88 sta zaprti. Privzeto `RwFlyLineOfSight=0` (Q81), Q82 (vogal → M4.5) in Q84 ostanejo. **M4.17 zaključen.**

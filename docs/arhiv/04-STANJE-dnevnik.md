@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 154 → 1)
+# Arhiv: dnevnik sej (vnosi 160 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,115 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-29 (160) — M4.17: celotna validacija na novem trenutnem odtisu
+
+**Paket:** M4.17 (D-085, Q88) · **Stanje:** **v teku**, brez novih rezultatov.
+Pregledani so diff, R2, plan in prejšnji zapis; delne paketne spremembe ostanejo ohranjene.
+AI ni zaganjal testov, builda ali Minecrafta in ni spreminjal kode ali merilnih vhodov.
+
+Trenutni controller odtis je
+`adf047b4f6608eaf59f756abb6cd78f914a7e06f0bf98abd73c6713cd80935f9`,
+različen od `b8f98d28…` iz seje 159. Aktivna naloga nima rezultatov. Q88: zahteva se vseh
+23 ID-jev iz Q87: unit/build/package, m416-samotest-v1, m416-letenje-v1, oba originala
+m416b ter štiri variante m417 za vsako verzijo v1–v4. Parametri ostanejo isti; nove verzije
+ID-ja ne pomenijo zagona stare implementacije. Starih meritev ne prenesemo na nov odtis.
+
+Za vsak A/B par cene velja original istega odtisa, meja p95 = zgornji rob razpona
+originala × 1,1; prejšnji absolutni meji 10,0925/2,8116 ms sta zgodovinski. Letenje:
+stikalo 0 = M4.16, vidna črta in kombinacija = ustrezni prejšnji seriji, vsakič 180/180.
+Vse ponovitve se obravnavajo, brez izbire ugodnejših. Vogal Q82 in zid v kombinaciji Q84
+ostajata odprta; pragov ne spreminjamo. Po rezultatih analiza, evidence in šele nato
+commit/push M4.17. Nepovezani runner, baseline in audit ostanejo zunaj commita.
+
+### 2026-10-29 (159) — M4.17 poskus 4 izmerjen v mejah; celoten obvezni seznam še čaka
+
+**Paket:** M4.17 (D-085, Q87) · **Stanje:** **v teku**. Koda in merilni vhodi nespremenjeni.
+AI ni zaganjal testov/builda/Minecrafta. [Zapis](../meritve/2026-10-26-M4.17-vidna-crta.md).
+
+Na `b8f98d2898eb510ce9452868865cf20f3d9e586f532f38aa0e19e133634ae268` je vseh 11 ID-jev
+poskusa 4 zelenih. Primerjane mediane: `1340` = `1129`, `1349` = `1138`, `1358` = `1146`,
+vsakič **180/180**, vse nove serije z razponom 0. Patrulja p95 9,175 → 9,175 ≤ 10,0925 ms;
+boj 2,556 → **2,687 ≤ 2,8116 ms**, `npc.us` 9,97 → 10,57, alokacija 12,4 → 12,6 MB/s.
+Iz zadnjega RWPATH boja pred prepisom loga: `vidKlicev` 703.173, `vidCelic` 59.499.651,
+`vidProstih` = `vidUnija` 698.471, zaprtih 0. Dva zavržena boja 28. 10. zaradi vnosa na
+namizju nista uporabljena; veljaven je par 29. 10. (`0931`/`0956`).
+
+**Q87:** M4.17 še ne zaključimo: seznam upravljalnika zahteva tudi 12 ID-jev poskusov 1–3,
+ki imajo samo stare odtise. Zahtevamo jih brez spremembe kode ali parametrov. Vsako dodatno
+letenje mora ostati 180/180 enako, vsaka cena v isti meji proti originalu istega odtisa;
+morebitne neuspehe raziščemo. Stari rezultati ne nadomestijo trenutnih. Šele po vseh veljavnih
+rezultatih končni sprejem pod stikalom, posodobitev registrov/plana, commit in push. Q81
+(privzeto 0), Q82 (vogal → M4.5) in Q84 (zid v kombinaciji 5/6) ostanejo. Nato M4.2 → M4.3 →
+M4.5 po D-038. Nepovezani `overnight/runner.mjs`, baseline in `audit/*` ohranjeni zunaj paketa.
+
+### 2026-10-28 (158) — M4.17 poskus 3 izmerjen (enak izid, boj 0,001 ms čez mejo), poskus 4 v kodi
+
+**Paket:** M4.17 (D-085, Q79–Q86) · **Stanje:** **v teku** — poskus 3 izmerjen in ni sprejet,
+poskus 4 v kodi. [Zapis](../meritve/2026-10-26-M4.17-vidna-crta.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Na `346e8b08…` vseh 11 zahtevanih testov poskusa 3 zelenih. Letenje: `m416-letenje-v1` = M4.16,
+`m417-letenje-vid-v3` in `-vidnad-v3` **180/180 enaka** poskusoma 1 in 2. Cena: patrulja p95
+9,699 ≤ 10,09 (v meji); **boj p95 2,556 (2,425–2,621) → 2,884 > 2,883**, `npc.us` 9,53 → 11,53,
+alokacija 12,4 → 13,0 MB/s (dogodek je bil vzrok alokacije poskusa 2). `vidCelic` 56,2 M na 690 k
+preverb = 81 celic na preverbo, ~9.260/tick, ~43 ns na celico [K+M]. Q86: meja ostane; poskus 4 —
+`RwPathNavigateFlying.cells` vzame chunk enkrat na stolpec (`Chunk.getBlockState` = `World.getBlockState`
+po virih 2847) in zrak preskoči pred verigo `addCollisionBoxToList` (`NULL_AABB`); `FlightFollowTest`
++1 (451 JUnit). Zahtevani: unit, build, package, `m416-samotest-v1`, `m416-letenje-v1`,
+`m417-letenje-vid-v4`, `m417-letenje-vidnad-v4` (180/180 = poskusi 1–3), `m416b-leteci-v1`,
+`m417-leteci-vid-v4`, `m416b-letboj-v1`, `m417-letboj-vid-v4`.
+
+### 2026-10-28 (157) — M4.17 poskus 2 izmerjen (enak izid, boj en korak čez mejo), poskus 3 v kodi
+
+**Paket:** M4.17 (D-085, Q79–Q85) · **Stanje:** **v teku** — poskus 2 izmerjen in ni sprejet,
+poskus 3 v kodi. [Zapis](../meritve/2026-10-26-M4.17-vidna-crta.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Na `b79530e1…` vseh 11 zahtevanih testov poskusa 2 zelenih. Letenje: `m416-letenje-v1` = M4.16,
+`m417-letenje-vid-v2` in `-vidnad-v2` **180/180 enaka** poskusu 1 (dokaz unije potrjen v svetu).
+Cena: patrulja p95 9,175 = original (v meji); **boj p95 2,556 → 2,818 > 2,812** (+10,3 %, en korak
+ločljivosti), `npc.us` 9,69 → 11,02, alokacija 12,4 → 20,2 MB/s; `vidUnija` = `vidProstih` (vse proste
+preverbe odloči unija). Vzrok preostanka [K]: Forge `GetCollisionBoxesEvent` v vsaki celici
+`World.getCollisionBoxes` (World:1470). Q85: meja ostane; poskus 3 — dogodek enkrat pred zanko,
+`FlightFollow.scan` (prepis zanke originala, ponovno uporabljen seznam, števec `vidCelic`),
+`FlightFollowTest` +3 (450 JUnit). Zahtevani: unit, build, package, `m416-samotest-v1`,
+`m416-letenje-v1`, `m417-letenje-vid-v3`, `m417-letenje-vidnad-v3` (180/180 = poskus 1),
+`m416b-leteci-v1`, `m417-leteci-vid-v3`, `m416b-letboj-v1`, `m417-letboj-vid-v3`.
+
+### 2026-10-28 (156) — M4.17 poskus 1: vidna črta izmerjena, ni sprejeta (cena v boju)
+
+**Paket:** M4.17 (D-085, Q79–Q84) · **Stanje:** **v teku** — poskus 1 izmerjen in zapisan,
+poskus 2 (enak izid, nižja cena) v kodi. [Zapis](../meritve/2026-10-26-M4.17-vidna-crta.md). AI ni
+zaganjal testov/builda/Minecrafta.
+
+Koda poskusa 1: nov `rework/nav/FlightFollow` (pravilo brez sveta), prepis
+`isDirectPathBetweenPoints` v `RwPathNavigateFlying`, stikalo `RwFlyLineOfSight` (privzeto 0,
+`/rwpath vidno`), `FlightFollowTest` +10; harness `letenje-run.ps1 -VidnaCrta`, `perf-run.ps1
+-RwVidno`; ključ `RwFlyLineOfSight=0` ročno v `dev/run/config`. Na `75269123…` vseh 11 zahtevanih
+zelenih: stikalo 0 = M4.16 (180/180); labirint 0 → 0,125 b/t (B 6/6, z M4.10 A 6/6); vogal 0/6
+(pot se že v originalu konča pred krakom → iskanje, M4.5, Q82); z M4.10 zid 6/6 → 5/6 (Q84,
+odprt pojav); patrulja p95 8,913 = original; **boj p95 2,490 → 3,277 (+32 %)** čez mejo → ni
+sprejet (Q83). Poskus 2: `FlightFollow.sweep` najprej preveri unijo vseh korakov (ena preverba
+namesto ~12), izid dokazljivo enak; nov števec `vidUnija`, `FlightFollowTest` +3 (unija = koraki na 6.000 naključnih premikih po progah M4.16; 447 JUnit). Zahtevani: unit, build, package, `m416-samotest-v1`,
+`m416-letenje-v1`, `m417-letenje-vid-v2`, `m417-letenje-vidnad-v2` (180/180 = poskus 1),
+`m416b-leteci-v1`, `m417-leteci-vid-v2`, `m416b-letboj-v1`, `m417-letboj-vid-v2`.
+
+---
+
+
+### 2026-10-26 (155) — M4.10 izmerjen in zaključen
+
+**Paket:** M4.10 (D-084, Q75–Q78) · **Stanje:** **zaključeno**, pod stikalom `RwPathResume`,
+privzeto 0. [Zapis](../meritve/2026-10-26-M4.10-nadaljevanje.md). AI ni zaganjal testov/builda/Minecrafta.
+
+Seja 154 je napisala kodo (`PathResume`, `RwPathNavigateGround`, nov `RwPathNavigateFlying`,
+`PathResumeTest` +12; 434 JUnit v 70 datotekah, 184 razredov, 119 v rework) in harness
+`-Nadaljevanje`; na 8d2dc7f5… DW 0/6 pri 600 tickih (Q78: 48 blokov pri 0,066 b/t ne gre v fazo),
+zato `-TrajanjeFaze` in ID-ja `m410-letenje-dolgo-*`. Na `b53a0638…` zeleni unit, build, package,
+`m416-samotest-v1`, `m416-letenje-v1` (180/180 = M4.16), `m410-letenje-nad-v1` (DF/Z 6/6),
+`m410-letenje-dolgo-orig-v1` (DF/DW `navig0` 0/6), `m410-letenje-dolgo-nad-v1` (DF 6/6 220/230,
+DW 6/6 710/720), `m410-nav-orig-v1`/`-nad-v1` (12/12 `pot.*` enakih, µs v šumu),
+`m414b-navigator-harness-v3`; `m414b-navigator-trace-v3` pade samo na FA kot D-079. Privzeto 0
+(Q77). Naslednji M4.17.
 
 ### 2026-10-26 (154) — M4.10: nadaljevanje delne poti in vmesni cilj (koda, čaka A/B)
 
