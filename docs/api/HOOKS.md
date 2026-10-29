@@ -1,6 +1,6 @@
 # NPC hooks v1
 
-Generated from `ScriptHooks.npc()` in registry order; do not edit.
+Generated from `ScriptHooks.java()` in registry order; do not edit.
 
 Java 8; trusted authors only, with process permissions and no sandbox. JS remains the default. Java dispatch is NPC-only. Public no-argument constructor required; one instance/loader per NPC, tab and generation. Only overridden NpcScript hooks are bound. Tabs run in their existing order, then the API bus; cancellation and missing hooks keep the existing handler behavior.
 
@@ -232,6 +232,48 @@ public class Example_dialogClose extends noppes.npcs.rework.script.NpcScript {
 }
 ```
 
+## animationStart
+
+`public void animationStart(noppes.npcs.rework.anim.AnimationEvent.Started event)`
+
+Enum: `none`; cancelable on declared type: `false`. Optional animation hook (M7.5), called only with RwAnimHooks=1 for an EntityAnimatedNpc of customnpcentities 0.7.0; never called by EventHooks and not posted to the API event bus. The server observes the action once per world tick END and calls, in this order, animationEnd of the previous action, animationStart of a new one (also the same clip again), then animationEvent for each timed clip event the entity fired since the last observation, with tick = the action age it fired at. finished=false means stopped, replaced or cut by death; removal or unload of the NPC calls no hook.
+
+```java
+public class Example_animationStart extends noppes.npcs.rework.script.NpcScript {
+    @Override public void animationStart(noppes.npcs.rework.anim.AnimationEvent.Started event) {
+        log(event.npc.getName());
+    }
+}
+```
+
+## animationEnd
+
+`public void animationEnd(noppes.npcs.rework.anim.AnimationEvent.Ended event)`
+
+Enum: `none`; cancelable on declared type: `false`. Optional animation hook (M7.5), called only with RwAnimHooks=1 for an EntityAnimatedNpc of customnpcentities 0.7.0; never called by EventHooks and not posted to the API event bus. The server observes the action once per world tick END and calls, in this order, animationEnd of the previous action, animationStart of a new one (also the same clip again), then animationEvent for each timed clip event the entity fired since the last observation, with tick = the action age it fired at. finished=false means stopped, replaced or cut by death; removal or unload of the NPC calls no hook.
+
+```java
+public class Example_animationEnd extends noppes.npcs.rework.script.NpcScript {
+    @Override public void animationEnd(noppes.npcs.rework.anim.AnimationEvent.Ended event) {
+        log(event.npc.getName());
+    }
+}
+```
+
+## animationEvent
+
+`public void animationEvent(noppes.npcs.rework.anim.AnimationEvent.ClipEvent event)`
+
+Enum: `none`; cancelable on declared type: `false`. Optional animation hook (M7.5), called only with RwAnimHooks=1 for an EntityAnimatedNpc of customnpcentities 0.7.0; never called by EventHooks and not posted to the API event bus. The server observes the action once per world tick END and calls, in this order, animationEnd of the previous action, animationStart of a new one (also the same clip again), then animationEvent for each timed clip event the entity fired since the last observation, with tick = the action age it fired at. finished=false means stopped, replaced or cut by death; removal or unload of the NPC calls no hook.
+
+```java
+public class Example_animationEvent extends noppes.npcs.rework.script.NpcScript {
+    @Override public void animationEvent(noppes.npcs.rework.anim.AnimationEvent.ClipEvent event) {
+        log(event.npc.getName());
+    }
+}
+```
+
 ## Player and world
 
 The existing `event.player` (IPlayer, interact and other player events) and `event.npc.getWorld()` (IWorld); their members are in [API.md](API.md).
@@ -257,7 +299,7 @@ public class Example_playerWorld extends noppes.npcs.rework.script.NpcScript {
 
 ## Optional action animation
 
-`Animators.of(event.npc)` returns a non-null `IAnimator`. Requires a live `EntityAnimatedNpc` from customnpcentities 0.7.0; ordinary NPCs and a missing/incompatible mod return an inert handle (`isAvailable=false`, play/queue/stop=false, clip empty, tick 0, clips empty). No change to `ICustomNpc`. Call from the server thread; mutations elsewhere return false. Clip names are case-sensitive; unknown/null clips return false. `play` replaces the action and clears the queue only on success; `stop` clears it and stops the action. `queue` starts immediately when idle, otherwise appends FIFO, up to 32 pending clips shared by all tabs/handles of the entity. The next clip starts at world tick END after the current action ends. External AI/actions may interrupt; the queue waits for idle. Pending clips are discarded on death/entity unload and are not saved in NBT; script-tab reload does not clear the shared entity queue. No client locomotion, blending or hooks (M7.5). `getClip`/`getTick` describe the action only (idle: empty/0); `getClips` returns a fresh sorted array.
+`Animators.of(event.npc)` returns a non-null `IAnimator`. Requires a live `EntityAnimatedNpc` from customnpcentities 0.7.0; ordinary NPCs and a missing/incompatible mod return an inert handle (`isAvailable=false`, play/queue/stop=false, clip empty, tick 0, clips empty). No change to `ICustomNpc`. Call from the server thread; mutations elsewhere return false. Clip names are case-sensitive; unknown/null clips return false. `play` replaces the action and clears the queue only on success; `stop` clears it and stops the action. `queue` starts immediately when idle, otherwise appends FIFO, up to 32 pending clips shared by all tabs/handles of the entity. The next clip starts at world tick END after the current action ends. External AI/actions may interrupt; the queue waits for idle. Pending clips are discarded on death/entity unload and are not saved in NBT; script-tab reload does not clear the shared entity queue. No client locomotion or blending; the animation hooks above need RwAnimHooks=1. `getClip`/`getTick` describe the action only (idle: empty/0); `getClips` returns a fresh sorted array.
 
 ```java
 import noppes.npcs.rework.anim.Animators;

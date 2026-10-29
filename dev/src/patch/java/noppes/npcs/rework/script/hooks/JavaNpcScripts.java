@@ -80,6 +80,11 @@ public final class JavaNpcScripts {
     private Generation rejected;
 
     public void run(List<ScriptContainer> containers, IScriptHandler handler, EnumScriptType type, Event event) {
+        run(containers, handler, type.function, event);
+    }
+
+    /** M7.5: by hook name, so named hooks outside EnumScriptType (animation) use the same tabs and errors. */
+    public void run(List<ScriptContainer> containers, IScriptHandler handler, String name, Event event) {
         if (!CustomNpcs.EnableScripting) { return; }
         long loaded = ScriptController.Instance.lastLoaded;
         List<Map<String, String>> sources = new ArrayList<>();
@@ -99,7 +104,7 @@ public final class JavaNpcScripts {
             ScriptContainer container = containers.get(i);
             Tab tab = current.tabs[i];
             if (tab == null || container.errored) { continue; }
-            Method hook = tab.hooks.get(type.function);
+            Method hook = tab.hooks.get(name);
             if (hook == null) { continue; }
             synchronized (LOCK) {
                 ScriptContainer previous = ScriptContainer.Current;
@@ -107,9 +112,9 @@ public final class JavaNpcScripts {
                 try {
                     hook.invoke(tab.instance, event);
                 } catch (InvocationTargetException e) {
-                    fail(container, handler, SourceMap.runtime(type.function, e.getCause(), tab.origins), true);
+                    fail(container, handler, SourceMap.runtime(name, e.getCause(), tab.origins), true);
                 } catch (Throwable e) {
-                    fail(container, handler, SourceMap.runtime(type.function, e, tab.origins), true);
+                    fail(container, handler, SourceMap.runtime(name, e, tab.origins), true);
                 } finally {
                     // Same reentrant ownership contract as the JSR-223 container.
                     ScriptContainer.Current = previous;
@@ -170,7 +175,7 @@ public final class JavaNpcScripts {
             }
             ClassLoader loader = JdkScriptCompiler.newLoader(code, ICustomNpc.class.getClassLoader());
             Class<?> script = loader.loadClass(main);
-            Map<String, Method> hooks = JavaHookBinder.bind(script, ScriptHooks.npc());
+            Map<String, Method> hooks = JavaHookBinder.bind(script, ScriptHooks.java());
             Object instance = script.getConstructor().newInstance();
             if (report.length() > 0) { container.appandConsole(report.toString().trim()); }
             return new Tab(loader, instance, hooks, origins);

@@ -10,6 +10,7 @@ import noppes.npcs.api.event.DialogEvent;
 import noppes.npcs.api.event.NpcEvent;
 import noppes.npcs.api.event.RoleEvent;
 import noppes.npcs.constants.EnumScriptType;
+import noppes.npcs.rework.anim.AnimationEvent;
 import org.apache.commons.lang3.StringUtils;
 
 /** M6.2 (D-090, Q128): deterministic list of script hooks and their event types.
@@ -24,15 +25,23 @@ public final class ScriptHooks {
             "player", "block", "door", "item", "projectile", "forge"));
 
     public static final class Hook {
+        /** Null for a named hook outside EnumScriptType (M7.5 animation hooks). */
         public final EnumScriptType type;
         public final String name;
         /** Static type EventHooks passes; a hook parameter must accept it. */
         public final Class<?> event;
         Hook(EnumScriptType type, Class<?> event) { this.type = type; this.name = type.function; this.event = event; }
+        Hook(String name, Class<?> event) { this.type = null; this.name = name; this.event = event; }
         @Override public String toString() { return name + "(" + event.getName() + ")"; }
     }
 
     private static final List<Hook> NPC;
+    /** M7.5 (Q194): dispatched by rework.anim.AnimationHooks only with RwAnimHooks=1; not EventHooks. */
+    private static final List<Hook> ANIMATION = Collections.unmodifiableList(Arrays.asList(
+            new Hook("animationStart", AnimationEvent.Started.class),
+            new Hook("animationEnd", AnimationEvent.Ended.class),
+            new Hook("animationEvent", AnimationEvent.ClipEvent.class)));
+    private static final List<Hook> JAVA_HOOKS;
     static {
         Map<EnumScriptType, Class<?>> npc = new EnumMap<>(EnumScriptType.class);
         npc.put(EnumScriptType.INIT, NpcEvent.InitEvent.class);
@@ -55,6 +64,9 @@ public final class ScriptHooks {
         // EnumMap iterates in enum ordinal order, so the list never depends on put order.
         for (Map.Entry<EnumScriptType, Class<?>> entry : npc.entrySet()) { list.add(new Hook(entry.getKey(), entry.getValue())); }
         NPC = Collections.unmodifiableList(list);
+        List<Hook> java = new ArrayList<>(NPC);
+        java.addAll(ANIMATION);
+        JAVA_HOOKS = Collections.unmodifiableList(java);
     }
 
     private ScriptHooks() { }
@@ -63,6 +75,16 @@ public final class ScriptHooks {
 
     public static Hook npc(String name) {
         for (Hook hook : NPC) { if (hook.name.equals(name)) { return hook; } }
+        return null;
+    }
+
+    public static List<Hook> animation() { return ANIMATION; }
+
+    /** Every hook an NPC Java tab can bind: the 16 EventHooks hooks, then the animation hooks. */
+    public static List<Hook> java() { return JAVA_HOOKS; }
+
+    public static Hook java(String name) {
+        for (Hook hook : JAVA_HOOKS) { if (hook.name.equals(name)) { return hook; } }
         return null;
     }
 

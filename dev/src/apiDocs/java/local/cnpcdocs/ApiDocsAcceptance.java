@@ -133,6 +133,7 @@ public final class ApiDocsAcceptance {
         }
         require(names.contains("noppes.npcs.api.IWorld") && names.contains("noppes.npcs.api.entity.IPlayer"), "M6.11 player/world published");
         require(names.contains("noppes.npcs.rework.anim.Animators") && names.contains("noppes.npcs.rework.anim.IAnimator"), "M7.9 animation API published");
+        require(names.contains("noppes.npcs.rework.anim.AnimationEvent") && names.contains("noppes.npcs.rework.anim.AnimationEvent.Started"), "M7.5 animation hook events published");
         require(!names.contains("noppes.npcs.api.block.IBlock") && !names.contains("noppes.npcs.api.handler.data.IQuest"), "v2 block/quest types stay external");
         for (JsonElement ref : catalog.getAsJsonArray("externalReferences")) { require(!names.contains(ref.getAsString()), "external references disjoint"); }
     }
@@ -147,16 +148,17 @@ public final class ApiDocsAcceptance {
             String name = hook.get("name").getAsString();
             String event = hook.get("event").getAsString();
             hookNames.add(name);
-            require(ScriptHooks.npc(name).event.getName().replace('$', '.').equals(event), "registry event " + name);
+            require(ScriptHooks.java(name).event.getName().replace('$', '.').equals(event), "registry event " + name);
             examples.add(ApiDocs.source("Example_" + name, hook.get("example").getAsString()));
         }
         require(hookNames.equals(Arrays.asList("init", "tick", "interact", "dialog", "damaged", "died", "meleeAttack",
-                "target", "collide", "kill", "dialogOption", "targetLost", "role", "rangedLaunched", "timer", "dialogClose")), "16 expected hooks in registry order");
+                "target", "collide", "kill", "dialogOption", "targetLost", "role", "rangedLaunched", "timer", "dialogClose",
+                "animationStart", "animationEnd", "animationEvent")), "19 expected hooks in registry order");
         Files.createDirectories(work);
         List<String> options = Arrays.asList("-proc:none", "-source", "8", "-target", "8", "-encoding", "UTF-8",
                 "-classpath", System.getProperty("java.class.path"), "-d", work.toString());
         try (StandardJavaFileManager fm = compiler.getStandardFileManager(errors, Locale.ROOT, StandardCharsets.UTF_8)) {
-            require(compiler.getTask(null, fm, errors, options, null, examples).call(), "all 16 published Java examples compile: " + errors.getDiagnostics());
+            require(compiler.getTask(null, fm, errors, options, null, examples).call(), "all 19 published Java examples compile: " + errors.getDiagnostics());
             errors = new DiagnosticCollector<>();
             JavaFileObject wrong = ApiDocs.source("Wrong", "public class Wrong extends " + ApiDocs.BASE + " {\n"
                     + "@Override public void tick(noppes.npcs.api.event.NpcEvent.InitEvent event) {}\n}\n");
@@ -213,7 +215,7 @@ public final class ApiDocsAcceptance {
         Map<String, Object> proof = ApiDocs.obj("success", true, "checks", checks, "types", json.getAsJsonArray("types").size(),
                 "hooks", json.getAsJsonArray("hooks").size(), "signatureFingerprint", model.get("signatureFingerprint"),
                 "elapsedMillis", (System.nanoTime() - start) / 1_000_000.0,
-                "condition", "javac symbols vs independent reflection inventory; reversed discovery bytes; all 16 examples compiled, never executed; no game launch");
+                "condition", "javac symbols vs independent reflection inventory; reversed discovery bytes; all 19 examples compiled, never executed; no game launch");
         ApiDocs.write(Paths.get(args[0]), rendered);
         ApiDocs.write(Paths.get(args[1]), Collections.singletonMap("proof.json", (ApiDocs.JSON.toJson(proof) + "\n").getBytes(StandardCharsets.UTF_8)));
         System.out.println(ApiDocs.JSON.toJson(proof));

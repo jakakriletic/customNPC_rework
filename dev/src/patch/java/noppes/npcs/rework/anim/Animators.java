@@ -24,6 +24,8 @@ import noppes.npcs.entity.EntityNPCInterface;
  * Existing NPC classes, scripting dispatch, packets and NBT are untouched. */
 public final class Animators {
     private Animators() { }
+    /** Base class of animated NPCs in customnpcentities 0.7.0; found by name only. */
+    static final String ANIMATED = "dev.jakak.customnpcentities.entity.EntityAnimatedNpc";
     private static final Map<EntityNPCInterface, Handle> HANDLES = new WeakHashMap<>();
     private static final Set<Handle> PENDING = new LinkedHashSet<>();
     private static QueueTicks listener;
@@ -39,7 +41,7 @@ public final class Animators {
     private static final ClassValue<Binding> BINDINGS = new ClassValue<Binding>() {
         @Override protected Binding computeValue(Class<?> type) {
             for (Class<?> base = type; base != null; base = base.getSuperclass()) {
-                if (!base.getName().equals("dev.jakak.customnpcentities.entity.EntityAnimatedNpc")) { continue; }
+                if (!base.getName().equals(ANIMATED)) { continue; }
                 try { return new Binding(base); }
                 catch (ReflectiveOperationException | SecurityException failure) {
                     LogWriter.error("RWANIM incompatible optional animation API", failure);

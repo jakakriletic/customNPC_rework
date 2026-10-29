@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 182 → 1)
+# Arhiv: dnevnik sej (vnosi 183 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,16 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (183) — M7.V: zagon rework + entities 0.7.0
+
+**Paket:** M7.V (Q198–Q199) · **Stanje:** zaključen, poskus 2, brez produkcijske kode.
+Nov harness `m7v-entities-run.ps1` (pakiran dedicated strežnik, rework + `customnpcentities-0.7.0`).
+Controller **m7v-entities-v2 PASS na `2905a99d…`**: 5 mobov, vseh 37 klipov predvajanih in
+končanih (1.134 vzorcev, hitbox ves čas = definicija moba), save/stop/start ohrani UUID, razred,
+hitbox in animacijski NBT; brez povezovalnih in nalagalnih napak. Poskus 1 lažno negativen
+(INFO »missing mods«, Q199). [Dokazi/omejitve](../meritve/2026-10-29-M7.V-entities-zagon.md).
+Naslednji M7.9 → M7.5 → M10.
 
 ### 2026-10-29 (182) — M7.0: raziskava integracije animacij
 

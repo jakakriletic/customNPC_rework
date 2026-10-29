@@ -46,7 +46,7 @@ try {
     $watch.Stop()
     $proc = $null
     $proof = [IO.File]::ReadAllText((Join-Path $work 'proof.json')) | ConvertFrom-Json
-    Assert-JavaPrototype ($proof.success -and $proof.checks -gt 100 -and $proof.hooks -eq 16) 'independent symbol/reflection and compiled-example acceptance'
+    Assert-JavaPrototype ($proof.success -and $proof.checks -gt 100 -and $proof.hooks -eq 19) 'independent symbol/reflection and compiled-example acceptance'
     $outputs = [ordered]@{}
     foreach ($file in @('API.json','API.md','HOOKS.md')) {
         $actual = Join-Path $root "docs/api/$file"
@@ -65,7 +65,7 @@ try {
     $log = Read-JavaPrototypeLog "$prefix.log"
     Assert-JavaPrototype ($log -notmatch ':runClient|:runServer|Starting minecraft|MinecraftForge v|:buildPatchedMod|:compileScripts') 'no game or script execution task'
     @{success=$true;acceptance=$proof;outputs=$outputs;commandMillis=$watch.Elapsed.TotalMilliseconds;inputs=$before;
-      condition='one documentation acceptance; independent JVM byte equality; 16 compile-only examples; no production code or runtime change'} |
+      condition='one documentation acceptance; independent JVM byte equality; 19 compile-only examples; no production code or runtime change'} |
         ConvertTo-Json -Depth 12 | Set-Content -LiteralPath "$prefix-proof.json" -Encoding UTF8
     Write-Host "M69 evidence: $prefix-proof.json"
     $exitCode = 0

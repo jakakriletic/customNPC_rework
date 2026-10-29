@@ -39,15 +39,15 @@ public class NpcScriptTest {
         int hooks = 0;
         for (Method m : NpcScript.class.getDeclaredMethods()) {
             if (!Modifier.isPublic(m.getModifiers())) { continue; }
-            ScriptHooks.Hook hook = ScriptHooks.npc(m.getName());
+            ScriptHooks.Hook hook = ScriptHooks.java(m.getName());
             assertNotNull("public method is a registry hook: " + m, hook);
             assertArrayEquals(m.toString(), new Class<?>[] { hook.event }, m.getParameterTypes());
             assertEquals(void.class, m.getReturnType());
             assertFalse("overridable", Modifier.isFinal(m.getModifiers()) || Modifier.isStatic(m.getModifiers()));
             hooks++;
         }
-        assertEquals(ScriptHooks.npc().size(), hooks);
-        for (ScriptHooks.Hook hook : ScriptHooks.npc()) { assertNotNull(NpcScript.class.getMethod(hook.name, hook.event)); }
+        assertEquals(ScriptHooks.java().size(), hooks);
+        for (ScriptHooks.Hook hook : ScriptHooks.java()) { assertNotNull(NpcScript.class.getMethod(hook.name, hook.event)); }
     }
 
     @Test public void onlyOverridesAreBound() throws Exception {

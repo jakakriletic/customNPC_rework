@@ -55,6 +55,10 @@
     "noppes.npcs.api.event.NpcEvent.TimerEvent",
     "noppes.npcs.api.event.NpcEvent.UpdateEvent",
     "noppes.npcs.api.event.RoleEvent",
+    "noppes.npcs.rework.anim.AnimationEvent",
+    "noppes.npcs.rework.anim.AnimationEvent.ClipEvent",
+    "noppes.npcs.rework.anim.AnimationEvent.Ended",
+    "noppes.npcs.rework.anim.AnimationEvent.Started",
     "noppes.npcs.rework.anim.Animators",
     "noppes.npcs.rework.anim.IAnimator",
     "noppes.npcs.rework.script.NpcScript"
@@ -11795,6 +11799,228 @@
       ]
     },
     {
+      "name": "noppes.npcs.rework.anim.AnimationEvent",
+      "kind": "class",
+      "modifiers": [
+        "abstract",
+        "public"
+      ],
+      "declaredAnnotations": [],
+      "description": "No source description is available in the compiled API; see the signature.",
+      "typeParameters": [],
+      "superclass": "noppes.npcs.api.event.NpcEvent",
+      "interfaces": [],
+      "members": [
+        {
+          "id": "clip",
+          "kind": "field",
+          "name": "clip",
+          "modifiers": [
+            "final",
+            "public"
+          ],
+          "type": "java.lang.String",
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "tick",
+          "kind": "field",
+          "name": "tick",
+          "modifiers": [
+            "final",
+            "public"
+          ],
+          "type": "int",
+          "description": "No source description is available in the compiled API; see the signature."
+        }
+      ]
+    },
+    {
+      "name": "noppes.npcs.rework.anim.AnimationEvent.ClipEvent",
+      "kind": "class",
+      "modifiers": [
+        "final",
+        "public",
+        "static"
+      ],
+      "declaredAnnotations": [],
+      "description": "No source description is available in the compiled API; see the signature.",
+      "typeParameters": [],
+      "superclass": "noppes.npcs.rework.anim.AnimationEvent",
+      "interfaces": [],
+      "members": [
+        {
+          "id": "<init>(noppes.npcs.api.entity.ICustomNpc,java.lang.String,int,java.lang.String,float,java.lang.String)",
+          "kind": "constructor",
+          "name": "ClipEvent",
+          "modifiers": [
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.entity.ICustomNpc<?>"
+            },
+            {
+              "name": "arg1",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            },
+            {
+              "name": "arg3",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg4",
+              "type": "float"
+            },
+            {
+              "name": "arg5",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "data",
+          "kind": "field",
+          "name": "data",
+          "modifiers": [
+            "final",
+            "public"
+          ],
+          "type": "java.lang.String",
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "time",
+          "kind": "field",
+          "name": "time",
+          "modifiers": [
+            "final",
+            "public"
+          ],
+          "type": "float",
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "type",
+          "kind": "field",
+          "name": "type",
+          "modifiers": [
+            "final",
+            "public"
+          ],
+          "type": "java.lang.String",
+          "description": "No source description is available in the compiled API; see the signature."
+        }
+      ]
+    },
+    {
+      "name": "noppes.npcs.rework.anim.AnimationEvent.Ended",
+      "kind": "class",
+      "modifiers": [
+        "final",
+        "public",
+        "static"
+      ],
+      "declaredAnnotations": [],
+      "description": "No source description is available in the compiled API; see the signature.",
+      "typeParameters": [],
+      "superclass": "noppes.npcs.rework.anim.AnimationEvent",
+      "interfaces": [],
+      "members": [
+        {
+          "id": "<init>(noppes.npcs.api.entity.ICustomNpc,java.lang.String,int,boolean)",
+          "kind": "constructor",
+          "name": "Ended",
+          "modifiers": [
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.entity.ICustomNpc<?>"
+            },
+            {
+              "name": "arg1",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            },
+            {
+              "name": "arg3",
+              "type": "boolean"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "finished",
+          "kind": "field",
+          "name": "finished",
+          "modifiers": [
+            "final",
+            "public"
+          ],
+          "type": "boolean",
+          "description": "No source description is available in the compiled API; see the signature."
+        }
+      ]
+    },
+    {
+      "name": "noppes.npcs.rework.anim.AnimationEvent.Started",
+      "kind": "class",
+      "modifiers": [
+        "final",
+        "public",
+        "static"
+      ],
+      "declaredAnnotations": [],
+      "description": "No source description is available in the compiled API; see the signature.",
+      "typeParameters": [],
+      "superclass": "noppes.npcs.rework.anim.AnimationEvent",
+      "interfaces": [],
+      "members": [
+        {
+          "id": "<init>(noppes.npcs.api.entity.ICustomNpc,java.lang.String)",
+          "kind": "constructor",
+          "name": "Started",
+          "modifiers": [
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.entity.ICustomNpc<?>"
+            },
+            {
+              "name": "arg1",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        }
+      ]
+    },
+    {
       "name": "noppes.npcs.rework.anim.Animators",
       "kind": "class",
       "modifiers": [
@@ -11982,6 +12208,63 @@
           ],
           "typeParameters": [],
           "parameters": [],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "animationEnd(noppes.npcs.rework.anim.AnimationEvent.Ended)",
+          "kind": "method",
+          "name": "animationEnd",
+          "modifiers": [
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.rework.anim.AnimationEvent.Ended"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "animationEvent(noppes.npcs.rework.anim.AnimationEvent.ClipEvent)",
+          "kind": "method",
+          "name": "animationEvent",
+          "modifiers": [
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.rework.anim.AnimationEvent.ClipEvent"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "animationStart(noppes.npcs.rework.anim.AnimationEvent.Started)",
+          "kind": "method",
+          "name": "animationStart",
+          "modifiers": [
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.rework.anim.AnimationEvent.Started"
+            }
+          ],
           "returnType": "void",
           "throws": [],
           "varargs": false,
@@ -12504,9 +12787,36 @@
       "cancelableOnDeclaredEvent": false,
       "description": "NPC hook from ScriptHooks; event payload and inherited members are in API.md. Role variants may be cancelable independently.",
       "example": "public class Example_dialogClose extends noppes.npcs.rework.script.NpcScript {\n    @Override public void dialogClose(noppes.npcs.api.event.DialogEvent.CloseEvent event) {\n        log(event.npc.getName());\n    }\n}\n"
+    },
+    {
+      "name": "animationStart",
+      "enum": "none",
+      "event": "noppes.npcs.rework.anim.AnimationEvent.Started",
+      "signature": "public void animationStart(noppes.npcs.rework.anim.AnimationEvent.Started event)",
+      "cancelableOnDeclaredEvent": false,
+      "description": "Optional animation hook (M7.5), called only with RwAnimHooks=1 for an EntityAnimatedNpc of customnpcentities 0.7.0; never called by EventHooks and not posted to the API event bus. The server observes the action once per world tick END and calls, in this order, animationEnd of the previous action, animationStart of a new one (also the same clip again), then animationEvent for each timed clip event the entity fired since the last observation, with tick = the action age it fired at. finished=false means stopped, replaced or cut by death; removal or unload of the NPC calls no hook.",
+      "example": "public class Example_animationStart extends noppes.npcs.rework.script.NpcScript {\n    @Override public void animationStart(noppes.npcs.rework.anim.AnimationEvent.Started event) {\n        log(event.npc.getName());\n    }\n}\n"
+    },
+    {
+      "name": "animationEnd",
+      "enum": "none",
+      "event": "noppes.npcs.rework.anim.AnimationEvent.Ended",
+      "signature": "public void animationEnd(noppes.npcs.rework.anim.AnimationEvent.Ended event)",
+      "cancelableOnDeclaredEvent": false,
+      "description": "Optional animation hook (M7.5), called only with RwAnimHooks=1 for an EntityAnimatedNpc of customnpcentities 0.7.0; never called by EventHooks and not posted to the API event bus. The server observes the action once per world tick END and calls, in this order, animationEnd of the previous action, animationStart of a new one (also the same clip again), then animationEvent for each timed clip event the entity fired since the last observation, with tick = the action age it fired at. finished=false means stopped, replaced or cut by death; removal or unload of the NPC calls no hook.",
+      "example": "public class Example_animationEnd extends noppes.npcs.rework.script.NpcScript {\n    @Override public void animationEnd(noppes.npcs.rework.anim.AnimationEvent.Ended event) {\n        log(event.npc.getName());\n    }\n}\n"
+    },
+    {
+      "name": "animationEvent",
+      "enum": "none",
+      "event": "noppes.npcs.rework.anim.AnimationEvent.ClipEvent",
+      "signature": "public void animationEvent(noppes.npcs.rework.anim.AnimationEvent.ClipEvent event)",
+      "cancelableOnDeclaredEvent": false,
+      "description": "Optional animation hook (M7.5), called only with RwAnimHooks=1 for an EntityAnimatedNpc of customnpcentities 0.7.0; never called by EventHooks and not posted to the API event bus. The server observes the action once per world tick END and calls, in this order, animationEnd of the previous action, animationStart of a new one (also the same clip again), then animationEvent for each timed clip event the entity fired since the last observation, with tick = the action age it fired at. finished=false means stopped, replaced or cut by death; removal or unload of the NPC calls no hook.",
+      "example": "public class Example_animationEvent extends noppes.npcs.rework.script.NpcScript {\n    @Override public void animationEvent(noppes.npcs.rework.anim.AnimationEvent.ClipEvent event) {\n        log(event.npc.getName());\n    }\n}\n"
     }
   ],
   "playerWorldExample": "import noppes.npcs.api.IWorld;\nimport noppes.npcs.api.entity.IPlayer;\nimport noppes.npcs.api.event.NpcEvent;\n\npublic class Example_playerWorld extends noppes.npcs.rework.script.NpcScript {\n    @Override public void interact(NpcEvent.InteractEvent event) {\n        IPlayer<?> player = event.player;\n        IWorld world = event.npc.getWorld();\n        long time = world.getTime();\n        player.message(\"Hello \" + player.getDisplayName() + \" in \" + world.getName() + \" at \" + time);\n        world.getTempdata().put(\"lastVisitor\", player.getName());\n        if (!world.isDay()) {\n            world.setBlock(event.npc.getBlockX(), event.npc.getBlockY() + 2, event.npc.getBlockZ(), \"minecraft:torch\", 0);\n        }\n    }\n}\n",
   "animationExample": "import noppes.npcs.rework.anim.Animators;\nimport noppes.npcs.rework.anim.IAnimator;\nimport noppes.npcs.api.event.NpcEvent;\n\npublic class Example_animation extends noppes.npcs.rework.script.NpcScript {\n    @Override public void interact(NpcEvent.InteractEvent event) {\n        IAnimator animator = Animators.of(event.npc);\n        if (animator.isAvailable() && animator.play(\"hurt\")) {\n            animator.queue(\"idle\");\n        }\n    }\n}\n",
-  "signatureFingerprint": "87c71583dc439538032c2677489760f45434365a41506129063bfb0b4311491d"
+  "signatureFingerprint": "3164a7f04ba7d11f18a965c5fbab5259124d4fda7a070c6b5c053d09ea9b1338"
 }

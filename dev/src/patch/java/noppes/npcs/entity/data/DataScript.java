@@ -83,6 +83,29 @@ implements IScriptHandler {
         }
     }
 
+    /** M7.5: named hook outside EnumScriptType (animation hooks, RwAnimHooks=1 only). Same guard,
+     * init-on-reload, tabs, order and language branch as runScript; EventHooks never calls it. */
+    public void runScript(String hook, Event event) {
+        if (!this.isEnabled()) {
+            return;
+        }
+        if (ScriptController.Instance.lastLoaded > this.lastInited) {
+            this.lastInited = ScriptController.Instance.lastLoaded;
+            EventHooks.onNPCInit(this.npc);
+        }
+        if (ScriptHooks.JAVA.equals(this.scriptLanguage)) {
+            if (this.javaTabs == null) {
+                this.javaTabs = new JavaNpcScripts();
+            }
+            this.javaTabs.run(this.scripts, this, hook, event);
+            return;
+        }
+        this.javaTabs = null;
+        for (ScriptContainer script : this.scripts) {
+            script.run(hook, (Object)event);
+        }
+    }
+
     public boolean isEnabled() {
         return this.enabled && ScriptController.HasStart && !this.npc.world.isRemote;
     }

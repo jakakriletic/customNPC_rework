@@ -5,9 +5,10 @@ import noppes.npcs.api.event.DialogEvent;
 import noppes.npcs.api.event.NpcEvent;
 import noppes.npcs.api.event.RoleEvent;
 import noppes.npcs.controllers.ScriptContainer;
+import noppes.npcs.rework.anim.AnimationEvent;
 
 /** M6.3 (D-090, Q148): optional typed base class for a Java NPC script tab.
- * One method per NPC hook of ScriptHooks.npc(), with the event type EventHooks passes, so
+ * One method per NPC hook of ScriptHooks.java(), with the event type EventHooks passes, so
  * {@code @Override} lets javac reject a wrong name or event type. The API is the existing
  * noppes.npcs.api interfaces (event.npc, event.API); nothing is copied. Only overridden
  * methods are bound and called; these no-op defaults never run. A plain public class with
@@ -30,6 +31,10 @@ public abstract class NpcScript {
     public void rangedLaunched(NpcEvent.RangedLaunchedEvent event) { }
     public void timer(NpcEvent.TimerEvent event) { }
     public void dialogClose(DialogEvent.CloseEvent event) { }
+    /** M7.5: called only with RwAnimHooks=1 for an animated NPC of customnpcentities 0.7.0. */
+    public void animationStart(AnimationEvent.Started event) { }
+    public void animationEnd(AnimationEvent.Ended event) { }
+    public void animationEvent(AnimationEvent.ClipEvent event) { }
 
     /** Same output as the JS {@code log} helper: the running tab's console and the mod log.
      * Outside a hook call (no running tab) only the mod log. */

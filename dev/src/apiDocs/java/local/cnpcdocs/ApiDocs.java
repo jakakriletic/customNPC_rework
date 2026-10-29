@@ -61,6 +61,12 @@ public final class ApiDocs {
             + "        }\n"
             + "    }\n}\n";
 
+    static final String ANIMATION_HOOK = "Optional animation hook (M7.5), called only with RwAnimHooks=1 for an EntityAnimatedNpc of customnpcentities 0.7.0; "
+            + "never called by EventHooks and not posted to the API event bus. The server observes the action once per world tick END and calls, "
+            + "in this order, animationEnd of the previous action, animationStart of a new one (also the same clip again), then animationEvent for "
+            + "each timed clip event the entity fired since the last observation, with tick = the action age it fired at. finished=false means "
+            + "stopped, replaced or cut by death; removal or unload of the NPC calls no hook.";
+
     private ApiDocs() { }
 
     static Map<String, Object> obj(Object... pairs) {
@@ -81,12 +87,13 @@ public final class ApiDocs {
                 "noppes.npcs.api.entity.data.IData", "noppes.npcs.api.ITimers",
                 "noppes.npcs.api.INbt", "noppes.npcs.api.IPos", "noppes.npcs.api.IDamageSource",
                 "noppes.npcs.api.IWorld", "noppes.npcs.api.entity.IPlayer",
-                "noppes.npcs.rework.anim.Animators", "noppes.npcs.rework.anim.IAnimator"));
+                "noppes.npcs.rework.anim.Animators", "noppes.npcs.rework.anim.IAnimator",
+                "noppes.npcs.rework.anim.AnimationEvent"));
         for (String name : Arrays.asList("INPCAdvanced", "INPCAi", "INPCDisplay", "INPCInventory", "INPCJob",
                 "INPCMelee", "INPCRanged", "INPCRole", "INPCStats")) {
             names.add("noppes.npcs.api.entity.data." + name);
         }
-        for (ScriptHooks.Hook hook : ScriptHooks.npc()) { names.add(hook.event.getName().replace('$', '.')); }
+        for (ScriptHooks.Hook hook : ScriptHooks.java()) { names.add(hook.event.getName().replace('$', '.')); }
         return names;
     }
 
@@ -136,15 +143,15 @@ public final class ApiDocs {
             List<Object> types = new ArrayList<>();
             for (TypeElement type : published.values()) { types.add(describe(type)); }
             List<Object> hooks = new ArrayList<>();
-            for (ScriptHooks.Hook hook : ScriptHooks.npc()) {
+            for (ScriptHooks.Hook hook : ScriptHooks.java()) {
                 String event = hook.event.getName().replace('$', '.');
                 TypeElement type = elements.getTypeElement(event);
                 boolean cancelable = type.getAnnotationMirrors().stream().anyMatch(a -> a.getAnnotationType().toString()
                         .equals("net.minecraftforge.fml.common.eventhandler.Cancelable"));
-                hooks.add(obj("name", hook.name, "enum", hook.type.name(), "event", event,
+                hooks.add(obj("name", hook.name, "enum", hook.type == null ? "none" : hook.type.name(), "event", event,
                         "signature", "public void " + hook.name + "(" + event + " event)",
                         "cancelableOnDeclaredEvent", cancelable,
-                        "description", "NPC hook from ScriptHooks; event payload and inherited members are in API.md. Role variants may be cancelable independently.",
+                        "description", hook.type == null ? ANIMATION_HOOK : "NPC hook from ScriptHooks; event payload and inherited members are in API.md. Role variants may be cancelable independently.",
                         "example", example(hook.name, event)));
             }
             referenced.removeAll(published.keySet());
@@ -319,7 +326,7 @@ public final class ApiDocs {
         api.append("## External references (not expanded)\n\n");
         for (Object ref : (List<?>) catalog.get("externalReferences")) { api.append("- `").append(ref).append("`\n"); }
         out.put("API.md", api.toString().getBytes(StandardCharsets.UTF_8));
-        StringBuilder hooks = new StringBuilder("# NPC hooks v1\n\nGenerated from `ScriptHooks.npc()` in registry order; do not edit.\n\n");
+        StringBuilder hooks = new StringBuilder("# NPC hooks v1\n\nGenerated from `ScriptHooks.java()` in registry order; do not edit.\n\n");
         hooks.append(CONTRACT).append("\n\nAll examples are separate Java files, named after their public class. ")
                 .append("`public void` with the exact event type is the recommended typed signature. ")
                 .append("The plain-class binder also accepts a parameter supertype; overloads are rejected. ")
@@ -344,7 +351,7 @@ public final class ApiDocs {
                 .append("`play` replaces the action and clears the queue only on success; `stop` clears it and stops the action. ")
                 .append("`queue` starts immediately when idle, otherwise appends FIFO, up to 32 pending clips shared by all tabs/handles of the entity. ")
                 .append("The next clip starts at world tick END after the current action ends. External AI/actions may interrupt; the queue waits for idle. ")
-                .append("Pending clips are discarded on death/entity unload and are not saved in NBT; script-tab reload does not clear the shared entity queue. No client locomotion, blending or hooks (M7.5). ")
+                .append("Pending clips are discarded on death/entity unload and are not saved in NBT; script-tab reload does not clear the shared entity queue. No client locomotion or blending; the animation hooks above need RwAnimHooks=1. ")
                 .append("`getClip`/`getTick` describe the action only (idle: empty/0); `getClips` returns a fresh sorted array.\n\n```java\n")
                 .append(catalog.get("animationExample")).append("```\n\nJS: `var a = Java.type('noppes.npcs.rework.anim.Animators').of(event.npc);`\n");
         out.put("HOOKS.md", hooks.toString().getBytes(StandardCharsets.UTF_8));

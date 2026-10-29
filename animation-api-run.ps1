@@ -1,6 +1,9 @@
-# Controller-only M7.9 acceptance. Packaged server setup follows m7v/java-hooks; no parallel run.
+# Controller-only M7.9 acceptance, and M7.5 with -Package m75 -AnimHooks 0|1 (two bears, JS + typed Java hooks).
+# Packaged server setup follows m7v/java-hooks; no parallel run.
 # Entities=0 proves real absence (no optional mod on runtime OR compiler classpath).
 param([ValidateSet(0,1)][int]$Entities=1,
+      [ValidateSet('m79','m75')][string]$Package='m79',
+      [ValidateSet(0,1)][int]$AnimHooks=0,
       [string]$EntitiesJar=(Join-Path (Split-Path $PSScriptRoot -Parent) 'customNPC_entities_mod/build/libs/customnpcentities-0.7.0.jar'))
 $ErrorActionPreference='Stop'
 $root=$PSScriptRoot
@@ -9,8 +12,9 @@ $root=$PSScriptRoot
 . (Join-Path $root 'dev/testworld/java-compiler-lib.ps1')
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $stamp=Get-Date -Format 'yyyy-MM-dd-HHmmss'
-$prefix=Join-Path $root "audit/m79-e$Entities-$stamp"
-$work=Join-Path $root "dev/run-m79/e$Entities-$stamp"
+$tag=if($Package -eq 'm75') {"m75-h$AnimHooks"} else {"m79-e$Entities"}
+$prefix=Join-Path $root "audit/$tag-$stamp"
+$work=if($Package -eq 'm75') {Join-Path $root "dev/run-m75/h$AnimHooks-$stamp"} else {Join-Path $root "dev/run-m79/e$Entities-$stamp"}
 $run=Join-Path $root 'dev/run'
 $lock=$null; $proc=$null; $exitCode=1
 $oldJava=$env:JAVA_HOME; $oldPath=$env:PATH
@@ -45,7 +49,7 @@ function Wait-M79([string]$Marker,[int]$Seconds) {
     while((Get-Date) -lt $until -and -not $proc.HasExited) {
         $text=Read-JavaPrototypeLog $log
         if($text.Contains($Marker)) { return $text }
-        if($text -match "M79 FAILED|M79 DONE success=false|Encountered an unexpected exception|Exception ticking|$linkage") { throw 'Runtime fixture failed; see log.' }
+        if($text -match "M7[59] FAILED|M7[59] DONE success=false|Encountered an unexpected exception|Exception ticking|$linkage") { throw 'Runtime fixture failed; see log.' }
         Update-M79Owned
         $foreign=@(Get-NavForeignJava -Roots (@([int]$proc.Id)+@($ownedJava.Keys)))
         if($foreign.Count) { throw ('Foreign Java workload: '+($foreign -join '; ')) }
@@ -78,8 +82,9 @@ function Assert-M79Key($Proof,[string]$Key) {
     Assert-JavaPrototype (@($Proof.checks | Where-Object { $_.key -ceq $Key -and $_.ok -eq $true }).Count -eq 1) "pinned contract $Key"
 }
 try {
-    $lock=Enter-ScenarijZaklep -Pot (Join-Path $root '.scenarij.lock') -Kdo "m79-e$Entities"
+    $lock=Enter-ScenarijZaklep -Pot (Join-Path $root '.scenarij.lock') -Kdo $tag
     Assert-JavaPrototype (@(Get-NavForeignJava).Count -eq 0) 'no foreign Java workload'
+    Assert-JavaPrototype (($Package -eq 'm79' -and $AnimHooks -eq 0) -or ($Package -eq 'm75' -and $Entities -eq 1)) 'm75 needs the entities mod; m79 runs without hooks'
     $cp=Get-JavaPrototypeInputs $root
     $jdk=Join-Path $root '.tools/jdk8'; $env:JAVA_HOME=$jdk; $env:PATH="$jdk/bin;$env:PATH"
     New-Item -ItemType Directory -Path $work | Out-Null
@@ -98,6 +103,7 @@ try {
     $clones=Join-Path $work 'world/customnpcs/clones/1'; New-Item -ItemType Directory -Path $clones -Force | Out-Null
     $workspace=Join-Path $root 'dev/build/libs/CustomNPCs_1.12.2-01Oct19-workspace.jar'
     Assert-JavaPrototype (Test-JavaPrototypeJar $workspace 'noppes/npcs/rework/anim/Animators.class') 'controller packaged animation API exists'
+    if($Package -eq 'm75') { Assert-JavaPrototype (Test-JavaPrototypeJar $workspace 'noppes/npcs/rework/anim/AnimationHooks.class') 'controller packaged animation hooks exist' }
     $cache=Join-Path $env:USERPROFILE '.gradle/caches'
     $forge=Get-JavaPrototypeSingle (Join-Path $cache 'modules-2/files-2.1/net.minecraftforge/forge/1.12.2-14.23.5.2847') '*-universal.jar'
     $mc=Join-Path $cache 'minecraft/net/minecraft/minecraft_server/1.12.2/minecraft_server-1.12.2.jar'
@@ -124,6 +130,10 @@ try {
     $cfg=Join-Path $work 'config/CustomNpcs.cfg'
     Assert-JavaPrototype (-not ([IO.File]::ReadAllText($cfg) -match '(?m)^RwJavaClasspath=')) 'config copy has no Java classpath'
     [IO.File]::AppendAllText($cfg,("`nRwJavaClasspath="+$classpathFile.Replace('\','/')+"`n"),(New-Object Text.UTF8Encoding $false))
+    if($Package -eq 'm75') {
+        Assert-JavaPrototype (-not ([IO.File]::ReadAllText($cfg) -match '(?m)^RwAnimHooks=')) 'config copy has no animation hook switch'
+        [IO.File]::AppendAllText($cfg,"RwAnimHooks=$AnimHooks`n",(New-Object Text.UTF8Encoding $false))
+    }
     $mods=Join-Path $work 'mods'; New-Item -ItemType Directory -Path $mods | Out-Null
     Copy-Item -LiteralPath $workspace -Destination $mods
     if($Entities -eq 1) { Copy-Item -LiteralPath $EntitiesJar -Destination $mods }
@@ -131,7 +141,11 @@ try {
     $exe=Join-Path $jdk 'bin/java.exe'
     $arguments=@('-Xmx2G','-cp',$launchCp,'net.minecraft.launchwrapper.Launch','--tweakClass','net.minecraftforge.fml.common.launcher.FMLServerTweaker','nogui')
     $out="$prefix-proof.json"
-    $code=[IO.File]::ReadAllText((Join-Path $root 'dev/testworld/m79-api-control.js')).Replace('@@ENTITIES@@',($Entities -eq 1).ToString().ToLowerInvariant()).Replace('@@OUTPUT@@',($out.Replace('\','/') | ConvertTo-Json -Compress))
+    $code=if($Package -eq 'm75') {
+        [IO.File]::ReadAllText((Join-Path $root 'dev/testworld/m75-hooks-control.js')).Replace('@@HOOKS@@',($AnimHooks -eq 1).ToString().ToLowerInvariant()).Replace('@@OUTPUT@@',($out.Replace('\','/') | ConvertTo-Json -Compress))
+    } else {
+        [IO.File]::ReadAllText((Join-Path $root 'dev/testworld/m79-api-control.js')).Replace('@@ENTITIES@@',($Entities -eq 1).ToString().ToLowerInvariant()).Replace('@@OUTPUT@@',($out.Replace('\','/') | ConvertTo-Json -Compress))
+    }
     $codePath=Join-Path $work 'm79-control.js'; [IO.File]::WriteAllText($codePath,$code,(New-Object Text.UTF8Encoding $false))
     $clone=Join-Path $clones 'M79_Control.json'
     Install-NavController (Join-Path $root 'dev/testworld/customnpcs/clones/1/PERF_Kontrola.json') $codePath $clone
@@ -159,6 +173,35 @@ try {
         Assert-JavaPrototype ($text -match 'RWDIAG-CHUNKS stanje=on [^\r\n]* npc=3') 'three forced mobs'
     }
     Send-M79 'noppes clone spawn M79_Control 1 0,4,0'
+    if($Package -eq 'm75') {
+        $on=$AnimHooks -eq 1
+        Wait-M79 "M75 DONE success=true hooks=$($on.ToString().ToLowerInvariant())" 240 | Out-Null
+        $proof=[IO.File]::ReadAllText($out) | ConvertFrom-Json
+        $count=if($on) {14} else {13}
+        Assert-JavaPrototype ($proof.success -eq $true -and $proof.hooks -eq $on -and @($proof.checks).Count -eq $count -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) "$count successful probe checks"
+        foreach($key in @('switch-read','listener-only-with-switch','tracks-only-animated','available-0','available-1','play-bite-0','play-bite-1','bite-js','bite-java-equals-js','cuts-js','cuts-java-equals-js','tabs-healthy','control-npc-unchanged')) { Assert-M79Key $proof $key }
+        $bite='S:bite:0:bite|E:bite:sound:1:1|E:bite:lock:5:5|E:bite:lunge:5:5|E:bite:hit:10:10|E:bite:sound:10:10|X:bite:19:true|'
+        if($on) {
+            Assert-M79Key $proof 'idle-observe-silent'
+            Assert-JavaPrototype ($proof.biteJs -ceq $bite -and $proof.biteJava -ceq $bite) 'JS and Java bite hook golden'
+            $cut='S:bite:0:bite\|E:bite:sound:1:1\|X:bite:[1-4]:false\|'
+            $hurt='S:hurt:0:hurt\|X:hurt:9:true\|'
+            Assert-JavaPrototype ($proof.cutsJs -cmatch ('^'+$cut+$hurt+$cut+$cut+[regex]::Escape($bite)+'$') -and $proof.cutsJava -ceq $proof.cutsJs) 'JS and Java replace/stop/restart golden'
+            Assert-JavaPrototype ($proof.trackedNpcs -eq 2 -and $proof.idleObserveMicrosPerWorldTick -gt 0) 'two tracked bears and one idle observe cost datum'
+        } else {
+            Assert-JavaPrototype ($proof.biteJs -ceq '' -and $proof.biteJava -ceq '' -and $proof.cutsJs -ceq '' -and $proof.cutsJava -ceq '') 'switch 0: no hook call in either language'
+        }
+        Stop-M79
+        $all=($logs | ForEach-Object { Read-JavaPrototypeLog $_ }) -join "`n"
+        Assert-JavaPrototype (-not ($all -match "$linkage|RWANIM incompatible|RWANIM queue cancelled|RWANIM hooks stopped")) 'no linkage or bridge errors'
+        Assert-JavaPrototype (-not ($all -cmatch 'Exception ticking|Encountered an unexpected exception|Missing Mods|MissingModsException|DuplicateModsFound')) 'no ticking/loader errors'
+        foreach($path in $hashes.Keys) { Assert-JavaPrototype ((Get-M79Hash $path) -ceq $hashes[$path]) "unchanged protected input $path" }
+        @{success=$true;package='M7.5';animHooks=$AnimHooks;proof=$out;logs=$logs;inputs=$hashes;fixtureHash=(Get-JavaPrototypeHash $codePath);
+          condition='one packaged dedicated Forge server with customnpcentities 0.7.0; two live bears with the same hook script in JS and typed Java; clips driven by the M7.9 API; hooks=1 pinned bite and replace/stop/restart goldens plus one idle observe cost batch; hooks=0 no listener and no hook call; no client/rendering'} |
+            ConvertTo-Json -Depth 8 | Set-Content -LiteralPath "$prefix.json" -Encoding UTF8
+        Write-Host "M75 evidence: $prefix.json"
+        $exitCode=0
+    } else {
     Wait-M79 "M79 DONE success=true entities=$(($Entities -eq 1).ToString().ToLowerInvariant())" 240 | Out-Null
     $proof=[IO.File]::ReadAllText($out) | ConvertFrom-Json
     $count=if($Entities -eq 1) {28} else {10}
@@ -183,6 +226,7 @@ try {
         ConvertTo-Json -Depth 8 | Set-Content -LiteralPath "$prefix.json" -Encoding UTF8
     Write-Host "M79 evidence: $prefix.json"
     $exitCode=0
+    }
 } catch { Write-Host "FAIL $_" }
 finally {
     if($null -ne $proc -and -not $proc.HasExited) {

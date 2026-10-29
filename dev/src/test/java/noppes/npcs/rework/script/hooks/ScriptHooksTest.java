@@ -34,6 +34,20 @@ public class ScriptHooksTest {
         assertNull("block-only hook", ScriptHooks.npc(EnumScriptType.REDSTONE.function));
     }
 
+    @Test public void javaRegistryAppendsNamedAnimationHooks() {
+        List<ScriptHooks.Hook> hooks = ScriptHooks.java();
+        assertEquals(19, hooks.size());
+        assertEquals(ScriptHooks.npc(), hooks.subList(0, 16));
+        assertEquals(ScriptHooks.animation(), hooks.subList(16, 19));
+        assertEquals("[animationStart(noppes.npcs.rework.anim.AnimationEvent$Started), animationEnd(noppes.npcs.rework.anim.AnimationEvent$Ended), "
+                + "animationEvent(noppes.npcs.rework.anim.AnimationEvent$ClipEvent)]", ScriptHooks.animation().toString());
+        for (ScriptHooks.Hook hook : ScriptHooks.animation()) {
+            assertNull("no EnumScriptType", hook.type);
+            assertNull("not an EventHooks hook", ScriptHooks.npc(hook.name));
+            assertSame(hook, ScriptHooks.java(hook.name));
+        }
+    }
+
     @Test public void forgeStringHookNameFollowsEventHooksRule() {
         assertEquals("npcEventInitEvent", ScriptHooks.forgeHookName(NpcEvent.InitEvent.class));
         assertEquals("string", ScriptHooks.forgeHookName(String.class));
