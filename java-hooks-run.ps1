@@ -1,6 +1,8 @@
 # Controller-only M6.2. Disposable dev or actual packaged Forge server: JS/Java hook trace, one run.
+# -Package m63: same server, typed NpcScript probe (M6.3); m62 behaviour is unchanged by default.
 # Same server setup as java-runtime-run.ps1 (M6.1, Q137-Q140); only the fixture and assertions differ.
-param([ValidateSet('dev','packaged')][string]$Mode = 'dev')
+param([ValidateSet('dev','packaged')][string]$Mode = 'dev',
+      [ValidateSet('m62','m63')][string]$Package = 'm62')
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 . (Join-Path $root 'meritve-lib.ps1')
@@ -8,10 +10,11 @@ $root = $PSScriptRoot
 . (Join-Path $root 'dev/testworld/java-compiler-lib.ps1')
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $stamp = Get-Date -Format 'yyyy-MM-dd-HHmmss'
-$prefix = Join-Path $root "audit/m62-$Mode-$stamp"
+$tag = $Package.ToUpperInvariant()
+$prefix = Join-Path $root "audit/$Package-$Mode-$stamp"
 # Not under dev/build: Gradle deletes stale task outputs there, and ForgeGradle declares
 # runDir as a runServer output, so the copied config/EULA/world vanished before start (Q137).
-$work = Join-Path $root "dev/run-m62/hooks-$Mode-$stamp"
+$work = Join-Path $root "dev/run-$Package/hooks-$Mode-$stamp"
 $run = Join-Path $root 'dev/run'
 $lock = $null; $proc = $null; $exitCode = 1
 $oldJava=$env:JAVA_HOME; $oldPath=$env:PATH
@@ -73,7 +76,7 @@ function Wait-M61([string]$Marker, [int]$Seconds) {
         $text=Read-JavaPrototypeLog $log
         if ($text.Contains($Marker)) { return }
         # The probe provokes Java tab errors on purpose, so 'script errored' is expected here.
-        if ($text -match 'M62 FAILED|M62 DONE success=false|ScriptException|Encountered an unexpected exception') { throw 'Runtime fixture failed; see log.' }
+        if ($text -match "$tag FAILED|$tag DONE success=false|ScriptException|Encountered an unexpected exception") { throw 'Runtime fixture failed; see log.' }
         Update-M61Owned
         $foreign=@(Get-NavForeignJava -Roots (@([int]$proc.Id)+@($ownedJava.Keys)))
         if ($foreign.Count) { throw ('Foreign Java workload: '+($foreign -join '; ')) }
@@ -82,7 +85,7 @@ function Wait-M61([string]$Marker, [int]$Seconds) {
     throw "Missing marker: $Marker"
 }
 try {
-    $lock=Enter-ScenarijZaklep -Pot (Join-Path $root '.scenarij.lock') -Kdo "m62-$Mode"
+    $lock=Enter-ScenarijZaklep -Pot (Join-Path $root '.scenarij.lock') -Kdo "$Package-$Mode"
     Assert-JavaPrototype (@(Get-NavForeignJava).Count -eq 0) 'no foreign Java workload'
     $cp=Get-JavaPrototypeInputs $root
     $jdk=Join-Path $root '.tools/jdk8'
@@ -144,7 +147,9 @@ try {
         $arguments=@('-Xmx2G','-cp',$launchCp,'net.minecraft.launchwrapper.Launch','--tweakClass','net.minecraftforge.fml.common.launcher.FMLServerTweaker','nogui')
         $working=$work
     } else {
-        [IO.File]::WriteAllText($classpathFile,$cp,(New-Object Text.UTF8Encoding $false))
+        # The dev compile classpath has no patch classes; M6.3 tabs extend NpcScript from runServer's output.
+        $devCp=$cp; if ($Package -eq 'm63') { $devCp=$cp+';'+(Join-Path $root 'dev/build/classes/java/main') }
+        [IO.File]::WriteAllText($classpathFile,$devCp,(New-Object Text.UTF8Encoding $false))
         $exe=Join-Path $root 'dev/gradlew.bat'
         # gradlew.bat requires cmd; Start-JavaPrototypeProcess already provides it.
         $arguments=@('runServer','--offline','--no-daemon','--console=plain',"-PrwRunDir=$work")
@@ -155,12 +160,12 @@ try {
     $cfg=Join-Path $work 'config/CustomNpcs.cfg'
     Assert-JavaPrototype (-not ([IO.File]::ReadAllText($cfg) -match '(?m)^RwJavaClasspath=')) 'config copy has no RwJavaClasspath yet'
     [IO.File]::AppendAllText($cfg,("`nRwJavaClasspath="+$classpathFile.Replace('\','/')+"`n"),(New-Object Text.UTF8Encoding $false))
-    $code=[IO.File]::ReadAllText((Join-Path $root 'dev/testworld/java-hooks-control.js'))
+    $code=[IO.File]::ReadAllText((Join-Path $root $(if ($Package -eq 'm63') { 'dev/testworld/java-typed-control.js' } else { 'dev/testworld/java-hooks-control.js' })))
     $code=$code.Replace('@@OUTPUT@@',($out.Replace('\','/') | ConvertTo-Json -Compress)).Replace('@@MODE@@',($Mode | ConvertTo-Json -Compress))
     $codePath=Join-Path $work 'hooks-control.js'; [IO.File]::WriteAllText($codePath,$code,(New-Object Text.UTF8Encoding $false))
-    $clone=Join-Path $clones 'M62_Control.json'
+    $clone=Join-Path $clones "${tag}_Control.json"
     Install-NavController (Join-Path $root 'dev/testworld/customnpcs/clones/1/PERF_Kontrola.json') $codePath $clone
-    $cloneText=[IO.File]::ReadAllText($clone).Replace('"Name": "PERF_Kontrola"','"Name": "M62_Control"')
+    $cloneText=[IO.File]::ReadAllText($clone).Replace('"Name": "PERF_Kontrola"',"`"Name`": `"${tag}_Control`"")
     [IO.File]::WriteAllText($clone,$cloneText,(New-Object Text.UTF8Encoding $false))
     # A fresh flat world spawns far from 0,0, so the control NPC would sit in a non-ticking
     # chunk. Pin and save the origin spawn in a bootstrap start first (nav-gui-run pattern).
@@ -181,26 +186,36 @@ try {
     Wait-M61 'Done (' 1000
     Send-M61 'list'
     Wait-M61 'players online' 30
-    Send-M61 'noppes clone spawn M62_Control 1 0,4,0'
-    Wait-M61 "M62 DONE success=true mode=$Mode" 180
+    if ($Package -eq 'm63') {
+        $typedBase=if ($Mode -eq 'packaged') { $workspace } else { Join-Path $root 'dev/build/classes/java/main' }
+        Assert-JavaPrototype ($(if ($Mode -eq 'packaged') { Test-JavaPrototypeJar $typedBase 'noppes/npcs/rework/script/NpcScript.class' } else { Test-Path -LiteralPath (Join-Path $typedBase 'noppes/npcs/rework/script/NpcScript.class') })) 'NpcScript on the compiler classpath'
+    }
+    Send-M61 "noppes clone spawn ${tag}_Control 1 0,4,0"
+    Wait-M61 "$tag DONE success=true mode=$Mode" 180
     $text=Read-JavaPrototypeLog $log
-    Assert-JavaPrototype ([regex]::Matches($text,'M62 DONE').Count -eq 1) 'probe ran exactly once'
+    Assert-JavaPrototype ([regex]::Matches($text,"$tag DONE").Count -eq 1) 'probe ran exactly once'
     Assert-JavaPrototype ($text.Contains(('RWCORE coremod nalozen, runtimeDeobf=' + $(if($Mode -eq 'packaged') {'1'} else {'0'})))) 'expected coremod production/development mode'
     $proof=[IO.File]::ReadAllText($out) | ConvertFrom-Json
     Assert-JavaPrototype ($proof.success -eq $true -and $proof.mode -ceq $Mode) 'hook trace proof success'
     Assert-JavaPrototype (@($proof.checks).Count -eq 14 -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) '14 hook trace assertions'
     # Golden strings are pinned here too, so a probe edit cannot silently weaken the expectation.
     $golden='1:init:1;2:init;bus:init;1:tick;2:tick;bus:tick;1:tick;2:tick;bus:tick;1:interact:false;2:interact:true;bus:interact:true;ret:true;1:timer:7;2:timer:7;bus:timer;'
-    Assert-JavaPrototype ($proof.traces.js -ceq $golden -and $proof.traces.java -ceq $golden) 'JS and Java golden tab/bus/cancel trace'
+    $javaTrace=if ($Package -eq 'm63') { $proof.traces.typed } else { $proof.traces.java }
+    Assert-JavaPrototype ($proof.traces.js -ceq $golden -and $javaTrace -ceq $golden) 'JS and Java golden tab/bus/cancel trace'
     $reload='1:init:1;2:init;bus:init;1:tick;2:tick;bus:tick;'
-    Assert-JavaPrototype ($proof.traces.jsReload -ceq $reload -and $proof.traces.javaReload -ceq $reload) 'JS and Java reload trace'
+    $javaReload=if ($Package -eq 'm63') { $proof.traces.typedReload } else { $proof.traces.javaReload }
+    Assert-JavaPrototype ($proof.traces.jsReload -ceq $reload -and $javaReload -ceq $reload) 'JS and Java reload trace'
+    if ($Package -eq 'm63') {
+        Assert-JavaPrototype ($proof.traces.plain -ceq $golden) 'M6.2 plain Java class trace unchanged'
+        Assert-JavaPrototype ($proof.traces.typedName -ceq 'm63:7') 'typed API call on the existing interface'
+    }
     Send-M61 'stop'
     Wait-M61Exit 180
     $proc=$null
     foreach($path in $hashes.Keys) { Assert-JavaPrototype ((Get-M61InputHash $path) -ceq $hashes[$path]) "unchanged protected input $path" }
-    @{ success=$true; mode=$Mode; proof=$out; inputs=$hashes; compilerClasspath=[IO.File]::ReadAllText($classpathFile); fixtureHash=(Get-JavaPrototypeHash $codePath); condition='one functional server; real EventHooks with unspawned NPCs; JS and Java two-tab trace incl. bus order, cancel, timer, reload; Java error cases; no cost gate' } |
+    @{ success=$true; package=$Package; mode=$Mode; proof=$out; inputs=$hashes; compilerClasspath=[IO.File]::ReadAllText($classpathFile); fixtureHash=(Get-JavaPrototypeHash $codePath); condition='one functional server; real EventHooks with unspawned NPCs; JS and Java two-tab trace incl. bus order, cancel, timer, reload; Java error cases; no cost gate' } |
         ConvertTo-Json -Depth 8 | Set-Content -LiteralPath "$prefix.json" -Encoding UTF8
-    Write-Host "M62 $Mode evidence: $prefix.json"
+    Write-Host "$tag $Mode evidence: $prefix.json"
     $exitCode=0
 } catch { Write-Host "FAIL $_" }
 finally {

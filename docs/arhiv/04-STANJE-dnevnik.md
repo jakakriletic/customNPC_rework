@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 169 → 1)
+# Arhiv: dnevnik sej (vnosi 170 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,23 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-29 (170) — M6.1: JDK prevajalnik izbran in potrjen v Forge
+
+**Paket:** M6.1 (D-090, Q132–Q141) · **Stanje:** zaključen, poskus 1.
+JavaCompiler prototip z diagnostiko, brez annotation procesorjev/inicializacije;
+stock Janino primerjava, realni no-compiler JRE in ločena dev/packaged Forge scenarija.
+Originalni handlerji/privzeti JS isti; dva nova rework razreda in šest unit testov.
+[En zapis meril, hashov in odločitev](../meritve/2026-10-29-M6.1-prevajalnik.md).
+Na 03095534… unit/build/package in m61-compiler-v1 PASS; m61-dev-v1 padel pred zagonom
+strežnika (harness: Gradle je pod `dev/build` izbrisal kopijo configa/EULA, Q137). Delovna mapa
+premaknjena v `dev/run-m61/`. Na 4771a7b9… krmilni NPC ni tiknil (spawn svežega sveta daleč
+od 0,0; harness zdaj pribije spawn v bootstrap zagonu, Q138). Na 7372b8a6… dev: vseh 15 typed preverb,
+golden JS in časi OK; padla je le hash-kontrola `deobfedDeps/providedDummy.jar`, ki ga ForgeGradle
+ob vsakem zagonu znova zapiše (enak vnos `dummyThing`, nov zip čas). Harness ta dva dummy jarja zdaj
+primerja po vsebini vnosov (Q139). Na b05e6f7a… je varovalo kot tujo Javo štelo osirotel enkratni
+Gradle daemon; harness zdaj počaka lastne potomce (Q140). Na 85cc41cc… m61-dev-v1 in m61-packaged-v1 PASS (15/15).
+Q141: JDK JavaCompiler (warm 17–31 ms); Janino hitrejši, a brez lambd/preverbe generikov. Naslednji M6.2; nepovezane datoteke ohranjene.
 
 ### 2026-10-29 (169) — M6.0: raziskava Java scriptinga zaključena
 

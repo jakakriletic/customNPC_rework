@@ -145,7 +145,7 @@ public final class HookTraceProbe {
         }
     }
 
-    private static EntityNPCInterface npc(WorldServer world, String language, String... tabs) {
+    static EntityNPCInterface npc(WorldServer world, String language, String... tabs) {
         EntityCustomNpc npc = new EntityCustomNpc(world);
         npc.setPosition(0.5, 4, 0.5);
         NBTTagList list = new NBTTagList();
@@ -164,7 +164,7 @@ public final class HookTraceProbe {
         return npc;
     }
 
-    private static void drive(EntityNPCInterface npc, EntityPlayer player) {
+    static void drive(EntityNPCInterface npc, EntityPlayer player) {
         EventHooks.onNPCTick(npc);
         EventHooks.onNPCTick(npc);
         mark(npc.wrappedNPC, "ret:" + EventHooks.onNPCInteract(npc, player));
@@ -176,12 +176,12 @@ public final class HookTraceProbe {
         d.put("t", (d.has("t") ? d.get("t") : "") + s + ";");
     }
 
-    private static String trace(EntityNPCInterface npc) {
+    static String trace(EntityNPCInterface npc) {
         Object t = npc.wrappedNPC.getTempdata().get("t");
         return t == null ? "" : t.toString();
     }
 
-    private static String console(EntityNPCInterface npc) {
+    static String console(EntityNPCInterface npc) {
         StringBuilder out = new StringBuilder();
         for (ScriptContainer tab : npc.script.getScripts()) {
             for (String line : tab.console.values()) { out.append(line).append('\n'); }
@@ -189,7 +189,7 @@ public final class HookTraceProbe {
         return out.toString();
     }
 
-    private static void check(List<Map<String, Object>> checks, String key, boolean ok) {
+    static void check(List<Map<String, Object>> checks, String key, boolean ok) {
         Map<String, Object> check = new LinkedHashMap<>(); check.put("key", key); check.put("ok", ok); checks.add(check);
     }
 }

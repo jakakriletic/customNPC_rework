@@ -251,6 +251,8 @@ task testOriginal(type: Test) {
     exclude '**/JdkScriptCompilerTest.class'
     // M6.2: hook registry and Java binder are new.
     exclude '**/ScriptHooksTest.class'
+    // M6.3: typed base class NpcScript is new.
+    exclude '**/NpcScriptTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

@@ -25,7 +25,7 @@ import noppes.npcs.rework.script.JdkScriptCompiler;
 /** M6.2 (D-090, Q142-Q145): Java branch of one NPC script handler, selected by ScriptLanguage=Java.
  * Same tabs, order, event instance and console as ScriptContainer.run; the caller (DataScript)
  * keeps init-on-reload and EventHooks keeps the bus post after it. Trusted authors only (M6.8):
- * a loader is not a sandbox. Bytecode cache and atomic reload are M6.4, typed base M6.3.
+ * a loader is not a sandbox. Bytecode cache and atomic reload are M6.4; typed base NpcScript is M6.3.
  */
 public final class JavaNpcScripts {
     /** Same interned literal as ScriptContainer's private monitor, so JS and Java tabs never

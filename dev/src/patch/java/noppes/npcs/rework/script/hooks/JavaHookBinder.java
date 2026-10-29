@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import noppes.npcs.rework.script.NpcScript;
 
 /** M6.2: binds the public methods of a Java tab class to registry hooks.
  * A method named like a hook with a wrong shape is an error, never a silently missing hook (Q128).
+ * M6.3: the no-op defaults of NpcScript are not hooks; only overrides below it are bound.
  */
 public final class JavaHookBinder {
     private static final Pattern COMMENTS = Pattern.compile("/\\*.*?\\*/|//[^\\n]*", Pattern.DOTALL);
@@ -46,7 +48,7 @@ public final class JavaHookBinder {
         for (ScriptHooks.Hook hook : hooks) { byName.put(hook.name, hook); }
         Map<String, Method> bound = new LinkedHashMap<>();
         Map<String, String> seen = new LinkedHashMap<>();
-        for (Class<?> c = script; c != null && c != Object.class; c = c.getSuperclass()) {
+        for (Class<?> c = script; c != null && c != Object.class && c != NpcScript.class; c = c.getSuperclass()) {
             Method[] methods = c.getDeclaredMethods();
             // getDeclaredMethods has no defined order; sort so the reported error is deterministic.
             Arrays.sort(methods, (a, b) -> a.toString().compareTo(b.toString()));
