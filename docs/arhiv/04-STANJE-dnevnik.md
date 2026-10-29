@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 186 → 1)
+# Arhiv: dnevnik sej (vnosi 187 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (187) — M10.1a: strežniška A/B matrika (ni sprejeta)
+
+**Paket:** M10.1a (Q215–Q220) · **Stanje:** zaprt brez sprejema, oba poskusa porabljena (Q92).
+Harness `m10-matrika-run.ps1` (krak O distribucijski original, krak K kandidat). Poskus 1 padel na
+`spawnNPC(IWorld)` v originalu (Q219); poskus 2 `m101a-matrika-v2` v kraku O 11/13 OK, padca IN3 `NpcModelData`
+(oči klona naključne v originalu) in IA5 (stara entiteta v overworldu isti tick) sta strožja od originala; K se ni
+zagnal. Vse vrstice z istim harnessom in razsodbo O = K prestavljene v M10.1b (Q220).
+[Zapis](../meritve/2026-10-29-M10.1a-matrika.md). Naslednji M10.1b.
 
 ### 2026-10-29 (186) — M10.0: raziskava release kandidata
 

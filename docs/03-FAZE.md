@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0–M6.12 zaključeni (D-090–D-094, Q191); naslednji ostanek M7 po raziskavi [M7.0](raziskave/M7.0-animacije-integracija.md) (D-095): ~~M7.V~~ (Q199) → ~~M7.9~~ (Q202) → ~~M7.5~~ (Q206); M7 v1 zaključen; M10.0 raziskava zaključena (D-096), ~~M10.1a~~ in ~~M10.1b~~ zaprta brez sprejema (Q220, Q223), naslednji M10.1c (strežniški O = K) → M10.1d (klient); M7.8 v2. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
+**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0–M6.12 zaključeni (D-090–D-094, Q191); naslednji ostanek M7 po raziskavi [M7.0](raziskave/M7.0-animacije-integracija.md) (D-095): ~~M7.V~~ (Q199) → ~~M7.9~~ (Q202) → ~~M7.5~~ (Q206); M7 v1 zaključen; M10.0 raziskava zaključena (D-096), ~~M10.1a~~ in ~~M10.1b~~ zaprta brez sprejema (Q220, Q223), ~~M10.1c~~ primerjalno sprejet (Q225, delne vrstice ostanejo odprte), naslednji M10.1d (klient); M7.8 v2. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -576,7 +576,7 @@ CustomNPC+ repozitorija se ne prenesejo.
 | ~~M10.0~~ | **Raziskava zaključena 29. 10. (D-096, Q207–Q214):** [zapis](raziskave/M10.0-release-kandidat.md); M10.1 razdeljen na a/b, vrstni red M10.1a → M10.1b → M10.5 → M10.4 → M10.2 → M10.6 → M10.7 | S |
 | ~~M10.1a~~ | **Zaprt 29. 10. brez sprejema (Q220):** oba poskusa padla v harnessu na kraku O, K se ni zagnal; vse vrstice prestavljene v M10.1b. [Zapis](meritve/2026-10-29-M10.1a-matrika.md) | M |
 | ~~M10.1b~~ | **Zaprt 29. 10. brez sprejema (Q223):** oba kraka zelena po vrsticah, O = K padel samo na naključni `Eyes.Color`; [zapis](meritve/2026-10-29-M10.1b-matrika.md) | M |
-| M10.1c | Strežniški O/K tek `m10-matrika-run.ps1` z `Eyes.Color` "v paleti" (Q223, Q224): sprejem vrstic IN3, IN6–IN8, IA1–IA3, IA5, IS3, IS8, IL5, IL6 | S |
+| ~~M10.1c~~ | **Primerjalni paket sprejet 29. 10. (Q225):** `m101c-matrika-v1` PASS, O/K 13/13 + 9/9 in NBT/sledi enaki; IN3/IA3/IS3/IL5/IL6 ostanejo delno pokriti. [Zapis](meritve/2026-10-29-M10.1c-matrika.md); naslednji M10.1d po Q92 | S |
 | M10.1d | Klientski prehod (Q224): IL3, IK2, IC1–IC5, IK3, IK4, IO1–IO3, login/playerdata, pošta, skin napaka, F3+T, original ↔ kandidat klient/strežnik | M |
 | M10.2 | Meritve proti baselineu iz M2.6, vse scenarije | S |
 | M10.3 | Test na **kopiji** uporabnikovega pravega sveta | M |
