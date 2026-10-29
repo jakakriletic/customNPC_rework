@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 184 → 1)
+# Arhiv: dnevnik sej (vnosi 185 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,16 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (185) — M7.5: animacijski hooki start/end/event
+
+**Paket:** M7.5 (Q203–Q206) · **Stanje:** zaključen, sprejet v poskusu 1 na `e80e2658…`.
+Hooki `animationStart`/`animationEnd`/`animationEvent` za JS in Java prek `DataScript.runScript`, za stikalom
+`RwAnimHooks` (privzeto 0, pri 0 brez poslušalca). `AnimationHooks` + čisti `HookTracker` berejo ACTION enkrat na
+world tick; entities mod nespremenjen. unit/build/package, m75-api-v1 (57 tipov/626 članov, 19 hookov),
+m75-hooks-on-v1 (JS = Java pripeta sled), m75-hooks-off-v1 (noben hook pri 0) in m62-packaged-v3 16/16 PASS;
+opazovalec 0,953 µs/world tick (podatek). [Dokazi/omejitve](../meritve/2026-10-29-M7.5-animacijski-hooki.md).
+M7 v1 zaključen; naslednji M10.1.
 
 ### 2026-10-29 (184) — M7.9: refleksijski script animator
 
