@@ -46,6 +46,7 @@ import noppes.npcs.api.wrapper.BlockPosWrapper;
 import noppes.npcs.constants.EnumScriptType;
 import noppes.npcs.controllers.IScriptHandler;
 import noppes.npcs.controllers.ScriptController;
+import noppes.npcs.rework.script.SourceMap;
 
 public class ScriptContainer {
     private static final String lock = "lock";
@@ -65,6 +66,8 @@ public class ScriptContainer {
     private boolean init = false;
     private static Method luaCoerce;
     private static Method luaCall;
+    /** M6.5: segments of fullscript, so an error line maps back to the tab or the include file. */
+    private SourceMap sourceMap = new SourceMap();
 
     private static void FillMap(Class c) {
         Field[] declaredFields;
@@ -106,12 +109,15 @@ public class ScriptContainer {
     private String getFullCode() {
         if (!this.init) {
             this.fullscript = this.script;
+            this.sourceMap = new SourceMap();
             if (!this.fullscript.isEmpty()) {
+                this.sourceMap.add(1, "tab");
                 this.fullscript = this.fullscript + "\n";
             }
             for (String loc : this.scripts) {
                 String code = ScriptController.Instance.scripts.get(loc);
                 if (code == null || code.isEmpty()) continue;
+                this.sourceMap.add(1 + SourceMap.lines(this.fullscript), loc);
                 this.fullscript = this.fullscript + code + "\n";
             }
             this.unknownFunctions = new HashSet();
@@ -127,16 +133,22 @@ public class ScriptContainer {
      * WARNING - Removed try catching itself - possible behaviour change.
      */
     public void run(String type, Object event) {
-        if (this.errored || !this.hasCode() || this.unknownFunctions.contains(type) || !CustomNpcs.EnableScripting) {
+        if (!CustomNpcs.EnableScripting) {
+            return;
+        }
+        // M6.5 B5: a script reload must reach a stopped or partial container before the guards below;
+        // otherwise a fixed error or a newly added function never runs until the next GUI save.
+        if (ScriptController.Instance.lastLoaded > this.lastCreated) {
+            this.lastCreated = ScriptController.Instance.lastLoaded;
+            this.init = false;
+            this.errored = false;
+        }
+        if (this.errored || !this.hasCode() || this.unknownFunctions.contains(type)) {
             return;
         }
         this.setEngine(this.handler.getLanguage());
         if (this.engine == null) {
             return;
-        }
-        if (ScriptController.Instance.lastLoaded > this.lastCreated) {
-            this.lastCreated = ScriptController.Instance.lastLoaded;
-            this.init = false;
         }
         String string = lock;
         synchronized (lock) {
@@ -172,6 +184,10 @@ public class ScriptContainer {
             catch (Throwable e) {
                 this.errored = true;
                 e.printStackTrace(pw);
+                String source = this.sourceMap.locateScript(e);
+                if (source != null) {
+                    pw.println("Script source: " + source);
+                }
                 NoppesUtilServer.NotifyOPs(this.handler.noticeString() + " script errored", new Object[0]);
             }
             finally {

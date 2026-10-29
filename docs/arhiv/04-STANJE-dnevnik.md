@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 171 → 1)
+# Arhiv: dnevnik sej (vnosi 172 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,14 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-29 (172) — M6.3: tipizirana script pogodba `NpcScript`
+
+**Paket:** M6.3 (D-090, Q148–Q150) · **Stanje:** zaključen, poskus 1.
+Izbiren osnovni razred `rework/script/NpcScript` (16 no-op hookov z event tipi iz registryja + `log`)
+na obstoječih `noppes.npcs.api` vmesnikih; `JavaHookBinder` veže samo prepise. [Zapis](../meritve/2026-10-29-M6.3-pogodba.md).
+Na 2e9136a9… unit (5 `NpcScriptTest`), build, package in m63-packaged-v1 PASS 14/14: tipizirana sled = JS
+zlati niz tudi po reloadu, `@Override` napaka z vrstico, navaden M6.2 razred nespremenjen. Naslednji M6.4.
 
 ### 2026-10-29 (171) — M6.2: popis hookov in Java adapter na NPC handlerju
 

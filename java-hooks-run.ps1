@@ -1,9 +1,10 @@
 # Controller-only M6.2. Disposable dev or actual packaged Forge server: JS/Java hook trace, one run.
 # -Package m63: same server, typed NpcScript probe (M6.3); m62 behaviour is unchanged by default.
 # -Package m64: same server, per NPC/tab/generation loader, bytecode cache and atomic reload probe (M6.4).
+# -Package m65: same server, error origins and B5 recovery; JS B5 against the original jar bytes (M6.5).
 # Same server setup as java-runtime-run.ps1 (M6.1, Q137-Q140); only the fixture and assertions differ.
 param([ValidateSet('dev','packaged')][string]$Mode = 'dev',
-      [ValidateSet('m62','m63','m64')][string]$Package = 'm62')
+      [ValidateSet('m62','m63','m64','m65')][string]$Package = 'm62')
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 . (Join-Path $root 'meritve-lib.ps1')
@@ -107,17 +108,11 @@ try {
     $dependencies=@()
     $workspace=Join-Path $root 'dev/build/libs/CustomNPCs_1.12.2-01Oct19-workspace.jar'
     Assert-JavaPrototype (Test-Path -LiteralPath $workspace) 'controller packaged mod exists'
-    # The JS container stays byte-for-byte original; DataScript is the patched M6.2 edge.
-    $original=[IO.Compression.ZipFile]::OpenRead((Join-Path $root 'CustomNPCs_1.12.2-(01Oct19).jar'))
-    $candidate=[IO.Compression.ZipFile]::OpenRead($workspace)
-    try {
-        foreach($entry in @('noppes/npcs/controllers/ScriptContainer.class')) {
-            $sha=[Security.Cryptography.SHA256]::Create()
-            $a=$original.GetEntry($entry).Open(); $b=$candidate.GetEntry($entry).Open()
-            try { Assert-JavaPrototype ([BitConverter]::ToString($sha.ComputeHash($a)) -ceq [BitConverter]::ToString($sha.ComputeHash($b))) "unchanged JS container $entry" }
-            finally { $a.Dispose(); $b.Dispose(); $sha.Dispose() }
-        }
-    } finally { $original.Dispose(); $candidate.Dispose() }
+    # Since M6.5 the JS container is the patched B5 class (src/patch); verify-package limits the changed
+    # entries and the JS golden trace (m62) pins its behaviour. m65 still runs the original bytes.
+    $originalJar=Join-Path $root $(if ($Mode -eq 'packaged') { 'CustomNPCs_1.12.2-(01Oct19).jar' } else { 'dev/libs/customnpcs-mapped-01Oct19.jar' })
+    Assert-JavaPrototype (Test-JavaPrototypeJar $originalJar 'noppes/npcs/controllers/ScriptContainer.class') 'original JS container bytes available'
+    $hashes[$originalJar]=Get-JavaPrototypeHash $originalJar
     if ($Mode -eq 'packaged') {
         $cache=Join-Path $env:USERPROFILE '.gradle/caches'
         $forge=Get-JavaPrototypeSingle (Join-Path $cache 'modules-2/files-2.1/net.minecraftforge/forge/1.12.2-14.23.5.2847') '*-universal.jar'
@@ -149,7 +144,7 @@ try {
         $working=$work
     } else {
         # The dev compile classpath has no patch classes; M6.3 tabs extend NpcScript from runServer's output.
-        $devCp=$cp; if ($Package -in @('m63','m64')) { $devCp=$cp+';'+(Join-Path $root 'dev/build/classes/java/main') }
+        $devCp=$cp; if ($Package -in @('m63','m64','m65')) { $devCp=$cp+';'+(Join-Path $root 'dev/build/classes/java/main') }
         [IO.File]::WriteAllText($classpathFile,$devCp,(New-Object Text.UTF8Encoding $false))
         $exe=Join-Path $root 'dev/gradlew.bat'
         # gradlew.bat requires cmd; Start-JavaPrototypeProcess already provides it.
@@ -161,8 +156,8 @@ try {
     $cfg=Join-Path $work 'config/CustomNpcs.cfg'
     Assert-JavaPrototype (-not ([IO.File]::ReadAllText($cfg) -match '(?m)^RwJavaClasspath=')) 'config copy has no RwJavaClasspath yet'
     [IO.File]::AppendAllText($cfg,("`nRwJavaClasspath="+$classpathFile.Replace('\','/')+"`n"),(New-Object Text.UTF8Encoding $false))
-    $code=[IO.File]::ReadAllText((Join-Path $root $(switch ($Package) { 'm63' { 'dev/testworld/java-typed-control.js' } 'm64' { 'dev/testworld/java-reload-control.js' } default { 'dev/testworld/java-hooks-control.js' } })))
-    $code=$code.Replace('@@OUTPUT@@',($out.Replace('\','/') | ConvertTo-Json -Compress)).Replace('@@MODE@@',($Mode | ConvertTo-Json -Compress))
+    $code=[IO.File]::ReadAllText((Join-Path $root $(switch ($Package) { 'm63' { 'dev/testworld/java-typed-control.js' } 'm64' { 'dev/testworld/java-reload-control.js' } 'm65' { 'dev/testworld/java-recovery-control.js' } default { 'dev/testworld/java-hooks-control.js' } })))
+    $code=$code.Replace('@@OUTPUT@@',($out.Replace('\','/') | ConvertTo-Json -Compress)).Replace('@@MODE@@',($Mode | ConvertTo-Json -Compress)).Replace('@@ORIGINAL@@',($originalJar.Replace('\','/') | ConvertTo-Json -Compress))
     $codePath=Join-Path $work 'hooks-control.js'; [IO.File]::WriteAllText($codePath,$code,(New-Object Text.UTF8Encoding $false))
     $clone=Join-Path $clones "${tag}_Control.json"
     Install-NavController (Join-Path $root 'dev/testworld/customnpcs/clones/1/PERF_Kontrola.json') $codePath $clone
@@ -187,7 +182,7 @@ try {
     Wait-M61 'Done (' 1000
     Send-M61 'list'
     Wait-M61 'players online' 30
-    if ($Package -in @('m63','m64')) {
+    if ($Package -in @('m63','m64','m65')) {
         $typedBase=if ($Mode -eq 'packaged') { $workspace } else { Join-Path $root 'dev/build/classes/java/main' }
         Assert-JavaPrototype ($(if ($Mode -eq 'packaged') { Test-JavaPrototypeJar $typedBase 'noppes/npcs/rework/script/NpcScript.class' } else { Test-Path -LiteralPath (Join-Path $typedBase 'noppes/npcs/rework/script/NpcScript.class') })) 'NpcScript on the compiler classpath'
     }
@@ -198,7 +193,14 @@ try {
     Assert-JavaPrototype ($text.Contains(('RWCORE coremod nalozen, runtimeDeobf=' + $(if($Mode -eq 'packaged') {'1'} else {'0'})))) 'expected coremod production/development mode'
     $proof=[IO.File]::ReadAllText($out) | ConvertFrom-Json
     Assert-JavaPrototype ($proof.success -eq $true -and $proof.mode -ceq $Mode) 'hook trace proof success'
-    if ($Package -eq 'm64') {
+    if ($Package -eq 'm65') {
+        Assert-JavaPrototype (@($proof.checks).Count -eq 15 -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) '15 recovery/source map assertions'
+        # Pinned here too, so a probe edit cannot silently weaken the expectation.
+        $pinned=[ordered]@{ javaRuntime=''; javaRecovered='ok;'; javaMissing='tick;timer7;'; javaCompileFixed='p1;'
+            oUnknown='tick;|;tick;interact;'; fUnknown='tick;|;interact;tick;interact;'; oErrored='boom;|;|;'; fErrored='boom;|;|;ok;' }
+        foreach($key in $pinned.Keys) { Assert-JavaPrototype ($proof.traces.$key -ceq $pinned[$key]) "pinned M6.5 trace $key" }
+        Assert-JavaPrototype ($proof.traces.fErroredConsole.Contains('Script source: m65/fe.js:3') -and -not $proof.traces.oErroredConsole.Contains('Script source:')) 'JS include source line only in the patched container'
+    } elseif ($Package -eq 'm64') {
         Assert-JavaPrototype (@($proof.checks).Count -eq 15 -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) '15 reload/cache assertions'
         # Pinned here too, so a probe edit cannot silently weaken the expectation.
         $pinned=[ordered]@{ a='c1/1;c1/1;c2/2;c2/2;'; b='c1/1;c1/1;'; aReload='c1/1;c1/1;'; aGuiSave='c1/1;c1/1;'; c1='c1/1;v1;'; c2='c1/1;v2;'

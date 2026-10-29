@@ -255,6 +255,8 @@ task testOriginal(type: Test) {
     exclude '**/NpcScriptTest.class'
     // M6.4: bounded bytecode cache is new.
     exclude '**/BytecodeCacheTest.class'
+    // M6.5: error source map is new.
+    exclude '**/SourceMapTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

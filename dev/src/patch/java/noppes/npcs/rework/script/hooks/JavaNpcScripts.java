@@ -24,6 +24,7 @@ import noppes.npcs.controllers.ScriptContainer;
 import noppes.npcs.controllers.ScriptController;
 import noppes.npcs.rework.script.BytecodeCache;
 import noppes.npcs.rework.script.JdkScriptCompiler;
+import noppes.npcs.rework.script.SourceMap;
 
 /** M6.2 (D-090, Q142-Q145): Java branch of one NPC script handler, selected by ScriptLanguage=Java.
  * Same tabs, order, event instance and console as ScriptContainer.run; the caller (DataScript)
@@ -34,6 +35,8 @@ import noppes.npcs.rework.script.JdkScriptCompiler;
  * A script reload or a changed tab/include prepares a complete new generation before the event and
  * swaps it in only when every tab compiled, bound and instantiated. Otherwise the last valid
  * generation keeps running with the error in the tab console; without one nothing runs (M6.2).
+ * M6.5 (B5): diagnostics name the tab or include file of each unit; a runtime error stops the tab
+ * until the next reload or source change, and a swapped-in generation clears errored on every tab.
  */
 public final class JavaNpcScripts {
     /** Same interned literal as ScriptContainer's private monitor, so JS and Java tabs never
@@ -47,8 +50,10 @@ public final class JavaNpcScripts {
         final ClassLoader loader;
         final Object instance;
         final Map<String, Method> hooks;
-        Tab(ClassLoader loader, Object instance, Map<String, Method> hooks) {
-            this.loader = loader; this.instance = instance; this.hooks = hooks;
+        /** Unit path ("pkg/Name.java") to "tab N" or "include <name>". */
+        final Map<String, String> origins;
+        Tab(ClassLoader loader, Object instance, Map<String, Method> hooks, Map<String, String> origins) {
+            this.loader = loader; this.instance = instance; this.hooks = hooks; this.origins = origins;
         }
     }
 
@@ -81,7 +86,11 @@ public final class JavaNpcScripts {
         if ((current == null || !current.matches(loaded, containers, sources))
                 && (rejected == null || !rejected.matches(loaded, containers, sources))) {
             Generation next = prepare(containers, handler, sources, loaded);
-            if (next != null) { current = next; rejected = null; }
+            if (next != null) {
+                current = next; rejected = null;
+                // B5: the new generation compiled and bound every tab, so stopped tabs run again.
+                for (ScriptContainer container : containers) { container.errored = false; }
+            }
             else { rejected = new Generation(loaded, containers, sources, new Tab[0]); }
         }
         if (current == null) { return; }
@@ -96,9 +105,9 @@ public final class JavaNpcScripts {
                 try {
                     hook.invoke(tab.instance, event);
                 } catch (InvocationTargetException e) {
-                    fail(container, handler, stack(e.getCause()), true);
+                    fail(container, handler, SourceMap.runtime(type.function, e.getCause(), tab.origins), true);
                 } catch (Throwable e) {
-                    fail(container, handler, stack(e), true);
+                    fail(container, handler, SourceMap.runtime(type.function, e, tab.origins), true);
                 } finally {
                     ScriptContainer.Current = null;
                 }
@@ -122,14 +131,15 @@ public final class JavaNpcScripts {
         Tab[] tabs = new Tab[containers.size()];
         for (int i = 0; i < tabs.length; i++) {
             if (sources.get(i).isEmpty()) { continue; }
-            tabs[i] = load(containers.get(i), handler, sources.get(i), current == null);
+            tabs[i] = load(containers.get(i), handler, sources.get(i), current == null, i + 1);
             if (tabs[i] == null) { return null; }
         }
         return new Generation(loaded, containers, Collections.unmodifiableList(sources), tabs);
     }
 
-    private static Tab load(ScriptContainer container, IScriptHandler handler, Map<String, String> sources, boolean first) {
+    private static Tab load(ScriptContainer container, IScriptHandler handler, Map<String, String> sources, boolean first, int index) {
         StringBuilder report = new StringBuilder();
+        Map<String, String> origins = new LinkedHashMap<>();
         try {
             Map<String, String> units = new LinkedHashMap<>();
             String main = null;
@@ -138,6 +148,7 @@ public final class JavaNpcScripts {
                 if (units.put(name, source.getValue()) != null) {
                     throw new JavaHookBinder.BindException("unit.duplicate", "Type " + name + " is declared twice in this tab");
                 }
+                origins.put(name.replace('.', '/') + ".java", source.getKey().isEmpty() ? "tab " + index : "include " + source.getKey());
                 if (main == null) { main = name; }
             }
             String classpath = classpath();
@@ -147,8 +158,10 @@ public final class JavaNpcScripts {
                 JdkScriptCompiler.Result result = compiler().compile(units, classpath);
                 synchronized (JavaNpcScripts.class) { compiles++; }
                 for (JdkScriptCompiler.Problem p : result.problems) {
-                    report.append(p.kind).append(' ').append(p.file.replace("memory:///", "")).append(':').append(p.line)
-                            .append(':').append(p.column).append(' ').append(p.code).append(": ").append(p.message).append('\n');
+                    String file = p.file.startsWith("/") ? p.file.substring(1) : p.file;
+                    String origin = origins.get(file);
+                    report.append(p.kind).append(' ').append(file).append(':').append(p.line).append(':').append(p.column)
+                            .append(origin == null ? " " : " [" + origin + "] ").append(p.code).append(": ").append(p.message).append('\n');
                 }
                 if (!result.success) { fail(container, handler, report.toString().trim(), first); return null; }
                 code = result.bytecode();
@@ -159,11 +172,11 @@ public final class JavaNpcScripts {
             Map<String, Method> hooks = JavaHookBinder.bind(script, ScriptHooks.npc());
             Object instance = script.getConstructor().newInstance();
             if (report.length() > 0) { container.appandConsole(report.toString().trim()); }
-            return new Tab(loader, instance, hooks);
+            return new Tab(loader, instance, hooks, origins);
         } catch (JavaHookBinder.BindException e) {
             fail(container, handler, e.code + ": " + e.getMessage(), first);
         } catch (InvocationTargetException e) {
-            fail(container, handler, stack(e.getCause()), first);
+            fail(container, handler, SourceMap.runtime("<init>", e.getCause(), origins), first);
         } catch (Throwable e) {
             fail(container, handler, stack(e), first);
         }

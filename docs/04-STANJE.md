@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-29** (seja 173) — **M6.4 zaključen (Q151–Q156)**. Loader in instanca na NPC/tab/generacijo, omejen bytecode cache (`BytecodeCache`), atomski reload s invalidacijo vključitev/API; 15/15 v zapakiranem Forge, regresije M6.2/M6.3 14/14. [Rezultati](meritve/2026-10-29-M6.4-reload.md). |
-| Trenutni milestone | **M6 — Scripting, M6.4 zaključen, naslednji M6.5** po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
-| Naslednji paketi | **M6.5–10 (M6.6 samo zaradi pravilnosti) → M6.12 → M6.11 player/world → ostanek M7 → M10** po [Q92](10-OBSEG-V1.md). M6.5: datoteka/vrstica/stolpec, source map vključitev, runtime stack, B5 obnovitev po popravku. Brez zgodovinskih ponovitev; privzeto izklopljeno brez cenovne meje, največ 2 poskusa/paket. M4.15a potrditev 2000 nedosegljivih odložena; Q22/OptiFine/Entity Culling za release, M10.3 blokiran (Q1). |
+| Zadnja posodobitev | **2026-10-29** (seja 174) — **M6.5 zaključen, poskus 2 (Q163)**. Šest controller testov PASS na `7ec18d6e…`: m65 15/15, m62 14/14, m64 15/15; B5 in izvor napak potrjena. [Zapis](meritve/2026-10-29-M6.5-napake.md). |
+| Trenutni milestone | **M6 — Scripting, M6.5 zaključen, naslednji pogojni M6.6, nato M6.7** po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
+| Naslednji paketi | **M6.6 (samo po reprodukciji pravilnosti) → M6.7–10 → M6.12 → M6.11 player/world → ostanek M7 → M10** po [Q92](10-OBSEG-V1.md). M6.5 sprejet (D-091); M6.6 najprej reprodukcija gnezdenega lastništva, brez odstranitve locka kot optimizacije. Brez zgodovinskih ponovitev; privzeto izklopljeno brez cenovne meje, največ 2 poskusa/paket. M4.15a potrditev 2000 nedosegljivih odložena; Q22/OptiFine/Entity Culling za release, M10.3 blokiran (Q1). |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **206** datotek `.java` v `src/patch` (29. 10.; M6.4 +`BytecodeCache`, +`ReloadProbe`), od tega **137** v `noppes/npcs/rework/…` (`ai` 5, `core` 10, `data` 5, `diag` 28, `entity` 13, `far` 21, `formation` 15, `movement` 2, `nav` 18, `net` 3, `render` 7, `script` 10) in 3 dostopni razredi v `net/minecraft/…`; build/package PASS na `b2719356…`: **74** pričakovanih spremenjenih vnosov (73 razredov originala + manifest coremoda) |
-| Testi | **501 JUnit** metod `@Test` v **79** datotekah (M6.4 +5 `BytecodeCacheTest`) + **40 primerjalnih testov originala**. M3.8b: unit/build/package in GUI/restart zeleni na `b2719356…`, 216/216. M4.15b/c pretekli PASS ostanejo veljavni za svoje odtise; brez ponavljanja letenj/cen (Q90/Q92). FA sprejem M4.14b ostaja neuspešen (D-079). Dodatno **20** preverb dedicated-server smoka in **16** trditev samotesta protokola ponovitev |
+| Prevedljivih razredov | **209** datotek `.java` v `src/patch` (M6.5: baseline `ScriptContainer`, `SourceMap`, `RecoveryProbe`), od tega **139** rework (`script` 12) in 3 dostopni razredi v `net/minecraft/…`; build/package PASS na `7ec18d6e…`: **78** pričakovanih spremenjenih vnosov (77 razredov originala + manifest coremoda), 298 zapakiranih class datotek |
+| Testi | **510** metod `@Test` v **81** datotekah; `testOriginal` **45** preverjanj. M6.5 +7 `SourceMapTest` in +2 `ScriptContainerBaselineTest`; unit/build/package ter m65 15/15, m62 14/14, m64 15/15 PASS na `7ec18d6e…`. Brez ponavljanja uspešnih serij (Q90/Q92). FA sprejem M4.14b ostaja neuspešen (D-079); smoke/protokol dodatno 20/16 trditev |
 | Odprti pojavi | nobenega blokirnega; Q84 (M4.17 + M4.10 zid 6/6 → 5/6, vzrok [H], ovira za privzeti vklop kombinacije); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10, Q12 in Q14 odprta; Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -40,7 +40,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M3 Jedro entitete | **zaključeno do M3.9, M3.8b GUI potrjen** | [M3.8b](meritve/2026-10-29-M3.8b-gui.md) 216/216, clone/restart in 18 PNG potrjeni; fizično gibanje igralca med dvema SOLID ostane nepokrito, celoten M3 izhodni kriterij ni potrjen. Q15 → D-028 |
 | M4 Gibanje | **Paketi v1.0 obravnavani z omejitvami** | [M4.15c](meritve/2026-10-29-M4.15c-klient.md) GUI/restart zelen; M4.15a potrditev 2000 nedosegljivih odložena. Celoten M4 izhodni kriterij ni izpolnjen; M4.14b brez FA sprejema (D-079), M4.14d v2, F1–F12 odprti. |
 | M5 Performance | **zaključeno 22. 10. (D-055)** | M5-S: kapaciteta M5.8; M5-K: sprejem M5-K.2; M5-V: sprejem M5-V.8 in privzeti vklop V.8b; M5.Z: obe matriki in sled zeleni. [Regresija](meritve/2026-10-22-M5.Z-regresija.md); nepokrita release preverjanja ostanejo M10 |
-| M6 Scripting | **M6.0–M6.4 zaključeni** | [Prevajalnik](meritve/2026-10-29-M6.1-prevajalnik.md) (Q141), [hooki](meritve/2026-10-29-M6.2-hooki.md) (Q142–Q147), [pogodba](meritve/2026-10-29-M6.3-pogodba.md) (Q148–Q150), [reload](meritve/2026-10-29-M6.4-reload.md) (Q151–Q156); naslednji M6.5 |
+| M6 Scripting | **M6.0–M6.5 zaključeni** | [Prevajalnik](meritve/2026-10-29-M6.1-prevajalnik.md) (Q141), [hooki](meritve/2026-10-29-M6.2-hooki.md) (Q142–Q147), [pogodba](meritve/2026-10-29-M6.3-pogodba.md) (Q148–Q150), [reload](meritve/2026-10-29-M6.4-reload.md) (Q151–Q156), [napake/B5](meritve/2026-10-29-M6.5-napake.md) (Q157–Q163); naslednji pogojni M6.6, nato M6.7 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
@@ -55,8 +55,15 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 171 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 172 → 1, novejši zgoraj).*
 
+
+### 2026-10-29 (174) — M6.5: izvor napak, source map vključitev, B5
+
+**Paket:** M6.5 (D-090, Q157–Q163) · **Stanje:** zaključen, poskus 2 (harness). Baseline `ScriptContainer` `5fbda3f`.
+B5 popravljen v JS `ScriptContainer` (reload pred zgodnjimi izhodi) in Java (nova generacija počisti `errored`);
+izvor napak `SourceMap` (JS `Script source:`, Java `[tab N|include ime]` in skrajšan stack). [Zapis](meritve/2026-10-29-M6.5-napake.md).
+Prvi controller m65 FAIL zaradi pričakovanega števila 14 namesto 15; popravek samo harnessa (Q163). Vseh šest zahtevanih testov PASS na `7ec18d6e…`: unit/build/package, m65 15/15, m62 14/14 in m64 15/15. Originalni bajti reproducirajo obe B5 napaki; popravek obnovi tudi prej manjkajoč hook. Omejitve Q162 ostanejo; naslednji pogojni M6.6 (najprej reprodukcija), nato M6.7 po Q92.
 
 ### 2026-10-29 (173) — M6.4: loader na NPC/tab/generacijo, bytecode cache, atomski reload
 
@@ -65,12 +72,3 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 pokvarjen reload pusti zadnjo veljavno generacijo. [Zapis](meritve/2026-10-29-M6.4-reload.md).
 Na 9490206d… unit (5 `BytecodeCacheTest`), build, package, m64-packaged-v1 15/15, m62-packaged-v2 in
 m63-packaged-v1 14/14 PASS. Izključitev testa iz `testOriginal` je harness (Q156). Naslednji M6.5.
-
-### 2026-10-29 (172) — M6.3: tipizirana script pogodba `NpcScript`
-
-**Paket:** M6.3 (D-090, Q148–Q150) · **Stanje:** zaključen, poskus 1.
-Izbiren osnovni razred `rework/script/NpcScript` (16 no-op hookov z event tipi iz registryja + `log`)
-na obstoječih `noppes.npcs.api` vmesnikih; `JavaHookBinder` veže samo prepise. [Zapis](meritve/2026-10-29-M6.3-pogodba.md).
-Na 2e9136a9… unit (5 `NpcScriptTest`), build, package in m63-packaged-v1 PASS 14/14: tipizirana sled = JS
-zlati niz tudi po reloadu, `@Override` napaka z vrstico, navaden M6.2 razred nespremenjen. Naslednji M6.4.
-

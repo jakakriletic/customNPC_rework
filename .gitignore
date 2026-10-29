@@ -34,3 +34,4 @@ audit/*.csv
 
 # M5-S P1: JFR posnetki profila (veliki, lokalni)
 audit/jfr/
+dev/run-m65/

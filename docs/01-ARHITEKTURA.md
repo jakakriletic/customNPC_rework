@@ -944,3 +944,13 @@ M6.6 samo po reprodukciji lastništva gnezdenih klicev; binarni `Current` se ohr
 M6.11 v1 samo player/world (Q92); M6.1–10 → M6.12 → minimalni M6.11 → M7.
 To je raziskovalna odločitev, ne dokaz runtime delovanja ali pohitritve; merilni vhodi isti.
 [Koda, primarni viri, kritika vsakega paketa in sprejem](raziskave/M6.0-java-scripting.md).
+
+### D-091 — M6.5: obnova B5 ob reloadu in izvor napak (2026-10-29, Q157–Q163)
+
+JS preveri reload pred `errored`/manjkajočim hookom; popravek velja brez stikala za vse
+`ScriptContainer` handlerje, ker obnovi namen obstoječega reloada. Java počisti napake
+šele ob uspešni novi generaciji. Brez reloada ostane runtime napaka ustavljena.
+Diagnostika ohrani obstoječi izpis in doda izvor taba/vključitve ter lokacijo, kjer obstaja.
+Originalni bajti reproducirajo B5 v istem Forge strežniku; šest sprejemnih testov PASS,
+JS/Java zlata sled in cache/reload regresiji zeleni. Omejitvi ure v ms in JS konzole ostaneta.
+[Merila, rezultati in odločitve](meritve/2026-10-29-M6.5-napake.md).
