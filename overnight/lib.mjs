@@ -134,7 +134,8 @@ export function executable(name) {
     return process.platform === 'win32' && path.basename(name).toLowerCase() === 'codex.exe' ? codexInstalled() : null;
   }
   for (const directory of (process.env.PATH || '').split(path.delimiter)) {
-    for (const extension of process.platform === 'win32' ? ['.exe', ''] : ['']) {
+    // Windows cannot spawn npm's extensionless shell shim; only accept a real .exe there.
+    for (const extension of process.platform === 'win32' && !path.extname(name) ? ['.exe'] : ['']) {
       const candidate = path.join(directory.replace(/^"|"$/g, ''), name + extension);
       try { if (fs.statSync(candidate).isFile()) return candidate; } catch { /* next path */ }
     }
@@ -142,6 +143,9 @@ export function executable(name) {
   if (process.platform === 'win32' && name === 'claude') {
     const candidate = path.join(process.env.USERPROFILE || '', '.local', 'bin', 'claude.exe');
     if (fs.existsSync(candidate)) return candidate;
+    // npm install: claude.cmd calls this native binary directly.
+    const npm = path.join(process.env.APPDATA || '', 'npm', 'node_modules', '@anthropic-ai', 'claude-code', 'bin', 'claude.exe');
+    if (fs.existsSync(npm)) return npm;
     for (const editor of ['.vscode', '.cursor']) {
       const extensions = path.join(process.env.USERPROFILE || '', editor, 'extensions');
       if (!fs.existsSync(extensions)) continue;
