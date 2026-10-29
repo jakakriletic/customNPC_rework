@@ -197,6 +197,26 @@ task verifyApiDocs(type: JavaExec, dependsOn: apiDocsClasses) {
 }
 generateApiDocs.mustRunAfter verifyApiDocs
 
+// M6.10: offline IDE template and its acceptance tool never enter the mod source set.
+sourceSets {
+    scriptTemplate {
+        java.srcDir 'src/scriptTemplate/java'
+        compileClasspath = sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath = output + compileClasspath
+    }
+}
+task exportJavaTemplateClasspath(dependsOn: classes) {
+    description = 'Export the current compiled API and mapped dependencies for the Java 8 script IDE template.'
+    doLast {
+        def target = file(project.findProperty('javaTemplateOutput') ?: '../scripts/java/template/.local/api-classpath.txt')
+        target.parentFile.mkdirs()
+        // Patched API classes precede the original mapped binary. No API stubs or copies.
+        def paths = (sourceSets.main.output.classesDirs + sourceSets.main.compileClasspath).files.findAll { it.exists() }
+        target.setText(paths.collect { it.absolutePath }.join(File.pathSeparator), 'UTF-8')
+        println "Java template classpath: $target"
+    }
+}
+
 // M6.1 prototype: explicit compiler/dependency inputs, not a production script registration.
 // Only the controller invokes this task. No dependency on normal builds or game launches.
 task javaPrototypePaths {

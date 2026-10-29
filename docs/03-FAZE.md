@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0–M6.9 zaključeni (D-090–D-094, Q180); naslednji M6.10 → M6.12 → M6.11 player/world → ostanek M7 → M10. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
+**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0–M6.10 zaključeni (D-090–D-094, Q183); naslednji M6.12 → M6.11 player/world → ostanek M7 → M10. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -426,7 +426,7 @@ dokazi so v raziskavi; pri prvem prenosu originalnega razreda velja ločen basel
 | ~~M6.7~~ | **Zaključeno 29. 10. (D-093, Q169–Q172), poskus 2 (harness):** `.\dev.ps1 compileScripts` brez Minecrafta, skupni compiler/API/source map, JSON/exit status brez izvajanja razredov/procesorjev. CLI 4,979/4,881 s, JS/Java 16/16, source/B5 17/17; unit/build/package PASS. [Dokazila in odtisa](meritve/2026-10-29-M6.7-cli.md) | S |
 | ~~M6.8~~ | **Zaključeno 29. 10. (D-094, Q173–Q176), poskus 1:** obstoječe JS/Java pravice, OpsOnly in reload 27/27; unit/build/package PASS na `36620163…`. Java file/reflection dovoljena, brez sandboxa; odprti originalni default ni trust meja. Produkcijske pravice/runtime isti. [Politika in dokazi](meritve/2026-10-29-M6.8-pravice.md) | M |
 | ~~M6.9~~ | **Zaključeno 29. 10. (Q177–Q180), poskus 1:** razvojni generator `docs/api/API.json`, `API.md`, `HOOKS.md`; izrecen v1 nabor/izključitve, 49 tipov/515 članov/16 hookov, 5.661 preverjanj in prevedeni primeri PASS na `0ff903b4…`. Bajtno deterministično, runtime isti. [Dokazi](meritve/2026-10-29-M6.9-api.md) | M |
-| M6.10 | `scripts/java/template/`: ista Java 8/API pogodba v IDE/CLI/runtime, primeri z diagnostiko | S |
+| ~~M6.10~~ | **Zaključeno 29. 10. (Q181–Q183), poskus 1:** `scripts/java/template/` Gradle Java/IDEA/Eclipse predloga z dejanskim API classpath ter istim CLI/compilerjem/binderjem; typed StarterNpc z vključitvijo in trije negativni primeri (vrstica/koda). m610-template-v1 53 preverjanj PASS na `53ca9c0d…`, runtime isti. [Dokazi](meritve/2026-10-29-M6.10-predloga.md) | S |
 | M6.11 | **Po M6.12, samo player/world** dostopi iz NPC Java skripte (Q92); item/block/quest/dialog/faction in njihovi Java handlerji v2 | M |
 | M6.12 | Obstoječa izbira jezika: GUI/save/clone/JVM restart in JS→Java→JS; privzeto JS, brez compilerja jasna napaka, JS sled nespremenjena | S |
 

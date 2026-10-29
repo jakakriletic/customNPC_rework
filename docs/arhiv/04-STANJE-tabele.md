@@ -94,6 +94,9 @@ nove omejitve/pasti se dopisujejo na konec §5.
 
 | # | Vprašanje | Vpliva na | Stanje |
 |---|---|---|---|
+| Q181 | Kako IDE dobi isto Java/API pogodbo? | M6.10 | **odločeno 29. 10. samostojno:** Gradle Java/IDEA/Eclipse, JDK 8; export dejanskih patch/API razredov pred mapped odvisnostmi, compileOnly brez stubov. Isti CompileScripts/JavaSources/JdkScriptCompiler, brez game plugina; modpack classpath avtomatika ostane M6.12. [Merila](../meritve/2026-10-29-M6.10-predloga.md). |
+| Q182 | Najmanjši uporabni primeri/dokazi za predlogo? | M6.10 | **odločeno 29. 10. samostojno:** typed init/tick/interact/timer in vključitev z generiki/lambdo; napačen hook/API tip/include s file/origin/line/column/code. En offline m610-template-v1: IDE model in kompilacija, CLI exit 0/1, isti compiler/binder tipi brez inicializacije ali izvajanja skript. Brez trditve nove IDE GUI/Forge seje. |
+| Q183 | Kateri testi in odtis pokrijejo predlogo? | M6.10 | **odločeno 29. 10. samostojno:** samo novi controller harness, produkcija in normalni mod isti (Q90). Vse predlogine vhode zunaj fingerprintPaths pripne celoten SHA-256 popis v dev/testworld/java-template-inputs.json; preveri copy/presledke, nespremenjene vhode/mod in odsotnost Minecrafta. Unit/build/package/M6 serij ne ponavljamo. |
 | Q1 | Kateri modpack in Forge verzijo dejansko uporabljaš? | vse; združljivost je do takrat neznanka | **odgovorjeno 17. 9.** — uporabnik nima dostopa; zabeleženo kot blokada (M0.7 §6), ponovno odpreti pred M10 |
 | Q2 | Kopija sveta s problematičnimi NPC-ji | M1.4 | zaprto — uporabnik je nima; paket odložen |
 | Q3 | Konkretna pokvarjena clone JSON datoteka | M1.4 | zaprto — ne obstaja; paket odložen |

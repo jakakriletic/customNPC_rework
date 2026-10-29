@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 176 → 1)
+# Arhiv: dnevnik sej (vnosi 177 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,18 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (177) — M6.8: trusted-only pravice in meje
+
+**Paket:** M6.8 (D-094, Q173–Q176) · **Stanje:** zaključen, poskus 1.
+Controller unit/build/package in m68-packaged-v1 **27/27 PASS** na `36620163…`.
+Dejanski packet handler/ukaz reload potrdita JS/Java deny/grant, nespremenjen handler
+ob zavrnitvi ter op reload; Java file/reflection marker potrdi odsotnost izolacije.
+Provider/config obnovljena, SecurityManager isti; produkcijske pravice/runtime isti.
+Originalni default ALL ni trust meja; profil za nezaupane igralce zahteva zaupane op
+avtorje (`OpsOnly=true`) ali izrecno omejene vse urejevalne/uvozne poti.
+[Politika, omejitve in dokazi](../meritve/2026-10-29-M6.8-pravice.md), sonda 351,797 ms kot
+podatek, brez sandbox/GUI/login/plugin trditve. Q92 usklajen, naslednji M6.9; brez ponovitev.
 
 ### 2026-10-29 (176) — M6.7: compile-only CLI
 

@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "tabs": [
+    {"id": "hook", "files": ["WrongHook.java"]},
+    {"id": "type", "files": ["WrongType.java"]},
+    {"id": "include", "files": ["../../src/main/java/example/StarterNpc.java", "BrokenCounterText.java"]}
+  ]
+}

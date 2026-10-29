@@ -1,0 +1,14 @@
+{
+  "scripts/java/template/.gitignore": "33d2166cb6db722be3205137c24d9c92caa88663533d718adbe0b87c4764b81b",
+  "scripts/java/template/build.gradle": "e46f1c2c7a8169d0c83df25ab94f3bd760b41a7e22258c15f88abb21e4bd0a84",
+  "scripts/java/template/check.ps1": "2bf05867c55d40cda99c9b9ceed7d258c741fd1acd310353399df890e1bbfe85",
+  "scripts/java/template/examples/invalid/BrokenCounterText.java": "2655c13496ce85a831f29dce4fc9640d817f42aefc391e2f041bf9ace10c2d4c",
+  "scripts/java/template/examples/invalid/scripts.json": "8ae892bc1952adff24090564d73e16c75439e8213b8ab51978f27a934c2c7b83",
+  "scripts/java/template/examples/invalid/WrongHook.java": "da8b5c6558e1a56ddef486582439737684b67f230f85ead23fdda9b0fdab6420",
+  "scripts/java/template/examples/invalid/WrongType.java": "06bfc910c3041d5b3f73b4abf74f3c7adccd6a4b6892acd6a7c7d61a962d2dca",
+  "scripts/java/template/README.md": "0c908c268aa6936db4a1cb1a9ef5e4258a6651080e4a5d603e7526e953382c70",
+  "scripts/java/template/scripts.json": "45572632904bff5572ebf28b7bc27a91395a6e636e9ed3c5338c5454e1b4ffe9",
+  "scripts/java/template/settings.gradle": "92fa88d51b5881bc60db30250668783f9240b4e1d0a000dfff95334d4a4d1866",
+  "scripts/java/template/src/main/java/example/CounterText.java": "b33523596c80bcd0c9fe59aad907d7b0d47755e9eafabaa0cdb46676202787b3",
+  "scripts/java/template/src/main/java/example/StarterNpc.java": "ccd6475bf95d93f2218f31969bb2e93920a7f7a7215deb8adf46da276c4023c0"
+}

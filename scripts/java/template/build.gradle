@@ -1,0 +1,33 @@
+// No game plugin, repositories, downloaded API, mod packaging or script execution.
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+sourceCompatibility = targetCompatibility = '1.8'
+
+if (!JavaVersion.current().isJava8()) {
+    throw new GradleException('Use JDK 8 for the Gradle JVM and project SDK (the same Java version as the NPC runtime).')
+}
+def apiFile = file(project.findProperty('apiClasspathFile') ?: '.local/api-classpath.txt')
+if (!apiFile.isFile()) {
+    throw new GradleException('Missing API classpath. In the repository run: .\\dev.ps1 exportJavaTemplateClasspath --offline')
+}
+def apiPaths = apiFile.getText('UTF-8').trim().split(java.util.regex.Pattern.quote(File.pathSeparator))
+if (!apiPaths.length || apiPaths.any { !new File(it).exists() }) {
+    throw new GradleException('Stale API classpath; exportJavaTemplateClasspath again after restoring/building the repository.')
+}
+dependencies { compileOnly files(apiPaths) }
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    options.debug = true
+    options.compilerArgs += ['-proc:none', '-implicit:none', '-g', '-sourcepath', '']
+}
+// A script project is source for NPC tabs, never a deployable Forge mod.
+jar.enabled = false
+task compileScripts(type: JavaExec) {
+    description = 'Compile the tab manifest with the runtime compiler; emit JSON without executing scripts or Minecraft.'
+    main = 'noppes.npcs.rework.script.CompileScripts'
+    classpath = files(apiPaths)
+    args file(project.findProperty('scriptsManifest') ?: 'scripts.json').absolutePath,
+         file(project.findProperty('scriptsReport') ?: '.local/compile.json').absolutePath,
+         apiPaths.join(File.pathSeparator)
+}

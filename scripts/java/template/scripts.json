@@ -1,0 +1,6 @@
+{
+  "schema": 1,
+  "tabs": [
+    {"id": "starter", "files": ["src/main/java/example/StarterNpc.java", "src/main/java/example/CounterText.java"]}
+  ]
+}
