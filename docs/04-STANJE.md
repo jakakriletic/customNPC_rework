@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-29** (seja 180) — **M6.12 zaključen, poskus 1** (Q184–Q187). Controller PASS na `48c60f8e…`: m612-gui-v1 101 trditev (izbira jezika JS↔Java, brez compilerja `compiler.unavailable`, clone, JVM restart, 8 PNG) in JS/Java regresija m62 16/16. Java v izbiri samo pri `RwJavaClasspath`; [dokazi in omejitve](meritve/2026-10-29-M6.12-izbira-jezika.md). |
-| Trenutni milestone | **M6 — Scripting, M6.0–M6.10 in M6.12 zaključeni, naslednji M6.11 player/world** po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
-| Naslednji paketi | **M6.11 player/world → ostanek M7 → M10** po [Q92](10-OBSEG-V1.md). Uspešnih serij se ne ponavlja (Q90). Privzeto izklopljeno brez cenovne meje, največ 2 poskusa/paket. M4.15a potrditev 2000 nedosegljivih odložena; Q22/OptiFine/Entity Culling za release, M10.3 blokiran (Q1). |
+| Zadnja posodobitev | **2026-10-29** (seja 181) — **M6.11 zaključen, poskus 1** (Q188–Q191). Controller PASS na `e3e30ca1…`: m611-packaged-v1 12/12 (JS = Java player/world sled, zapis bloka, tipizirani napaki) in m69-api-v1 6.761 preverjanj (51 tipov/606 članov). Ogret par JS 8,80 / Java 2,07 µs; [dokazi in omejitve](meritve/2026-10-29-M6.11-player-world.md). |
+| Trenutni milestone | **M6 — Scripting v1 zaključen (M6.0–M6.12), naslednji ostanek M7** po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
+| Naslednji paketi | **Ostanek M7 (M7.5 hooki, M7.8 reload, M7.9 script API, uskladitev verzije CNPC) → M10** po [Q92](10-OBSEG-V1.md). Uspešnih serij se ne ponavlja (Q90). Privzeto izklopljeno brez cenovne meje, največ 2 poskusa/paket. M4.15a potrditev 2000 nedosegljivih odložena; Q22/OptiFine/Entity Culling za release, M10.3 blokiran (Q1). |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **215** datotek `.java` v `src/patch` (M6.12: `JavaLanguage`, `ScriptGuiHarness`), od tega **145** rework (`script` 17) in 3 dostopni razredi v `net/minecraft/…`; build/package PASS na `48c60f8e…`: **78** pričakovanih spremenjenih vnosov (77 razredov originala + manifest coremoda) |
-| Testi | **519** metod `@Test` v **82** datotekah; `testOriginal` **45** preverjanj. M6.9 m69-api-v1 5.661 preverjanj PASS na `0ff903b4…`; M6.8 unit/build/package in m68 27/27 PASS na `36620163…`, produkcija ista, brez ponavljanja (Q90/Q92). FA sprejem M4.14b ostaja neuspešen (D-079); smoke/protokol dodatno 20/16 trditev |
+| Prevedljivih razredov | **216** datotek `.java` v `src/patch` (M6.11: `PlayerWorldProbe`), od tega **146** rework (`script` 18) in 3 dostopni razredi v `net/minecraft/…`; build/package PASS na `e3e30ca1…`: **78** pričakovanih spremenjenih vnosov (77 razredov originala + manifest coremoda) |
+| Testi | **519** metod `@Test` v **82** datotekah; `testOriginal` **45** preverjanj. M6.11 m69-api-v1 6.761 preverjanj in m611 12/12 PASS na `e3e30ca1…`; M6.8 unit/build/package in m68 27/27 PASS na `36620163…`, produkcija ista, brez ponavljanja (Q90/Q92). FA sprejem M4.14b ostaja neuspešen (D-079); smoke/protokol dodatno 20/16 trditev |
 | Odprti pojavi | nobenega blokirnega; Q84 (M4.17 + M4.10 zid 6/6 → 5/6, vzrok [H], ovira za privzeti vklop kombinacije); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10, Q12 in Q14 odprta; Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -40,7 +40,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M3 Jedro entitete | **zaključeno do M3.9, M3.8b GUI potrjen** | [M3.8b](meritve/2026-10-29-M3.8b-gui.md) 216/216, clone/restart in 18 PNG potrjeni; fizično gibanje igralca med dvema SOLID ostane nepokrito, celoten M3 izhodni kriterij ni potrjen. Q15 → D-028 |
 | M4 Gibanje | **Paketi v1.0 obravnavani z omejitvami** | [M4.15c](meritve/2026-10-29-M4.15c-klient.md) GUI/restart zelen; M4.15a potrditev 2000 nedosegljivih odložena. Celoten M4 izhodni kriterij ni izpolnjen; M4.14b brez FA sprejema (D-079), M4.14d v2, F1–F12 odprti. |
 | M5 Performance | **zaključeno 22. 10. (D-055)** | M5-S: kapaciteta M5.8; M5-K: sprejem M5-K.2; M5-V: sprejem M5-V.8 in privzeti vklop V.8b; M5.Z: obe matriki in sled zeleni. [Regresija](meritve/2026-10-22-M5.Z-regresija.md); nepokrita release preverjanja ostanejo M10 |
-| M6 Scripting | **M6.0–M6.10, M6.12 zaključeni** | [Izbira jezika](meritve/2026-10-29-M6.12-izbira-jezika.md) m612-gui-v1 101 trditev PASS, Java v obstoječem GUI pri `RwJavaClasspath`, clone/restart (Q187); modpack classpath ročni (Q184); naslednji M6.11 |
+| M6 Scripting | **v1 zaključen (M6.0–M6.12)** | [Player/world](meritve/2026-10-29-M6.11-player-world.md) m611 12/12, `IPlayer`/`IWorld` v API (Q191); [izbira jezika](meritve/2026-10-29-M6.12-izbira-jezika.md) 101 trditev (Q187); modpack classpath ročni (Q184); item/block/quest/dialog/faction v2 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
@@ -55,7 +55,17 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 178 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 179 → 1, novejši zgoraj).*
+
+### 2026-10-29 (181) — M6.11: player/world iz NPC Java skripte
+
+**Paket:** M6.11 (Q188–Q191) · **Stanje:** zaključen, poskus 1.
+V objavljen v1 API pridejo samo `IPlayer` in `IWorld` (51 tipov/606 članov) ter preveden
+`Example_playerWorld` v HOOKS.md; `NpcScript`/runtime ista. Controller **PASS na `e3e30ca1…`**:
+unit/build/package, m69-api-v1 6.761 preverjanj in m611-packaged-v1 12/12 (sled JS = Java iz MC
+stanja, zapis bloka, tempdata, `LossyTime.java:5`/`UnknownPlayer.java:5` brez izvajanja). Ogret
+par kot podatek: JS 8,80 µs, Java 2,07 µs/interact; cold Java compile 287 ms.
+[Dokazi/omejitve](meritve/2026-10-29-M6.11-player-world.md). Q92 usklajen; M6 v1 zaključen, naslednji ostanek M7.
 
 ### 2026-10-29 (180) — M6.12: Java v obstoječi izbiri jezika
 

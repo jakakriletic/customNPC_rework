@@ -232,3 +232,25 @@ public class Example_dialogClose extends noppes.npcs.rework.script.NpcScript {
 }
 ```
 
+## Player and world
+
+The existing `event.player` (IPlayer, interact and other player events) and `event.npc.getWorld()` (IWorld); their members are in [API.md](API.md).
+
+```java
+import noppes.npcs.api.IWorld;
+import noppes.npcs.api.entity.IPlayer;
+import noppes.npcs.api.event.NpcEvent;
+
+public class Example_playerWorld extends noppes.npcs.rework.script.NpcScript {
+    @Override public void interact(NpcEvent.InteractEvent event) {
+        IPlayer<?> player = event.player;
+        IWorld world = event.npc.getWorld();
+        long time = world.getTime();
+        player.message("Hello " + player.getDisplayName() + " in " + world.getName() + " at " + time);
+        world.getTempdata().put("lastVisitor", player.getName());
+        if (!world.isDay()) {
+            world.setBlock(event.npc.getBlockX(), event.npc.getBlockY() + 2, event.npc.getBlockZ(), "minecraft:torch", 0);
+        }
+    }
+}
+```

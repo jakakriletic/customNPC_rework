@@ -2,7 +2,7 @@
   "schema": 1,
   "operation": "api-reference",
   "javaVersion": "8",
-  "scope": "Published v1 reference: NPC script base, NPC/entity inheritance, NPC data interfaces, NPC hook events and public role event variants, timers/data/NBT/position/damage API and NpcAPI. All public declared members are listed; protected members are included only on NpcScript. Inheritance links point to documented ancestors, including Forge Event for cancellation. Referenced types outside this explicit set are external references, not recursively published API. Existing methods returning item/block/quest/dialog/faction/player/world types remain visible; this does not implement new Java handlers or prove the later M6.11 player/world package.",
+  "scope": "Published v1 reference: NPC script base, NPC/entity inheritance, NPC data interfaces, NPC hook events and public role event variants, timers/data/NBT/position/damage API, NpcAPI and the player/world API (IPlayer, IWorld). All public declared members are listed; protected members are included only on NpcScript. Inheritance links point to documented ancestors, including Forge Event for cancellation. Referenced types outside this explicit set are external references, not recursively published API. Existing methods returning item/block/quest/dialog/faction types remain visible; this does not implement new Java handlers for them.",
   "contract": "Java 8; trusted authors only, with process permissions and no sandbox. JS remains the default. Java dispatch is NPC-only. Public no-argument constructor required; one instance/loader per NPC, tab and generation. Only overridden NpcScript hooks are bound. Tabs run in their existing order, then the API bus; cancellation and missing hooks keep the existing handler behavior.",
   "descriptionPolicy": "No source description is available in the compiled API; see the signature.",
   "parameterNames": "arg0, arg1, ... are positional labels, not original source parameter names.",
@@ -15,8 +15,7 @@
     "forge"
   ],
   "excludedSurfaces": [
-    "IPlayer/IWorld expansion and examples pending M6.11",
-    "item/block/quest/dialog/faction expansions and Java handlers (v2)",
+    "item/block/quest/dialog/faction/container/scoreboard/dimension types reached from IPlayer/IWorld, their expansions and Java handlers (v2)",
     "implementation wrappers, Minecraft/Forge internals except the inherited Event contract",
     "Object members, private/package members, synthetic/bridge members and constant values",
     "runtime frequency, subtype instances and behavior not derivable from signatures"
@@ -26,8 +25,10 @@
     "noppes.npcs.api.INbt",
     "noppes.npcs.api.IPos",
     "noppes.npcs.api.ITimers",
+    "noppes.npcs.api.IWorld",
     "noppes.npcs.api.NpcAPI",
     "noppes.npcs.api.entity.ICustomNpc",
+    "noppes.npcs.api.entity.IPlayer",
     "noppes.npcs.api.entity.data.IData",
     "noppes.npcs.api.entity.data.INPCAdvanced",
     "noppes.npcs.api.entity.data.INPCAi",
@@ -1658,6 +1659,989 @@
             }
           ],
           "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        }
+      ]
+    },
+    {
+      "name": "noppes.npcs.api.IWorld",
+      "kind": "interface",
+      "modifiers": [
+        "abstract",
+        "public"
+      ],
+      "declaredAnnotations": [],
+      "description": "No source description is available in the compiled API; see the signature.",
+      "typeParameters": [],
+      "superclass": "none",
+      "interfaces": [],
+      "members": [
+        {
+          "id": "broadcast(java.lang.String)",
+          "kind": "method",
+          "name": "broadcast",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "createEntity(java.lang.String)",
+          "kind": "method",
+          "name": "createEntity",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "noppes.npcs.api.entity.IEntity",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "createEntityFromNBT(noppes.npcs.api.INbt)",
+          "kind": "method",
+          "name": "createEntityFromNBT",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.INbt"
+            }
+          ],
+          "returnType": "noppes.npcs.api.entity.IEntity",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "createItem(java.lang.String,int,int)",
+          "kind": "method",
+          "name": "createItem",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            }
+          ],
+          "returnType": "noppes.npcs.api.item.IItemStack",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "createItemFromNbt(noppes.npcs.api.INbt)",
+          "kind": "method",
+          "name": "createItemFromNbt",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.INbt"
+            }
+          ],
+          "returnType": "noppes.npcs.api.item.IItemStack",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "explode(double,double,double,float,boolean,boolean)",
+          "kind": "method",
+          "name": "explode",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "double"
+            },
+            {
+              "name": "arg1",
+              "type": "double"
+            },
+            {
+              "name": "arg2",
+              "type": "double"
+            },
+            {
+              "name": "arg3",
+              "type": "float"
+            },
+            {
+              "name": "arg4",
+              "type": "boolean"
+            },
+            {
+              "name": "arg5",
+              "type": "boolean"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getAllEntities(int)",
+          "kind": "method",
+          "name": "getAllEntities",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "noppes.npcs.api.entity.IEntity[]",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getAllPlayers()",
+          "kind": "method",
+          "name": "getAllPlayers",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "noppes.npcs.api.entity.IPlayer[]",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getBiomeName(int,int)",
+          "kind": "method",
+          "name": "getBiomeName",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            }
+          ],
+          "returnType": "java.lang.String",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getBlock(int,int,int)",
+          "kind": "method",
+          "name": "getBlock",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            }
+          ],
+          "returnType": "noppes.npcs.api.block.IBlock",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getClone(int,java.lang.String)",
+          "kind": "method",
+          "name": "getClone",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            },
+            {
+              "name": "arg1",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "noppes.npcs.api.entity.IEntity",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getClosestEntity(int,int,int,int,int)",
+          "kind": "method",
+          "name": "getClosestEntity",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            },
+            {
+              "name": "arg3",
+              "type": "int"
+            },
+            {
+              "name": "arg4",
+              "type": "int"
+            }
+          ],
+          "returnType": "noppes.npcs.api.entity.IEntity",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getClosestEntity(noppes.npcs.api.IPos,int,int)",
+          "kind": "method",
+          "name": "getClosestEntity",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.IPos"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            }
+          ],
+          "returnType": "noppes.npcs.api.entity.IEntity",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getDimension()",
+          "kind": "method",
+          "name": "getDimension",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "noppes.npcs.api.IDimension",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getEntity(java.lang.String)",
+          "kind": "method",
+          "name": "getEntity",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "noppes.npcs.api.entity.IEntity",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getLightValue(int,int,int)",
+          "kind": "method",
+          "name": "getLightValue",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            }
+          ],
+          "returnType": "float",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getMCBlockPos(int,int,int)",
+          "kind": "method",
+          "name": "getMCBlockPos",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            }
+          ],
+          "returnType": "net.minecraft.util.math.BlockPos",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getMCWorld()",
+          "kind": "method",
+          "name": "getMCWorld",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "net.minecraft.world.WorldServer",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getName()",
+          "kind": "method",
+          "name": "getName",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "java.lang.String",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getNearbyEntities(int,int,int,int,int)",
+          "kind": "method",
+          "name": "getNearbyEntities",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            },
+            {
+              "name": "arg3",
+              "type": "int"
+            },
+            {
+              "name": "arg4",
+              "type": "int"
+            }
+          ],
+          "returnType": "noppes.npcs.api.entity.IEntity[]",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getNearbyEntities(noppes.npcs.api.IPos,int,int)",
+          "kind": "method",
+          "name": "getNearbyEntities",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.IPos"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            }
+          ],
+          "returnType": "noppes.npcs.api.entity.IEntity[]",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getPlayer(java.lang.String)",
+          "kind": "method",
+          "name": "getPlayer",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "noppes.npcs.api.entity.IPlayer",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getRedstonePower(int,int,int)",
+          "kind": "method",
+          "name": "getRedstonePower",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            }
+          ],
+          "returnType": "int",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getScoreboard()",
+          "kind": "method",
+          "name": "getScoreboard",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "noppes.npcs.api.IScoreboard",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getSpawnPoint()",
+          "kind": "method",
+          "name": "getSpawnPoint",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "noppes.npcs.api.block.IBlock",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getStoreddata()",
+          "kind": "method",
+          "name": "getStoreddata",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "noppes.npcs.api.entity.data.IData",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getTempdata()",
+          "kind": "method",
+          "name": "getTempdata",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "noppes.npcs.api.entity.data.IData",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getTime()",
+          "kind": "method",
+          "name": "getTime",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "long",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getTotalTime()",
+          "kind": "method",
+          "name": "getTotalTime",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "long",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "isDay()",
+          "kind": "method",
+          "name": "isDay",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "isRaining()",
+          "kind": "method",
+          "name": "isRaining",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "playSoundAt(noppes.npcs.api.IPos,java.lang.String,float,float)",
+          "kind": "method",
+          "name": "playSoundAt",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.IPos"
+            },
+            {
+              "name": "arg1",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg2",
+              "type": "float"
+            },
+            {
+              "name": "arg3",
+              "type": "float"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "removeBlock(int,int,int)",
+          "kind": "method",
+          "name": "removeBlock",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "setBlock(int,int,int,java.lang.String,int)",
+          "kind": "method",
+          "name": "setBlock",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            },
+            {
+              "name": "arg3",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg4",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "setRaining(boolean)",
+          "kind": "method",
+          "name": "setRaining",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "boolean"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "setSpawnPoint(noppes.npcs.api.block.IBlock)",
+          "kind": "method",
+          "name": "setSpawnPoint",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.block.IBlock"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "setTime(long)",
+          "kind": "method",
+          "name": "setTime",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "long"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "spawnClone(double,double,double,int,java.lang.String)",
+          "kind": "method",
+          "name": "spawnClone",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "double"
+            },
+            {
+              "name": "arg1",
+              "type": "double"
+            },
+            {
+              "name": "arg2",
+              "type": "double"
+            },
+            {
+              "name": "arg3",
+              "type": "int"
+            },
+            {
+              "name": "arg4",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "noppes.npcs.api.entity.IEntity",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "spawnEntity(noppes.npcs.api.entity.IEntity)",
+          "kind": "method",
+          "name": "spawnEntity",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.entity.IEntity"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "spawnParticle(java.lang.String,double,double,double,double,double,double,double,int)",
+          "kind": "method",
+          "name": "spawnParticle",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg1",
+              "type": "double"
+            },
+            {
+              "name": "arg2",
+              "type": "double"
+            },
+            {
+              "name": "arg3",
+              "type": "double"
+            },
+            {
+              "name": "arg4",
+              "type": "double"
+            },
+            {
+              "name": "arg5",
+              "type": "double"
+            },
+            {
+              "name": "arg6",
+              "type": "double"
+            },
+            {
+              "name": "arg7",
+              "type": "double"
+            },
+            {
+              "name": "arg8",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "thunderStrike(double,double,double)",
+          "kind": "method",
+          "name": "thunderStrike",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "double"
+            },
+            {
+              "name": "arg1",
+              "type": "double"
+            },
+            {
+              "name": "arg2",
+              "type": "double"
+            }
+          ],
+          "returnType": "void",
           "throws": [],
           "varargs": false,
           "description": "No source description is available in the compiled API; see the signature."
@@ -4729,6 +5713,1006 @@
           "id": "swingOffhand()",
           "kind": "method",
           "name": "swingOffhand",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        }
+      ]
+    },
+    {
+      "name": "noppes.npcs.api.entity.IPlayer",
+      "kind": "interface",
+      "modifiers": [
+        "abstract",
+        "public"
+      ],
+      "declaredAnnotations": [],
+      "description": "No source description is available in the compiled API; see the signature.",
+      "typeParameters": [
+        {
+          "name": "T",
+          "bounds": [
+            "net.minecraft.entity.player.EntityPlayerMP"
+          ]
+        }
+      ],
+      "superclass": "none",
+      "interfaces": [
+        "noppes.npcs.api.entity.IEntityLivingBase<T>"
+      ],
+      "members": [
+        {
+          "id": "addDialog(int)",
+          "kind": "method",
+          "name": "addDialog",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "addFactionPoints(int,int)",
+          "kind": "method",
+          "name": "addFactionPoints",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "canQuestBeAccepted(int)",
+          "kind": "method",
+          "name": "canQuestBeAccepted",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "clearData()",
+          "kind": "method",
+          "name": "clearData",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "closeGui()",
+          "kind": "method",
+          "name": "closeGui",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "factionStatus(int)",
+          "kind": "method",
+          "name": "factionStatus",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "int",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "finishQuest(int)",
+          "kind": "method",
+          "name": "finishQuest",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getActiveQuests()",
+          "kind": "method",
+          "name": "getActiveQuests",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "noppes.npcs.api.handler.data.IQuest[]",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getDisplayName()",
+          "kind": "method",
+          "name": "getDisplayName",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "java.lang.String",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getExpLevel()",
+          "kind": "method",
+          "name": "getExpLevel",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "int",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getFactionPoints(int)",
+          "kind": "method",
+          "name": "getFactionPoints",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "int",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getFinishedQuests()",
+          "kind": "method",
+          "name": "getFinishedQuests",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "noppes.npcs.api.handler.data.IQuest[]",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getGamemode()",
+          "kind": "method",
+          "name": "getGamemode",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "int",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getHunger()",
+          "kind": "method",
+          "name": "getHunger",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "int",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getInventory()",
+          "kind": "method",
+          "name": "getInventory",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "noppes.npcs.api.IContainer",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getMCEntity()",
+          "kind": "method",
+          "name": "getMCEntity",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "T",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getOpenContainer()",
+          "kind": "method",
+          "name": "getOpenContainer",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "noppes.npcs.api.IContainer",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getPixelmonData()",
+          "kind": "method",
+          "name": "getPixelmonData",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "java.lang.Object",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getSpawnPoint()",
+          "kind": "method",
+          "name": "getSpawnPoint",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "noppes.npcs.api.block.IBlock",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getTimers()",
+          "kind": "method",
+          "name": "getTimers",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "noppes.npcs.api.ITimers",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "giveItem(java.lang.String,int,int)",
+          "kind": "method",
+          "name": "giveItem",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            }
+          ],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "giveItem(noppes.npcs.api.item.IItemStack)",
+          "kind": "method",
+          "name": "giveItem",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.item.IItemStack"
+            }
+          ],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "hasAchievement(java.lang.String)",
+          "kind": "method",
+          "name": "hasAchievement",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "hasActiveQuest(int)",
+          "kind": "method",
+          "name": "hasActiveQuest",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "hasFinishedQuest(int)",
+          "kind": "method",
+          "name": "hasFinishedQuest",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "hasPermission(java.lang.String)",
+          "kind": "method",
+          "name": "hasPermission",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "hasReadDialog(int)",
+          "kind": "method",
+          "name": "hasReadDialog",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "inventoryItemCount(java.lang.String,int)",
+          "kind": "method",
+          "name": "inventoryItemCount",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            }
+          ],
+          "returnType": "int",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "inventoryItemCount(noppes.npcs.api.item.IItemStack)",
+          "kind": "method",
+          "name": "inventoryItemCount",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.item.IItemStack"
+            }
+          ],
+          "returnType": "int",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "kick(java.lang.String)",
+          "kind": "method",
+          "name": "kick",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "message(java.lang.String)",
+          "kind": "method",
+          "name": "message",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "playSound(java.lang.String,float,float)",
+          "kind": "method",
+          "name": "playSound",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg1",
+              "type": "float"
+            },
+            {
+              "name": "arg2",
+              "type": "float"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "removeAllItems(noppes.npcs.api.item.IItemStack)",
+          "kind": "method",
+          "name": "removeAllItems",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.item.IItemStack"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "removeDialog(int)",
+          "kind": "method",
+          "name": "removeDialog",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "removeItem(java.lang.String,int,int)",
+          "kind": "method",
+          "name": "removeItem",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            }
+          ],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "removeItem(noppes.npcs.api.item.IItemStack,int)",
+          "kind": "method",
+          "name": "removeItem",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.item.IItemStack"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            }
+          ],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "removeQuest(int)",
+          "kind": "method",
+          "name": "removeQuest",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "resetSpawnpoint()",
+          "kind": "method",
+          "name": "resetSpawnpoint",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "sendMail(noppes.npcs.api.entity.data.IPlayerMail)",
+          "kind": "method",
+          "name": "sendMail",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.entity.data.IPlayerMail"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "sendNotification(java.lang.String,java.lang.String,int)",
+          "kind": "method",
+          "name": "sendNotification",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg1",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "setExpLevel(int)",
+          "kind": "method",
+          "name": "setExpLevel",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "setGamemode(int)",
+          "kind": "method",
+          "name": "setGamemode",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "setHunger(int)",
+          "kind": "method",
+          "name": "setHunger",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "setSpawnPoint(noppes.npcs.api.block.IBlock)",
+          "kind": "method",
+          "name": "setSpawnPoint",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.block.IBlock"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "setSpawnpoint(int,int,int)",
+          "kind": "method",
+          "name": "setSpawnpoint",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            },
+            {
+              "name": "arg2",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "showChestGui(int)",
+          "kind": "method",
+          "name": "showChestGui",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "noppes.npcs.api.IContainer",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "showDialog(int,java.lang.String)",
+          "kind": "method",
+          "name": "showDialog",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            },
+            {
+              "name": "arg1",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "startQuest(int)",
+          "kind": "method",
+          "name": "startQuest",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "stopQuest(int)",
+          "kind": "method",
+          "name": "stopQuest",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "int"
+            }
+          ],
+          "returnType": "void",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "updatePlayerInventory()",
+          "kind": "method",
+          "name": "updatePlayerInventory",
           "modifiers": [
             "abstract",
             "public"
@@ -10172,6 +12156,7 @@
     "net.minecraft.entity.EntityLiving",
     "net.minecraft.entity.EntityLivingBase",
     "net.minecraft.entity.player.EntityPlayer",
+    "net.minecraft.entity.player.EntityPlayerMP",
     "net.minecraft.inventory.Container",
     "net.minecraft.inventory.IInventory",
     "net.minecraft.item.ItemStack",
@@ -10187,11 +12172,11 @@
     "net.minecraftforge.fml.common.eventhandler.ListenerList",
     "noppes.npcs.api.CommandNoppesBase",
     "noppes.npcs.api.IContainer",
+    "noppes.npcs.api.IDimension",
     "noppes.npcs.api.IRayTrace",
-    "noppes.npcs.api.IWorld",
+    "noppes.npcs.api.IScoreboard",
     "noppes.npcs.api.block.IBlock",
     "noppes.npcs.api.entity.IEntityItem",
-    "noppes.npcs.api.entity.IPlayer",
     "noppes.npcs.api.entity.IProjectile",
     "noppes.npcs.api.entity.data.IMark",
     "noppes.npcs.api.entity.data.IPlayerMail",
@@ -10204,6 +12189,7 @@
     "noppes.npcs.api.handler.data.IDialog",
     "noppes.npcs.api.handler.data.IDialogOption",
     "noppes.npcs.api.handler.data.IFaction",
+    "noppes.npcs.api.handler.data.IQuest",
     "noppes.npcs.api.item.IItemStack"
   ],
   "hooks": [
@@ -10352,5 +12338,6 @@
       "example": "public class Example_dialogClose extends noppes.npcs.rework.script.NpcScript {\n    @Override public void dialogClose(noppes.npcs.api.event.DialogEvent.CloseEvent event) {\n        log(event.npc.getName());\n    }\n}\n"
     }
   ],
-  "signatureFingerprint": "3ccc97292eb6cfe17e64061dbe0e069e8dde8f4ad89c49c401646b4779ec5ce7"
+  "playerWorldExample": "import noppes.npcs.api.IWorld;\nimport noppes.npcs.api.entity.IPlayer;\nimport noppes.npcs.api.event.NpcEvent;\n\npublic class Example_playerWorld extends noppes.npcs.rework.script.NpcScript {\n    @Override public void interact(NpcEvent.InteractEvent event) {\n        IPlayer<?> player = event.player;\n        IWorld world = event.npc.getWorld();\n        long time = world.getTime();\n        player.message(\"Hello \" + player.getDisplayName() + \" in \" + world.getName() + \" at \" + time);\n        world.getTempdata().put(\"lastVisitor\", player.getName());\n        if (!world.isDay()) {\n            world.setBlock(event.npc.getBlockX(), event.npc.getBlockY() + 2, event.npc.getBlockZ(), \"minecraft:torch\", 0);\n        }\n    }\n}\n",
+  "signatureFingerprint": "f4653e35430b33945dc182281fa539d562d50255f294ac5242574afe282de298"
 }

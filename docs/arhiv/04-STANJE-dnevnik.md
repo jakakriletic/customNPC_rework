@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 178 → 1)
+# Arhiv: dnevnik sej (vnosi 179 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,17 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (179) — M6.10: Java 8 IDE predloga
+
+**Paket:** M6.10 (Q181–Q183) · **Stanje:** zaključen, poskus 1.
+`scripts/java/template/`: Gradle Java/IDEA/Eclipse, dejanski API classpath, isti compile-only
+CLI in typed StarterNpc z vključitvijo. Controller **m610-template-v1 PASS na `53ca9c0d…`**:
+53 preverjanj, IDE/CLI exit 0, negativni CLI exit 1 z `WrongHook/WrongType/BrokenCounterText.java:5`
+in compiler kodami; razredi brez inicializacije, isti binder. Ukaz 14.470 ms kot podatek.
+Produkcija/JS/Java runtime isti; brez ponavljanja M6 serij (Q90).
+[Dokazi/omejitve](meritve/2026-10-29-M6.10-predloga.md). IDE uporabniška seja/Forge izvajanje
+ni nov dokaz. Q92 usklajen; naslednji M6.12.
 
 ### 2026-10-29 (178) — M6.9: generator API reference
 

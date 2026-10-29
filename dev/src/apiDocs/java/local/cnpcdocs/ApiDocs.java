@@ -28,12 +28,28 @@ public final class ApiDocs {
             + "one instance/loader per NPC, tab and generation. Only overridden NpcScript hooks are bound. "
             + "Tabs run in their existing order, then the API bus; cancellation and missing hooks keep the existing handler behavior.";
     static final String SCOPE = "Published v1 reference: NPC script base, NPC/entity inheritance, NPC data interfaces, "
-            + "NPC hook events and public role event variants, timers/data/NBT/position/damage API and NpcAPI. "
+            + "NPC hook events and public role event variants, timers/data/NBT/position/damage API, NpcAPI "
+            + "and the player/world API (IPlayer, IWorld). "
             + "All public declared members are listed; protected members are included only on NpcScript. "
             + "Inheritance links point to documented ancestors, including Forge Event for cancellation. "
             + "Referenced types outside this explicit set are external references, not recursively published API. "
-            + "Existing methods returning item/block/quest/dialog/faction/player/world types remain visible; "
-            + "this does not implement new Java handlers or prove the later M6.11 player/world package.";
+            + "Existing methods returning item/block/quest/dialog/faction types remain visible; "
+            + "this does not implement new Java handlers for them.";
+    /** M6.11 (Q188): one compiled player/world example, published after the hook examples. */
+    static final String PLAYER_WORLD_EXAMPLE = "import noppes.npcs.api.IWorld;\n"
+            + "import noppes.npcs.api.entity.IPlayer;\n"
+            + "import noppes.npcs.api.event.NpcEvent;\n\n"
+            + "public class Example_playerWorld extends " + BASE + " {\n"
+            + "    @Override public void interact(NpcEvent.InteractEvent event) {\n"
+            + "        IPlayer<?> player = event.player;\n"
+            + "        IWorld world = event.npc.getWorld();\n"
+            + "        long time = world.getTime();\n"
+            + "        player.message(\"Hello \" + player.getDisplayName() + \" in \" + world.getName() + \" at \" + time);\n"
+            + "        world.getTempdata().put(\"lastVisitor\", player.getName());\n"
+            + "        if (!world.isDay()) {\n"
+            + "            world.setBlock(event.npc.getBlockX(), event.npc.getBlockY() + 2, event.npc.getBlockZ(), \"minecraft:torch\", 0);\n"
+            + "        }\n"
+            + "    }\n}\n";
 
     private ApiDocs() { }
 
@@ -53,7 +69,8 @@ public final class ApiDocs {
         SortedSet<String> names = new TreeSet<>(Arrays.asList(BASE,
                 "noppes.npcs.api.NpcAPI", "noppes.npcs.api.entity.ICustomNpc",
                 "noppes.npcs.api.entity.data.IData", "noppes.npcs.api.ITimers",
-                "noppes.npcs.api.INbt", "noppes.npcs.api.IPos", "noppes.npcs.api.IDamageSource"));
+                "noppes.npcs.api.INbt", "noppes.npcs.api.IPos", "noppes.npcs.api.IDamageSource",
+                "noppes.npcs.api.IWorld", "noppes.npcs.api.entity.IPlayer"));
         for (String name : Arrays.asList("INPCAdvanced", "INPCAi", "INPCDisplay", "INPCInventory", "INPCJob",
                 "INPCMelee", "INPCRanged", "INPCRole", "INPCStats")) {
             names.add("noppes.npcs.api.entity.data." + name);
@@ -124,12 +141,12 @@ public final class ApiDocs {
                     "contract", CONTRACT, "descriptionPolicy", NO_DOC,
                     "parameterNames", "arg0, arg1, ... are positional labels, not original source parameter names.",
                     "excludedJavaHandlers", ScriptHooks.V1_EXCLUDED,
-                    "excludedSurfaces", Arrays.asList("IPlayer/IWorld expansion and examples pending M6.11",
-                            "item/block/quest/dialog/faction expansions and Java handlers (v2)",
+                    "excludedSurfaces", Arrays.asList("item/block/quest/dialog/faction/container/scoreboard/dimension types reached from IPlayer/IWorld, their expansions and Java handlers (v2)",
                             "implementation wrappers, Minecraft/Forge internals except the inherited Event contract",
                             "Object members, private/package members, synthetic/bridge members and constant values",
                             "runtime frequency, subtype instances and behavior not derivable from signatures"),
-                    "roots", roots(), "types", types, "externalReferences", new ArrayList<>(referenced), "hooks", hooks);
+                    "roots", roots(), "types", types, "externalReferences", new ArrayList<>(referenced), "hooks", hooks,
+                    "playerWorldExample", PLAYER_WORLD_EXAMPLE);
             return false;
         }
 
@@ -307,6 +324,8 @@ public final class ApiDocs {
                     .append(h.get("cancelableOnDeclaredEvent")).append("`. ").append(h.get("description"))
                     .append("\n\n```java\n").append(h.get("example")).append("```\n\n");
         }
+        hooks.append("## Player and world\n\nThe existing `event.player` (IPlayer, interact and other player events) and `event.npc.getWorld()` (IWorld); ")
+                .append("their members are in [API.md](API.md).\n\n```java\n").append(catalog.get("playerWorldExample")).append("```\n");
         out.put("HOOKS.md", hooks.toString().getBytes(StandardCharsets.UTF_8));
         return out;
     }

@@ -4,9 +4,10 @@
 # -Package m65: same server, error origins and B5 recovery; JS B5 against the original jar bytes (M6.5).
 # -Package m66 [-ContextFixed]: nested ownership reproduction / fixed context acceptance (M6.6).
 # -Package m68: existing server permissions and trusted-only capability boundary (M6.8).
+# -Package m611: player/world API trace JS = Java, typed diagnostics, one warmed JS/Java pair as data (M6.11).
 # Same server setup as java-runtime-run.ps1 (M6.1, Q137-Q140); only the fixture and assertions differ.
 param([ValidateSet('dev','packaged')][string]$Mode = 'dev',
-      [ValidateSet('m62','m63','m64','m65','m66','m68')][string]$Package = 'm62',
+      [ValidateSet('m62','m63','m64','m65','m66','m68','m611')][string]$Package = 'm62',
       [switch]$ContextFixed)
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
@@ -147,7 +148,7 @@ try {
         $working=$work
     } else {
         # The dev compile classpath has no patch classes; M6.3 tabs extend NpcScript from runServer's output.
-        $devCp=$cp; if ($Package -in @('m63','m64','m65','m66','m68')) { $devCp=$cp+';'+(Join-Path $root 'dev/build/classes/java/main') }
+        $devCp=$cp; if ($Package -in @('m63','m64','m65','m66','m68','m611')) { $devCp=$cp+';'+(Join-Path $root 'dev/build/classes/java/main') }
         [IO.File]::WriteAllText($classpathFile,$devCp,(New-Object Text.UTF8Encoding $false))
         $exe=Join-Path $root 'dev/gradlew.bat'
         # gradlew.bat requires cmd; Start-JavaPrototypeProcess already provides it.
@@ -159,7 +160,7 @@ try {
     $cfg=Join-Path $work 'config/CustomNpcs.cfg'
     Assert-JavaPrototype (-not ([IO.File]::ReadAllText($cfg) -match '(?m)^RwJavaClasspath=')) 'config copy has no RwJavaClasspath yet'
     [IO.File]::AppendAllText($cfg,("`nRwJavaClasspath="+$classpathFile.Replace('\','/')+"`n"),(New-Object Text.UTF8Encoding $false))
-    $code=[IO.File]::ReadAllText((Join-Path $root $(switch ($Package) { 'm63' { 'dev/testworld/java-typed-control.js' } 'm64' { 'dev/testworld/java-reload-control.js' } 'm65' { 'dev/testworld/java-recovery-control.js' } 'm66' { 'dev/testworld/java-context-control.js' } 'm68' { 'dev/testworld/java-trust-control.js' } default { 'dev/testworld/java-hooks-control.js' } })))
+    $code=[IO.File]::ReadAllText((Join-Path $root $(switch ($Package) { 'm63' { 'dev/testworld/java-typed-control.js' } 'm64' { 'dev/testworld/java-reload-control.js' } 'm65' { 'dev/testworld/java-recovery-control.js' } 'm66' { 'dev/testworld/java-context-control.js' } 'm68' { 'dev/testworld/java-trust-control.js' } 'm611' { 'dev/testworld/java-playerworld-control.js' } default { 'dev/testworld/java-hooks-control.js' } })))
     $code=$code.Replace('@@OUTPUT@@',($out.Replace('\','/') | ConvertTo-Json -Compress)).Replace('@@MODE@@',($Mode | ConvertTo-Json -Compress)).Replace('@@ORIGINAL@@',($originalJar.Replace('\','/') | ConvertTo-Json -Compress))
     $code=$code.Replace('@@CONTEXT_FIXED@@',([bool]$ContextFixed).ToString().ToLowerInvariant())
     $codePath=Join-Path $work 'hooks-control.js'; [IO.File]::WriteAllText($codePath,$code,(New-Object Text.UTF8Encoding $false))
@@ -186,7 +187,7 @@ try {
     Wait-M61 'Done (' 1000
     Send-M61 'list'
     Wait-M61 'players online' 30
-    if ($Package -in @('m63','m64','m65','m66')) {
+    if ($Package -in @('m63','m64','m65','m66','m611')) {
         $typedBase=if ($Mode -eq 'packaged') { $workspace } else { Join-Path $root 'dev/build/classes/java/main' }
         Assert-JavaPrototype ($(if ($Mode -eq 'packaged') { Test-JavaPrototypeJar $typedBase 'noppes/npcs/rework/script/NpcScript.class' } else { Test-Path -LiteralPath (Join-Path $typedBase 'noppes/npcs/rework/script/NpcScript.class') })) 'NpcScript on the compiler classpath'
     }
@@ -197,7 +198,17 @@ try {
     Assert-JavaPrototype ($text.Contains(('RWCORE coremod nalozen, runtimeDeobf=' + $(if($Mode -eq 'packaged') {'1'} else {'0'})))) 'expected coremod production/development mode'
     $proof=[IO.File]::ReadAllText($out) | ConvertFrom-Json
     Assert-JavaPrototype ($proof.success -eq $true -and $proof.mode -ceq $Mode) 'hook trace proof success'
-    if ($Package -eq 'm68') {
+    if ($Package -eq 'm611') {
+        Assert-JavaPrototype (@($proof.checks).Count -eq 12 -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) '12 player/world assertions'
+        foreach ($key in @('js-player-world-trace','java-equals-js','world-write-java','lossy-time-typed-error','unknown-player-member-typed-error','timed-traces-equal')) {
+            Assert-JavaPrototype (@($proof.checks | Where-Object { $_.key -ceq $key -and $_.ok -eq $true }).Count -eq 1) "pinned M6.11 contract $key"
+        }
+        # Pinned here too, so a probe edit cannot silently weaken the expectation.
+        Assert-JavaPrototype ($proof.traces.java -ceq $proof.traces.js -and $proof.traces.js -cmatch '^p:\[Minecraft\]/\[Minecraft\]/-?\d+/0/true;w:world/\d+/\d+/(true|false)/(true|false)/0\|timer:11:world$') 'JS and Java player/world trace'
+        Assert-JavaPrototype ($proof.traces.jsPlaced -ceq 'minecraft:stone' -and $proof.traces.javaPlaced -ceq 'minecraft:stone') 'both languages wrote the world block'
+        Assert-JavaPrototype ($proof.traces.lossyConsole.Contains('LossyTime.java:5:') -and $proof.traces.unknownConsole.Contains('UnknownPlayer.java:5:')) 'typed diagnostics carry file and line'
+        Assert-JavaPrototype (@($proof.timing.jsMicrosPerInteract).Count -eq 5 -and @($proof.timing.javaMicrosPerInteract).Count -eq 5 -and $proof.timing.jsMedian -gt 0 -and $proof.timing.javaMedian -gt 0) 'one warmed JS/Java pair recorded (data, no gate)'
+    } elseif ($Package -eq 'm68') {
         Assert-JavaPrototype (@($proof.checks).Count -eq 27 -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) '27 existing-permission and trust-boundary assertions'
         foreach ($language in @('js','java')) {
             foreach ($suffix in @('ops-only-denies','permission-denies-upload','tool-denies','trusted-save','trusted-runs','denied-replacement-keeps-handler')) {
@@ -278,7 +289,7 @@ try {
     Wait-M61Exit 180
     $proc=$null
     foreach($path in $hashes.Keys) { Assert-JavaPrototype ((Get-M61InputHash $path) -ceq $hashes[$path]) "unchanged protected input $path" }
-    $condition=if ($Package -eq 'm68') { 'one packaged/dev Forge server; real packet entry and registered reload command; unconnected EntityPlayerMP transport and test permission provider; JS/Java deny and grant, bounded Java file/reflection capability; no GUI/login/plugin or CPU/heap sandbox claim; production permission/runtime code unchanged' } elseif ($Package -eq 'm66') { "one packaged/dev Forge server; real EventHooks with unspawned NPCs; binary chest/projectile ownership; ContextFixed=$([bool]$ContextFixed); no rendered GUI, impact events or async claim" } else { 'one functional server; real EventHooks with unspawned NPCs; JS and Java two-tab trace incl. bus order, cancel, timer, reload; Java error cases; no cost gate' }
+    $condition=if ($Package -eq 'm611') { 'one packaged/dev Forge server; real EventHooks with unspawned NPCs and a FakePlayer; JS and typed Java IPlayer/IWorld interact/timer trace and block write; two typed compile errors; one warmed JS/Java interact pair (2000 warmup, 5 alternating rounds x 1000) as data, no cost gate' } elseif ($Package -eq 'm68') { 'one packaged/dev Forge server; real packet entry and registered reload command; unconnected EntityPlayerMP transport and test permission provider; JS/Java deny and grant, bounded Java file/reflection capability; no GUI/login/plugin or CPU/heap sandbox claim; production permission/runtime code unchanged' } elseif ($Package -eq 'm66') { "one packaged/dev Forge server; real EventHooks with unspawned NPCs; binary chest/projectile ownership; ContextFixed=$([bool]$ContextFixed); no rendered GUI, impact events or async claim" } else { 'one functional server; real EventHooks with unspawned NPCs; JS and Java two-tab trace incl. bus order, cancel, timer, reload; Java error cases; no cost gate' }
     @{ success=$true; package=$Package; mode=$Mode; proof=$out; inputs=$hashes; compilerClasspath=[IO.File]::ReadAllText($classpathFile); fixtureHash=(Get-JavaPrototypeHash $codePath); condition=$condition } |
         ConvertTo-Json -Depth 8 | Set-Content -LiteralPath "$prefix.json" -Encoding UTF8
     Write-Host "$tag $Mode evidence: $prefix.json"

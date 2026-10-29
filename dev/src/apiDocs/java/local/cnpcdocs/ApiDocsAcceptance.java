@@ -131,7 +131,8 @@ public final class ApiDocsAcceptance {
                 require(c.getAsJsonArray("declaredAnnotations").toString().contains("net.minecraftforge.fml.common.eventhandler.Cancelable"), "role subtype cancellation annotation published");
             }
         }
-        require(!names.contains("noppes.npcs.api.IWorld") && !names.contains("noppes.npcs.api.entity.IPlayer"), "M6.11 expansions excluded");
+        require(names.contains("noppes.npcs.api.IWorld") && names.contains("noppes.npcs.api.entity.IPlayer"), "M6.11 player/world published");
+        require(!names.contains("noppes.npcs.api.block.IBlock") && !names.contains("noppes.npcs.api.handler.data.IQuest"), "v2 block/quest types stay external");
         for (JsonElement ref : catalog.getAsJsonArray("externalReferences")) { require(!names.contains(ref.getAsString()), "external references disjoint"); }
     }
 
@@ -160,6 +161,16 @@ public final class ApiDocsAcceptance {
                     + "@Override public void tick(noppes.npcs.api.event.NpcEvent.InitEvent event) {}\n}\n");
             require(!compiler.getTask(null, fm, errors, options, null, Collections.singletonList(wrong)).call(), "wrong event rejected");
             require(errors.getDiagnostics().stream().anyMatch(d -> d.getKind() == Diagnostic.Kind.ERROR && d.getLineNumber() == 2 && d.getColumnNumber() > 0), "wrong example has line/column");
+            errors = new DiagnosticCollector<>();
+            JavaFileObject playerWorld = ApiDocs.source("Example_playerWorld", catalog.get("playerWorldExample").getAsString());
+            require(compiler.getTask(null, fm, errors, options, null, Collections.singletonList(playerWorld)).call(), "published player/world example compiles: " + errors.getDiagnostics());
+            errors = new DiagnosticCollector<>();
+            JavaFileObject lossy = ApiDocs.source("LossyTime", "public class LossyTime extends " + ApiDocs.BASE + " {\n"
+                    + "@Override public void interact(noppes.npcs.api.event.NpcEvent.InteractEvent event) {\n"
+                    + "int time = event.npc.getWorld().getTime(); }\n}\n");
+            require(!compiler.getTask(null, fm, errors, options, null, Collections.singletonList(lossy)).call(), "long world time into int rejected");
+            require(errors.getDiagnostics().stream().anyMatch(d -> d.getKind() == Diagnostic.Kind.ERROR && d.getLineNumber() == 3
+                    && d.getColumnNumber() > 0 && "compiler.err.prob.found.req".equals(d.getCode())), "typed world diagnostic has line/column/code");
         }
     }
 
@@ -192,6 +203,8 @@ public final class ApiDocsAcceptance {
             require(hooks.contains("## " + h.get("name") + "\n") && hooks.contains("```java\n" + h.get("example") + "```"), "same hook example rendered in Markdown");
         }
         require(hooks.contains("no sandbox") && markdown.contains("arg0") && markdown.contains("## Exclusions"), "scope/trust/parameter limitations published");
+        require(hooks.contains("## Player and world\n") && hooks.contains("```java\n" + model.get("playerWorldExample") + "```"), "same player/world example rendered in Markdown");
+        require(!markdown.contains("pending M6.11"), "M6.11 exclusion removed");
         Map<String, Object> proof = ApiDocs.obj("success", true, "checks", checks, "types", json.getAsJsonArray("types").size(),
                 "hooks", json.getAsJsonArray("hooks").size(), "signatureFingerprint", model.get("signatureFingerprint"),
                 "elapsedMillis", (System.nanoTime() - start) / 1_000_000.0,
