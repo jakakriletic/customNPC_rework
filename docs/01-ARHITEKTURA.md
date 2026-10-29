@@ -930,3 +930,6 @@ Privzeto vanilla in ista tick koda; sprejem zahteva unit/build/package in tri
 strežniške pogodbe (z/brez knjižnice, globalno 0/1); klient/reload ostaneta M4.15c.
 Q116: sedem zahtevanih controller testov zelenih na `d71d75d4…`; M4.15b zaključen.
 [Pogodba, omejitve in rezultati](meritve/2026-10-29-M4.15b-gui.md).
+Q122: M4.15c zaključen na `c91ad234…`, šest controller testov zelenih, GUI/save/restart
+70/70 ×2 + 68/68 in 30 PNG pregledanih; opt-in sonda, produkcija M4.15b ista.
+[Klientova dokazila in odločitve Q117–Q122](meritve/2026-10-29-M4.15c-klient.md).

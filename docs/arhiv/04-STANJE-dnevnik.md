@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 164 → 1)
+# Arhiv: dnevnik sej (vnosi 165 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,19 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-29 (165) — M4.15a: analiza izvedenih meritev, odložena potrditev
+
+**Paket:** M4.15a (D-088, Q98–Q107) · **Stanje:** **raziskovalno obravnavan, lestvici neuspešni**.
+Na nespremenjenem `f0606b11…` controller samotest in kompatibilnost zelena (18/18),
+obe šestcelični lestvici exit 1 zaradi U1 pri 2000 nedosegljivih (881/800 <1000 tarč).
+Ostalih 10 celic uspešnih; neuspešni par ni A/B referenca, sprejemni seznam ni zelen.
+Q106: brez znižanja U1 ali ponavljanja; potrditev 2000 in skupne porabe pomnilnika odložena.
+Q107: naslednji neodvisni GUI M4.15b/c, vanilla/Baritone 0/1, strežniško dejansko ozadje
+in razlog fallbacka; opozorilo o odvisnosti cene od prizora, brez obljube kapacitete.
+[En zapis pogojev, rezultatov in odločitev](../meritve/2026-10-29-M4.15a-baritone.md).
+Produkcija, harnessi in merilni vhodi po uspešnih testih isti; seja ni zaganjala testov.
+Commit vsebuje paketni harness in dokumentacijo; nepovezani baseline, ZAZENI-BASELINE in audit ohranjeni.
 
 ### 2026-10-29 (164) — M4.3: Hover zaključen
 
