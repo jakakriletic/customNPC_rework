@@ -974,3 +974,14 @@ JSON pove izvor/vrstico/stolpec in status vsakega taba; brez loaderja ali hook b
 annotation processing izklopljen. Plain hooki zahtevajo še runtime preverbo; ni sandbox.
 CLI 4,979/4,881 s na popisanem korpusu; JS/Java in source/B5 regresiji zeleni.
 [Dokazi, ločena odtisa in omejitve](meritve/2026-10-29-M6.7-cli.md).
+
+### D-094 — M6.8: obstoječe pravice in izrecna trust politika (2026-10-29, Q173–Q176)
+
+JS/Java uporabljata isto strežniško `customnpcs.tool.scripter`, orodje in OpsOnly preverbo;
+reload ostane op ukaz. Produkcijske pravice in izvajalnik se ne spreminjajo.
+Odprti originalni default ALL ni trust meja; za nezaupane igralce `OpsOnly=true` in zaupani
+op avtorji ali izrecno omejene vse urejevalne/uvozne poti pri `DisablePermissions=false`.
+Zaupan mora biti tudi source/vključitev/clone/NBT uvoz. Java teče s pravicami procesa;
+loader/whitelist nista sandbox, ni CPU/heap timeouta ali globalnega SecurityManagerja.
+Controller unit/build/package in 27/27 na `36620163…` potrdi deny/grant/reload in omejen
+file/reflection dostop, ne GUI/login/permission plugina. [Politika in dokazi](meritve/2026-10-29-M6.8-pravice.md).

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 174 → 1)
+# Arhiv: dnevnik sej (vnosi 175 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,16 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (175) — M6.6: reprodukcija in obnova gnezdenega lastništva
+
+**Paket:** M6.6 (D-090/D-092, Q164–Q168) · **Stanje:** zaključen, poskus 2 (harness).
+Reprodukcija 48/48 na `01f08637…`; končni unit/build/package, m66-context-v1 88/88 in
+m62-packaged-v3 16/16 PASS na `af46a352…`. JS/Java v finally obnovita prejšnji Current,
+JS tudi CurrentType; binarno polje in lock ostaneta. Prvi m62 13/14 je bil zastarel null check
+v živem controller tabu; popravek harnessa ločeno potrdi caller in vrhnji null ob return/throw,
+zlate sledi iste. [Zapis](../meritve/2026-10-29-M6.6-context.md). GUI/impact/async in hitrost
+niso dokazovani. Q92 usklajen; brez ponavljanja uspešnih testov, naslednji M6.7.
 
 
 ### 2026-10-29 (174) — M6.5: izvor napak, source map vključitev, B5
