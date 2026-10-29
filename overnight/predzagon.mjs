@@ -2,6 +2,7 @@
 // Usage: node overnight/predzagon.mjs   (exit 0 = safe to launch, 1 = fix first)
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import { publish } from './control.mjs';
 import { toolDirectory, loadConfig, executable, nativeEnvironment, subscriptionStatus, agentArguments } from './lib.mjs';
 
 const c = loadConfig(path.join(toolDirectory, 'config.local.json'));
@@ -16,6 +17,8 @@ for (const p of c.profiles.filter(p => p.enabled)) {
   report(version.status === 0, `${p.id}: verzija ${(version.stdout || version.stderr || String(version.error)).trim().split('\n')[0]}`);
   const auth = subscriptionStatus(p);
   report(auth.ok, `${p.id}: prijava ${auth.reason}`);
+  // A confirmed login clears a stale auth block in state (the runner never re-enables it on its own).
+  if (auth.ok) publish(c, { type: 'verified', id: p.id });
   // Every flag the controller passes must still appear in the CLI help.
   const help = spawnSync(exe, p.kind === 'codex' ? ['exec', '--help'] : ['--help'], { encoding: 'utf8', env: nativeEnvironment(p), windowsHide: true, timeout: 20000 });
   const text = `${help.stdout}${help.stderr}`;
