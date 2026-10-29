@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 165 → 1)
+# Arhiv: dnevnik sej (vnosi 166 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,19 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-29 (166) — M4.15b: GUI izbira in strežniška pogodba zaključena
+
+**Paket:** M4.15b (D-089, Q108–Q116) · **Stanje:** zaključeno, poskus 1 produkcije.
+Osnovni prenos preverjen/potisnjen kot `599751f`; nato AI → Movement → Backend 0/1,
+strežniško dejansko ozadje/razlog in legacy save brez spremembe izbire.
+Vseh sedem zahtevanih controller testov zelenih na `d71d75d4…`: 34 properties trditev,
+unit/build/package in 97/97 ×3 za library/global 1/1, 1/0, 0/1; config/runtime SHA isti.
+Predhodna FAIL ostaneta FAIL; zaščita preveri iste surove properties zapise in obnovi
+izvirne bajte pred končnim SHA. Privzeto vanilla, brez sprememb tick/gibalne kode.
+[En zapis dokazil in omejitev](../meritve/2026-10-29-M4.15b-gui.md). Naslednji M4.15c:
+klikanje, svet save/reload in klient/dedicated povezava še niso potrjeni.
+Po uspešnih testih samo dokumentacija; brez ponovitev, baseline/ZAZENI-BASELINE/audit ohranjeni.
 
 ### 2026-10-29 (165) — M4.15a: analiza izvedenih meritev, odložena potrditev
 

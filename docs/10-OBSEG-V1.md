@@ -13,8 +13,8 @@ brišemo jih, ostanejo v `03-FAZE.md` kot plan za v2.
 |---|---|---|
 | 1 | ~~M4.2~~ | `FlightMode` + NBT zaključen 29. 10. (D-086); unit/build/package in M4.16 180/180 zeleni |
 | 2 | ~~M4.3~~ | `HoverMoveHelper` zaključen 29. 10. (D-087); privzeto 180/180 = original, H0–H4 z restartom zeleni, cena enkrat kot podatek |
-| 3 | M4.15a (obravnavan z omejitvami) → ~~M4.15b~~ → ~~M4.15c~~ | GUI/pogodba in klient/restart zaključeni (D-089, Q122); 70/70 ×2 + 68/68, 30 PNG pregledanih; naslednji M3.8b |
-| 4 | M3.8b | GUI za `RwHitboxMode` |
+| 3 | M4.15a (obravnavan z omejitvami) → ~~M4.15b~~ → ~~M4.15c~~ | GUI/pogodba in klient/restart zaključeni (D-089, Q122); 70/70 ×2 + 68/68, 30 PNG pregledanih |
+| 4 | ~~M3.8b~~ | GUI za `RwHitboxMode` zaključen 29. 10. (Q126), 216/216, clone/restart in 18 PNG potrjeni; naslednji M6, najprej raziskava M6.0 (D-029) |
 | 5 | M6.1 → M6.10, M6.12 | Java scripting; M6.6 samo, če je potreben za pravilnost |
 | 6 | M6.11 | samo najmanjši nabor (player, world); ostalo v v2 |
 | 7 | ostanek M7 | M7.5 hooki, M7.8 reload, M7.9 script API, uskladitev verzije CNPC (D-024) |

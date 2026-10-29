@@ -50,20 +50,22 @@ IGuiData {
     @Override
     public void initGui() {
         super.initGui();
+        // Ten 20px rows fit the existing panel even at the minimum 240px GUI height.
+        final int rowStep = 21;
         int y = this.guiTop + 4;
         this.addLabel(new GuiNpcLabel(0, "gui.name", this.guiLeft + 5, y + 5));
         this.addTextField(new GuiNpcTextField(0, this, this.fontRenderer, this.guiLeft + 50, y, 200, 20, this.display.getName()));
         this.addButton(new GuiNpcButton(0, this.guiLeft + 253, y, 110, 20, new String[]{"display.show", "display.hide", "display.showAttacking"}, this.display.getShowName()));
-        this.addLabel(new GuiNpcLabel(11, "gui.title", this.guiLeft + 5, (y += 23) + 5));
+        this.addLabel(new GuiNpcLabel(11, "gui.title", this.guiLeft + 5, (y += rowStep) + 5));
         this.addTextField(new GuiNpcTextField(11, this, this.fontRenderer, this.guiLeft + 50, y, 200, 20, this.display.getTitle()));
-        this.addLabel(new GuiNpcLabel(1, "display.model", this.guiLeft + 5, (y += 23) + 5));
+        this.addLabel(new GuiNpcLabel(1, "display.model", this.guiLeft + 5, (y += rowStep) + 5));
         this.addButton(new GuiNpcButton(1, this.guiLeft + 50, y, 110, 20, "selectServer.edit"));
         this.addLabel(new GuiNpcLabel(2, "display.size", this.guiLeft + 175, y + 5));
         this.addTextField(new GuiNpcTextField(2, this, this.fontRenderer, this.guiLeft + 203, y, 40, 20, this.display.getSize() + ""));
         this.getTextField((int)2).numbersOnly = true;
         this.getTextField(2).setMinMaxDefault(1, 30, 5);
         this.addLabel(new GuiNpcLabel(3, "(1-30)", this.guiLeft + 246, y + 5));
-        this.addLabel(new GuiNpcLabel(4, "display.texture", this.guiLeft + 5, (y += 23) + 5));
+        this.addLabel(new GuiNpcLabel(4, "display.texture", this.guiLeft + 5, (y += rowStep) + 5));
         this.addTextField(new GuiNpcTextField(3, this, this.fontRenderer, this.guiLeft + 80, y, 200, 20, this.display.skinType == 0 ? this.display.getSkinTexture() : this.display.getSkinUrl()));
         this.addButton(new GuiNpcButton(3, this.guiLeft + 325, y, 38, 20, "mco.template.button.select"));
         this.addButton(new GuiNpcButton(2, this.guiLeft + 283, y, 40, 20, new String[]{"display.texture", "display.player", "display.url"}, this.display.skinType));
@@ -71,13 +73,13 @@ IGuiData {
         if (this.display.skinType == 1 && !this.display.getSkinPlayer().isEmpty()) {
             this.getTextField(3).setText(this.display.getSkinPlayer());
         }
-        this.addLabel(new GuiNpcLabel(8, "display.cape", this.guiLeft + 5, (y += 23) + 5));
+        this.addLabel(new GuiNpcLabel(8, "display.cape", this.guiLeft + 5, (y += rowStep) + 5));
         this.addTextField(new GuiNpcTextField(8, this, this.fontRenderer, this.guiLeft + 80, y, 200, 20, this.display.getCapeTexture()));
         this.addButton(new GuiNpcButton(8, this.guiLeft + 283, y, 80, 20, "display.selectTexture"));
-        this.addLabel(new GuiNpcLabel(9, "display.overlay", this.guiLeft + 5, (y += 23) + 5));
+        this.addLabel(new GuiNpcLabel(9, "display.overlay", this.guiLeft + 5, (y += rowStep) + 5));
         this.addTextField(new GuiNpcTextField(9, this, this.fontRenderer, this.guiLeft + 80, y, 200, 20, this.display.getOverlayTexture()));
         this.addButton(new GuiNpcButton(9, this.guiLeft + 283, y, 80, 20, "display.selectTexture"));
-        this.addLabel(new GuiNpcLabel(5, "display.livingAnimation", this.guiLeft + 5, (y += 23) + 5));
+        this.addLabel(new GuiNpcLabel(5, "display.livingAnimation", this.guiLeft + 5, (y += rowStep) + 5));
         this.addButton(new GuiNpcButton(5, this.guiLeft + 120, y, 50, 20, new String[]{"gui.yes", "gui.no"}, this.display.getHasLivingAnimation() ? 0 : 1));
         this.addLabel(new GuiNpcLabel(6, "display.tint", this.guiLeft + 180, y + 5));
         String color = Integer.toHexString(this.display.getTint());
@@ -86,16 +88,16 @@ IGuiData {
         }
         this.addTextField(new GuiNpcTextField(6, this, this.guiLeft + 220, y, 60, 20, color));
         this.getTextField(6).setTextColor(this.display.getTint());
-        this.addLabel(new GuiNpcLabel(7, "display.visible", this.guiLeft + 5, (y += 23) + 5));
+        this.addLabel(new GuiNpcLabel(7, "display.visible", this.guiLeft + 5, (y += rowStep) + 5));
         this.addButton(new GuiNpcButton(7, this.guiLeft + 120, y, 50, 20, new String[]{"gui.yes", "gui.no", "gui.partly"}, this.display.getVisible()));
         this.addLabel(new GuiNpcLabel(13, "display.interactable", this.guiLeft + 180, y + 5));
         this.addButton(new GuiNpcButtonYesNo(13, this.guiLeft + 280, y, this.display.getHasHitbox()));
-        this.addLabel(new GuiNpcLabel(10, "display.bossbar", this.guiLeft + 5, (y += 23) + 5));
+        this.addLabel(new GuiNpcLabel(10, "display.bossbar", this.guiLeft + 5, (y += rowStep) + 5));
         this.addButton(new GuiNpcButton(10, this.guiLeft + 60, y, 110, 20, new String[]{"display.hide", "display.show", "display.showAttacking"}, this.display.getBossbar()));
         this.addLabel(new GuiNpcLabel(12, "gui.color", this.guiLeft + 180, y + 5));
         this.addButton(new GuiNpcButton(12, this.guiLeft + 220, y, 110, 20, this.display.getBossColor(), "color.pink", "color.blue", "color.red", "color.green", "color.yellow", "color.purple", "color.white"));
         // M3.8b (R6): nacin hitboxa; velja samo z RwHitbox=1 v CustomNpcs.cfg.
-        this.addLabel(new GuiNpcLabel(14, "Hitbox", this.guiLeft + 5, (y += 23) + 5));
+        this.addLabel(new GuiNpcLabel(14, "Hitbox", this.guiLeft + 5, (y += rowStep) + 5));
         this.addButton(new GuiNpcButton(14, this.guiLeft + 60, y, 110, 20, HitboxGui.labels(), this.rwHitboxMode));
         this.addLabel(new GuiNpcLabel(15, HitboxGui.HINT, this.guiLeft + 180, y + 5));
     }

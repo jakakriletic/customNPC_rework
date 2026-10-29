@@ -79,6 +79,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-10-29 | M3.8b: štirje controller testi zeleni na `b2719356…` | unit/build/package, GUI 147/147 + restart 69/69, šest istih UUID, clone vseh načinov, globalno 0/1 in HasHitbox; 18 PNG vizualno pregledanih. Poskus 2 razmik 21 px odpravi odrezano vrstico na istem zaslonu; fizika ista, pogoji isti (Q123–Q126) | [zapis](meritve/2026-10-29-M3.8b-gui.md) |
 | 2026-10-29 | M4.15c: šest controller testov zelenih na `c91ad234…` | unit/build/package, integrirano 70/70 ×2, dedicated 68/68; isti UUID po restartu vseh treh svetov, 30 PNG vizualno pregledanih, config/runtime/options isti, properties/ops obnovljeni. Brez časovne meritve ali spremembe produkcije M4.15b (Q122) | [zapis](meritve/2026-10-29-M4.15c-klient.md) |
 | 2026-10-29 | M4.15b: sedem controller testov zelenih na `d71d75d4…` | properties 34, unit/build/package, library/global 1/1, 1/0 in 0/1 po 97/97; 74 pričakovanih razlik, runtime/config SHA isti. Brez nove cenovne meritve; klik/reload sveta M4.15c odprt (D-089/Q116) | [zapis](meritve/2026-10-29-M4.15b-gui.md) |
 | 2026-10-29 | M4.15a na `f0606b11…`: samotest/kompatibilnost zelena, obe šestcelični lestvici **exit 1** | 18/18 fallback/rebuild; 10/12 celic uspešnih, U1 pri 2000 nedosegljivih 881/800 <1000, brez A/B sklepa za ta par. Cena enkrat po Q92, privzeto 0; potrditev 2000 in skupnega pomnilnika odložena. GUI 0/1 z dejanskim ozadjem in opozorilom, brez trditve o kapaciteti (D-088) | [zapis](meritve/2026-10-29-M4.15a-baritone.md) |

@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. Naslednji M3.8b → M6 → ostanek M7 → M10; M4.15b/c zaključena (D-089, Q122), M4.15a lestvici neuspešni in potrditev 2000 nedosegljivih odložena (D-088). Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
+**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. Naslednji M6.0 raziskava → M6 v1.0 → ostanek M7 → M10; M3.8b zaključen (Q126), M4.15b/c zaključena (D-089, Q122), M4.15a potrditev 2000 nedosegljivih odložena (D-088). Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -167,7 +167,8 @@ hitbox, kolizije in passenger logiko v `EntityNPCInterface`.
 | M3.5 | `updateHitbox()` ob spremembi jahanja (Forge `EntityMountEvent`) | **zaključeno 24. 9.** — mount že pravilen v originalu (`EntityCustomNpc.startRiding`); popravek samo za sestop, v `dismountRidingEntity` (ne `EntityMountEvent`, ker se sproži pred spremembo); pod `RwMountSteering`; E9 v svetu: način 0 po sestopu 1,463 (napaka), način 1 1,900 ([zapis](meritve/2026-09-24-M3.5-hitbox.md)) |
 | M3.6 | ~~Popravek mutex bitov `EntityAIAttackTarget`~~ → **prioriteta napada pred gibanjem** (pod stikalom `RwAttackPriority`, z A/B scenarijem `m36-run.ps1`). Preusmerjeno 24. 9. z odobritvijo uporabnika (D-020): mutex biti napada so enaki vanilla, napaka je v prioriteti | **zaključeno 5. 10.** — način 1 zelen (tavajoči v dosegu 10/10 z zakasnitvijo kontrole), način 0 napako ponovi (6/8 nad kontrolo), hipoteza `aggroRange` (P2) potrjena ([zapis](meritve/2026-09-24-M3.6-prioriteta-napada.md)) |
 | M3.7 | Ločitev `minRange` od `npc.width`; spodnja meja napadalnega dosega | **zaključeno 5. 10. brez spremembe obnašanja** — premisa ovržena iz kode: doseg = max(r² + wt, (2w)² + wt), izklop hitboxa ga ne zmanjša. Nov kandidat za zgoščevanje (brez hitboxa se NPC-ji ne odrivajo) čaka na scenarij in spada v M3.8. [analiza](meritve/2026-10-05-M3.7-analiza-minrange.md) |
-| M3.8 | **R6**: `RwHitboxMode` ORIGINAL / SOLID / SMART (velikost + ščit) + NBT + ukaz `/rwhitbox` + testi; GUI v M3.8b (D-025, zahteva uporabnika 5. 10.) | **zaključeno 5. 10.** — scenarij `hb-run.ps1` H0–H8 zelen, 201/201 testov; **M3.8b GUI v kodi 5. 10.** (vrstica Hitbox na zavihku Display), čaka na `hb-run` in preverbo v klientu ([zapis](meritve/2026-10-05-M3.8-hitbox-nacini.md)) |
+| M3.8 | **R6**: `RwHitboxMode` ORIGINAL / SOLID / SMART (velikost + ščit) + NBT + ukaz `/rwhitbox` + testi; GUI v M3.8b (D-025, zahteva uporabnika 5. 10.) | **zaključeno 5. 10.** — scenarij `hb-run.ps1` H0–H8 zelen, 201/201 testov; [zapis](meritve/2026-10-05-M3.8-hitbox-nacini.md) |
+| ~~M3.8b~~ | Display → Hitbox, obstoječe tri izbire; geometrija vrstic 21 px, fizika/NBT ista | **zaključeno 29. 10. (Q123–Q126), poskus 2:** unit/build/package in GUI 216/216 PASS na `b2719356…`, clone/restart šestih istih UUID, 18 PNG pregledanih; globalno 0/1 in HasHitbox potrjena. Prvi FAIL ostane reprodukcija; M3.9 gibanje igralca nepokrito. [Dokazila](meritve/2026-10-29-M3.8b-gui.md) |
 | M3.9 | Preverba solid × mount: solid nosilec pod jahačem, solid NPC na poti drugega NPC-ja, igralec ujet med dvema | **zaključeno 7. 10.** — `m39-run.ps1` J1–J6, P1–P4 zelena; igralec iz kode in s testom (klient skupaj z M3.8b); ugotovitev Q15: jahan nosilec in solid NPC se ne razmakneta ([zapis](meritve/2026-10-07-M3.9-solid-jahanje.md)) |
 | M3.10 | *Opcijsko, nova funkcija:* jahač kot "commander" nosilca — konjenica, kjer nosilec sledi jahačevemu cilju | M |
 
@@ -202,7 +203,7 @@ vsake 4 ticke, po prihodu do ~3,5 bloka drsenja, **[H]** model); cilj dlje od `N
 poti**, ne delne poti; CustomNPC+ ima isto iskanje kot vanilla 1.12, razlika je v sledenju in krmiljenju.
 M4.1, M4.4, M4.9 in M4.12 zavrženi ali združeni, M4.11 pogojen, dodana M4.16 in M4.17.
 
-**Vrstni red M4 za v1.0 (Q92, prevlada nad D-038):** ~~M4.2~~ (D-086) → ~~M4.3~~ (D-087) → M4.15a (obravnavan z omejitvami, D-088) → ~~M4.15b~~ (D-089) → ~~M4.15c~~ (Q122); naslednji M3.8b. Ostali nedokončani paketi spodaj so v2. M4.14b/M4.16/M4.16b/M4.10/M4.17 so že obravnavani; odprta FA merila in Q82/Q84 ostanejo zapisana, ne blokirajo v1.0.
+**Vrstni red M4 za v1.0 (Q92, prevlada nad D-038):** ~~M4.2~~ (D-086) → ~~M4.3~~ (D-087) → M4.15a (obravnavan z omejitvami, D-088) → ~~M4.15b~~ (D-089) → ~~M4.15c~~ (Q122); tudi M3.8b zaključen, naslednji raziskava M6.0. Ostali nedokončani paketi spodaj so v2. M4.14b/M4.16/M4.16b/M4.10/M4.17 so že obravnavani; odprta FA merila in Q82/Q84 ostanejo zapisana, ne blokirajo v1.0.
 
 ### Paketi
 

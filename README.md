@@ -14,10 +14,10 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-10-29 |
-| Trenutna faza | **M4 — Gibanje in navigacija** (R2), raziskava M4.0 opravljena 20. 10. (D-038). M0/M1/M2 zaključeni, M3 do M3.9 (GUI M3.8b odprt), **M5 zaključen 22. 10.** (D-055). Animacijsko jedro M7 v ločenem modu `customNPC_entities_mod` (D-024) |
-| Naslednji korak | **M3.8b → M6** po [obsegu v1.0 (Q92)](docs/10-OBSEG-V1.md), nato ostanek M7 in M10. M4.15b/c GUI/pogodba in klient/restart zaključeni (D-089, Q122), M4.15a podatki zbrani (D-088), obe lestvici neuspešni pri 2000 nedosegljivih; potrditev odložena, GUI brez obljube kapacitete. Paketi zunaj seznama so v2; pri privzeto 0 cena ni pogoj (ena meritev), največ 2 poskusa na paket. Dnevnik: [04-STANJE](docs/04-STANJE.md) |
+| Trenutna faza | **Naslednji M6 — Scripting, najprej raziskava M6.0** (D-029). Paketi M4 v1.0 obravnavani z omejitvami; M0/M1/M2 zaključeni, M3 do M3.9 (GUI M3.8b preverjen, celoten M3 izhod še ni potrjen), **M5 zaključen 22. 10.** (D-055). Animacijsko jedro M7 v ločenem modu `customNPC_entities_mod` (D-024) |
+| Naslednji korak | **M6.0 raziskava → M6 v1.0 → ostanek M7 → M10** po [obsegu v1.0 (Q92)](docs/10-OBSEG-V1.md). M3.8b zaključen (Q126); M4.15b/c GUI/pogodba in klient/restart zaključeni (D-089, Q122), M4.15a potrditev 2000 nedosegljivih odložena. Paketi zunaj seznama so v2; pri privzeto 0 cena ni pogoj (ena meritev), največ 2 poskusa na paket. Dnevnik: [04-STANJE](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 194 datotek `.java` v `src/patch` (126 rework), 74 testnih datotek (476 metod `@Test` in 40 primerjalnih testov originala). M4.15c: +1 diagnostična sonda, šest controller testov zelenih na `c91ad234…`. M4.14b FA merila ostajajo neizpolnjena (D-079), M4.14d odložen (Q65/Q74), pragovi isti. |
+| Prevedljivih razredov | 195 datotek `.java` v `src/patch` (127 rework), 74 testnih datotek (476 metod `@Test` in 40 primerjalnih testov originala). M3.8b: +1 diagnostična sonda, štirje controller testi zeleni na `b2719356…`. M4.14b FA merila ostajajo neizpolnjena (D-079), M4.14d odložen (Q65/Q74), pragovi isti. |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in
@@ -29,7 +29,8 @@ datotek za obnovo in ima mod pomembnejše težave, se dodatna forenzika R9, migr
 **M4.3 zaključen (29. 10., D-087):** `RwFlightMode=1` izbere Hover, privzeto original;
 upošteva hitrost navigatorja in se ustavi brez drsenja v A/C. Controller sprejem z restartom
 zelen na `3eba45ab…`, privzeto 180/180 = M4.16; omejitve poti ostanejo zapisane.
-[Dokazila](docs/meritve/2026-10-29-M4.3-hover.md). M4.15b/c zaključena (D-089, Q122): [klient/restart](docs/meritve/2026-10-29-M4.15c-klient.md) 70/70 ×2 + 68/68 in 30 pregledanih PNG na `c91ad234…`; naslednji M3.8b po Q92;
+[Dokazila](docs/meritve/2026-10-29-M4.3-hover.md). M4.15b/c zaključena (D-089, Q122): [klient/restart](docs/meritve/2026-10-29-M4.15c-klient.md) 70/70 ×2 + 68/68 in 30 pregledanih PNG na `c91ad234…`;
+[M3.8b zaključen (Q126)](docs/meritve/2026-10-29-M3.8b-gui.md): 216/216, clone/restart šestih UUID in 18 pregledanih PNG; naslednji raziskava M6.0 po Q92/D-029.
 [M4.15a](docs/meritve/2026-10-29-M4.15a-baritone.md) ima 10/12 veljavnih cenovnih celic,
 potrditev 2000 nedosegljivih ostaja neuspešna/odložena, privzeto ozadje vanilla.
 
@@ -80,8 +81,8 @@ Podrobnosti, dokazi iz kode in kaj je še treba preveriti: [`docs/02-ZAHTEVE.md`
 M0  Temelj                      okolje, build, testi, git            ← zakljuceno (M0.8 = zabelezena blokada)
 M1  Integriteta podatkov        R9 + B1/B2, atomski zapis, migracija ← zaključeno
 M2  Diagnostika in meritve      reprodukcije, profiling, baseline    ← ~96 %, baseline M2.6 tece 5. 10.
-M3  Jedro entitete              R1 mount, R6 solid hitbox            ← do M3.9, GUI M3.8b odprt
-M4  Gibanje in navigacija       R2 letenje, navigacija                ← v1.0 paketi obravnavani; M4.15a z omejitvami, naslednji M3.8b (Q92)
+M3  Jedro entitete              R1 mount, R6 solid hitbox            ← do M3.9, GUI M3.8b preverjen
+M4  Gibanje in navigacija       R2 letenje, navigacija                ← v1.0 paketi obravnavani; M4.15a z omejitvami, naslednji M6.0 (Q92)
 M5  Performance AI              R5 strežnik, klient in daljna vidnost ← zaključeno 22. 10., regresija M5.Z, D-055
 M6  Scripting platforma         R7 Java scripting, hook registry
 M7  Animacije + AI okolje       R4 animacijski sistem in avtorsko okolje

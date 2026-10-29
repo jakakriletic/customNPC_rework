@@ -183,6 +183,7 @@ public final class ClientHarness {
     /** Klice {@code CustomNpcs} prek refleksije, samo na klientu in samo z lastnostjo. */
     public static void install(String path) {
         try {
+            if (HitboxGuiHarness.installIfRequested(path)) { return; }
             // M4.15c is a separate, explicitly requested functional job, never a timing run.
             if (NavGuiHarness.installIfRequested(path)) { return; }
             HarnessJob job = HarnessJob.load(new File(path));
