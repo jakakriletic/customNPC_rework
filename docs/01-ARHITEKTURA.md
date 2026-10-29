@@ -995,3 +995,13 @@ Script API je `Animators.of(npc)` (brez spremembe `ICustomNpc`, brez `blendTo`);
 `animationStart/animationEnd/animationEvent` (klipi imajo dogodke, ne frameov), opazovanje pod
 `RwAnimHooks` privzeto 0. M7.8 reload in `blendTo` sta v2. Vrstni red M7.V → M7.9 → M7.5 → M10.
 [Raziskava](raziskave/M7.0-animacije-integracija.md).
+
+### D-096 — M10.0: release kandidat proti distribucijskemu originalu (2026-10-29, Q207–Q214)
+
+Release matrika primerja **distribucijski** `CustomNPCs_1.12.2-(01Oct19).jar` in kandidata s
+privzetimi vrednostmi kode na istem pakiranem Forge strežniku z isto JS krmilno skripto; dovoljene
+so samo razlike iz registra sprememb obnašanja (dosedanji krak 0 je bil isti popravljeni jar, D-055).
+M10.1 se razdeli na M10.1a (strežnik) in M10.1b (klient). Vrstni red M10.1a → M10.1b → M10.5 →
+M10.4 → M10.2 → M10.6 → M10.7. Soak 4 h z merili trenda; M10.2 ponovi original isti dan samo ob
+alarmu 5 % p95. M10.3 in IO4 ostaneta blokirana (Q1), klientski coremod v pakiranem klientu je
+znana omejitev. [Raziskava](raziskave/M10.0-release-kandidat.md).

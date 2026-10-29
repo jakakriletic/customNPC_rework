@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 183 → 1)
+# Arhiv: dnevnik sej (vnosi 184 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,16 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (184) — M7.9: refleksijski script animator
+
+**Paket:** M7.9 (Q200–Q202) · **Stanje:** zaključen, sprejet v poskusu 1 na `1a2a2b75…`.
+`Animators.of(npc)` / `IAnimator`, FIFO največ 32 na entiteto, šibke reference in poslušalec samo
+ob čakajoči vrsti; originalni razredi in entities mod nespremenjeni. Šest unit primerov, API
+generator in `animation-api-run.ps1` za JS/Java z dejanskim modom ter brez njega.
+unit/build/package, m69-api-v1 (53 tipov/614 članov), m79-api-v1 28/28 (JS = Java FIFO
+`hurt,idle,hurt`) in m79-absent-v1 10/10 PASS; getterji 1,41 µs/trojico (podatek).
+[Dokazi/omejitve](../meritve/2026-10-29-M7.9-animator-api.md). Naslednji M7.5 → M10.
 
 ### 2026-10-29 (183) — M7.V: zagon rework + entities 0.7.0
 

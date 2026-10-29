@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0–M6.12 zaključeni (D-090–D-094, Q191); naslednji ostanek M7 po raziskavi [M7.0](raziskave/M7.0-animacije-integracija.md) (D-095): ~~M7.V~~ (Q199) → ~~M7.9~~ (Q202) → ~~M7.5~~ (Q206); M7 v1 zaključen, naslednji M10.1; M7.8 v2. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
+**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0–M6.12 zaključeni (D-090–D-094, Q191); naslednji ostanek M7 po raziskavi [M7.0](raziskave/M7.0-animacije-integracija.md) (D-095): ~~M7.V~~ (Q199) → ~~M7.9~~ (Q202) → ~~M7.5~~ (Q206); M7 v1 zaključen; M10.0 raziskava zaključena (D-096), naslednji M10.1a; M7.8 v2. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -573,7 +573,9 @@ CustomNPC+ repozitorija se ne prenesejo.
 
 | ID | Paket | Vel. |
 |---|---|---|
-| M10.1 | Celotna funkcionalna matrika iz `PLAN_IMPLEMENTACIJE.md` §6 | M |
+| ~~M10.0~~ | **Raziskava zaključena 29. 10. (D-096, Q207–Q214):** [zapis](raziskave/M10.0-release-kandidat.md); M10.1 razdeljen na a/b, vrstni red M10.1a → M10.1b → M10.5 → M10.4 → M10.2 → M10.6 → M10.7 | S |
+| M10.1a | Strežniška A/B matrika: ista JS sled na distribucijskem originalu in kandidatu s privzetimi vrednostmi kode (pakiran strežnik); razlike samo iz registra | M |
+| M10.1b | Klientski prehod: login/playerdata, dialog/quest klik, pošta, skin napaka, F3+T, original ↔ kandidat klient/strežnik | M |
 | M10.2 | Meritve proti baselineu iz M2.6, vse scenarije | S |
 | M10.3 | Test na **kopiji** uporabnikovega pravega sveta | M |
 | M10.4 | Soak test, priporočeno 24 h z dejansko aktivnostjo | S |
