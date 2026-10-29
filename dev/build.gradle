@@ -158,6 +158,17 @@ task workspacePaths {
     }
 }
 
+// M6.1 prototype: explicit compiler/dependency inputs, not a production script registration.
+// Only the controller invokes this task. No dependency on normal builds or game launches.
+task javaPrototypePaths {
+    doLast {
+        def out = file("$buildDir/m61")
+        out.mkdirs()
+        new File(out, 'compile-classpath.txt').text = sourceSets.main.compileClasspath.asPath
+        new File(out, 'runtime-classpath.txt').text = sourceSets.main.runtimeClasspath.asPath
+    }
+}
+
 task testOriginal(type: Test) {
     description = 'Runs characterization tests against the original remapped binary, without patch classes.'
     testClassesDirs = sourceSets.test.output.classesDirs
@@ -236,6 +247,8 @@ task testOriginal(type: Test) {
     exclude '**/HoverMoveHelperTest.class'
     // M4.15b: transient AI editor protocol and strict navigation choice.
     exclude '**/NavGuiDataTest.class'
+    // M6.1: new opt-in compiler prototype has no counterpart in the original.
+    exclude '**/JdkScriptCompilerTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

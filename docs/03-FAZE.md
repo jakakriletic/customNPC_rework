@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0 raziskava zaključena (D-090); naslednji M6.1 → M6 v1.0 → ostanek M7 → M10. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
+**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0 in M6.1 zaključena (D-090, Q141); naslednji M6.2 → M6 v1.0 → ostanek M7 → M10. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -407,8 +407,8 @@ lahko uporabi.
 **Vhodni pogoj:** M1 (varno shranjevanje skript in njihovih podatkov).
 
 **M6.0 zaključen 29. 10. (D-090, Q127–Q131):** [raziskava](raziskave/M6.0-java-scripting.md).
-JDK 8 JavaCompiler je prvi kandidat za M6.1; hitrost in Forge runtime povezava še nista
-izmerjeni. Java samo za zaupanja vredne avtorje, JS ostane privzet. Obstoječi API,
+JDK 8 JavaCompiler je v M6.1 izbran (Q141) in potrjen v dev/zapakiranem Forge; hitrost izvajanja Java/JS še ni
+izmerjena. Java samo za zaupanja vredne avtorje, JS ostane privzet. Obstoječi API,
 handlerji in jezikovni GUI se razširijo, ne nadomestijo. Kritika vsakega paketa in njegovi
 dokazi so v raziskavi; pri prvem prenosu originalnega razreda velja ločen baseline commit.
 
@@ -417,7 +417,7 @@ dokazi so v raziskavi; pri prvem prenosu originalnega razreda velja ločen basel
 | ID | Paket | Vel. |
 |---|---|---|
 | ~~M6.0~~ | Raziskava izvedbe zaključena; brez sprememb merilnih vhodov in brez novih meritev | S |
-| M6.1 | JDK 8 JavaCompiler prototip in primerjava s pripetim stock Janinom; jezik/diagnostika/no-compiler, cold/warm časi ter typed API povezava v dev in zapakiranem Forge runtime | M |
+| ~~M6.1~~ | **Zaključeno 29. 10. (Q132–Q141), poskus 1:** JDK JavaCompiler izbran; Janino zavrne lambdo in sprejme napačen generik. Typed API 15/15 v dev in zapakiranem Forge, brez compilerja jasna napaka, JS isti; warm 17–31 ms kot podatek. [Dokazila](meritve/2026-10-29-M6.1-prevajalnik.md) | M |
 | M6.2 | `rework/script/hooks/`: deterministični popis podpisov + omejen adapter na obstoječem robu; isti tab/init/bus vrstni red, preklic, string hooki; JS veja ostane | M |
 | M6.3 | Tipizirana script pogodba z obstoječimi NPC/event API vmesniki; najmanjši uporaben nabor, brez podvojitve vseh ovojev | M |
 | M6.4 | Loader/instanca na NPC/tab/generacijo, omejen cache bytecode; atomski reload in invalidacija vključitev/API, brez deljenja static stanja | M |

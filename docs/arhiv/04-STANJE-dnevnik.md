@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 167 → 1)
+# Arhiv: dnevnik sej (vnosi 168 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,18 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-29 (168) — M3.8b: GUI, clone in restart zaključeni
+
+**Paket:** M3.8b (Q123–Q126) · **Stanje:** zaključen, poskus 2, fizika/podatkovna pogodba ista.
+Vsi štirje controller testi PASS na `b2719356…`: unit/build/package in m38b-gui-v1,
+147/147 + 69/69; wand/Display paketi, globalno 0/1, HasHitbox, clone in save/restart potrjeni.
+Šest istih UUID po drugem JVM, vseh 18 PNG vizualno pregledanih, config/options isti.
+Prvi GUI FAIL (`667b844b…`, spodnji rob 251 > 240) ostane reprodukcija; razmik 21 px
+da spodnji rob 233 na istem zaslonu, brez spremembe meril, ločljivosti ali fizike.
+[En zapis meril/dokazil](../meritve/2026-10-29-M3.8b-gui.md).
+Po PASS samo dokumentacija, brez ponovitev (Q90/Q92); naslednji raziskava M6.0 (D-029).
+M3.9 gibanje igralca med dvema SOLID s tem še ni izmerjeno; nepovezane datoteke ohranjene.
 
 ### 2026-10-29 (167) — M4.15c: GUI in save/restart zaključena
 
