@@ -158,6 +158,22 @@ task workspacePaths {
     }
 }
 
+// M6.7: a plain Java process, never runClient/runServer/LaunchWrapper. The compiler sees
+// the current patch/API first, followed by the same mapped compile dependencies as :test.
+task compileScripts(type: JavaExec, dependsOn: classes) {
+    description = 'Compile the Java tab manifest without starting Minecraft; write structured JSON.'
+    main = 'noppes.npcs.rework.script.CompileScripts'
+    classpath = sourceSets.main.output + sourceSets.main.compileClasspath
+    workingDir = rootProject.projectDir.parentFile
+    doFirst {
+        def compilerPath = project.hasProperty('scriptsClasspathFile') ?
+                file(project.property('scriptsClasspathFile')).getText('UTF-8').trim() : classpath.asPath
+        args file(project.findProperty('scriptsManifest') ?: '../scripts/java/scripts.json').absolutePath,
+             file(project.findProperty('scriptsReport') ?: "$buildDir/reports/scripts/compile.json").absolutePath,
+             compilerPath
+    }
+}
+
 // M6.1 prototype: explicit compiler/dependency inputs, not a production script registration.
 // Only the controller invokes this task. No dependency on normal builds or game launches.
 task javaPrototypePaths {
@@ -257,6 +273,7 @@ task testOriginal(type: Test) {
     exclude '**/BytecodeCacheTest.class'
     // M6.5: error source map is new.
     exclude '**/SourceMapTest.class'
+    exclude '**/CompileScriptsTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

@@ -61,6 +61,7 @@ public final class RecoveryProbe {
         Map<String, Object> traces = new LinkedHashMap<>();
         proof.put("mode", mode); proof.put("checks", checks); proof.put("traces", traces); proof.put("success", false);
         Map<String, String> includes = ScriptController.Instance.scripts;
+        ScriptContainer caller = ScriptContainer.Current;
         File jsDir = null;
         try {
             WorldServer world = control.getWorld().getMCWorld();
@@ -137,7 +138,13 @@ public final class RecoveryProbe {
             check(checks, "js-fixed-errored-recovers-only-after-reload", "boom;|;|;ok;".equals(js.get("fErrored")) && Boolean.FALSE.equals(js.get("fErroredFlag")));
             check(checks, "js-runtime-source-map", ((String) js.get("fErroredConsole")).contains("Script source: m65/fe.js:3"));
             check(checks, "js-syntax-source-map", syntax.errored() && syntax.console().contains("Script source: m65/fs.js:2"));
-            check(checks, "current-cleared", ScriptContainer.Current == null);
+            // M6.6 restores the live controller, rather than clearing a nested caller.
+            check(checks, "current-caller-restored", caller != null
+                    && ((EntityNPCInterface) control.getMCEntity()).script.getScripts().contains(caller)
+                    && ScriptContainer.Current == caller);
+            check(checks, "current-top-level-js-cleared", topLevelCleared(world, "ECMAScript", JS_ONE,
+                    JS_ONE.replace("t(e,'1:tick');", "throw new Error('m62 fixture');")));
+            check(checks, "current-top-level-java-cleared", topLevelCleared(world, ScriptHooks.JAVA, JAVA_ONE, JAVA_THROW));
             boolean allOk = true;
             for (Map<String, Object> c : checks) { allOk &= Boolean.TRUE.equals(c.get("ok")); }
             proof.put("success", allOk);
@@ -155,6 +162,27 @@ public final class RecoveryProbe {
             // Reload from disk: drops the fixture includes (JS files and the Java map entries).
             ScriptController.Instance.loadCategories();
             Files.write(Paths.get(output), new GsonBuilder().setPrettyPrinting().create().toJson(proof).getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
+    /** Supply a null entry owner, run normal and throwing events through the real handler,
+     * then restore the suspended controller even when fixture setup fails. */
+    private static boolean topLevelCleared(WorldServer world, String language, String normal, String throwing) {
+        synchronized ("lock") {
+            ScriptContainer caller = ScriptContainer.Current;
+            try {
+                ScriptContainer.Current = null;
+                EntityNPCInterface npc = npc(world, language, normal);
+                EventHooks.onNPCTick(npc);
+                boolean ok = ScriptContainer.Current == null && !tab(npc, 0).errored
+                        && "1:init:1;1:tick;".equals(trace(npc));
+                npc = npc(world, language, throwing);
+                EventHooks.onNPCTick(npc);
+                return ok && ScriptContainer.Current == null && tab(npc, 0).errored
+                        && "1:init:1;".equals(trace(npc)) && console(npc).contains("m62 fixture");
+            } finally {
+                ScriptContainer.Current = caller;
+            }
         }
     }
 

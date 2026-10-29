@@ -6,20 +6,14 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import noppes.npcs.rework.script.NpcScript;
+import noppes.npcs.rework.script.JavaSources;
 
 /** M6.2: binds the public methods of a Java tab class to registry hooks.
  * A method named like a hook with a wrong shape is an error, never a silently missing hook (Q128).
  * M6.3: the no-op defaults of NpcScript are not hooks; only overrides below it are bound.
  */
 public final class JavaHookBinder {
-    private static final Pattern COMMENTS = Pattern.compile("/\\*.*?\\*/|//[^\\n]*", Pattern.DOTALL);
-    private static final Pattern PACKAGE = Pattern.compile("\\bpackage\\s+([A-Za-z_$][\\w$]*(?:\\s*\\.\\s*[A-Za-z_$][\\w$]*)*)\\s*;");
-    private static final Pattern PUBLIC_TYPE = Pattern.compile(
-            "\\bpublic\\s+(?:(?:final|abstract|strictfp)\\s+)*(class|interface|enum)\\s+([A-Za-z_$][\\w$]*)");
-
     public static final class BindException extends Exception {
         public final String code;
         BindException(String code, String message) { super(message); this.code = code; }
@@ -30,12 +24,8 @@ public final class JavaHookBinder {
     /** Binary name of the public top-level type in one compilation unit; javac requires
      * the unit name to match it. Comments are skipped; string literals are not parsed. */
     public static String unitName(String source) throws BindException {
-        String code = COMMENTS.matcher(source).replaceAll(" ");
-        Matcher type = PUBLIC_TYPE.matcher(code);
-        if (!type.find()) { throw new BindException("unit.noPublicType", "A Java tab needs one public top-level class"); }
-        Matcher pkg = PACKAGE.matcher(code);
-        String name = type.group(2);
-        return pkg.find() ? pkg.group(1).replaceAll("\\s", "") + "." + name : name;
+        try { return JavaSources.unitName(source); }
+        catch (JavaSources.SourceException e) { throw new BindException(e.code, e.getMessage()); }
     }
 
     /** Hook name -> method. The class must be public with a public no-argument constructor. */

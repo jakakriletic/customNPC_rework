@@ -24,6 +24,7 @@ import noppes.npcs.controllers.ScriptContainer;
 import noppes.npcs.controllers.ScriptController;
 import noppes.npcs.rework.script.BytecodeCache;
 import noppes.npcs.rework.script.JdkScriptCompiler;
+import noppes.npcs.rework.script.JavaSources;
 import noppes.npcs.rework.script.SourceMap;
 
 /** M6.2 (D-090, Q142-Q145): Java branch of one NPC script handler, selected by ScriptLanguage=Java.
@@ -143,16 +144,14 @@ public final class JavaNpcScripts {
         StringBuilder report = new StringBuilder();
         Map<String, String> origins = new LinkedHashMap<>();
         try {
-            Map<String, String> units = new LinkedHashMap<>();
-            String main = null;
+            Map<String, String> labelled = new LinkedHashMap<>();
             for (Map.Entry<String, String> source : sources.entrySet()) {
-                String name = JavaHookBinder.unitName(source.getValue());
-                if (units.put(name, source.getValue()) != null) {
-                    throw new JavaHookBinder.BindException("unit.duplicate", "Type " + name + " is declared twice in this tab");
-                }
-                origins.put(name.replace('.', '/') + ".java", source.getKey().isEmpty() ? "tab " + index : "include " + source.getKey());
-                if (main == null) { main = name; }
+                labelled.put(source.getKey().isEmpty() ? "tab " + index : "include " + source.getKey(), source.getValue());
             }
+            JavaSources input = new JavaSources(labelled);
+            Map<String, String> units = input.units;
+            String main = input.main;
+            origins.putAll(input.origins);
             String classpath = classpath();
             String key = BytecodeCache.key(compiler().identity(), classpath, units);
             Map<String, byte[]> code = CACHE.get(key);
@@ -160,7 +159,7 @@ public final class JavaNpcScripts {
                 JdkScriptCompiler.Result result = compiler().compile(units, classpath);
                 synchronized (JavaNpcScripts.class) { compiles++; }
                 for (JdkScriptCompiler.Problem p : result.problems) {
-                    String file = p.file.startsWith("/") ? p.file.substring(1) : p.file;
+                    String file = JavaSources.unitPath(p.file);
                     String origin = origins.get(file);
                     report.append(p.kind).append(' ').append(file).append(':').append(p.line).append(':').append(p.column)
                             .append(origin == null ? " " : " [" + origin + "] ").append(p.code).append(": ").append(p.message).append('\n');
@@ -175,6 +174,8 @@ public final class JavaNpcScripts {
             Object instance = script.getConstructor().newInstance();
             if (report.length() > 0) { container.appandConsole(report.toString().trim()); }
             return new Tab(loader, instance, hooks, origins);
+        } catch (JavaSources.SourceException e) {
+            fail(container, handler, e.code + ": " + e.getMessage(), first);
         } catch (JavaHookBinder.BindException e) {
             fail(container, handler, e.code + ": " + e.getMessage(), first);
         } catch (InvocationTargetException e) {

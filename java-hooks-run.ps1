@@ -224,7 +224,10 @@ try {
             }
         }
     } elseif ($Package -eq 'm65') {
-        Assert-JavaPrototype (@($proof.checks).Count -eq 15 -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) '15 recovery/source map assertions'
+        Assert-JavaPrototype (@($proof.checks).Count -eq 17 -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) '17 recovery/source map assertions'
+        foreach ($key in @('current-caller-restored','current-top-level-js-cleared','current-top-level-java-cleared')) {
+            Assert-JavaPrototype (@($proof.checks | Where-Object { $_.key -ceq $key -and $_.ok -eq $true }).Count -eq 1) "pinned M6.6 recovery context contract: $key"
+        }
         # Pinned here too, so a probe edit cannot silently weaken the expectation.
         $pinned=[ordered]@{ javaRuntime=''; javaRecovered='ok;'; javaMissing='tick;timer7;'; javaCompileFixed='p1;'
             oUnknown='tick;|;tick;interact;'; fUnknown='tick;|;interact;tick;interact;'; oErrored='boom;|;|;'; fErrored='boom;|;|;ok;' }

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 172 → 1)
+# Arhiv: dnevnik sej (vnosi 174 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,14 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+
+### 2026-10-29 (174) — M6.5: izvor napak, source map vključitev, B5
+
+**Paket:** M6.5 (D-090, Q157–Q163) · **Stanje:** zaključen, poskus 2 (harness). Baseline `ScriptContainer` `5fbda3f`.
+B5 popravljen v JS `ScriptContainer` (reload pred zgodnjimi izhodi) in Java (nova generacija počisti `errored`);
+izvor napak `SourceMap` (JS `Script source:`, Java `[tab N|include ime]` in skrajšan stack). [Zapis](../meritve/2026-10-29-M6.5-napake.md).
+Prvi controller m65 FAIL zaradi pričakovanega števila 14 namesto 15; popravek samo harnessa (Q163). Vseh šest zahtevanih testov PASS na `7ec18d6e…`: unit/build/package, m65 15/15, m62 14/14 in m64 15/15. Originalni bajti reproducirajo obe B5 napaki; popravek obnovi tudi prej manjkajoč hook. Omejitve Q162 ostanejo; naslednji pogojni M6.6 (najprej reprodukcija), nato M6.7 po Q92.
 
 
 ### 2026-10-29 (173) — M6.4: loader na NPC/tab/generacijo, bytecode cache, atomski reload

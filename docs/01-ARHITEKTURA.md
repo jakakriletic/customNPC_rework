@@ -965,3 +965,12 @@ lastništva nima stikala (izjema D-007); ni nov način izvajanja ali optimizacij
 Sprejeto v poskusu 2 (harness): vseh pet controller testov PASS na `af46a352…`,
 M6.6 88/88 in M6.2 16/16; brez trditve o hitrosti ali podpori async skript.
 [Merila in rezultati](meritve/2026-10-29-M6.6-context.md).
+
+### D-093 — M6.7: compile-only manifest brez izvajanja (2026-10-29, Q169–Q172)
+
+`compileScripts` sprejme manifest schema=1 z urejenimi tabi/datotekami, ne novega world formata.
+CLI in runtime delita `JavaSources`, JDK compiler in compiler/API/izvorni odtis.
+JSON pove izvor/vrstico/stolpec in status vsakega taba; brez loaderja ali hook bindanja,
+annotation processing izklopljen. Plain hooki zahtevajo še runtime preverbo; ni sandbox.
+CLI 4,979/4,881 s na popisanem korpusu; JS/Java in source/B5 regresiji zeleni.
+[Dokazi, ločena odtisa in omejitve](meritve/2026-10-29-M6.7-cli.md).

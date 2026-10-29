@@ -81,6 +81,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-10-29 | M6.7: compile-only CLI in regresiji, poskus 2 (harness) | CLI + m62 16/16 PASS na `e00c80cf…`; unit/build/package + m65 17/17 PASS na `3e58697d…`. Celotni ukaz valid/invalid 4,979/4,881 s, storitev 485,728/434,497 ms; brez izvajanja skript/procesorjev, 78 pričakovanih razlik | [zapis](meritve/2026-10-29-M6.7-cli.md) |
 | 2026-10-29 | M6.6: pet controller testov PASS na `af46a352…`, poskus 2 (harness) | unit/build/package, gnezdeno lastništvo 88/88, JS/Java zlata regresija 16/16; 78 pričakovanih razlik. Brez časovne meritve | [zapis](meritve/2026-10-29-M6.6-context.md) |
 | 2026-10-29 | M6.5: šest controller testov PASS na `7ec18d6e…`, poskus 2 (harness) | unit/build/package, m65 15/15 (originalni B5 proti popravku, JS/Java lokacije/obnova), m62 14/14 in m64 15/15; 78 pričakovanih razlik. Brez časovne meritve ali GUI pregleda | [zapis](meritve/2026-10-29-M6.5-napake.md) |
 | 2026-10-29 | M3.8b: štirje controller testi zeleni na `b2719356…` | unit/build/package, GUI 147/147 + restart 69/69, šest istih UUID, clone vseh načinov, globalno 0/1 in HasHitbox; 18 PNG vizualno pregledanih. Poskus 2 razmik 21 px odpravi odrezano vrstico na istem zaslonu; fizika ista, pogoji isti (Q123–Q126) | [zapis](meritve/2026-10-29-M3.8b-gui.md) |
