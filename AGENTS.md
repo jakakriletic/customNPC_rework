@@ -23,5 +23,9 @@ controller, the owner has authorized continuous autonomous development until Sto
 - Missing real credentials, unavailable hardware/data or failed measurements remain real
   facts: document and defer that dependent package, then continue independent plan work.
   Never fabricate proof or mark a package complete just to keep the queue moving.
+- Owner standing rule (Q90): never rerun a series that already passed on unchanged production
+  code and harnesses, and request only the tests needed to accept the current code. No reruns of
+  rejected earlier attempts, no extra "just in case" repetitions; controller-only changes do not
+  require revalidation (see `docs/05-SEJA-PROTOKOL.md` §2 Meritve).
 - Keep state/docs current; commit only your package and push without force. Native CLI
   permissions are configured per process by the controller, not by changing global settings.

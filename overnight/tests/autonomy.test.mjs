@@ -165,3 +165,14 @@ test('dashboard restarts a killed continuous controller, logs exit reasons and h
     const { active } = readJson(path.join(c.stateDirectory, 'state.json')); if (active) fs.writeFileSync(path.join(active.directory, 'CANCEL'), 'cleanup');
   }
 });
+test('passed tests on unchanged code are not rerun and old-code requirements are dropped', t => {
+  const c = config(t); c.tests.unit = {}; c.tests.perf = {}; c.tests.old = {};
+  const s = newState(); s.active = { profileId: 'codex' }; const task = makeTask('rule', 'goal');
+  task.sourceFingerprint = 'v1'; task.requiredTests = ['old'];
+  task.results = [{ testId: 'unit', success: true, sourceFingerprint: 'v2' }, { testId: 'perf', success: false, sourceFingerprint: 'v2' }];
+  applyAgentResult(c, s, task, { kind: 'success', decision: plan('test', { testIds: ['unit', 'perf'] }) }, 'v2');
+  assert.deepEqual(task.tests, ['perf']); assert.deepEqual(task.requiredTests, ['unit', 'perf']); assert.equal(task.phase, 'tests');
+  task.results.push({ testId: 'perf', success: true, sourceFingerprint: 'v2' });
+  applyAgentResult(c, s, task, { kind: 'success', decision: plan('test', { testIds: ['unit', 'perf'] }) }, 'v2');
+  assert.deepEqual(task.tests, []); assert.equal(task.phase, 'agent');
+});

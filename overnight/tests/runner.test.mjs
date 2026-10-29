@@ -23,12 +23,12 @@ const c = { tests: { unit: {}, client: {} }, maximumIterations: 6, maximumTestRe
 const plan = (action, testIds = []) => ({ action, testIds, summary: 'summary', handoff: 'next step' });
 function activeState(profileId = 'claude-1') { return { ...newState(), active: { profileId } }; }
 
-test('source and test parameter changes invalidate the same measurement identity', t => {
+test('source changes invalidate the measurement identity, a new test ID does not', t => {
   const root = temporary(t); fs.writeFileSync(path.join(root, 'source.java'), 'original');
   const config = { projectRoot: root, fingerprintPaths: ['source.java'], tests: { unit: { mode: 0 } } };
   const first = fingerprint(config); assert.equal(fingerprint(config), first);
-  config.tests.unit.mode = 1; assert.notEqual(fingerprint(config), first);
-  config.tests.unit.mode = 0; fs.appendFileSync(path.join(root, 'source.java'), ' change'); assert.notEqual(fingerprint(config), first);
+  config.tests.extra = { mode: 1 }; assert.equal(fingerprint(config), first);
+  fs.appendFileSync(path.join(root, 'source.java'), ' change'); assert.notEqual(fingerprint(config), first);
 });
 test('path escape is rejected', t => { const root = temporary(t); assert.throws(() => within(root, '../other.ps1')); });
 test('JSON state replacement preserves Unicode and valid JSON', t => { const file = path.join(temporary(t), 'state.json'); writeJson(file, { value: 'miška' }); writeJson(file, { value: 'oči' }); assert.deepEqual(readJson(file), { value: 'oči' }); });

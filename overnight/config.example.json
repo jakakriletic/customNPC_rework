@@ -19,13 +19,7 @@
     "perf-run.ps1",
     "k-run.ps1",
     "ponovitve-run.ps1",
-    "meritve-lib.ps1",
-    "overnight/runner.mjs",
-    "overnight/lib.mjs",
-    "overnight/worker.mjs",
-    "overnight/windows.ps1",
-    "overnight/decision.schema.json",
-    "overnight/control.mjs"
+    "meritve-lib.ps1"
   ],
   "profiles": [
     {

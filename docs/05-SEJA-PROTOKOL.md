@@ -108,6 +108,13 @@ da je premisa paketa napačna: ustavi se, zapiši, prilagodi plan, šele nato na
 - "Hitreje" brez številke ne obstaja. Protokol je v `01-ARHITEKTURA.md` §7.
 - Kandidat za optimizacijo, ki ne preseže merilnega šuma, se **zavrže**, ne obdrži "za vsak
   slučaj".
+- **Brez nepotrebnih ponovitev (Q90, stalno pravilo lastnika, 29. 10. 2026):** če se
+  produkcijska koda in testni scenariji od uspešne serije niso spremenili, se ta serija ne
+  ponavlja. Za sprejem paketa se zahtevajo samo testi, ki dokazujejo **trenutno** kodo
+  (enakost, cena in nujne regresije). Testi zavrnjenih prejšnjih poskusov, dodatne ponovitve
+  »za vsak slučaj« in ponovna validacija zaradi sprememb upravljalnika (`overnight/`) ali
+  novega testnega ID-ja niso potrebni. Upravljalnik to uveljavlja sam: uspešnih testov na
+  istem odtisu ne požene znova, odtis pa ne vključuje več datotek `overnight/` in kataloga ID-jev.
 
 ---
 

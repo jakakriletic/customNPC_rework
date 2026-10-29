@@ -49,7 +49,8 @@ export function loadConfig(file) {
 }
 export function fingerprint(c) {
   const hash = crypto.createHash('sha256');
-  hash.update(JSON.stringify(c.tests || {})); hash.update('\0');
+  // Test IDs are immutable (decision() rejects redefinition), so the catalogue is not hashed:
+  // registering a new ID must not invalidate results of unchanged code. Scripts are hashed below.
   const visit = file => {
     const stat = fs.lstatSync(file);
     if (stat.isSymbolicLink()) throw new Error(`Simbolicna povezava v merilnih vhodih: ${file}`);
