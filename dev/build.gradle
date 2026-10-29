@@ -234,6 +234,8 @@ task testOriginal(type: Test) {
     // M4.2: flight selection and its NBT schema are new (no original counterpart).
     exclude '**/FlightModeTest.class'
     exclude '**/HoverMoveHelperTest.class'
+    // M4.15b: transient AI editor protocol and strict navigation choice.
+    exclude '**/NavGuiDataTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

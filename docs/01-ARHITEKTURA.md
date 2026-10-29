@@ -918,3 +918,15 @@ potrditev te obremenitve odložena, ne sprejeta. Brez ponavljanja ali spremembe 
 Q107: GUI vanilla/Baritone 0/1, globalni config samo dovoljenje; strežniško dejansko
 ozadje/razlog, brez obljube pospešitve/kapacitete. Produkcija ista; naslednji M4.15b.
 [Pogoji, merila in odločitve](meritve/2026-10-29-M4.15a-baritone.md).
+
+### D-089 — M4.15b: prehodno stanje navigacije v AI editorju (2026-10-29, Q111–Q113)
+
+Obstoječi AI Get/Save paketi, brez novih ID-jev; int izbira `RwNavBackend` 0/1,
+`RwNavGuiStatus` samo v odgovoru, ne v shranjenem AI/svetu. Manjkajoč/neveljaven
+save ključ ohrani izbiro starega klienta; poslano dejansko stanje se ignorira.
+Strežnik prebere API priklop in dejanski navigator, brez mutacije. UI je posnetek
+ob odprtju z razlogom fallbacka in oznako neshranjene izbire; lokalni config ni vir.
+Privzeto vanilla in ista tick koda; sprejem zahteva unit/build/package in tri
+strežniške pogodbe (z/brez knjižnice, globalno 0/1); klient/reload ostaneta M4.15c.
+Q116: sedem zahtevanih controller testov zelenih na `d71d75d4…`; M4.15b zaključen.
+[Pogodba, omejitve in rezultati](meritve/2026-10-29-M4.15b-gui.md).

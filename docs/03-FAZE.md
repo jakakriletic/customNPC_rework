@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. Naslednji M4.15b/c → M3.8b → M6 → ostanek M7 → M10; M4.15a podatki zbrani, lestvici neuspešni in potrditev 2000 nedosegljivih odložena (D-088). Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
+**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. Naslednji M4.15c → M3.8b → M6 → ostanek M7 → M10; M4.15b zaključen (D-089), M4.15a lestvici neuspešni in potrditev 2000 nedosegljivih odložena (D-088). Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -202,7 +202,7 @@ vsake 4 ticke, po prihodu do ~3,5 bloka drsenja, **[H]** model); cilj dlje od `N
 poti**, ne delne poti; CustomNPC+ ima isto iskanje kot vanilla 1.12, razlika je v sledenju in krmiljenju.
 M4.1, M4.4, M4.9 in M4.12 zavrženi ali združeni, M4.11 pogojen, dodana M4.16 in M4.17.
 
-**Vrstni red M4 za v1.0 (Q92, prevlada nad D-038):** ~~M4.2~~ (D-086) → ~~M4.3~~ (D-087) → M4.15a → b → c; ostali nedokončani paketi spodaj so v2. M4.14b/M4.16/M4.16b/M4.10/M4.17 so že obravnavani; odprta FA merila in Q82/Q84 ostanejo zapisana, ne blokirajo v1.0.
+**Vrstni red M4 za v1.0 (Q92, prevlada nad D-038):** ~~M4.2~~ (D-086) → ~~M4.3~~ (D-087) → M4.15a (obravnavan z omejitvami, D-088) → ~~M4.15b~~ (D-089) → M4.15c; ostali nedokončani paketi spodaj so v2. M4.14b/M4.16/M4.16b/M4.10/M4.17 so že obravnavani; odprta FA merila in Q82/Q84 ostanejo zapisana, ne blokirajo v1.0.
 
 ### Paketi
 
@@ -232,7 +232,7 @@ M4.1, M4.4, M4.9 in M4.12 zavrženi ali združeni, M4.11 pogojen, dodana M4.16 i
 | M4.14c | Šele po M4.14b in M2.4: cena na tick pri 50/200 članih; parametri iz `06-FORMACIJE.md` §6 po meritvi | S |
 | M4.15 | **Izbira navigacijskega ozadja v GUI NPC-ja** (D-036, zahteva uporabnika 15. 10.). Izbira na NPC-ju že obstaja (NBT `RwNavBackend`, ukaz `/rwnav`, ponovni priklop po `updateTasks` — M7/NB, D-022), v GUI pa je ni in igralec ne vidi, s čim NPC dejansko hodi. Vhod: M4.0 (primerjava Baritone : vanilla) in M4.15a | M |
 | M4.15a | **Raziskovalno obravnavan 29. 10., sprejem lestvic neuspešen (D-088/Q106–Q107):** kompatibilnost 18/18 zelena, 12 celic boj/nedosegljiva ×500/1000/2000 ×0/1 enkrat po Q92. Obe lestvici exit 1 samo U1 pri 2000 nedosegljivih (881/800 <1000); potrditev te obremenitve in skupne porabe pomnilnika odložena. Pet veljavnih parov in fallback sonda podpirata neodvisni M4.15b: vanilla/Baritone, dejansko ozadje/razlog, brez obljube pospešitve ali kapacitete. Privzeto 0, brez ponavljanja ali sprememb pogojev/meril. [Dokazila](meritve/2026-10-29-M4.15a-baritone.md) | S |
-| M4.15b | **GUI in prenos stanja:** v nastavitvah AI NPC-ja (gibanje) izbira ozadja *vanilla* / *Baritone* (obstoječi ključ `RwNavBackend` 0/1; tretje stanje »po configu« samo, če ga M4.15a upraviči) in vrstica **dejanskega** ozadja z razlogom, kadar izbira ne velja (`npcbaritone` ni nameščen, globalno stikalo `RwNavBackend` 0, velikost ali način gibanja ni podprt, član formacije U7). Obstoječi NBT tipi, packet ID-ji in vrstni redi enumov nespremenjeni; dejansko ozadje izračuna strežnik in ga pošlje ob odprtju GUI. Privzeto vanilla, brez knjižnice bitno enako kot prej (D-007, D-022) | M |
+| ~~M4.15b~~ | **Zaključeno 29. 10. (D-089, Q108–Q116):** AI → Movement → Backend, izbira vanilla/Baritone 0/1 in strežniški posnetek dejanskega navigatorja/razloga; prehodno stanje samo v odgovoru, legacy save ohrani izbiro, obstoječi NBT tipi/packet ID-ji/enum vrstni red isti. Privzeto 0; sedem controller testov zelenih na `d71d75d4…`, 34 trditev zaščite properties in 97/97 v vsaki od treh strežniških pogodb. Klik/reload ostane M4.15c; brez obljube kapacitete. [Dokazila](meritve/2026-10-29-M4.15b-gui.md) | M |
 | M4.15c | Preverba v klientu z igralcem: preklop v GUI, ponovno nalaganje sveta, urejanje NPC-ja (`updateTasks`), klient brez `npcbaritone`, dedicirani strežnik | S |
 
 **Izhodni kriterij** (merljiv na scenariju M4.16, D-038; pragovi z **[H]** se potrdijo ali popravijo

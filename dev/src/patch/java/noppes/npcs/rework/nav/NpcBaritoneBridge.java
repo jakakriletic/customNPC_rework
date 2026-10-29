@@ -15,6 +15,14 @@ final class NpcBaritoneBridge {
         return NpcBaritone.available() && NpcBaritone.get(npc) != null;
     }
 
+    /** Read-only explanation for an editor response; never attempts an attachment. */
+    static String fallbackReason(EntityNPCInterface npc) {
+        if (!NpcBaritone.available()) { return "unavailable"; }
+        if (NpcBaritone.apiVersion() < 2) { return "incompatible"; }
+        if (!NpcBaritone.supports(npc)) { return "unsupported"; }
+        return "not_attached";
+    }
+
     static boolean attach(EntityNPCInterface npc) {
         if (!NpcBaritone.available() || NpcBaritone.apiVersion() < 2
                 || !NpcBaritone.supports(npc)) {

@@ -14,14 +14,22 @@ import noppes.npcs.client.gui.util.GuiNpcTextField;
 import noppes.npcs.client.gui.util.ITextfieldListener;
 import noppes.npcs.client.gui.util.SubGuiInterface;
 import noppes.npcs.entity.data.DataAI;
+import noppes.npcs.rework.nav.GuiNavBackend;
+import noppes.npcs.rework.nav.NavGuiState;
 
 public class SubGuiNpcMovement
 extends SubGuiInterface
 implements ITextfieldListener {
     private DataAI ai;
+    private final NavGuiState navigation;
 
     public SubGuiNpcMovement(DataAI ai) {
+        this(ai, null);
+    }
+
+    public SubGuiNpcMovement(DataAI ai, NavGuiState navigation) {
         this.ai = ai;
+        this.navigation = navigation;
         this.setBackground("menubg.png");
         this.xSize = 256;
         this.ySize = 216;
@@ -36,6 +44,9 @@ implements ITextfieldListener {
         this.addButton(new GuiNpcButton(0, this.guiLeft + 80, y, 100, 20, new String[]{"ai.standing", "ai.wandering", "ai.movingpath"}, this.ai.getMovingType()));
         this.addButton(new GuiNpcButton(15, this.guiLeft + 80, y += 22, 100, 20, new String[]{"movement.ground", "movement.flying", "movement.swimming"}, this.ai.movementType));
         this.addLabel(new GuiNpcLabel(15, "movement.navigation", this.guiLeft + 4, y + 5));
+        if (this.navigation != null) {
+            this.addButton(new GuiNpcButton(16, this.guiLeft + 184, y, 68, 20, "Backend"));
+        }
         if (this.ai.getMovingType() == 1) {
             this.addTextField(new GuiNpcTextField(4, this, this.guiLeft + 100, y += 22, 40, 20, this.ai.walkingRange + ""));
             this.getTextField((int)4).numbersOnly = true;
@@ -145,6 +156,8 @@ implements ITextfieldListener {
             this.ai.stopAndInteract = button.getValue() == 1;
         } else if (button.id == 15) {
             this.ai.movementType = button.getValue();
+        } else if (button.id == 16 && this.navigation != null) {
+            this.setSubGui(new GuiNavBackend(this.navigation));
         } else if (button.id == 66) {
             this.close();
         }

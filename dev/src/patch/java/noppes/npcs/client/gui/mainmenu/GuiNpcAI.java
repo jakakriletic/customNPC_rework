@@ -21,6 +21,7 @@ import noppes.npcs.client.gui.util.ITextfieldListener;
 import noppes.npcs.constants.EnumPacketServer;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.entity.data.DataAI;
+import noppes.npcs.rework.nav.NavGuiState;
 
 public class GuiNpcAI
 extends GuiNPCInterface2
@@ -28,6 +29,8 @@ implements ITextfieldListener,
 IGuiData {
     private String[] tacts = new String[]{"aitactics.rush", "aitactics.stagger", "aitactics.orbit", "aitactics.hitandrun", "aitactics.ambush", "aitactics.stalk", "gui.none"};
     private DataAI ai;
+    private final NavGuiState navigation = new NavGuiState();
+    private boolean aiLoaded;
 
     public GuiNpcAI(EntityNPCInterface npc) {
         super(npc, 6);
@@ -91,6 +94,8 @@ IGuiData {
         this.getButton(10).setEnabled(this.ai.tacticalVariant != 5 || this.ai.tacticalVariant != 6);
         this.addLabel(new GuiNpcLabel(2, "ai.movement", this.guiLeft + 4, this.guiTop + 165));
         this.addButton(new GuiNpcButton(2, this.guiLeft + 86, this.guiTop + 160, 60, 20, "selectServer.edit"));
+        // GUI_DATA is routed to the deepest subdialog. Wait for the initial AI reply.
+        this.getButton(2).setEnabled(this.aiLoaded);
     }
 
     @Override
@@ -109,7 +114,7 @@ IGuiData {
         } else if (button.id == 1) {
             this.ai.doorInteract = button.getValue();
         } else if (button.id == 2) {
-            this.setSubGui(new SubGuiNpcMovement(this.ai));
+            this.setSubGui(new SubGuiNpcMovement(this.ai, this.navigation));
         } else if (button.id == 5) {
             this.npc.ais.setAvoidsWater(button.getValue() == 1);
         } else if (button.id == 6) {
@@ -133,12 +138,17 @@ IGuiData {
 
     @Override
     public void save() {
-        Client.sendData(EnumPacketServer.MainmenuAISave, this.ai.writeToNBT(new NBTTagCompound()));
+        if (!this.aiLoaded) { return; }
+        NBTTagCompound data = this.ai.writeToNBT(new NBTTagCompound());
+        this.navigation.writeChoice(data);
+        Client.sendData(EnumPacketServer.MainmenuAISave, data);
     }
 
     @Override
     public void setGuiData(NBTTagCompound compound) {
         this.ai.readToNBT(compound);
+        this.navigation.load(compound);
+        this.aiLoaded = true;
         this.initGui();
     }
 }

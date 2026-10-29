@@ -111,6 +111,7 @@ import noppes.npcs.controllers.data.SpawnData;
 import noppes.npcs.controllers.data.TransportLocation;
 import noppes.npcs.entity.EntityCustomNpc;
 import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.rework.nav.NavGuiData;
 import noppes.npcs.entity.data.DataScenes;
 import noppes.npcs.roles.JobSpawner;
 import noppes.npcs.roles.RoleCompanion;
@@ -455,12 +456,9 @@ public class PacketHandlerServer {
             npc.updateAI = true;
             npc.updateClient = true;
         } else if (type == EnumPacketServer.MainmenuAIGet) {
-            Server.sendData(player, EnumPacketClient.GUI_DATA, npc.ais.writeToNBT(new NBTTagCompound()));
+            Server.sendData(player, EnumPacketClient.GUI_DATA, NavGuiData.reply(npc));
         } else if (type == EnumPacketServer.MainmenuAISave) {
-            npc.ais.readToNBT(Server.readNBT(buffer));
-            npc.setHealth(npc.getMaxHealth());
-            npc.updateAI = true;
-            npc.updateClient = true;
+            NavGuiData.save(npc, Server.readNBT(buffer));
         } else if (type == EnumPacketServer.MainmenuAdvancedGet) {
             Server.sendData(player, EnumPacketClient.GUI_DATA, npc.advanced.writeToNBT(new NBTTagCompound()));
         } else if (type == EnumPacketServer.MainmenuAdvancedSave) {
