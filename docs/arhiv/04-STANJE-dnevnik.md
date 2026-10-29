@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 170 → 1)
+# Arhiv: dnevnik sej (vnosi 171 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,16 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-29 (171) — M6.2: popis hookov in Java adapter na NPC handlerju
+
+**Paket:** M6.2 (D-090, Q142–Q147) · **Stanje:** zaključen, poskus 2 (harness).
+Baseline `DataScript` ločen commit `cf498ae`; `rework/script/hooks/` (16 NPC hookov, string hook
+pravilo, vezava podpisov) in Java veja v `DataScript.runScript` pri `ScriptLanguage=Java`; JS pot ista.
+[En zapis meril, odločitev in rezultatov](../meritve/2026-10-29-M6.2-hooki.md).
+Na c7d8bd67… unit/build/package in m62-dev-v1 PASS 14/14; m62-packaged-v1 11/14 (harness: compiler
+classpath brez Forge universal, Q147). Na d4972147… (ista produkcija) m62-packaged-v2 PASS 14/14.
+Omejitev: modpack rabi ročni `RwJavaClasspath` z Forge universal (M6.7/M6.12). Naslednji M6.3; nepovezane datoteke ohranjene.
 
 ### 2026-10-29 (170) — M6.1: JDK prevajalnik izbran in potrjen v Forge
 

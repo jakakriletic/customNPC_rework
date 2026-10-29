@@ -15,7 +15,7 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 |---|---|
 | Datum zadnje posodobitve | 2026-10-29 |
 | Trenutna faza | **M6 — Scripting, M6.0–M6.2 zaključeni** (D-090, Q141, Q147): JDK JavaCompiler in Java adapter za 16 NPC hookov pri `ScriptLanguage=Java`, JS privzet. Paketi M4 v1.0 obravnavani z omejitvami; M0/M1/M2 zaključeni, M3 do M3.9 (GUI preverjen, celoten izhod še ni potrjen), M5 zaključen (D-055). Animacijsko jedro M7 v `customNPC_entities_mod` (D-024) |
-| Naslednji korak | **M6.4 → M6 v1.0 → ostanek M7 → M10** po [obsegu v1.0 (Q92)](docs/10-OBSEG-V1.md). JDK 8 JavaCompiler izbran in potrjen v dev/zapakiranem Forge (M6.1, Q141); M6.2 hook adapter (Q147) in M6.3 tipizirana pogodba `NpcScript` (Q150) zaključena; M6.4 loader/cache/reload. Java za zaupanja vredne avtorje, JS privzet; M6.6 samo zaradi pravilnosti, M6.11 samo player/world. Zunaj seznama v2; privzeto izklopljeno brez cenovne meje (ena meritev), največ 2 poskusa/paket. Dnevnik: [04-STANJE](docs/04-STANJE.md) |
+| Naslednji korak | **M6.5 → M6 v1.0 → ostanek M7 → M10** po [obsegu v1.0 (Q92)](docs/10-OBSEG-V1.md). JDK 8 JavaCompiler izbran in potrjen v dev/zapakiranem Forge (M6.1, Q141); M6.2 hook adapter (Q147) in M6.3 tipizirana pogodba `NpcScript` (Q150) zaključena; M6.4 loader/cache/atomski reload zaključen (Q156); M6.5 diagnostika/source map/B5. Java za zaupanja vredne avtorje, JS privzet; M6.6 samo zaradi pravilnosti, M6.11 samo player/world. Zunaj seznama v2; privzeto izklopljeno brez cenovne meje (ena meritev), največ 2 poskusa/paket. Dnevnik: [04-STANJE](docs/04-STANJE.md) |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
 | Prevedljivih razredov | 202 datotek `.java` v `src/patch` (133 rework), 77 testnih datotek (491 metod `@Test` in 40 primerjalnih testov originala). M6.2: baseline `DataScript` + 4 v `script/hooks`, m62-dev/packaged 14/14. M4.14b FA merila ostajajo neizpolnjena (D-079), M4.14d odložen (Q65/Q74), pragovi isti. |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
@@ -30,7 +30,7 @@ datotek za obnovo in ima mod pomembnejše težave, se dodatna forenzika R9, migr
 upošteva hitrost navigatorja in se ustavi brez drsenja v A/C. Controller sprejem z restartom
 zelen na `3eba45ab…`, privzeto 180/180 = M4.16; omejitve poti ostanejo zapisane.
 [Dokazila](docs/meritve/2026-10-29-M4.3-hover.md). M4.15b/c zaključena (D-089, Q122): [klient/restart](docs/meritve/2026-10-29-M4.15c-klient.md) 70/70 ×2 + 68/68 in 30 pregledanih PNG na `c91ad234…`;
-[M3.8b zaključen (Q126)](docs/meritve/2026-10-29-M3.8b-gui.md): 216/216, clone/restart šestih UUID in 18 pregledanih PNG; [M6.0 raziskava](docs/raziskave/M6.0-java-scripting.md) in [M6.1 prevajalnik](docs/meritve/2026-10-29-M6.1-prevajalnik.md) zaključena (JDK JavaCompiler, Q141); [M6.2 hooki](docs/meritve/2026-10-29-M6.2-hooki.md) zaključen (Q147); [M6.3 pogodba](docs/meritve/2026-10-29-M6.3-pogodba.md) zaključena (Q150), naslednji M6.4 po Q92.
+[M3.8b zaključen (Q126)](docs/meritve/2026-10-29-M3.8b-gui.md): 216/216, clone/restart šestih UUID in 18 pregledanih PNG; [M6.0 raziskava](docs/raziskave/M6.0-java-scripting.md) in [M6.1 prevajalnik](docs/meritve/2026-10-29-M6.1-prevajalnik.md) zaključena (JDK JavaCompiler, Q141); [M6.2 hooki](docs/meritve/2026-10-29-M6.2-hooki.md) zaključen (Q147); [M6.3 pogodba](docs/meritve/2026-10-29-M6.3-pogodba.md) zaključena (Q150); [M6.4 reload](docs/meritve/2026-10-29-M6.4-reload.md) zaključen (Q156), naslednji M6.5 po Q92.
 [M4.15a](docs/meritve/2026-10-29-M4.15a-baritone.md) ima 10/12 veljavnih cenovnih celic,
 potrditev 2000 nedosegljivih ostaja neuspešna/odložena, privzeto ozadje vanilla.
 
@@ -84,7 +84,7 @@ M2  Diagnostika in meritve      reprodukcije, profiling, baseline    ← ~96 %, 
 M3  Jedro entitete              R1 mount, R6 solid hitbox            ← do M3.9, GUI M3.8b preverjen
 M4  Gibanje in navigacija       R2 letenje, navigacija                ← v1.0 paketi obravnavani; M4.15a z omejitvami (Q92)
 M5  Performance AI              R5 strežnik, klient in daljna vidnost ← zaključeno 22. 10., regresija M5.Z, D-055
-M6  Scripting platforma         R7 Java scripting, hook registry      ← M6.0–M6.3 zaključeni; naslednji M6.4
+M6  Scripting platforma         R7 Java scripting, hook registry      ← M6.0–M6.4 zaključeni; naslednji M6.5
 M7  Animacije + AI okolje       R4 animacijski sistem in avtorsko okolje
 M8  (izločeno, D-023)           migracija CustomNPC+ ni več v planu
 M9  Chatbot                     R8

@@ -29,6 +29,8 @@ import javax.tools.ToolProvider;
  * The caller supplies the compiler classpath for its MCP/SRG environment explicitly.
  */
 public final class JdkScriptCompiler {
+    private static final List<String> OPTIONS = Collections.unmodifiableList(Arrays.asList("-source", "8", "-target", "8",
+            "-encoding", "UTF-8", "-proc:none", "-implicit:none", "-g"));
     private final JavaCompiler compiler;
     public JdkScriptCompiler() { this(ToolProvider.getSystemJavaCompiler()); }
     // Deterministic absent-provider test without changing global state.
@@ -54,8 +56,8 @@ public final class JdkScriptCompiler {
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         StringWriter extra = new StringWriter();
         // No annotation processors or implicit source discovery from the game/CLI classpath.
-        List<String> options = Arrays.asList("-source", "8", "-target", "8", "-encoding", "UTF-8",
-                "-proc:none", "-implicit:none", "-g", "-classpath", classpath, "-sourcepath", "");
+        List<String> options = new ArrayList<>(OPTIONS);
+        options.addAll(Arrays.asList("-classpath", classpath, "-sourcepath", ""));
         try (StandardJavaFileManager standard = compiler.getStandardFileManager(diagnostics, Locale.ROOT, StandardCharsets.UTF_8);
              MemoryFiles files = new MemoryFiles(standard)) {
             boolean success = Boolean.TRUE.equals(compiler.getTask(extra, files, diagnostics, options, null, units).call());
@@ -74,6 +76,20 @@ public final class JdkScriptCompiler {
             }
             return new Result(success, bytes, problems, extra.toString());
         }
+    }
+    /** M6.4 cache key part: the same provider, JVM and options give the same bytes for the same input. */
+    public String identity() {
+        return (compiler == null ? "none" : compiler.getClass().getName()) + "|" + System.getProperty("java.version") + "|" + OPTIONS;
+    }
+    /** Fresh loader over compiled bytes; no class initialization until the caller explicitly executes. */
+    public static ClassLoader newLoader(final Map<String, byte[]> code, ClassLoader apiParent) {
+        return new ClassLoader(apiParent) {
+            @Override protected Class<?> findClass(String name) throws ClassNotFoundException {
+                byte[] bytes = code.get(name);
+                if (bytes == null) { throw new ClassNotFoundException(name); }
+                return defineClass(name, bytes, 0, bytes.length);
+            }
+        };
     }
     private static URI uri(String name, JavaFileObject.Kind kind) {
         return URI.create("memory:///" + name.replace('.', '/') + kind.extension);
@@ -117,14 +133,7 @@ public final class JdkScriptCompiler {
         /** Fresh loader; no class initialization until the caller explicitly executes. */
         public ClassLoader newLoader(ClassLoader apiParent) {
             if (!success) { throw new IllegalStateException("Compilation failed"); }
-            final Map<String, byte[]> copy = bytecode();
-            return new ClassLoader(apiParent) {
-                @Override protected Class<?> findClass(String name) throws ClassNotFoundException {
-                    byte[] code = copy.get(name);
-                    if (code == null) { throw new ClassNotFoundException(name); }
-                    return defineClass(name, code, 0, code.length);
-                }
-            };
+            return JdkScriptCompiler.newLoader(bytecode(), apiParent);
         }
     }
 }

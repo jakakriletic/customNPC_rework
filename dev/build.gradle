@@ -253,6 +253,8 @@ task testOriginal(type: Test) {
     exclude '**/ScriptHooksTest.class'
     // M6.3: typed base class NpcScript is new.
     exclude '**/NpcScriptTest.class'
+    // M6.4: bounded bytecode cache is new.
+    exclude '**/BytecodeCacheTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0–M6.3 zaključeni (D-090, Q141, Q147, Q150); naslednji M6.4 → M6 v1.0 → ostanek M7 → M10. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
+**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0–M6.4 zaključeni (D-090, Q141, Q147, Q150, Q156); naslednji M6.5 → M6 v1.0 → ostanek M7 → M10. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -420,7 +420,7 @@ dokazi so v raziskavi; pri prvem prenosu originalnega razreda velja ločen basel
 | ~~M6.1~~ | **Zaključeno 29. 10. (Q132–Q141), poskus 1:** JDK JavaCompiler izbran; Janino zavrne lambdo in sprejme napačen generik. Typed API 15/15 v dev in zapakiranem Forge, brez compilerja jasna napaka, JS isti; warm 17–31 ms kot podatek. [Dokazila](meritve/2026-10-29-M6.1-prevajalnik.md) | M |
 | ~~M6.2~~ | **Zaključeno 29. 10. (Q142–Q147), poskus 2 (harness):** popis 16 NPC hookov + string hook pravilo, Java veja v `DataScript` pri `ScriptLanguage=Java`; JS/Java sled tabov, busa in preklica enaka zlatemu nizu, 14/14 v dev in zapakiranem Forge. Modpack rabi ročni `RwJavaClasspath` (M6.7/M6.12). [Dokazila](meritve/2026-10-29-M6.2-hooki.md) | M |
 | ~~M6.3~~ | **Zaključeno 29. 10. (Q148–Q150), poskus 1:** izbiren osnovni razred `NpcScript` (16 tipiziranih no-op hookov + `log`) na obstoječih `noppes.npcs.api` vmesnikih; tipizirana sled = JS zlati niz, `@Override` napaka z vrstico, 14/14 v zapakiranem Forge. [Dokazila](meritve/2026-10-29-M6.3-pogodba.md) | M |
-| M6.4 | Loader/instanca na NPC/tab/generacijo, omejen cache bytecode; atomski reload in invalidacija vključitev/API, brez deljenja static stanja | M |
+| ~~M6.4~~ | ~~Loader/instanca na NPC/tab/generacijo, omejen cache bytecode; atomski reload in invalidacija vključitev/API, brez deljenja static stanja~~ — zaključen 29. 10. ([zapis](meritve/2026-10-29-M6.4-reload.md), Q151–Q156) | M |
 | M6.5 | Datoteka/vrstica/stolpec, source map vključitev, runtime stack; reprodukcija in popravek B5, obnovitev po popravku tudi prej manjkajočega hooka | M |
 | M6.6 | **Samo po reprodukciji pravilnosti:** gnezden context shrani/obnovi lastnika v finally; ohrani binarni `Current`; odstranitev locka ni optimizacijski cilj | — |
 | M6.7 | `.\dev.ps1 compileScripts` brez Minecrafta, isti compiler/API/source map, strukturirani izidi; brez izvajanja razredov in annotation procesorjev | S |

@@ -72,9 +72,8 @@ implements IScriptHandler {
             if (this.javaTabs == null) {
                 this.javaTabs = new JavaNpcScripts();
             }
-            for (ScriptContainer script : this.scripts) {
-                this.javaTabs.run(script, this, type, event);
-            }
+            // M6.4: one call per event, so a reload swaps all tabs of this handler atomically.
+            this.javaTabs.run(this.scripts, this, type, event);
             return;
         }
         for (ScriptContainer script : this.scripts) {

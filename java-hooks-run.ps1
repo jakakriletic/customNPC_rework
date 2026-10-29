@@ -1,8 +1,9 @@
 # Controller-only M6.2. Disposable dev or actual packaged Forge server: JS/Java hook trace, one run.
 # -Package m63: same server, typed NpcScript probe (M6.3); m62 behaviour is unchanged by default.
+# -Package m64: same server, per NPC/tab/generation loader, bytecode cache and atomic reload probe (M6.4).
 # Same server setup as java-runtime-run.ps1 (M6.1, Q137-Q140); only the fixture and assertions differ.
 param([ValidateSet('dev','packaged')][string]$Mode = 'dev',
-      [ValidateSet('m62','m63')][string]$Package = 'm62')
+      [ValidateSet('m62','m63','m64')][string]$Package = 'm62')
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 . (Join-Path $root 'meritve-lib.ps1')
@@ -148,7 +149,7 @@ try {
         $working=$work
     } else {
         # The dev compile classpath has no patch classes; M6.3 tabs extend NpcScript from runServer's output.
-        $devCp=$cp; if ($Package -eq 'm63') { $devCp=$cp+';'+(Join-Path $root 'dev/build/classes/java/main') }
+        $devCp=$cp; if ($Package -in @('m63','m64')) { $devCp=$cp+';'+(Join-Path $root 'dev/build/classes/java/main') }
         [IO.File]::WriteAllText($classpathFile,$devCp,(New-Object Text.UTF8Encoding $false))
         $exe=Join-Path $root 'dev/gradlew.bat'
         # gradlew.bat requires cmd; Start-JavaPrototypeProcess already provides it.
@@ -160,7 +161,7 @@ try {
     $cfg=Join-Path $work 'config/CustomNpcs.cfg'
     Assert-JavaPrototype (-not ([IO.File]::ReadAllText($cfg) -match '(?m)^RwJavaClasspath=')) 'config copy has no RwJavaClasspath yet'
     [IO.File]::AppendAllText($cfg,("`nRwJavaClasspath="+$classpathFile.Replace('\','/')+"`n"),(New-Object Text.UTF8Encoding $false))
-    $code=[IO.File]::ReadAllText((Join-Path $root $(if ($Package -eq 'm63') { 'dev/testworld/java-typed-control.js' } else { 'dev/testworld/java-hooks-control.js' })))
+    $code=[IO.File]::ReadAllText((Join-Path $root $(switch ($Package) { 'm63' { 'dev/testworld/java-typed-control.js' } 'm64' { 'dev/testworld/java-reload-control.js' } default { 'dev/testworld/java-hooks-control.js' } })))
     $code=$code.Replace('@@OUTPUT@@',($out.Replace('\','/') | ConvertTo-Json -Compress)).Replace('@@MODE@@',($Mode | ConvertTo-Json -Compress))
     $codePath=Join-Path $work 'hooks-control.js'; [IO.File]::WriteAllText($codePath,$code,(New-Object Text.UTF8Encoding $false))
     $clone=Join-Path $clones "${tag}_Control.json"
@@ -186,7 +187,7 @@ try {
     Wait-M61 'Done (' 1000
     Send-M61 'list'
     Wait-M61 'players online' 30
-    if ($Package -eq 'm63') {
+    if ($Package -in @('m63','m64')) {
         $typedBase=if ($Mode -eq 'packaged') { $workspace } else { Join-Path $root 'dev/build/classes/java/main' }
         Assert-JavaPrototype ($(if ($Mode -eq 'packaged') { Test-JavaPrototypeJar $typedBase 'noppes/npcs/rework/script/NpcScript.class' } else { Test-Path -LiteralPath (Join-Path $typedBase 'noppes/npcs/rework/script/NpcScript.class') })) 'NpcScript on the compiler classpath'
     }
@@ -197,6 +198,13 @@ try {
     Assert-JavaPrototype ($text.Contains(('RWCORE coremod nalozen, runtimeDeobf=' + $(if($Mode -eq 'packaged') {'1'} else {'0'})))) 'expected coremod production/development mode'
     $proof=[IO.File]::ReadAllText($out) | ConvertFrom-Json
     Assert-JavaPrototype ($proof.success -eq $true -and $proof.mode -ceq $Mode) 'hook trace proof success'
+    if ($Package -eq 'm64') {
+        Assert-JavaPrototype (@($proof.checks).Count -eq 15 -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) '15 reload/cache assertions'
+        # Pinned here too, so a probe edit cannot silently weaken the expectation.
+        $pinned=[ordered]@{ a='c1/1;c1/1;c2/2;c2/2;'; b='c1/1;c1/1;'; aReload='c1/1;c1/1;'; aGuiSave='c1/1;c1/1;'; c1='c1/1;v1;'; c2='c1/1;v2;'
+            cBroken='c2/2;v2;'; cBrokenAgain='c3/3;v2;'; cFixed='c1/1;v3;'; d=''; aRestored='c1/1;c1/1;' }
+        foreach($key in $pinned.Keys) { Assert-JavaPrototype ($proof.traces.$key -ceq $pinned[$key]) "pinned M6.4 trace $key" }
+    } else {
     Assert-JavaPrototype (@($proof.checks).Count -eq 14 -and @($proof.checks | Where-Object { $_.ok -ne $true }).Count -eq 0) '14 hook trace assertions'
     # Golden strings are pinned here too, so a probe edit cannot silently weaken the expectation.
     $golden='1:init:1;2:init;bus:init;1:tick;2:tick;bus:tick;1:tick;2:tick;bus:tick;1:interact:false;2:interact:true;bus:interact:true;ret:true;1:timer:7;2:timer:7;bus:timer;'
@@ -208,6 +216,7 @@ try {
     if ($Package -eq 'm63') {
         Assert-JavaPrototype ($proof.traces.plain -ceq $golden) 'M6.2 plain Java class trace unchanged'
         Assert-JavaPrototype ($proof.traces.typedName -ceq 'm63:7') 'typed API call on the existing interface'
+    }
     }
     Send-M61 'stop'
     Wait-M61Exit 180
