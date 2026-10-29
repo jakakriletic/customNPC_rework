@@ -11,7 +11,7 @@ brišemo jih, ostanejo v `03-FAZE.md` kot plan za v2.
 
 | # | Paket | Opomba |
 |---|---|---|
-| 1 | M4.2 | `FlightMode` + NBT (v teku 29. 10.) |
+| 1 | ~~M4.2~~ | `FlightMode` + NBT zaključen 29. 10. (D-086); unit/build/package in M4.16 180/180 zeleni |
 | 2 | M4.3 | `HoverMoveHelper` |
 | 3 | M4.15a → M4.15b → M4.15c | izbira navigacijskega ozadja v GUI |
 | 4 | M3.8b | GUI za `RwHitboxMode` |

@@ -881,3 +881,15 @@ novega. Če prenos ne uspe, se razišče njegov konkretni izpis pred meritvami; 
 jarja ali druge različice mappings ne uporabimo kot nadomestilo.
 
 **Zaključek (29. 10., seja 162):** Q90 (lastnik, 29. 10.): M4.17 je sprejet na podlagi celotne serije poskusa 4 na `b8f98d28…`. Vseh 11 obveznih ID-jev je zelenih, letenje 180/180, obe cenovni meji izpolnjeni. Dodatnih 12 ID-jev poskusov 1–3 (Q87) in ponovne validacije 23 ID-jev (Q88) ne izvajamo. Razlog: lastnik izrecno zahteva hitrejši napredek in manjšo porabo časa in žetonov. Produkcijska koda in harnessi se od te serije niso spremenili (`dev/src` brez sprememb po 28. 10. 12:38 UTC). Nov odtis izvira samo iz popravka controllerja `overnight/lib.mjs` (OPS.9, iskanje `claude.exe`) in kataloškega ID-ja `m417-mcp-cache-v1`. Q87 in Q88 sta zaprti. Privzeto `RwFlyLineOfSight=0` (Q81), Q82 (vogal → M4.5) in Q84 ostanejo. **M4.17 zaključen.**
+
+### D-086 — M4.2: pogodba shranjenega načina letenja (2026-10-29, Q6/Q31/Q91)
+
+Samostojno po pooblastilu lastnika: ORIGINAL=0/HOVER=1/MOMENTUM=2, izrecni ID-ji, ne ordinal.
+Q91: root NBT int `RwFlightMode` v obstoječih hookih entitete; original brez ključa,
+manjkanje/neznan ID/napačen tip → original. Sledi vzorcu `RwNavBackend`, brez prenosa DataAI.
+`movementType`, originalni NBT tipi in omrežni ID-ji ostanejo isti; M4.2 izbiro samo shrani.
+Q6: samostojni NPC-ji, igralčevo vozilo ločeno po R2 §7. Q31: (c), samo načini brez dodatkov
+pristajanja/višine; samodejni spust nasprotuje lebdenju, dodatki nimajo izmerjene potrebe.
+Q92: v1.0 nadaljuje s Hover M4.3; Momentum/M4.6 in GUI M4.2b sta v2, ID 2 je rezervirana izbira.
+Sprejeto: controller unit/build/package/M4.16 zeleni na `d7a9f810…`, 180/180 median = original.
+[Pogodba, omejitve in dokazila](meritve/2026-10-29-M4.2-nacin-letenja.md).

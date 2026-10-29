@@ -294,6 +294,15 @@ M4.10 (nadaljevanje poti in cilj izven dometa) → M4.17 (sledenje z vidno črto
 M4.5 samo pogojno → M4.6 → M4.7. Točki 3 in 5 spodaj sta spremenjeni; obseg nastavitev letenja je
 vprašanje Q31, vozilo za igralca Q6.*
 
+**M4.2 (29. 10., D-086; samostojna odločitev Q6/Q31):** M4 obdrži samostojne NPC-je in
+načine original / Hover / Momentum. Dodatne nastavitve višinske meje, samodejnega spusta brez
+poti, hoje ob tleh in ločene hitrosti dviganja niso vključene; Hover mora najprej dokazati
+lebdenje in ustavljanje po merilu M4.16. Igralčevo vozilo ostane ločen paket po točki 7.
+`RwFlightMode` je root int z ID-ji 0/1/2 (ne ordinal); 0 se ne zapiše. Manjkajoč, neznan ali
+napačno tipiziran ključ pomeni original. M4.2 izbiro samo shrani, helperja prideta v M4.3/M4.6,
+GUI v M4.2b po M4.3. **Q92:** v1.0 vključuje le Hover M4.3; Momentum/M4.6 in GUI M4.2b sta v2.
+`movementType` ostane nedotaknjen. [Pogodba in dokazila](meritve/2026-10-29-M4.2-nacin-letenja.md).
+
 1. **Nov enum `FlightMode`** v `rework/movement/`, shranjen v novem NBT ključu
    (`RwFlightMode`). `ais.movementType` ostane nedotaknjen za združljivost; nova vrednost
    se upošteva samo, če je prisotna.

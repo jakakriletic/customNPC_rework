@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 160 → 1)
+# Arhiv: dnevnik sej (vnosi 161 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,23 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-29 (161) — M4.17: obnova manjkajočega MCP artefakta pred validacijo
+
+**Paket:** M4.17 (D-085, Q89) · **Stanje:** **v teku**, sprejem ni zaključen.
+Controllerjev unit na `adf047b4…` je uspel, build pa pade pri `extractMcpMappings`:
+za `de.oceanlabs.mcp:mcp_snapshot:20171003-1.12` ni offline predpomnilnika.
+Pregled potrdi samo starejša imenika 20170908/20170927; zaklenjene različice ne menjamo.
+[Zapis](../meritve/2026-10-26-M4.17-vidna-crta.md).
+
+**Q89:** controller naj prek obstoječega `dev.ps1` izvede `extractMcpMappings` brez
+`--offline` (nov ID `m417-mcp-cache-v1`), nato vseh 23 obveznih ID-jev z običajnim
+offline buildom. Katalog testov spremeni odtis, zato tudi unit potrebuje nov rezultat.
+Ob neuspehu prenosa naj se pred meritvami razišče konkreten log. Meje in scenariji isti;
+letenje 180/180 proti referencam, cena proti originalu istega odtisa (zgornji rob p95 × 1,1).
+AI ni zaganjal testov/builda/Minecrafta in ni spreminjal kode, configa ali zaklepa okolja.
+Q82/Q84 in privzeto 0 ostajajo; commit/push M4.17 čaka veljavno celotno validacijo.
+Nepovezani runner, baseline in audit so ohranjeni.
 
 ### 2026-10-29 (160) — M4.17: celotna validacija na novem trenutnem odtisu
 

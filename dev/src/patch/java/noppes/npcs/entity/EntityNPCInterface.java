@@ -157,6 +157,7 @@ import noppes.npcs.rework.entity.RiderState;
 import noppes.npcs.rework.entity.RwHitbox;
 import noppes.npcs.rework.far.FarServer;
 import noppes.npcs.rework.nav.RwNavBackend;
+import noppes.npcs.rework.movement.FlightMode;
 import noppes.npcs.rework.render.RenderBox;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -294,6 +295,8 @@ IAnimals {
     public boolean updateAI = false;
     /** M7: per-NPC opt-in, persisted only when enabled to preserve old NBT by default. */
     private int rwNavBackend;
+    /** M4.2: saved selection only; helper implementations follow in M4.3/M4.6. */
+    private int rwFlightMode;
     /** M3.8 (R6): nacin hitboxa (HitboxWeights); na klientu ze ucinkovit nacin iz spawn podatkov. */
     private int rwHitboxMode;
     /** M3.8b: na klientu shranjeni nacin iz spawn podatkov (za GUI Display); na serverju se ne rabi. */
@@ -331,6 +334,18 @@ IAnimals {
 
     public int getRwNavBackend() {
         return rwNavBackend;
+    }
+
+    public FlightMode getRwFlightMode() {
+        return FlightMode.fromId(rwFlightMode);
+    }
+
+    public void setRwFlightMode(int mode) {
+        int next = FlightMode.fromId(mode).id();
+        if (rwFlightMode != next) {
+            rwFlightMode = next;
+            updateAI = true;
+        }
     }
 
     public void setRwNavBackend(int backend) {
@@ -1117,6 +1132,7 @@ IAnimals {
         this.stats.readToNBT(compound);
         this.ais.readToNBT(compound);
         this.rwNavBackend = compound.getInteger("RwNavBackend") == 1 ? 1 : 0;
+        this.rwFlightMode = FlightMode.read(compound).id();
         this.rwHitboxMode = HitboxWeights.sanitize(compound.getInteger("RwHitboxMode"));
         this.script.readFromNBT(compound);
         this.timers.readFromNBT(compound);
@@ -1144,6 +1160,7 @@ IAnimals {
         this.display.writeToNBT(compound);
         this.stats.writeToNBT(compound);
         this.ais.writeToNBT(compound);
+        this.getRwFlightMode().write(compound);
         if (this.rwNavBackend == 1) {
             compound.setInteger("RwNavBackend", 1);
         } else {
