@@ -132,6 +132,7 @@ public final class ApiDocsAcceptance {
             }
         }
         require(names.contains("noppes.npcs.api.IWorld") && names.contains("noppes.npcs.api.entity.IPlayer"), "M6.11 player/world published");
+        require(names.contains("noppes.npcs.rework.anim.Animators") && names.contains("noppes.npcs.rework.anim.IAnimator"), "M7.9 animation API published");
         require(!names.contains("noppes.npcs.api.block.IBlock") && !names.contains("noppes.npcs.api.handler.data.IQuest"), "v2 block/quest types stay external");
         for (JsonElement ref : catalog.getAsJsonArray("externalReferences")) { require(!names.contains(ref.getAsString()), "external references disjoint"); }
     }
@@ -164,6 +165,9 @@ public final class ApiDocsAcceptance {
             errors = new DiagnosticCollector<>();
             JavaFileObject playerWorld = ApiDocs.source("Example_playerWorld", catalog.get("playerWorldExample").getAsString());
             require(compiler.getTask(null, fm, errors, options, null, Collections.singletonList(playerWorld)).call(), "published player/world example compiles: " + errors.getDiagnostics());
+            errors = new DiagnosticCollector<>();
+            JavaFileObject animation = ApiDocs.source("Example_animation", catalog.get("animationExample").getAsString());
+            require(compiler.getTask(null, fm, errors, options, null, Collections.singletonList(animation)).call(), "published animation example compiles: " + errors.getDiagnostics());
             errors = new DiagnosticCollector<>();
             JavaFileObject lossy = ApiDocs.source("LossyTime", "public class LossyTime extends " + ApiDocs.BASE + " {\n"
                     + "@Override public void interact(noppes.npcs.api.event.NpcEvent.InteractEvent event) {\n"
@@ -205,6 +209,7 @@ public final class ApiDocsAcceptance {
         require(hooks.contains("no sandbox") && markdown.contains("arg0") && markdown.contains("## Exclusions"), "scope/trust/parameter limitations published");
         require(hooks.contains("## Player and world\n") && hooks.contains("```java\n" + model.get("playerWorldExample") + "```"), "same player/world example rendered in Markdown");
         require(!markdown.contains("pending M6.11"), "M6.11 exclusion removed");
+        require(hooks.contains("## Optional action animation\n") && hooks.contains("```java\n" + model.get("animationExample") + "```"), "same animation example rendered in Markdown");
         Map<String, Object> proof = ApiDocs.obj("success", true, "checks", checks, "types", json.getAsJsonArray("types").size(),
                 "hooks", json.getAsJsonArray("hooks").size(), "signatureFingerprint", model.get("signatureFingerprint"),
                 "elapsedMillis", (System.nanoTime() - start) / 1_000_000.0,

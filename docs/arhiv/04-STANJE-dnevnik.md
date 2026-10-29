@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 181 → 1)
+# Arhiv: dnevnik sej (vnosi 182 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (182) — M7.0: raziskava integracije animacij
+
+**Paket:** M7.0 (D-095, Q192–Q197) · **Stanje:** zaključen, raziskava brez produkcijske kode.
+javap: vsi CNPC člani, ki jih uporablja `customNPC_entities_mod` 0.7.0, obstajajo v 01Oct19 z
+istimi deskriptorji; manjka zagon obeh modov (M7.V). Most `rework/anim` z refleksijo, entities
+mod nespremenjen; API `Animators.of(npc)`, hooki `animationStart/animationEnd/animationEvent`
+(`RwAnimHooks` privzeto 0). M7.8 reload in `blendTo` v2.
+[Raziskava](../raziskave/M7.0-animacije-integracija.md). Naslednji M7.V → M7.9 → M7.5 → M10.
 
 ### 2026-10-29 (181) — M6.11: player/world iz NPC Java skripte
 

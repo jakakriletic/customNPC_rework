@@ -2,7 +2,7 @@
   "schema": 1,
   "operation": "api-reference",
   "javaVersion": "8",
-  "scope": "Published v1 reference: NPC script base, NPC/entity inheritance, NPC data interfaces, NPC hook events and public role event variants, timers/data/NBT/position/damage API, NpcAPI and the player/world API (IPlayer, IWorld). All public declared members are listed; protected members are included only on NpcScript. Inheritance links point to documented ancestors, including Forge Event for cancellation. Referenced types outside this explicit set are external references, not recursively published API. Existing methods returning item/block/quest/dialog/faction types remain visible; this does not implement new Java handlers for them.",
+  "scope": "Published v1 reference: NPC script base, NPC/entity inheritance, NPC data interfaces, NPC hook events and public role event variants, timers/data/NBT/position/damage API, NpcAPI, the player/world API (IPlayer, IWorld), and optional action animation (Animators, IAnimator). All public declared members are listed; protected members are included only on NpcScript. Inheritance links point to documented ancestors, including Forge Event for cancellation. Referenced types outside this explicit set are external references, not recursively published API. Existing methods returning item/block/quest/dialog/faction types remain visible; this does not implement new Java handlers for them.",
   "contract": "Java 8; trusted authors only, with process permissions and no sandbox. JS remains the default. Java dispatch is NPC-only. Public no-argument constructor required; one instance/loader per NPC, tab and generation. Only overridden NpcScript hooks are bound. Tabs run in their existing order, then the API bus; cancellation and missing hooks keep the existing handler behavior.",
   "descriptionPolicy": "No source description is available in the compiled API; see the signature.",
   "parameterNames": "arg0, arg1, ... are positional labels, not original source parameter names.",
@@ -55,6 +55,8 @@
     "noppes.npcs.api.event.NpcEvent.TimerEvent",
     "noppes.npcs.api.event.NpcEvent.UpdateEvent",
     "noppes.npcs.api.event.RoleEvent",
+    "noppes.npcs.rework.anim.Animators",
+    "noppes.npcs.rework.anim.IAnimator",
     "noppes.npcs.rework.script.NpcScript"
   ],
   "types": [
@@ -11793,6 +11795,172 @@
       ]
     },
     {
+      "name": "noppes.npcs.rework.anim.Animators",
+      "kind": "class",
+      "modifiers": [
+        "final",
+        "public"
+      ],
+      "declaredAnnotations": [],
+      "description": "No source description is available in the compiled API; see the signature.",
+      "typeParameters": [],
+      "superclass": "java.lang.Object",
+      "interfaces": [],
+      "members": [
+        {
+          "id": "of(noppes.npcs.api.entity.ICustomNpc)",
+          "kind": "method",
+          "name": "of",
+          "modifiers": [
+            "public",
+            "static",
+            "synchronized"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "noppes.npcs.api.entity.ICustomNpc<?>"
+            }
+          ],
+          "returnType": "noppes.npcs.rework.anim.IAnimator",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        }
+      ]
+    },
+    {
+      "name": "noppes.npcs.rework.anim.IAnimator",
+      "kind": "interface",
+      "modifiers": [
+        "abstract",
+        "public"
+      ],
+      "declaredAnnotations": [],
+      "description": "No source description is available in the compiled API; see the signature.",
+      "typeParameters": [],
+      "superclass": "none",
+      "interfaces": [],
+      "members": [
+        {
+          "id": "getClip()",
+          "kind": "method",
+          "name": "getClip",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "java.lang.String",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getClips()",
+          "kind": "method",
+          "name": "getClips",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "java.lang.String[]",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "getTick()",
+          "kind": "method",
+          "name": "getTick",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "int",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "isAvailable()",
+          "kind": "method",
+          "name": "isAvailable",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "play(java.lang.String)",
+          "kind": "method",
+          "name": "play",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "queue(java.lang.String)",
+          "kind": "method",
+          "name": "queue",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            }
+          ],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
+          "id": "stop()",
+          "kind": "method",
+          "name": "stop",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        }
+      ]
+    },
+    {
       "name": "noppes.npcs.rework.script.NpcScript",
       "kind": "class",
       "modifiers": [
@@ -12339,5 +12507,6 @@
     }
   ],
   "playerWorldExample": "import noppes.npcs.api.IWorld;\nimport noppes.npcs.api.entity.IPlayer;\nimport noppes.npcs.api.event.NpcEvent;\n\npublic class Example_playerWorld extends noppes.npcs.rework.script.NpcScript {\n    @Override public void interact(NpcEvent.InteractEvent event) {\n        IPlayer<?> player = event.player;\n        IWorld world = event.npc.getWorld();\n        long time = world.getTime();\n        player.message(\"Hello \" + player.getDisplayName() + \" in \" + world.getName() + \" at \" + time);\n        world.getTempdata().put(\"lastVisitor\", player.getName());\n        if (!world.isDay()) {\n            world.setBlock(event.npc.getBlockX(), event.npc.getBlockY() + 2, event.npc.getBlockZ(), \"minecraft:torch\", 0);\n        }\n    }\n}\n",
-  "signatureFingerprint": "f4653e35430b33945dc182281fa539d562d50255f294ac5242574afe282de298"
+  "animationExample": "import noppes.npcs.rework.anim.Animators;\nimport noppes.npcs.rework.anim.IAnimator;\nimport noppes.npcs.api.event.NpcEvent;\n\npublic class Example_animation extends noppes.npcs.rework.script.NpcScript {\n    @Override public void interact(NpcEvent.InteractEvent event) {\n        IAnimator animator = Animators.of(event.npc);\n        if (animator.isAvailable() && animator.play(\"hurt\")) {\n            animator.queue(\"idle\");\n        }\n    }\n}\n",
+  "signatureFingerprint": "87c71583dc439538032c2677489760f45434365a41506129063bfb0b4311491d"
 }

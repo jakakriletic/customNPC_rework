@@ -28,8 +28,8 @@ public final class ApiDocs {
             + "one instance/loader per NPC, tab and generation. Only overridden NpcScript hooks are bound. "
             + "Tabs run in their existing order, then the API bus; cancellation and missing hooks keep the existing handler behavior.";
     static final String SCOPE = "Published v1 reference: NPC script base, NPC/entity inheritance, NPC data interfaces, "
-            + "NPC hook events and public role event variants, timers/data/NBT/position/damage API, NpcAPI "
-            + "and the player/world API (IPlayer, IWorld). "
+            + "NPC hook events and public role event variants, timers/data/NBT/position/damage API, NpcAPI, "
+            + "the player/world API (IPlayer, IWorld), and optional action animation (Animators, IAnimator). "
             + "All public declared members are listed; protected members are included only on NpcScript. "
             + "Inheritance links point to documented ancestors, including Forge Event for cancellation. "
             + "Referenced types outside this explicit set are external references, not recursively published API. "
@@ -48,6 +48,16 @@ public final class ApiDocs {
             + "        world.getTempdata().put(\"lastVisitor\", player.getName());\n"
             + "        if (!world.isDay()) {\n"
             + "            world.setBlock(event.npc.getBlockX(), event.npc.getBlockY() + 2, event.npc.getBlockZ(), \"minecraft:torch\", 0);\n"
+            + "        }\n"
+            + "    }\n}\n";
+    static final String ANIMATION_EXAMPLE = "import noppes.npcs.rework.anim.Animators;\n"
+            + "import noppes.npcs.rework.anim.IAnimator;\n"
+            + "import noppes.npcs.api.event.NpcEvent;\n\n"
+            + "public class Example_animation extends " + BASE + " {\n"
+            + "    @Override public void interact(NpcEvent.InteractEvent event) {\n"
+            + "        IAnimator animator = Animators.of(event.npc);\n"
+            + "        if (animator.isAvailable() && animator.play(\"hurt\")) {\n"
+            + "            animator.queue(\"idle\");\n"
             + "        }\n"
             + "    }\n}\n";
 
@@ -70,7 +80,8 @@ public final class ApiDocs {
                 "noppes.npcs.api.NpcAPI", "noppes.npcs.api.entity.ICustomNpc",
                 "noppes.npcs.api.entity.data.IData", "noppes.npcs.api.ITimers",
                 "noppes.npcs.api.INbt", "noppes.npcs.api.IPos", "noppes.npcs.api.IDamageSource",
-                "noppes.npcs.api.IWorld", "noppes.npcs.api.entity.IPlayer"));
+                "noppes.npcs.api.IWorld", "noppes.npcs.api.entity.IPlayer",
+                "noppes.npcs.rework.anim.Animators", "noppes.npcs.rework.anim.IAnimator"));
         for (String name : Arrays.asList("INPCAdvanced", "INPCAi", "INPCDisplay", "INPCInventory", "INPCJob",
                 "INPCMelee", "INPCRanged", "INPCRole", "INPCStats")) {
             names.add("noppes.npcs.api.entity.data." + name);
@@ -146,7 +157,7 @@ public final class ApiDocs {
                             "Object members, private/package members, synthetic/bridge members and constant values",
                             "runtime frequency, subtype instances and behavior not derivable from signatures"),
                     "roots", roots(), "types", types, "externalReferences", new ArrayList<>(referenced), "hooks", hooks,
-                    "playerWorldExample", PLAYER_WORLD_EXAMPLE);
+                    "playerWorldExample", PLAYER_WORLD_EXAMPLE, "animationExample", ANIMATION_EXAMPLE);
             return false;
         }
 
@@ -326,6 +337,16 @@ public final class ApiDocs {
         }
         hooks.append("## Player and world\n\nThe existing `event.player` (IPlayer, interact and other player events) and `event.npc.getWorld()` (IWorld); ")
                 .append("their members are in [API.md](API.md).\n\n```java\n").append(catalog.get("playerWorldExample")).append("```\n");
+        hooks.append("\n## Optional action animation\n\n`Animators.of(event.npc)` returns a non-null `IAnimator`. Requires a live ")
+                .append("`EntityAnimatedNpc` from customnpcentities 0.7.0; ordinary NPCs and a missing/incompatible mod return an inert handle ")
+                .append("(`isAvailable=false`, play/queue/stop=false, clip empty, tick 0, clips empty). No change to `ICustomNpc`. ")
+                .append("Call from the server thread; mutations elsewhere return false. Clip names are case-sensitive; unknown/null clips return false. ")
+                .append("`play` replaces the action and clears the queue only on success; `stop` clears it and stops the action. ")
+                .append("`queue` starts immediately when idle, otherwise appends FIFO, up to 32 pending clips shared by all tabs/handles of the entity. ")
+                .append("The next clip starts at world tick END after the current action ends. External AI/actions may interrupt; the queue waits for idle. ")
+                .append("Pending clips are discarded on death/entity unload and are not saved in NBT; script-tab reload does not clear the shared entity queue. No client locomotion, blending or hooks (M7.5). ")
+                .append("`getClip`/`getTick` describe the action only (idle: empty/0); `getClips` returns a fresh sorted array.\n\n```java\n")
+                .append(catalog.get("animationExample")).append("```\n\nJS: `var a = Java.type('noppes.npcs.rework.anim.Animators').of(event.npc);`\n");
         out.put("HOOKS.md", hooks.toString().getBytes(StandardCharsets.UTF_8));
         return out;
     }

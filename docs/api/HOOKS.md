@@ -254,3 +254,24 @@ public class Example_playerWorld extends noppes.npcs.rework.script.NpcScript {
     }
 }
 ```
+
+## Optional action animation
+
+`Animators.of(event.npc)` returns a non-null `IAnimator`. Requires a live `EntityAnimatedNpc` from customnpcentities 0.7.0; ordinary NPCs and a missing/incompatible mod return an inert handle (`isAvailable=false`, play/queue/stop=false, clip empty, tick 0, clips empty). No change to `ICustomNpc`. Call from the server thread; mutations elsewhere return false. Clip names are case-sensitive; unknown/null clips return false. `play` replaces the action and clears the queue only on success; `stop` clears it and stops the action. `queue` starts immediately when idle, otherwise appends FIFO, up to 32 pending clips shared by all tabs/handles of the entity. The next clip starts at world tick END after the current action ends. External AI/actions may interrupt; the queue waits for idle. Pending clips are discarded on death/entity unload and are not saved in NBT; script-tab reload does not clear the shared entity queue. No client locomotion, blending or hooks (M7.5). `getClip`/`getTick` describe the action only (idle: empty/0); `getClips` returns a fresh sorted array.
+
+```java
+import noppes.npcs.rework.anim.Animators;
+import noppes.npcs.rework.anim.IAnimator;
+import noppes.npcs.api.event.NpcEvent;
+
+public class Example_animation extends noppes.npcs.rework.script.NpcScript {
+    @Override public void interact(NpcEvent.InteractEvent event) {
+        IAnimator animator = Animators.of(event.npc);
+        if (animator.isAvailable() && animator.play("hurt")) {
+            animator.queue("idle");
+        }
+    }
+}
+```
+
+JS: `var a = Java.type('noppes.npcs.rework.anim.Animators').of(event.npc);`
