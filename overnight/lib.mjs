@@ -233,9 +233,9 @@ export function quotaReset(error, currentMs, defaultMinutes) {
   return { until: new Date(currentMs + defaultMinutes * 60000).toISOString(), exact: false };
 }
 const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-// Claude CLI states the reset only in prose: "resets 5:30pm (Europe/Ljubljana)" or "resets Oct 23, 5pm (...)".
+// Claude/Codex CLIs state the reset only in prose: "resets 5:30pm (Europe/Ljubljana)", "try again at 1:26 AM" or "resets Oct 23, 5pm (...)".
 export function resetFromMessage(message, currentMs) {
-  const m = /\bresets\s+(?:(?:on\s+)?([a-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(?:at\s+)?)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*(?:\(([^)]+)\))?/i.exec(message);
+  const m = /\b(?:resets|try again at)\s+(?:(?:on\s+)?([a-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(?:at\s+)?)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*(?:\(([^)]+)\))?/i.exec(message);
   if (!m) return null;
   let hour = Number(m[3]); const minute = Number(m[4] || 0); const half = m[5]?.toLowerCase();
   if (half && (hour < 1 || hour > 12)) return null;
