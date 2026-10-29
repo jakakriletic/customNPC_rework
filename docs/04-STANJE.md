@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-29** (seja 177) — **M6.8 zaključen, poskus 1** (D-094, Q173–Q176). Unit/build/package in m68-packaged-v1 27/27 PASS na `36620163…`; JS/Java save in reload pravice potrjene, produkcijske pravice/runtime isti. [Trust politika in dokazi](meritve/2026-10-29-M6.8-pravice.md); brez sandbox/GUI/login trditve. |
-| Trenutni milestone | **M6 — Scripting, M6.0–M6.8 zaključeni, naslednji M6.9** po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
-| Naslednji paketi | **M6.9–10 → M6.12 → M6.11 player/world → ostanek M7 → M10** po [Q92](10-OBSEG-V1.md). Uspešnih serij se ne ponavlja (Q90). Privzeto izklopljeno brez cenovne meje, največ 2 poskusa/paket. M4.15a potrditev 2000 nedosegljivih odložena; Q22/OptiFine/Entity Culling za release, M10.3 blokiran (Q1). |
+| Zadnja posodobitev | **2026-10-29** (seja 178) — **M6.9 zaključen, poskus 1** (Q177–Q180). Controller m69-api-v1 PASS na `0ff903b4…`: 5.661 preverjanj, 49 tipov/515 članov, 16 prevedenih primerov; API.json/API.md/HOOKS.md bajtno deterministični. Produkcija/runtime ista; [dokazi in omejitve](meritve/2026-10-29-M6.9-api.md). |
+| Trenutni milestone | **M6 — Scripting, M6.0–M6.9 zaključeni, naslednji M6.10** po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
+| Naslednji paketi | **M6.10 → M6.12 → M6.11 player/world → ostanek M7 → M10** po [Q92](10-OBSEG-V1.md). Uspešnih serij se ne ponavlja (Q90). Privzeto izklopljeno brez cenovne meje, največ 2 poskusa/paket. M4.15a potrditev 2000 nedosegljivih odložena; Q22/OptiFine/Entity Culling za release, M10.3 blokiran (Q1). |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **213** datotek `.java` v `src/patch` (M6.8: `TrustProbe`), od tega **143** rework (`script` 16) in 3 dostopni razredi v `net/minecraft/…`; build/package PASS na `36620163…`: **78** pričakovanih spremenjenih vnosov (77 razredov originala + manifest coremoda), 311 zapakiranih class datotek |
-| Testi | **519** metod `@Test` v **82** datotekah; `testOriginal` **45** preverjanj. M6.8 unit/build/package in m68 27/27 PASS na `36620163…`; produkcija in stare serije nespremenjene, brez ponavljanja (Q90/Q92). FA sprejem M4.14b ostaja neuspešen (D-079); smoke/protokol dodatno 20/16 trditev |
+| Testi | **519** metod `@Test` v **82** datotekah; `testOriginal` **45** preverjanj. M6.9 m69-api-v1 5.661 preverjanj PASS na `0ff903b4…`; M6.8 unit/build/package in m68 27/27 PASS na `36620163…`, produkcija ista, brez ponavljanja (Q90/Q92). FA sprejem M4.14b ostaja neuspešen (D-079); smoke/protokol dodatno 20/16 trditev |
 | Odprti pojavi | nobenega blokirnega; Q84 (M4.17 + M4.10 zid 6/6 → 5/6, vzrok [H], ovira za privzeti vklop kombinacije); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10, Q12 in Q14 odprta; Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -40,7 +40,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M3 Jedro entitete | **zaključeno do M3.9, M3.8b GUI potrjen** | [M3.8b](meritve/2026-10-29-M3.8b-gui.md) 216/216, clone/restart in 18 PNG potrjeni; fizično gibanje igralca med dvema SOLID ostane nepokrito, celoten M3 izhodni kriterij ni potrjen. Q15 → D-028 |
 | M4 Gibanje | **Paketi v1.0 obravnavani z omejitvami** | [M4.15c](meritve/2026-10-29-M4.15c-klient.md) GUI/restart zelen; M4.15a potrditev 2000 nedosegljivih odložena. Celoten M4 izhodni kriterij ni izpolnjen; M4.14b brez FA sprejema (D-079), M4.14d v2, F1–F12 odprti. |
 | M5 Performance | **zaključeno 22. 10. (D-055)** | M5-S: kapaciteta M5.8; M5-K: sprejem M5-K.2; M5-V: sprejem M5-V.8 in privzeti vklop V.8b; M5.Z: obe matriki in sled zeleni. [Regresija](meritve/2026-10-22-M5.Z-regresija.md); nepokrita release preverjanja ostanejo M10 |
-| M6 Scripting | **M6.0–M6.8 zaključeni** | [Pravice](meritve/2026-10-29-M6.8-pravice.md) JS/Java in reload 27/27, unit/build/package PASS (D-094, Q176); originalni default ALL ni trust meja, brez sandboxa; naslednji M6.9 |
+| M6 Scripting | **M6.0–M6.9 zaključeni** | [API reference](meritve/2026-10-29-M6.9-api.md) 5.661 preverjanj PASS, deterministični 49 tipov/16 hookov in prevedeni primeri (Q180); runtime isti, brez sandboxa; naslednji M6.10 |
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | ostanejo script API/hooki, uskladitev verzije CNPC, reload; [plan](08-PREGLED-IN-PLAN.md) |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
@@ -55,7 +55,19 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 175 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 176 → 1, novejši zgoraj).*
+
+### 2026-10-29 (178) — M6.9: generator API reference
+
+**Paket:** M6.9 (Q177–Q180) · **Stanje:** zaključen, poskus 1.
+Generator iz javac API simbolov in istega hook registry pripravi API.json/API.md/HOOKS.md.
+Izrecni v1 nabor/izključitve, generiki, dedovanje, event polja in 16 Java primerov;
+odsoten Javadoc/imena so označena. Razvojni sourceSet ostane izven moda; runtime isti.
+Controller m69-api-v1 **PASS na `0ff903b4…`**: 5.661 preverjanj, 49 tipov/515 članov,
+16 prevedenih primerov, napačen tip zavrnjen z lokacijo; neodvisni popis in bajtna enakost
+med JVM/obrnjenim odkrivanjem potrjena. Celoten ukaz 7.372,120 ms kot podatek.
+[Dokazi in omejitve](meritve/2026-10-29-M6.9-api.md); produkcija/zapakirani mod isti,
+brez Minecrafta ali izvajanja primerov. Q92 usklajen; naslednji M6.10, brez ponovitev.
 
 ### 2026-10-29 (177) — M6.8: trusted-only pravice in meje
 
@@ -68,16 +80,3 @@ Originalni default ALL ni trust meja; profil za nezaupane igralce zahteva zaupan
 avtorje (`OpsOnly=true`) ali izrecno omejene vse urejevalne/uvozne poti.
 [Politika, omejitve in dokazi](meritve/2026-10-29-M6.8-pravice.md), sonda 351,797 ms kot
 podatek, brez sandbox/GUI/login/plugin trditve. Q92 usklajen, naslednji M6.9; brez ponovitev.
-
-
-### 2026-10-29 (176) — M6.7: compile-only CLI
-
-**Paket:** M6.7 (D-090/D-093, Q169–Q172) · **Stanje:** zaključen, poskus 2 (harness).
-`compileScripts` uporablja isti JDK compiler in skupni `JavaSources` kot runtime, manifest
-urejenih tabov/vključitev ter JSON diagnostiko/exit status brez nalaganja skript.
-Dodanih devet JUnit testov in `java-cli-run.ps1`. [Merila in odločitve](meritve/2026-10-29-M6.7-cli.md).
-Controller na `e00c80cf…`: CLI in m62 16/16 PASS; ukaza CLI 4,979/4,881 s,
-tripwire za static/konstruktor/procesor ni nastal. M65 14/15 zaradi starega null checka;
-popravek samo sonde/harnessa potrjen na `3e58697d…`: unit/build/package in m65 17/17 PASS,
-caller ter vrhnji cleanup potrjena. CLI/m62 brez ponavljanja, produkcija ista.
-Q92 usklajen; naslednji M6.8. Plain hook bind in samodejni modpack classpath nista CLI dokaz.

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 175 → 1)
+# Arhiv: dnevnik sej (vnosi 176 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,18 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (176) — M6.7: compile-only CLI
+
+**Paket:** M6.7 (D-090/D-093, Q169–Q172) · **Stanje:** zaključen, poskus 2 (harness).
+`compileScripts` uporablja isti JDK compiler in skupni `JavaSources` kot runtime, manifest
+urejenih tabov/vključitev ter JSON diagnostiko/exit status brez nalaganja skript.
+Dodanih devet JUnit testov in `java-cli-run.ps1`. [Merila in odločitve](../meritve/2026-10-29-M6.7-cli.md).
+Controller na `e00c80cf…`: CLI in m62 16/16 PASS; ukaza CLI 4,979/4,881 s,
+tripwire za static/konstruktor/procesor ni nastal. M65 14/15 zaradi starega null checka;
+popravek samo sonde/harnessa potrjen na `3e58697d…`: unit/build/package in m65 17/17 PASS,
+caller ter vrhnji cleanup potrjena. CLI/m62 brez ponavljanja, produkcija ista.
+Q92 usklajen; naslednji M6.8. Plain hook bind in samodejni modpack classpath nista CLI dokaz.
 
 ### 2026-10-29 (175) — M6.6: reprodukcija in obnova gnezdenega lastništva
 

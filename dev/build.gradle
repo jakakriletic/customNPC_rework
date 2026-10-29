@@ -174,6 +174,29 @@ task compileScripts(type: JavaExec, dependsOn: classes) {
     }
 }
 
+// M6.9: build-time documentation tooling stays out of the mod and normal test/build tasks.
+sourceSets {
+    apiDocs {
+        java.srcDir 'src/apiDocs/java'
+        compileClasspath = sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath = output + compileClasspath
+    }
+}
+task generateApiDocs(type: JavaExec, dependsOn: apiDocsClasses) {
+    description = 'Generate deterministic docs/api reference from the compiled API and NPC hook registry, without Minecraft.'
+    main = 'local.cnpcdocs.ApiDocs'
+    classpath = sourceSets.apiDocs.runtimeClasspath
+    args file(project.findProperty('apiDocsOutput') ?: '../docs/api').absolutePath
+}
+task verifyApiDocs(type: JavaExec, dependsOn: apiDocsClasses) {
+    description = 'Verify the API reference inventory, determinism and Java examples; publish only after acceptance.'
+    main = 'local.cnpcdocs.ApiDocsAcceptance'
+    classpath = sourceSets.apiDocs.runtimeClasspath
+    args file(project.findProperty('apiDocsVerifiedOutput') ?: "$buildDir/m69/verified").absolutePath,
+         file(project.findProperty('apiDocsWork') ?: "$buildDir/m69").absolutePath
+}
+generateApiDocs.mustRunAfter verifyApiDocs
+
 // M6.1 prototype: explicit compiler/dependency inputs, not a production script registration.
 // Only the controller invokes this task. No dependency on normal builds or game launches.
 task javaPrototypePaths {

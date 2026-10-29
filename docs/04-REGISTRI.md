@@ -81,6 +81,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-10-29 | M6.9: API reference, poskus 1 | m69-api-v1 PASS na `0ff903b4…`: 5.661 preverjanj, 49 tipov/515 članov/16 hookov, prevedeni primeri in bajtna determinističnost; celoten ukaz 7.372,120 ms kot podatek, produkcija/mod ista | [zapis](meritve/2026-10-29-M6.9-api.md) |
 | 2026-10-29 | M6.8: trusted-only pravice, poskus 1 | unit/build/package in 27/27 PASS na `36620163…`; JS/Java deny/grant ter reload 0/1, file/reflection dovoljena, SecurityManager/provider/config ohranjeni. Sonda 351,797 ms kot podatek, 78 pričakovanih razlik; brez sandbox/GUI/login trditve | [zapis](meritve/2026-10-29-M6.8-pravice.md) |
 | 2026-10-29 | M6.7: compile-only CLI in regresiji, poskus 2 (harness) | CLI + m62 16/16 PASS na `e00c80cf…`; unit/build/package + m65 17/17 PASS na `3e58697d…`. Celotni ukaz valid/invalid 4,979/4,881 s, storitev 485,728/434,497 ms; brez izvajanja skript/procesorjev, 78 pričakovanih razlik | [zapis](meritve/2026-10-29-M6.7-cli.md) |
 | 2026-10-29 | M6.6: pet controller testov PASS na `af46a352…`, poskus 2 (harness) | unit/build/package, gnezdeno lastništvo 88/88, JS/Java zlata regresija 16/16; 78 pričakovanih razlik. Brez časovne meritve | [zapis](meritve/2026-10-29-M6.6-context.md) |
