@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 166 → 1)
+# Arhiv: dnevnik sej (vnosi 167 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -7,6 +7,19 @@ prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
 
+
+### 2026-10-29 (167) — M4.15c: GUI in save/restart zaključena
+
+**Paket:** M4.15c (Q117–Q122) · **Stanje:** zaključen, brez spremembe produkcije M4.15b.
+Vseh šest zahtevanih controller testov zelenih na `c91ad234…`: unit/build/package,
+integrirano s knjižnico/brez nje 70/70 ×2, dedicated s knjižnico/klient brez nje 68/68.
+Wand → AI → Movement → Backend, izbira 0/1, hoja/let/hoja in save/restart istega UUID
+potrjeni; vseh 30 novih PNG vizualno pregledanih, vsebina panela berljiva.
+Config/runtime/options isti; dedicated properties in ops obnovljeni, čisti izhodi.
+Prejšnji FAIL ostanejo FAIL; Q119–Q121 popravijo dokazno kodo, ne sprejemnih meril.
+[En zapis dokazil in omejitev](../meritve/2026-10-29-M4.15c-klient.md).
+Po uspešnih testih samo dokumentacija, brez ponovitev. Naslednji M3.8b po Q92;
+M4.15a odložena potrditev ostane. Baseline, ZAZENI-BASELINE in audit izven commita.
 
 ### 2026-10-29 (166) — M4.15b: GUI izbira in strežniška pogodba zaključena
 

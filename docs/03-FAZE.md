@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. Naslednji M6.0 raziskava → M6 v1.0 → ostanek M7 → M10; M3.8b zaključen (Q126), M4.15b/c zaključena (D-089, Q122), M4.15a potrditev 2000 nedosegljivih odložena (D-088). Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
+**Q92 (29. 10.): [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; ostalo je v2. M6.0 raziskava zaključena (D-090); naslednji M6.1 → M6 v1.0 → ostanek M7 → M10. M3.8b in M4.15b/c zaključeni, M4.15a potrditev 2000 nedosegljivih odložena. Pri privzeto 0 cena ni pogoj (izmeri se enkrat); največ 2 poskusa na paket, kratek zapis dokazil.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -406,30 +406,42 @@ lahko uporabi.
 
 **Vhodni pogoj:** M1 (varno shranjevanje skript in njihovih podatkov).
 
+**M6.0 zaključen 29. 10. (D-090, Q127–Q131):** [raziskava](raziskave/M6.0-java-scripting.md).
+JDK 8 JavaCompiler je prvi kandidat za M6.1; hitrost in Forge runtime povezava še nista
+izmerjeni. Java samo za zaupanja vredne avtorje, JS ostane privzet. Obstoječi API,
+handlerji in jezikovni GUI se razširijo, ne nadomestijo. Kritika vsakega paketa in njegovi
+dokazi so v raziskavi; pri prvem prenosu originalnega razreda velja ločen baseline commit.
+
 ### Paketi
 
 | ID | Paket | Vel. |
 |---|---|---|
-| M6.1 | Prototip prevajalnika; odločitev **Janino** vs `javax.tools.JavaCompiler`; meritev časa prevajanja | M |
-| M6.2 | `rework/script/hooks/` — hook registry; ponovna implementacija obstoječih dogodkov skozenj, brez spremembe vrstnega reda in frekvence | M |
-| M6.3 | `rework/script/api/` — tipiziran API za NPC (najmanjši uporaben nabor) | M |
-| M6.4 | Izolacija: `ClassLoader` na skripto, hot reload, cache prevedenih razredov | M |
-| M6.5 | **Diagnostika napak**: prevajalne napake z datoteko/vrstico/stolpcem; runtime izjeme s stack traceom skripte; skripta se po popravku spet zažene (popravek **B5**) | M |
-| M6.6 | Odstranitev globalnega locka (prej M5.1, preseljen z D-030: v M5 ni dobitka MSPT, ostane zaradi pravilnosti statičnih `Current`/`CurrentType`) | — |
-| M6.7 | `.\dev.ps1 compileScripts` — prevajanje vseh skript **brez Minecrafta** | S |
-| M6.8 | Varnostna omejitev: whitelist paketov, prepoved refleksije / `java.io` / `java.net` / `System.exit`; bytecode verifikacija | M |
-| M6.9 | Generator API dokumentacije: `docs/api/API.json`, `API.md`, `HOOKS.md` | M |
-| M6.10 | Projektna predloga `scripts/java/template/` z gradle/IDE nastavitvijo za autocomplete | S |
-| M6.11 | Razširitev API-ja: player, world, item, block, quest, dialog, faction | L |
-| M6.12 | Združljivost: obstoječe JS skripte delujejo nespremenjeno; izbira jezika na NPC-ju | S |
+| ~~M6.0~~ | Raziskava izvedbe zaključena; brez sprememb merilnih vhodov in brez novih meritev | S |
+| M6.1 | JDK 8 JavaCompiler prototip in primerjava s pripetim stock Janinom; jezik/diagnostika/no-compiler, cold/warm časi ter typed API povezava v dev in zapakiranem Forge runtime | M |
+| M6.2 | `rework/script/hooks/`: deterministični popis podpisov + omejen adapter na obstoječem robu; isti tab/init/bus vrstni red, preklic, string hooki; JS veja ostane | M |
+| M6.3 | Tipizirana script pogodba z obstoječimi NPC/event API vmesniki; najmanjši uporaben nabor, brez podvojitve vseh ovojev | M |
+| M6.4 | Loader/instanca na NPC/tab/generacijo, omejen cache bytecode; atomski reload in invalidacija vključitev/API, brez deljenja static stanja | M |
+| M6.5 | Datoteka/vrstica/stolpec, source map vključitev, runtime stack; reprodukcija in popravek B5, obnovitev po popravku tudi prej manjkajočega hooka | M |
+| M6.6 | **Samo po reprodukciji pravilnosti:** gnezden context shrani/obnovi lastnika v finally; ohrani binarni `Current`; odstranitev locka ni optimizacijski cilj | — |
+| M6.7 | `.\dev.ps1 compileScripts` brez Minecrafta, isti compiler/API/source map, strukturirani izidi; brez izvajanja razredov in annotation procesorjev | S |
+| M6.8 | Trusted-only pravice in preverjena politika omejitev; whitelist/bytecode pregled nista sandbox, brez prisilnega Thread.stop ali globalnega SecurityManagerja | M |
+| M6.9 | Deterministični generator `docs/api/API.json`, `API.md`, `HOOKS.md` iz istega API/registry vira; izrecen v1 nabor in izključitve | M |
+| M6.10 | `scripts/java/template/`: ista Java 8/API pogodba v IDE/CLI/runtime, primeri z diagnostiko | S |
+| M6.11 | **Po M6.12, samo player/world** dostopi iz NPC Java skripte (Q92); item/block/quest/dialog/faction in njihovi Java handlerji v2 | M |
+| M6.12 | Obstoječa izbira jezika: GUI/save/clone/JVM restart in JS→Java→JS; privzeto JS, brez compilerja jasna napaka, JS sled nespremenjena | S |
+
+Vrstni red: M6.1–M6.10 (M6.6 pogojno) → M6.12 → minimalni M6.11 → M7.
+Varnostna politika M6.8 velja že od prvega Java opt-in; potrdi se v svojem paketu.
 
 **Izhodni kriterij:**
 - Java skripta se prevede, naloži, teče in se hot-reloada brez restarta strežnika
 - prevajalna napaka da uporabno sporočilo z vrstico, v igri in v logu
 - `compileScripts` vrne rezultat v nekaj sekundah
 - obstoječe JS skripte v testnem svetu delujejo identično kot prej
-- `API.json` je popoln in strojno berljiv
-- izmerjena razlika v performanceu Java vs JS na istem scenariju je zapisana
+- `API.json` je popoln za izrecno objavljen v1 nabor in strojno berljiv
+- Java deluje v zapakiranem Forge okolju; loaderji ne delijo stanja med NPC-ji/tabi
+- izmerjena razlika Java vs JS na istem scenariju/sledi je zapisana (en ogret par kot
+  podatek po Q92, cold compile posebej); raziskava ne dokazuje pospeška
 
 **Tveganja:**
 - Varnostna izolacija prevedene Jave je težka. Če se izkaže, da je z Janino ni mogoče

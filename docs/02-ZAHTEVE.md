@@ -667,51 +667,48 @@ opcijsko Kotlin JSR-223, in pobere vse ostale JSR-223 engine-e s classpatha.
 
 **[dokazano] Vse to teče pod enim globalnim lockom** (vrstica 142) — glej R5.
 
-**[dokazano] Napake so tihe.** Manjkajoča funkcija → `NoSuchMethodException` → ime gre v
-`unknownFunctions` (vrstica 170) in se nikoli več ne kliče. Katerakoli druga napaka →
-`errored = true` (vrstica 173) in **cela skripta se ustavi do reloada**. Za AI, ki piše
-skripte, je to najslabši možni feedback.
+**[dokazano] Napaka onemogoči container.** Manjkajoča funkcija → `NoSuchMethodException`
+→ ime v `unknownFunctions`; druga napaka → `errored = true`, stack trace v console in
+obvestilo OP-jem. Napake torej niso brez izpisa. Toda spodnji B5 prepreči, da bi navadna
+reload preverba dosegla že ustavljen container; za AI povratno zanko manjka zanesljiva obnova.
 
 **[dokazano] Reload logika ima bug (B5 iz `PLAN_IMPLEMENTACIJE.md`):** vrstica 130 vrne
 zgodaj zaradi `unknownFunctions`/`errored`, **preden** vrstica 137 preveri, ali je koda novejša.
 
-### Ali je Java scripting sploh smiseln — da, in zakaj
+### Izvedba po M6.0 (29. 10. 2026, D-090)
 
-- **Performance:** prevedena Java koda teče kot navaden bytecode, brez JS↔Java marshallinga
-  in brez interpretacije. To je realen dobiček, ne teoretičen.
-- **Za AI:** tipi so **preverljivi pred zagonom**. AI, ki napiše `npc.setHealth("full")`,
-  dobi napako pri prevajanju z vrstico, namesto tihega neuspeha čez tri dni.
-- **Precedens:** CustomNPC+ to že dela z Janino ("real Java code compiled by the Janino
-  engine, full class and lambda support"). Ni raziskovalni projekt.
+[Raziskava, primarni viri in kritika vseh paketov](raziskave/M6.0-java-scripting.md)
+ločijo kodo, stare meritve in hipoteze. Java ni že dokazana optimizacija: Nashorn tudi
+prevaja, profil M5.0 pa ima `ScriptContainer` 1,8 %, ne meritve Java prihranka.
+Tipi in uporabna povratna zanka ostanejo glavni zahtevi; hitrost se izmeri na istem
+scenariju/sledi, en ogret JS/Java par kot podatek po Q92, cold compile posebej.
 
-### Predlagana arhitektura
+**Prevajalnik (Q127).** Prvi kandidat za M6.1 je **JDK 8 JavaCompiler**, da dobimo polno
+Javo 8 in preverjanje generikov. Stock Janino je primerjalni prototip; ni dokazano enak
+lastnemu JaninoLoaderju CustomNPC+. Brez compiler ponudnika jasna napaka, brez fallbacka
+med jeziki. Java način zahteva JDK 8; obstoječi JS zaradi tega ne dobi nove zahteve.
+M6.1 mora poleg jezika/diagnostike/časov dokazati API povezavo v dev in zapakiranem Forge
+runtime; sam mapped jar ni dokaz produkcije.
 
-```
-rework/script/
-├── api/          tipiziran API (IRwNpc, IRwPlayer, IRwWorld, IRwEvent…)
-├── compile/      prevajanje + cache + hot reload
-├── hooks/        registry dogodkov
-└── compat/       stari JS ostane delujoč
-```
+**API in dogodki (Q128).** `rework/script/api` je typed script pogodba z obstoječimi
+NPC/event vmesniki, ne podvojitev vseh ovojev. `hooks` popiše podpise in delegira na
+obstoječem handler robu; JS pot, tab/init/bus vrstni red, preklic in string hooki ostanejo.
+Uporabi se že obstoječa per-NPC izbira `ScriptLanguage` in serverjev seznam za GUI.
+M6.11 v1 vključuje samo player/world dostopa iz NPC skripte (Q92); širitev drugih Java
+handlerjev in item/block/quest/dialog/faction je v2.
 
-**Prevajalnik.** Dve možnosti, odločitev v M6.1 po prototipu:
+**Stanje/reload (Q130).** Omejen skupen cache bytecode, lasten loader/instanca na
+NPC/tab/generacijo; tudi static stanje ni deljeno. Ključ vključuje izvor, urejene
+vključitve, compiler/opcije in API/classpath odtis. Nova generacija se zamenja med dogodki,
+napaka pusti zadnjo veljavno generacijo z vidno diagnostiko; prvi neuspeh ničesar ne izvaja.
+Loader ni sandbox. `Current` ostane zaradi binarnih chest/projectile porabnikov; M6.6
+samo po reprodukciji pravilnosti gnezdenega lastništva, brez cilja odstranitve locka.
 
-| | Janino | `javax.tools.JavaCompiler` (JDK 8) |
-|---|---|---|
-| Velikost | ~1 MB embedded | že v JDK |
-| Podpora jezika | podmnožica Jave (lambde da, generics omejeno) | polna Java 8 |
-| Zahteva JDK | ne | **da** — uporabnik mora imeti JDK, ne JRE |
-| Precedens | CustomNPC+ ga uporablja | — |
-
-Predlog: **Janino primarno** (deluje povsod), `JavaCompiler` kot opcijski "full" način.
-
-**Izolacija.** Vsaka skripta se prevede v svoj `ClassLoader`, da se da razred ob reloadu
-zavreči. Globalne spremenljivke ostanejo izolirane po NPC-ju
-(`PLAN_IMPLEMENTACIJE.md` §2 to izrecno zahteva).
-
-**Varnost.** Prevedena Java ima polni dostop do JVM. Potrebna je whitelist paketov in
-prepoved refleksije, `java.io`, `java.net`, `System.exit`. **[preveri]** koliko se to da
-uveljaviti z Janino; verjetno z bytecode verifikacijo po prevajanju.
+**Varnost (Q129).** V1 Java je za zaupanja vredne avtorje z obstoječimi scripting pravicami.
+Whitelist ali bytecode pregled nista dokaz izolacije; ni varnega CPU/heap timeouta ali
+prisilnega `Thread.stop`. Globalnega SecurityManagerja ne spreminjamo. `compileScripts`
+ne izvaja skriptnih razredov in izklopi annotation processing. To je eksplicitna omejitev,
+predvidena v tveganjih M6, ne trditev o sandboxu.
 
 **Napake, ki jih AI lahko popravi.** To je ključno:
 
@@ -723,7 +720,7 @@ uveljaviti z Janino; verjetno z bytecode verifikacijo po prevajanju.
 
 **Strojno berljiv API.** Generator, ki iz API vmesnikov naredi:
 
-- `docs/api/API.json` — polna shema (razredi, metode, parametri, tipi, opisi)
+- `docs/api/API.json` — polna shema objavljenega v1 nabora z izključitvami (razredi, metode, parametri, tipi, opisi)
 - `docs/api/API.md` — človeško berljivo
 - `docs/api/HOOKS.md` — vsi hooki s podpisi in primeri
 - predlogo projekta (`scripts/java/template/`), ki se prevede v IDE-ju z autocomplete
@@ -733,13 +730,11 @@ delujejo naprej. To ni pogajanje — obstoječi svetovi bi drugače nehali delov
 
 ### Faznost znotraj M6
 
-1. M6.1 prototip prevajalnika + odločitev Janino / JavaCompiler
-2. M6.2 hook registry in tipiziran API za NPC (najmanjši uporaben nabor)
-3. M6.3 hot reload + cache + izolacija ClassLoaderjev
-4. M6.4 diagnostika napak + `compileScripts` CLI
-5. M6.5 generator API dokumentacije + projektna predloga
-6. M6.6 popravek B5 + odstranitev globalnega locka (prej M5.1, D-030)
-7. M6.7 širjenje API-ja na player, world, item, block, quest, dialog
+Veljajo ID-ji in dokazila iz [M6 plana](03-FAZE.md): **M6.1–M6.10 → M6.12 → M6.11
+player/world → M7**. M6.6 samo po reprodukciji pravilnosti; B5 je v M6.5, varnostna
+politika M6.8 velja že ob prvem Java opt-in. M6.0 je raziskava, noben funkcionalni paket
+še ni sprejet. Produkcijske spremembe potrebujejo controller unit/build/package in
+ustrezno JS enakost/Java funkcionalnost; samo dokumentacija ne potrebuje ponovitev (Q131).
 
 ---
 

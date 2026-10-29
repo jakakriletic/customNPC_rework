@@ -933,3 +933,14 @@ Q116: sedem zahtevanih controller testov zelenih na `d71d75d4…`; M4.15b zaklju
 Q122: M4.15c zaključen na `c91ad234…`, šest controller testov zelenih, GUI/save/restart
 70/70 ×2 + 68/68 in 30 PNG pregledanih; opt-in sonda, produkcija M4.15b ista.
 [Klientova dokazila in odločitve Q117–Q122](meritve/2026-10-29-M4.15c-klient.md).
+
+### D-090 — M6.0: dodana Java pot ob ohranjeni JS pogodbi (2026-10-29, Q127–Q131)
+
+JDK 8 JavaCompiler je prvi kandidat za M6.1; brez ponudnika jasna napaka, brez fallbacka.
+Tipizirani obstoječi API/eventi in handler rob, isti vrstni red/bus; JS ostane privzet.
+Java trusted-only; loader/whitelist nista sandbox, brez globalnega SecurityManagerja.
+Bytecode cache, lasten loader/instanca na NPC/tab/generacijo, atomski reload; B5 v M6.5.
+M6.6 samo po reprodukciji lastništva gnezdenih klicev; binarni `Current` se ohrani.
+M6.11 v1 samo player/world (Q92); M6.1–10 → M6.12 → minimalni M6.11 → M7.
+To je raziskovalna odločitev, ne dokaz runtime delovanja ali pohitritve; merilni vhodi isti.
+[Koda, primarni viri, kritika vsakega paketa in sprejem](raziskave/M6.0-java-scripting.md).
