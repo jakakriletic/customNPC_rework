@@ -1,11 +1,15 @@
-# Controller-only M10.1a (D-096, Q215-Q218). Server A/B matrix: the same flat world, the same JS
+# Controller-only M10.1c server close-out (D-096, Q215-Q218, Q221-Q224; harness of M10.1a/b). Server A/B matrix: the same flat world, the same JS
 # control script and the same procedure run twice on a packaged Forge 1.12.2 dedicated server:
 #   O = distribution CustomNPCs_1.12.2-(01Oct19).jar (never placed in dev/run/mods or dev/libs),
 #   K = workspace jar with code defaults (-Drwprivzeto=1, given to both arms; O ignores it).
 # Phases per arm: bootstrap (spawn point) -> run (fixtures and rows) -> real save/stop/start -> verify.
 # Without a player nothing ticks after 300 ticks, and O has no /rwdiag, so the control NPCs use the
 # original CNPC ChunkLoader job (NpcJob 8) in both arms. Rows: IN3 IN6 IN7 IN8 IA1 IA2 IA3 IA5 IS3 IS8
-# IL5 IL6; IC2-IC4 and IO3 need a real player connection and are M10.1b (Q217).
+# IL5 IL6; IC2-IC4 and IO3 need a real player connection and are the client part M10.1d (Q217, Q224).
+# IN3: the set of source keys that differ in the clone is compared O = K (the original re-rolls eye colours).
+# IN6: derived ModelPartConfig Trans* values are masked (recomputed on every load, Q222).
+# O = K: Eyes.Color is a fresh draw from the 23-colour palette per entity in both jars, so it is compared
+# as "in the palette", not as a value (Q223).
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 . (Join-Path $root 'meritve-lib.ps1')
@@ -13,7 +17,7 @@ $root = $PSScriptRoot
 . (Join-Path $root 'dev/testworld/java-compiler-lib.ps1')
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $stamp = Get-Date -Format 'yyyy-MM-dd-HHmmss'
-$prefix = Join-Path $root "audit/m101a-matrika-$stamp"
+$prefix = Join-Path $root "audit/m101c-matrika-$stamp"
 $run = Join-Path $root 'dev/run'
 $lock = $null; $proc = $null; $exitCode = 1
 $oldJava=$env:JAVA_HOME; $oldPath=$env:PATH
@@ -111,6 +115,30 @@ function Get-M10MapDiff($A, $B, [string[]]$Skip) {
     $keys=@(@($A.PSObject.Properties.Name)+@($B.PSObject.Properties.Name) | Sort-Object -Unique)
     return @($keys | Where-Object { $_ -notin $Skip -and $A.$_ -cne $B.$_ })
 }
+# IN6 (Q222): ModelPartConfig Trans* are derived; ModelDataShared.readFromNBT overwrites them through
+# updateTransate on every load (original 01Oct19), so a fresh NPC (0) and its reloaded NBT differ there.
+function Get-M10Underived($Map) {
+    $copy=[pscustomobject]@{}
+    foreach($p in $Map.PSObject.Properties) {
+        $v=$p.Value; if ($p.Name -ceq 'NpcModelData') { $v=([string]$v) -replace '("Trans[XYZ]"): -?[0-9.]+(E-?[0-9]+)?f','$1: derived' }
+        $copy | Add-Member -NotePropertyName $p.Name -NotePropertyValue $v
+    }
+    return $copy
+}
+# O = K (Q223): ModelEyeData() sets Eyes.Color with new Random().nextInt(23) from this palette (same
+# constructor in 01Oct19 and the workspace); a colour outside it still counts as a difference.
+$eyePalette=@(8368696,16247203,10526975,10987431,10791096,4210943,14188339,11685080,6724056,15066419,8375321,15892389,10066329,5013401,8339378,3361970,6704179,6717235,10040115,16445005,6085589,4882687,55610)
+function Get-M10EyeRolled($Map) {
+    $copy=[pscustomobject]@{}
+    foreach($p in $Map.PSObject.Properties) {
+        $v=$p.Value
+        if ($p.Name -ceq 'NpcModelData') {
+            $v=[regex]::Replace([string]$v,'("Eyes": \{[^}]*"Color": )(-?[0-9]+)',{ param($m) if([int]$m.Groups[2].Value -in $eyePalette){ $m.Groups[1].Value+'palette' } else { $m.Value } })
+        }
+        $copy | Add-Member -NotePropertyName $p.Name -NotePropertyValue $v
+    }
+    return $copy
+}
 function Invoke-M10Arm([string]$Arm, [string]$Jar) {
     $script:work=Join-Path $root "dev/run-m10/$Arm-$stamp"
     New-Item -ItemType Directory -Path $script:work | Out-Null
@@ -159,7 +187,7 @@ function Invoke-M10Arm([string]$Arm, [string]$Jar) {
     Assert-JavaPrototype (@($verifyProof.checks).Count -eq 9) "$Arm 9 verify assertions"
     Stop-M10
     $skip=@($positional)+@($runProof.volatile)
-    $in6=@(Get-M10MapDiff $runProof.aMap $verifyProof.aMap $skip)
+    $in6=@(Get-M10MapDiff (Get-M10Underived $runProof.aMap) (Get-M10Underived $verifyProof.aMap) $skip)
     Assert-JavaPrototype ($in6.Count -eq 0) ("$Arm IN6 NBT of M10_A equal after restart; differs: "+($in6 -join ','))
     $armLogs=($logs | Where-Object { $_ -like "*-$Arm-*" } | ForEach-Object { Read-JavaPrototypeLog $_ }) -join "`n"
     Assert-JavaPrototype (-not ($armLogs -cmatch '\tat noppes\.|Exception ticking|Encountered an unexpected exception')) "$Arm no noppes stack trace or ticking exception in any start"
@@ -169,7 +197,7 @@ function Invoke-M10Arm([string]$Arm, [string]$Jar) {
     return @{ arm=$Arm; run=$runProof; verify=$verifyProof; unloaded=$unloaded; work=$script:work; fixtures=@{ run=(Get-JavaPrototypeHash $runCode); verify=(Get-JavaPrototypeHash $verifyCode) } }
 }
 try {
-    $lock=Enter-ScenarijZaklep -Pot (Join-Path $root '.scenarij.lock') -Kdo 'm101a-matrika'
+    $lock=Enter-ScenarijZaklep -Pot (Join-Path $root '.scenarij.lock') -Kdo 'm101c-matrika'
     Assert-JavaPrototype (@(Get-NavForeignJava).Count -eq 0) 'no foreign Java workload'
     $cp=Get-JavaPrototypeInputs $root
     $jdk=Join-Path $root '.tools/jdk8'
@@ -216,7 +244,7 @@ try {
         $ot=$o[$phase].trace; $kt=$k[$phase].trace
         foreach($name in @($ot.PSObject.Properties.Name)) { Assert-JavaPrototype ([string]$ot.$name -ceq [string]$kt.$name) "O = K $phase trace $name ($($ot.$name))" }
         Assert-JavaPrototype (@($ot.PSObject.Properties.Name).Count -eq @($kt.PSObject.Properties.Name).Count) "O = K $phase trace keys"
-        $diff=@(Get-M10MapDiff $o[$phase].aMap $k[$phase].aMap (@($positional)+$volatile))
+        $diff=@(Get-M10MapDiff (Get-M10EyeRolled $o[$phase].aMap) (Get-M10EyeRolled $k[$phase].aMap) (@($positional)+$volatile))
         $unexplained=@($diff | Where-Object { -not ($_ -cmatch '^Rw' -and $null -eq $o[$phase].aMap.$_) })
         Assert-JavaPrototype ($unexplained.Count -eq 0) ("O = K $phase NBT of M10_A except registered K-only Rw keys; unexplained: "+($unexplained -join ','))
         Write-Host "OK $phase K-only registered keys: $(@($diff) -join ',')"
@@ -224,9 +252,9 @@ try {
     Assert-JavaPrototype ($o.unloaded -eq $k.unloaded) "O = K IL5 nether unload observed ($($o.unloaded))"
     foreach($path in $hashes.Keys) { Assert-JavaPrototype ((Get-M10InputHash $path) -ceq $hashes[$path]) "unchanged protected input $path" }
     $condition='two arms on fresh flat worlds, one packaged Forge 14.23.5.2847 dedicated server each, no player; O = distribution 01Oct19 jar, K = workspace jar with -Drwprivzeto=1 (both arms get the property); same JS control (original CNPC API only) kept ticking by the original ChunkLoader job; bootstrap, run, save/stop/start, verify; nether via forge setdimension; no client'
-    @{ success=$true; package='M10.1a'; O=$o; K=$k; volatile=$volatile; logs=$logs; inputs=$hashes; condition=$condition } |
+    @{ success=$true; package='M10.1c'; O=$o; K=$k; volatile=$volatile; logs=$logs; inputs=$hashes; condition=$condition } |
         ConvertTo-Json -Depth 10 | Set-Content -LiteralPath "$prefix.json" -Encoding UTF8
-    Write-Host "M10.1a evidence: $prefix.json"
+    Write-Host "M10.1c evidence: $prefix.json"
     $exitCode=0
 } catch { Write-Host "FAIL $_" }
 finally {

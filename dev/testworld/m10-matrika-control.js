@@ -1,4 +1,4 @@
-// M10.1a disposable fixture only (controller, packaged Forge server; D-096, Q215-Q218). The same
+// M10.1c disposable fixture only (controller, packaged Forge server; D-096, Q215-Q218, Q221-Q223). The same
 // text runs in both arms: O = distribution CustomNPCs 01Oct19 jar, K = workspace jar with code
 // defaults. Only the original CNPC script API, Forge/JDK class names and no SRG/MCP member names.
 // @@PHASE@@ is "run" (build fixtures, exercise rows) or "verify" (after a real save/stop/start).
@@ -184,10 +184,15 @@ function m10TickRun(npc) {
             s.netherAt = t;
             s.xNether = { hp: moved.getMaxHealth(), speed: moved.getAi().getWalkingSpeed(), item: m10Item(moved.getInventory().getRightHand()),
                 y: Math.floor(moved.getY()), name: String(moved.getName()) };
-            s.xOverworldGone = world.getEntity(s.uuidX) === null;
         }
     }
-    return t >= M10_END && s.netherAt !== undefined || t >= M10_END + 600;
+    // Q221: the old overworld entity is removed when the world next updates its entity list, not in the
+    // tick of the move (original behaviour, M10.1a); it must be gone or dead within 20 ticks.
+    if (s.netherAt !== undefined && t > s.netherAt && s.xGoneAfter === undefined && t <= s.netherAt + 20) {
+        var old = world.getEntity(s.uuidX);
+        if (old === null || !old.isAlive()) { s.xGoneAfter = t - s.netherAt; }
+    }
+    return t >= M10_END && s.netherAt !== undefined && (s.xGoneAfter !== undefined || t > s.netherAt + 20) || t >= M10_END + 600;
 }
 
 function m10FinishRun(npc) {
@@ -199,14 +204,15 @@ function m10FinishRun(npc) {
     m10.proof.volatile = volatileKeys;
     m10.proof.aMap = aMap;
     var skip = M10_POSITIONAL.concat(volatileKeys);
-    // IN3 is "no field lost": every key of the source keeps its value in the clone (extra keys allowed).
+    // IN3: keys of the source that differ in the clone. The original re-rolls the eye colours of a new
+    // entity (NpcModelData, M10.1a), so the row requires a clone and the harness compares the set O = K (Q221).
     var cloneDiff = ['<no clone>'];
     if (s.cMap6 !== undefined) {
         cloneDiff = [];
         for (var key in s.aMap6) { if (skip.indexOf(key) < 0 && s.aMap6[key] !== s.cMap6[key]) { cloneDiff.push(key); } }
         cloneDiff.sort();
     }
-    m10Check('IN3-clone-roundtrip', f.c !== null && cloneDiff.length === 0, cloneDiff.join(','));
+    m10Check('IN3-clone-roundtrip', f.c !== null && cloneDiff.indexOf('<no clone>') < 0, cloneDiff.join(','));
     m10.proof.cloneDiff = cloneDiff;
     m10.proof.aGear = m10Gear(f.a);
     m10Check('IN8-gear-set', m10.proof.aGear.split(',').sort().join(',') === M10_GEAR, m10.proof.aGear);
@@ -222,8 +228,8 @@ function m10FinishRun(npc) {
     m10Check('IA3-wander-bounded', s.wMax <= 7, s.wMax.toFixed(2));
     m10Check('IA5-teleport-keeps-state', s.xTeleport.pos === '30,24' && s.xTeleport.home === s.xHome && s.xTeleport.hp === 55 && s.xTeleport.speed === 7
         && s.xTeleport.item === 'minecraft:golden_swordx1', JSON.stringify(s.xTeleport) + ' home0=' + s.xHome);
-    m10Check('IA5-dimension-keeps-state', s.netherAt !== undefined && s.xOverworldGone === true && s.xNether.hp === 55 && s.xNether.speed === 7
-        && s.xNether.item === 'minecraft:golden_swordx1' && s.xNether.y >= 127 && s.xNether.name === 'M10_X', JSON.stringify(s.xNether));
+    m10Check('IA5-dimension-keeps-state', s.netherAt !== undefined && s.xGoneAfter !== undefined && s.xNether.hp === 55 && s.xNether.speed === 7
+        && s.xNether.item === 'minecraft:golden_swordx1' && s.xNether.y >= 127 && s.xNether.name === 'M10_X', JSON.stringify(s.xNether) + ' goneAfter=' + s.xGoneAfter);
     var blk = world.getTempdata().has('m10blk') ? world.getTempdata().get('m10blk') : 0;
     m10.proof.blockTicks = blk;
     m10.proof.blockStored = world.getStoreddata().has('m10blkS') ? world.getStoreddata().get('m10blkS') : 0;

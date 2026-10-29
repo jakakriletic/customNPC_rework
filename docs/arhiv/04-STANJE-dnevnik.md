@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 185 → 1)
+# Arhiv: dnevnik sej (vnosi 186 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (186) — M10.0: raziskava release kandidata
+
+**Paket:** M10.0 (D-096, Q207–Q214) · **Stanje:** zaključen, raziskava brez kode in testov.
+Pokritost matrike M0.7 osvežena z dokazi M3.8b, M4.15c, M6 in M7 (npr. IS6/IS7, IL2, IK1 zeleni); ostane
+31 nepokritih ali delnih vrstic. Release se primerja z **distribucijskim** originalom na pakiranem strežniku
+z isto JS sledjo (D-096). M10.1 razdeljen na M10.1a (strežnik) in M10.1b (klient); vrstni red M10.1a →
+M10.1b → M10.5 → M10.4 (4 h) → M10.2 → M10.6 → M10.7. [Raziskava](../raziskave/M10.0-release-kandidat.md).
+Naslednji M10.1a.
 
 ### 2026-10-29 (185) — M7.5: animacijski hooki start/end/event
 
