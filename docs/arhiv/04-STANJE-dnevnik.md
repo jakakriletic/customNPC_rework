@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 194 → 1)
+# Arhiv: dnevnik sej (vnosi 195 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-30 (195) — M10.7: changelog
+
+**Paket:** M10.7 (Q246–Q247) · **Stanje:** zaključen, poskus 1, samo dokumentacija.
+Nov [`CHANGELOG.md`](../CHANGELOG.md) (angleško kot UPORABNIKI, Q246): spremembe obnašanja privzeto vklopljene,
+isti izid hitreje, popravki brez stikala, opt-in funkcije, združljivost in v2. Register dopolnjen s 5 manjkajočimi
+vrsticami (`RwAnimHooks`, `Animators`, Java/`RwJavaClasspath`, GUI `RwHitboxMode`, `RwLodStart`; Q247).
+Produkcija nespremenjena, brez testov (Q90). [Zapis](../meritve/2026-10-30-M10.7-changelog.md).
+Obseg v1 (Q92) nima več izvedljivih paketov: M10.3 blokiran (Q1), M10.1a/b/d in M10.4 v2. Release ni sprejet.
 
 ### 2026-10-30 (194) — M10.6: uporabniška dokumentacija
 

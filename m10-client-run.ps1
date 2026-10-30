@@ -1,4 +1,4 @@
-# M10.1d. Controller owns this foreground scenario and all child JVMs.
+# M10.1d, reused by P2 (Q251). Controller owns this foreground scenario and all child JVMs.
 # Dev MCP client/server (explicitly not packaged-client Q22 proof).
 # Same independent diagnostic mod in all cases, never a rework harness in O.
 param([ValidateSet('integrated','dedicated','original-client','original-server')][string]$Case='integrated')
@@ -8,7 +8,7 @@ $root=$PSScriptRoot
 . (Join-Path $root 'nav-meritve-lib.ps1')
 . (Join-Path $root 'dev/testworld/java-compiler-lib.ps1')
 $stamp=Get-Date -Format 'yyyy-MM-dd-HHmmss'
-$base=Join-Path $root "audit/m101d-$Case-$stamp"
+$base=Join-Path $root "audit/p2-klient-$Case-$stamp"
 $work=Join-Path $root "dev/run-m101d/$Case-$stamp"
 $world='m101d-world'
 $clientArm=if($Case -eq 'original-client'){'O'}else{'K'}
@@ -29,7 +29,7 @@ function Guard {
     if($foreign.Count){throw ('Foreign Java workload: '+($foreign -join '; '))}
 }
 function Send([string]$Text){$server.StandardInput.WriteLine($Text);$server.StandardInput.Flush()}
-function Wait-Marker($Proc,[string]$Log,[string]$Marker,[int]$Seconds=900){
+function Wait-Marker($Proc,[string]$Log,[string]$Marker,[int]$Seconds=300){
     $until=(Get-Date).AddSeconds($Seconds)
     do {
         $text=Read-JavaPrototypeLog $Log
@@ -71,7 +71,9 @@ function Stop-Server {
 }
 function Read-Checks([string]$Path,[string[]]$Keys){
     Assert-JavaPrototype (Test-Path -LiteralPath $Path) "proof exists: $Path"
-    $rows=@([IO.File]::ReadAllText($Path)|ConvertFrom-Json)
+    # P2: PS 5.1 ConvertFrom-Json emits a JSON array as one pipeline object; the inner
+    # parentheses enumerate it (attempt 1 counted 1 row instead of 13).
+    $rows=@(([IO.File]::ReadAllText($Path)|ConvertFrom-Json))
     Assert-JavaPrototype ($rows.Count -eq $Keys.Count) "exactly $($Keys.Count) assertions: $Path"
     Assert-JavaPrototype (@($rows|Where-Object {$_.ok -ne $true}).Count -eq 0) "all assertions passed: $Path"
     Assert-JavaPrototype ((@($rows.key|Sort-Object)-join '|') -ceq (@($Keys|Sort-Object)-join '|')) "exact assertion key set: $Path"
@@ -108,11 +110,19 @@ try{
     # non-Rw settings; rwPrivzeto=1 restores only the code defaults under test.
     Copy-Item -LiteralPath (Join-Path $run 'config') -Destination (Join-Path $work 'config') -Recurse
     if($optionsExisted){Copy-Item -LiteralPath $options -Destination $work}
+    # P2: a dedicated server only lets operators run commands (vanilla canUseCommand); the
+    # M10.1d original-client cell waited for ACK:SCENE because /m10probe was refused.
+    # Offline UUID = Java UUID.nameUUIDFromBytes("OfflinePlayer:"+name), no profile lookup.
+    $md5=[Security.Cryptography.MD5]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes('OfflinePlayer:M101D_Player'))
+    $md5[6]=($md5[6] -band 0x0f) -bor 0x30; $md5[8]=($md5[8] -band 0x3f) -bor 0x80
+    $hex=($md5|ForEach-Object {$_.ToString('x2')}) -join ''
+    $uuid=$hex.Substring(0,8)+'-'+$hex.Substring(8,4)+'-'+$hex.Substring(12,4)+'-'+$hex.Substring(16,4)+'-'+$hex.Substring(20,12)
+    [IO.File]::WriteAllText((Join-Path $work 'ops.json'),('[{"uuid":"'+$uuid+'","name":"M101D_Player","level":4,"bypassesPlayerLimit":false}]'),(New-Object Text.UTF8Encoding $false))
     foreach($pass in @('edit','verify')){
         if(-not $integrated){Start-Server $pass $world}
         $r=Start-Gradle 'runClient' $clientArm (Job $pass) "$pass-client"
         $client=$r.proc; $clientLog=$r.log
-        Wait-Exit $client $clientLog 1500; $client=$null
+        Wait-Exit $client $clientLog 600; $client=$null
         $proof=[IO.File]::ReadAllText("$base-$pass-client.json")|ConvertFrom-Json
         Assert-JavaPrototype ($proof.success -eq $true -and $proof.case -ceq $Case -and $proof.pass -ceq $pass) "$pass proof identity/success"
         $clientKeys=@('login-sync-dialogs','login-sync-quests','login-sync-factions','connection-mode')
@@ -147,6 +157,8 @@ try{
     }
     $combined=($logs|ForEach-Object {Read-JavaPrototypeLog $_}) -join "`n"
     Assert-JavaPrototype ($combined.Contains('Error with EnumPacketServer.null')) 'malformed packet actually reached CNPC handler'
+    # P2 (Q251): only the original client may need the second sync; the candidate must not.
+    if($clientArm -eq 'K'){Assert-JavaPrototype ($combined -cnotmatch 'M101D CLIENT RESYNC') 'candidate client used the real login sync'}
     Assert-JavaPrototype ($combined -cnotmatch 'M101D FAILED|NoSuchMethodError|NoSuchFieldError|AbstractMethodError|Exception ticking|Encountered an unexpected exception') 'no fixture/linkage/ticking failure'
     # The one deliberately malformed packet is expected to log a handled exception.
     $unexpected=@($combined -split "`n" | Where-Object {
@@ -156,9 +168,9 @@ try{
     Assert-JavaPrototype ($unexpected.Count -eq 0) ('no unexpected CNPC stack: '+($unexpected -join '; '))
     foreach($path in $hashes.Keys){Assert-JavaPrototype ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -ceq $hashes[$path]) "protected input unchanged: $path"}
     Assert-JavaPrototype ((Test-Path -LiteralPath $options) -eq $optionsExisted) 'main options presence unchanged'
-    @{success=$true;package='M10.1d';case=$Case;server=$serverArm;client=$clientArm;inputs=$hashes;proofs=$proofs;logs=$logs;work=$work;limits=@('MCP dev runtime, not packaged-client Q22','local offline player, no real authentication','no user modpack','texture registry stability and heap samples, not a heap leak proof')} |
+    @{success=$true;package='P2';case=$Case;server=$serverArm;client=$clientArm;inputs=$hashes;proofs=$proofs;logs=$logs;work=$work;limits=@('MCP dev runtime, not packaged-client Q22','local offline player, no real authentication','no user modpack','texture registry stability and heap samples, not a heap leak proof')} |
         ConvertTo-Json -Depth 12|Set-Content -LiteralPath "$base.json" -Encoding UTF8
-    Write-Host "M10.1d evidence: $base.json"; $exitCode=0
+    Write-Host "P2 client matrix evidence: $base.json"; $exitCode=0
 }catch{Write-Host "FAIL $_"}
 finally{
     if($null -ne $client){try{Stop-JavaPrototypeProcess $client}catch{Write-Host "Cleanup failure: $_";$exitCode=1}}

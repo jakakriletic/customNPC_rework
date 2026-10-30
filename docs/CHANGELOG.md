@@ -42,6 +42,9 @@ Measured against the 5 Oct baseline: 8 of 9 cells faster, idle-500 p95 MSPT −9
   on error. `SaveFile` flushes. The player save queue is bound to the world session (B1, B2).
 - Scripts: a nested event restores the previous `Current` (and `CurrentType` in JS) (M6.6);
   reload restores a JS tab after an error and a previously missing hook (M6.5).
+- Client: CustomNPCs packets are handed to the client thread before the player is looked up, so
+  the login sync (dialogs, quests, factions, player data) is no longer dropped when it arrives
+  before the join packet is processed (P2, Q251).
 
 ### New opt-in features — OFF by default
 

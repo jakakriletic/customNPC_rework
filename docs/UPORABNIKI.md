@@ -120,9 +120,15 @@ are not written to the config.
 
 Not proven, so not claimed:
 
-- **Client compatibility matrix not passed** (M10.1a/b/d closed without acceptance, Q233): login,
-  dialog/quest clicks, mail and mixed original/rework client–server pairs are not validated.
-  Server-side original vs rework comparison passed only on a partial matrix (M10.1c, Q225).
+- **Client compatibility matrix only partly passed** (P2, Q254): with the rework on both sides,
+  login sync, dialog/quest clicks, trader, bank, skin download failure and resource reload pass on
+  an integrated and a dedicated server; mail to an offline player and relogin pass on integrated
+  only. Mixed original/rework client–server pairs are not validated. An original client on a
+  dedicated server can miss the CustomNPCs login sync (an original bug, fixed only in the rework
+  client). Mail cannot be sent to a player who first joined after the server started until the
+  next restart (original behaviour). Tested on a dev client with an offline player, not a
+  packaged client (Q22). Server-side original vs rework comparison passed only on a partial
+  matrix (M10.1c, Q225).
 - **Long-run stability:** a 4 h soak with 200 NPCs ran without a server fault (49/49 samples, p95
   MSPT 3.28 → 3.47 ms), but the heap after full GC grew 168 → 242 MB (+44 %) while the test world
   kept expanding; a slow leak is not ruled out (P1). `/rwdiag chunks` is a diagnostic tool only.

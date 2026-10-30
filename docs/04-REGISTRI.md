@@ -24,6 +24,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
+| 2026-10-30 | Klient: `PacketHandlerClient` vsak CNPC paket uvrsti v nit klienta in igralca prebere šele tam; login sync (dialogi, questi, frakcije, playerdata), ki pride pred obdelavo `SPacketJoinGame`, se ne izgubi več. Brez igralca (odjava) se paket zavrže kot prej | P2, Q251 | brez (popravek) | vedno |
 | 2026-10-29 | Animacijski hooki `animationStart/animationEvent/animationEnd` za JS in Java: opazovalec enkrat na world tick (END) za animirane NPC-je moda `customnpcentities` 0.7.0; brez moda nič. Bere se ob zagonu | M7.5, D-095, Q194 | `RwAnimHooks` | **0** (brez poslušalca) |
 | 2026-10-29 | Skriptni API `Animators.of(npc)`/`IAnimator` (play, queue ≤ 32, stop, getterji) prek refleksije; brez moda `isAvailable()=false`, klici ne naredijo nič | M7.9, Q195 | brez (nov API) | vedno; učinek samo z modom |
 | 2026-10-29 | NPC skripte v Javi (`ScriptLanguage=Java`): isti hooki kot JS, `IPlayer`/`IWorld`, prevajanje z javac JDK 8, samo NPC skriptni GUI; brez sandboxa (zaupani avtorji) | M6.1–M6.11, D-090 | `RwJavaClasspath` | **prazno** (Java tab ustavi z jasno napako, JS nespremenjen) |
@@ -86,6 +87,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-10-30 | P2 klientska matrika, 2 poskusa | Na `b9d83659…` unit/build/package/compile in `p2-integrated-v2` PASS; `p2-dedicated-v2` edit 13/13 + 13/13 (login sync), FAIL na offline mailu igralcu iz iste seje (omejitev originala, Q254); O/K kraka nezahtevana (Q255); zaprt z omejitvijo | [zapis](meritve/2026-10-30-P2-klientska-matrika.md) |
 | 2026-10-30 | M10.5 rollback, poskus 2 | `m105-rollback-v2` PASS na `e4febe95…`: 58/58, backup/obnova 42/42 datotek bajtno enaka; K/O restarta ohranita vse 3 UUID-je in napredek, Java v O inertna, Rw ključi izpuščeni (Q236); sintetični obseg | [zapis](meritve/2026-10-30-M10.5-rollback.md) |
 | 2026-10-30 | M10.1d klient, 2 poskusa | Na `62940ab3…` prevod v2 PASS, integrated/dedicated/O-klient/O-strežnik v2 FAIL, nič PNG; zaprt brez sprejema, validacija v2 (Q233), produkcija ista | [zapis](meritve/2026-10-30-M10.1d-klient.md) |
 | 2026-10-29 | M10.1c strežniški O = K, poskus 1 | m101c-matrika-v1 PASS na `62d88a26…`: vsak krak 13/13 + 9/9, NBT/sledi enaki; IN3/IA3/IS3/IL5/IL6 delni (Q225), brez performance meritve | [zapis](meritve/2026-10-29-M10.1c-matrika.md) |

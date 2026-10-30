@@ -94,7 +94,10 @@ public final class ReleaseHarness {
     }
     static void spawn(MinecraftServer s,String name,int dialog,int role,double x) {
         if(actor(s,name)!=null) { return; }
+        // P2: load the target chunk first; a spawn into an unloaded chunk is silently refused.
+        s.getWorld(0).getChunkFromChunkCoords(net.minecraft.util.math.MathHelper.floor(x)>>4,0);
         EntityCustomNpc n=new EntityCustomNpc(s.getWorld(0)); n.display.setName(name); n.setPosition(x,4,0);
+        n.modelData.eyes.color=8339378; // P2: fixed palette colour instead of the random constructor pick
         n.ais.setMovingType(0); n.advanced.setRole(role); n.advanced.attackOtherFactions=false;
         if(dialog>0) { DialogOption o=new DialogOption(); o.dialogId=dialog; n.dialogs.put(0,o); }
         if(role==1) {
@@ -106,7 +109,7 @@ public final class ReleaseHarness {
         }
         if(role==3) { ((RoleBank)n.roleInterface).bankId=BANK; }
         if(name.endsWith("Skin")) { n.display.setSkinUrl("http://127.0.0.1:9/m101d-missing.png"); }
-        s.getWorld(0).spawnEntity(n);
+        if(!s.getWorld(0).spawnEntity(n)) { throw new IllegalStateException("spawn refused "+name); }
     }
     static void snapshot(PlayerData d,File f) throws IOException {
         CompressedStreamTools.write(d.getNBT(),f);
@@ -131,6 +134,10 @@ public final class ReleaseHarness {
                 }
                 EntityPlayerMP p=getCommandSenderAsPlayer(sender); PlayerData d=PlayerData.get(p);
                 switch(stage) {
+                    case "resync":
+                        // Original-client arm only (P2, Q251): the same login sync the server sent once.
+                        if(!"O".equals(job.getProperty("client"))) { throw new IllegalStateException("resync only for the original client"); }
+                        SyncController.syncPlayer(p); break;
                     case "setup":
                         p.setGameType(net.minecraft.world.GameType.SURVIVAL); p.setHealth(p.getMaxHealth());
                         p.connection.setPlayerLocation(0,4,3,180,0); p.experienceLevel=0;

@@ -36,7 +36,7 @@ public final class ReleaseClient {
     final Set<String> acks=new HashSet<>();
     String phase="MENU", afterAck, error="";
     long since=System.nanoTime(); int delay=20, skinFrames, reload;
-    boolean done; Set<String> textureKeys;
+    boolean done, resynced; long joinedAt; Set<String> textureKeys;
     public static void install() { MinecraftForge.EVENT_BUS.register(new ReleaseClient()); }
     void enter(String next,int wait) { phase=next; since=System.nanoTime(); delay=wait; System.out.println("M101D CLIENT PHASE "+phase); }
     void check(String key,boolean ok,String detail) {
@@ -61,7 +61,7 @@ public final class ReleaseClient {
         Minecraft mc=Minecraft.getMinecraft();
         try {
             if(!error.isEmpty()) { throw new IllegalStateException(error); }
-            if(System.nanoTime()-since>180000000000L) { throw new IllegalStateException("Timeout "+phase+" screen="+mc.currentScreen); }
+            if(System.nanoTime()-since>180000000000L) { throw new IllegalStateException("Timeout "+phase+" "+state(mc)); }
             if(delay-->0) { return; }
             if(phase.startsWith("ACK:")) {
                 if(acks.contains(afterAck)) { enter(phase.substring(4),20); } return;
@@ -79,16 +79,27 @@ public final class ReleaseClient {
                     }
                     enter("JOIN",100); break;
                 case "JOIN":
-                    if(mc.world==null||mc.player==null||mc.currentScreen!=null) { break; }
-                    // No explicit sync request here: this must be the actual login sync.
-                    if(!DialogController.instance.categories.containsKey(ReleaseHarness.CAT)||!QuestController.instance.categories.containsKey(ReleaseHarness.CAT)) { break; }
-                    check("login-sync-dialogs",DialogController.instance.categories.get(ReleaseHarness.CAT).dialogs.size()==3,"three dialogs");
-                    check("login-sync-quests",QuestController.instance.categories.get(ReleaseHarness.CAT).quests.containsKey(ReleaseHarness.QUEST),"quest present");
-                    check("login-sync-factions",!FactionController.instance.factions.isEmpty(),"faction categories");
+                    if(mc.world==null||mc.player==null||mc.currentScreen!=null) { joinedAt=0; break; }
+                    if(joinedAt==0) { joinedAt=System.nanoTime(); }
+                    // No explicit sync request for the candidate client: this must be the actual login sync.
+                    if(!DialogController.instance.categories.containsKey(ReleaseHarness.CAT)||!QuestController.instance.categories.containsKey(ReleaseHarness.CAT)) {
+                        // The original client drops CNPC packets that arrive before mc.player exists
+                        // (Q251). Only that arm may ask the server to send the same sync once more.
+                        if("O".equals(job.getProperty("client"))&&!resynced&&System.nanoTime()-joinedAt>10000000000L) {
+                            resynced=true; System.out.println("M101D CLIENT RESYNC "+state(mc)); command("resync","JOIN");
+                        } break;
+                    }
+                    String via=resynced?"after resync (original drops early packets, Q251)":"login sync";
+                    check("login-sync-dialogs",DialogController.instance.categories.get(ReleaseHarness.CAT).dialogs.size()==3,"three dialogs, "+via);
+                    check("login-sync-quests",QuestController.instance.categories.get(ReleaseHarness.CAT).quests.containsKey(ReleaseHarness.QUEST),"quest present, "+via);
+                    check("login-sync-factions",!FactionController.instance.factions.isEmpty(),"faction categories, "+via);
                     check("connection-mode",mc.isIntegratedServerRunning()==!job.containsKey("connect"),job.getProperty("case"));
                     command("setup","SCENE"); break;
                 case "SCENE":
-                    if(actor("Offer")==null||actor("Skin")==null) { break; }
+                    if("edit".equals(job.getProperty("pass"))) {
+                        boolean all=true; for(String a:new String[]{"Offer","Progress","Locked","Trader","Bank","Skin"}) { all&=actor(a)!=null; }
+                        if(!all) { break; }
+                    } else if(actor("Offer")==null||actor("Skin")==null) { break; }
                     mc.player.inventory.currentItem=8; // empty hand, never the NPC wand
                     if("verify".equals(job.getProperty("pass"))) { command("verify","MAIL"); }
                     else { interact("Locked"); enter("DENIED",40); } break;
@@ -174,6 +185,13 @@ public final class ReleaseClient {
                 default: throw new IllegalStateException(phase);
             }
         } catch(Exception|LinkageError e) { e.printStackTrace(); finish(false,e.toString()); }
+    }
+    String state(Minecraft mc) {
+        StringBuilder b=new StringBuilder("screen=").append(mc.currentScreen).append(" world=").append(mc.world!=null).append(" player=").append(mc.player!=null);
+        b.append(" dialogCats=").append(DialogController.instance.categories.keySet()).append(" questCats=").append(QuestController.instance.categories.keySet());
+        b.append(" factions=").append(FactionController.instance.factions.size()).append(" resynced=").append(resynced);
+        if(mc.world!=null) { b.append(" npcs="); for(Entity e:mc.world.loadedEntityList) { if(e instanceof EntityNPCInterface) { b.append(e.getName()).append(','); } } }
+        return b.toString();
     }
     EntityNPCInterface actor(String suffix) {
         Minecraft mc=Minecraft.getMinecraft();

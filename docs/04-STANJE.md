@@ -14,9 +14,9 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-30** (seja 196) — **P1 zaključen z omejitvijo** (Q248; Q249–Q250): 4 h soak brez padca, 49/49 vzorcev, p95 +6 %; heap po GC +44 % (odprto); [zapis](meritve/2026-10-30-P1-soak.md). Nočni razvoj ustavljen po odločitvi lastnika. |
+| Zadnja posodobitev | **2026-10-30** (seja 197) — **P2 zaključen z omejitvijo** (Q251–Q255): popravek izgubljenega login synca na klientu (integrated PASS, dedicated edit 13/13 + 13/13); dedicated offline mail padel na omejitvi originala, mešana O/K para v2; [zapis](meritve/2026-10-30-P2-klientska-matrika.md). Prej (seja 196) — **P1 zaključen z omejitvijo** (Q248; Q249–Q250): 4 h soak brez padca, 49/49 vzorcev, p95 +6 %; heap po GC +44 % (odprto); [zapis](meritve/2026-10-30-P1-soak.md). Nočni razvoj ustavljen po odločitvi lastnika. |
 | Trenutni milestone | **M10 — release** (v1 obseg Q92); M7 v1 zaključen (M7.0, M7.V, M7.9, M7.5; D-095); M6 Scripting v1 zaključen (M6.0–M6.12) po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
-| Naslednji paketi | **Popravki omejitev v1.0 P1–P8** po [Q248](10-OBSEG-V1.md): P1 soak (zaključen z omejitvijo heapa) → P2 klientska matrika → P3 `RwPathResume`/`RwFlyLineOfSight` → P4 formacije → P5 Java GUI/classpath → P6 GUI `RwFlightMode` → P7 animacije → P8 Baritone; vsak posodobi `UPORABNIKI.md` §6. Po P8 čakamo odločitev lastnika o izdaji (brez v2). Q90/Q92 veljata: uspešnih serij ne ponavljamo, največ 2 poskusa/paket. M10.3/IO4 blokirana (Q1). |
+| Naslednji paketi | **Popravki omejitev v1.0 P1–P8** po [Q248](10-OBSEG-V1.md): P1 soak (zaključen z omejitvijo heapa) → P2 klientska matrika (zaključen z omejitvijo) → **P3 naslednji:** `RwPathResume`/`RwFlyLineOfSight` → P4 formacije → P5 Java GUI/classpath → P6 GUI `RwFlightMode` → P7 animacije → P8 Baritone; vsak posodobi `UPORABNIKI.md` §6. Po P8 čakamo odločitev lastnika o izdaji (brez v2). Q90/Q92 veljata: uspešnih serij ne ponavljamo, največ 2 poskusa/paket. M10.3/IO4 blokirana (Q1). |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **224** datotek `.java` v `src/patch` (M7.5: `rework/anim` +3 + `AnimationHooksProbe`), od tega **154** rework in 3 dostopni razredi v `net/minecraft/…`; build/package PASS na `e80e2658…`: **78** pričakovanih spremenjenih vnosov (77 razredov originala + manifest coremoda) |
 | Testi | **534** metod `@Test` v **85** datotekah; `testOriginal` **45** preverjanj. M7.5 m75-api-v1 6.998 preverjanj, m75-hooks-on/off-v1 in m62-packaged-v3 PASS na `e80e2658…`; M7.9 m79-api-v1/m79-absent-v1 PASS na `1a2a2b75…`; M6.11 m611 12/12 PASS na `e3e30ca1…`; M6.8 unit/build/package in m68 27/27 PASS na `36620163…`, produkcija ista, brez ponavljanja (Q90/Q92). FA sprejem M4.14b ostaja neuspešen (D-079); smoke/protokol dodatno 20/16 trditev |
@@ -55,7 +55,20 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 194 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 195 → 1, novejši zgoraj).*
+
+### 2026-10-30 (197) — P2: klientska matrika (zaključen z omejitvijo)
+
+**Paket:** P2 (Q248, Q251–Q255) · **Stanje:** zaključen z omejitvijo po poskusu 2. Na b9d83659… zeleni unit/build/package,
+`p2-compile-v2` in `p2-integrated-v2`; `p2-dedicated-v2` je fazo edit prestal (klient 13/13 z login syncem, strežnik 13/13),
+padel pa na koraku offline maila: original napolni `nameUUIDs` samo ob zagonu, zato `addPlayerMessage` za igralca iz iste
+seje vrže NPE (omejitev originala, harness v2). O/K kraka nista zahtevana (isti korak, Q255). Popravek Q251 ostane.
+Naslednji P3. Poskus 1: unit/build/package/compile
+zeleni; integrated padel samo na štetju trditev v harnessu (PS 5.1 `ConvertFrom-Json`, Q253), vseh 13 + 13 trditev `ok`.
+Vzroki padcev M10.1d iz logov: originalni `PacketHandlerClient` zavrže CNPC pakete pred `mc.player` (izgubljen login sync,
+JOIN timeout na dedicated K-klientu), dedicated zavrne ukaze ne-opu (O-klient ACK:SCENE), spawn v nenaložen chunk
+(integrated `Missing Locked`). Popravek produkcije brez stikala (Q251), harness determinističen (Q252).
+[Zapis](meritve/2026-10-30-P2-klientska-matrika.md).
 
 ### 2026-10-30 (196) — P1: popravek soaka (zaključen z omejitvijo)
 
@@ -65,11 +78,3 @@ brez NPE ob stop (Q241: samo naloženi svetovi + `FMLServerStoppingEvent`). Soak
 `rwdiag chunks on 1 60`, podatka `maxDrift`/`forcedChunks`. Zahtevani unit/build/package, `m104-harness-v3`, `m104-soak-v3`.
 [Zapis](meritve/2026-10-30-P1-soak.md).
 
-### 2026-10-30 (195) — M10.7: changelog
-
-**Paket:** M10.7 (Q246–Q247) · **Stanje:** zaključen, poskus 1, samo dokumentacija.
-Nov [`CHANGELOG.md`](CHANGELOG.md) (angleško kot UPORABNIKI, Q246): spremembe obnašanja privzeto vklopljene,
-isti izid hitreje, popravki brez stikala, opt-in funkcije, združljivost in v2. Register dopolnjen s 5 manjkajočimi
-vrsticami (`RwAnimHooks`, `Animators`, Java/`RwJavaClasspath`, GUI `RwHitboxMode`, `RwLodStart`; Q247).
-Produkcija nespremenjena, brez testov (Q90). [Zapis](meritve/2026-10-30-M10.7-changelog.md).
-Obseg v1 (Q92) nima več izvedljivih paketov: M10.3 blokiran (Q1), M10.1a/b/d in M10.4 v2. Release ni sprejet.
