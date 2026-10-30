@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 190 → 1)
+# Arhiv: dnevnik sej (vnosi 191 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,18 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-30 (191) — M10.5: rollback vaja sprejeta
+
+**Paket:** M10.5 (Q234–Q236) · **Stanje:** sprejet, poskus 2.
+Controller `m105-rollback-v2` PASS na `e4febe95…`: 6 faz **58/58**, 7 čistih stopov,
+backup/obnova **42/42** datotek z istimi SHA256; obe varnostni kopiji nespremenjeni.
+K restart in oba jar-only O zagona ohranijo 3 UUID-je, opremo/storeddata, quest/dialog in cel
+CNPC playerdata. Java teče v K, v O ostane source brez izvajanja; O izpusti oba Rw ključa.
+Polna obnova vrne prvotni NPC/napredek; poznejše spremembe izgubi, original vrne B3.
+Poskus 1 padel zaradi classpath fixture, v2 preveri ista privzeta stikala. Produkcija/harness
+po PASS ista; brez ponovitev (Q90). [Dokazi in meje](../meritve/2026-10-30-M10.5-rollback.md).
+Sintetično, brez prave prijave/GUI/companion ali Q1; release ostane odprt. Naslednji M10.4 soak 4 h (Q92/D-096).
 
 ### 2026-10-30 (190) — M10.1d: klientski harness
 

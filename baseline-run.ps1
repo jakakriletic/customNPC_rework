@@ -13,6 +13,13 @@
 #     .\baseline-run.ps1                          # po protokolu
 #     .\baseline-run.ps1 -Razprseno               # spawn razprsen (glej scenarij, odlocitev D-017)
 #     .\baseline-run.ps1 -Ponovitev 2 -Seconds 60 -WarmupSeconds 20   # preverba skripte, ~45 min
+#     .\baseline-run.ps1 -Privzeto 1 -Primerjaj audit\m26-baseline-2026-10-05-1426.json   # M10.2
+#
+# M10.2 (D-096, Q242): -Privzeto 1 postavi ORG_GRADLE_PROJECT_rwPrivzeto=1 kot matrika-run.ps1, zato
+# runServer tece s stikali Rw* na privzetih vrednostih kode; vsaka ponovitev mora imeti v logu
+# serverja vrstico 'RWPRIVZETO 1 ' (B4). -Primerjaj doda primerjavo z obstojecim baselinom:
+# odtis celic (B5) in alarm p95 MSPT (mediana +5 % in razpona locena). Alarm je podatek za
+# sodbo paketa, ne izhodna koda.
 #
 # Izid:
 #     audit\m26-baseline-<cas>\p<i>\<varianta>-<N>.json   zapisi celic vseh ponovitev
@@ -21,7 +28,8 @@
 
 param([int]$Ponovitev = 3, [int]$Seconds = 300, [int]$WarmupSeconds = 120, [switch]$Razprseno,
       [string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][string[]]$CountsIn = @('50', '200', '500'),
-      [switch]$Vztrajaj, [switch]$AcceptEula)
+      [switch]$Vztrajaj, [switch]$AcceptEula,
+      [ValidateSet(-1, 0, 1)][int]$Privzeto = -1, [string]$Primerjaj = '')
 
 $ErrorActionPreference = 'Stop'
 $root  = $PSScriptRoot
@@ -57,8 +65,20 @@ function F([double]$v) {
     return ('{0:N2}' -f $v)
 }
 
+$prejsnjiPrivzeto = $env:ORG_GRADLE_PROJECT_rwPrivzeto
+if ($Privzeto -ge 0) { $env:ORG_GRADLE_PROJECT_rwPrivzeto = [string]$Privzeto }
+else { Remove-Item Env:ORG_GRADLE_PROJECT_rwPrivzeto -ErrorAction SilentlyContinue }
+
 try {
     Step 1 'Priprava'
+    Write-Host ("  stikala: {0}" -f $(switch ($Privzeto) { 1 { 'privzete vrednosti kode (-Privzeto 1)' } 0 { 'config dev\run (-Privzeto 0)' } default { 'config dev\run (brez preglasitve)' } }))
+    $ref = $null
+    if ($Primerjaj -ne '') {
+        $refPot = if ([System.IO.Path]::IsPathRooted($Primerjaj)) { $Primerjaj } else { Join-Path $root $Primerjaj }
+        Check ("primerjalni baseline obstaja ({0})" -f $Primerjaj) (Test-Path $refPot)
+        if ($failures.Count) { throw 'Manjka primerjalni baseline.' }
+        $ref = Get-Content -Raw -LiteralPath $refPot | ConvertFrom-Json
+    }
     # M2.6b: 27. 9. je drug baseline (zapis -1231) stekel med prvim (-1230). Lasten zaklep,
     # ker perf-run.ps1 med ponovitvami svoj zaklep sprosti (vmes tece testworld.ps1).
     $zaklep = Enter-ScenarijZaklep -Pot (Join-Path $root '.baseline.lock') -Kdo 'baseline-run'
@@ -104,7 +124,16 @@ try {
         $p = Start-Process -FilePath $psExe -ArgumentList $args2 -PassThru -Wait -NoNewWindow -RedirectStandardOutput $log -RedirectStandardError ($log + '.err')
         $minut = ((Get-Date) - $t0).TotalMinutes
         Write-Host ("  izhodna koda {0}, {1:N1} min, izpis {2}" -f $p.ExitCode, $minut, $log)
-        $zagoni += [pscustomobject]@{ I = $i; Koda = $p.ExitCode; Dir = $dir }
+        $srvLog = Join-Path $audit 'm24-perf.log'
+        $privzetoVrstica = ''
+        if ((Test-Path $srvLog) -and (Get-Item $srvLog).LastWriteTime -ge $t0) {
+            Copy-Item $srvLog (Join-Path $serija ("p{0}-server.log" -f $i)) -Force
+            if ($Privzeto -ge 0) {
+                $v = Select-String -LiteralPath $srvLog -SimpleMatch ("RWPRIVZETO {0} " -f $Privzeto) | Select-Object -First 1
+                if ($v) { $privzetoVrstica = ($v.Line -replace '^.*(RWPRIVZETO)', '$1'); Write-Host ("  {0}" -f $privzetoVrstica) }
+            }
+        }
+        $zagoni += [pscustomobject]@{ I = $i; Koda = $p.ExitCode; Dir = $dir; Privzeto = $privzetoVrstica }
         if ($p.ExitCode -ne 0 -and -not $Vztrajaj) {
             Write-Host '  Ponovitev je padla; naslednje so izpuscene (-Vztrajaj jih vseeno pozene).'
             break
@@ -114,6 +143,9 @@ try {
     Step 3 'B1-B3: ponovitve in odtis'
     foreach ($z in $zagoni) { Check ("B1: ponovitev {0} je uspela (koda {1})" -f $z.I, $z.Koda) ($z.Koda -eq 0) }
     Check ("B1: ponovitev je {0} (zahtevano {1})" -f $zagoni.Count, $Ponovitev) ($zagoni.Count -eq $Ponovitev)
+    if ($Privzeto -ge 0) {
+        foreach ($z in $zagoni) { Check ("B4: log serverja ponovitve {0} ima 'RWPRIVZETO {1} '" -f $z.I, $Privzeto) ($z.Privzeto -ne '') }
+    }
 
     $zdruzeno = [ordered]@{}
     foreach ($c in $cells) {
@@ -147,17 +179,40 @@ try {
         $zdruzeno[$c] = [ordered]@{ odtis = $o0; velicine = $vel; nasiceno = $(if ($vel.Contains('nasiceno')) { $vel['nasiceno'].max } else { 0 }) }
     }
 
+    $primerjava = [ordered]@{}
+    if ($null -ne $ref) {
+        Step '3b' ("B5 in alarm p95: primerjava z {0}" -f $Primerjaj)
+        foreach ($c in $zdruzeno.Keys) {
+            $rc = $ref.celice.$c
+            if ($null -eq $rc) { Check ("B5: celica {0} je v primerjalnem baselinu" -f $c) $false; continue }
+            $ro = ConvertTo-Slovar $rc.odtis; $ko = $zdruzeno[$c].odtis
+            $razlike = @(); foreach ($k in $odtisKljuci) { if ("$($ko[$k])" -ne "$($ro[$k])") { $razlike += ("{0}: {1} proti {2}" -f $k, $ko[$k], $ro[$k]) } }
+            Check ("B5: celica {0} ima enak odtis kot primerjalni baseline" -f $c) ($razlike.Count -eq 0)
+            if ($razlike.Count) { $razlike | Select-Object -First 3 | ForEach-Object { Write-Host "      $_" } }
+            $k95 = $zdruzeno[$c].velicine['mspt.p95']; $r95 = $rc.velicine.'mspt.p95'
+            if ($null -eq $k95 -or $null -eq $r95) { continue }
+            $rel = if ([double]$r95.mediana -gt 0) { ([double]$k95.mediana / [double]$r95.mediana) - 1 } else { [double]::NaN }
+            $nad5 = ($rel -gt 0.05); $loceno = ([double]$k95.min -gt [double]$r95.max)
+            $alarm = ($nad5 -and $loceno)
+            $primerjava[$c] = [ordered]@{ kandidat = $k95.mediana; kMin = $k95.min; kMax = $k95.max; baseline = $r95.mediana
+                                          bMin = $r95.min; bMax = $r95.max; rel = [math]::Round($rel, 4); nad5 = $nad5; loceno = $loceno; alarm = $alarm }
+            Write-Host ("  {0,-12} p95 {1} ({2}-{3}) proti {4} ({5}-{6}): {7:+0.0;-0.0} %{8}" -f $c, (F $k95.mediana), (F $k95.min), (F $k95.max),
+                (F $r95.mediana), (F $r95.min), (F $r95.max), (100 * $rel), $(if ($alarm) { '  ALARM' } elseif ($nad5) { '  nad 5 %, razpona se prekrivata' } else { '' }))
+        }
+    }
+
     Step 4 'Zapis baseline'
     $jsonPot = Join-Path $audit ("m26-baseline-{0}.json" -f $stamp)
-    $out = [ordered]@{ shema = 1; paket = 'M2.6'; zagon = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'); ponovitev = $zagoni.Count
+    $out = [ordered]@{ shema = 1; paket = $(if ($Privzeto -eq 1) { 'M10.2' } else { 'M2.6' }); privzeto = $Privzeto; primerjaj = $Primerjaj; primerjava = $primerjava; zagon = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'); ponovitev = $zagoni.Count
                        sekund = $Seconds; ogrevanje = $WarmupSeconds; razprseno = $(if ($Razprseno) { 1 } else { 0 })
                        uspeh = ($failures.Count -eq 0); padle = @($failures); celice = $zdruzeno }
     [System.IO.File]::WriteAllText($jsonPot, ((($out | ConvertTo-Json -Depth 8) -replace "`r`n", "`n") + "`n"), (New-Object System.Text.UTF8Encoding($false)))
     Write-Host ("  {0}" -f $jsonPot)
 
     $datum = Get-Date -Format 'yyyy-MM-dd'
-    $md = Join-Path $root ("docs\meritve\baseline-{0}.md" -f $datum)
-    if (Test-Path $md) { $md = Join-Path $root ("docs\meritve\baseline-{0}.md" -f $stamp) }
+    $mdIme = if ($Privzeto -eq 1) { 'baseline-kandidat' } else { 'baseline' }
+    $md = Join-Path $root ("docs\meritve\{0}-{1}.md" -f $mdIme, $datum)
+    if (Test-Path $md) { $md = Join-Path $root ("docs\meritve\{0}-{1}.md" -f $mdIme, $stamp) }
     $L = @()
     $L += ("# Baseline originala (M2.6), {0}" -f $datum)
     $L += ''
@@ -183,6 +238,17 @@ try {
     }
     $L += ''
     $L += 'MSPT v ms. GC ms/s: cas zbiranja smeti na sekundo meritve. Alok. MB/s: alokacije server niti.'
+    if ($primerjava.Count) {
+        $L += ''
+        $L += ('Primerjava p95 MSPT z `{0}` (alarm: mediana +5 % in razpona locena):' -f $Primerjaj)
+        $L += ''
+        $L += '| celica | kandidat | baseline | razlika | alarm |'
+        $L += '|---|---:|---:|---:|---|'
+        foreach ($c in $primerjava.Keys) {
+            $x = $primerjava[$c]
+            $L += ('| {0} | {1} ({2}-{3}) | {4} ({5}-{6}) | {7:+0.0;-0.0} % | {8} |' -f $c, (F $x.kandidat), (F $x.kMin), (F $x.kMax), (F $x.baseline), (F $x.bMin), (F $x.bMax), (100 * $x.rel), $(if ($x.alarm) { '**da**' } else { 'ne' }))
+        }
+    }
     [System.IO.File]::WriteAllText($md, (($L -join "`n") + "`n"), (New-Object System.Text.UTF8Encoding($false)))
     $L | ForEach-Object { Write-Host "  $_" }
     Write-Host ''
@@ -196,4 +262,8 @@ catch {
     Write-Host "NAPAKA: $_"
     Write-Host 'M2.6 NEUSPESNO.'
     exit 1
+}
+finally {
+    if ($null -ne $prejsnjiPrivzeto) { $env:ORG_GRADLE_PROJECT_rwPrivzeto = $prejsnjiPrivzeto }
+    else { Remove-Item Env:ORG_GRADLE_PROJECT_rwPrivzeto -ErrorAction SilentlyContinue }
 }
