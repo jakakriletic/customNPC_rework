@@ -9,12 +9,26 @@ export function tail(file, bytes = 4 * 1024 * 1024) {
   try { const size = fs.fstatSync(fd).size; const b = Buffer.alloc(Math.min(size, bytes)); fs.readSync(fd, b, 0, b.length, Math.max(0, size - b.length)); return b.toString('utf8'); }
   finally { fs.closeSync(fd); }
 }
+// M10.4 measures four full hours; its registered 14400 s window cannot also cover
+// Forge bootstrap, 120 s warmup and clean shutdown. An explicit, narrowly scoped
+// literal grants 30 min overhead. Fresh workers load this without restarting the
+// running controller. Stop/CANCEL still interrupts immediately; other budgets stay exact.
+export function operationTimeoutSeconds(spec) {
+  const allowance = spec.test?.parameters?.SetupAllowanceSeconds;
+  if (allowance === undefined) return spec.timeoutSeconds;
+  const script = String(spec.test?.script || '').replaceAll('\\', '/').split('/').at(-1);
+  if (spec.type !== 'test' || script !== 'm104-soak-run.ps1' || spec.timeoutSeconds !== 14400 || allowance !== 1800) {
+    throw new Error('Setup allowance is reserved for the fixed M10.4 four-hour soak');
+  }
+  return spec.timeoutSeconds + allowance;
+}
 export async function execute(spec) {
   const releaseAwake = spec.test?.desktop ? await lock(spec.directory, { keepAwake: true }) : async () => {};
   try { return await executeChild(spec); }
   finally { await releaseAwake(); }
 }
 async function executeChild(spec) {
+  const timeoutSeconds = operationTimeoutSeconds(spec);
   const output = path.join(spec.directory, 'stdout.log');
   const errorOutput = path.join(spec.directory, 'stderr.log');
   if (spec.profile) {
@@ -39,7 +53,7 @@ async function executeChild(spec) {
         else child.kill('SIGTERM');
       }
     };
-    timer = setTimeout(() => { timedOut = true; killOwnedChild(); }, spec.timeoutSeconds * 1000);
+    timer = setTimeout(() => { timedOut = true; killOwnedChild(); }, timeoutSeconds * 1000);
     cancelTimer = setInterval(() => {
       if (!cancelled && fs.existsSync(path.join(spec.directory, 'CANCEL'))) { cancelled = true; killOwnedChild(); }
     }, 250);

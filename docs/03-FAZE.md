@@ -580,7 +580,7 @@ CustomNPC+ repozitorija se ne prenesejo.
 | ~~M10.1d~~ | **Zaprt brez sprejema 30. 10. (Q233), validacija v2:** oba poskusa porabljena, prevod v2 PASS, vse 4 funkcionalne celice FAIL; [zapis](meritve/2026-10-30-M10.1d-klient.md). Naslednji M10.5 → M10.4 (4 h) → M10.2 → M10.6 → M10.7 po Q92; release merila ostanejo odprta | M |
 | M10.2 | Meritve proti baselineu iz M2.6, vse scenarije | S |
 | M10.3 | Test na **kopiji** uporabnikovega pravega sveta | M |
-| M10.4 | **Naslednji po Q92/D-096:** soak **4 h** z dejansko aktivnostjo in trend merili iz M10.0 | S |
+| ~~M10.4~~ | **Zaprt brez sprejema 30. 10. (Q240), polni soak v2:** soak-v2 padel po 2 h 25 min, ker so bojni pari odtavali in diag chunkloader dosegel 2000 chunkov; [zapis](meritve/2026-10-30-M10.4-soak.md). Naslednji M10.2 → M10.6 → M10.7 po Q92 | S |
 | ~~M10.5~~ | **Sprejet 30. 10., poskus 2 (Q236):** [rollback](meritve/2026-10-30-M10.5-rollback.md), 6 faz 58/58, obnova 42/42 datotek; sintetični obseg, izguba Rw ključev in vrnitev B3 izrecni; release ostane odprt | S |
 | M10.6 | Uporabniška dokumentacija: nove nastavitve, migracija, znane omejitve | M |
 | M10.7 | Changelog z eksplicitnim seznamom sprememb obnašanja | S |

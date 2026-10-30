@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 189 → 1)
+# Arhiv: dnevnik sej (vnosi 190 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,17 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-30 (190) — M10.1d: klientski harness
+
+**Paket:** M10.1d (Q226–Q233) · **Stanje:** zaprt brez sprejema, validacija v2 (Q92).
+Ločen klientski testni mod proti originalnemu API, brez spremembe produkcije. Na `62940ab3…`
+controller prevod v2 PASS; integrated FAIL (`Missing Locked`), dedicated/original-server FAIL
+(`Timeout JOIN`), original-client FAIL (`Timeout ACK:SCENE`). Povezave/prijave potrjene v logih,
+vendar nobena celica ni dosegla offline/restart/verify, nič PNG; nobena nova vsebinska vrstica
+ni sprejeta. Oba poskusa porabljena, brez popravka/ponavljanja/tretjega poskusa (Q90/Q92).
+[Dokazi in omejitve](../meritve/2026-10-30-M10.1d-klient.md). Harness in razsodba se arhivirata s commit/push;
+celoten release sprejem ni potrjen. Naslednji neodvisni paket M10.5 rollback po D-096/Q92.
 
 ### 2026-10-29 (189) — M10.1c: strežniški O = K
 
