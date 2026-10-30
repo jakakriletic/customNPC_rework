@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 191 → 1)
+# Arhiv: dnevnik sej (vnosi 192 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,20 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-30 (192) — M10.4: soak zaprt brez sprejema
+
+**Paket:** M10.4 (Q237–Q241) · **Stanje:** zaprt brez sprejema po 2 poskusih; polni soak v2.
+Izoliran packaged scenarij: 200 delovnih NPC (80 patrulja, 80 boj, 40 JS timerji) + opazovalec,
+120 s ogrevanja in 4 h neprekinjene meritve; save-all vsakih 5 min. Preveri vsakega NPC,
+GC/heap, niti, urni MSPT p95 ter dejansko asinhrono vrsto in zadnjo datoteko na disku.
+Controller worker za ta test dobi izrecnih 1800 s režijskega časa nad 14400 s meritve,
+brez spremembe drugih rokov ali Stop/CANCEL. Poskus 1: harness-v1 PASS, soak-v1 FAIL v bootstrapu na standardnih FML
+`[main/ERROR]` vrsticah (harness, Q239). Poskus 2: harness-v2 PASS, soak-v2 FAIL po 8.702 s pri vzorcu 30
+(`Worker set changed`); vzorci 0–29 PASS, 420/421 asinhronih zapisov, niti stalno 36 od 50 min.
+Vzrok harness: 76/80 borcev odtavalo ~1.500 blokov, diag chunkloader brez sproščanja dosegel 2000 chunkov;
+isto kopičenje pokvari trend heap/MSPT. Diag stop NPE ob ustavitvi zabeležen (Q241). Polni soak v2 (Q240).
+[Dokazi in meje](../meritve/2026-10-30-M10.4-soak.md). Naslednji M10.2 → M10.6 → M10.7 po Q92/D-096. Q1/release ostajata odprta.
 
 ### 2026-10-30 (191) — M10.5: rollback vaja sprejeta
 

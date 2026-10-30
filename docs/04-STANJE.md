@@ -14,9 +14,9 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-30** (seja 193) — **M10.2 sprejet** (Q242–Q243): kandidat s privzetimi stikali proti baselineu 5. 10., 9/9 celic brez alarma p95, 8/9 hitrejših (idle-500 −92,9 %); [dokazi in meje](meritve/2026-10-30-M10.2-baseline.md). Produkcija nespremenjena; starih serij ne ponavljamo (Q90). |
+| Zadnja posodobitev | **2026-10-30** (seja 194) — **M10.6 zaključen** (Q244–Q245): uporabniška dokumentacija [`UPORABNIKI.md`](UPORABNIKI.md) — nastavitve, migracija/rollback, znane omejitve; [zapis](meritve/2026-10-30-M10.6-dokumentacija.md). Produkcija nespremenjena; starih serij ne ponavljamo (Q90). |
 | Trenutni milestone | **M10 — release** (v1 obseg Q92); M7 v1 zaključen (M7.0, M7.V, M7.9, M7.5; D-095); M6 Scripting v1 zaključen (M6.0–M6.12) po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
-| Naslednji paketi | **M10.6 → M10.7** (M10.2 sprejet Q242; M10.4 zaprt brez sprejema, soak v2 Q240; M10.5 sprejet Q236; M10.1d zaprt brez sprejema, validacija v2 Q233; M10.1c primerjalno sprejet Q225) po [Q92](10-OBSEG-V1.md) in D-096. Uspešnih serij se ne ponavlja (Q90). Privzeto izklopljeno brez cenovne meje, največ 2 poskusa/paket. M4.15a potrditev 2000 nedosegljivih odložena; Q22/OptiFine/Entity Culling za release, M10.3 blokiran (Q1). |
+| Naslednji paketi | **M10.7** changelog (M10.6 zaključen Q244; M10.2 sprejet Q242; M10.4 zaprt brez sprejema, soak v2 Q240; M10.5 sprejet Q236; M10.1d zaprt brez sprejema, validacija v2 Q233; M10.1c primerjalno sprejet Q225) po [Q92](10-OBSEG-V1.md) in D-096. Uspešnih serij se ne ponavlja (Q90). Privzeto izklopljeno brez cenovne meje, največ 2 poskusa/paket. M4.15a potrditev 2000 nedosegljivih odložena; Q22/OptiFine/Entity Culling za release, M10.3 blokiran (Q1). |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **224** datotek `.java` v `src/patch` (M7.5: `rework/anim` +3 + `AnimationHooksProbe`), od tega **154** rework in 3 dostopni razredi v `net/minecraft/…`; build/package PASS na `e80e2658…`: **78** pričakovanih spremenjenih vnosov (77 razredov originala + manifest coremoda) |
 | Testi | **534** metod `@Test` v **85** datotekah; `testOriginal` **45** preverjanj. M7.5 m75-api-v1 6.998 preverjanj, m75-hooks-on/off-v1 in m62-packaged-v3 PASS na `e80e2658…`; M7.9 m79-api-v1/m79-absent-v1 PASS na `1a2a2b75…`; M6.11 m611 12/12 PASS na `e3e30ca1…`; M6.8 unit/build/package in m68 27/27 PASS na `36620163…`, produkcija ista, brez ponavljanja (Q90/Q92). FA sprejem M4.14b ostaja neuspešen (D-079); smoke/protokol dodatno 20/16 trditev |
@@ -44,7 +44,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | [M7.0 raziskava](raziskave/M7.0-animacije-integracija.md) (D-095); [M7.V zagon](meritve/2026-10-29-M7.V-entities-zagon.md) 37/37 klipov (Q199); [M7.9 `Animators`](meritve/2026-10-29-M7.9-animator-api.md) (Q202); [M7.5 hooki](meritve/2026-10-29-M7.5-animacijski-hooki.md) (Q206); v1 zaključen; M7.8 reload v2 |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
-| M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b/d brez sprejema; celoten release odprt. M10.4 soak v2 (Q240). Naslednji M10.6; M10.3/IO4 blokirana (Q1) |
+| M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b/d brez sprejema; celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). Naslednji M10.7; M10.3/IO4 blokirana (Q1) |
 | M11 Poveljevanje prek zemljevida | ni začeto — **zadnja faza** (D-026, 6. 10.) | R10; vhodni pogoj M4.14b, M4.10, M5; Q14 |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
@@ -55,7 +55,15 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 191 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 192 → 1, novejši zgoraj).*
+
+### 2026-10-30 (194) — M10.6: uporabniška dokumentacija
+
+**Paket:** M10.6 (Q244–Q245) · **Stanje:** zaključen, poskus 1, samo dokumentacija.
+Nova [`UPORABNIKI.md`](UPORABNIKI.md) (angleško, Q244): namestitev, 27 globalnih `Rw…` ključev v treh skupinah,
+per-NPC NBT, ukazi, Java trust politika, migracija/rollback po M10.5 in znane omejitve (Q245: nesprejeto kot nedokazano).
+Vrednosti preverjene proti `@ConfigProp` v `CustomNpcs.java`. Produkcija nespremenjena, brez testov (Q90).
+[Zapis](meritve/2026-10-30-M10.6-dokumentacija.md). Naslednji M10.7 (changelog). Q1/release ostajata odprta.
 
 ### 2026-10-30 (193) — M10.2: kandidat proti baselineu sprejet
 
@@ -67,17 +75,3 @@ p95 MSPT nižji v 8/9 celicah (idle-500 44,0 → 3,15 ms, skripte-500 47,2 → 9
 skripte-50 +8,2 % v šumu (razpona se prekrivata). Brez alarma, zato brez ponovnega originala (Q210/Q243).
 Meja: dev runServer kot 5. 10., drift stroja ni ločen. [Dokazi](meritve/2026-10-30-M10.2-baseline.md).
 Naslednji M10.6 → M10.7 po Q92/D-096. Q1/release ostajata odprta.
-
-### 2026-10-30 (192) — M10.4: soak zaprt brez sprejema
-
-**Paket:** M10.4 (Q237–Q241) · **Stanje:** zaprt brez sprejema po 2 poskusih; polni soak v2.
-Izoliran packaged scenarij: 200 delovnih NPC (80 patrulja, 80 boj, 40 JS timerji) + opazovalec,
-120 s ogrevanja in 4 h neprekinjene meritve; save-all vsakih 5 min. Preveri vsakega NPC,
-GC/heap, niti, urni MSPT p95 ter dejansko asinhrono vrsto in zadnjo datoteko na disku.
-Controller worker za ta test dobi izrecnih 1800 s režijskega časa nad 14400 s meritve,
-brez spremembe drugih rokov ali Stop/CANCEL. Poskus 1: harness-v1 PASS, soak-v1 FAIL v bootstrapu na standardnih FML
-`[main/ERROR]` vrsticah (harness, Q239). Poskus 2: harness-v2 PASS, soak-v2 FAIL po 8.702 s pri vzorcu 30
-(`Worker set changed`); vzorci 0–29 PASS, 420/421 asinhronih zapisov, niti stalno 36 od 50 min.
-Vzrok harness: 76/80 borcev odtavalo ~1.500 blokov, diag chunkloader brez sproščanja dosegel 2000 chunkov;
-isto kopičenje pokvari trend heap/MSPT. Diag stop NPE ob ustavitvi zabeležen (Q241). Polni soak v2 (Q240).
-[Dokazi in meje](meritve/2026-10-30-M10.4-soak.md). Naslednji M10.2 → M10.6 → M10.7 po Q92/D-096. Q1/release ostajata odprta.
