@@ -32,5 +32,8 @@ controller, the owner has authorized continuous autonomous development until Sto
   default 0 have no cost gate (measure cost once as data); at most 2 attempts per package,
   then accept under the switch with noted limits or defer to v2; keep docs short (one
   measurement note + one 04-STANJE entry per package).
+- Owner decision Q248: the v1.0 scope is done; next work is the ordered fix list P1–P8 in
+  `docs/10-OBSEG-V1.md` ("Popravki omejitev v1.0"). Each fix updates `docs/UPORABNIKI.md` §6.
+  After P8 wait for the owner's release decision; do not start v2 packages.
 - Keep state/docs current; commit only your package and push without force. Native CLI
   permissions are configured per process by the controller, not by changing global settings.

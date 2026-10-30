@@ -20,6 +20,27 @@ brišemo jih, ostanejo v `03-FAZE.md` kot plan za v2.
 | 7 | ~~M7.0~~ → ~~M7.V~~ → ~~M7.9~~ → ~~M7.5~~ | [raziskava M7.0](raziskave/M7.0-animacije-integracija.md) zaključena 29. 10. (D-095, Q192–Q197): uskladitev verzije CNPC (M7.V, 01Oct19, [zaključen](meritve/2026-10-29-M7.V-entities-zagon.md) Q199), script API `Animators.of(npc)` ([zaključen](meritve/2026-10-29-M7.9-animator-api.md) Q202), hooki start/end/event ([zaključen](meritve/2026-10-29-M7.5-animacijski-hooki.md) Q206); M7 v1 zaključen, naslednji M10; M7.8 reload in `blendTo` v2 |
 | 8 | ~~M10.0~~ → ~~M10.1a~~ → ~~M10.1b~~ → ~~M10.1c~~ → ~~M10.1d~~ → ~~M10.5~~ → ~~M10.4~~ → ~~M10.2~~ → ~~M10.6~~ → ~~M10.7~~ | D-096/Q92: soak 4 h; M10.3 blokiran (Q1). M10.1a/b zaprta brez sprejema (Q220/Q223); [M10.1c](meritve/2026-10-29-M10.1c-matrika.md) primerjalno sprejet, O/K 13/13 + 9/9, IN3/IA3/IS3/IL5/IL6 delni (Q225). [M10.1d](meritve/2026-10-30-M10.1d-klient.md) zaprt brez sprejema po 2 poskusih, vse 4 celice v2 FAIL, nadaljnja validacija v2 (Q233); release ni sprejet. [M10.5](meritve/2026-10-30-M10.5-rollback.md) sprejet na poskusu 2, 58/58 in obnova 42/42 datotek (Q236). [M10.4](meritve/2026-10-30-M10.4-soak.md) zaprt brez sprejema po 2 poskusih, soak 2 h 25 min do izgube NPC zaradi diag meje chunkov, polni soak v2 (Q240). [M10.2](meritve/2026-10-30-M10.2-baseline.md) sprejet, 9/9 celic brez alarma p95 proti 5. 10. (Q242). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) uporabniška dokumentacija [`UPORABNIKI.md`](UPORABNIKI.md) zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) [`CHANGELOG.md`](CHANGELOG.md) zaključen (Q246). Obseg v1 brez izvedljivih paketov; release ni sprejet |
 
+## Popravki omejitev v1.0 (Q248, odločitev lastnika 30. 10. 2026)
+
+Obseg v1.0 je izčrpan (M10.7), izdaja pa ni sprejeta zaradi omejitev v `docs/UPORABNIKI.md` §6.
+Pred izdajo se odpravijo omejitve, ki jih lahko odpravimo brez lastnika, po tem vrstnem redu.
+Pravila spodaj (Q90, Q92) veljajo naprej; po popravku kode se zahtevana serija sme ponoviti
+(nova koda), uspešne serije na nespremenjeni kodi pa ne. Vsak zaključen popravek posodobi §6.
+
+| # | Paket | Cilj |
+|---|---|---|
+| P1 | soak (M10.4) | popravi diag nalagalnik chunkov (sprošča chunke, brez NPE ob stop, Q241) in zanos bojnih parov (Q240); 4 h soak zelen |
+| P2 | klientska matrika (M10.1) | determinističen scenarij (barva oči ipd.), prijava, dialog/quest kliki, mail, mešani O/K pari; matrika zelena |
+| P3 | `RwPathResume` / `RwFlyLineOfSight` | vogal in labirint (Q82) |
+| P4 | formacije | izpolni merila D-079 |
+| P5 | Java scripting | Java tudi v player/forge/block/door/item GUI; samodejni `RwJavaClasspath` |
+| P6 | `RwFlightMode` | GUI za izbiro načina |
+| P7 | animacije | walk/idle/death hooki, dogodki ustavljenega koraka, `blendTo`, `/npcanim reload` |
+| P8 | Baritone | odprte cenovne meje M4.15a |
+
+Ne v tem sklopu: M10.3/IO4 (pravi modpack, blokiran na Q1). Po P1–P8 upravljalnik ne začne v2
+paketov, ampak počaka na odločitev lastnika o izdaji.
+
 ## Prestavljeno v v2 (po izdaji v1.0)
 
 M3.10, M4.5, M4.6, M4.7, M4.8, M4.11, M4.13, M4.14c, M4.14d, M5.10, M7.11, M9 (chatbot),
