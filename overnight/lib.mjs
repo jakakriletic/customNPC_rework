@@ -211,7 +211,9 @@ export function decision(value, c) {
     for (const [key, v] of Object.entries(parameters)) {
       if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(key) || !(Array.isArray(v) ? v.every(x => ['string', 'number', 'boolean'].includes(typeof x)) : ['string', 'number', 'boolean'].includes(typeof v))) throw new Error('Neveljavni literalni parametri');
     }
-    if (!Number.isInteger(t.timeoutSeconds) || t.timeoutSeconds < 1 || t.timeoutSeconds > 14400 || typeof t.desktop !== 'boolean') throw new Error('Neveljavna meja testa');
+    if (!Number.isInteger(t.timeoutSeconds) || t.timeoutSeconds < 1 || typeof t.desktop !== 'boolean') throw new Error('Neveljavna meja testa');
+    // Owner time budget (Q250): no new test may run longer than 30 minutes.
+    if (t.timeoutSeconds > 1800) throw new Error(`Meja testa ${t.id} presega 1800 s (Q250: test najvec 30 min)`);
     // Every new scenario uses desktop guards; only the known non-client scripts can opt out.
     const desktop = !['dev.ps1', 'verify-package.ps1'].includes(path.relative(c.projectRoot, script).replaceAll('\\', '/')) || t.desktop;
     definitions[t.id] = { script, parameters, desktop, quiet: true, timeoutSeconds: t.timeoutSeconds };

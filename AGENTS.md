@@ -35,5 +35,8 @@ controller, the owner has authorized continuous autonomous development until Sto
 - Owner decision Q248: the v1.0 scope is done; next work is the ordered fix list P1–P8 in
   `docs/10-OBSEG-V1.md` ("Popravki omejitev v1.0"). Each fix updates `docs/UPORABNIKI.md` §6.
   After P8 wait for the owner's release decision; do not start v2 packages.
+- Owner time budget Q250: no test longer than 30 min (controller rejects `timeoutSeconds` > 1800),
+  ~30 min of tests per package, 1 performance repetition (3 only when turning a switch on by
+  default), one-pass baselines, soak at most 1 h (rule 5 in `docs/10-OBSEG-V1.md`).
 - Keep state/docs current; commit only your package and push without force. Native CLI
   permissions are configured per process by the controller, not by changing global settings.

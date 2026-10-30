@@ -63,6 +63,13 @@ M14 (instanciran izris). Odprti Q-ji teh paketov (npr. Q82 vogal → M4.5, Q84) 
    `04-REGISTRI.md`, `03-FAZE.md` in README samo ob zaključku paketa, ena vrstica. Brez vmesnih
    »nadaljevanje seje« razdelkov, ki ponavljajo stanje.
 
+5. **Časovni proračun testov (Q250, 30. 10.).** Od 25. 10. so testi porabili ~23 h, AI ~10 h;
+   največ dolge serije (perf ×3 po ~25 min, baseline 3,3 h, soak 4 h). Odslej: noben test ne
+   traja več kot 30 min (upravljalnik zavrne `timeoutSeconds` > 1800), na paket skupaj ~30 min
+   testov; prednost imajo unit testi in funkcionalni preizkusi pod 5 min; primerjava
+   zmogljivosti 1 ponovitev (3 samo ob privzetem vklopu stikala); baseline en prehod; soak
+   največ 1 h. Že uspešen rezultat se ne meri znova.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela

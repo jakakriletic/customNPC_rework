@@ -51,6 +51,9 @@ test('new scenarios are literal, guarded, persisted and cannot replace acceptanc
   fs.appendFileSync(path.join(c.projectRoot, 'scenario.ps1'), '\nWrite-Output CHANGED'); assert.notEqual(fingerprint(c), first);
   assert.throws(() => decision(plan('test', { testIds: ['new-client'], testDefinitions: [item] }), c));
   assert.throws(() => decision(plan('test', { testIds: ['outside'], testDefinitions: [{ ...item, id: 'outside', script: '../outside.ps1' }] }), c));
+  // Q250: tests longer than 30 minutes are rejected.
+  assert.throws(() => decision(plan('test', { testIds: ['long'], testDefinitions: [{ ...item, id: 'long', timeoutSeconds: 1801 }] }), c), /Q250/);
+  assert.ok(decision(plan('test', { testIds: ['short'], testDefinitions: [{ ...item, id: 'short', timeoutSeconds: 1800 }] }), c).definitions.short);
 });
 test('research completion requires actual documents and unchanged source with no pending tests', t => {
   const c = config(t); fs.writeFileSync(path.join(c.projectRoot, 'research.md'), '# Findings');
