@@ -22,6 +22,7 @@ import noppes.npcs.constants.EnumScriptType;
 import noppes.npcs.controllers.IScriptHandler;
 import noppes.npcs.controllers.ScriptContainer;
 import noppes.npcs.controllers.ScriptController;
+import noppes.npcs.rework.script.AutoClasspath;
 import noppes.npcs.rework.script.BytecodeCache;
 import noppes.npcs.rework.script.JdkScriptCompiler;
 import noppes.npcs.rework.script.JavaSources;
@@ -38,6 +39,9 @@ import noppes.npcs.rework.script.SourceMap;
  * generation keeps running with the error in the tab console; without one nothing runs (M6.2).
  * M6.5 (B5): diagnostics name the tab or include file of each unit; a runtime error stops the tab
  * until the next reload or source change, and a swapped-in generation clears errored on every tab.
+ * P5 (Q263, Q264): the same branch serves the player, forge, block, door and item handlers. Their
+ * tabs bind public one-event methods by hook name (JavaHookBinder.bindByName); a call checks that
+ * the method accepts the event instance, otherwise the tab stops with hook.signature.
  */
 public final class JavaNpcScripts {
     /** Same interned literal as ScriptContainer's private monitor, so JS and Java tabs never
@@ -78,6 +82,16 @@ public final class JavaNpcScripts {
     private Generation current;
     /** Last rejected input, so an unchanged broken source is not recompiled on every event. */
     private Generation rejected;
+    /** NPC handler: hooks of the ScriptHooks registry; otherwise by name (P5). */
+    private final boolean npc;
+
+    /** NPC handler (DataScript). */
+    public JavaNpcScripts() { this(true); }
+
+    private JavaNpcScripts(boolean npc) { this.npc = npc; }
+
+    /** P5: player, forge, block, door or item handler. */
+    public static JavaNpcScripts handler() { return new JavaNpcScripts(false); }
 
     public void run(List<ScriptContainer> containers, IScriptHandler handler, EnumScriptType type, Event event) {
         run(containers, handler, type.function, event);
@@ -106,6 +120,10 @@ public final class JavaNpcScripts {
             if (tab == null || container.errored) { continue; }
             Method hook = tab.hooks.get(name);
             if (hook == null) { continue; }
+            if (event != null && !hook.getParameterTypes()[0].isInstance(event)) {
+                fail(container, handler, "hook.signature: Hook " + hook + " does not accept " + event.getClass().getName().replace('$', '.'), true);
+                continue;
+            }
             synchronized (LOCK) {
                 ScriptContainer previous = ScriptContainer.Current;
                 ScriptContainer.Current = container;
@@ -139,13 +157,13 @@ public final class JavaNpcScripts {
         Tab[] tabs = new Tab[containers.size()];
         for (int i = 0; i < tabs.length; i++) {
             if (sources.get(i).isEmpty()) { continue; }
-            tabs[i] = load(containers.get(i), handler, sources.get(i), current == null, i + 1);
+            tabs[i] = load(containers.get(i), handler, sources.get(i), current == null, i + 1, npc);
             if (tabs[i] == null) { return null; }
         }
         return new Generation(loaded, containers, Collections.unmodifiableList(sources), tabs);
     }
 
-    private static Tab load(ScriptContainer container, IScriptHandler handler, Map<String, String> sources, boolean first, int index) {
+    private static Tab load(ScriptContainer container, IScriptHandler handler, Map<String, String> sources, boolean first, int index, boolean npc) {
         StringBuilder report = new StringBuilder();
         Map<String, String> origins = new LinkedHashMap<>();
         try {
@@ -175,7 +193,7 @@ public final class JavaNpcScripts {
             }
             ClassLoader loader = JdkScriptCompiler.newLoader(code, ICustomNpc.class.getClassLoader());
             Class<?> script = loader.loadClass(main);
-            Map<String, Method> hooks = JavaHookBinder.bind(script, ScriptHooks.java());
+            Map<String, Method> hooks = npc ? JavaHookBinder.bind(script, ScriptHooks.java()) : JavaHookBinder.bindByName(script);
             Object instance = script.getConstructor().newInstance();
             if (report.length() > 0) { container.appandConsole(report.toString().trim()); }
             return new Tab(loader, instance, hooks, origins);
@@ -214,12 +232,16 @@ public final class JavaNpcScripts {
         return compiler;
     }
 
-    /** RwJavaClasspath: a file holding the compiler classpath, or the classpath itself. */
+    /** RwJavaClasspath: auto (P5, this runtime), a file holding the compiler classpath, or the classpath itself. */
     private static String classpath() throws Exception {
         String value = CustomNpcs.RwJavaClasspath.trim();
         if (value.isEmpty()) {
             throw new JavaHookBinder.BindException("java.classpath.unset",
-                    "Set RwJavaClasspath in CustomNpcs.cfg to the API/game classpath for Java scripts; JS is unchanged");
+                    "Set RwJavaClasspath in CustomNpcs.cfg to auto or to the API/game classpath for Java scripts; JS is unchanged");
+        }
+        if (AutoClasspath.isAuto(value)) {
+            try { return AutoClasspath.get(); }
+            catch (Exception e) { throw new JavaHookBinder.BindException("java.classpath.auto", "RwJavaClasspath=auto failed: " + e + "; JS is unchanged"); }
         }
         Path file = Paths.get(value);
         return Files.isRegularFile(file) ? new String(Files.readAllBytes(file), StandardCharsets.UTF_8).trim() : value;

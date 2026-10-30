@@ -147,6 +147,7 @@ import noppes.npcs.rework.far.CommandRwFar;
 import noppes.npcs.rework.far.FarRegistry;
 import noppes.npcs.rework.far.FarServer;
 import noppes.npcs.rework.anim.AnimationHooks;
+import noppes.npcs.rework.script.AutoClasspath;
 import noppes.npcs.rework.script.hooks.JavaLanguage;
 
 @Mod(modid="customnpcs", name="CustomNpcs", version="1.12", acceptedMinecraftVersions="1.12, 1.12.1, 1.12.2")
@@ -222,7 +223,7 @@ public class CustomNpcs {
     public static int RwHitboxShieldWeight = 200;
     @ConfigProp(info="Rework M3.8: extra shield items for smart hitbox, comma separated registry names (mod:item). Items extending ItemShield or named *shield*, *buckler*, *pavise* are detected automatically")
     public static String RwHitboxShieldItems = "";
-    @ConfigProp(info="Rework M6.2 (D-090): compiler classpath for NPC scripts with ScriptLanguage=Java (server side, trusted script authors only; needs a JDK 8 with javac). Either a file that holds the classpath or the classpath itself; it must contain the CustomNPCs API and the game classes of this exact runtime. Empty = a Java tab stops with a clear error; JS and the other languages are not affected. Default empty")
+    @ConfigProp(info="Rework M6.2 (D-090): compiler classpath for scripts with ScriptLanguage=Java (NPC, player, forge, block, door and item scripts; server side, trusted script authors only; needs a JDK 8 with javac). auto (P5) = built from this exact runtime: every game, Forge and mod file of the game class loader, and in production a once-generated jar of the game classes with their runtime (SRG) names under customnpcs-java/. Otherwise a file that holds the classpath or the classpath itself; it must contain the CustomNPCs API and the game classes of this exact runtime. Empty = Java is not offered and a Java tab stops with a clear error; JS and the other languages are not affected. Default empty")
     public static String RwJavaClasspath = "";
     @ConfigProp(info="Rework M7.5 (D-095, Q194): animation script hooks for animated NPCs of the optional mod customnpcentities 0.7.0. With 1 the server observes each animated NPC once per world tick (end) and calls the NPC script hooks animationStart, animationEvent (timed clip events such as hit or sound) and animationEnd, in JS and Java. Without the optional mod nothing is tracked. Read at startup. 0 = original (no listener, no hooks), 1 = hooks. Default 0")
     public static int RwAnimHooks = 0;
@@ -383,6 +384,14 @@ public class CustomNpcs {
     public void setAboutToStart(FMLServerAboutToStartEvent event) {
         Availability.scoreboardValues.clear();
         Server = event.getServer();
+        // P5: build the auto Java classpath before the first tick, never on a script event.
+        if (EnableScripting && AutoClasspath.isAuto(RwJavaClasspath)) {
+            try {
+                AutoClasspath.get();
+            } catch (Exception e) {
+                LogWriter.error("RWJAVA auto classpath failed; Java tabs report it, JS is unchanged", e);
+            }
+        }
         WorldSaveSession.begin(CustomNpcs.getWorldSaveDirectory());
         ChunkController.instance.clear();
         FactionController.instance.load();

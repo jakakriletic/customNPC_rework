@@ -72,7 +72,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwNavBackend` | 0 | permits NPCs with per-NPC `RwNavBackend=1` to use Baritone (needs the `npcbaritone` library) |
 | `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks (needs `customnpcentities`; read at startup) |
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
-| `RwJavaClasspath` | empty | enables Java NPC scripts (see §4) |
+| `RwJavaClasspath` | empty | enables Java scripts (see §4); `auto` = classpath built from the running server |
 
 ### Per-NPC settings (saved in the NPC)
 
@@ -95,10 +95,14 @@ are not written to the config.
   there is no sandbox. On servers with untrusted players set `OpsOnly=true` and trust every op,
   or restrict scripting and all other edit/import paths with your permission system. The original
   open default is not a security boundary.
-- Needs a JDK 8 (`javac`) and `RwJavaClasspath` set by hand to a file or classpath containing the
-  CustomNPCs API and the game classes of this exact runtime. Empty = Java tabs stop with a clear
-  error; JS is unaffected.
-- Only the NPC script GUI offers Java (player, forge, block, door and item scripts keep the original languages).
+- Needs a JDK 8 (`javac`) and `RwJavaClasspath`. `auto` (recommended) uses everything the server
+  loaded (Forge, mods, libraries); on a packaged server it writes once
+  `customnpcs-java/minecraft-<key>.jar` with the game classes under SRG names (~2 s at first start,
+  reused after restart, rebuilt when mods change). A file or classpath set by hand still works.
+  Empty = Java tabs stop with a clear error; JS is unaffected.
+- NPC, player, forge, block, door and item script GUIs offer Java. A handler hook is a public method
+  named after the hook with one event parameter; a wrong event type stops the tab with `hook.signature`.
+  Projectile scripts stay JS only.
 - API: [API.md](api/API.md), hooks and examples: [HOOKS.md](api/HOOKS.md), IDE template:
   [scripts/java/template](../scripts/java/template/README.md). v1 covers NPC, player and world;
   items, blocks, quests, dialogs and factions in Java are planned for v2.
@@ -149,7 +153,9 @@ Not proven, so not claimed:
   were not done.
 - `RwAnimHooks` observes once per tick; events of a step that a script stops later in the same
   tick are not reported; no walk/idle/death hooks; `blendTo` and `/npcanim reload` are v2.
-- `RwJavaClasspath` is manual; automatic modpack classpath is v2.
+- Java scripts (P5, Q263–Q268): `RwJavaClasspath=auto` and Java in the player/forge/block/door/item
+  GUIs were tested on a packaged Forge server without other mods. Classes that other mods change
+  with coremods or mixins are seen in their Forge form; no real modpack was tested (Q1).
 - `RwFlightMode` has no GUI; Momentum flight mode is v2.
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in

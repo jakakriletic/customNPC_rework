@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraftforge.fml.common.eventhandler.Event;
 import noppes.npcs.rework.script.NpcScript;
 import noppes.npcs.rework.script.JavaSources;
 
@@ -59,6 +60,38 @@ public final class JavaHookBinder {
                             + hook.name + "(" + hook.event.getName().replace('$', '.') + " event)");
                 }
                 bound.put(hook.name, method);
+            }
+        }
+        return bound;
+    }
+
+    /** P5 (Q264): player, forge, block, door and item tabs. Their hook names are many (EnumScriptType
+     * functions; forge names follow ScriptHooks.forgeHookName), so every public instance method with
+     * one Event (or wider) parameter is a hook under its own name; JavaNpcScripts checks the event
+     * instance on each call. Other methods are helpers. Two such methods with one name are an error. */
+    public static Map<String, Method> bindByName(Class<?> script) throws BindException {
+        int mod = script.getModifiers();
+        if (!Modifier.isPublic(mod) || Modifier.isAbstract(mod) || script.isInterface()) {
+            throw new BindException("unit.notInstantiable", script.getName() + " must be a public, non-abstract class");
+        }
+        Map<String, Method> bound = new LinkedHashMap<>();
+        Map<String, String> seen = new LinkedHashMap<>();
+        for (Class<?> c = script; c != null && c != Object.class && c != NpcScript.class; c = c.getSuperclass()) {
+            Method[] methods = c.getDeclaredMethods();
+            Arrays.sort(methods, (a, b) -> a.toString().compareTo(b.toString()));
+            for (Method method : methods) {
+                int m = method.getModifiers();
+                Class<?>[] params = method.getParameterTypes();
+                if (method.isSynthetic() || method.isBridge() || !Modifier.isPublic(m) || Modifier.isStatic(m) || params.length != 1
+                        || !(Event.class.isAssignableFrom(params[0]) || params[0].isAssignableFrom(Event.class))) { continue; }
+                String signature = Arrays.toString(params);
+                String previous = seen.get(method.getName());
+                if (previous != null) {
+                    if (previous.equals(signature)) { continue; } // overridden in a subclass
+                    throw new BindException("hook.ambiguous", "Hook " + method.getName() + " is declared more than once in " + script.getName());
+                }
+                seen.put(method.getName(), signature);
+                bound.put(method.getName(), method);
             }
         }
         return bound;

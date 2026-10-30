@@ -107,4 +107,36 @@ public class ScriptHooksTest {
         assertEquals("hook.ambiguous", bindError(im + "public class Tab { public void tick(NpcEvent.UpdateEvent e) {} public void tick(Object e) {} }"));
         assertEquals("unit.notInstantiable", bindError("public abstract class Tab { }"));
     }
+
+    private static String byNameError(String source) throws Exception {
+        try { JavaHookBinder.bindByName(compile(source)); }
+        catch (JavaHookBinder.BindException e) { return e.code; }
+        return null;
+    }
+
+    /** P5 (Q264): player/forge/block/door/item tabs bind every public one-event method by name. */
+    @Test public void handlerTabsBindPublicEventMethodsByName() throws Exception {
+        Class<?> c = compile("import noppes.npcs.api.event.BlockEvent;\nimport net.minecraftforge.fml.common.eventhandler.Event;\n"
+                + "public class Tab {\n public void timer(BlockEvent.TimerEvent e) {}\n public void worldEventSave(Event e) {}\n"
+                + " public void any(Object e) {}\n public void helper(String s) {}\n void hidden(BlockEvent e) {}\n"
+                + " public static void util(BlockEvent e) {}\n public void two(BlockEvent a, BlockEvent b) {}\n}");
+        Map<String, Method> bound = JavaHookBinder.bindByName(c);
+        assertEquals("[any, timer, worldEventSave]", new java.util.TreeSet<>(bound.keySet()).toString());
+        assertEquals(noppes.npcs.api.event.BlockEvent.TimerEvent.class, bound.get("timer").getParameterTypes()[0]);
+    }
+
+    @Test public void handlerTabsRejectOverloadsAndAbstract() throws Exception {
+        String im = "import noppes.npcs.api.event.BlockEvent;\n";
+        assertEquals("hook.ambiguous", byNameError(im + "public class Tab { public void timer(BlockEvent.TimerEvent e) {} public void timer(BlockEvent.InitEvent e) {} }"));
+        assertEquals("unit.notInstantiable", byNameError("public abstract class Tab { }"));
+        Class<?> c = compile(im + "public class Tab extends Base { public void timer(BlockEvent.TimerEvent e) {} }\n"
+                + "class Base { public void timer(BlockEvent.TimerEvent e) {} public void init(BlockEvent.InitEvent e) {} }");
+        Map<String, Method> bound = JavaHookBinder.bindByName(c);
+        assertEquals(c, bound.get("timer").getDeclaringClass());
+        assertTrue(bound.containsKey("init"));
+    }
+
+    @Test public void onlyProjectileStaysWithoutJava() {
+        assertEquals(Collections.singletonList("projectile"), ScriptHooks.V1_EXCLUDED);
+    }
 }

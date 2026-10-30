@@ -20,9 +20,9 @@ import org.apache.commons.lang3.StringUtils;
 public final class ScriptHooks {
     /** Value of the existing NBT key ScriptLanguage that selects the Java branch of the NPC handler. */
     public static final String JAVA = "Java";
-    /** Handlers whose Java branch is outside v1 (Q92); their JS hooks stay the original. */
-    public static final List<String> V1_EXCLUDED = Collections.unmodifiableList(Arrays.asList(
-            "player", "block", "door", "item", "projectile", "forge"));
+    /** Handlers whose Java branch is outside v1 (Q92); their JS hooks stay the original.
+     * P5 (Q263): player, block, door, item and forge got the Java branch; projectile has no GUI. */
+    public static final List<String> V1_EXCLUDED = Collections.unmodifiableList(Arrays.asList("projectile"));
 
     public static final class Hook {
         /** Null for a named hook outside EnumScriptType (M7.5 animation hooks). */

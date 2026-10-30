@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 197 → 1)
+# Arhiv: dnevnik sej (vnosi 198 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,14 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-30 (198) — P3: vogal in labirint (sprejet pod stikali)
+
+**Paket:** P3 (Q248, Q82, Q256) · **Stanje:** sprejet pod stikali, privzeto 0, poskus 1. Na a7b11f8d… zeleni unit/build/package
+in `p3-letenje-orig/nad/vidnad-v1` (ena ponovitev, Q250). Vzrok vogala: vanilla meja 200 vozlišč; `RwPathFinder` (kopija
+`PathFinder` z nastavljivo mejo) ob obnovi brez napredka enkrat išče s 1024 vozlišči. Pri 0 180/180 = M4.16; z obema stikaloma
+vogal A 0/6 → **6/6**, labirint 6/6, ostalo = M4.17 v4. Samo `RwPathResume` vogala ne reši (8,83 do cilja). Cena 753–817 µs na
+široko iskanje (podatek). Naslednji P4. [Zapis](meritve/2026-10-30-P3-vogal-labirint.md).
 
 ### 2026-10-30 (197) — P2: klientska matrika (zaključen z omejitvijo)
 

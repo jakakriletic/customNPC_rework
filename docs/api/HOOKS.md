@@ -2,11 +2,11 @@
 
 Generated from `ScriptHooks.java()` in registry order; do not edit.
 
-Java 8; trusted authors only, with process permissions and no sandbox. JS remains the default. Java dispatch is NPC-only. Public no-argument constructor required; one instance/loader per NPC, tab and generation. Only overridden NpcScript hooks are bound. Tabs run in their existing order, then the API bus; cancellation and missing hooks keep the existing handler behavior.
+Java 8; trusted authors only, with process permissions and no sandbox. JS remains the default. NPC tabs bind registry hooks; player, forge, block, door and item tabs bind public one-event methods by hook name (P5). Public no-argument constructor required; one instance/loader per NPC, tab and generation. Only overridden NpcScript hooks are bound. Tabs run in their existing order, then the API bus; cancellation and missing hooks keep the existing handler behavior.
 
 All examples are separate Java files, named after their public class. `public void` with the exact event type is the recommended typed signature. The plain-class binder also accepts a parameter supertype; overloads are rejected. Payload fields, mutability and inheritance are in [API.md](API.md). `event.setCanceled(true)` is valid only for a cancelable actual event; role subtypes differ. Cancelable metadata below describes the declared event type, not every runtime subtype. No frequency guarantee follows from the registry order.
 
-Forge string hooks remain outside NPC Java v1: the existing rule is uncapitalize(simple binary event name with `$` removed). Excluded Java handlers: `[player, block, door, item, projectile, forge]`.
+Forge string hooks (forge Java tabs, P5) follow the existing rule is uncapitalize(simple binary event name with `$` removed). Excluded Java handlers: `[projectile]`.
 
 ## init
 

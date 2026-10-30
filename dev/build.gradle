@@ -356,6 +356,8 @@ task testOriginal(type: Test) {
     exclude '**/CompileScriptsTest.class'
     // M6.12: Java entry in the existing language selection is new.
     exclude '**/JavaLanguageTest.class'
+    // P5: auto Java classpath is new.
+    exclude '**/AutoClasspathTest.class'
     // M7.9: optional animation API and queue policy have no original counterpart.
     exclude '**/ClipQueueTest.class'
     // M7.5: animation hook tracker is new.

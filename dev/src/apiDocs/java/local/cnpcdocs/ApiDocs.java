@@ -24,7 +24,7 @@ public final class ApiDocs {
     static final String BASE = "noppes.npcs.rework.script.NpcScript";
     static final String NO_DOC = "No source description is available in the compiled API; see the signature.";
     static final String CONTRACT = "Java 8; trusted authors only, with process permissions and no sandbox. "
-            + "JS remains the default. Java dispatch is NPC-only. Public no-argument constructor required; "
+            + "JS remains the default. NPC tabs bind registry hooks; player, forge, block, door and item tabs bind public one-event methods by hook name (P5). Public no-argument constructor required; "
             + "one instance/loader per NPC, tab and generation. Only overridden NpcScript hooks are bound. "
             + "Tabs run in their existing order, then the API bus; cancellation and missing hooks keep the existing handler behavior.";
     static final String SCOPE = "Published v1 reference: NPC script base, NPC/entity inheritance, NPC data interfaces, "
@@ -334,7 +334,7 @@ public final class ApiDocs {
                 .append("`event.setCanceled(true)` is valid only for a cancelable actual event; role subtypes differ. ")
                 .append("Cancelable metadata below describes the declared event type, not every runtime subtype. ")
                 .append("No frequency guarantee follows from the registry order.\n\n")
-                .append("Forge string hooks remain outside NPC Java v1: the existing rule is uncapitalize(simple binary event name with `$` removed). ")
+                .append("Forge string hooks (forge Java tabs, P5) follow the existing rule is uncapitalize(simple binary event name with `$` removed). ")
                 .append("Excluded Java handlers: `").append(catalog.get("excludedJavaHandlers")).append("`.\n\n");
         for (Map<String, Object> h : rows(catalog.get("hooks"))) {
             hooks.append("## ").append(h.get("name")).append("\n\n`").append(h.get("signature")).append("`\n\n")

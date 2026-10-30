@@ -3,16 +3,11 @@
   "operation": "api-reference",
   "javaVersion": "8",
   "scope": "Published v1 reference: NPC script base, NPC/entity inheritance, NPC data interfaces, NPC hook events and public role event variants, timers/data/NBT/position/damage API, NpcAPI, the player/world API (IPlayer, IWorld), and optional action animation (Animators, IAnimator). All public declared members are listed; protected members are included only on NpcScript. Inheritance links point to documented ancestors, including Forge Event for cancellation. Referenced types outside this explicit set are external references, not recursively published API. Existing methods returning item/block/quest/dialog/faction types remain visible; this does not implement new Java handlers for them.",
-  "contract": "Java 8; trusted authors only, with process permissions and no sandbox. JS remains the default. Java dispatch is NPC-only. Public no-argument constructor required; one instance/loader per NPC, tab and generation. Only overridden NpcScript hooks are bound. Tabs run in their existing order, then the API bus; cancellation and missing hooks keep the existing handler behavior.",
+  "contract": "Java 8; trusted authors only, with process permissions and no sandbox. JS remains the default. NPC tabs bind registry hooks; player, forge, block, door and item tabs bind public one-event methods by hook name (P5). Public no-argument constructor required; one instance/loader per NPC, tab and generation. Only overridden NpcScript hooks are bound. Tabs run in their existing order, then the API bus; cancellation and missing hooks keep the existing handler behavior.",
   "descriptionPolicy": "No source description is available in the compiled API; see the signature.",
   "parameterNames": "arg0, arg1, ... are positional labels, not original source parameter names.",
   "excludedJavaHandlers": [
-    "player",
-    "block",
-    "door",
-    "item",
-    "projectile",
-    "forge"
+    "projectile"
   ],
   "excludedSurfaces": [
     "item/block/quest/dialog/faction/container/scoreboard/dimension types reached from IPlayer/IWorld, their expansions and Java handlers (v2)",

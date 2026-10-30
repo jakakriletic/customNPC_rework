@@ -59,7 +59,7 @@ Measured against the 5 Oct baseline: 8 of 9 cells faster, idle-500 p95 MSPT −9
 | Baritone navigation backend per NPC, GUI AI → Movement → Backend (M4.15b/c, D-089) | `RwNavBackend` + NBT `RwNavBackend`, `/rwnav` | needs `npcbaritone` library |
 | Formations with home and facing at the end (M4.14) | `/rwsquad`, `FormationApi` | P4: members go in column through narrow doors and follow the shared path without extra searches; acceptance per Q257 (slots, lag), one scene |
 | Client LOD: NPCs beyond N blocks without eyes, name, chat bubbles and 3D headwear (M5-K K5) | `RwLodStart` (0) | changes the look of distant NPCs |
-| **Java NPC scripts** (`ScriptLanguage=Java`) with the same hooks as JS, `IPlayer`/`IWorld` access, API docs and IDE template (M6.1–M6.11, D-090) | `RwJavaClasspath` (empty = off) | trusted authors only, no sandbox; needs JDK 8; NPC scripts only |
+| **Java NPC scripts** (`ScriptLanguage=Java`) with the same hooks as JS, `IPlayer`/`IWorld` access, API docs and IDE template (M6.1–M6.11, D-090) | `RwJavaClasspath` (empty = off, `auto` = from the server, P5) | trusted authors only, no sandbox; needs JDK 8; NPC, player, forge, block, door and item scripts (P5); not projectile |
 | Animation API `Animators.of(npc)`: `play`, `queue`, `stop`, `getClip`, `getTick`, `getClips` (M7.9) | always present; does nothing without `customnpcentities` 0.7.0 | |
 | Animation hooks `animationStart`, `animationEvent`, `animationEnd` in JS and Java (M7.5, D-095) | `RwAnimHooks` (0), read at startup | once per tick; no walk/idle/death hooks |
 | Diagnostics and measurements (M2.1) | `/rwdiag`, `-Drwdiag=on` | `/rwdiag chunks` never releases chunks and logs an NPE on stop (Q241) |
@@ -77,4 +77,4 @@ Diagnostic commands: `/rwtarget`, `/rwhitbox`, `/rwfar`, `/rwimpostor`, `/rwcoll
 ### Moved to v2
 
 Full client matrix and 4 h soak, `/npcanim reload` and `blendTo`, Momentum flight mode and a
-flight GUI, automatic Java classpath, Java API for items/blocks/quests/dialogs/factions.
+flight GUI, Java API for items/blocks/quests/dialogs/factions.

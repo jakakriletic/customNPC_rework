@@ -4,8 +4,6 @@ import static org.junit.Assert.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import org.junit.Test;
 
 public class JavaLanguageTest {
@@ -28,18 +26,9 @@ public class JavaLanguageTest {
         assertEquals(2, languages.size());
     }
 
-    @Test public void otherHandlersKeepEveryLanguageExceptJavaInOrder() {
-        NBTTagList list = new NBTTagList();
-        for (String name : new String[] {"Java", "ECMAScript", "lua"}) {
-            NBTTagCompound language = new NBTTagCompound();
-            language.setString("Language", name);
-            list.appendTag(language);
-        }
-        NBTTagList out = JavaLanguage.withoutJava(list);
-        assertEquals(2, out.tagCount());
-        assertEquals("ECMAScript", out.getCompoundTagAt(0).getString("Language"));
-        assertEquals("lua", out.getCompoundTagAt(1).getString("Language"));
-        assertEquals(3, list.tagCount());
-        assertEquals(0, JavaLanguage.withoutJava(new NBTTagList()).tagCount());
+    @Test public void autoClasspathAlsoAddsJava() {
+        Map<String, String> languages = new HashMap<>();
+        assertTrue(JavaLanguage.register(languages, " auto "));
+        assertEquals(".java", languages.get(ScriptHooks.JAVA));
     }
 }
