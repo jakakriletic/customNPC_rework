@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 193 → 1)
+# Arhiv: dnevnik sej (vnosi 194 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,14 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-30 (194) — M10.6: uporabniška dokumentacija
+
+**Paket:** M10.6 (Q244–Q245) · **Stanje:** zaključen, poskus 1, samo dokumentacija.
+Nova [`UPORABNIKI.md`](../UPORABNIKI.md) (angleško, Q244): namestitev, 27 globalnih `Rw…` ključev v treh skupinah,
+per-NPC NBT, ukazi, Java trust politika, migracija/rollback po M10.5 in znane omejitve (Q245: nesprejeto kot nedokazano).
+Vrednosti preverjene proti `@ConfigProp` v `CustomNpcs.java`. Produkcija nespremenjena, brez testov (Q90).
+[Zapis](../meritve/2026-10-30-M10.6-dokumentacija.md). Naslednji M10.7 (changelog). Q1/release ostajata odprta.
 
 ### 2026-10-30 (193) — M10.2: kandidat proti baselineu sprejet
 

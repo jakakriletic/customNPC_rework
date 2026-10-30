@@ -116,7 +116,10 @@ try {
     $arguments=@('-Xms2G','-Xmx2G','-XX:+UseParallelGC','-Drwprivzeto=1','-cp',$launchCp,'net.minecraft.launchwrapper.Launch','--tweakClass','net.minecraftforge.fml.common.launcher.FMLServerTweaker','nogui')
     Start-M104 'bootstrap';Send-M104 'setworldspawn 0 4 0';Wait-M104 'Set the world spawn point to (0, 4, 0)' 30;Stop-M104
     Start-M104 'soak';Send-M104 'noppes clone spawn M104 1 0,4,0';Wait-M104 'M104 READY workers=200' 180
-    Send-M104 'rwdiag chunks on 1';Wait-M104 'RWDIAG-CHUNKS stanje=on' 30
+    # P1 (Q249): release chunks left by NPCs for 60 s; the old never-release mode hit the 2000 cap.
+    $offset=(Read-JavaPrototypeLog $log).Length
+    Send-M104 'rwdiag chunks on 1 60';Wait-M104 'RWDIAG-CHUNKS stanje=on' 30 $offset
+    Assert-M104 ((Read-JavaPrototypeLog $log).Substring($offset) -cmatch 'RWDIAG-CHUNKS stanje=on [^\r\n]* npc=\d+ sprosti=60s sprosceni=0') 'Diag chunk release mode active'
     # Two-minute warmup; no accepted short mode. A failed warmup cannot be a passing soak.
     $warm=[Diagnostics.Stopwatch]::StartNew()
     while($warm.Elapsed.TotalSeconds -lt 120){Guard-M104;Test-M104Log (Read-JavaPrototypeLog $log);Assert-M104 (-not $proc.HasExited) 'Alive during warmup';Start-Sleep -Seconds 2}
@@ -127,7 +130,7 @@ try {
             Guard-M104;Test-M104Log (Read-JavaPrototypeLog $log);Assert-M104 (-not $proc.HasExited) 'Alive during soak';Start-Sleep -Seconds 2
         }
         Save-M104;Request-M104 $seq
-        Write-Host "M104 progress $seq/48 elapsed=$([int]$clock.Elapsed.TotalSeconds)s heap=$($samples[-1].heap) threads=$($samples[-1].threads)"
+        Write-Host "M104 progress $seq/48 elapsed=$([int]$clock.Elapsed.TotalSeconds)s heap=$($samples[-1].heap) threads=$($samples[-1].threads) drift=$([int]$samples[-1].maxDrift) chunks=$($samples[-1].forcedChunks)"
     }
     $summary=Test-M104Samples $samples
     Stop-M104
@@ -138,7 +141,7 @@ try {
 finally {
     if($null -ne $proc){try{if(-not $proc.HasExited){Send-M104 'stop';if(-not $proc.WaitForExit(30000)){Stop-JavaPrototypeProcess $proc}};[M61ProcessLog]::Finish($proc)}catch{Stop-JavaPrototypeProcess $proc; $exitCode=1}}
     @{success=($exitCode -eq 0);package='M10.4';error=$failure;samples=$samples;summary=$summary;logs=$logs;inputs=$hashes;scenario=$work;
-        limits=@('synthetic dedicated world; Q1 absent','200 workers plus one observer; no clients or entities mod','original code-default JS scripting, no Java workload at empty compiler classpath','full GC every 5 min is part of the fixed measurement; p95 from complete hourly histograms')}|
+        limits=@('P1: diag chunk release after 60 s and knockback-resistant fighters (Q249/Q250)','synthetic dedicated world; Q1 absent','200 workers plus one observer; no clients or entities mod','original code-default JS scripting, no Java workload at empty compiler classpath','full GC every 5 min is part of the fixed measurement; p95 from complete hourly histograms')}|
         ConvertTo-Json -Depth 15|Set-Content -LiteralPath "$prefix.json" -Encoding UTF8
     if($null -ne $lock){$lock.Dispose()};$env:JAVA_HOME=$oldJava;$env:PATH=$oldPath
 }

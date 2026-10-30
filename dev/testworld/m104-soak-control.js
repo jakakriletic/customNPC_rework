@@ -46,13 +46,15 @@ function setup(npc) {
         s.patrol.push({ n: p, x: p.getX(), z: p.getZ(), distance: 0, previous: 0 }); s.workers.push(p);
     }
     // 40 independent melee pairs, zero weapon knockback. Hits are real AI damage.
+    // P1 (Q250): full knockback resistance, otherwise vanilla hit knockback walks each pair
+    // ~1,000-2,000 blocks away over hours (M10.4 attempt 2). No teleport, no AI/entity reset.
     for (var j = 0; j < 40; j++) {
         var bx = -56 + (j % 10) * 10, bz = 8 + Math.floor(j / 10) * 8;
         var a = spawn(w, 'SOAK_A' + j, bx, bz), b = spawn(w, 'SOAK_B' + j, bx + 2, bz);
         a.setFaction(1); b.setFaction(2);
-        for each (var c in [a, b]) { c.getStats().getMelee().setStrength(1); c.getStats().getMelee().setKnockback(0); c.getStats().getMelee().setDelay(20); }
+        for each (var c in [a, b]) { c.getStats().getMelee().setStrength(1); c.getStats().getMelee().setKnockback(0); c.getStats().getMelee().setDelay(20); c.getStats().setResistance(3, 2); }
         a.setAttackTarget(b); b.setAttackTarget(a);
-        s.combat.push({ n: a, target: b, hp: a.getHealth(), damage: 0, previous: 0 }, { n: b, target: a, hp: b.getHealth(), damage: 0, previous: 0 });
+        s.combat.push({ n: a, target: b, hp: a.getHealth(), damage: 0, previous: 0, hx: bx, hz: bz }, { n: b, target: a, hp: b.getHealth(), damage: 0, previous: 0, hx: bx + 2, hz: bz });
         s.workers.push(a, b);
     }
     for (var k = 0; k < 40; k++) {
@@ -94,11 +96,14 @@ function snapshot(npc, seq) {
     var quests = persisted.getCompound('QuestData').getList('CompletedQuests', 10);
     must(quests.length === 1 && quests[0].getInteger('Quest') === 104
         && Number(quests[0].getLong('Date')) === Math.floor(s.steps / 20) * 20, 'Latest async write missing on disk');
-    var moved = 0, damaged = 0, timers = 0, minDistance = 1e99, minTicks = 1e99;
+    var moved = 0, damaged = 0, timers = 0, minDistance = 1e99, minTicks = 1e99, maxDrift = 0;
     for each (var p in s.patrol) {
         var dist = p.distance - p.previous; minDistance = Math.min(minDistance, dist); if (dist > 1) { moved++; } p.previous = p.distance;
     }
-    for each (var c in s.combat) { if (c.damage > c.previous) { damaged++; } c.previous = c.damage; }
+    for each (var c in s.combat) {
+        if (c.damage > c.previous) { damaged++; } c.previous = c.damage;
+        var fx = c.n.getX() - c.hx, fz = c.n.getZ() - c.hz; maxDrift = Math.max(maxDrift, Math.sqrt(fx * fx + fz * fz));
+    }
     for each (var t in s.scripted) {
         var n = Number(t.n.getTempdata().get('soak')), delta = n - t.previous;
         minTicks = Math.min(minTicks, delta); if (delta > 0) { timers++; } t.previous = n;
@@ -119,7 +124,9 @@ function snapshot(npc, seq) {
         alive: alive, moved: moved, damaged: damaged, timers: timers, minDistance: minDistance, minTimerDelta: minTicks,
         heap: heap, threads: threads, gcBefore: before, gcAfter: after, queue: queue, active: active,
         writes: Math.floor(s.steps / 20), writesCompleted: completed, persistedStep: Number(quests[0].getLong('Date')),
-        ticks: Number(hist.count()), p95ns: Number(hist.percentile(0.95)) };
+        ticks: Number(hist.count()), p95ns: Number(hist.percentile(0.95)),
+        // P1 data only: combat drift from spawn and forced diag chunks (release mode, Q249).
+        maxDrift: maxDrift, forcedChunks: Number(Java.type('noppes.npcs.rework.diag.DiagChunkLoader').forcedChunks()) };
     if (seq > 0 && seq % 12 === 0) {
         write(OUT + '-hour' + (seq / 12) + '.json', JSON.parse(String(diag.toJson())));
     }

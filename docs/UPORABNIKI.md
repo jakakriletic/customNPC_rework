@@ -123,9 +123,9 @@ Not proven, so not claimed:
 - **Client compatibility matrix not passed** (M10.1a/b/d closed without acceptance, Q233): login,
   dialog/quest clicks, mail and mixed original/rework client–server pairs are not validated.
   Server-side original vs rework comparison passed only on a partial matrix (M10.1c, Q225).
-- **Long-run stability:** the 4 h soak ran 2 h 25 min without a server fault, then the test's
-  diagnostic chunk loader hit its limit (Q240); 4 h stability is not proven. `/rwdiag chunks`
-  never releases chunks and logs an NPE on stop (Q241); do not use it on production servers.
+- **Long-run stability:** a 4 h soak with 200 NPCs ran without a server fault (49/49 samples, p95
+  MSPT 3.28 → 3.47 ms), but the heap after full GC grew 168 → 242 MB (+44 %) while the test world
+  kept expanding; a slow leak is not ruled out (P1). `/rwdiag chunks` is a diagnostic tool only.
 - **No real modpack test** (M10.3 blocked, Q1). OptiFine, shaders and Entity Culling are handled
   by fallbacks but were not checked in a full modpack; the client coremod in a packaged client was
   not tested.

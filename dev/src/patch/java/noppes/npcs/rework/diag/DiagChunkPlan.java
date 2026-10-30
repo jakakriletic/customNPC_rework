@@ -1,7 +1,11 @@
 package noppes.npcs.rework.diag;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Izracun nabora chunkov, ki jih mora merilni scenarij prisilno nalozit.
@@ -91,6 +95,44 @@ public final class DiagChunkPlan {
                         out.add(pack(cx + dx, cz + dz));
                     }
                 }
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Kateri prisilno nalozeni chunki niso vec potrebni (P1, Q249).
+     *
+     * <p>Chunk se sprosti sele, ko {@code graceScans} zaporednih pregledov ni v naboru
+     * {@code wanted}. Zakasnitev prepreci, da bi NPC na meji chunka vsako sekundo odklopil in
+     * priklopil isti chunk. {@code misses} je stanje med pregledi in se posodobi na mestu.
+     *
+     * @param forced     trenutno prisilno nalozeni chunki
+     * @param wanted     popoln nabor tega pregleda (ne odrezan na proracunu)
+     * @param misses     zaporedni pregledi brez potrebe, po chunku
+     * @param graceScans 0 ali manj pomeni, da se nic ne sprosti (pogoj meritev pred P1)
+     * @return chunki za sprostitev, v vrstnem redu {@code forced}
+     */
+    public static List<Long> stale(Collection<Long> forced, Set<Long> wanted,
+            Map<Long, Integer> misses, int graceScans) {
+        List<Long> out = new ArrayList<Long>();
+        if (graceScans <= 0 || forced == null) {
+            misses.clear();
+            return out;
+        }
+        misses.keySet().retainAll(forced);
+        for (Long packed : forced) {
+            if (wanted != null && wanted.contains(packed)) {
+                misses.remove(packed);
+                continue;
+            }
+            Integer before = misses.get(packed);
+            int count = before == null ? 1 : before.intValue() + 1;
+            if (count >= graceScans) {
+                misses.remove(packed);
+                out.add(packed);
+            } else {
+                misses.put(packed, Integer.valueOf(count));
             }
         }
         return out;

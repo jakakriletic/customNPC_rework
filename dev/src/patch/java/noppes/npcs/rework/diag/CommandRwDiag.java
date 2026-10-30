@@ -34,7 +34,7 @@ public class CommandRwDiag extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/rwdiag <on|off|status|reset|dump [ime]|chunks <on [obroc]|off|status>"
+        return "/rwdiag <on|off|status|reset|dump [ime]|chunks <on [obroc] [sprostiSekund]|off|status>"
                 + "|nav <x y z [ponovitev] [maxNpc] [imePredpona]|status>"
                 + "|vd [razdalja]|track [bloki|0]|spawnnbt>";
     }
@@ -83,7 +83,18 @@ public class CommandRwDiag extends CommandBase {
                         return;
                     }
                 }
-                reply(sender, DiagChunkLoader.enable(server, ring));
+                // P1 (Q249): izbirno sproscanje chunkov brez NPC-ja po toliko sekundah.
+                // Brez argumenta 0, torej pogoj vseh dosedanjih meritev (nic se ne sprosca).
+                int releaseSeconds = 0;
+                if (args.length > 3) {
+                    try {
+                        releaseSeconds = Integer.parseInt(args[3]);
+                    } catch (NumberFormatException notANumber) {
+                        reply(sender, "RWDIAG-CHUNKS-NAPAKA sprostitev ni stevilo: " + args[3]);
+                        return;
+                    }
+                }
+                reply(sender, DiagChunkLoader.enable(server, ring, releaseSeconds));
                 return;
             }
             if (what.equals("off")) {

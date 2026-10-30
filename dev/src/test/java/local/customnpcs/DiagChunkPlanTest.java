@@ -6,8 +6,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 import noppes.npcs.rework.diag.DiagChunkPlan;
 
@@ -130,5 +133,54 @@ public class DiagChunkPlanTest {
                 DiagChunkPlan.expand(Arrays.asList(DiagChunkPlan.pack(-7, -7)), -3, 100);
         assertEquals(1, plan.size());
         assertTrue(plan.contains(DiagChunkPlan.pack(-7, -7)));
+    }
+
+    // P1 (Q249): sproscanje chunkov brez NPC-ja v vecurnem soaku.
+
+    @Test
+    public void staleNeverReleasesWithoutGrace() {
+        Map<Long, Integer> misses = new HashMap<Long, Integer>();
+        misses.put(DiagChunkPlan.pack(9, 9), 5);
+        List<Long> forced = Arrays.asList(DiagChunkPlan.pack(0, 0), DiagChunkPlan.pack(1, 0));
+        for (int scan = 0; scan < 100; scan++) {
+            assertTrue(DiagChunkPlan.stale(forced, Collections.<Long>emptySet(), misses, 0).isEmpty());
+        }
+        assertTrue("brez sprostitve ni stanja", misses.isEmpty());
+    }
+
+    @Test
+    public void staleReleasesOnlyAfterConsecutiveMisses() {
+        Map<Long, Integer> misses = new HashMap<Long, Integer>();
+        long kept = DiagChunkPlan.pack(0, 0);
+        long left = DiagChunkPlan.pack(-3, 4);
+        List<Long> forced = Arrays.asList(kept, left);
+        LinkedHashSet<Long> wanted = new LinkedHashSet<Long>(Arrays.asList(kept));
+        assertTrue(DiagChunkPlan.stale(forced, wanted, misses, 3).isEmpty());
+        assertTrue(DiagChunkPlan.stale(forced, wanted, misses, 3).isEmpty());
+        assertEquals(Arrays.asList(left), DiagChunkPlan.stale(forced, wanted, misses, 3));
+        assertFalse(misses.containsKey(left));
+        assertFalse(misses.containsKey(kept));
+    }
+
+    @Test
+    public void staleResetsWhenNpcReturns() {
+        Map<Long, Integer> misses = new HashMap<Long, Integer>();
+        long edge = DiagChunkPlan.pack(5, 5);
+        List<Long> forced = Arrays.asList(edge);
+        LinkedHashSet<Long> empty = new LinkedHashSet<Long>();
+        LinkedHashSet<Long> back = new LinkedHashSet<Long>(forced);
+        assertTrue(DiagChunkPlan.stale(forced, empty, misses, 2).isEmpty());
+        assertTrue("NPC spet tu: stevec na nic", DiagChunkPlan.stale(forced, back, misses, 2).isEmpty());
+        assertTrue(DiagChunkPlan.stale(forced, empty, misses, 2).isEmpty());
+        assertEquals(Arrays.asList(edge), DiagChunkPlan.stale(forced, empty, misses, 2));
+    }
+
+    @Test
+    public void staleDropsStateOfChunksNoLongerForced() {
+        Map<Long, Integer> misses = new HashMap<Long, Integer>();
+        misses.put(DiagChunkPlan.pack(7, 7), 1);
+        DiagChunkPlan.stale(Arrays.asList(DiagChunkPlan.pack(0, 0)),
+                new LinkedHashSet<Long>(Arrays.asList(DiagChunkPlan.pack(0, 0))), misses, 5);
+        assertTrue(misses.isEmpty());
     }
 }

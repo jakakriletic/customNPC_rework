@@ -70,6 +70,7 @@ import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import net.minecraftforge.fml.common.network.FMLEventChannel;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -419,6 +420,13 @@ public class CustomNpcs {
         QuestController.instance.load();
         ScriptController.HasStart = true;
         ServerCloneController.Instance = new ServerCloneController();
+    }
+
+    @Mod.EventHandler
+    public void stopping(FMLServerStoppingEvent event) {
+        // P1 (Q241): merilne tickete sprosti, dokler so svetovi se nalozeni in pred zadnjim
+        // shranjevanjem; po FMLServerStoppedEvent bi releaseTicket vrgel NPE.
+        DiagChunkLoader.disable();
     }
 
     @Mod.EventHandler

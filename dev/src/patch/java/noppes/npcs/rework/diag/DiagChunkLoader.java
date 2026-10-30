@@ -1,13 +1,16 @@
 package noppes.npcs.rework.diag;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -59,7 +62,7 @@ public final class DiagChunkLoader {
      *
      * <p>Do M5.8 (15. 10.) je bila 400. V boju z 2500 NPC-ji so se borci razbezali cez vec
      * chunkov, nabor je med merjenjem stal na meji, del NPC-jev se je raztovoril in celica je
-     * padla na P3/P4. Chunki se ne sproscajo (glej {@code onWorldTick}), zato meja omejuje
+     * padla na P3/P4. Chunki se privzeto ne sproscajo (glej {@code onWorldTick}), zato meja omejuje
      * razprsenost cele celice; {@code perf-run.ps1} jo preveri z merilom P4c.
      */
     public static final int MAX_CHUNKS_PER_WORLD = 2000;
@@ -72,6 +75,12 @@ public final class DiagChunkLoader {
     private static DiagChunkLoader registered;
     private static int radius = DEFAULT_RADIUS;
     private static int refused;
+    /** P1 (Q249): po toliko zaporednih pregledih brez NPC-ja se chunk sprosti; 0 = nikoli. */
+    private static int releaseAfterScans;
+    private static int released;
+
+    /** Najvec ena ura: daljse cakanje je prakticno isto kot nikoli. */
+    public static final int MAX_RELEASE_SECONDS = 3600;
 
     private DiagChunkLoader() {
     }
@@ -105,7 +114,20 @@ public final class DiagChunkLoader {
      * @return vrstica z markerjem {@code RWDIAG-CHUNKS}, primerna za log in za skripto
      */
     public static synchronized String enable(MinecraftServer server, int requestedRadius) {
+        return enable(server, requestedRadius, 0);
+    }
+
+    /**
+     * Kot {@link #enable(MinecraftServer, int)}, z izbirnim sproscanjem (P1, Q249).
+     *
+     * @param releaseSeconds po toliko sekundah brez NPC-ja v obmocju se chunk sprosti;
+     *                       0 ohrani pogoj dosedanjih meritev (nic se ne sprosti)
+     */
+    public static synchronized String enable(MinecraftServer server, int requestedRadius,
+            int releaseSeconds) {
         disable();
+        // Pregled je enkrat na sekundo (REFRESH_EVERY_TICKS), zato so sekunde kar pregledi.
+        releaseAfterScans = releaseSeconds <= 0 ? 0 : Math.min(releaseSeconds, MAX_RELEASE_SECONDS);
         if (server == null || server.worlds == null) {
             return "RWDIAG-CHUNKS-NAPAKA server ni na voljo";
         }
@@ -138,7 +160,13 @@ public final class DiagChunkLoader {
             registered = null;
         }
         for (int i = 0; i < WORLDS.size(); i++) {
-            List<ForgeChunkManager.Ticket> tickets = WORLDS.get(i).tickets;
+            WorldTickets holder = WORLDS.get(i);
+            // Q241: po raztovoru sveta je Forge tickete ze zavrgel, releaseTicket pa bi vrgel
+            // NPE (tickets.get(world) == null). Sprostimo samo tickete se nalozenih svetov.
+            if (!isLoaded(holder.world)) {
+                continue;
+            }
+            List<ForgeChunkManager.Ticket> tickets = holder.tickets;
             for (int j = 0; j < tickets.size(); j++) {
                 try {
                     ForgeChunkManager.releaseTicket(tickets.get(j));
@@ -149,6 +177,13 @@ public final class DiagChunkLoader {
         }
         WORLDS.clear();
         refused = 0;
+        released = 0;
+        releaseAfterScans = 0;
+    }
+
+    private static boolean isLoaded(WorldServer world) {
+        return world != null && world.provider != null
+                && DimensionManager.getWorld(world.provider.getDimension()) == world;
     }
 
     public static synchronized String status(int npcs) {
@@ -157,7 +192,9 @@ public final class DiagChunkLoader {
                 + " tiketi=" + tickets()
                 + " obroc=" + radius
                 + " zavrnjeni=" + refused
-                + (npcs < 0 ? "" : " npc=" + npcs);
+                + (npcs < 0 ? "" : " npc=" + npcs)
+                // Samo v nacinu s sproscanjem; privzeta vrstica ostane enaka za obstojece harnesse.
+                + (releaseAfterScans > 0 ? " sprosti=" + releaseAfterScans + "s sprosceni=" + released : "");
     }
 
     public static synchronized String status() {
@@ -186,11 +223,18 @@ public final class DiagChunkLoader {
             centers.add(DiagChunkPlan.pack(
                     DiagChunkPlan.chunkOf(entity.posX), DiagChunkPlan.chunkOf(entity.posZ)));
         }
-        if (centers.isEmpty()) {
+        WorldTickets holder = existingHolder(world);
+        if (centers.isEmpty() && (holder == null || releaseAfterScans <= 0)) {
             return npcs;
         }
-        WorldTickets holder = holderFor(world);
+        if (holder == null) {
+            holder = holderFor(world);
+        }
         LinkedHashSet<Long> wanted = DiagChunkPlan.expand(centers, radius, MAX_CHUNKS_PER_WORLD);
+        // Odrezan nabor ne pove, kateri chunki res niso potrebni, zato takrat ne sprostimo nic.
+        if (releaseAfterScans > 0 && wanted.size() < MAX_CHUNKS_PER_WORLD) {
+            release(holder, DiagChunkPlan.stale(holder.forced, wanted, holder.misses, releaseAfterScans));
+        }
         for (Long packed : wanted) {
             if (holder.forced.contains(packed)) {
                 continue;
@@ -212,6 +256,19 @@ public final class DiagChunkLoader {
 
     private static boolean force(WorldTickets holder, WorldServer world, long packed) {
         int maxDepth = Math.max(1, ForgeChunkManager.getMaxChunkDepthFor(CustomNpcs.MODID));
+        if (releaseAfterScans > 0 && (holder.current == null || holder.onCurrent >= maxDepth)) {
+            // Po sprostitvah imajo starejsi ticketi prostor; forceChunk na polnem ticketu bi
+            // tiho izrinil najstarejsi chunk, zato stejemo dejanski seznam ticketa.
+            for (int i = 0; i < holder.tickets.size(); i++) {
+                ForgeChunkManager.Ticket candidate = holder.tickets.get(i);
+                int used = candidate.getChunkList().size();
+                if (used < maxDepth) {
+                    holder.current = candidate;
+                    holder.onCurrent = used;
+                    break;
+                }
+            }
+        }
         if (holder.current == null || holder.onCurrent >= maxDepth) {
             ForgeChunkManager.Ticket ticket = ForgeChunkManager.requestTicket(
                     CustomNpcs.instance, world, ForgeChunkManager.Type.NORMAL);
@@ -226,14 +283,40 @@ public final class DiagChunkLoader {
                 new ChunkPos(DiagChunkPlan.unpackX(packed), DiagChunkPlan.unpackZ(packed)));
         holder.onCurrent++;
         holder.forced.add(Long.valueOf(packed));
+        holder.owner.put(Long.valueOf(packed), holder.current);
         return true;
     }
 
-    private static WorldTickets holderFor(WorldServer world) {
+    private static void release(WorldTickets holder, List<Long> stale) {
+        for (int i = 0; i < stale.size(); i++) {
+            Long packed = stale.get(i);
+            ForgeChunkManager.Ticket ticket = holder.owner.remove(packed);
+            holder.forced.remove(packed);
+            if (ticket == null) {
+                continue;
+            }
+            ForgeChunkManager.unforceChunk(ticket,
+                    new ChunkPos(DiagChunkPlan.unpackX(packed), DiagChunkPlan.unpackZ(packed)));
+            if (ticket == holder.current) {
+                holder.onCurrent = ticket.getChunkList().size();
+            }
+            released++;
+        }
+    }
+
+    private static WorldTickets existingHolder(WorldServer world) {
         for (int i = 0; i < WORLDS.size(); i++) {
             if (WORLDS.get(i).world == world) {
                 return WORLDS.get(i);
             }
+        }
+        return null;
+    }
+
+    private static WorldTickets holderFor(WorldServer world) {
+        WorldTickets existing = existingHolder(world);
+        if (existing != null) {
+            return existing;
         }
         WorldTickets created = new WorldTickets(world);
         WORLDS.add(created);
@@ -247,9 +330,10 @@ public final class DiagChunkLoader {
      * svet s sabo. Tako ta razred ne potrebuje nobene poti do {@code MinecraftServer}
      * izven ukaza, ki ga vklopi.
      *
-     * <p>Chunki se ne sproscajo nazaj. Merilni zagon traja minute, ne ure, zato je nekaj
-     * chunkov vec cenejse od odklapljanja in ponovnega priklapljanja, ki bi sredi meritve
-     * spremenilo prav tisto, kar merimo.
+     * <p>Privzeto se chunki ne sproscajo nazaj. Merilni zagon traja minute, ne ure, zato je
+     * nekaj chunkov vec cenejse od odklapljanja in ponovnega priklapljanja, ki bi sredi meritve
+     * spremenilo prav tisto, kar merimo. Vecurni soak (M10.4) pa je mejo 2000 dosegel, ker so
+     * borci tavali; zanj je sproscanje izbirno ({@code chunks on <obroc> <sekunde>}, P1, Q249).
      */
     @SubscribeEvent
     public void onWorldTick(TickEvent.WorldTickEvent event) {
@@ -283,6 +367,9 @@ public final class DiagChunkLoader {
         private final List<ForgeChunkManager.Ticket> tickets =
                 new ArrayList<ForgeChunkManager.Ticket>();
         private final LinkedHashSet<Long> forced = new LinkedHashSet<Long>();
+        private final Map<Long, ForgeChunkManager.Ticket> owner =
+                new HashMap<Long, ForgeChunkManager.Ticket>();
+        private final Map<Long, Integer> misses = new HashMap<Long, Integer>();
         private ForgeChunkManager.Ticket current;
         private int onCurrent;
         private int refreshCountdown = REFRESH_EVERY_TICKS;
