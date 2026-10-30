@@ -24,6 +24,11 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
+| 2026-10-29 | Animacijski hooki `animationStart/animationEvent/animationEnd` za JS in Java: opazovalec enkrat na world tick (END) za animirane NPC-je moda `customnpcentities` 0.7.0; brez moda nič. Bere se ob zagonu | M7.5, D-095, Q194 | `RwAnimHooks` | **0** (brez poslušalca) |
+| 2026-10-29 | Skriptni API `Animators.of(npc)`/`IAnimator` (play, queue ≤ 32, stop, getterji) prek refleksije; brez moda `isAvailable()=false`, klici ne naredijo nič | M7.9, Q195 | brez (nov API) | vedno; učinek samo z modom |
+| 2026-10-29 | NPC skripte v Javi (`ScriptLanguage=Java`): isti hooki kot JS, `IPlayer`/`IWorld`, prevajanje z javac JDK 8, samo NPC skriptni GUI; brez sandboxa (zaupani avtorji) | M6.1–M6.11, D-090 | `RwJavaClasspath` | **prazno** (Java tab ustavi z jasno napako, JS nespremenjen) |
+| 2026-10-29 | Izbira hitbox načina (`RwHitboxMode` 0/1/2) v GUI NPC-ja | M3.8b | per-NPC `RwHitboxMode`, globalni `RwHitbox` | **0** (vanilla) |
+| 2026-10-21 | Klient LOD L1: NPC dlje od N blokov brez oči, imena, oblačkov in 3D pokrivala (ploska plast) | M5-K K5 | `RwLodStart` | **0** (original) |
 | 2026-10-29 | JS/Java gnezden dogodek v finally obnovi prejšnji Current; JS tudi CurrentType; binarni chest/projectile porabniki in globalni lock ostanejo | M6.6, D-092, Q168 | brez (popravek namena lastništva) | vedno; Java ostane opt-in |
 | 2026-10-29 | Reload obnovi JS tab po napaki in prej manjkajoč hook; Java nova generacija počisti napake, source map poimenuje izvor | M6.5, B5, D-091 | brez (popravek namena reloada) | vedno; Java ostane opt-in |
 | 2026-10-29 | AI → Movement → Backend izbira vanilla/Baritone 0/1 in strežniški posnetek dejanskega navigatorja/razloga; legacy save ohrani izbiro, status samo v odgovoru. Klient/save/restart potrjen v M4.15c (Q122) | M4.15b/c, D-089 | per-NPC `RwNavBackend`, globalni config dovoljenje | **0** (vanilla) |

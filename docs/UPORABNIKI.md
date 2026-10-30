@@ -139,5 +139,5 @@ Not proven, so not claimed:
 - `RwJavaClasspath` is manual; automatic modpack classpath is v2.
 - `RwFlightMode` has no GUI; Momentum flight mode is v2.
 
-The full list of behaviour changes is in the changelog (M10.7) and in
+The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).

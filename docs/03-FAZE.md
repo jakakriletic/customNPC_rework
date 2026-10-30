@@ -583,7 +583,7 @@ CustomNPC+ repozitorija se ne prenesejo.
 | ~~M10.4~~ | **Zaprt brez sprejema 30. 10. (Q240), polni soak v2:** soak-v2 padel po 2 h 25 min, ker so bojni pari odtavali in diag chunkloader dosegel 2000 chunkov; [zapis](meritve/2026-10-30-M10.4-soak.md). Naslednji M10.2 → M10.6 → M10.7 po Q92 | S |
 | ~~M10.5~~ | **Sprejet 30. 10., poskus 2 (Q236):** [rollback](meritve/2026-10-30-M10.5-rollback.md), 6 faz 58/58, obnova 42/42 datotek; sintetični obseg, izguba Rw ključev in vrnitev B3 izrecni; release ostane odprt | S |
 | ~~M10.6~~ | **Zaključen 30. 10. (Q244):** [`UPORABNIKI.md`](UPORABNIKI.md) — nastavitve, migracija/rollback, znane omejitve; [zapis](meritve/2026-10-30-M10.6-dokumentacija.md). Naslednji M10.7 po Q92 | M |
-| M10.7 | Changelog z eksplicitnim seznamom sprememb obnašanja | S |
+| ~~M10.7~~ | **Zaključen 30. 10. (Q246–Q247):** [`CHANGELOG.md`](CHANGELOG.md) z eksplicitnim seznamom sprememb obnašanja, register dopolnjen; [zapis](meritve/2026-10-30-M10.7-changelog.md). Obseg v1 (Q92) brez izvedljivih paketov; M10.3 blokiran (Q1), M10.1a/b/d in M10.4 v2 | S |
 
 **Izhodni kriterij:** `PLAN_IMPLEMENTACIJE.md` §6 "Sprejem" v celoti izpolnjen, plus
 uspešna rollback vaja.

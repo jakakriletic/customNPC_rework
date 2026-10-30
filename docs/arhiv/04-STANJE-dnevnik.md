@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 192 → 1)
+# Arhiv: dnevnik sej (vnosi 193 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,17 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-30 (193) — M10.2: kandidat proti baselineu sprejet
+
+**Paket:** M10.2 (Q242–Q243) · **Stanje:** sprejet, poskus 1.
+`baseline-run.ps1` dobi `-Privzeto 1` (stikala na privzetih vrednostih kode, B4 preveri `RWPRIVZETO 1`
+v logu vsake ponovitve) in `-Primerjaj` (B5 odtis celice + alarm p95: mediana +5 % in ločena razpona).
+Controller `m102-baseline-v1` PASS na `e6e3be3b…`: 3 ponovitve × 9 celic, B1–B5/P1–P9 zeleni, odtis = 5. 10.
+p95 MSPT nižji v 8/9 celicah (idle-500 44,0 → 3,15 ms, skripte-500 47,2 → 9,18 ms, boj-500 9,70 → 6,55 ms);
+skripte-50 +8,2 % v šumu (razpona se prekrivata). Brez alarma, zato brez ponovnega originala (Q210/Q243).
+Meja: dev runServer kot 5. 10., drift stroja ni ločen. [Dokazi](../meritve/2026-10-30-M10.2-baseline.md).
+Naslednji M10.6 → M10.7 po Q92/D-096. Q1/release ostajata odprta.
 
 ### 2026-10-30 (192) — M10.4: soak zaprt brez sprejema
 
