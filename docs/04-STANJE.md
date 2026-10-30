@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-30** (seja 200) — **P5 Java sprejet** (Q263–Q268): Java v player/forge/block/door/item GUI, JS = Java 19/19, `RwJavaClasspath=auto` na pakiranem Forge; [zapis](meritve/2026-10-30-P5-java-handlerji.md). Prej (seja 199) — **P4 formacije sprejet po merilih Q257** (Q257–Q262): G/O 8/8 mest, DONE 101/40, FA5 G 1 ≤ 1, zaostanek 1,09/0,39; izvirni skupni cilj in premer ostaneta NOTE; [zapis](meritve/2026-10-30-P4-formacije.md). Prej (seja 198) — **P3 sprejet pod stikali** (Q256): vogal A 0/6 → 6/6 in labirint 6/6 z `RwPathResume=1` + `RwFlyLineOfSight=1`, pri 0 180/180 = M4.16; [zapis](meritve/2026-10-30-P3-vogal-labirint.md). Prej (seja 197) — **P2 zaključen z omejitvijo** (Q251–Q255): popravek izgubljenega login synca na klientu (integrated PASS, dedicated edit 13/13 + 13/13); dedicated offline mail padel na omejitvi originala, mešana O/K para v2; [zapis](meritve/2026-10-30-P2-klientska-matrika.md). Prej (seja 196) — **P1 zaključen z omejitvijo** (Q248; Q249–Q250): 4 h soak brez padca, 49/49 vzorcev, p95 +6 %; heap po GC +44 % (odprto); [zapis](meritve/2026-10-30-P1-soak.md). Nočni razvoj ustavljen po odločitvi lastnika. |
+| Zadnja posodobitev | **2026-10-30** (seja 201) — **P6 GUI Original/Hover sprejet** (Q269–Q271): unit/build/package in `p6-gui-v1` PASS na `81e79f30…`, 137/137, clone/restart šestih UUID-jev; toast na PNG prekriva novi gumb (vizualna omejitev). [Zapis](meritve/2026-10-30-P6-flight-gui.md). |
 | Trenutni milestone | **M10 — release** (v1 obseg Q92); M7 v1 zaključen (M7.0, M7.V, M7.9, M7.5; D-095); M6 Scripting v1 zaključen (M6.0–M6.12) po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
-| Naslednji paketi | **Popravki omejitev v1.0 P1–P8** po [Q248](10-OBSEG-V1.md): P1 soak (zaključen z omejitvijo heapa) → P2 klientska matrika (zaključen z omejitvijo) → P3 `RwPathResume`/`RwFlyLineOfSight` (sprejet pod stikali) → P4 formacije (sprejet po Q257) → P5 Java GUI/classpath (sprejet) → **P6 naslednji:** GUI `RwFlightMode` → P7 animacije → P8 Baritone; vsak posodobi `UPORABNIKI.md` §6. Po P8 čakamo odločitev lastnika o izdaji (brez v2). Q90/Q92 veljata: uspešnih serij ne ponavljamo, največ 2 poskusa/paket. M10.3/IO4 blokirana (Q1). |
+| Naslednji paketi | **Popravki omejitev v1.0 P1–P8** po [Q248](10-OBSEG-V1.md): P1 soak (zaključen z omejitvijo heapa) → P2 klientska matrika (zaključen z omejitvijo) → P3 `RwPathResume`/`RwFlyLineOfSight` (sprejet pod stikali) → P4 formacije (sprejet po Q257) → P5 Java GUI/classpath (sprejet) → P6 GUI `RwFlightMode` (sprejet) → **P7 naslednji:** animacije → P8 Baritone; vsak posodobi `UPORABNIKI.md` §6. Po P8 čakamo odločitev lastnika o izdaji (brez v2). Q90/Q92 veljata: uspešnih serij ne ponavljamo, največ 2 poskusa/paket. M10.3/IO4 blokirana (Q1). |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **233** datotek `.java` v `src/patch` (P5: handler kopije, `AutoClasspath`, `HandlerJavaProbe`), od tega **156** rework in 4 dostopni razredi v `net/minecraft/…`; build/package PASS na `e80e2658…`: **78** pričakovanih spremenjenih vnosov (77 razredov originala + manifest coremoda) |
-| Testi | **560** metod `@Test` v **87** datotekah; `testOriginal` **45** preverjanj. P5 unit/build/package, `p5-handlers-v1` in `m62-packaged-v3` PASS na `6531b341…`. P4 unit/build/package, `p4-harness-v1` in `p4-formacije-v1` PASS na `e964773f…`. P3 unit/build/package in `p3-letenje-*-v1` PASS na `a7b11f8d…`. M7.5 m75-api-v1 6.998 preverjanj, m75-hooks-on/off-v1 in m62-packaged-v3 PASS na `e80e2658…`; M7.9 m79-api-v1/m79-absent-v1 PASS na `1a2a2b75…`; M6.11 m611 12/12 PASS na `e3e30ca1…`; M6.8 unit/build/package in m68 27/27 PASS na `36620163…`, produkcija ista, brez ponavljanja (Q90/Q92). FA sprejem M4.14b neuspešen (D-079), P4 sprejet po merilih Q257; smoke/protokol dodatno 20/16 trditev |
+| Prevedljivih razredov | **235** datotek `.java` v `src/patch`, od tega **158** rework; P6: `FlightGui` in `FlightGuiHarness`. Build/package PASS na `81e79f30…`: 370 razredov v jarju, **85** pričakovanih razlik originala (84 razredov + manifest). |
+| Testi | **567** metod `@Test` v **88** datotekah; `testOriginal` **45** preverjanj. P6 unit/build/package in `p6-gui-v1` PASS na `81e79f30…` (79/79 + 58/58). Predhodnih uspešnih serij ne ponavljamo (Q90). |
 | Odprti pojavi | nobenega blokirnega; Q84 (M4.17 + M4.10 zid 6/6 → 5/6, vzrok [H], ovira za privzeti vklop kombinacije); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10, Q12 in Q14 odprta; Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -55,7 +55,17 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 198 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 199 → 1, novejši zgoraj).*
+
+### 2026-10-30 (201) — P6: GUI za način letenja (sprejet)
+
+**Paket:** P6 (Q248, Q269–Q271) · **Stanje:** funkcionalno sprejet, poskus 1; Original ostane privzet.
+Na 81e79f30… unit/build/package in p6-gui-v1 PASS: 79/79 + 58/58, šest istih UUID-jev po restartu,
+kloni z novimi UUID-ji, Original/Hover/Momentum in ground↔flying potrjeni. AI → Movement ponudi
+Fly: Orig/Hover samo za leteče; Momentum onemogočen in ohranjen, legacy save ne spremeni načina.
+Vseh 10 PNG pregledanih; tutorial toast prekriva novi gumb, zato berljivost ni vizualno dokazana,
+napis/meje in dejanski kliki so preverjeni s harnessom. Brez nove tick kode ali ponovitve po Q90.
+Naslednji P7 animacije. [Zapis](meritve/2026-10-30-P6-flight-gui.md).
 
 ### 2026-10-30 (200) — P5: Java v vseh skriptnih GUI-jih in `RwJavaClasspath=auto` (sprejet)
 
@@ -64,12 +74,4 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 tip dogodka → `hook.signature`. `auto`: viri nalagalnika + enkrat zapisan jar Minecraft/Forge razredov skozi Forgeovo verigo
 (3.601 razredov, 1,98 s; restart reused 7 ms). Poskus 1 17/19: Forge razredi na disku obfuscirani (`amu`) → v jar (Q268).
 Omejitve: coremodi/mixini modov ne, pravi modpack ne (Q1), projektil brez Jave. Naslednji P6. [Zapis](meritve/2026-10-30-P5-java-handlerji.md).
-
-### 2026-10-30 (199) — P4: formacije (sprejet po merilih Q257)
-
-**Paket:** P4 (Q248, D-079, Q257–Q262) · **Stanje:** sprejet, poskus 1. Na e964773f… zeleni unit/build/package, `p4-harness-v1`
-in `p4-formacije-v1` (ena ponovitev, Q250). FA1/2 po 8/8 mestih in FA4 po zaostanku ≤ 6 (Q257); planer: točka kolone ob zaprti
-crti, hoja po skupni poti brez iskanja, iskanje samo ob obtičanju (Q258–Q262). G: DONE 101 (prej 237), FA5 1 ≤ 1 (prej 29–117),
-obtičanja 0, zaostanek 1,088; O: DONE 40, 0,391. Izvirni skupni cilj 4/8 in 3/8 ter premer 8,03/6,43 ostanejo NOTE. F1–F12 odprti.
-Naslednji P5. [Zapis](meritve/2026-10-30-P4-formacije.md).
 

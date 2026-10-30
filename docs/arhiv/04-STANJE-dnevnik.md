@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 198 → 1)
+# Arhiv: dnevnik sej (vnosi 199 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,14 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-30 (199) — P4: formacije (sprejet po merilih Q257)
+
+**Paket:** P4 (Q248, D-079, Q257–Q262) · **Stanje:** sprejet, poskus 1. Na e964773f… zeleni unit/build/package, `p4-harness-v1`
+in `p4-formacije-v1` (ena ponovitev, Q250). FA1/2 po 8/8 mestih in FA4 po zaostanku ≤ 6 (Q257); planer: točka kolone ob zaprti
+crti, hoja po skupni poti brez iskanja, iskanje samo ob obtičanju (Q258–Q262). G: DONE 101 (prej 237), FA5 1 ≤ 1 (prej 29–117),
+obtičanja 0, zaostanek 1,088; O: DONE 40, 0,391. Izvirni skupni cilj 4/8 in 3/8 ter premer 8,03/6,43 ostanejo NOTE. F1–F12 odprti.
+Naslednji P5. [Zapis](../meritve/2026-10-30-P4-formacije.md).
 
 ### 2026-10-30 (198) — P3: vogal in labirint (sprejet pod stikali)
 

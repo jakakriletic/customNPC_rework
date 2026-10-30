@@ -4,6 +4,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.common.Loader;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.rework.formation.SquadManager;
+import noppes.npcs.rework.movement.FlightGui;
 
 /** AI editor wire extension only. Does not add fields to DataAI or entity persistence. */
 public final class NavGuiData {
@@ -21,6 +22,7 @@ public final class NavGuiData {
         status.setInteger("Actual", "active".equals(reason) ? 1 : 0);
         status.setString("Reason", reason);
         data.setTag(STATUS, status);
+        FlightGui.writeReply(data, npc);
         return data;
     }
 
@@ -28,6 +30,7 @@ public final class NavGuiData {
     public static void save(EntityNPCInterface npc, NBTTagCompound data) {
         npc.ais.readToNBT(data);
         applySelection(npc, data);
+        FlightGui.applySelection(npc, data);
         npc.setHealth(npc.getMaxHealth());
         npc.updateAI = true;
         npc.updateClient = true;

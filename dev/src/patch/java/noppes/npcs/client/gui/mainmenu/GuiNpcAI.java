@@ -21,6 +21,7 @@ import noppes.npcs.client.gui.util.ITextfieldListener;
 import noppes.npcs.constants.EnumPacketServer;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.entity.data.DataAI;
+import noppes.npcs.rework.movement.FlightGui;
 import noppes.npcs.rework.nav.NavGuiState;
 
 public class GuiNpcAI
@@ -30,6 +31,7 @@ IGuiData {
     private String[] tacts = new String[]{"aitactics.rush", "aitactics.stagger", "aitactics.orbit", "aitactics.hitandrun", "aitactics.ambush", "aitactics.stalk", "gui.none"};
     private DataAI ai;
     private final NavGuiState navigation = new NavGuiState();
+    private final FlightGui flight = new FlightGui();
     private boolean aiLoaded;
 
     public GuiNpcAI(EntityNPCInterface npc) {
@@ -114,7 +116,7 @@ IGuiData {
         } else if (button.id == 1) {
             this.ai.doorInteract = button.getValue();
         } else if (button.id == 2) {
-            this.setSubGui(new SubGuiNpcMovement(this.ai, this.navigation));
+            this.setSubGui(new SubGuiNpcMovement(this.ai, this.navigation, this.flight));
         } else if (button.id == 5) {
             this.npc.ais.setAvoidsWater(button.getValue() == 1);
         } else if (button.id == 6) {
@@ -141,6 +143,7 @@ IGuiData {
         if (!this.aiLoaded) { return; }
         NBTTagCompound data = this.ai.writeToNBT(new NBTTagCompound());
         this.navigation.writeChoice(data);
+        this.flight.writeChoice(data);
         Client.sendData(EnumPacketServer.MainmenuAISave, data);
     }
 
@@ -148,6 +151,7 @@ IGuiData {
     public void setGuiData(NBTTagCompound compound) {
         this.ai.readToNBT(compound);
         this.navigation.load(compound);
+        this.flight.load(compound);
         this.aiLoaded = true;
         this.initGui();
     }

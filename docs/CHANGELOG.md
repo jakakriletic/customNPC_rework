@@ -55,7 +55,7 @@ Measured against the 5 Oct baseline: 8 of 9 cells faster, idle-500 p95 MSPT −9
 | Per-NPC hitbox modes solid/smart with shield weight; NPC carrier with NPC crew pushed with total mass (M3.8, D-028); mode in the NPC GUI (M3.8b) | `RwHitbox`, NBT `RwHitboxMode`, `RwHitboxShieldWeight` (200), `RwHitboxShieldItems` | |
 | Path continuation to goals beyond the navigation range (M4.10, D-084) | `RwPathResume`, `/rwpath nadaljuj` | flying: stalled resume retries once with a 1024-node search (P3); corner/maze pass only together with `RwFlyLineOfSight`; walking keeps the 200-node limit |
 | Flying NPC line-of-sight check while following a path (M4.17, D-085) | `RwFlyLineOfSight`, `/rwpath vidno` | attempt-1 cost +32 % in flying combat (Q83) |
-| Hover flight: direct 3D movement, holds position, stops without sliding (M4.3, D-087) | NBT `RwFlightMode`=1 | no GUI in v1 |
+| Hover flight: direct 3D movement, holds position, stops without sliding (M4.3, D-087) | NBT `RwFlightMode`=1; AI → Movement → `Fly: Hover` when Navigation = Flying (P6) | Original remains default; saved Momentum shown disabled and preserved |
 | Baritone navigation backend per NPC, GUI AI → Movement → Backend (M4.15b/c, D-089) | `RwNavBackend` + NBT `RwNavBackend`, `/rwnav` | needs `npcbaritone` library |
 | Formations with home and facing at the end (M4.14) | `/rwsquad`, `FormationApi` | P4: members go in column through narrow doors and follow the shared path without extra searches; acceptance per Q257 (slots, lag), one scene |
 | Client LOD: NPCs beyond N blocks without eyes, name, chat bubbles and 3D headwear (M5-K K5) | `RwLodStart` (0) | changes the look of distant NPCs |
@@ -76,5 +76,5 @@ Diagnostic commands: `/rwtarget`, `/rwhitbox`, `/rwfar`, `/rwimpostor`, `/rwcoll
 
 ### Moved to v2
 
-Full client matrix and 4 h soak, `/npcanim reload` and `blendTo`, Momentum flight mode and a
-flight GUI, Java API for items/blocks/quests/dialogs/factions.
+Full client matrix and 4 h soak, `/npcanim reload` and `blendTo`, Momentum flight mode,
+Java API for items/blocks/quests/dialogs/factions.

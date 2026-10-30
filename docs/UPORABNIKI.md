@@ -80,7 +80,11 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 |---|---|---|
 | `RwHitboxMode` | NPC GUI (hitbox) | 0 vanilla, 1 solid, 2 smart; needs `RwHitbox=1` |
 | `RwNavBackend` | AI → Movement → Backend | 0 vanilla, 1 Baritone; needs the global permission |
-| `RwFlightMode` | NBT only (no GUI in v1) | 0 original, 1 Hover (holds position, stops without sliding) |
+| `RwFlightMode` | AI → Movement, first row (`Fly: Orig` / `Fly: Hover`), visible when Navigation = Flying | 0 original, 1 Hover (holds position, stops without sliding); saved Momentum (2) is shown disabled |
+
+Choose Flying in Navigation to show the flight button, select Original or Hover, then close
+Movement and the AI editor to save. Switching back to Ground hides the button but preserves
+the stored flight mode; Hover applies only while flying. A new NPC defaults to Original.
 
 ### Commands (op)
 
@@ -156,7 +160,11 @@ Not proven, so not claimed:
 - Java scripts (P5, Q263–Q268): `RwJavaClasspath=auto` and Java in the player/forge/block/door/item
   GUIs were tested on a packaged Forge server without other mods. Classes that other mods change
   with coremods or mixins are seen in their Forge form; no real modpack was tested (Q1).
-- `RwFlightMode` has no GUI; Momentum flight mode is v2.
+- `RwFlightMode` now has a GUI (P6): Original/Hover selection, cloning and restart passed on an
+  integrated dev client (137 checks). The 10 screenshots were reviewed, but the movement tutorial
+  toast covers the new button; its label and bounds were checked by the GUI harness. Packaged
+  and dedicated clients were not tested for P6. Momentum flight mode stays v2 and cannot be
+  selected in the GUI; an existing NBT value of 2 is preserved.
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).
