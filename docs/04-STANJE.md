@@ -14,9 +14,9 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-29** (seja 189) — **M10.1c primerjalno sprejet** (Q225): controller m101c-matrika-v1 PASS na `62d88a26…`, oba kraka 13/13 + 9/9, NBT/sledi O = K. IN3/IA3/IS3/IL5/IL6 ostanejo delni; celoten release sprejem še ni potrjen. [Zapis](meritve/2026-10-29-M10.1c-matrika.md). |
+| Zadnja posodobitev | **2026-10-30** (seja 190) — **M10.1d zaprt brez sprejema** (Q233): na `62940ab3…` prevod v2 PASS, vse 4 funkcionalne celice FAIL, nič PNG; oba poskusa porabljena, validacija v2. Produkcija ista, brez ponovitev; naslednji neodvisni M10.5 rollback po Q92. [Zapis](meritve/2026-10-30-M10.1d-klient.md). |
 | Trenutni milestone | **M10 — release** (v1 obseg Q92); M7 v1 zaključen (M7.0, M7.V, M7.9, M7.5; D-095); M6 Scripting v1 zaključen (M6.0–M6.12) po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
-| Naslednji paketi | **M10.1d (klient) po ~~M10.1c~~ (primerjalno sprejet Q225) → M10.5 rollback → M10.4 soak 4 h → M10.2 → M10.6 → M10.7** po [Q92](10-OBSEG-V1.md) in D-096 (~~M10.0~~ Q207–Q214; M10.1a/M10.1b zaprta brez sprejema Q220/Q223; M7 v1 zaključen, M7.8 v2). Uspešnih serij se ne ponavlja (Q90). Privzeto izklopljeno brez cenovne meje, največ 2 poskusa/paket. M4.15a potrditev 2000 nedosegljivih odložena; Q22/OptiFine/Entity Culling za release, M10.3 blokiran (Q1). |
+| Naslednji paketi | **M10.5 rollback → M10.4 soak 4 h → M10.2 → M10.6 → M10.7** (M10.1d zaprt brez sprejema, validacija v2 Q233; M10.1c primerjalno sprejet Q225) po [Q92](10-OBSEG-V1.md) in D-096 (~~M10.0~~ Q207–Q214; M10.1a/M10.1b zaprta brez sprejema Q220/Q223; M7 v1 zaključen, M7.8 v2). Uspešnih serij se ne ponavlja (Q90). Privzeto izklopljeno brez cenovne meje, največ 2 poskusa/paket. M4.15a potrditev 2000 nedosegljivih odložena; Q22/OptiFine/Entity Culling za release, M10.3 blokiran (Q1). |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **224** datotek `.java` v `src/patch` (M7.5: `rework/anim` +3 + `AnimationHooksProbe`), od tega **154** rework in 3 dostopni razredi v `net/minecraft/…`; build/package PASS na `e80e2658…`: **78** pričakovanih spremenjenih vnosov (77 razredov originala + manifest coremoda) |
 | Testi | **534** metod `@Test` v **85** datotekah; `testOriginal` **45** preverjanj. M7.5 m75-api-v1 6.998 preverjanj, m75-hooks-on/off-v1 in m62-packaged-v3 PASS na `e80e2658…`; M7.9 m79-api-v1/m79-absent-v1 PASS na `1a2a2b75…`; M6.11 m611 12/12 PASS na `e3e30ca1…`; M6.8 unit/build/package in m68 27/27 PASS na `36620163…`, produkcija ista, brez ponavljanja (Q90/Q92). FA sprejem M4.14b ostaja neuspešen (D-079); smoke/protokol dodatno 20/16 trditev |
@@ -44,7 +44,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | [M7.0 raziskava](raziskave/M7.0-animacije-integracija.md) (D-095); [M7.V zagon](meritve/2026-10-29-M7.V-entities-zagon.md) 37/37 klipov (Q199); [M7.9 `Animators`](meritve/2026-10-29-M7.9-animator-api.md) (Q202); [M7.5 hooki](meritve/2026-10-29-M7.5-animacijski-hooki.md) (Q206); v1 zaključen; M7.8 reload v2 |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
-| M10 Release | **M10.1c O = K primerjalno sprejet** (Q225); M10.1a/b nista sprejeta | [M10.1c](meritve/2026-10-29-M10.1c-matrika.md) 13/13 + 9/9 na krak; IN3/IA3/IS3/IL5/IL6 delni; naslednji M10.1d klient, M10.3/IO4 blokirana (Q1) |
+| M10 Release | **M10.1c O = K primerjalno sprejet** (Q225); M10.1a/b nista sprejeta | [M10.1c](meritve/2026-10-29-M10.1c-matrika.md) 13/13 + 9/9 na krak; IN3/IA3/IS3/IL5/IL6 delni; M10.1d zaprt brez sprejema (Q233), naslednji M10.5; M10.3/IO4 blokirana (Q1) |
 | M11 Poveljevanje prek zemljevida | ni začeto — **zadnja faza** (D-026, 6. 10.) | R10; vhodni pogoj M4.14b, M4.10, M5; Q14 |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
@@ -55,7 +55,18 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 187 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 188 → 1, novejši zgoraj).*
+
+### 2026-10-30 (190) — M10.1d: klientski harness
+
+**Paket:** M10.1d (Q226–Q233) · **Stanje:** zaprt brez sprejema, validacija v2 (Q92).
+Ločen klientski testni mod proti originalnemu API, brez spremembe produkcije. Na `62940ab3…`
+controller prevod v2 PASS; integrated FAIL (`Missing Locked`), dedicated/original-server FAIL
+(`Timeout JOIN`), original-client FAIL (`Timeout ACK:SCENE`). Povezave/prijave potrjene v logih,
+vendar nobena celica ni dosegla offline/restart/verify, nič PNG; nobena nova vsebinska vrstica
+ni sprejeta. Oba poskusa porabljena, brez popravka/ponavljanja/tretjega poskusa (Q90/Q92).
+[Dokazi in omejitve](meritve/2026-10-30-M10.1d-klient.md). Harness in razsodba se arhivirata s commit/push;
+celoten release sprejem ni potrjen. Naslednji neodvisni paket M10.5 rollback po D-096/Q92.
 
 ### 2026-10-29 (189) — M10.1c: strežniški O = K
 
@@ -65,11 +76,3 @@ zaščiteni vhodi nespremenjeni. Produkcija/harness ostaneta ista; uspešnega te
 IN3/IA3/IS3/IL5/IL6 ostanejo delno pokriti (zlasti `unloaded=False` v obeh krakih ni unload dokaz in IL6 ne meri
 save vrste); celoten release sprejem ni potrjen. [Zapis](meritve/2026-10-29-M10.1c-matrika.md).
 Naslednji M10.1d klient po Q92/Q224; M10.3/IO4 blokirana (Q1).
-
-### 2026-10-29 (188) — M10.1b: strežniške A/B vrstice (ni sprejet)
-
-**Paket:** M10.1b (Q221–Q224) · **Stanje:** zaprt brez sprejema, oba poskusa porabljena (Q92).
-Razsodba IN3/IA5 popravljena po Q221, IN6 maskira izpeljane `Trans[XYZ]` (Q222, padec poskusa 1). Poskus 2
-`m101b-matrika-v2`: oba kraka 13/13 run, 9/9 verify, IN6 in IL6 OK, sled razsodb O = K enaka; padec samo na
-O = K NBT zaradi naključne `Eyes.Color` (`nextInt(23)` v obeh jarih, Q223). M10.1c ponovi O/K tek z barvo
-"v paleti" (`m101c-matrika-v1`), klientske vrstice M10.1d (Q224). [Zapis](meritve/2026-10-29-M10.1b-matrika.md).

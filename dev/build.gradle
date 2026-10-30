@@ -38,6 +38,19 @@ dependencies {
 // Only explicitly restored classes compile; MDK examples are excluded.
 sourceSets.main.java.srcDirs = ['src/patch/java']
 sourceSets.main.resources.srcDirs = ['src/patch/resources']
+
+// M10.1d: an independent diagnostic mod, compiled ONLY against the mapped original.
+// It is never included in devRuntimeMod/buildPatchedMod or installed in dev/run/mods.
+sourceSets {
+    releaseHarness {
+        java.srcDirs = ['src/releaseHarness/java']
+        compileClasspath = sourceSets.main.compileClasspath
+    }
+}
+task releaseHarnessJar(type: Jar, dependsOn: releaseHarnessClasses) {
+    archiveName = 'm10-release-harness.jar'
+    from sourceSets.releaseHarness.output
+}
 tasks.withType(JavaCompile) { options.encoding = 'UTF-8' }
 test {
     // Plain JUnit has no FML class transformer: use mapped compile dependencies.
@@ -71,6 +84,7 @@ task devRuntimeMod(type: Jar, dependsOn: classes) {
 afterEvaluate {
     ['runClient', 'runServer'].each { taskName ->
         tasks.getByName(taskName).dependsOn devRuntimeMod
+        if (project.hasProperty('m10Job')) { tasks.getByName(taskName).dependsOn releaseHarnessJar }
         tasks.getByName(taskName).maxHeapSize = '2G'
         tasks.getByName(taskName).doFirst {
             // Vsak zagon dobi svojo kopijo runtime jarja. build/libs/customnpcs-dev-runtime.jar
@@ -90,6 +104,28 @@ afterEvaluate {
             }) + files(snap)
             // M5.15 (D-031): v dev okolju coremod ni v mods/, zato ga FML dobi prek lastnosti.
             systemProperty 'fml.coreMods.load', 'noppes.npcs.rework.core.RwCoreMod'
+            if (project.hasProperty('m10Job')) {
+                // Remove main output as well as the runtime jar in the O arm. No patched
+                // CustomNpcs or diagnostic class may leak into an original-client claim.
+                if (project.hasProperty('m10Original')) {
+                    def outputs = sourceSets.main.output.files.collect { it.canonicalFile }
+                    classpath = files(classpath.files.findAll {
+                        !it.name.toLowerCase().startsWith('customnpcs') && !outputs.contains(it.canonicalFile)
+                    }) + files('libs/customnpcs-mapped-01Oct19.jar')
+                    systemProperties.remove('fml.coreMods.load')
+                }
+                classpath += files(releaseHarnessJar.archivePath)
+                systemProperty 'm10job', project.property('m10Job')
+                if (taskName == 'runClient') {
+                    // FG otherwise chooses a new random Player### each JVM; IL3 must
+                    // reconnect the same real local player, not create another account.
+                    def launchArgs = new ArrayList(args)
+                    def usernameIndex = launchArgs.indexOf('--username')
+                    if (usernameIndex >= 0) { launchArgs.set(usernameIndex + 1, 'M101D_Player') }
+                    else { launchArgs.addAll(['--username', 'M101D_Player']) }
+                    setArgs(launchArgs)
+                }
+            }
             if (project.hasProperty('npcBaritoneDev')) {
                 classpath += files("${npcBaritoneModDir}/build/classes/java/main",
                                    "${npcBaritoneModDir}/build/resources/main")

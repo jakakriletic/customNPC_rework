@@ -577,7 +577,7 @@ CustomNPC+ repozitorija se ne prenesejo.
 | ~~M10.1a~~ | **Zaprt 29. 10. brez sprejema (Q220):** oba poskusa padla v harnessu na kraku O, K se ni zagnal; vse vrstice prestavljene v M10.1b. [Zapis](meritve/2026-10-29-M10.1a-matrika.md) | M |
 | ~~M10.1b~~ | **Zaprt 29. 10. brez sprejema (Q223):** oba kraka zelena po vrsticah, O = K padel samo na naključni `Eyes.Color`; [zapis](meritve/2026-10-29-M10.1b-matrika.md) | M |
 | ~~M10.1c~~ | **Primerjalni paket sprejet 29. 10. (Q225):** `m101c-matrika-v1` PASS, O/K 13/13 + 9/9 in NBT/sledi enaki; IN3/IA3/IS3/IL5/IL6 ostanejo delno pokriti. [Zapis](meritve/2026-10-29-M10.1c-matrika.md); naslednji M10.1d po Q92 | S |
-| M10.1d | Klientski prehod (Q224): IL3, IK2, IC1–IC5, IK3, IK4, IO1–IO3, login/playerdata, pošta, skin napaka, F3+T, original ↔ kandidat klient/strežnik | M |
+| ~~M10.1d~~ | **Zaprt brez sprejema 30. 10. (Q233), validacija v2:** oba poskusa porabljena, prevod v2 PASS, vse 4 funkcionalne celice FAIL; [zapis](meritve/2026-10-30-M10.1d-klient.md). Naslednji M10.5 → M10.4 (4 h) → M10.2 → M10.6 → M10.7 po Q92; release merila ostanejo odprta | M |
 | M10.2 | Meritve proti baselineu iz M2.6, vse scenarije | S |
 | M10.3 | Test na **kopiji** uporabnikovega pravega sveta | M |
 | M10.4 | Soak test, priporočeno 24 h z dejansko aktivnostjo | S |

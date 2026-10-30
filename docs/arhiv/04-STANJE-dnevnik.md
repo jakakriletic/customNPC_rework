@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 187 → 1)
+# Arhiv: dnevnik sej (vnosi 188 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,14 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (188) — M10.1b: strežniške A/B vrstice (ni sprejet)
+
+**Paket:** M10.1b (Q221–Q224) · **Stanje:** zaprt brez sprejema, oba poskusa porabljena (Q92).
+Razsodba IN3/IA5 popravljena po Q221, IN6 maskira izpeljane `Trans[XYZ]` (Q222, padec poskusa 1). Poskus 2
+`m101b-matrika-v2`: oba kraka 13/13 run, 9/9 verify, IN6 in IL6 OK, sled razsodb O = K enaka; padec samo na
+O = K NBT zaradi naključne `Eyes.Color` (`nextInt(23)` v obeh jarih, Q223). M10.1c ponovi O/K tek z barvo
+"v paleti" (`m101c-matrika-v1`), klientske vrstice M10.1d (Q224). [Zapis](../meritve/2026-10-29-M10.1b-matrika.md).
 
 ### 2026-10-29 (187) — M10.1a: strežniška A/B matrika (ni sprejeta)
 
