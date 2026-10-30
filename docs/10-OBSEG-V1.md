@@ -35,7 +35,7 @@ Pravila spodaj (Q90, Q92) veljajo naprej; po popravku kode se zahtevana serija s
 | ~~P4~~ | formacije — sprejet po merilih Q257 (G/O 8/8 mest, FA5 G 1 ≤ 1, zaostanek ≤ 1,1; izvirni skupni cilj/premer NOTE, F1–F12 odprti) | izpolni merila D-079 |
 | ~~P5~~ | Java scripting — sprejet (Java v 5 handlerjih JS = Java, `RwJavaClasspath=auto` na pakiranem Forge; pravi modpack ni preverjen, Q1) | Java tudi v player/forge/block/door/item GUI; samodejni `RwJavaClasspath` |
 | ~~P6~~ | `RwFlightMode` — GUI Original/Hover sprejet (137/137, clone/restart; omejitev PNG Q271) | GUI za izbiro načina |
-| P7 | animacije | walk/idle/death hooki, dogodki ustavljenega koraka, `blendTo`, `/npcanim reload` |
+| P7 | animacije — [P7.0 raziskava zaključena](raziskave/P7.0-animacije-razsiritev.md) (D-098); implementacija naslednja, brez sprejema | walk/idle/death hooki, dogodki ustavljenega koraka, `blendTo`, `/npcanim reload` |
 | P8 | Baritone | odprte cenovne meje M4.15a |
 
 Ne v tem sklopu: M10.3/IO4 (pravi modpack, blokiran na Q1). Po P1–P8 upravljalnik ne začne v2

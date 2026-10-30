@@ -1020,3 +1020,13 @@ odrinjen član iz HOLD ostane PATH (Q258–Q262, D-080).
 **Razlog:** D-079 dovoli spremembo meril samo z novo utemeljeno odločitvijo; prag 6 izhaja iz
 LAG_STOP. Poskus 1 sprejet: G DONE 101, FA5 1 ≤ 1, obtičanja 0, zaostanek 1,088; O DONE 40.
 Omejitve: ena scena in ponovitev, F1–F12 odprti. [Zapis](meritve/2026-10-30-P4-formacije.md).
+
+### D-098 — P7.0: lokalni adapter za razširjene animacije (2026-10-30, Q272–Q276)
+
+Q248 ponovno odpre dele D-095: točen dnevnik akcij in walk/idle/death hooki, `blendTo` ter reload.
+Izbrana pot je ozek ASM adapter v reworku za pripeti entities 0.7.0; njegov repo/jar ostaneta nedotaknjena.
+Hooki ostanejo pod `RwAnimHooks` (privzeto 0); blend/reload sta izrecna opt-in posega. Brez tujih DataParameter ID-jev:
+ločen kanal, revizije in snapshoti po logični strani/seji, tudi za obstoječe entitete in pozni join.
+Razlog: END polling izgubi zgodovino, cache clear pusti stare NPC knjižnice, play ni blend.
+To je načrt, ne funkcionalni sprejem. Naslednja implementacija P7 mora dokazati server in klient;
+[raziskava/merila](raziskave/P7.0-animacije-razsiritev.md), brez novega merilnega poskusa v tej seji.

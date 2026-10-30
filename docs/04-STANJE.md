@@ -14,9 +14,9 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-10-30** (seja 201) — **P6 GUI Original/Hover sprejet** (Q269–Q271): unit/build/package in `p6-gui-v1` PASS na `81e79f30…`, 137/137, clone/restart šestih UUID-jev; toast na PNG prekriva novi gumb (vizualna omejitev). [Zapis](meritve/2026-10-30-P6-flight-gui.md). |
+| Zadnja posodobitev | **2026-10-30** (seja 202) — **P7.0 izvedbena raziskava zaključena** (Q272–Q276, D-098): bytecode potrdi izgubo zgodovine po stopu in ločene NPC predpomnilnike. Izbrana lokalna instrumentacija, točen dnevnik, blend poze in transakcijski reload; **P7 še ni implementiran ali sprejet**. Produkcija/harnessi nespremenjeni, brez novih testov (Q90). [Načrt/dokazi](raziskave/P7.0-animacije-razsiritev.md). |
 | Trenutni milestone | **M10 — release** (v1 obseg Q92); M7 v1 zaključen (M7.0, M7.V, M7.9, M7.5; D-095); M6 Scripting v1 zaključen (M6.0–M6.12) po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
-| Naslednji paketi | **Popravki omejitev v1.0 P1–P8** po [Q248](10-OBSEG-V1.md): P1 soak (zaključen z omejitvijo heapa) → P2 klientska matrika (zaključen z omejitvijo) → P3 `RwPathResume`/`RwFlyLineOfSight` (sprejet pod stikali) → P4 formacije (sprejet po Q257) → P5 Java GUI/classpath (sprejet) → P6 GUI `RwFlightMode` (sprejet) → **P7 naslednji:** animacije → P8 Baritone; vsak posodobi `UPORABNIKI.md` §6. Po P8 čakamo odločitev lastnika o izdaji (brez v2). Q90/Q92 veljata: uspešnih serij ne ponavljamo, največ 2 poskusa/paket. M10.3/IO4 blokirana (Q1). |
+| Naslednji paketi | **Popravki omejitev v1.0 P1–P8** po [Q248](10-OBSEG-V1.md): P1 soak (zaključen z omejitvijo heapa) → P2 klientska matrika (zaključen z omejitvijo) → P3 `RwPathResume`/`RwFlyLineOfSight` (sprejet pod stikali) → P4 formacije (sprejet po Q257) → P5 Java GUI/classpath (sprejet) → P6 GUI `RwFlightMode` (sprejet) → **P7 naslednji:** implementacija po zaključeni [P7.0 raziskavi](raziskave/P7.0-animacije-razsiritev.md) (D-098; funkcionalni sprejem odprt) → P8 Baritone; vsak posodobi `UPORABNIKI.md` §6. Po P8 čakamo odločitev lastnika o izdaji (brez v2). Q90/Q92 veljata: uspešnih serij ne ponavljamo, največ 2 poskusa/paket. M10.3/IO4 blokirana (Q1). |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **235** datotek `.java` v `src/patch`, od tega **158** rework; P6: `FlightGui` in `FlightGuiHarness`. Build/package PASS na `81e79f30…`: 370 razredov v jarju, **85** pričakovanih razlik originala (84 razredov + manifest). |
 | Testi | **567** metod `@Test` v **88** datotekah; `testOriginal` **45** preverjanj. P6 unit/build/package in `p6-gui-v1` PASS na `81e79f30…` (79/79 + 58/58). Predhodnih uspešnih serij ne ponavljamo (Q90). |
@@ -41,7 +41,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M4 Gibanje | **Paketi v1.0 obravnavani z omejitvami** | [M4.15c](meritve/2026-10-29-M4.15c-klient.md) GUI/restart zelen; M4.15a potrditev 2000 nedosegljivih odložena. Celoten M4 izhodni kriterij ni izpolnjen; M4.14b brez FA sprejema (D-079); P4 FA sprejet po Q257 ([zapis](meritve/2026-10-30-P4-formacije.md)), F1–F12 odprti. |
 | M5 Performance | **zaključeno 22. 10. (D-055)** | M5-S: kapaciteta M5.8; M5-K: sprejem M5-K.2; M5-V: sprejem M5-V.8 in privzeti vklop V.8b; M5.Z: obe matriki in sled zeleni. [Regresija](meritve/2026-10-22-M5.Z-regresija.md); nepokrita release preverjanja ostanejo M10 |
 | M6 Scripting | **v1 zaključen (M6.0–M6.12)** | [Player/world](meritve/2026-10-29-M6.11-player-world.md) m611 12/12, `IPlayer`/`IWorld` v API (Q191); [izbira jezika](meritve/2026-10-29-M6.12-izbira-jezika.md) 101 trditev (Q187); P5: Java v vseh skriptnih GUI-jih, `RwJavaClasspath=auto` (Q265); item/block/quest/dialog/faction API v2 |
-| M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | [M7.0 raziskava](raziskave/M7.0-animacije-integracija.md) (D-095); [M7.V zagon](meritve/2026-10-29-M7.V-entities-zagon.md) 37/37 klipov (Q199); [M7.9 `Animators`](meritve/2026-10-29-M7.9-animator-api.md) (Q202); [M7.5 hooki](meritve/2026-10-29-M7.5-animacijski-hooki.md) (Q206); v1 zaključen; M7.8 reload v2 |
+| M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | [M7.0 raziskava](raziskave/M7.0-animacije-integracija.md) (D-095); [M7.V zagon](meritve/2026-10-29-M7.V-entities-zagon.md) 37/37 klipov (Q199); [M7.9 `Animators`](meritve/2026-10-29-M7.9-animator-api.md) (Q202); [M7.5 hooki](meritve/2026-10-29-M7.5-animacijski-hooki.md) (Q206); prvotni v1 zaključen; P7.0 raziskava razširitve zaključena (D-098), implementacija P7 odprta |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
 | M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b/d brez sprejema; celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
@@ -55,7 +55,16 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 199 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 200 → 1, novejši zgoraj).*
+
+### 2026-10-30 (202) — P7.0: izvedbena raziskava animacij (zaključena)
+
+**Paket:** P7.0 (Q248, Q272–Q276, D-098) · **Stanje:** raziskava zaključena; P7 popravek še ni implementiran ali sprejet.
+Po protokolu §1a ponovno preverjena premisa D-095: END polling izgubi zadnji izvedeni korak, cache clear ne zamenja NPC knjižnic,
+play pa ne zagotovi prehoda poze. Bralni javap pripetega entities 0.7.0 in primarni ASM/Forge viri podpirajo lokalni adapter,
+dnevnik, snapshot knjižnice po logični strani ter ločen sync kanal. Entities repo/jar ostaneta nedotaknjena. Zapis vsebuje
+pogodbo hookov, blendTo/reload in obvezni server/klient sprejem znotraj Q250. Brez testov/builda/Minecrafta; produkcija in harnessi
+nespremenjeni (Q90). Naslednja implementacija celotnega P7, nato P8; brez novega merilnega poskusa. [Raziskava](raziskave/P7.0-animacije-razsiritev.md).
 
 ### 2026-10-30 (201) — P6: GUI za način letenja (sprejet)
 
@@ -66,12 +75,4 @@ Fly: Orig/Hover samo za leteče; Momentum onemogočen in ohranjen, legacy save n
 Vseh 10 PNG pregledanih; tutorial toast prekriva novi gumb, zato berljivost ni vizualno dokazana,
 napis/meje in dejanski kliki so preverjeni s harnessom. Brez nove tick kode ali ponovitve po Q90.
 Naslednji P7 animacije. [Zapis](meritve/2026-10-30-P6-flight-gui.md).
-
-### 2026-10-30 (200) — P5: Java v vseh skriptnih GUI-jih in `RwJavaClasspath=auto` (sprejet)
-
-**Paket:** P5 (Q248, Q263–Q268) · **Stanje:** sprejet na poskusu 2, privzeto prazno. Na 6531b341… zeleni unit/build/package,
-`p5-handlers-v1` 19/19 in regresija `m62-packaged-v3`. Player/forge/block/door/item: Java tab = JS sled, vezava po imenu, napačen
-tip dogodka → `hook.signature`. `auto`: viri nalagalnika + enkrat zapisan jar Minecraft/Forge razredov skozi Forgeovo verigo
-(3.601 razredov, 1,98 s; restart reused 7 ms). Poskus 1 17/19: Forge razredi na disku obfuscirani (`amu`) → v jar (Q268).
-Omejitve: coremodi/mixini modov ne, pravi modpack ne (Q1), projektil brez Jave. Naslednji P6. [Zapis](meritve/2026-10-30-P5-java-handlerji.md).
 

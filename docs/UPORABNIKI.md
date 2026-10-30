@@ -156,7 +156,9 @@ Not proven, so not claimed:
   is the legion shape, not a fault. One test run, one scene; the manual in-game checks (F1–F12)
   were not done.
 - `RwAnimHooks` observes once per tick; events of a step that a script stops later in the same
-  tick are not reported; no walk/idle/death hooks; `blendTo` and `/npcanim reload` are v2.
+  tick are not reported; no walk/idle/death hooks; `blendTo` and `/npcanim reload` are unavailable.
+  P7 reopens these features; its [implementation research](raziskave/P7.0-animacije-razsiritev.md)
+  is complete, but the fix is not implemented or validated yet.
 - Java scripts (P5, Q263–Q268): `RwJavaClasspath=auto` and Java in the player/forge/block/door/item
   GUIs were tested on a packaged Forge server without other mods. Classes that other mods change
   with coremods or mixins are seen in their Forge form; no real modpack was tested (Q1).

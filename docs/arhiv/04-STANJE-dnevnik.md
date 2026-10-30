@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 199 → 1)
+# Arhiv: dnevnik sej (vnosi 200 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,14 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-30 (200) — P5: Java v vseh skriptnih GUI-jih in `RwJavaClasspath=auto` (sprejet)
+
+**Paket:** P5 (Q248, Q263–Q268) · **Stanje:** sprejet na poskusu 2, privzeto prazno. Na 6531b341… zeleni unit/build/package,
+`p5-handlers-v1` 19/19 in regresija `m62-packaged-v3`. Player/forge/block/door/item: Java tab = JS sled, vezava po imenu, napačen
+tip dogodka → `hook.signature`. `auto`: viri nalagalnika + enkrat zapisan jar Minecraft/Forge razredov skozi Forgeovo verigo
+(3.601 razredov, 1,98 s; restart reused 7 ms). Poskus 1 17/19: Forge razredi na disku obfuscirani (`amu`) → v jar (Q268).
+Omejitve: coremodi/mixini modov ne, pravi modpack ne (Q1), projektil brez Jave. Naslednji P6. [Zapis](../meritve/2026-10-30-P5-java-handlerji.md).
 
 ### 2026-10-30 (199) — P4: formacije (sprejet po merilih Q257)
 

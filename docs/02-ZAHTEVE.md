@@ -394,6 +394,8 @@ registry model. Za vsako funkcijo:
 
 **Faza:** M7 · **Velikost:** zelo velika · **Tveganje:** visoko · **Odvisnost:** M6 (R7)
 
+> **Q248/P7 (30. 10.):** `Animators.of(npc)` ostane vstop. Walk/idle/death hooki, dogodki ustavljenega koraka, `blendTo` in `/npcanim reload` so ponovno v obsegu. [P7.0](raziskave/P7.0-animacije-razsiritev.md) določa izvedbeni načrt in sprejem na serverju ter klientu; raziskava je zaključena, funkcionalni popravek še ni potrjen.
+
 ### Kaj kaže koda
 
 **[dokazano] 1.12.2 CustomNPCs nima animacijskega sistema, samo fiksne poze.**
