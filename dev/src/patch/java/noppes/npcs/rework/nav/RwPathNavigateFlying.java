@@ -10,10 +10,12 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathNavigateFlying;
 import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.pathfinding.RwPathFinder;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.ChunkCache;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -31,6 +33,9 @@ import net.minecraftforge.event.ForgeEventFactory;
  * <p>M4.17 (D-085): pri {@code RwFlyLineOfSight=1} {@link #isDirectPathBetweenPoints} preveri vidno
  * crto s premikom hitboxa in preskok omeji na {@link FlightFollow#MAX_SKIP} blokov
  * ({@link FlightFollow}); pri 0 vanilla, ki vedno vrne {@code true}.
+ *
+ * <p>P3 (Q256): pri {@code RwPathResume=1} obnova, ki z vanilla iskanjem ne napreduje, enkrat isce
+ * z {@link RwPathFinder} in mejo {@link PathResume#WIDE_NODES}; boljsi izid nadomesti vanilla izid.
  */
 public class RwPathNavigateFlying extends PathNavigateFlying {
     private final PathResume resume = new PathResume();
@@ -38,6 +43,8 @@ public class RwPathNavigateFlying extends PathNavigateFlying {
     private Path commandPath;
     /** Klic, ki ni ukaz: obnova, pot do entitete, vanilla {@code updatePath}. */
     private boolean passThrough;
+    /** P3 (Q256): iskalnik z mejo {@link PathResume#WIDE_NODES}; ustvarjen ob prvi obnovi brez napredka. */
+    private RwPathFinder wideFinder;
     /** M4.17 poskus 3: seznam skatel in celica za {@link #cells}; samo strezniska nit. */
     private final List<AxisAlignedBB> boxes = new ArrayList<AxisAlignedBB>();
     private final BlockPos.MutableBlockPos cell = new BlockPos.MutableBlockPos();
@@ -180,8 +187,20 @@ public class RwPathNavigateFlying extends PathNavigateFlying {
         boolean outer = this.passThrough;
         this.passThrough = true;
         try {
-            Path path = super.getPathToPos(new BlockPos(t[0], t[1], t[2]));
+            BlockPos target = new BlockPos(t[0], t[1], t[2]);
+            Path path = super.getPathToPos(target);
             PathPoint end = path == null ? null : path.getFinalPathPoint();
+            if (this.resume.stalls(end != null, end == null ? 0 : end.x, end == null ? 0 : end.y, end == null ? 0 : end.z)) {
+                long start = System.nanoTime();
+                Path wide = this.widePath(target);
+                PathPoint wideEnd = wide == null ? null : wide.getFinalPathPoint();
+                boolean progress = wideEnd != null && !this.resume.stalls(true, wideEnd.x, wideEnd.y, wideEnd.z);
+                PathResume.recordWide(progress, System.nanoTime() - start);
+                if (progress) {
+                    path = wide;
+                    end = wideEnd;
+                }
+            }
             if (this.resume.resumeResult(end != null, end == null ? 0 : end.x, end == null ? 0 : end.y, end == null ? 0 : end.z)) {
                 this.commandPath = path;
                 super.setPath(path, this.speed);
@@ -189,5 +208,24 @@ public class RwPathNavigateFlying extends PathNavigateFlying {
         } finally {
             this.passThrough = outer;
         }
+    }
+
+    /**
+     * P3: isto kot vanilla {@code getPathToPos} (isti ChunkCache in domet), z mejo
+     * {@link PathResume#WIDE_NODES} namesto 200. {@code targetPos} je ze nastavil predhodni klic
+     * {@code super.getPathToPos} do istega bloka.
+     */
+    private Path widePath(BlockPos target) {
+        if (this.wideFinder == null) {
+            this.wideFinder = new RwPathFinder(this.nodeProcessor, PathResume.WIDE_NODES);
+        }
+        float range = this.getPathSearchRange();
+        this.world.profiler.startSection("pathfind");
+        BlockPos at = new BlockPos(this.entity);
+        int i = (int) (range + 8.0F);
+        ChunkCache cache = new ChunkCache(this.world, at.add(-i, -i, -i), at.add(i, i, i), 0);
+        Path path = this.wideFinder.findPath(cache, this.entity, target, range);
+        this.world.profiler.endSection();
+        return path;
     }
 }

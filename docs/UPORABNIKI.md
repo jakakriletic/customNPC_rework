@@ -137,7 +137,10 @@ Not proven, so not claimed:
   not tested.
 - Performance: against the 5 Oct baseline 8 of 9 cells were faster, idle-500 p95 −92.9 %
   ([M10.2](meritve/2026-10-30-M10.2-baseline.md)); measured on a dev server, one machine.
-- `RwPathResume`/`RwFlyLineOfSight`: corner and maze cases still fail; Baritone backend has open
+- `RwPathResume`/`RwFlyLineOfSight` (P3, Q256): the flying corner and maze test courses pass
+  6/6 only with **both** switches on; `RwPathResume` alone still fails the corner. The wider search
+  (1024 nodes, once per stalled resume, ~0.8 ms) is flying only; walking NPCs keep the vanilla
+  200-node limit. Cost in flying combat with the wider search was not measured. Baritone backend has open
   cost limits ([M4.15a](meritve/2026-10-29-M4.15a-baritone.md)).
 - Formations do not meet all planned acceptance criteria (D-079).
 - `RwAnimHooks` observes once per tick; events of a step that a script stops later in the same

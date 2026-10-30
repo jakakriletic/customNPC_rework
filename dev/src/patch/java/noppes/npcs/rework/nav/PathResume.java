@@ -18,6 +18,10 @@ package noppes.npcs.rework.nav;
  * mesta dokazano nedosegljiv) in najvec {@link #MAX_RESUMES} obnov na en ukaz. Nadaljevanje
  * prekine: obticanje ali iztek vanilla ({@code clearPath}), nov ukaz, pot do entitete ali tuja pot.
  *
+ * <p>P3 (Q256): leteci navigator pred ustavitvijo zaradi obnove brez napredka enkrat isce z mejo
+ * {@link #WIDE_NODES} vozlisc ({@link #stalls}); vogal M4.16 se konca ob steni, ker vanilla meja
+ * 200 vozlisc ne doseze kraka (Q82).
+ *
  * <p>To je <b>sprememba obnasanja</b> (D-007): ukaz, ki je v originalu koncal brez poti ali pred
  * ciljem, zdaj pripelje do cilja. Zato stikalo {@code RwPathResume}, privzeto original.
  *
@@ -37,6 +41,11 @@ public final class PathResume {
     public static final double ARRIVED = 1.5;
     /** Nova pot mora koncati vsaj toliko blokov blize cilju kot prejsnja. */
     public static final double MIN_PROGRESS = 1.0;
+    /**
+     * P3 (Q256): meja vozlisc razsirjenega iskanja, kadar obnova z vanilla iskanjem (200) ne napreduje.
+     * Vogal M4.16 potrebuje z mesta ob steni ~253 vozlisc (simulacija vanilla A*), z zacetka do 877.
+     */
+    public static final int WIDE_NODES = 1024;
 
     private static int mode = ORIGINAL;
 
@@ -54,6 +63,12 @@ public final class PathResume {
     static long limit;
     /** Prekinjena: obticanje, nov ukaz, tuja pot. */
     static long cancelled;
+    /** P3: razsirjena iskanja (obnova brez napredka). */
+    static long wide;
+    /** P3: razsirjena iskanja, ki so napredovala in nadomestila vanilla izid. */
+    static long wideProgress;
+    /** P3: skupni cas razsirjenih iskanj. */
+    static long wideNanos;
 
     private boolean active;
     private int goalX;
@@ -90,12 +105,16 @@ public final class PathResume {
         noProgress = 0L;
         limit = 0L;
         cancelled = 0L;
+        wide = 0L;
+        wideProgress = 0L;
+        wideNanos = 0L;
     }
 
     public static String counters() {
         return "nadZacetih=" + started + " nadVmesnih=" + intermediates + " nadObnov=" + resumed
                 + " nadPrispelih=" + arrived + " nadBrezNapredka=" + noProgress + " nadMeja=" + limit
-                + " nadPrekinjenih=" + cancelled;
+                + " nadPrekinjenih=" + cancelled + " nadSirokih=" + wide + " nadSirokihNapredek=" + wideProgress
+                + " nadSirokihUs=" + wideNanos / 1000L;
     }
 
     /** Manhattanska razdalja blokov. */
@@ -244,6 +263,26 @@ public final class PathResume {
         }
         this.bestEnd = end;
         return true;
+    }
+
+    /**
+     * P3: ali bi {@link #resumeResult} s tem izidom nadaljevanje ustavil (ni poti ali ni napredka).
+     * Stanja ne spremeni; navigator na tej podlagi enkrat poskusi razsirjeno iskanje.
+     */
+    public boolean stalls(boolean hasPath, int endX, int endY, int endZ) {
+        if (!this.active) {
+            return false;
+        }
+        return !hasPath || euclid(endX, endY, endZ, this.goalX, this.goalY, this.goalZ) > this.bestEnd - MIN_PROGRESS;
+    }
+
+    /** P3: zapis enega razsirjenega iskanja. */
+    static void recordWide(boolean progress, long nanosTaken) {
+        ++wide;
+        if (progress) {
+            ++wideProgress;
+        }
+        wideNanos += nanosTaken;
     }
 
     /** Prekinitev od zunaj (obticanje, nov ukaz do entitete, tuja pot, brisanje poti). */

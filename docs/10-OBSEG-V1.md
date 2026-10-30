@@ -31,7 +31,7 @@ Pravila spodaj (Q90, Q92) veljajo naprej; po popravku kode se zahtevana serija s
 |---|---|---|
 | ~~P1~~ | soak (M10.4) — zaključen z omejitvijo (heap +44 % v 4 h odprt) | popravi diag nalagalnik chunkov (sprošča chunke, brez NPE ob stop, Q241) in zanos bojnih parov (Q240); 4 h soak zelen |
 | ~~P2~~ | klientska matrika (M10.1) — zaključen z omejitvijo (login sync popravljen; dedicated mail/relogin in mešana O/K para v2, Q254) | determinističen scenarij (barva oči ipd.), prijava, dialog/quest kliki, mail, mešani O/K pari; matrika zelena |
-| P3 | `RwPathResume` / `RwFlyLineOfSight` | vogal in labirint (Q82) |
+| ~~P3~~ | `RwPathResume` / `RwFlyLineOfSight` — sprejet pod stikali (vogal in labirint 6/6 z obema, Q256; samo nadaljevanje vogala ne reši) | vogal in labirint (Q82) |
 | P4 | formacije | izpolni merila D-079 |
 | P5 | Java scripting | Java tudi v player/forge/block/door/item GUI; samodejni `RwJavaClasspath` |
 | P6 | `RwFlightMode` | GUI za izbiro načina |

@@ -53,7 +53,7 @@ Measured against the 5 Oct baseline: 8 of 9 cells faster, idle-500 p95 MSPT −9
 | NPC mount ridden by an NPC steers itself; rider `tpTo` moves the mount; full hitbox after dismount (M3.3–M3.5) | `RwMountSteering` 0/1/2, `/rwmount` | |
 | Melee attack starts before a wander/move path ends (M3.6) | `RwAttackPriority`, `/rwattack` | |
 | Per-NPC hitbox modes solid/smart with shield weight; NPC carrier with NPC crew pushed with total mass (M3.8, D-028); mode in the NPC GUI (M3.8b) | `RwHitbox`, NBT `RwHitboxMode`, `RwHitboxShieldWeight` (200), `RwHitboxShieldItems` | |
-| Path continuation to goals beyond the navigation range (M4.10, D-084) | `RwPathResume`, `/rwpath nadaljuj` | corner/maze cases still fail |
+| Path continuation to goals beyond the navigation range (M4.10, D-084) | `RwPathResume`, `/rwpath nadaljuj` | flying: stalled resume retries once with a 1024-node search (P3); corner/maze pass only together with `RwFlyLineOfSight`; walking keeps the 200-node limit |
 | Flying NPC line-of-sight check while following a path (M4.17, D-085) | `RwFlyLineOfSight`, `/rwpath vidno` | attempt-1 cost +32 % in flying combat (Q83) |
 | Hover flight: direct 3D movement, holds position, stops without sliding (M4.3, D-087) | NBT `RwFlightMode`=1 | no GUI in v1 |
 | Baritone navigation backend per NPC, GUI AI → Movement → Backend (M4.15b/c, D-089) | `RwNavBackend` + NBT `RwNavBackend`, `/rwnav` | needs `npcbaritone` library |

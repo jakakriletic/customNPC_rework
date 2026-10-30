@@ -337,6 +337,7 @@ task testOriginal(type: Test) {
     // M4.10: nadaljevanje poti (rework/nav/PathResume); M4.17: vidna crta (FlightFollow).
     exclude '**/PathResumeTest.class'
     exclude '**/FlightFollowTest.class'
+    exclude '**/RwPathFinderTest.class'
     // M4.2: flight selection and its NBT schema are new (no original counterpart).
     exclude '**/FlightModeTest.class'
     exclude '**/HoverMoveHelperTest.class'

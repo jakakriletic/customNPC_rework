@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 195 → 1)
+# Arhiv: dnevnik sej (vnosi 196 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,14 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-30 (196) — P1: popravek soaka (zaključen z omejitvijo)
+
+**Paket:** P1 (Q248, Q249–Q250) · **Stanje:** zaključen z omejitvijo (lastnik), poskus 1. unit/build/package/harness zeleni; soak 4 h brez padca, 49/49 vzorcev, p95 3,28→3,47 ms; merilo heapa padlo (168→242 MB po GC, +44 %), odprto.
+`DiagChunkLoader`: izbirno sproščanje chunkov brez NPC-ja (`/rwdiag chunks on <obroč> <sekunde>`, privzeto 0 = staro),
+brez NPE ob stop (Q241: samo naloženi svetovi + `FMLServerStoppingEvent`). Soak: borci z odpornostjo na knockback (Q250),
+`rwdiag chunks on 1 60`, podatka `maxDrift`/`forcedChunks`. Zahtevani unit/build/package, `m104-harness-v3`, `m104-soak-v3`.
+[Zapis](../meritve/2026-10-30-P1-soak.md).
 
 ### 2026-10-30 (195) — M10.7: changelog
 

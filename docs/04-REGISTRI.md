@@ -24,6 +24,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
+| 2026-10-30 | Leteči NPC: ko obnova delne poti (`RwPathResume`) z vanilla iskanjem ne napreduje ≥ 1 blok, enkrat išče z mejo 1024 vozlišč (vanilla 200) v istem dometu in ChunkCache (`RwPathFinder`); če napreduje, nadomesti vanilla izid. M4.16 *vogal* z `RwFlyLineOfSight` 0/6 → 6/6; brez vidne črte vogal 0/6. Kopenski navigator nespremenjen. Števci `/rwpath` `nadSirokih*` | P3, Q82, Q256 | `RwPathResume` | **0** (cena 753–817 µs na široko iskanje, boj ni izmerjen) |
 | 2026-10-30 | Klient: `PacketHandlerClient` vsak CNPC paket uvrsti v nit klienta in igralca prebere šele tam; login sync (dialogi, questi, frakcije, playerdata), ki pride pred obdelavo `SPacketJoinGame`, se ne izgubi več. Brez igralca (odjava) se paket zavrže kot prej | P2, Q251 | brez (popravek) | vedno |
 | 2026-10-29 | Animacijski hooki `animationStart/animationEvent/animationEnd` za JS in Java: opazovalec enkrat na world tick (END) za animirane NPC-je moda `customnpcentities` 0.7.0; brez moda nič. Bere se ob zagonu | M7.5, D-095, Q194 | `RwAnimHooks` | **0** (brez poslušalca) |
 | 2026-10-29 | Skriptni API `Animators.of(npc)`/`IAnimator` (play, queue ≤ 32, stop, getterji) prek refleksije; brez moda `isAvailable()=false`, klici ne naredijo nič | M7.9, Q195 | brez (nov API) | vedno; učinek samo z modom |
@@ -87,6 +88,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-10-30 | P3 vogal/labirint, poskus 1: `letenje-run.ps1` ena ponovitev (Q250) pri 0, `-Nadaljevanje 1` in `-Nadaljevanje 1 -VidnaCrta 1` | Na `a7b11f8d…` unit/build/package in `p3-letenje-orig/nad/vidnad-v1` PASS, LT1–LT9. Pri 0 180/180 = M4.16; vid+nad faza A vogal 0/6 → **6/6** (do cilja 7,04 → 0,82), labirint 6/6, ostalo = M4.17 v4; samo nad vogal 0/6 (6,96 → 8,83). `nadSirokih` 42/29, vsa z napredkom, 753/817 µs. Sprejeto pod stikali | [zapis](meritve/2026-10-30-P3-vogal-labirint.md) |
 | 2026-10-30 | P2 klientska matrika, 2 poskusa | Na `b9d83659…` unit/build/package/compile in `p2-integrated-v2` PASS; `p2-dedicated-v2` edit 13/13 + 13/13 (login sync), FAIL na offline mailu igralcu iz iste seje (omejitev originala, Q254); O/K kraka nezahtevana (Q255); zaprt z omejitvijo | [zapis](meritve/2026-10-30-P2-klientska-matrika.md) |
 | 2026-10-30 | M10.5 rollback, poskus 2 | `m105-rollback-v2` PASS na `e4febe95…`: 58/58, backup/obnova 42/42 datotek bajtno enaka; K/O restarta ohranita vse 3 UUID-je in napredek, Java v O inertna, Rw ključi izpuščeni (Q236); sintetični obseg | [zapis](meritve/2026-10-30-M10.5-rollback.md) |
 | 2026-10-30 | M10.1d klient, 2 poskusa | Na `62940ab3…` prevod v2 PASS, integrated/dedicated/O-klient/O-strežnik v2 FAIL, nič PNG; zaprt brez sprejema, validacija v2 (Q233), produkcija ista | [zapis](meritve/2026-10-30-M10.1d-klient.md) |

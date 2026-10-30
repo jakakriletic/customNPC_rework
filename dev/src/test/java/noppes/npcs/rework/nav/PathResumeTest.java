@@ -180,7 +180,32 @@ public class PathResumeTest {
 
     @Test
     public void stevciVOdgovoru() {
-        assertEquals("nadZacetih=0 nadVmesnih=0 nadObnov=0 nadPrispelih=0 nadBrezNapredka=0 nadMeja=0 nadPrekinjenih=0",
+        assertEquals("nadZacetih=0 nadVmesnih=0 nadObnov=0 nadPrispelih=0 nadBrezNapredka=0 nadMeja=0 nadPrekinjenih=0"
+                + " nadSirokih=0 nadSirokihNapredek=0 nadSirokihUs=0",
                 PathResume.counters());
+    }
+
+    @Test
+    public void zastojNaVogluSprozRazsirjenoIskanjeBrezSpremembeStanja() {
+        // P3 (Q256), proga V M4.16: ukaz (-14, 4, -48) -> (-14, 4, -60), pot konca ob steni (-14, 4, -53).
+        PathResume r = new PathResume();
+        assertFalse("neaktivno: brez razsirjenega iskanja", r.stalls(false, 0, 0, 0));
+        assertArrayEquals(new int[] {-14, 4, -60}, r.command(-14, 4, -48, -14, 4, -60, RANGE));
+        r.commandResult(true, -14, 4, -53);
+        assertTrue(r.active());
+        assertArrayEquals(new int[] {-14, 4, -60}, r.next(-14, 4, -53, RANGE));
+        assertTrue("vanilla obnova najde isto tocko", r.stalls(true, -14, 4, -53));
+        assertTrue("brez poti", r.stalls(false, 0, 0, 0));
+        assertTrue("visje ob steni, ne blize", r.stalls(true, -14, 10, -55));
+        assertFalse("razsirjeno iskanje do cilja napreduje", r.stalls(true, -14, 4, -60));
+        assertTrue("stalls ne spremeni stanja", r.active());
+        assertEquals(1, r.resumes());
+        assertTrue(r.resumeResult(true, -14, 4, -60));
+        assertNull("pot do cilja: konec nadaljevanja", r.next(-14, 4, -60, RANGE));
+        assertEquals(1L, PathResume.arrived);
+        assertEquals(0L, PathResume.noProgress);
+        PathResume.recordWide(true, 2500L);
+        PathResume.recordWide(false, 1500L);
+        assertTrue(PathResume.counters().endsWith("nadSirokih=2 nadSirokihNapredek=1 nadSirokihUs=4"));
     }
 }
