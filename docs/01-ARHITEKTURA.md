@@ -1005,3 +1005,18 @@ M10.1 se razdeli na M10.1a (strežnik) in M10.1b (klient). Vrstni red M10.1a →
 M10.4 → M10.2 → M10.6 → M10.7. Soak 4 h z merili trenda; M10.2 ponovi original isti dan samo ob
 alarmu 5 % p95. M10.3 in IO4 ostaneta blokirana (Q1), klientski coremod v pakiranem klientu je
 znana omejitev. [Raziskava](raziskave/M10.0-release-kandidat.md).
+
+### D-097 — P4: formacije po merilih mest in zaostanka, člani sledijo skupni poti (2026-10-30, Q257–Q262)
+
+**Vprašanje:** kako P4 "izpolni merila D-079", ko FA1/2 (2 bloka od skupnega cilja) in FA4
+(premer ≤ 6) legija(8,4) po konstrukciji ne more izpolniti, FA5 G pa je padal (29–117 iskanj)?
+
+**Odločitev:** FA1/2 se sodita po 8/8 zasedenih končnih mestih, FA4 po zaostanku neopravičenega
+člana med pohodom ≤ LAG_STOP + 1 = 6; izvirni vrednosti ostaneta NOTE, varovalki M4.14d sta vrata
+(Q257). Planer: zaprta črta do mesta → točka kolone na skupni poti; zaprta črta do cilja → hoja po
+skupni poti brez iskanja; iskanje samo ob obtičanju; prosta preverjena črta 6–14 blokov STEER,
+odrinjen član iz HOLD ostane PATH (Q258–Q262, D-080).
+
+**Razlog:** D-079 dovoli spremembo meril samo z novo utemeljeno odločitvijo; prag 6 izhaja iz
+LAG_STOP. Poskus 1 sprejet: G DONE 101, FA5 1 ≤ 1, obtičanja 0, zaostanek 1,088; O DONE 40.
+Omejitve: ena scena in ponovitev, F1–F12 odprti. [Zapis](meritve/2026-10-30-P4-formacije.md).

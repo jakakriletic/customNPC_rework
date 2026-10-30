@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 196 → 1)
+# Arhiv: dnevnik sej (vnosi 197 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,19 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-30 (197) — P2: klientska matrika (zaključen z omejitvijo)
+
+**Paket:** P2 (Q248, Q251–Q255) · **Stanje:** zaključen z omejitvijo po poskusu 2. Na b9d83659… zeleni unit/build/package,
+`p2-compile-v2` in `p2-integrated-v2`; `p2-dedicated-v2` je fazo edit prestal (klient 13/13 z login syncem, strežnik 13/13),
+padel pa na koraku offline maila: original napolni `nameUUIDs` samo ob zagonu, zato `addPlayerMessage` za igralca iz iste
+seje vrže NPE (omejitev originala, harness v2). O/K kraka nista zahtevana (isti korak, Q255). Popravek Q251 ostane.
+Naslednji P3. Poskus 1: unit/build/package/compile
+zeleni; integrated padel samo na štetju trditev v harnessu (PS 5.1 `ConvertFrom-Json`, Q253), vseh 13 + 13 trditev `ok`.
+Vzroki padcev M10.1d iz logov: originalni `PacketHandlerClient` zavrže CNPC pakete pred `mc.player` (izgubljen login sync,
+JOIN timeout na dedicated K-klientu), dedicated zavrne ukaze ne-opu (O-klient ACK:SCENE), spawn v nenaložen chunk
+(integrated `Missing Locked`). Popravek produkcije brez stikala (Q251), harness determinističen (Q252).
+[Zapis](../meritve/2026-10-30-P2-klientska-matrika.md).
 
 ### 2026-10-30 (196) — P1: popravek soaka (zaključen z omejitvijo)
 

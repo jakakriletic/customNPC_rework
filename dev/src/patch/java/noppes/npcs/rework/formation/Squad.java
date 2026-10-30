@@ -381,6 +381,11 @@ public final class Squad {
                 nav.setSpeed(speedIn);
                 return;
             }
+            if (planner.following[i]) {
+                // Zaprta ravna crta: hoja po skupni poti, brez predteka (P4, Q258).
+                steer(nav, planner.aimX[i], planner.aimY[i], planner.aimZ[i], speedIn);
+                return;
+            }
             if (planner.phase() == SquadPlanner.Phase.MARCHING
                     && planner.anchorSpeed() > 0 && !planner.trailing[i]) {
                 tx += FormationMath.forwardX(planner.yaw()) * LEAD;
@@ -421,6 +426,8 @@ public final class Squad {
             lastPathTick[i] = ticks;
             lastPathX[i] = tx;
             lastPathZ[i] = tz;
+            // Eno pravo iskanje na obticanje; clan nato prehodi obvoz (D-080, Q64).
+            planner.searched(i);
             if (nav.tryMoveToXYZ(tx, ty, tz, speedIn)) {
                 // Nova pot dobi svoje okno vanilla casovne meje, ne stenskega casa
                 // prejsnjih STEER poti (D-077; navigator sled 4a7a6623, 5 izgub G).
@@ -614,9 +621,13 @@ public final class Squad {
         int excused = 0;
         int trailing = 0;
         int settled = 0;
+        int onTrack = 0;
         for (int i = 0; i < members.length; i++) {
             if (members[i] == null) {
                 continue;
+            }
+            if (planner.following[i]) {
+                onTrack++;
             }
             if (planner.straggler[i]) {
                 stragglers++;
@@ -635,10 +646,12 @@ public final class Squad {
                 "RWSQUAD enota=%d ime=%s oblika=%s faza=%s clanov=%d/%d ostane=%.1f hitrost=%.3f/%.3f"
                         + " zaostali=%d opraviceni=%d kolona=%d na_mestu=%d iskanj=%d obnov=%d obtical=%d"
                         + " brez_poti=%s cilj_nedosegljiv=%s neporavnani=%d tick=%d"
-                        + " iskanj_rok=%d iskanj_premik=%d iskanj_izgub=%d iskanj_postav=%d iskanj_dalec=%d",
+                        + " iskanj_rok=%d iskanj_premik=%d iskanj_izgub=%d iskanj_postav=%d iskanj_dalec=%d"
+                        + " po_poti=%d zaostanek_max=%.3f",
                 id, label, order.shape, planner.phase(), alive, members.length, planner.remaining(),
                 planner.anchorSpeed(), planner.cruise(), stragglers, excused, trailing, settled, pathRequests,
                 planner.replans(), planner.stuckEvents(), pathless, planner.goalUnreachable(),
-                planner.unsettledAtEnd(), ticks, byInterval, byMove, byLost, inSettling, beyondSteer);
+                planner.unsettledAtEnd(), ticks, byInterval, byMove, byLost, inSettling, beyondSteer,
+                onTrack, planner.marchLagMax());
     }
 }

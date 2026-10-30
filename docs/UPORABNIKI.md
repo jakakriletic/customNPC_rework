@@ -142,7 +142,11 @@ Not proven, so not claimed:
   (1024 nodes, once per stalled resume, ~0.8 ms) is flying only; walking NPCs keep the vanilla
   200-node limit. Cost in flying combat with the wider search was not measured. Baritone backend has open
   cost limits ([M4.15a](meritve/2026-10-29-M4.15a-baritone.md)).
-- Formations do not meet all planned acceptance criteria (D-079).
+- Formations (P4, Q257): on the door and open test courses all 8 slots are filled (door 101 ticks,
+  open 40), one path search per squad, no stuck members, member lag ≤ 1.1 blocks. Members do not
+  all end within 2 blocks of the goal and the squad is wider than 6 blocks at a 1-block door; this
+  is the legion shape, not a fault. One test run, one scene; the manual in-game checks (F1–F12)
+  were not done.
 - `RwAnimHooks` observes once per tick; events of a step that a script stops later in the same
   tick are not reported; no walk/idle/death hooks; `blendTo` and `/npcanim reload` are v2.
 - `RwJavaClasspath` is manual; automatic modpack classpath is v2.

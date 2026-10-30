@@ -40,6 +40,9 @@ public class SquadPlannerTest {
         final boolean[] eligible;
         final double[] realSpeed;
         final boolean[] frozen;
+        /** Ce ni null, clan ne more stopiti na mesto, kjer se ne da stati (zid). */
+        Terrain solid;
+        int pathTicks;
         double worstMarchError;
         int maxTrailing;
         final Set<Phase> seen = new HashSet<Phase>();
@@ -68,13 +71,21 @@ public class SquadPlannerTest {
                 if (frozen[i] || planner.mode[i] == SquadPlanner.HOLD) {
                     continue;
                 }
-                double dx = planner.targetX[i] - x[i];
-                double dz = planner.targetZ[i] - z[i];
+                if (planner.mode[i] == SquadPlanner.PATH) {
+                    pathTicks++;
+                }
+                // Clan hodi proti tocki, ki mu jo da planer (cilj ali tocka na skupni poti).
+                double dx = planner.aimX[i] - x[i];
+                double dz = planner.aimZ[i] - z[i];
                 double d = Math.hypot(dx, dz);
                 double v = Math.min(Math.min(planner.speed[i], realSpeed[i]), d);
                 if (d > 1.0E-9) {
-                    x[i] += dx / d * v;
-                    z[i] += dz / d * v;
+                    double nx = x[i] + dx / d * v;
+                    double nz = z[i] + dz / d * v;
+                    if (solid == null || !Double.isNaN(solid.standY(nx, GROUND, nz))) {
+                        x[i] = nx;
+                        z[i] = nz;
+                    }
                 }
             }
             maxTrailing = Math.max(maxTrailing, trailingNow);
@@ -308,6 +319,160 @@ public class SquadPlannerTest {
         assertEquals(Phase.DONE, sim.planner.phase());
         assertTrue("pred vrati bi se morala formacija stisniti", sim.maxTrailing >= 4);
         assertEquals("za vrati bi se morala spet razpreti", 0, trailingAfter);
+    }
+
+    /** Zid pri z = 30 z vrati sirine enega bloka pri x = 0 (kot proga G v M2.7). */
+    private static final class NarrowDoor implements Terrain {
+        @Override
+        public double standY(double x, double yHint, double z) {
+            if (Math.floor(z) == 30 && Math.floor(x) != 0) {
+                return Double.NaN;
+            }
+            return GROUND;
+        }
+    }
+
+    @Test
+    public void straightLineProbeSeesWallAndNarrowDoor() {
+        Terrain t = new NarrowDoor();
+        assertTrue(SquadPlanner.straightWalkable(t, 0.5, GROUND, 25.5, 0.5, 35.5));
+        assertFalse(SquadPlanner.straightWalkable(t, 3.5, GROUND, 25.5, 3.5, 35.5));
+        // diagonala skozi vogal vrat: sredina gre skozi, rob NPC-ja zadene zid
+        assertFalse(SquadPlanner.straightWalkable(t, -2.5, GROUND, 27.5, 3.5, 32.5));
+        // kratka crta tik ob zidu (clan prislonjen na zid, mesto takoj za njim)
+        assertFalse(SquadPlanner.straightWalkable(t, 1.5, GROUND, 29.8, 1.5, 31.0));
+    }
+
+    /**
+     * P4 (Q258): na mesto za zidom se da stati, ravna crta do njega pa je zaprta. Clan dobi
+     * tocko kolone na skupni poti, ne mesta za zidom (D-079: FA5 G iz iskanj ob zidu).
+     */
+    @Test
+    public void slotBehindWallBecomesColumnPoint() {
+        SquadPlanner p = new SquadPlanner(new Slot[] {new Slot(0, 0), new Slot(3, 0)}, uniform(2, V),
+                PathTrack.straight(0.5, GROUND, 0.5, 0.5, GROUND, 60.5), true,
+                0.5, GROUND, 60.5, 0, new NarrowDoor(), true, true);
+        Sim sim = new Sim(p, new double[] {0.5, -2.5}, new double[] {0.5, 0.5}, uniform(2, V));
+        sim.solid = new NarrowDoor();
+        for (int t = 0; t < 400 && p.phase() != Phase.MARCHING; t++) {
+            sim.step();
+        }
+        assertEquals(Phase.MARCHING, p.phase());
+        boolean sawColumn = false;
+        for (int t = 0; t < 2000 && p.anchorZ() < 40; t++) {
+            sim.step();
+            if (p.anchorZ() > 31.5 && p.anchorZ() < 33 && sim.z[1] < 30) {
+                assertTrue("mesto za zidom mora postati tocka kolone", p.trailing[1]);
+                assertEquals("tocka kolone je na skupni poti", 0.5, p.targetX[1], 1.0E-9);
+                sawColumn = true;
+            }
+        }
+        assertTrue("fixture must reach the wall with member 1 behind it", sawColumn);
+    }
+
+    /** P4 (Q258): zaprta crta in clan dlje od STEER_MAX: sledenje skupni poti, ne PATH. */
+    @Test
+    public void blockedMemberFollowsSharedTrackInsteadOfSearching() {
+        Slot[] slots = {new Slot(0, 0)};
+        SquadPlanner p = new SquadPlanner(slots, uniform(1, V),
+                PathTrack.straight(0.5, GROUND, 20.5, 0.5, GROUND, 40.5), true,
+                3.5, GROUND, 40.5, 0, new NarrowDoor(), false, true);
+        assertEquals(Phase.SETTLING, p.phase());
+        double[] x = {3.5};
+        double[] y = {GROUND};
+        double[] z = {27.5};
+        p.update(x, y, z, new boolean[] {true});
+        assertTrue("fixture: target beyond STEER_MAX", p.error[0] > SquadPlanner.STEER_MAX);
+        assertEquals(SquadPlanner.STEER, p.mode[0]);
+        assertTrue(p.following[0]);
+        assertEquals("aim is on the shared track", 0.5, p.aimX[0], 1.0E-9);
+        assertTrue(SquadPlanner.straightWalkable(new NarrowDoor(), x[0], GROUND, z[0], p.aimX[0], p.aimZ[0]));
+    }
+
+    /** Opravicilo zaostanka ne vsili iskanja; to sme samo zaznava obticanja (P4, Q258). */
+    @Test
+    public void excusalDoesNotForcePathSearch() {
+        int n = 10;
+        PathTrack track = PathTrack.straight(0.5, GROUND, 0.5, 0.5, GROUND, 100.5);
+        Sim sim = legionMarch(n, 5, track, true, 0.5, 100.5, new Terrain.Flat(GROUND), uniform(n, V));
+        while (sim.planner.phase() != Phase.MARCHING) {
+            sim.step();
+        }
+        // clan 7 hodi s petino hitrosti: zaostaja nad HOLDING, a se premika (ni obtican)
+        sim.realSpeed[7] = V * 0.2;
+        for (int t = 0; t < 1500 && !sim.planner.excused[7]; t++) {
+            sim.step();
+        }
+        assertTrue("fixture must excuse the slow member", sim.planner.excused[7]);
+        assertTrue("fixture: excused member within steering range", sim.planner.error[7] <= SquadPlanner.STEER_MAX);
+        assertEquals("slow walking is not a stuck event", 0, sim.planner.stuckEvents());
+        assertEquals("excusal alone must not force a search", SquadPlanner.STEER, sim.planner.mode[7]);
+    }
+
+    /** Eno pravo iskanje na obticanje: searched pocisti kazen (D-080 dopolnitev). */
+    @Test
+    public void searchedClearsStuckPenalty() {
+        Sim sim = stuckMemberRecovery();
+        SquadPlanner p = sim.planner;
+        p.searched(0);
+        sim.x[1] = p.targetX[1];
+        sim.z[1] = p.targetZ[1];
+        p.update(sim.x, sim.y, sim.z, sim.eligible);
+        assertEquals(SquadPlanner.STEER, p.mode[0]);
+    }
+
+    /**
+     * P4 (Q258), proga G v malem: legija 8 clanov skozi vrata sirine 1 s fizicnim zidom.
+     * Enota konca na unikatnih mestih brez obticanja in brez enega ticka PATH, napaka
+     * neopravicenih clanov med pohodom ostane pod LAG_STOP + 1 (FA4 po Q257).
+     */
+    @Test
+    public void legionPassesNarrowDoorWithoutSearches() {
+        int n = 8;
+        PathTrack track = PathTrack.straight(0.5, GROUND, 18.5, 0.5, GROUND, 38.5);
+        NarrowDoor wall = new NarrowDoor();
+        Sim sim = legionMarch(n, 4, track, true, 0.5, 38.5, wall, uniform(n, V));
+        sim.solid = wall;
+        SquadPlanner p = sim.planner;
+        StringBuilder trace = new StringBuilder();
+        int ticks = -1;
+        for (int t = 0; t < 6000; t++) {
+            int before = p.stuckEvents();
+            sim.step();
+            if (p.stuckEvents() > before && trace.length() < 4000) {
+                // Diagnostika ob obticanju: kateri clan, kje in proti cemu je hodil.
+                trace.append(" | t=").append(t).append(' ').append(p.phase());
+                for (int i = 0; i < n; i++) {
+                    if (p.mode[i] == SquadPlanner.PATH) {
+                        trace.append(String.format(java.util.Locale.ROOT,
+                                " c%d(%.2f,%.2f)->(%.2f,%.2f) aim(%.2f,%.2f) e=%.2f kol=%s",
+                                i, sim.x[i], sim.z[i], p.targetX[i], p.targetZ[i], p.aimX[i], p.aimZ[i],
+                                p.error[i], p.trailing[i]));
+                    }
+                }
+            }
+            for (int i = 0; i < n && trace.length() < 4000; i++) {
+                if (p.mode[i] == SquadPlanner.PATH && p.phase() != Phase.DONE) {
+                    // Diagnostika PATH brez obticanja: faza, clan, napaka in vrsta cilja.
+                    trace.append(String.format(java.util.Locale.ROOT,
+                            " | PATH t=%d %s c%d(%.2f,%.2f)->(%.2f,%.2f) e=%.2f kol=%s opr=%s",
+                            t, p.phase(), i, sim.x[i], sim.z[i], p.targetX[i], p.targetZ[i],
+                            p.error[i], p.trailing[i], p.excused[i]));
+                }
+            }
+            if (p.phase() == Phase.DONE) {
+                ticks = t;
+                break;
+            }
+        }
+        assertTrue("enota ni koncala" + trace, ticks > 0);
+        assertEquals("obticanja" + trace, 0, sim.planner.stuckEvents());
+        assertEquals("ticki PATH" + trace, 0, sim.pathTicks);
+        assertEquals(0, sim.planner.unsettledAtEnd());
+        assertTrue("zaostanek " + sim.planner.marchLagMax(), sim.planner.marchLagMax() <= SquadPlanner.LAG_STOP + 1);
+        for (int i = 0; i < n; i++) {
+            assertTrue("clan " + i + " ni za zidom", sim.z[i] > 31);
+        }
     }
 
     @Test

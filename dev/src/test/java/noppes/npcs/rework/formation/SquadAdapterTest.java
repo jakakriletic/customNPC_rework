@@ -190,6 +190,22 @@ public class SquadAdapterTest {
     }
 
     @Test
+    public void followingSteerUsesTrackAimWithoutLeadOrSearch() throws Exception {
+        // P4 (Q258): the straight line to the target is closed; the member walks to the
+        // planner's point on the shared track, without forward lead and without a search.
+        planner.following[0] = true;
+        planner.aimX[0] = -9.5;
+        planner.aimY[0] = 4;
+        planner.aimZ[0] = 73.5;
+        planner.targetZ[0] = 76.5;
+        field(SquadPlanner.class, "anchorSpeed").setDouble(planner, 0.4851);
+        squad.drive(0);
+        assertEquals(73, nav.getPath().getFinalPathPoint().z);
+        assertEquals(-10, nav.getPath().getFinalPathPoint().x);
+        assertEquals("following is not a real search", 0, nav.requests);
+    }
+
+    @Test
     public void stationaryAnchorSteersTowardsSlotBehindMember() {
         // G after tick 26: the anchor is stopped; a lead point beyond the
         // assigned slot drives a member towards the wall instead of back.

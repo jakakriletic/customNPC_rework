@@ -5,8 +5,13 @@
     F1-F12 are a separate smoke pass and are NOT certified by this A/B runner.
     TraceRecovery is a separate diagnostic: all ticks plus navigation/recovery identities.
     TraceNavigator adds read-only vanilla timeout/update state; never acceptance proof.
+    P4 (Q257): FA1/2 are judged by the 8 unique final slots and FA4 by the largest lag of a
+    non-excused member behind its commanded target (RWSQUAD zaostanek_max <= LAG_STOP + 1 = 6).
+    The original common-goal and diameter values stay in the report as NOTE rows, because a
+    legion(8,4) cannot meet them by construction (slots 3 blocks off the goal, diameter 6.325).
+    P4 also keeps the M4.14d guards: G DONE <= 246 ticks and G stuck events <= 6 (Q65).
 #>
-param([int]$TimeoutSec = 240, [switch]$Trace, [switch]$TraceRecovery, [switch]$TraceNavigator)
+param([int]$TimeoutSec = 240, [switch]$Trace, [switch]$TraceRecovery, [switch]$TraceNavigator, [switch]$P4)
 
 $ErrorActionPreference = 'Stop'
 if ($TraceNavigator) { $TraceRecovery = $true }
@@ -20,7 +25,7 @@ $seed = Join-Path $root 'dev\testworld'
 New-Item -ItemType Directory -Force -Path $audit | Out-Null
 $stamp = Get-Date -Format 'yyyy-MM-dd-HHmmss'
 $base = "rwform-$stamp-base"
-$reportKind = if ($TraceNavigator) { 'm414b-navigator' } elseif ($TraceRecovery) { 'm414b-recovery' } elseif ($Trace) { 'm414b-trace' } else { 'm414b' }
+$reportKind = if ($P4) { 'p4-formacije' } elseif ($TraceNavigator) { 'm414b-navigator' } elseif ($TraceRecovery) { 'm414b-recovery' } elseif ($Trace) { 'm414b-trace' } else { 'm414b' }
 $prefix = Join-Path $audit "$reportKind-$stamp"
 $failures = @()
 $checks = @()
@@ -34,6 +39,12 @@ function Check([string]$Name, [bool]$Ok) {
     $script:checks += [pscustomobject]@{ name = $Name; ok = $Ok }
     Write-Host ("{0} {1}" -f $(if ($Ok) { 'OK' } else { 'FAIL' }), $Name)
     if (-not $Ok) { $script:failures += $Name }
+}
+# P4 (Q257): an original criterion that the formation geometry cannot meet is recorded, not gated.
+function Note([string]$Name, [bool]$Ok) {
+    if (-not $P4) { Check $Name $Ok; return }
+    $script:checks += [pscustomobject]@{ name = "NOTE $Name"; ok = $Ok; note = $true }
+    Write-Host ("NOTE {0} {1}" -f $(if ($Ok) { 'met' } else { 'not met' }), $Name)
 }
 function Get-Log([string]$Path) {
     if (-not (Test-Path -LiteralPath $Path)) { return '' }
@@ -320,8 +331,8 @@ try {
             $navigation | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 "$prefix-navigator.json"
         }
     }
-    Check 'FA1: original common-goal metric G = 8/8' ($arms['FORMACIJA-G'].arrived -eq 8)
-    Check 'FA2: original common-goal metric O = 8/8' ($arms['FORMACIJA-O'].arrived -eq 8)
+    Note ('FA1: original common-goal metric G = 8/8 (observed {0})' -f $arms['FORMACIJA-G'].arrived) ($arms['FORMACIJA-G'].arrived -eq 8)
+    Note ('FA2: original common-goal metric O = 8/8 (observed {0})' -f $arms['FORMACIJA-O'].arrived) ($arms['FORMACIJA-O'].arrived -eq 8)
     foreach ($lane in @('G', 'O')) {
         $slots = [regex]::Match($b, ('FORM-CAS proga={0} mesta=(\d+)/8 vsiTick=(-?\d+)' -f $lane))
         Check "FA1/2-slot $lane : 8 unique final slots simultaneously occupied" ($slots.Success -and [int]$slots.Groups[1].Value -eq 8)
@@ -334,8 +345,18 @@ try {
         }
         $march = [regex]::Matches($b, ('FORM-S proga={0} tick=\d+ mesta=\d+/8 napakaMax=[\d.]+ razpon=([\d.]+) [^\r\n]*faza=MARCHING\b' -f $lane))
         $max = ($march | ForEach-Object { [double]::Parse($_.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture) } | Measure-Object -Maximum).Maximum
-        Check "FA4 $lane : marching diameter <= 6 (observed $max)" ($march.Count -gt 0 -and $max -le 6)
+        Note "FA4 $lane : marching diameter <= 6 (observed $max)" ($march.Count -gt 0 -and $max -le 6)
         $end = Read-FinalSquad $arms['FORMACIJA-custom'] $lane
+        if ($P4) {
+            $lag = if ($null -ne $end -and $end.ContainsKey('zaostanek_max')) { [double]::Parse($end.zaostanek_max, [Globalization.CultureInfo]::InvariantCulture) } else { -1 }
+            Check "FA4-lag $lane : largest non-excused member lag while marching <= LAG_STOP + 1 = 6 (observed $lag)" ($lag -ge 0 -and $lag -le 6)
+            if ($lane -eq 'G') {
+                $doneTick = if ($null -ne $end) { [int]$end.tick } else { -1 }
+                $stuck = if ($null -ne $end) { [int]$end.obtical } else { -1 }
+                Check "guard G : DONE tick <= 246 (observed $doneTick)" ($doneTick -gt 0 -and $doneTick -le 246)
+                Check "guard G : stuck events <= 6 (observed $stuck)" ($stuck -ge 0 -and $stuck -le 6)
+            }
+        }
         Check "FA6 $lane : one DONE record, no unreachable goal or unsettled members" ($null -ne $end -and $end.faza -eq 'DONE' -and $end.cilj_nedosegljiv -eq 'false' -and $end.neporavnani -eq '0')
         # Squad.status currently omits the initial leader search. Include that known call
         # explicitly in the reported real-search count; do not use Path identity counts.
@@ -353,7 +374,7 @@ try {
     $result | ConvertTo-Json -Depth 9 | Set-Content -Encoding UTF8 "$prefix.json"
     $table = @('# M4.14b A/B', '', 'F1-F12 are pending; this report covers only FA1-FA6.', '', '| Check | Result |', '|---|---|')
     if ($Trace) { $table = @('# M4.14b diagnostic trace (not acceptance/performance proof)', '', 'All original FA checks are retained. F1-F12 are pending.', '', '| Check | Result |', '|---|---|') }
-    foreach ($check in $checks) { $table += ('| {0} | {1} |' -f $check.name, $(if ($check.ok) { 'OK' } else { '**FAIL**' })) }
+    foreach ($check in $checks) { $table += ('| {0} | {1} |' -f $check.name, $(if ($check.ok) { 'OK' } elseif ($check.note) { 'not met (NOTE, Q257)' } else { '**FAIL**' })) }
     $table | Set-Content -Encoding UTF8 "$prefix.md"
     Write-Host "Report: $prefix.md"
 }

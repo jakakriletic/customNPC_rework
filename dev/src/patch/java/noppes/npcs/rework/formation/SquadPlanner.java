@@ -41,6 +41,20 @@ public final class SquadPlanner {
     /** Clan je predalec ali obtical: potrebuje pravo iskanje poti. */
     public static final int PATH = 2;
 
+    /** Korak in polovicna sirina preverbe ravne crte; 0,29 je tik pod polsirino NPC-ja 0,3. */
+    public static final double PROBE_STEP = 0.4;
+    public static final double PROBE_HALF_WIDTH = 0.29;
+    /** Preverba crte do cilja velja najvec toliko tickov, ce se clan in cilj ne premakneta. */
+    public static final int PROBE_REFRESH = 10;
+    public static final double PROBE_MOVE = 0.3;
+    /**
+     * Clan z zaprto ravno crto do cilja hodi po skupni poti do tocke toliko blokov pred
+     * svojo projekcijo na pot (P4, Q258), brez iskanja.
+     */
+    public static final double FOLLOW_AHEAD = 2.0;
+    /** Sledenje poti mora clana premakniti po poti ali vsaj toliko priblizati cilju. */
+    public static final double FOLLOW_MIN = PROBE_STEP;
+
     /** Blizje od tega je clan na mestu. */
     public static final double SETTLED = 0.4;
     /** Clan na mestu, ki ga odrinejo dlje od tega, se spet premakne (histereza). */
@@ -133,6 +147,25 @@ public final class SquadPlanner {
     public final boolean[] straggler;
     public final boolean[] trailing;
     public final double[] error;
+    /**
+     * Tocka, proti kateri clan dejansko hodi, kadar {@link #following}: na skupni poti,
+     * ker ravna crta do cilja ni prehodna. Napaka in hitrost se se vedno merita do cilja.
+     */
+    public final double[] aimX;
+    public final double[] aimY;
+    public final double[] aimZ;
+    public final boolean[] following;
+
+    private final int[] probeTick;
+    private final double[] probeX;
+    private final double[] probeZ;
+    private final double[] probeTX;
+    private final double[] probeTZ;
+    private final boolean[] probeClear;
+    /** Najvecja napaka neopravicenih clanov v trenutni fazi MARCHING (FA4, Q257, Q259). */
+    private double marchLagMax;
+    /** Tick zadnje zamenjave vrste cilja (mesto ali tocka kolone) za vsakega clana. */
+    private final int[] kindTick;
 
     /**
      * @param slots       mesto za vsakega clana, ze dodeljeno ({@code slots[i]} je clan i)
@@ -188,8 +221,20 @@ public final class SquadPlanner {
         straggler = new boolean[n];
         trailing = new boolean[n];
         error = new double[n];
+        aimX = new double[n];
+        aimY = new double[n];
+        aimZ = new double[n];
+        following = new boolean[n];
+        probeTick = new int[2 * n];
+        probeX = new double[2 * n];
+        probeZ = new double[2 * n];
+        probeTX = new double[2 * n];
+        probeTZ = new double[2 * n];
+        probeClear = new boolean[2 * n];
+        kindTick = new int[n];
         Arrays.fill(faceYaw, Double.NaN);
         Arrays.fill(error, Double.NaN);
+        Arrays.fill(probeTick, Integer.MIN_VALUE);
 
         if (!formFirst || track.length() < FORM_SKIP) {
             enterSettling();
@@ -236,7 +281,7 @@ public final class SquadPlanner {
             return;
         }
         if (!targetsReady) {
-            computeTargets(eligible);
+            computeTargets(px, py, pz, eligible);
         }
 
         int count = 0;
@@ -253,6 +298,13 @@ public final class SquadPlanner {
             error[i] = e;
             count++;
             detectStuck(i, px[i], pz[i], e);
+            if (phase == Phase.MARCHING && !excused[i] && tick - kindTick[i] >= STUCK_WINDOW
+                    && (targetX[i] - px[i]) * FormationMath.forwardX(yaw)
+                            + (targetZ[i] - pz[i]) * FormationMath.forwardZ(yaw) >= -0.5) {
+                // Zaostanek je napaka do cilja pred clanom, ko cilj ni pravkar zamenjal vrste
+                // (mesto <-> tocka kolone): skok ob zamenjavi ni zaostajanje (P4, Q259).
+                marchLagMax = Math.max(marchLagMax, e);
+            }
             if (e > STRAGGLER) {
                 straggler[i] = true;
                 stragglers++;
@@ -263,8 +315,10 @@ public final class SquadPlanner {
             if (phase == Phase.MARCHING) {
                 lagTicks[i] = e > HOLDING ? lagTicks[i] + 1 : 0;
                 if (lagTicks[i] > WAIT_LIMIT && !excused[i]) {
+                    // Opravicilo sprosti enoto in da clanu tocko kolone. Iskanja ne vsili:
+                    // zaostanek v vrsti pred vrati ni dokaz, da ravna crta ali skupna pot
+                    // ne gre; to dokaze sele detectStuck (P4, Q258; M4.14d poskus 2).
                     excused[i] = true;
-                    pathUntil[i] = tick + STUCK_PENALTY;
                     trailUntil[i] = tick + STUCK_PENALTY;
                 }
             }
@@ -350,8 +404,8 @@ public final class SquadPlanner {
                 ? FormationMath.turnToward(yaw, desired, TURN_RATE)
                 : finalYaw;
 
-        computeTargets(eligible);
-        computeCommands(px, pz, eligible);
+        computeTargets(px, py, pz, eligible);
+        computeCommands(px, py, pz, eligible);
     }
 
     private void detectStuck(int i, double x, double z, double e) {
@@ -365,7 +419,10 @@ public final class SquadPlanner {
             return;
         }
         double moved = horizontal(x - checkX[i], z - checkZ[i]);
-        if (mode[i] == STEER && e > 1.0 && moved < STUCK_MOVE) {
+        // Clan z ukazom plazenja (hitrost pod 2 x STUCK_MOVE na okno) ni obtical: tudi brez
+        // ovire ne bi presel STUCK_MOVE (P4 poskus 1, enotski test vrat: zadnja vrsta).
+        boolean crawl = speed[i] < 2 * STUCK_MOVE / STUCK_WINDOW;
+        if (mode[i] == STEER && e > 1.0 && moved < STUCK_MOVE && !crawl) {
             pathUntil[i] = tick + STUCK_PENALTY;
             trailUntil[i] = tick + STUCK_PENALTY;
             stuckEvents++;
@@ -375,7 +432,7 @@ public final class SquadPlanner {
         checkTick[i] = tick;
     }
 
-    private void computeTargets(boolean[] eligible) {
+    private void computeTargets(double[] px, double[] py, double[] pz, boolean[] eligible) {
         targetsReady = true;
         if (phase == Phase.SETTLING || phase == Phase.DONE) {
             for (int i = 0; i < n; i++) {
@@ -396,6 +453,16 @@ public final class SquadPlanner {
             double sx = FormationMath.worldX(ax, yaw, slots[i]);
             double sz = FormationMath.worldZ(az, yaw, slots[i]);
             double sy = tick < trailUntil[i] ? Double.NaN : terrain.standY(sx, ay, sz);
+            if (!Double.isNaN(sy) && phase == Phase.MARCHING
+                    && !lineClear(i, px[i], py[i], pz[i], sx, sz)) {
+                // Na mesto se da stati, ravna crta do njega pa je zaprta (mesto za zidom ob
+                // vratih): clan gre na tocko kolone, kot da mesta ni (P4, Q258). Brez tega
+                // zaide v zid in ga resi sele iskanje (FA5 G, D-079).
+                sy = Double.NaN;
+            }
+            if (Double.isNaN(sy) != trailing[i]) {
+                kindTick[i] = tick;
+            }
             if (Double.isNaN(sy)) {
                 double s = Math.max(0, anchorS - (trailRank[i] + 1) * TRAIL_SPACING);
                 targetX[i] = track.x(s);
@@ -411,11 +478,15 @@ public final class SquadPlanner {
         }
     }
 
-    private void computeCommands(double[] px, double[] pz, boolean[] eligible) {
+    private void computeCommands(double[] px, double[] py, double[] pz, boolean[] eligible) {
         double fx = FormationMath.forwardX(yaw);
         double fz = FormationMath.forwardZ(yaw);
         for (int i = 0; i < n; i++) {
             faceYaw[i] = Double.NaN;
+            following[i] = false;
+            aimX[i] = targetX[i];
+            aimY[i] = targetY[i];
+            aimZ[i] = targetZ[i];
             if (!eligible[i]) {
                 mode[i] = HOLD;
                 speed[i] = 0;
@@ -443,16 +514,159 @@ public final class SquadPlanner {
                 faceYaw[i] = slots[i].faceOutward ? outwardYaw(i) : yaw;
                 continue;
             }
-            mode[i] = e > STEER_MAX || tick < pathUntil[i] ? PATH : STEER;
+            double along = dx * fx + dz * fz;
+            if (tick < pathUntil[i]) {
+                mode[i] = PATH;
+            } else if (follow(i, px[i], py[i], pz[i])) {
+                mode[i] = STEER;
+            } else if (e > STEER_MAX && e <= STRAGGLER
+                    && (phase == Phase.SETTLING || phase == Phase.MARCHING
+                            && (along < -0.5 || mode[i] == STEER || kindTick[i] == tick))
+                    && lineClear(n + i, px[i], py[i], pz[i], targetX[i], targetZ[i])) {
+                // Preverjena prosta crta: brez iskanja (P4, Q261, Q262). Tocka kolone za
+                // clanom, skok cilja ob zamenjavi vrste (tocka kolone -> mesto), clan, ki ze
+                // hodi, in koncna mesta v SETTLING. Odrinjen clan na mestu (HOLD) ostane PATH
+                // (D-080); obticanje na crti ujame detectStuck.
+                mode[i] = STEER;
+            } else {
+                mode[i] = e > STEER_MAX ? PATH : STEER;
+            }
             double v;
             if (phase == Phase.MARCHING) {
-                double along = dx * fx + dz * fz;
-                v = along < -0.5 ? anchorSpeed * 0.5 : anchorSpeed + GAIN * e;
+                // Cilj za clanom: med hojo sidra clan le upocasni; ko sidro stoji, se vrne
+                // k cilju, sicer bi se plazil z MIN_SPEED in drzal sidro (P4, Q261).
+                v = along < -0.5 ? (anchorSpeed > 0 ? anchorSpeed * 0.5 : GAIN * e) : anchorSpeed + GAIN * e;
             } else {
                 v = 0.04 + 0.15 * e;
             }
             speed[i] = Math.max(MIN_SPEED, Math.min(vmax[i], v));
         }
+    }
+
+    /**
+     * Clan z zaprto ravno crto do cilja hodi po skupni poti (P4, Q258): proti tocki
+     * {@link #FOLLOW_AHEAD} od svoje projekcije na pot v smeri projekcije cilja, ali na samo
+     * projekcijo, ce do nje vodi prosta crta. Pot je ze poiskana in prehodna, zato iskanja
+     * ni; ce clan na njej obtici, ga ujame {@link #detectStuck}. Brez proste crte do poti
+     * ostane staro pravilo (STEER do {@link #STEER_MAX}, dlje PATH).
+     */
+    private boolean follow(int i, double x, double y, double z) {
+        if (phase != Phase.MARCHING && phase != Phase.SETTLING) {
+            return false;
+        }
+        if (lineClear(n + i, x, y, z, targetX[i], targetZ[i])) {
+            return false;
+        }
+        double from = track.nearestS(x, z);
+        double to = track.nearestS(targetX[i], targetZ[i]);
+        double ahead = to >= from ? Math.min(to, from + FOLLOW_AHEAD) : Math.max(to, from - FOLLOW_AHEAD);
+        if (Math.abs(ahead - from) < FOLLOW_MIN
+                && horizontal(targetX[i] - track.x(ahead), targetZ[i] - track.z(ahead))
+                        > horizontal(targetX[i] - x, targetZ[i] - z) - FOLLOW_MIN) {
+            // Cilj je bocno ob clanu in pot ga ne priblizuje: crto je zaprl samo rob
+            // preverbe ob steni (drsenje ob zidu). Sledenje bi clana vleklo na pot in nazaj
+            // in bi ga ustavilo (P4 poskus 1, enotski test vrat: 3 obticanja); ostane STEER.
+            return false;
+        }
+        double[] candidates = {ahead, from};
+        for (int c = 0; c < candidates.length; c++) {
+            double s = candidates[c];
+            double cx = track.x(s);
+            double cz = track.z(s);
+            // Projekcija je bocni korak na ze prehodno pot: clan ob zidu ima sredino 0,3 od
+            // njega, zato zanjo velja samo srednja crta (rob bi zadel zid, ob katerem stoji).
+            double half = c == 0 ? PROBE_HALF_WIDTH : 0;
+            if (horizontal(cx - x, cz - z) <= STRAGGLER && walkable(terrain, x, y, z, cx, cz, half)) {
+                following[i] = true;
+                aimX[i] = cx;
+                aimY[i] = track.y(s);
+                aimZ[i] = cz;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Ali je ravna crta od clana do ({@code tx}, {@code tz}) prehodna. Dlje od
+     * {@link #STRAGGLER} se ne preverja (steje kot prosta, torej staro obnasanje). Kratka crta
+     * se preverja: clan tik pred zidom z mestom diagonalno skozi vogal vrat bi sicer zasel v
+     * zid (P4 poskus 1, enotski test vrat: 3 obticanja). Rezultat se hrani
+     * {@link #PROBE_REFRESH} tickov v reziji {@code k}.
+     */
+    private boolean lineClear(int k, double x, double y, double z, double tx, double tz) {
+        double d = horizontal(tx - x, tz - z);
+        if (d > STRAGGLER) {
+            return true;
+        }
+        if (probeTick[k] != Integer.MIN_VALUE && tick - probeTick[k] < PROBE_REFRESH
+                && horizontal(x - probeX[k], z - probeZ[k]) < PROBE_MOVE
+                && horizontal(tx - probeTX[k], tz - probeTZ[k]) < PROBE_MOVE) {
+            return probeClear[k];
+        }
+        probeTick[k] = tick;
+        probeX[k] = x;
+        probeZ[k] = z;
+        probeTX[k] = tx;
+        probeTZ[k] = tz;
+        probeClear[k] = straightWalkable(terrain, x, y, z, tx, tz);
+        return probeClear[k];
+    }
+
+    /**
+     * Ravna crta je prehodna, ce se da stati na sredini in na obeh robovih sirine NPC-ja v
+     * vsakem koraku {@link #PROBE_STEP}, z najvec enim blokom visinske razlike med koraki.
+     * Ne nadomesti fizike: obticanje na taki crti ujame {@link #detectStuck}.
+     */
+    public static boolean straightWalkable(Terrain terrain, double x0, double y0, double z0, double x1, double z1) {
+        return walkable(terrain, x0, y0, z0, x1, z1, PROBE_HALF_WIDTH);
+    }
+
+    private static boolean walkable(Terrain terrain, double x0, double y0, double z0, double x1, double z1,
+            double halfWidth) {
+        double dx = x1 - x0;
+        double dz = z1 - z0;
+        double len = horizontal(dx, dz);
+        if (len < 1.0E-6) {
+            return true;
+        }
+        double ux = dx / len;
+        double uz = dz / len;
+        int steps = (int) Math.ceil(len / PROBE_STEP);
+        double prevY = y0;
+        for (int k = 1; k <= steps; k++) {
+            double t = Math.min(len, k * PROBE_STEP);
+            double cx = x0 + ux * t;
+            double cz = z0 + uz * t;
+            double cy = Double.NaN;
+            for (int side = -1; side <= 1; side++) {
+                double sx = cx - uz * side * halfWidth;
+                double sz = cz + ux * side * halfWidth;
+                double sy = terrain.standY(sx, prevY, sz);
+                if (Double.isNaN(sy) || Math.abs(sy - prevY) > 1.0 + 1.0E-9) {
+                    return false;
+                }
+                if (side == 0) {
+                    cy = sy;
+                }
+            }
+            prevY = cy;
+        }
+        return true;
+    }
+
+    /**
+     * Squad je za clana {@code i} izdal pravo iskanje. Obticanje dovoli eno iskanje (FA5:
+     * meja je 1 + obnove + obticanja); clan nato prehodi obvoz, ki ima prednost v STEER.
+     * Novo obticanje dovoli novo iskanje (D-080 dopolnitev, Q64).
+     */
+    public void searched(int i) {
+        pathUntil[i] = 0;
+    }
+
+    /** Najvecja napaka neopravicenih clanov med MARCHING (FA4 po Q257). */
+    public double marchLagMax() {
+        return marchLagMax;
     }
 
     private double outwardYaw(int i) {
