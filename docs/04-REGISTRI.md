@@ -81,6 +81,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-10-30 | M10.5 rollback, poskus 2 | `m105-rollback-v2` PASS na `e4febe95…`: 58/58, backup/obnova 42/42 datotek bajtno enaka; K/O restarta ohranita vse 3 UUID-je in napredek, Java v O inertna, Rw ključi izpuščeni (Q236); sintetični obseg | [zapis](meritve/2026-10-30-M10.5-rollback.md) |
 | 2026-10-30 | M10.1d klient, 2 poskusa | Na `62940ab3…` prevod v2 PASS, integrated/dedicated/O-klient/O-strežnik v2 FAIL, nič PNG; zaprt brez sprejema, validacija v2 (Q233), produkcija ista | [zapis](meritve/2026-10-30-M10.1d-klient.md) |
 | 2026-10-29 | M10.1c strežniški O = K, poskus 1 | m101c-matrika-v1 PASS na `62d88a26…`: vsak krak 13/13 + 9/9, NBT/sledi enaki; IN3/IA3/IS3/IL5/IL6 delni (Q225), brez performance meritve | [zapis](meritve/2026-10-29-M10.1c-matrika.md) |
 | 2026-10-29 | M6.9: API reference, poskus 1 | m69-api-v1 PASS na `0ff903b4…`: 5.661 preverjanj, 49 tipov/515 članov/16 hookov, prevedeni primeri in bajtna determinističnost; celoten ukaz 7.372,120 ms kot podatek, produkcija/mod ista | [zapis](meritve/2026-10-29-M6.9-api.md) |

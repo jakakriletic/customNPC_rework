@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 188 → 1)
+# Arhiv: dnevnik sej (vnosi 189 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-29 (189) — M10.1c: strežniški O = K
+
+**Paket:** M10.1c (Q225) · **Stanje:** primerjalno sprejet, poskus 1.
+Controller `m101c-matrika-v1` PASS na `62d88a26…`: O/K 13/13 run + 9/9 verify, normalizirani NBT in sledi enaki,
+zaščiteni vhodi nespremenjeni. Produkcija/harness ostaneta ista; uspešnega teka ne ponavljamo (Q90).
+IN3/IA3/IS3/IL5/IL6 ostanejo delno pokriti (zlasti `unloaded=False` v obeh krakih ni unload dokaz in IL6 ne meri
+save vrste); celoten release sprejem ni potrjen. [Zapis](../meritve/2026-10-29-M10.1c-matrika.md).
+Naslednji M10.1d klient po Q92/Q224; M10.3/IO4 blokirana (Q1).
 
 ### 2026-10-29 (188) — M10.1b: strežniške A/B vrstice (ni sprejet)
 
