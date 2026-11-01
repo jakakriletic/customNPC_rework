@@ -6,7 +6,7 @@ Published v1 reference: NPC script base, NPC/entity inheritance, NPC data interf
 
 Java 8; trusted authors only, with process permissions and no sandbox. JS remains the default. NPC tabs bind registry hooks; player, forge, block, door and item tabs bind public one-event methods by hook name (P5). Public no-argument constructor required; one instance/loader per NPC, tab and generation. Only overridden NpcScript hooks are bound. Tabs run in their existing order, then the API bus; cancellation and missing hooks keep the existing handler behavior.
 
-Signature fingerprint: `063fc2580802b2fcffee197a7fc77eca1c301b8264f21635c8b25848bb525405`.
+Signature fingerprint: `e9b21aa610f23de571e67d0c598810ce255a7bbb133e8250f6d9859133503ea3`.
 
 Descriptions: No source description is available in the compiled API; see the signature. Parameter labels `arg0`, `arg1`, ... are positional. Read inherited members through superclass/interface links; generic type arguments are preserved on those links. No constant values are read and no API instances are created.
 
@@ -1018,6 +1018,7 @@ No source description is available in the compiled API; see the signature.
 
 Kind: `abstract, public interface`; declared annotations: ``; type parameters: ``; superclass: `none`; interfaces: `[]`.
 
+- `abstract public boolean blendTo(java.lang.String arg0, int arg1)` — No source description is available in the compiled API; see the signature.
 - `abstract public java.lang.String getClip()` — No source description is available in the compiled API; see the signature.
 - `abstract public java.lang.String[] getClips()` — No source description is available in the compiled API; see the signature.
 - `abstract public int getTick()` — No source description is available in the compiled API; see the signature.

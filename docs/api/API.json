@@ -12229,6 +12229,30 @@
       "interfaces": [],
       "members": [
         {
+          "id": "blendTo(java.lang.String,int)",
+          "kind": "method",
+          "name": "blendTo",
+          "modifiers": [
+            "abstract",
+            "public"
+          ],
+          "typeParameters": [],
+          "parameters": [
+            {
+              "name": "arg0",
+              "type": "java.lang.String"
+            },
+            {
+              "name": "arg1",
+              "type": "int"
+            }
+          ],
+          "returnType": "boolean",
+          "throws": [],
+          "varargs": false,
+          "description": "No source description is available in the compiled API; see the signature."
+        },
+        {
           "id": "getClip()",
           "kind": "method",
           "name": "getClip",
@@ -12976,6 +13000,6 @@
     }
   ],
   "playerWorldExample": "import noppes.npcs.api.IWorld;\nimport noppes.npcs.api.entity.IPlayer;\nimport noppes.npcs.api.event.NpcEvent;\n\npublic class Example_playerWorld extends noppes.npcs.rework.script.NpcScript {\n    @Override public void interact(NpcEvent.InteractEvent event) {\n        IPlayer<?> player = event.player;\n        IWorld world = event.npc.getWorld();\n        long time = world.getTime();\n        player.message(\"Hello \" + player.getDisplayName() + \" in \" + world.getName() + \" at \" + time);\n        world.getTempdata().put(\"lastVisitor\", player.getName());\n        if (!world.isDay()) {\n            world.setBlock(event.npc.getBlockX(), event.npc.getBlockY() + 2, event.npc.getBlockZ(), \"minecraft:torch\", 0);\n        }\n    }\n}\n",
-  "animationExample": "import noppes.npcs.rework.anim.Animators;\nimport noppes.npcs.rework.anim.IAnimator;\nimport noppes.npcs.api.event.NpcEvent;\n\npublic class Example_animation extends noppes.npcs.rework.script.NpcScript {\n    @Override public void interact(NpcEvent.InteractEvent event) {\n        IAnimator animator = Animators.of(event.npc);\n        if (animator.isAvailable() && animator.play(\"hurt\")) {\n            animator.queue(\"idle\");\n        }\n    }\n}\n",
-  "signatureFingerprint": "063fc2580802b2fcffee197a7fc77eca1c301b8264f21635c8b25848bb525405"
+  "animationExample": "import noppes.npcs.rework.anim.Animators;\nimport noppes.npcs.rework.anim.IAnimator;\nimport noppes.npcs.api.event.NpcEvent;\n\npublic class Example_animation extends noppes.npcs.rework.script.NpcScript {\n    @Override public void interact(NpcEvent.InteractEvent event) {\n        IAnimator animator = Animators.of(event.npc);\n        if (animator.isAvailable() && (animator.blendTo(\"hurt\", 4) || animator.play(\"hurt\"))) {\n            animator.queue(\"idle\");\n        }\n    }\n}\n",
+  "signatureFingerprint": "e9b21aa610f23de571e67d0c598810ce255a7bbb133e8250f6d9859133503ea3"
 }

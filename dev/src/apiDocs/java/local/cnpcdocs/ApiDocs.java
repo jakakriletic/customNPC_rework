@@ -56,7 +56,7 @@ public final class ApiDocs {
             + "public class Example_animation extends " + BASE + " {\n"
             + "    @Override public void interact(NpcEvent.InteractEvent event) {\n"
             + "        IAnimator animator = Animators.of(event.npc);\n"
-            + "        if (animator.isAvailable() && animator.play(\"hurt\")) {\n"
+            + "        if (animator.isAvailable() && (animator.blendTo(\"hurt\", 4) || animator.play(\"hurt\"))) {\n"
             + "            animator.queue(\"idle\");\n"
             + "        }\n"
             + "    }\n}\n";
@@ -348,12 +348,12 @@ public final class ApiDocs {
                 .append("their members are in [API.md](API.md).\n\n```java\n").append(catalog.get("playerWorldExample")).append("```\n");
         hooks.append("\n## Optional action animation\n\n`Animators.of(event.npc)` returns a non-null `IAnimator`. Requires a live ")
                 .append("`EntityAnimatedNpc` from customnpcentities 0.7.0; ordinary NPCs and a missing/incompatible mod return an inert handle ")
-                .append("(`isAvailable=false`, play/queue/stop=false, clip empty, tick 0, clips empty). No change to `ICustomNpc`. ")
+                .append("(`isAvailable=false`, play/queue/stop/blendTo=false, clip empty, tick 0, clips empty). No change to `ICustomNpc`. ")
                 .append("Call from the server thread; mutations elsewhere return false. Clip names are case-sensitive; unknown/null clips return false. ")
                 .append("`play` replaces the action and clears the queue only on success; `stop` clears it and stops the action. ")
                 .append("`queue` starts immediately when idle, otherwise appends FIFO, up to 32 pending clips shared by all tabs/handles of the entity. ")
                 .append("The next clip starts at world tick END after the current action ends. External AI/actions may interrupt; the queue waits for idle. ")
-                .append("Pending clips are discarded on death/entity unload and are not saved in NBT; script-tab reload does not clear the shared entity queue. No client locomotion or blending; the animation hooks above need RwAnimHooks=1 (2 adds idle/walk/death). ")
+                .append("Pending clips are discarded on death/entity unload and are not saved in NBT; script-tab reload does not clear the shared entity queue. With RwAnimHooks=1 or 2 `blendTo(clip, ticks)` (0..200) plays like `play` and tracking clients with the same switch move from their last drawn pose to the new clip; with 0 it returns false. The animation hooks above need RwAnimHooks=1 (2 adds idle/walk/death). ")
                 .append("`getClip`/`getTick` describe the action only (idle: empty/0); `getClips` returns a fresh sorted array.\n\n```java\n")
                 .append(catalog.get("animationExample")).append("```\n\nJS: `var a = Java.type('noppes.npcs.rework.anim.Animators').of(event.npc);`\n");
         out.put("HOOKS.md", hooks.toString().getBytes(StandardCharsets.UTF_8));

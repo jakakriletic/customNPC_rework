@@ -147,6 +147,7 @@ import noppes.npcs.rework.far.CommandRwFar;
 import noppes.npcs.rework.far.FarRegistry;
 import noppes.npcs.rework.far.FarServer;
 import noppes.npcs.rework.anim.AnimationHooks;
+import noppes.npcs.rework.anim.BlendServer;
 import noppes.npcs.rework.script.AutoClasspath;
 import noppes.npcs.rework.script.hooks.JavaLanguage;
 
@@ -225,7 +226,7 @@ public class CustomNpcs {
     public static String RwHitboxShieldItems = "";
     @ConfigProp(info="Rework M6.2 (D-090): compiler classpath for scripts with ScriptLanguage=Java (NPC, player, forge, block, door and item scripts; server side, trusted script authors only; needs a JDK 8 with javac). auto (P5) = built from this exact runtime: every game, Forge and mod file of the game class loader, and in production a once-generated jar of the game classes with their runtime (SRG) names under customnpcs-java/. Otherwise a file that holds the classpath or the classpath itself; it must contain the CustomNPCs API and the game classes of this exact runtime. Empty = Java is not offered and a Java tab stops with a clear error; JS and the other languages are not affected. Default empty")
     public static String RwJavaClasspath = "";
-    @ConfigProp(info="Rework M7.5 (D-095, Q194): animation script hooks for animated NPCs of the optional mod customnpcentities 0.7.0. With 1 the server calls the NPC script hooks animationStart, animationEvent (timed clip events such as hit or sound) and animationEnd, in JS and Java, at world tick end from an exact log of every action start, fired event and stop (P7a: the loaded class of the optional mod gets journal calls at class load; a mismatch leaves it original and the hooks off). 2 = also the idle, walk and death layers (event source idle/walk/death, server clocks of the optional mod, hooks only). Without the optional mod nothing is tracked. Read at startup. 0 = original (no listener, no hooks, class untouched), 1 = action hooks, 2 = action and layer hooks. Default 0")
+    @ConfigProp(info="Rework M7.5 (D-095, Q194): animation script hooks for animated NPCs of the optional mod customnpcentities 0.7.0. With 1 the server calls the NPC script hooks animationStart, animationEvent (timed clip events such as hit or sound) and animationEnd, in JS and Java, at world tick end from an exact log of every action start, fired event and stop (P7a: the loaded class of the optional mod gets journal calls at class load; a mismatch leaves it original and the hooks off). 2 = also the idle, walk and death layers (event source idle/walk/death, server clocks of the optional mod, hooks only). 1 and 2 also enable IAnimator.blendTo (P7b): the server sends the blend on its own channel rwanim and a client with 1 or 2 moves from its last drawn pose to the new clip (the client class of the optional mod gets a pose call at class load; otherwise the clip just plays). Without the optional mod nothing is tracked. Read at startup. 0 = original (no listener, no hooks, class untouched), 1 = action hooks, 2 = action and layer hooks. Default 0")
     public static int RwAnimHooks = 0;
     public static long ticks;
     @SidedProxy(clientSide="noppes.npcs.client.ClientProxy", serverSide="noppes.npcs.CommonProxy")
@@ -333,6 +334,15 @@ public class CustomNpcs {
         // M7.5/P7a: only the switch registers the animation hook observer; 0 adds no listener.
         if (RwAnimHooks >= 1) {
             AnimationHooks.install(RwAnimHooks);
+            // P7b: rwanim channel for IAnimator.blendTo; the client also gets its receiver.
+            BlendServer.init();
+            if (ev.getSide().isClient()) {
+                try {
+                    Class.forName("noppes.npcs.rework.anim.BlendClient").getMethod("install").invoke(null);
+                } catch (ReflectiveOperationException e) {
+                    LogWriter.error("RWANIM blend client not installed", e);
+                }
+            }
         }
         if (ev.getSide().isClient()) {
             try {

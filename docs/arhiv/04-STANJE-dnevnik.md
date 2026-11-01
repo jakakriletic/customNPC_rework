@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 201 → 1)
+# Arhiv: dnevnik sej (vnosi 202 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-30 (202) — P7.0: izvedbena raziskava animacij (zaključena)
+
+**Paket:** P7.0 (Q248, Q272–Q276, D-098) · **Stanje:** raziskava zaključena; P7 popravek še ni implementiran ali sprejet.
+Po protokolu §1a ponovno preverjena premisa D-095: END polling izgubi zadnji izvedeni korak, cache clear ne zamenja NPC knjižnic,
+play pa ne zagotovi prehoda poze. Bralni javap pripetega entities 0.7.0 in primarni ASM/Forge viri podpirajo lokalni adapter,
+dnevnik, snapshot knjižnice po logični strani ter ločen sync kanal. Entities repo/jar ostaneta nedotaknjena. Zapis vsebuje
+pogodbo hookov, blendTo/reload in obvezni server/klient sprejem znotraj Q250. Brez testov/builda/Minecrafta; produkcija in harnessi
+nespremenjeni (Q90). Naslednja implementacija celotnega P7, nato P8; brez novega merilnega poskusa. [Raziskava](../raziskave/P7.0-animacije-razsiritev.md).
 
 ### 2026-10-30 (201) — P6: GUI za način letenja (sprejet)
 

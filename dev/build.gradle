@@ -368,6 +368,10 @@ task testOriginal(type: Test) {
     exclude '**/ActionJournalTest.class'
     exclude '**/LocomotionTest.class'
     exclude '**/AnimatedNpcPatchTest.class'
+    // P7b: blendTo pose math, rwanim codec and the AnimatedModel patch are new.
+    exclude '**/PoseBlendTest.class'
+    exclude '**/BlendCodecTest.class'
+    exclude '**/AnimatedModelPatchTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

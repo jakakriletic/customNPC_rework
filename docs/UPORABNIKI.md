@@ -70,7 +70,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwPathResume` | 0 | walking/flying NPCs continue partial paths to goals beyond the navigation range |
 | `RwFlyLineOfSight` | 0 | flying NPCs follow paths around corners instead of flying at walls |
 | `RwNavBackend` | 0 | permits NPCs with per-NPC `RwNavBackend=1` to use Baritone (needs the `npcbaritone` library) |
-| `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`) |
+| `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`); >=1 also enables `blendTo` (set on server and clients) |
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
 | `RwJavaClasspath` | empty | enables Java scripts (see §4); `auto` = classpath built from the running server |
 
@@ -110,7 +110,7 @@ are not written to the config.
 - API: [API.md](api/API.md), hooks and examples: [HOOKS.md](api/HOOKS.md), IDE template:
   [scripts/java/template](../scripts/java/template/README.md). v1 covers NPC, player and world;
   items, blocks, quests, dialogs and factions in Java are planned for v2.
-- Animations: `Animators.of(npc)` (`play`, `queue`, `stop`, `getClip`, `getTick`, `getClips`) works
+- Animations: `Animators.of(npc)` (`play`, `blendTo`, `queue`, `stop`, `getClip`, `getTick`, `getClips`) works
   only with `customnpcentities` 0.7.0; without it `isAvailable()` is false and calls do nothing.
 
 ## 5. Migration and rollback
@@ -159,8 +159,13 @@ Not proven, so not claimed:
   event and stop is now reported in order, also several in one tick and a stop in the tick of an event;
   `RwAnimHooks=2` adds walk/idle/death (server-side script calls only). Tested on a packaged server with
   `customnpcentities` 0.7.0 only; if that mod's class does not match, the hooks stay off with an error.
-  The end of death is reported at respawn; removing an NPC calls no hook. `blendTo` and
-  `/npcanim reload` are still unavailable (P7b).
+  The end of death is reported at respawn; removing an NPC calls no hook.
+- `blendTo(clip, ticks)` (P7b, [note](meritve/2026-11-01-P7b-blendto.md)): needs `RwAnimHooks>=1` on the
+  server (otherwise it returns false) and on the client (otherwise the clip starts without a transition).
+  The pose moves linearly from the last drawn pose over 0–200 ticks; a new action interrupts, death is never
+  blended. Tested on an integrated dev client only, not on a dedicated server or packaged client; a player
+  who starts tracking the NPC mid-blend sees the plain clip; client cost not measured.
+  `/npcanim reload` is still unavailable (P7c).
 - Java scripts (P5, Q263–Q268): `RwJavaClasspath=auto` and Java in the player/forge/block/door/item
   GUIs were tested on a packaged Forge server without other mods. Classes that other mods change
   with coremods or mixins are seen in their Forge form; no real modpack was tested (Q1).

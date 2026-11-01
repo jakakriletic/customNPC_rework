@@ -34,6 +34,7 @@ public final class Animators {
         public boolean play(String clip) { return false; }
         public boolean queue(String clip) { return false; }
         public boolean stop() { return false; }
+        public boolean blendTo(String clip, int ticks) { return false; }
         public String getClip() { return ""; }
         public int getTick() { return 0; }
         public String[] getClips() { return new String[0]; }
@@ -135,6 +136,17 @@ public final class Animators {
         public boolean play(String name) { boolean ok = queue.play(name); update(this); return ok; }
         public boolean queue(String name) { boolean ok = queue.queue(name); update(this); return ok; }
         public boolean stop() { boolean ok = queue.stop(); update(this); return ok; }
+        // P7b (Q282): a play whose clip the tracking clients blend into from their last drawn pose.
+        public boolean blendTo(String name, int ticks) {
+            if (!PoseBlend.validTicks(ticks) || !BlendServer.enabled() || !writable()) { return false; }
+            boolean ok = play(name);
+            EntityNPCInterface npc = live();
+            if (ok && ticks > 0 && npc != null) {
+                int token = AnimBlend.token(npc);
+                if ((token & 0xFF) != 0) { BlendServer.send(npc, token, ticks); }
+            }
+            return ok;
+        }
         public String getClip() {
             EntityNPCInterface npc = live();
             if (npc == null) { return ""; }

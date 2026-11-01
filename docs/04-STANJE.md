@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-01** (seja 203) — **P7a sprejet** (poskus 1, Q277–Q281): točen strežniški dnevnik akcij prek instrumentacije naloženega `EntityAnimatedNpc` (pripet jar nedotaknjen), walk/idle/death plasti pri `RwAnimHooks=2`, polje `source`. Na `84bbd8da…` unit/build/package, `p7-h0/h1/h2-v1` in `p7-api-v1` PASS, JS = Java. Privzeto 0. [Zapis](meritve/2026-11-01-P7a-dnevnik-animacij.md). |
+| Zadnja posodobitev | **2026-11-01** (seja 204) — **P7b sprejet** (poskus 1, Q282–Q286): `IAnimator.blendTo(clip, ticks)` z linearnim prehodom poze na klientu (kanal `rwanim`, coremod v `AnimatedModel.buildPose`, pripet jar nedotaknjen). Na `c5f61924…` unit/build/package, `p7b-blend-v1` 29/29 in `p7b-api-v1` PASS. Privzeto 0. [Zapis](meritve/2026-11-01-P7b-blendto.md). |
 | Trenutni milestone | **M10 — release** (v1 obseg Q92); M7 v1 zaključen (M7.0, M7.V, M7.9, M7.5; D-095); M6 Scripting v1 zaključen (M6.0–M6.12) po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
-| Naslednji paketi | **Popravki omejitev v1.0 P1–P8** po [Q248](10-OBSEG-V1.md): P1 soak (zaključen z omejitvijo heapa) → P2 klientska matrika (zaključen z omejitvijo) → P3 `RwPathResume`/`RwFlyLineOfSight` (sprejet pod stikali) → P4 formacije (sprejet po Q257) → P5 Java GUI/classpath (sprejet) → P6 GUI `RwFlightMode` (sprejet) → P7a strežniški hooki (sprejet) → **P7b naslednji:** `blendTo` + `/npcanim reload` s klientom po [P7.0](raziskave/P7.0-animacije-razsiritev.md) (D-098, Q277) → P8 Baritone; vsak posodobi `UPORABNIKI.md` §6. Po P8 čakamo odločitev lastnika o izdaji (brez v2). Q90/Q92 veljata: uspešnih serij ne ponavljamo, največ 2 poskusa/paket. M10.3/IO4 blokirana (Q1). |
+| Naslednji paketi | **Popravki omejitev v1.0 P1–P8** po [Q248](10-OBSEG-V1.md): P1 soak (zaključen z omejitvijo heapa) → P2 klientska matrika (zaključen z omejitvijo) → P3 `RwPathResume`/`RwFlyLineOfSight` (sprejet pod stikali) → P4 formacije (sprejet po Q257) → P5 Java GUI/classpath (sprejet) → P6 GUI `RwFlightMode` (sprejet) → P7a strežniški hooki (sprejet) → P7b `blendTo` (sprejet) → **P7c naslednji:** `/npcanim reload` s klientom po [P7.0](raziskave/P7.0-animacije-razsiritev.md) (D-098, Q283) → P8 Baritone; vsak posodobi `UPORABNIKI.md` §6. Po P8 čakamo odločitev lastnika o izdaji (brez v2). Q90/Q92 veljata: uspešnih serij ne ponavljamo, največ 2 poskusa/paket. M10.3/IO4 blokirana (Q1). |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **240** datotek `.java` v `src/patch`, od tega **163** rework; P7a: `ActionJournal`, `AnimJournal`, `Locomotion`, `AnimatedNpcPatch`, `AnimationJournalProbe`. Build/package PASS na `84bbd8da…`. |
-| Testi | **583** metod `@Test` v **91** datotekah; trije novi P7a razredi izključeni iz `testOriginal`. P7a unit/build/package, `p7-h0/h1/h2-v1`, `p7-api-v1` PASS na `84bbd8da…`. Predhodnih uspešnih serij ne ponavljamo (Q90). |
+| Prevedljivih razredov | **247** datotek `.java` v `src/patch`, od tega **170** rework; P7b: `PoseBlend`, `BlendCodec`, `BlendServer`, `BlendClient`, `AnimBlend`, `AnimatedModelPatch`, `AnimBlendHarness`. Build/package PASS na `c5f61924…`. |
+| Testi | **595** metod `@Test` v **94** datotekah; trije novi P7b razredi izključeni iz `testOriginal`. P7b unit/build/package, `p7b-blend-v1`, `p7b-api-v1` PASS na `c5f61924…`. Predhodnih uspešnih serij ne ponavljamo (Q90). |
 | Odprti pojavi | nobenega blokirnega; Q84 (M4.17 + M4.10 zid 6/6 → 5/6, vzrok [H], ovira za privzeti vklop kombinacije); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10, Q12 in Q14 odprta; Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -41,7 +41,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M4 Gibanje | **Paketi v1.0 obravnavani z omejitvami** | [M4.15c](meritve/2026-10-29-M4.15c-klient.md) GUI/restart zelen; M4.15a potrditev 2000 nedosegljivih odložena. Celoten M4 izhodni kriterij ni izpolnjen; M4.14b brez FA sprejema (D-079); P4 FA sprejet po Q257 ([zapis](meritve/2026-10-30-P4-formacije.md)), F1–F12 odprti. |
 | M5 Performance | **zaključeno 22. 10. (D-055)** | M5-S: kapaciteta M5.8; M5-K: sprejem M5-K.2; M5-V: sprejem M5-V.8 in privzeti vklop V.8b; M5.Z: obe matriki in sled zeleni. [Regresija](meritve/2026-10-22-M5.Z-regresija.md); nepokrita release preverjanja ostanejo M10 |
 | M6 Scripting | **v1 zaključen (M6.0–M6.12)** | [Player/world](meritve/2026-10-29-M6.11-player-world.md) m611 12/12, `IPlayer`/`IWorld` v API (Q191); [izbira jezika](meritve/2026-10-29-M6.12-izbira-jezika.md) 101 trditev (Q187); P5: Java v vseh skriptnih GUI-jih, `RwJavaClasspath=auto` (Q265); item/block/quest/dialog/faction API v2 |
-| M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | [M7.0 raziskava](raziskave/M7.0-animacije-integracija.md) (D-095); [M7.V zagon](meritve/2026-10-29-M7.V-entities-zagon.md) 37/37 klipov (Q199); [M7.9 `Animators`](meritve/2026-10-29-M7.9-animator-api.md) (Q202); [M7.5 hooki](meritve/2026-10-29-M7.5-animacijski-hooki.md) (Q206); prvotni v1 zaključen; P7.0 raziskava (D-098); [P7a strežniški hooki](meritve/2026-11-01-P7a-dnevnik-animacij.md) sprejeti (Q281); P7b blend/reload odprt |
+| M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | [M7.0 raziskava](raziskave/M7.0-animacije-integracija.md) (D-095); [M7.V zagon](meritve/2026-10-29-M7.V-entities-zagon.md) 37/37 klipov (Q199); [M7.9 `Animators`](meritve/2026-10-29-M7.9-animator-api.md) (Q202); [M7.5 hooki](meritve/2026-10-29-M7.5-animacijski-hooki.md) (Q206); prvotni v1 zaključen; P7.0 raziskava (D-098); [P7a strežniški hooki](meritve/2026-11-01-P7a-dnevnik-animacij.md) sprejeti (Q281); [P7b `blendTo`](meritve/2026-11-01-P7b-blendto.md) sprejet (Q286); P7c reload odprt |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
 | M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b/d brez sprejema; celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
@@ -55,7 +55,16 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 201 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 202 → 1, novejši zgoraj).*
+
+### 2026-11-01 (204) — P7b: `blendTo` s klientskim prehodom poze (sprejet)
+
+**Paket:** P7b (Q248, Q282–Q286, D-098) · **Stanje:** sprejet na poskusu 1; `RwAnimHooks` privzeto 0.
+`IAnimator.blendTo(clip, ticks)` (0–200) pri `RwAnimHooks>=1` pošlje sporočilo na kanal `rwanim`; klientski coremod v
+`AnimatedModel.buildPose` linearno zmeša zadnjo narisano pozo v novo. Na c5f61924… PASS: unit (595 `@Test`), build, package,
+`p7b-blend-v1` 29/29 (prvi skok 607,7 → 48,6, linearnost ≤ 5,2·10⁻⁸, zamenjava iz zmešane poze, smrt brez blenda, guardi),
+`p7b-api-v1`. Prvi zagon padel v pripravi sveta, popravek samo v harnessu (Q285). Cena ni ločeno izmerjena (Q286); samo
+integriran dev klient. Naslednji P7c `/npcanim reload`, nato P8. [Zapis](meritve/2026-11-01-P7b-blendto.md).
 
 ### 2026-11-01 (203) — P7a: točen dnevnik animacij in walk/idle/death hooki (sprejet)
 
@@ -65,12 +74,3 @@ neujemanju isti bajti in hooki izklopljeni); hooki tečejo ob END v točnem vrst
 ticku, stop v ticku hita (10, prej izgubljen) in pri 18 (`finished=false`), pri 2 walk→idle in smrt; JS = Java, pri 0
 razred nedotaknjen. Cena v mirovanju 0,35/2,92 µs na tick (podatek). Fikstura h2 popravljena brez novega poskusa (Q281).
 Naslednji P7b (`blendTo`, `/npcanim reload`, klient). [Zapis](meritve/2026-11-01-P7a-dnevnik-animacij.md).
-
-### 2026-10-30 (202) — P7.0: izvedbena raziskava animacij (zaključena)
-
-**Paket:** P7.0 (Q248, Q272–Q276, D-098) · **Stanje:** raziskava zaključena; P7 popravek še ni implementiran ali sprejet.
-Po protokolu §1a ponovno preverjena premisa D-095: END polling izgubi zadnji izvedeni korak, cache clear ne zamenja NPC knjižnic,
-play pa ne zagotovi prehoda poze. Bralni javap pripetega entities 0.7.0 in primarni ASM/Forge viri podpirajo lokalni adapter,
-dnevnik, snapshot knjižnice po logični strani ter ločen sync kanal. Entities repo/jar ostaneta nedotaknjena. Zapis vsebuje
-pogodbo hookov, blendTo/reload in obvezni server/klient sprejem znotraj Q250. Brez testov/builda/Minecrafta; produkcija in harnessi
-nespremenjeni (Q90). Naslednja implementacija celotnega P7, nato P8; brez novega merilnega poskusa. [Raziskava](raziskave/P7.0-animacije-razsiritev.md).
