@@ -70,7 +70,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwPathResume` | 0 | walking/flying NPCs continue partial paths to goals beyond the navigation range |
 | `RwFlyLineOfSight` | 0 | flying NPCs follow paths around corners instead of flying at walls |
 | `RwNavBackend` | 0 | permits NPCs with per-NPC `RwNavBackend=1` to use Baritone (needs the `npcbaritone` library) |
-| `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks (needs `customnpcentities`; read at startup) |
+| `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`) |
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
 | `RwJavaClasspath` | empty | enables Java scripts (see §4); `auto` = classpath built from the running server |
 
@@ -155,10 +155,12 @@ Not proven, so not claimed:
   all end within 2 blocks of the goal and the squad is wider than 6 blocks at a 1-block door; this
   is the legion shape, not a fault. One test run, one scene; the manual in-game checks (F1–F12)
   were not done.
-- `RwAnimHooks` observes once per tick; events of a step that a script stops later in the same
-  tick are not reported; no walk/idle/death hooks; `blendTo` and `/npcanim reload` are unavailable.
-  P7 reopens these features; its [implementation research](raziskave/P7.0-animacije-razsiritev.md)
-  is complete, but the fix is not implemented or validated yet.
+- `RwAnimHooks` (P7a, [note](meritve/2026-11-01-P7a-dnevnik-animacij.md)): every action start, clip
+  event and stop is now reported in order, also several in one tick and a stop in the tick of an event;
+  `RwAnimHooks=2` adds walk/idle/death (server-side script calls only). Tested on a packaged server with
+  `customnpcentities` 0.7.0 only; if that mod's class does not match, the hooks stay off with an error.
+  The end of death is reported at respawn; removing an NPC calls no hook. `blendTo` and
+  `/npcanim reload` are still unavailable (P7b).
 - Java scripts (P5, Q263–Q268): `RwJavaClasspath=auto` and Java in the player/forge/block/door/item
   GUIs were tested on a packaged Forge server without other mods. Classes that other mods change
   with coremods or mixins are seen in their Forge form; no real modpack was tested (Q1).

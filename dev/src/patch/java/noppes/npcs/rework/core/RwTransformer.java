@@ -40,6 +40,9 @@ public class RwTransformer implements IClassTransformer {
         if (basicClass != null && RenderEntitiesPatch.TARGET_CLASS.equals(transformedName)) {
             return RenderEntitiesPatch.apply(basicClass);
         }
+        if (basicClass != null && AnimatedNpcPatch.TARGET_CLASS.equals(transformedName)) {
+            return AnimatedNpcPatch.apply(basicClass);
+        }
         return basicClass;
     }
 

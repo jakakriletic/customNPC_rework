@@ -24,6 +24,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
+| 2026-11-01 | Animacijski hooki iz točnega dnevnika: coremod ob nalaganju vstavi klice v `EntityAnimatedNpc` 0.7.0 (vzorci preverjeni, neujemanje = isti bajti, hooki izklopljeni); vsi starti/dogodki/stopi v vrstnem redu, tudi stop v ticku dogodka in pri length−1 (`finished=false`); pri 2 walk/idle/death plasti, polje `source` | P7a, D-098, Q277–Q281 | `RwAnimHooks` | **0** (razred nedotaknjen) |
 | 2026-10-30 | AI → Movement: Fly: Orig/Hover samo za leteče; strežnik sprejme izrecni int 0/1, nedotaknjen/legacy save ohrani način; Momentum prikazan onemogočen in ohranjen, kopenski NPC shrani izbiro brez uporabe Hover | P6, Q269–Q271 | per-NPC `RwFlightMode` | **0** (original); tick koda ista |
 | 2026-10-30 | Java tudi v player/forge/block/door/item skriptnem GUI (vezava hookov po imenu, napačen tip dogodka = `hook.signature`); `RwJavaClasspath=auto` sestavi classpath iz virov nalagalnika in v produkciji enkrat zapiše jar Minecraft/Forge razredov skozi Forgeovo verigo (SRG) | P5, Q263–Q268 | `RwJavaClasspath` | **prazno** (GUI ponudi Javo, tab brez classpatha se ustavi z napako; JS nespremenjen) |
 | 2026-10-30 | Formacije: član z zaprto ravno črto do mesta gre na točko kolone na skupni poti; z zaprto črto hodi po skupni poti brez iskanja; iskanje samo ob obtičanju; prosta črta 6–14 blokov STEER (G: iskanja 29–117 → 1, DONE 237 → 101) | P4, D-079, Q258–Q262 | sam ukaz `/rwsquad` | brez ukaza nič |
@@ -91,6 +92,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-01 | P7a animacijski hooki, poskus 1: `animation-api-run.ps1 -Package p7` pakiran strežnik, `RwAnimHooks` 0/1/2 | Na `84bbd8da…` unit/build/package, `p7-h0/h1/h2-v1` (23/23, JS = Java), `p7-api-v1` PASS; stop v ticku hita 10 in pri 18 javljena, walk→idle in smrt pri 2; cena v mirovanju 0,35/2,92 µs na tick | [zapis](meritve/2026-11-01-P7a-dnevnik-animacij.md) |
 | 2026-10-30 | P6 GUI, poskus 1: `flight-gui-run.ps1`, integrated dev klient | Na `81e79f30…` unit/build/package in `p6-gui-v1` PASS; edit 79/79 + restart 58/58, 6 UUID-jev in kloni; 10 PNG pregledanih, toast prekriva novi gumb (vizualna omejitev Q271) | [zapis](meritve/2026-10-30-P6-flight-gui.md) |
 | 2026-10-30 | P5 Java handlerji + `auto`, poskus 2: `java-hooks-run.ps1 -Mode packaged -Package p5`, pakiran Forge | Na `6531b341…` unit/build/package, `p5-handlers-v1` 19/19 (5 handlerjev JS = Java, `hook.signature`), `m62-packaged-v3` PASS; jar `auto` 3.601 razredov v 1.976 ms, restart reused 7 ms. Poskus 1 17/19 (forge `amu`, Q268) | [zapis](meritve/2026-10-30-P5-java-handlerji.md) |
 | 2026-10-30 | P4 formacije, poskus 1: `formacije-run.ps1 -P4` ena ponovitev (Q250) | Na `e964773f…` unit/build/package, `p4-harness-v1`, `p4-formacije-v1` PASS: G/O 8/8 mest, DONE 101/40, FA5 1 ≤ 1, obtičanja 0, zaostanek 1,088/0,391; NOTE skupni cilj 4/8 in 3/8, premer 8,034/6,428; kontrola A G/O enaka. Sprejeto po Q257 | [zapis](meritve/2026-10-30-P4-formacije.md) |

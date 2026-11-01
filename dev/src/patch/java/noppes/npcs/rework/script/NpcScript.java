@@ -31,7 +31,7 @@ public abstract class NpcScript {
     public void rangedLaunched(NpcEvent.RangedLaunchedEvent event) { }
     public void timer(NpcEvent.TimerEvent event) { }
     public void dialogClose(DialogEvent.CloseEvent event) { }
-    /** M7.5: called only with RwAnimHooks=1 for an animated NPC of customnpcentities 0.7.0. */
+    /** M7.5: called only with RwAnimHooks>=1 for an animated NPC of customnpcentities 0.7.0. */
     public void animationStart(AnimationEvent.Started event) { }
     public void animationEnd(AnimationEvent.Ended event) { }
     public void animationEvent(AnimationEvent.ClipEvent event) { }

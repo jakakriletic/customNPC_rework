@@ -61,11 +61,13 @@ public final class ApiDocs {
             + "        }\n"
             + "    }\n}\n";
 
-    static final String ANIMATION_HOOK = "Optional animation hook (M7.5), called only with RwAnimHooks=1 for an EntityAnimatedNpc of customnpcentities 0.7.0; "
-            + "never called by EventHooks and not posted to the API event bus. The server observes the action once per world tick END and calls, "
-            + "in this order, animationEnd of the previous action, animationStart of a new one (also the same clip again), then animationEvent for "
-            + "each timed clip event the entity fired since the last observation, with tick = the action age it fired at. finished=false means "
-            + "stopped, replaced or cut by death; removal or unload of the NPC calls no hook.";
+    static final String ANIMATION_HOOK = "Optional animation hook (M7.5, P7a), called only with RwAnimHooks=1 or 2 for an EntityAnimatedNpc of customnpcentities 0.7.0; "
+            + "never called by EventHooks and not posted to the API event bus. The entity logs every action start, server clip event and stop as it "
+            + "happens; at world tick END the hooks run in exactly that order (also several transitions in one tick), with tick = the action age "
+            + "(0 at start, the firing age for an event, the age at the stop for an end). finished=true only when the clip ended at its length; a "
+            + "stop, also at length-1, a replacement or death gives false. source is action; with RwAnimHooks=2 also idle, walk (walk clock and "
+            + "limbSwingAmount > 0.25 as the optional mod) and death layers, after the action steps of that tick; layer events call hooks only. "
+            + "Animators.getTick() is live and 0 after a stop. Removal or unload of the NPC calls no hook.";
 
     private ApiDocs() { }
 
@@ -351,7 +353,7 @@ public final class ApiDocs {
                 .append("`play` replaces the action and clears the queue only on success; `stop` clears it and stops the action. ")
                 .append("`queue` starts immediately when idle, otherwise appends FIFO, up to 32 pending clips shared by all tabs/handles of the entity. ")
                 .append("The next clip starts at world tick END after the current action ends. External AI/actions may interrupt; the queue waits for idle. ")
-                .append("Pending clips are discarded on death/entity unload and are not saved in NBT; script-tab reload does not clear the shared entity queue. No client locomotion or blending; the animation hooks above need RwAnimHooks=1. ")
+                .append("Pending clips are discarded on death/entity unload and are not saved in NBT; script-tab reload does not clear the shared entity queue. No client locomotion or blending; the animation hooks above need RwAnimHooks=1 (2 adds idle/walk/death). ")
                 .append("`getClip`/`getTick` describe the action only (idle: empty/0); `getClips` returns a fresh sorted array.\n\n```java\n")
                 .append(catalog.get("animationExample")).append("```\n\nJS: `var a = Java.type('noppes.npcs.rework.anim.Animators').of(event.npc);`\n");
         out.put("HOOKS.md", hooks.toString().getBytes(StandardCharsets.UTF_8));

@@ -61,7 +61,7 @@ Measured against the 5 Oct baseline: 8 of 9 cells faster, idle-500 p95 MSPT −9
 | Client LOD: NPCs beyond N blocks without eyes, name, chat bubbles and 3D headwear (M5-K K5) | `RwLodStart` (0) | changes the look of distant NPCs |
 | **Java NPC scripts** (`ScriptLanguage=Java`) with the same hooks as JS, `IPlayer`/`IWorld` access, API docs and IDE template (M6.1–M6.11, D-090) | `RwJavaClasspath` (empty = off, `auto` = from the server, P5) | trusted authors only, no sandbox; needs JDK 8; NPC, player, forge, block, door and item scripts (P5); not projectile |
 | Animation API `Animators.of(npc)`: `play`, `queue`, `stop`, `getClip`, `getTick`, `getClips` (M7.9) | always present; does nothing without `customnpcentities` 0.7.0 | |
-| Animation hooks `animationStart`, `animationEvent`, `animationEnd` in JS and Java (M7.5, D-095) | `RwAnimHooks` (0), read at startup | once per tick; no walk/idle/death hooks |
+| Animation hooks `animationStart`, `animationEvent`, `animationEnd` in JS and Java (M7.5, D-095); exact order of every action step and walk/idle/death layers with `event.source` (P7a) | `RwAnimHooks` (0; 1 = actions, 2 = + walk/idle/death), read at startup | needs `customnpcentities` 0.7.0; layers are script calls only; no `blendTo`/reload yet |
 | Diagnostics and measurements (M2.1) | `/rwdiag`, `-Drwdiag=on` | `/rwdiag chunks` never releases chunks and logs an NPE on stop (Q241) |
 
 Diagnostic commands: `/rwtarget`, `/rwhitbox`, `/rwfar`, `/rwimpostor`, `/rwcollide`, `/rwdata`,

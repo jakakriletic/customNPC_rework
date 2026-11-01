@@ -36,7 +36,7 @@ public final class ScriptHooks {
     }
 
     private static final List<Hook> NPC;
-    /** M7.5 (Q194): dispatched by rework.anim.AnimationHooks only with RwAnimHooks=1; not EventHooks. */
+    /** M7.5 (Q194): dispatched by rework.anim.AnimationHooks only with RwAnimHooks>=1; not EventHooks. */
     private static final List<Hook> ANIMATION = Collections.unmodifiableList(Arrays.asList(
             new Hook("animationStart", AnimationEvent.Started.class),
             new Hook("animationEnd", AnimationEvent.Ended.class),

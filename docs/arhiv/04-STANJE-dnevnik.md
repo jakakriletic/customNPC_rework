@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 200 → 1)
+# Arhiv: dnevnik sej (vnosi 201 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,16 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-10-30 (201) — P6: GUI za način letenja (sprejet)
+
+**Paket:** P6 (Q248, Q269–Q271) · **Stanje:** funkcionalno sprejet, poskus 1; Original ostane privzet.
+Na 81e79f30… unit/build/package in p6-gui-v1 PASS: 79/79 + 58/58, šest istih UUID-jev po restartu,
+kloni z novimi UUID-ji, Original/Hover/Momentum in ground↔flying potrjeni. AI → Movement ponudi
+Fly: Orig/Hover samo za leteče; Momentum onemogočen in ohranjen, legacy save ne spremeni načina.
+Vseh 10 PNG pregledanih; tutorial toast prekriva novi gumb, zato berljivost ni vizualno dokazana,
+napis/meje in dejanski kliki so preverjeni s harnessom. Brez nove tick kode ali ponovitve po Q90.
+Naslednji P7 animacije. [Zapis](../meritve/2026-10-30-P6-flight-gui.md).
 
 ### 2026-10-30 (200) — P5: Java v vseh skriptnih GUI-jih in `RwJavaClasspath=auto` (sprejet)
 

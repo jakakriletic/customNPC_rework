@@ -83,7 +83,7 @@ implements IScriptHandler {
         }
     }
 
-    /** M7.5: named hook outside EnumScriptType (animation hooks, RwAnimHooks=1 only). Same guard,
+    /** M7.5: named hook outside EnumScriptType (animation hooks, RwAnimHooks>=1 only). Same guard,
      * init-on-reload, tabs, order and language branch as runScript; EventHooks never calls it. */
     public void runScript(String hook, Event event) {
         if (!this.isEnabled()) {

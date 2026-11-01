@@ -30,6 +30,8 @@ public class RwCoreMod implements IFMLLoadingPlugin {
     public static final String PROP_LOADED = "rwcore.loaded";
     public static final String PROP_DEOBF = "rwcore.deobf";
     public static final String PROP_CLASSES = "rwcore.classes";
+    /** P7a: game directory (Forge mcLocation), where AnimatedNpcPatch reads config/CustomNpcs.cfg. */
+    public static final String PROP_HOME = "rwcore.home";
 
     private static final Logger LOG = LogManager.getLogger("customnpcs-rework-core");
 
@@ -54,6 +56,10 @@ public class RwCoreMod implements IFMLLoadingPlugin {
         boolean deobf = flag instanceof Boolean && ((Boolean) flag).booleanValue();
         System.setProperty(PROP_LOADED, "1");
         System.setProperty(PROP_DEOBF, deobf ? "1" : "0");
+        Object home = data == null ? null : data.get("mcLocation");
+        if (home instanceof java.io.File) {
+            System.setProperty(PROP_HOME, ((java.io.File) home).getAbsolutePath());
+        }
         if (System.getProperty(PROP_CLASSES) == null) {
             System.setProperty(PROP_CLASSES, "0");
         }

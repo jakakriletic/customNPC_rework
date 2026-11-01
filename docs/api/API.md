@@ -6,7 +6,7 @@ Published v1 reference: NPC script base, NPC/entity inheritance, NPC data interf
 
 Java 8; trusted authors only, with process permissions and no sandbox. JS remains the default. NPC tabs bind registry hooks; player, forge, block, door and item tabs bind public one-event methods by hook name (P5). Public no-argument constructor required; one instance/loader per NPC, tab and generation. Only overridden NpcScript hooks are bound. Tabs run in their existing order, then the API bus; cancellation and missing hooks keep the existing handler behavior.
 
-Signature fingerprint: `3164a7f04ba7d11f18a965c5fbab5259124d4fda7a070c6b5c053d09ea9b1338`.
+Signature fingerprint: `063fc2580802b2fcffee197a7fc77eca1c301b8264f21635c8b25848bb525405`.
 
 Descriptions: No source description is available in the compiled API; see the signature. Parameter labels `arg0`, `arg1`, ... are positional. Read inherited members through superclass/interface links; generic type arguments are preserved on those links. No constant values are read and no API instances are created.
 
@@ -965,7 +965,12 @@ No source description is available in the compiled API; see the signature.
 
 Kind: `abstract, public class`; declared annotations: ``; type parameters: ``; superclass: `noppes.npcs.api.event.NpcEvent`; interfaces: `[]`.
 
+- `final public static java.lang.String ACTION` — No source description is available in the compiled API; see the signature.
+- `final public static java.lang.String DEATH` — No source description is available in the compiled API; see the signature.
+- `final public static java.lang.String IDLE` — No source description is available in the compiled API; see the signature.
+- `final public static java.lang.String WALK` — No source description is available in the compiled API; see the signature.
 - `final public java.lang.String clip` — No source description is available in the compiled API; see the signature.
+- `final public java.lang.String source` — No source description is available in the compiled API; see the signature.
 - `final public int tick` — No source description is available in the compiled API; see the signature.
 
 ### noppes.npcs.rework.anim.AnimationEvent.ClipEvent
@@ -975,6 +980,7 @@ No source description is available in the compiled API; see the signature.
 Kind: `final, public, static class`; declared annotations: ``; type parameters: ``; superclass: `noppes.npcs.rework.anim.AnimationEvent`; interfaces: `[]`.
 
 - `public ClipEvent(noppes.npcs.api.entity.ICustomNpc<?> arg0, java.lang.String arg1, int arg2, java.lang.String arg3, float arg4, java.lang.String arg5)` — No source description is available in the compiled API; see the signature.
+- `public ClipEvent(noppes.npcs.api.entity.ICustomNpc<?> arg0, java.lang.String arg1, int arg2, java.lang.String arg3, float arg4, java.lang.String arg5, java.lang.String arg6)` — No source description is available in the compiled API; see the signature.
 - `final public java.lang.String data` — No source description is available in the compiled API; see the signature.
 - `final public float time` — No source description is available in the compiled API; see the signature.
 - `final public java.lang.String type` — No source description is available in the compiled API; see the signature.
@@ -986,6 +992,7 @@ No source description is available in the compiled API; see the signature.
 Kind: `final, public, static class`; declared annotations: ``; type parameters: ``; superclass: `noppes.npcs.rework.anim.AnimationEvent`; interfaces: `[]`.
 
 - `public Ended(noppes.npcs.api.entity.ICustomNpc<?> arg0, java.lang.String arg1, int arg2, boolean arg3)` — No source description is available in the compiled API; see the signature.
+- `public Ended(noppes.npcs.api.entity.ICustomNpc<?> arg0, java.lang.String arg1, int arg2, boolean arg3, java.lang.String arg4)` — No source description is available in the compiled API; see the signature.
 - `final public boolean finished` — No source description is available in the compiled API; see the signature.
 
 ### noppes.npcs.rework.anim.AnimationEvent.Started
@@ -995,6 +1002,7 @@ No source description is available in the compiled API; see the signature.
 Kind: `final, public, static class`; declared annotations: ``; type parameters: ``; superclass: `noppes.npcs.rework.anim.AnimationEvent`; interfaces: `[]`.
 
 - `public Started(noppes.npcs.api.entity.ICustomNpc<?> arg0, java.lang.String arg1)` — No source description is available in the compiled API; see the signature.
+- `public Started(noppes.npcs.api.entity.ICustomNpc<?> arg0, java.lang.String arg1, java.lang.String arg2)` — No source description is available in the compiled API; see the signature.
 
 ### noppes.npcs.rework.anim.Animators
 
