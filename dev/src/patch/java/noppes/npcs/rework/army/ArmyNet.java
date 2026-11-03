@@ -63,20 +63,23 @@ public final class ArmyNet {
         }
         ByteBuf payload = event.getPacket().payload();
         byte[] data = null;
-        if (payload.readableBytes() <= ArmyStaffCodec.MAX_REQUEST) {
+        if (payload.readableBytes() <= ArmyStaffCodec.MAX_PERM_REQUEST) {
             data = new byte[payload.readableBytes()];
             payload.getBytes(payload.readerIndex(), data);
         }
-        if (ArmyStaffCodec.kind(data) == ArmyStaffCodec.REQUEST) {
-            final ArmyStaffCodec.Request request = ArmyStaffCodec.request(data);
+        int kind = ArmyStaffCodec.kind(data);
+        if (kind == ArmyStaffCodec.REQUEST || kind == ArmyStaffCodec.PERM_REQUEST) {
+            final ArmyStaffCodec.Request request = kind == ArmyStaffCodec.REQUEST ? ArmyStaffCodec.request(data) : null;
+            final ArmyStaffCodec.PermRequest perm = kind == ArmyStaffCodec.PERM_REQUEST ? ArmyStaffCodec.permRequest(data) : null;
             server.addScheduledTask(() -> {
-                if (request == null) { rejected++; return; }
+                if (request == null && perm == null) { rejected++; return; }
                 int now = server.getTickCounter();
                 Integer last = lastAction.get(player);
                 if (last != null && now - last < 5) { limited++; return; }
                 if (player.hasDisconnected() || !ArmyCommandService.enabled()) { return; }
                 lastAction.put(player, now);
-                ArmyStaffCodec.Response response = ArmyStaffServer.execute(player, request);
+                ArmyStaffCodec.Response response = request != null ? ArmyStaffServer.execute(player, request)
+                        : ArmyStaffServer.executePerm(player, perm);
                 channel.sendTo(new FMLProxyPacket(new PacketBuffer(Unpooled.wrappedBuffer(response.encode())),
                         ArmySnapshot.CHANNEL), player);
             });

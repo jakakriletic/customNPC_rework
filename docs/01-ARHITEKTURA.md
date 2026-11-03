@@ -1064,3 +1064,13 @@ roko, bližino in sveže pravice, nato kliče `ArmyCommandService`. Cilj iz pogl
 blokov do 256 članov, ne nova večizbira iz M13. Ustvarjanje ostane izrecno op dejanje z lastnikom.
 Sprejeto na poskusu 1 (Q340): unit/build/package, GUI 97 in snapshot regresija 90 PASS na
 `7f086cda…`, pet PNG pregledanih z navedenimi mejami. [Dokazi/meje](meritve/2026-11-03-M11.8a-palica.md).
+
+### D-102 — M11.8b: dovoljenja prek iste strežniške avtoritete (2026-11-03, Q357–Q359)
+
+Kind 5 (≤58 B) na `rwarmy` doda players/grants/grant/revoke; odgovor ostane kind 4, snapshot v1 nespremenjen.
+Palica in svež akter se preverita pri vsakem dejanju; UUID, doseg lastnika/op in shranjevanje ostanejo M11.1b.
+Kljukice izberejo vojske za naslednje dejanje, niso optimističen prikaz pravic. Večizbor je zaporedje
+potrjenih dejanj z rate limitom, ne transakcija; zavrnitev/timeout ustavi preostanek, brez rollbacka
+že potrjenih dejanj ali sočasnih sprememb drugega upravljalca. Privzeto 0. Sprejeto na poskusu 1
+(Q360): unit/build/package, GUI 101 in regresija palice 97 PASS na `24828502…`, pet PNG pregledanih.
+[Dokazi in meje](meritve/2026-11-03-M11.8b-dovoljenja-gui.md).

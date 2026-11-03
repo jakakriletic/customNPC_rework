@@ -64,6 +64,39 @@ public final class ArmyStaffServer {
         if (!current.isEmpty() && !ArmyCommandService.access(p.getServer(), actor, current).canView()) { current = ""; }
         return reply(r, result.ok, current, result.message);
     }
+    /**
+     * M11.8b Permissions tab: the same service calls as /rwarmy players/grants/grant/revoke with the live actor, so
+     * a deop or revoke applies to the next click. A grant/revoke answer also carries the player's grants after it.
+     */
+    public static ArmyStaffCodec.Response executePerm(EntityPlayerMP p, ArmyStaffCodec.PermRequest r) {
+        if (!ArmyCommandService.enabled()) { return permReply(r, false, "RWARMY off"); }
+        if (!holding(p)) { return permReply(r, false, "RWARMY hold the command staff"); }
+        ArmyActor actor = ArmyCommandService.actorFor(p.getServer(), p.getUniqueID());
+        if (r.op == ArmyStaffCodec.PermOp.PLAYERS) {
+            List<String> names = ArmyCommandService.candidates(p.getServer(), actor, r.player);
+            if (names.isEmpty()) { return permReply(r, false, "RWARMY no matching players (only owners and operators can list)"); }
+            return permReply(r, true, "RWARMY players n=" + names.size() + "\n" + String.join("\n", names));
+        }
+        if (r.player.isEmpty()) { return permReply(r, false, "RWARMY select a player"); }
+        String head = "";
+        boolean ok = true;
+        if (r.op != ArmyStaffCodec.PermOp.GRANTS) {
+            String army = r.army.isEmpty() ? ArmyCommandService.ALL : r.army;
+            ArmyCommandService.Reply result = r.op == ArmyStaffCodec.PermOp.GRANT
+                    ? ArmyCommandService.grant(p.getServer(), actor, r.player, ArmyStaffCodec.KINDS[r.kind], army)
+                    : ArmyCommandService.revoke(p.getServer(), actor, r.player, ArmyStaffCodec.KINDS[r.kind], army);
+            ok = result.ok; head = result.message + "\n";
+        }
+        StringBuilder text = new StringBuilder(head);
+        for (String line : ArmyCommandService.describeGrants(p.getServer(), actor, r.player)) {
+            if (text.length() + line.length() + 1 > 2000) { text.append("..."); break; }
+            text.append(line).append('\n');
+        }
+        return permReply(r, ok && !text.toString().contains("RWARMY unknown player"), text.toString().trim());
+    }
+    private static ArmyStaffCodec.Response permReply(ArmyStaffCodec.PermRequest r, boolean ok, String text) {
+        return new ArmyStaffCodec.Response(r.id, ok, -1, "", text);
+    }
     private static ArmyStaffCodec.Response reply(ArmyStaffCodec.Request r, boolean ok, String army, String text) {
         return new ArmyStaffCodec.Response(r.id, ok, r.npc, army, text);
     }

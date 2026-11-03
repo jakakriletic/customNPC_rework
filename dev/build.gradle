@@ -394,6 +394,8 @@ task testOriginal(type: Test) {
     exclude '**/ArmyStaffTest.class'
     // M11.6: travelling chunk tickets are new.
     exclude '**/ArmyTicketPlanTest.class'
+    // M11.8b: new permission packet codec, absent from the original.
+    exclude '**/ArmyStaffPermTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

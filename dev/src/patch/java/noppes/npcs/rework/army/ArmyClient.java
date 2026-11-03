@@ -30,6 +30,13 @@ public final class ArmyClient {
         return id;
     }
 
+    /** M11.8b: one Permissions tab action. @return the id of the request */
+    public static int perm(ArmyStaffCodec.PermOp op, int kind, String player, String army) {
+        int id = nextRequest++ & Integer.MAX_VALUE;
+        send(new ArmyStaffCodec.PermRequest(id, op, kind, player, army).encode());
+        return id;
+    }
+
     private ArmyClient() {
     }
 

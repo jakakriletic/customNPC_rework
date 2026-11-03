@@ -159,6 +159,17 @@ in a 16-block sphere (up to 256; more changes nothing). Existing assignment perm
 to each NPC; an unassigned NPC still needs an op or script. Every action checks current rights.
 The staff remains registered but inactive when armies are disabled.
 
+**Permissions (M11.8b):** owners and ops can choose an online or cached player (four per
+page); enter a name prefix and use **Find players** to narrow the list (up to 50 matches).
+Choose **Select armies** and check armies, or type one army name. **View/Command: selected**
+adds that right; **all** includes future armies in your owner/op scope; **none** clears
+that right in your scope. Command includes view. **Revoke army** removes explicit rights
+for the checked/typed armies; an all-armies grant or another grantor's rights may remain.
+**Show grants** shows server records; scroll the reply with the mouse wheel. Checkboxes
+select the next action, rather than showing current grants. Changes are checked on the
+server at every click. Multiple armies are processed in order; denial or timeout stops
+the remaining changes and keeps those already confirmed. Closing the GUI stops the queue.
+
 ## 4. Java NPC scripts
 
 - **Trusted script authors only.** Java runs with the full permissions of the server process;
@@ -248,12 +259,12 @@ Not proven, so not claimed:
   toast covers the new button; its label and bounds were checked by the GUI harness. Packaged
   and dedicated clients were not tested for P6. Momentum flight mode stays v2 and cannot be
   selected in the GUI; an existing NBT value of 2 is preserved.
-- Armies (`RwArmies`, M11.1/M11.1b/M11.2/M11.3/M11.4/M11.8a, [note](meritve/2026-11-03-M11.1-register.md),
+- Armies (`RwArmies`, M11.1/M11.1b/M11.2/M11.3/M11.4/M11.8a/b, [note](meritve/2026-11-03-M11.1-register.md),
   [permissions](meritve/2026-11-03-M11.1b-dovoljenja.md), [clusters](meritve/2026-11-03-M11.2-grozdi-posnetek.md),
   [companies](meritve/2026-11-03-M11.3-cete.md), [swarm/stance](meritve/2026-11-03-M11.4-roj-drza.md)):
   short moves, passive swarm and combat return work for loaded ground members. An NPC without an army can be
-  assigned only by an op or a script. Faction membership gives no rights. Permissions have no GUI yet
-  (M11.8b). The full permissions matrix used stand-in players; staff deop/view/revoke was also tested
+  assigned only by an op or a script. Faction membership gives no rights. The full permissions matrix
+  used stand-in players; staff deop/view/revoke was also tested
   with one real client. `members`, `list` and `info`
   count loaded NPCs only; after `remove`, NPCs in unloaded chunks keep the old name without effect.
   The register and permissions were tested on a dev dedicated server only. Clusters and the snapshot were tested
@@ -261,7 +272,12 @@ Not proven, so not claimed:
   [staff GUI](meritve/2026-11-03-M11.8a-palica.md) passed assignment, bulk assignment of 3, aiming,
   physical cluster movement/return, stop, current rights, restart and switch 0. Five PNGs were reviewed;
   a tutorial toast partly covers Refresh and long status text can be cut after two lines. Other resolutions,
-  larger bulk groups, integrated/packaged staff pairs and difficult terrain were not tested. The ray's
+  larger bulk groups, integrated/packaged staff pairs and difficult terrain were not tested. The
+  [Permissions tab](meritve/2026-11-03-M11.8b-dovoljenja-gui.md) passed 101 checks with one real dev
+  client and dev dedicated server, an offline grantee and five test cache profiles; no simultaneous
+  grantors or integrated/packaged pair. Five PNGs were reviewed; tutorial partly covers the top row.
+  Replies show three lines with wheel scrolling and are capped at 2000 characters (truncation marked).
+  Multiple selected armies are not an atomic transaction. The ray's
   vanilla step limit may shorten its reach. Map integration is M11.7; cost is M11.10. After a restart the
   time of the last position can be older than the last time the army was seen; the position itself is kept.
   Movement was tested with 32 NPCs in four companies of 8, legion on flat ground, on a dev dedicated

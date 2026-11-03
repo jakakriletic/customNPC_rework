@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 213 → 1)
+# Arhiv: dnevnik sej (vnosi 214 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,16 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (214) — M11.5: dolg pohod (odložen v v2)
+
+**Paket:** M11.5 (Q341–Q348) · **Stanje:** odložen po 2 poskusih; produkcija umaknjena, `RwArmies` ostane 0.
+Etape ≤min(24, NpcNavRange−8, FOLLOW_RANGE−8) z eno potjo na etapo; harness `army-march-run.ps1` (32 članov, 240 blokov, restart).
+Poskus 1 (march-v2) BLOCKED na končni etapi; poskus 2 (ohranjene čete/pasovi, Q345) march-v3 PASS, regresija čet FAIL;
+popravek razdelitve po rangu (Q347) march-v4 PASS, `m113-companies-v2` FAIL (končna etapa 14 blokov BLOCKED pri age=457).
+Q348: ne sprejmemo z regresijo M11.3; koda vrnjena na HEAD, dokazi M11.3/M11.4/M11.8a veljajo brez novih serij (Q90).
+Harness ostane za nov pristop v v2. Seja ni zaganjala workloadov. Naslednji M11.6; M10.3 ostane blokiran Q1.
+[Dokazi/meje](../meritve/2026-11-03-M11.5-dolg-pohod.md).
 
 ### 2026-11-03 (213) — M11.8a: palica/GUI (sprejet)
 
