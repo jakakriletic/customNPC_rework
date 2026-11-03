@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 203 → 1)
+# Arhiv: dnevnik sej (vnosi 204 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-01 (204) — P7b: `blendTo` s klientskim prehodom poze (sprejet)
+
+**Paket:** P7b (Q248, Q282–Q286, D-098) · **Stanje:** sprejet na poskusu 1; `RwAnimHooks` privzeto 0.
+`IAnimator.blendTo(clip, ticks)` (0–200) pri `RwAnimHooks>=1` pošlje sporočilo na kanal `rwanim`; klientski coremod v
+`AnimatedModel.buildPose` linearno zmeša zadnjo narisano pozo v novo. Na c5f61924… PASS: unit (595 `@Test`), build, package,
+`p7b-blend-v1` 29/29 (prvi skok 607,7 → 48,6, linearnost ≤ 5,2·10⁻⁸, zamenjava iz zmešane poze, smrt brez blenda, guardi),
+`p7b-api-v1`. Prvi zagon padel v pripravi sveta, popravek samo v harnessu (Q285). Cena ni ločeno izmerjena (Q286); samo
+integriran dev klient. Naslednji P7c `/npcanim reload`, nato P8. [Zapis](../meritve/2026-11-01-P7b-blendto.md).
 
 ### 2026-11-01 (203) — P7a: točen dnevnik animacij in walk/idle/death hooki (sprejet)
 

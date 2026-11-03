@@ -162,6 +162,14 @@
 # snapshot/search/queue counters, with unchanged configs/runtime SHA-256 in the record.
 #     .\nav-lestvica-run.ps1 -Backend 0   # once; then 1, data only (Q92)
 #
+# P8 (Q292-Q293): -MrezaSirina 50 doubles the grid width (default 25 keeps every earlier cell).
+# At N=2000 each group then has 20 rows, the same depth as N=1000 at width 25. At width 25 only
+# ~800 NPCs ever had a target (rows beyond reach of the other group), so U1 (>= N/2) could not
+# pass at N=2000 on either backend. -ZiviHeap: after the window 'jcmd GC.class_histogram'
+# (JDK 8 runs a full GC first) gives the live heap and the npcbaritone class share; the raw
+# histogram is saved next to the cell JSON (-histo.txt). Data only, no limit.
+#     .\p8-baritone-run.ps1 -Backend 0   # then 1
+#
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
 # pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
 # (merilo P9), in ob sesutju serverja takoj konca z vzrokom iz loga.
@@ -176,7 +184,8 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [switch]$RwPathCas, [Alias('RwPathAB')][string]$RwPathABNiz = '', [int]$RwPathOkno = 15, [int]$RwCollide = -1,
       [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwPathMemo = -1, [int]$RwData = -1, [int]$RwMove = -1, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15, [int]$RwVidno = -1,
       [ValidateSet(-1, 0, 1, 2)][int]$FlightMode = -1,
-      [ValidateSet(-1, 0, 1)][int]$NavBackend = -1, [string]$BaritoneRoot = '')
+      [ValidateSet(-1, 0, 1)][int]$NavBackend = -1, [string]$BaritoneRoot = '',
+      [ValidateSet(25, 50)][int]$MrezaSirina = 25, [switch]$ZiviHeap)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -207,7 +216,7 @@ if ($NavBackend -ge 0) {
 # Prizorisce; iste stevilke so opisane v perf-setup-commands.txt in v scenariju.
 $gridX     = 48      # zahodni rob mreze
 $gridZ     = -12     # severni rob mreze
-$gridW     = 25      # NPC-jev v vrsti (os x); N mora biti veckratnik 2*gridW = 50
+$gridW     = $MrezaSirina  # NPC-jev v vrsti (os x), privzeto 25; N mora biti veckratnik 2*gridW
 $bojGap    = 4       # prazne vrste med skupinama A in B (AggroRange 16 jih pokrije)
 $kontrolaAt = '60,4,30'
 $znaneVariante = @('idle', 'boj', 'skripte', 'nedosegljiva', 'leteci', 'leteci-boj')
@@ -1236,6 +1245,25 @@ try {
             Check 'NB3: library performance counters have measured ticks' ($null -ne $navPerf -and $navPerf['ticks'] -gt 0)
         }
 
+        # P8: live heap after a full GC (JDK 8 GC.class_histogram collects first), after the window.
+        $ziv = $null
+        if ($ZiviHeap) {
+            $javaPid = Get-ServerJavaPid
+            $histo = if ($javaPid -gt 0) { Invoke-Jcmd $javaPid @('GC.class_histogram') } else { '' }
+            [IO.File]::WriteAllText((Join-Path $audit ('m24-perf-{0}-{1}-{2}-histo.txt' -f $v, $N, $stamp)), $histo)
+            $mTot = [regex]::Match($histo, '(?m)^Total\s+(\d+)\s+(\d+)')
+            $npcbB = 0L; $npcbN = 0L
+            foreach ($m in [regex]::Matches($histo, '(?m)^\s*\d+:\s+(\d+)\s+(\d+)\s+(\S+)')) {
+                if ($m.Groups[3].Value -like 'si.ladja.npcbaritone.*') { $npcbN += [long]$m.Groups[1].Value; $npcbB += [long]$m.Groups[2].Value }
+            }
+            Check ('H1: live heap measured after full GC (PID {0})' -f $javaPid) $mTot.Success
+            if ($mTot.Success) {
+                $ziv = @{ 'heap.zivMB' = [math]::Round([long]$mTot.Groups[2].Value / 1048576.0, 1); 'heap.zivObjektov' = [long]$mTot.Groups[1].Value
+                          'heap.npcbMB' = [math]::Round($npcbB / 1048576.0, 2); 'heap.npcbObjektov' = $npcbN }
+                Write-Host ('  live heap {0} MB, npcbaritone classes {1} MB' -f $ziv['heap.zivMB'], $ziv['heap.npcbMB'])
+            }
+        }
+
         # --- posnetek ---
         $dumpPath = Read-DumpJsonPath $srv.Log
         $dump = $null
@@ -1382,6 +1410,7 @@ try {
         $odtis = @{ razprseno = $(if ($Razprseno) { 1 } else { 0 }); varianta = $v; npc = $N; sekund = $Seconds; ogrevanje = $WarmupSeconds; obroc = $ChunkRadius
                     celica = $idx; celic = $cells.Count; mrezaX = $gridX; mrezaZ = $gridZ; mrezaSirina = $gridW }
         if ($FlightMode -ge 0) { $odtis['flightMode'] = $FlightMode }
+        if ($ZiviHeap) { $odtis['ziviHeap'] = 1; if ($null -ne $ziv) { foreach ($key in $ziv.Keys) { $vel[$key] = $ziv[$key] } } }
         if ($NavBackend -ge 0) {
             $odtis['navBackend'] = $NavBackend
             $odtis['npcbRuntime'] = $navRuntimeHash

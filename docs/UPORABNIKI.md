@@ -155,8 +155,12 @@ Not proven, so not claimed:
 - `RwPathResume`/`RwFlyLineOfSight` (P3, Q256): the flying corner and maze test courses pass
   6/6 only with **both** switches on; `RwPathResume` alone still fails the corner. The wider search
   (1024 nodes, once per stalled resume, ~0.8 ms) is flying only; walking NPCs keep the vanilla
-  200-node limit. Cost in flying combat with the wider search was not measured. Baritone backend has open
-  cost limits ([M4.15a](meritve/2026-10-29-M4.15a-baritone.md)).
+  200-node limit. Cost in flying combat with the wider search was not measured.
+- Baritone backend (`RwNavBackend`, P8, [note](meritve/2026-11-03-P8-baritone-cena.md)): at 2000 NPCs with an
+  unreachable target, MSPT 87.5 → 65.8 ms (TPS 11.4 → 15.1, still below 20); in combat 43.9 → 41.5 ms
+  (p99 58.7 → 60.8). Live heap after full GC is higher: +157 MB after the unreachable test, +449 MB after
+  both tests in one server; the library keeps about 213 settings objects per NPC created, which may not be
+  released when NPCs are removed (not proven). One run on one machine; capacity is not promised.
 - Formations (P4, Q257): on the door and open test courses all 8 slots are filled (door 101 ticks,
   open 40), one path search per squad, no stuck members, member lag ≤ 1.1 blocks. Members do not
   all end within 2 blocks of the goal and the squad is wider than 6 blocks at a 1-block door; this

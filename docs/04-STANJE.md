@@ -14,9 +14,9 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-03** (seja 205) — **P7c sprejet** (poskus 1, Q287–Q291): `/npcanim reload [entityId]` kot transakcija s potrditvijo vseh klientov, poznim joinom in posnetkom knjižnice po logični strani (coremod v `EntityAnimatedNpc.animations()`, pripet jar nedotaknjen). Na `baf07948…` unit/build/package, `p7c-dedicated-v1` 39/39, `p7c-integrated-v1` 34/34, `p7-h1-v1` in `p7b-blend-v1` PASS. Privzeto 0. [Zapis](meritve/2026-11-01-P7c-reload.md). |
+| Zadnja posodobitev | **2026-11-03** (seja 206) — **P8 sprejet kot podatek** (poskus 1, Q292–Q294): cena Baritone pri 2000 NPC-jih na široki mreži z živim heapom. Na `dbca5966…` `p8-off-v1`/`p8-on-v1` PASS; nedosegljiva MSPT 87,55 → 65,77, boj 43,89 → 41,46, živi heap +157/+449 MB. Privzeto 0. [Zapis](meritve/2026-11-03-P8-baritone-cena.md). |
 | Trenutni milestone | **M10 — release** (v1 obseg Q92); M7 v1 zaključen (M7.0, M7.V, M7.9, M7.5; D-095); M6 Scripting v1 zaključen (M6.0–M6.12) po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
-| Naslednji paketi | **Popravki omejitev v1.0 P1–P8** po [Q248](10-OBSEG-V1.md): P1 soak (zaključen z omejitvijo heapa) → P2 klientska matrika (zaključen z omejitvijo) → P3 `RwPathResume`/`RwFlyLineOfSight` (sprejet pod stikali) → P4 formacije (sprejet po Q257) → P5 Java GUI/classpath (sprejet) → P6 GUI `RwFlightMode` (sprejet) → P7a strežniški hooki (sprejet) → P7b `blendTo` (sprejet) → P7c `/npcanim reload` (sprejet, Q291) → **P8 naslednji:** cena Baritone; vsak posodobi `UPORABNIKI.md` §6. Po P8 čakamo odločitev lastnika o izdaji (brez v2). Q90/Q92 veljata: uspešnih serij ne ponavljamo, največ 2 poskusa/paket. M10.3/IO4 blokirana (Q1). |
+| Naslednji paketi | **Popravki omejitev v1.0 P1–P8** po [Q248](10-OBSEG-V1.md): P1 soak (zaključen z omejitvijo heapa) → P2 klientska matrika (zaključen z omejitvijo) → P3 `RwPathResume`/`RwFlyLineOfSight` (sprejet pod stikali) → P4 formacije (sprejet po Q257) → P5 Java GUI/classpath (sprejet) → P6 GUI `RwFlightMode` (sprejet) → P7a strežniški hooki (sprejet) → P7b `blendTo` (sprejet) → P7c `/npcanim reload` (sprejet, Q291) → P8 cena Baritone (sprejet kot podatek, Q294). **P1–P8 zaključeni; čakamo odločitev lastnika o izdaji (brez v2).** Q90/Q92 veljata: uspešnih serij ne ponavljamo, največ 2 poskusa/paket. M10.3/IO4 blokirana (Q1). |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **247** datotek `.java` v `src/patch`, od tega **170** rework; P7b: `PoseBlend`, `BlendCodec`, `BlendServer`, `BlendClient`, `AnimBlend`, `AnimatedModelPatch`, `AnimBlendHarness`. Build/package PASS na `c5f61924…`. |
 | Testi | **595** metod `@Test` v **94** datotekah; trije novi P7b razredi izključeni iz `testOriginal`. P7b unit/build/package, `p7b-blend-v1`, `p7b-api-v1` PASS na `c5f61924…`. Predhodnih uspešnih serij ne ponavljamo (Q90). |
@@ -55,7 +55,15 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 203 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 204 → 1, novejši zgoraj).*
+
+### 2026-11-03 (206) — P8: cena Baritone pri 2000 NPC-jih (sprejet kot podatek)
+
+**Paket:** P8 (Q248, Q292–Q294) · **Stanje:** sprejet na poskusu 1; `RwNavBackend` privzeto 0, produkcija nespremenjena.
+`p8-baritone-run.ps1` (nedosegljiva + boj 2000, mreža 50, živi heap po polnem GC). Na dbca5966… `p8-off-v1`/`p8-on-v1`
+exit 0, vsa merila OK; U1 1341/1418 (M4.15a padec je bila geometrija, Q292). MSPT 0→1: nedosegljiva 87,55 → 65,77,
+boj 43,89 → 41,46; živi heap +157/+449 MB, možno zadrževanje `Settings$Setting` v knjižnici (Q294). P1–P8 zaključeni;
+čakamo odločitev lastnika o izdaji. [Zapis](meritve/2026-11-03-P8-baritone-cena.md).
 
 ### 2026-11-03 (205) — P7c: `/npcanim reload` s potrditvijo klientov (sprejet)
 
@@ -65,12 +73,3 @@ kot transakcijo: preverjanje vseh datotek, potrditev vseh klientov s hashem, nat
 pozni join dobi stanje ali je odklopljen. Posnetek po logični strani prek patcha `animations()`. Na baf07948… PASS: unit
 (616 `@Test`), build, package, `p7c-dedicated-v1` 39/39, `p7c-integrated-v1` 34/34, regresiji `p7-h1-v1` in `p7b-blend-v1`.
 Cena ni izmerjena (Q291); samo dev klient/strežnik. Naslednji P8 (Baritone). [Zapis](meritve/2026-11-01-P7c-reload.md).
-
-### 2026-11-01 (204) — P7b: `blendTo` s klientskim prehodom poze (sprejet)
-
-**Paket:** P7b (Q248, Q282–Q286, D-098) · **Stanje:** sprejet na poskusu 1; `RwAnimHooks` privzeto 0.
-`IAnimator.blendTo(clip, ticks)` (0–200) pri `RwAnimHooks>=1` pošlje sporočilo na kanal `rwanim`; klientski coremod v
-`AnimatedModel.buildPose` linearno zmeša zadnjo narisano pozo v novo. Na c5f61924… PASS: unit (595 `@Test`), build, package,
-`p7b-blend-v1` 29/29 (prvi skok 607,7 → 48,6, linearnost ≤ 5,2·10⁻⁸, zamenjava iz zmešane poze, smrt brez blenda, guardi),
-`p7b-api-v1`. Prvi zagon padel v pripravi sveta, popravek samo v harnessu (Q285). Cena ni ločeno izmerjena (Q286); samo
-integriran dev klient. Naslednji P7c `/npcanim reload`, nato P8. [Zapis](meritve/2026-11-01-P7b-blendto.md).
