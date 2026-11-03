@@ -59,13 +59,26 @@ zemljevida)**, ker je lastniku najpomembnejši; ostali v2 paketi pridejo za njim
 - **Q346 (odločitev lastnika 3. 11., zemljevid Xaero je ključen):** M11.7a/b **nista izbirna** —
   vojske se morajo videti in premikati na Xaero zemljevidu prek `xaerofleetcommand`
   (`../ladja_mod/milestones/xaero-fleet-command`, paket `si.ladja.xaerofleet`); M11 brez tega ni
-  zaključen. Nadomesti Q302: oba GitHub repa (`ladja_mod`, `customNPC_rework`) sta **javna**
-  (preverjeno 3. 11.), zato v `ladja_mod` **ni git operacij** (brez branch/add/commit/push; delovna
-  kopija je lastnikova veja z njegovimi spremembami, mapa `milestones/xaero-fleet-command` ni v gitu).
-  Pred prvo spremembo kopija mape v `.overnight/backup-xaero-fleet-command-<datum>/`; spremembe se
-  zgradijo lokalno (jar), opišejo v zapisu meritve brez kode piratk. Kar M11.7b potrebuje v
-  `ladja_mod`, se omeji na to mapo; `mod/pirate-mca` se ne dotika. Ročna preverba zemljevida v
-  klientu ostane lastniku.
+  zaključen. Nadomesti Q302 (GitHub vidnost ni ovira, lastnik 3. 11.).
+  - **Izvor:** najnovejša različica je `../advantura_estetika_mod/xaero-winter-storm`
+    (v0.1.8-winter = v0.1.7 + zavihek Winter storm, ni v gitu); `ladja_mod/milestones/xaero-fleet-command`
+    je še v0.1.7. M11.7b gradi na **v0.1.8-winter** (nič od nevihte se ne izgubi; najprej preveri,
+    da v0.1.7 v `ladja_mod` nima ničesar, česar winter nima) in izda novo verzijo (npr. v0.1.9).
+  - **Sinhronizacija:** isti končni izvor se prepiše v **obe** mapi (`xaero-winter-storm` in
+    `ladja_mod/milestones/xaero-fleet-command`), da sta enaki; jar tudi v `dist/` in v
+    `finisher verzije/v<ver>/` po obstoječem vzorcu. Pred prvo spremembo kopija obeh map v
+    `.overnight/backup-xaero-<datum>/`. V `ladja_mod` brez git operacij na lastnikovi veji
+    (`piratke-cloveskost` ima njegove necommitane spremembe); `mod/pirate-mca` se ne dotika.
+  - **Namestitev povsod**, kjer je zdaj nameščen `xaerofleetcommand` (stanje 3. 11.): `curseforge/.../Instances/Giga Advantura/mods` (v0.1.8-winter),
+    `Instances/RLCraft/mods`, `Desktop/Servers/novadvantura/mods`, `Servers/piratka server/mods`,
+    `Servers/RLCRAFT - Vegova edition/mods`, `ladja_mod/_packlab-multiplayer-20261031/mods` (v0.1.7).
+    Ob namestitvi ponovno poišči vse `xaerofleetcommand*.jar` v `mods/` mapah (CurseForge, Desktop,
+    `.minecraft`). Star jar se **premakne** (ne izbriše) v `.overnight/backup-xaero-<datum>/<namestitev>/`,
+    v `mods/` ostane samo nov. Ne zamenjuj, dokler teče Minecraft/strežnik te namestitve (počakaj ali
+    zapiši). Arhivov (`finisher verzije`, `baseline`, `_to_delete`, `_production-jars-disabled-in-dev`)
+    se ne spreminja. Namestitve v0.1.7 s tem dobijo tudi Winter storm — zapiši v zapis meritve.
+  - Most je fail-closed: brez CNPC rework (ali pri `RwArmies=0`) mapa dela kot doslej. Ročna
+    preverba zemljevida v klientu ostane lastniku; zapis meritve navede seznam zamenjanih jarjev.
 
 ## Prestavljeno v v2 (po izdaji v1.0)
 
