@@ -72,6 +72,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwNavBackend` | 0 | permits NPCs with per-NPC `RwNavBackend=1` to use Baritone (needs the `npcbaritone` library) |
 | `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`); >=1 also enables `blendTo` and `/npcanim` (set on server and clients) |
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
+| `RwArmies` | 0 | armies: `/rwarmy` and `ArmyApi`, register saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs) |
 | `RwJavaClasspath` | empty | enables Java scripts (see §4); `auto` = classpath built from the running server |
 
 ### Per-NPC settings (saved in the NPC)
@@ -80,6 +81,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 |---|---|---|
 | `RwHitboxMode` | NPC GUI (hitbox) | 0 vanilla, 1 solid, 2 smart; needs `RwHitbox=1` |
 | `RwNavBackend` | AI → Movement → Backend | 0 vanilla, 1 Baritone; needs the global permission |
+| `RwArmy` | `/rwarmy assign`, `ArmyApi.assign` | army name (string); none = no key; needs `RwArmies=1` to change |
 | `RwFlightMode` | AI → Movement, first row (`Fly: Orig` / `Fly: Hover`), visible when Navigation = Flying | 0 original, 1 Hover (holds position, stops without sliding); saved Momentum (2) is shown disabled |
 
 Choose Flying in Navigation to show the flight button, select Original or Hover, then close
@@ -98,6 +100,12 @@ With `RwAnimHooks>=1`: `/npcanim reload [entityId]` loads animations from
 `/npcanim status` shows the current revision. Every player online must accept the files first;
 otherwise nothing changes. Running actions and `Animators` queues of the changed NPCs are stopped.
 The reload lasts until the server stops.
+
+With `RwArmies=1`: `/rwarmy create <army> [player|uuid:<uuid>|faction:<id>]` (from the console the
+owner is required), `assign <army> <npc name|selector> [range]` (name: loaded NPCs within 100 blocks,
+at most 220), `unassign <npc name|selector> [range]`, `list`, `info <army>`, `remove <army>`. Army names
+are 1–32 letters, digits, `_` or `-` and ignore case. Scripts: `Java.type("noppes.npcs.rework.army.ArmyApi")`
+with `create`, `remove`, `assign`, `unassign`, `armyOf`, `list`, `exists`, `owner`, `members`.
 
 ## 4. Java NPC scripts
 
@@ -188,6 +196,10 @@ Not proven, so not claimed:
   toast covers the new button; its label and bounds were checked by the GUI harness. Packaged
   and dedicated clients were not tested for P6. Momentum flight mode stays v2 and cannot be
   selected in the GUI; an existing NBT value of 2 is preserved.
+- Armies (`RwArmies`, M11.1, [note](meritve/2026-11-03-M11.1-register.md)): only the register, names and
+  commands; armies do not move or fight together yet. No permissions yet: the command is for ops and the
+  API for trusted script authors (M11.1b). `members`, `list` and `info` count loaded NPCs only; after
+  `remove`, NPCs in unloaded chunks keep the old name without effect. Tested on a dev dedicated server only.
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).

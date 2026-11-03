@@ -149,6 +149,7 @@ import noppes.npcs.Server;
 import noppes.npcs.VersionCompatibility;
 import noppes.npcs.ai.CombatHandler;
 import noppes.npcs.rework.ai.AttackPriority;
+import noppes.npcs.rework.army.ArmyRegistry;
 import noppes.npcs.rework.entity.HitboxGui;
 import noppes.npcs.rework.entity.HitboxWeights;
 import noppes.npcs.rework.entity.DataShadow;
@@ -299,6 +300,8 @@ IAnimals {
     private int rwFlightMode;
     /** M3.8 (R6): nacin hitboxa (HitboxWeights); na klientu ze ucinkovit nacin iz spawn podatkov. */
     private int rwHitboxMode;
+    /** M11.1 (Q297): army name (NBT RwArmy, string); empty = no army, no key. Kept with RwArmies=0 too. */
+    private String rwArmy = "";
     /** M3.8b: na klientu shranjeni nacin iz spawn podatkov (za GUI Display); na serverju se ne rabi. */
     private int rwHitboxStored;
     /** M5-V.6: na klientu se poveca ob vsakem branju spawn podatkov (spawn, UPDATE_NPC); impostor L2 ob spremembi znova izracuna videz. */
@@ -346,6 +349,15 @@ IAnimals {
             rwFlightMode = next;
             updateAI = true;
         }
+    }
+
+    public String getRwArmy() {
+        return rwArmy;
+    }
+
+    /** M11.1: set through ArmyCommandService only (it checks the register and the switch). */
+    public void setRwArmy(String army) {
+        rwArmy = army == null ? "" : army;
     }
 
     public void setRwNavBackend(int backend) {
@@ -1134,6 +1146,7 @@ IAnimals {
         this.rwNavBackend = compound.getInteger("RwNavBackend") == 1 ? 1 : 0;
         this.rwFlightMode = FlightMode.read(compound).id();
         this.rwHitboxMode = HitboxWeights.sanitize(compound.getInteger("RwHitboxMode"));
+        this.rwArmy = ArmyRegistry.readNpc(compound);
         this.script.readFromNBT(compound);
         this.timers.readFromNBT(compound);
         this.advanced.readToNBT(compound);
@@ -1171,6 +1184,7 @@ IAnimals {
         } else {
             compound.removeTag("RwHitboxMode");
         }
+        ArmyRegistry.writeNpc(compound, this.rwArmy);
         this.script.writeToNBT(compound);
         this.timers.writeToNBT(compound);
         this.advanced.writeToNBT(compound);

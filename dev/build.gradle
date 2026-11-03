@@ -384,6 +384,8 @@ task testOriginal(type: Test) {
     exclude '**/ReloadCodecTest.class'
     exclude '**/AnimFileValidatorTest.class'
     exclude '**/ReloadTxnTest.class'
+    // M11.1: the army register and the RwArmy NPC key are new.
+    exclude '**/ArmyRegistryTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

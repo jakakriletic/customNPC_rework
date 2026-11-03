@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 205 → 1)
+# Arhiv: dnevnik sej (vnosi 206 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,14 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (206) — P8: cena Baritone pri 2000 NPC-jih (sprejet kot podatek)
+
+**Paket:** P8 (Q248, Q292–Q294) · **Stanje:** sprejet na poskusu 1; `RwNavBackend` privzeto 0, produkcija nespremenjena.
+`p8-baritone-run.ps1` (nedosegljiva + boj 2000, mreža 50, živi heap po polnem GC). Na dbca5966… `p8-off-v1`/`p8-on-v1`
+exit 0, vsa merila OK; U1 1341/1418 (M4.15a padec je bila geometrija, Q292). MSPT 0→1: nedosegljiva 87,55 → 65,77,
+boj 43,89 → 41,46; živi heap +157/+449 MB, možno zadrževanje `Settings$Setting` v knjižnici (Q294). P1–P8 zaključeni;
+čakamo odločitev lastnika o izdaji. [Zapis](../meritve/2026-11-03-P8-baritone-cena.md).
 
 ### 2026-11-03 (205) — P7c: `/npcanim reload` s potrditvijo klientov (sprejet)
 

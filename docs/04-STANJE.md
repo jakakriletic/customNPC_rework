@@ -14,9 +14,9 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-03** (seja 207) — **M11.0 zaključen kot raziskava** (Q295, Q296–Q302): raziskava vojsk preverjena proti kodi in M11 razrezan na 13 paketov z vrstnim redom; koda in testi nespremenjeni. [Zapis §5](raziskave/M11.0-vojske-prek-zemljevida.md). |
+| Zadnja posodobitev | **2026-11-03** (seja 208) — **M11.1 sprejet** (Q303–Q308): register vojsk, NBT `RwArmy`, `/rwarmy` in `ArmyApi` pod `RwArmies` (privzeto 0); `m111-army-v2` 68/68. [Zapis](meritve/2026-11-03-M11.1-register.md). |
 | Trenutni milestone | **M11 — vojske in poveljevanje** (v2, Q295). v1.0 sprejet z omejitvami `UPORABNIKI.md` §6 (P1–P8 zaključeni); M10.3/IO4 ostaneta odprta (Q1). |
-| Naslednji paketi | **M11 po [M11.0 §5.3](raziskave/M11.0-vojske-prek-zemljevida.md):** M11.1 register + `RwArmy` + `/rwarmy` (stikalo `RwArmies`, privzeto 0) → M11.1b dovoljenja → M11.2 grozdi/posnetek → M11.3 čete → M11.4 roj/drža → M11.8a palica → M11.5 dolg pohod → M11.6 ticket → M11.8b dovoljenja GUI → M11.7a/b zemljevid → M11.9 → M11.10. Q90/Q92/Q250 veljajo; vsak paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`. |
+| Naslednji paketi | **M11 po [M11.0 §5.3](raziskave/M11.0-vojske-prek-zemljevida.md):** ~~M11.1~~ register + `RwArmy` + `/rwarmy` (Q303–Q308) → **M11.1b dovoljenja** → M11.2 grozdi/posnetek → M11.3 čete → M11.4 roj/drža → M11.8a palica → M11.5 dolg pohod → M11.6 ticket → M11.8b dovoljenja GUI → M11.7a/b zemljevid → M11.9 → M11.10. Q90/Q92/Q250 veljajo; vsak paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **247** datotek `.java` v `src/patch`, od tega **170** rework; P7b: `PoseBlend`, `BlendCodec`, `BlendServer`, `BlendClient`, `AnimBlend`, `AnimatedModelPatch`, `AnimBlendHarness`. Build/package PASS na `c5f61924…`. |
 | Testi | **595** metod `@Test` v **94** datotekah; trije novi P7b razredi izključeni iz `testOriginal`. P7b unit/build/package, `p7b-blend-v1`, `p7b-api-v1` PASS na `c5f61924…`. Predhodnih uspešnih serij ne ponavljamo (Q90). |
@@ -45,7 +45,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
 | M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b/d brez sprejema; celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
-| M11 Poveljevanje prek zemljevida | **v teku** (v2, Q295) | M11.0 preverjen in razrezan 3. 11. (Q296–Q302); naslednji M11.1 |
+| M11 Poveljevanje prek zemljevida | **v teku** (v2, Q295) | M11.0 preverjen in razrezan 3. 11. (Q296–Q302); [M11.1](meritve/2026-11-03-M11.1-register.md) register sprejet (Q303–Q308); naslednji M11.1b |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -55,7 +55,17 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 205 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 206 → 1, novejši zgoraj).*
+
+### 2026-11-03 (208) — M11.1: register vojsk, `RwArmy` in `/rwarmy` (sprejet)
+
+**Paket:** M11.1 (Q296–Q299, Q303–Q308) · **Stanje:** sprejet na poskusu 1; `RwArmies` privzeto 0.
+Nov `rework/army`: register v `data/rwarmies.dat` (ime brez velikih črk, lastnik UUID ali frakcija), NBT `RwArmy` na NPC-ju,
+`ArmyCommandService` v0, `ArmyApi` in `/rwarmy create/assign/unassign/list/info/remove` (op). Pri 0 ni ukaza, register ni
+naložen, ime na NPC-ju ohranjeno. Na c9e0493a… PASS: unit (`ArmyRegistryTest` 13), build, package, `m111-army-v2` 68/68
+(create/assign/API 16/16/restart/izklop). Padca unit (inicializacija) in `m111-army-v1` (harness brez vsiljenih chunkov) nista
+poskusa (Q307/Q308). Omejitve: brez dovoljenj, štejejo samo naloženi člani, sirote po `remove`. Naslednji M11.1b.
+[Zapis](meritve/2026-11-03-M11.1-register.md).
 
 ### 2026-11-03 (207) — M11.0: preverba raziskave vojsk in razrez M11 (raziskava)
 
@@ -65,12 +75,4 @@ ni trajen, P4 preverjen samo pri 8 članih, `xaerofleetcommand` 0.4.0 s pogodbo 
 Xaero prek `xaerofleetcommand` kot dodatek, jedro je CNPC `ArmyCommandService` + palica (Q296); četa 8 (Q298); `RwArmies`
 privzeto 0 (Q299); trajen ukaz v registru (Q300); potujoč ticket (Q301); tuj repo samo lokalno do potrditve (Q302).
 Naslednji M11.1. [Zapis §5](raziskave/M11.0-vojske-prek-zemljevida.md).
-
-### 2026-11-03 (206) — P8: cena Baritone pri 2000 NPC-jih (sprejet kot podatek)
-
-**Paket:** P8 (Q248, Q292–Q294) · **Stanje:** sprejet na poskusu 1; `RwNavBackend` privzeto 0, produkcija nespremenjena.
-`p8-baritone-run.ps1` (nedosegljiva + boj 2000, mreža 50, živi heap po polnem GC). Na dbca5966… `p8-off-v1`/`p8-on-v1`
-exit 0, vsa merila OK; U1 1341/1418 (M4.15a padec je bila geometrija, Q292). MSPT 0→1: nedosegljiva 87,55 → 65,77,
-boj 43,89 → 41,46; živi heap +157/+449 MB, možno zadrževanje `Settings$Setting` v knjižnici (Q294). P1–P8 zaključeni;
-čakamo odločitev lastnika o izdaji. [Zapis](meritve/2026-11-03-P8-baritone-cena.md).
 
