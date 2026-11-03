@@ -56,6 +56,16 @@ zemljevida)**, ker je lastniku najpomembnejši; ostali v2 paketi pridejo za njim
 - Pravila Q90, Q92 (stikalo privzeto 0, največ 2 poskusa, kratki zapisi) in Q250 (≤ 30 min na test)
   veljajo naprej. Vsak M11 paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`.
 - ~~M11.0~~ preverjen in razrezan 3. 11. (Q296–Q302, [§5](raziskave/M11.0-vojske-prek-zemljevida.md)); ~~M11.1~~ register vojsk sprejet (Q303–Q308, [zapis](meritve/2026-11-03-M11.1-register.md)); ~~M11.1b~~ dovoljenja sprejeta (Q309–Q316, [zapis](meritve/2026-11-03-M11.1b-dovoljenja.md)); ~~M11.2~~ grozdi in posnetek sprejeti (Q317–Q323, [zapis](meritve/2026-11-03-M11.2-grozdi-posnetek.md)); ~~M11.3~~ čete in trajen ukaz sprejeti na poskusu 2 (Q324–Q329, [zapis](meritve/2026-11-03-M11.3-cete.md)); ~~M11.4~~ roj/drža in vrnitev sprejeti na poskusu 1 (Q335, [zapis](meritve/2026-11-03-M11.4-roj-drza.md)); ~~M11.8a~~ palica/GUI sprejet na poskusu 1 (Q340, [zapis](meritve/2026-11-03-M11.8a-palica.md)); naslednji M11.5 dolg pohod.
+- **Q346 (odločitev lastnika 3. 11., zemljevid Xaero je ključen):** M11.7a/b **nista izbirna** —
+  vojske se morajo videti in premikati na Xaero zemljevidu prek `xaerofleetcommand`
+  (`../ladja_mod/milestones/xaero-fleet-command`, paket `si.ladja.xaerofleet`); M11 brez tega ni
+  zaključen. Nadomesti Q302: oba GitHub repa (`ladja_mod`, `customNPC_rework`) sta **javna**
+  (preverjeno 3. 11.), zato v `ladja_mod` **ni git operacij** (brez branch/add/commit/push; delovna
+  kopija je lastnikova veja z njegovimi spremembami, mapa `milestones/xaero-fleet-command` ni v gitu).
+  Pred prvo spremembo kopija mape v `.overnight/backup-xaero-fleet-command-<datum>/`; spremembe se
+  zgradijo lokalno (jar), opišejo v zapisu meritve brez kode piratk. Kar M11.7b potrebuje v
+  `ladja_mod`, se omeji na to mapo; `mod/pirate-mca` se ne dotika. Ročna preverba zemljevida v
+  klientu ostane lastniku.
 
 ## Prestavljeno v v2 (po izdaji v1.0)
 

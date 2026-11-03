@@ -38,6 +38,9 @@ controller, the owner has authorized continuous autonomous development until Sto
 - Owner decision Q295 (3. 11. 2026): v1.0 is accepted with all limits in `docs/UPORABNIKI.md` §6.
   Continue with v2, **M11 (armies and map command) first**, without waiting for its old entry
   conditions; see "Odločitev o izdaji in začetek v2" in `docs/10-OBSEG-V1.md`. Q90/Q92/Q250 still apply.
+- Owner decision Q346: the Xaero map bridge (M11.7a/b, `../ladja_mod/milestones/xaero-fleet-command`)
+  is required, not optional. Both GitHub repos are public: never run git in `ladja_mod`, back the
+  folder up to `.overnight/` before editing, build locally only, and never touch `mod/pirate-mca`.
 - Owner time budget Q250: no test longer than 30 min (controller rejects `timeoutSeconds` > 1800),
   ~30 min of tests per package, 1 performance repetition (3 only when turning a switch on by
   default), one-pass baselines, soak at most 1 h (rule 5 in `docs/10-OBSEG-V1.md`).
