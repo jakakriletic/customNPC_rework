@@ -2,6 +2,7 @@ package noppes.npcs.rework.army;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -25,12 +26,13 @@ import noppes.npcs.entity.EntityNPCInterface;
 
 /**
  * M11.1 (Q296, Q297, Q299): server side of armies, shared by {@code /rwarmy} and {@link ArmyApi}. Everything
- * returns a {@link Reply} and changes nothing while RwArmies=0. Provisional API version 0; M11.7a freezes the
- * service for external bridges as version 1. M11.1b: every call takes an {@link ArmyActor} and is checked here on
+ * changes nothing while RwArmies=0. M11.7a freezes the UUID-based bridge methods as version 1 (see
+ * docs/api/ARMY-BRIDGE-V1.md). Actor-based methods remain the trusted internal/script API.
+ * M11.1b: every action takes an {@link ArmyActor} and is checked here on
  * the server. An army the actor may not see answers exactly like one that does not exist.
  */
 public final class ArmyCommandService {
-    public static final int API_VERSION = 0;
+    public static final int API_VERSION = 1;
     /** Vanilla level of ordinary operator commands. */
     public static final int OPERATOR_LEVEL = 2;
     public static final String COMMAND_NAME = "rwarmy";
@@ -47,6 +49,10 @@ public final class ArmyCommandService {
             this.ok = ok;
             this.message = "RWARMY " + message;
         }
+
+        /** Frozen v1 bridge result; the text is diagnostic, never a machine-readable status code. */
+        public boolean isAccepted() { return ok; }
+        public String getMessage() { return message; }
     }
 
     /** Copy of CustomNpcs.RwArmies, set at server start, so this class never initializes CustomNpcs. */
@@ -61,6 +67,48 @@ public final class ArmyCommandService {
     static int clusterRadius() { return clusterRadius; }
 
     private ArmyCommandService() {
+    }
+
+    /** Static reflection entry point; no service instance or CNPC type is needed by a bridge. */
+    public static int getApiVersion() { return API_VERSION; }
+
+    /**
+     * Frozen v1: markers in one map dimension, with current server authority, never mutable registry objects.
+     * Call only on the server thread, with the UUID from the authenticated connection, not from its payload.
+     */
+    public static List<ArmyMapMarker> armiesVisibleTo(MinecraftServer server, UUID player, int dimension) {
+        if (bridgeRefusal(server, player) != null) { return Collections.emptyList(); }
+        ArmyActor actor = actorFor(server, player);
+        ArmySnapshot view = snapshot(server, actor, 0);
+        return view == null ? Collections.emptyList() : ArmyMapMarker.copy(view, registry(server), dimension);
+    }
+
+    /** Frozen v1: one army per call, same validation and durable intent as the command and staff. */
+    public static Reply submitMoveOrder(MinecraftServer server, UUID player, String name, int dimension,
+            double x, double y, double z, String shape, double speed, String stance) {
+        Reply refused = bridgeRefusal(server, player);
+        return refused != null ? refused : submitMove(server, actorFor(server, player), name, dimension,
+                x, y, z, shape, speed, stance);
+    }
+
+    public static Reply cancelOrder(MinecraftServer server, UUID player, String name) {
+        Reply refused = bridgeRefusal(server, player);
+        return refused != null ? refused : cancel(server, actorFor(server, player), name);
+    }
+
+    public static Reply setOrderEngagement(MinecraftServer server, UUID player, String name, String stance) {
+        Reply refused = bridgeRefusal(server, player);
+        return refused != null ? refused : engagement(server, actorFor(server, player), name, stance);
+    }
+
+    private static Reply bridgeRefusal(MinecraftServer server, UUID player) {
+        if (!enabled()) { return off(); }
+        if (server == null || player == null || !server.isCallingFromMinecraftThread()) {
+            return new Reply(false, "bridge needs a player and the server thread");
+        }
+        EntityPlayerMP online = server.getPlayerList() == null ? null : server.getPlayerList().getPlayerByUUID(player);
+        if (online == null || online.hasDisconnected()) { return new Reply(false, "bridge player offline"); }
+        return null;
     }
 
     /** Called from CustomNpcs at server start (and by unit tests). */

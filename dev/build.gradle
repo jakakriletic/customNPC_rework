@@ -396,6 +396,8 @@ task testOriginal(type: Test) {
     exclude '**/ArmyTicketPlanTest.class'
     // M11.8b: new permission packet codec, absent from the original.
     exclude '**/ArmyStaffPermTest.class'
+    // M11.7a: the reflection bridge contract does not exist in the original.
+    exclude '**/ArmyBridgeContractTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 214 → 1)
+# Arhiv: dnevnik sej (vnosi 215 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (215) — M11.6: potujoči chunk ticket (sprejet pod stikalom)
+
+**Paket:** M11.6 (Q349–Q356) · **Stanje:** sprejet pod stikalom po 2 poskusih (Q355); `RwArmies` ostane 0, `RwArmyMaxMarches` privzeto 2.
+Ticket drži chunke živih članov + obroč (≤49), vrsta po imenu, 5×5 na zadnjem položaju po restartu, sprostitev ob koncu/zaustavitvi, čiščenje ostankov ob nalaganju.
+Poskus 1 (v1) STALE → BLOCKED, popravek `Squad.emptied()` → WAITING (Q354); poskus 2 (v2) padel na harness meji, nadaljevanje BLOCKED; v3 harness napaka (Q356).
+Na `3147e2b8…` `m116-tickets-v4` 92 OK in `m116-companies-regress-v1` 50 OK; unit (+12)/build/package PASS na `f687be88…` (ista produkcija).
+Meje: nadaljevanje iz shranjenega položaja ni zanesljivo (v2), ena pot ≤ `NpcNavRange`, samo dev dedicated, cena M11.10. Seja ni zaganjala workloadov.
+Naslednji M11.8b; M10.3 ostane blokiran Q1. [Dokazi/meje](../meritve/2026-11-03-M11.6-ticket.md).
 
 ### 2026-11-03 (214) — M11.5: dolg pohod (odložen v v2)
 

@@ -205,7 +205,7 @@ public class ArmyRegistryTest {
         assertEquals(0, ArmyApi.list().length);
         assertEquals(0, ArmyApi.members("north").length);
         assertEquals("", ArmyApi.owner("north"));
-        assertEquals(0, ArmyApi.getApiVersion());
+        assertEquals(1, ArmyApi.getApiVersion()); // M11.7a: frozen bridge API v1
     }
 
     @Test

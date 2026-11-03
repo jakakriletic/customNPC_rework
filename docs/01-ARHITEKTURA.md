@@ -1074,3 +1074,14 @@ potrjenih dejanj z rate limitom, ne transakcija; zavrnitev/timeout ustavi preost
 že potrjenih dejanj ali sočasnih sprememb drugega upravljalca. Privzeto 0. Sprejeto na poskusu 1
 (Q360): unit/build/package, GUI 101 in regresija palice 97 PASS na `24828502…`, pet PNG pregledanih.
 [Dokazi in meje](meritve/2026-11-03-M11.8b-dovoljenja-gui.md).
+
+### D-103 — M11.7a: zamrznjena odsevna pogodba v1 (2026-11-03, Q361–Q363)
+
+Zunanji most kliče statične metode `ArmyCommandService` s strežnikom in UUID iz avtenticirane
+povezave. Servis zahteva strežniško nit in prijavljenega igralca ter za vsak klic določi sveže
+pravice; zaupanja vredni interni/skriptni `ArmyActor` ni pogodba mostu. Immutable `ArmyMapMarker`
+kopira obstoječi pravicno filtrirani posnetek in stanje namere; getterji uporabljajo samo JDK/primitivne
+tipe. Most upravlja omejen kodek, rate limit in schedule, brez novega kanala ali ticka v CNPC.
+`RwArmies` ostane 0. Sprejeto z unit odsevno pogodbo (+10)/build/package na `05586c4b…`;
+živ most in produkcijska reobf meja sledita v M11.7b po Q346.
+[Pogodba](api/ARMY-BRIDGE-V1.md), [dokazi/meje](meritve/2026-11-03-M11.7a-pogodba.md).

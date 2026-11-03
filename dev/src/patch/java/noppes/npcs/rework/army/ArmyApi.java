@@ -29,7 +29,7 @@ public final class ArmyApi {
     private ArmyApi() {
     }
 
-    /** Provisional version 0; frozen as 1 in M11.7a. */
+    /** Bridge contract version, frozen as 1 in M11.7a; see docs/api/ARMY-BRIDGE-V1.md. */
     public static int getApiVersion() {
         return ArmyCommandService.API_VERSION;
     }

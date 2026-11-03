@@ -278,8 +278,12 @@ Not proven, so not claimed:
   grantors or integrated/packaged pair. Five PNGs were reviewed; tutorial partly covers the top row.
   Replies show three lines with wheel scrolling and are capped at 2000 characters (truncation marked).
   Multiple selected armies are not an atomic transaction. The ray's
-  vanilla step limit may shorten its reach. Map integration is M11.7; cost is M11.10. After a restart the
-  time of the last position can be older than the last time the army was seen; the position itself is kept.
+  vanilla step limit may shorten its reach. The [bridge API v1](api/ARMY-BRIDGE-V1.md) is frozen
+  (M11.7a): reflection contract, build and package passed, including 10 new unit tests. This package
+  installs no map adapter; live Xaero integration follows in M11.7b. Online/offline and wrong-thread
+  calls on a real server, and the production reflection boundary, were not tested here. Cost is M11.10.
+  After a restart the time of the last position can be older than the last time the army was seen;
+  the position itself is kept.
   Movement was tested with 32 NPCs in four companies of 8, legion on flat ground, on a dev dedicated
   server without a client, including a restart mid-march. Column/ring have unit geometry checks only;
   larger companies and manual `/rwsquad` takeover were not tested. M11.4 proved one swarm of 8 after restart,
