@@ -83,7 +83,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 |---|---|---|
 | `RwHitboxMode` | NPC GUI (hitbox) | 0 vanilla, 1 solid, 2 smart; needs `RwHitbox=1` |
 | `RwNavBackend` | AI → Movement → Backend | 0 vanilla, 1 Baritone; needs the global permission |
-| `RwArmy` | `/rwarmy assign`, `ArmyApi.assign` | army name (string); none = no key; needs `RwArmies=1` to change |
+| `RwArmy` | AI → Army..., command staff, `/rwarmy assign`, `ArmyApi.assign` | army name (string); none = no key; needs `RwArmies=1` to change |
 | `RwFlightMode` | AI → Movement, first row (`Fly: Orig` / `Fly: Hover`), visible when Navigation = Flying | 0 original, 1 Hover (holds position, stops without sliding); saved Momentum (2) is shown disabled |
 
 Choose Flying in Navigation to show the flight button, select Original or Hover, then close
@@ -139,6 +139,25 @@ changes it for an existing order and rebuilds active companies. Both `move` and 
 `command` rights. Passive ends at arrival, BLOCKED or stop; it does not change factions or invulnerability.
 Mode and stance survive restart. Scripts can add `stance` after `speed` in `ArmyApi.move(...)`, or call
 `ArmyApi.engagement(army, stance)`; these trusted script calls act with operator rights.
+
+### Army Command Staff (M11.8a)
+
+Set `RwArmies=1` on both sides. Get `customnpcs:army_staff` from Creative Tools or
+`/give <player> customnpcs:army_staff` (no recipe). Hold it in the main hand and right-click
+an NPC to edit its army, or air/ground to open the army list. An op holding the NPC wand
+can also use AI → Army.... Enter an existing army name and click **Set NPC army**; empty
+clears membership. Creating an army remains an op command with an owner.
+
+**Nearby (256)** lists loaded clusters within 256 horizontal blocks in your dimension;
+**All armies** includes visible empty/unloaded armies and their last position. Counts are
+loaded members only. Select an army, choose legion/column/ring/swarm and passive/engage,
+then **Aim / right-click**: look at safe ground and right-click again. Sneak + right-click
+cancels aiming. The server checks the ray through loaded chunks, up to 256 blocks; a miss
+keeps the previous order. **Stop** cancels; **Return here** uses your current position.
+Staff moves use speed 1. **Assign within 16** asks for confirmation and assigns loaded NPCs
+in a 16-block sphere (up to 256; more changes nothing). Existing assignment permissions apply
+to each NPC; an unassigned NPC still needs an op or script. Every action checks current rights.
+The staff remains registered but inactive when armies are disabled.
 
 ## 4. Java NPC scripts
 
@@ -229,16 +248,21 @@ Not proven, so not claimed:
   toast covers the new button; its label and bounds were checked by the GUI harness. Packaged
   and dedicated clients were not tested for P6. Momentum flight mode stays v2 and cannot be
   selected in the GUI; an existing NBT value of 2 is preserved.
-- Armies (`RwArmies`, M11.1/M11.1b/M11.2/M11.3/M11.4, [note](meritve/2026-11-03-M11.1-register.md),
+- Armies (`RwArmies`, M11.1/M11.1b/M11.2/M11.3/M11.4/M11.8a, [note](meritve/2026-11-03-M11.1-register.md),
   [permissions](meritve/2026-11-03-M11.1b-dovoljenja.md), [clusters](meritve/2026-11-03-M11.2-grozdi-posnetek.md),
   [companies](meritve/2026-11-03-M11.3-cete.md), [swarm/stance](meritve/2026-11-03-M11.4-roj-drza.md)):
   short moves, passive swarm and combat return work for loaded ground members. An NPC without an army can be
   assigned only by an op or a script. Faction membership gives no rights. Permissions have no GUI yet
-  (M11.8b) and were tested with stand-in players, without a real client. `members`, `list` and `info`
+  (M11.8b). The full permissions matrix used stand-in players; staff deop/view/revoke was also tested
+  with one real client. `members`, `list` and `info`
   count loaded NPCs only; after `remove`, NPCs in unloaded chunks keep the old name without effect.
   The register and permissions were tested on a dev dedicated server only. Clusters and the snapshot were tested
-  with one real dev client on a dev dedicated server, not on integrated or packaged pairs; nothing on the client draws
-  the snapshot yet (staff GUI M11.8a, map M11.7) and its cost was not measured (M11.10). After a restart the
+  with one real dev client on a dev dedicated server, not on integrated or packaged pairs. The
+  [staff GUI](meritve/2026-11-03-M11.8a-palica.md) passed assignment, bulk assignment of 3, aiming,
+  physical cluster movement/return, stop, current rights, restart and switch 0. Five PNGs were reviewed;
+  a tutorial toast partly covers Refresh and long status text can be cut after two lines. Other resolutions,
+  larger bulk groups, integrated/packaged staff pairs and difficult terrain were not tested. The ray's
+  vanilla step limit may shorten its reach. Map integration is M11.7; cost is M11.10. After a restart the
   time of the last position can be older than the last time the army was seen; the position itself is kept.
   Movement was tested with 32 NPCs in four companies of 8, legion on flat ground, on a dev dedicated
   server without a client, including a restart mid-march. Column/ring have unit geometry checks only;

@@ -28,6 +28,7 @@ public final class ArmyNet {
 
     /** Server thread only; a player who reconnects is a new object and may ask at once. */
     private final Map<EntityPlayerMP, Integer> lastAnswer = new WeakHashMap<EntityPlayerMP, Integer>();
+    private final Map<EntityPlayerMP, Integer> lastAction = new WeakHashMap<EntityPlayerMP, Integer>();
 
     private ArmyNet() {
     }
@@ -62,9 +63,24 @@ public final class ArmyNet {
         }
         ByteBuf payload = event.getPacket().payload();
         byte[] data = null;
-        if (payload.readableBytes() == ArmySnapshot.REQUEST_SIZE) {
-            data = new byte[ArmySnapshot.REQUEST_SIZE];
+        if (payload.readableBytes() <= ArmyStaffCodec.MAX_REQUEST) {
+            data = new byte[payload.readableBytes()];
             payload.getBytes(payload.readerIndex(), data);
+        }
+        if (ArmyStaffCodec.kind(data) == ArmyStaffCodec.REQUEST) {
+            final ArmyStaffCodec.Request request = ArmyStaffCodec.request(data);
+            server.addScheduledTask(() -> {
+                if (request == null) { rejected++; return; }
+                int now = server.getTickCounter();
+                Integer last = lastAction.get(player);
+                if (last != null && now - last < 5) { limited++; return; }
+                if (player.hasDisconnected() || !ArmyCommandService.enabled()) { return; }
+                lastAction.put(player, now);
+                ArmyStaffCodec.Response response = ArmyStaffServer.execute(player, request);
+                channel.sendTo(new FMLProxyPacket(new PacketBuffer(Unpooled.wrappedBuffer(response.encode())),
+                        ArmySnapshot.CHANNEL), player);
+            });
+            return;
         }
         final int requestId = ArmySnapshot.decodeRequest(data);
         server.addScheduledTask(() -> answer(server, player, requestId));

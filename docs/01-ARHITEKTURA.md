@@ -1053,3 +1053,14 @@ tudi po WorldTick.START, ne spreminja frakcij in ob stop/koncu sprosti člana. N
 začasno prepusti gibanje bojnemu AI, zadrži svoj cilj in prepreči prezgodnji konec čete.
 Privzeto `RwArmies=0`, stare namere ostanejo formation/engage. Dokaz in omejitve:
 [M11.4](meritve/2026-11-03-M11.4-roj-drza.md); sprejet na poskusu 1 (Q335), cena v M11.10.
+
+### D-101 — M11.8a: stabilen predmet in strežniška avtoriteta palice (2026-11-03, Q336–Q339)
+
+Palica je vedno registrirana zaradi shranjenih inventarjev in skladnosti registrov; `RwArmies=0`
+jo pusti nedejavno, brez kanala/ukaza/army ticka. GUI članstva in palica pošiljata omejene
+zahteve na obstoječi `rwarmy` (novi kind 3/4, snapshot v1 nespremenjen). Strežnik preveri
+roko, bližino in sveže pravice, nato kliče `ArmyCommandService`. Cilj iz pogleda je strežniški
+žarek skozi naložene chunke, ne koordinate klienta. Množična dodelitev je potrjen krog 16
+blokov do 256 članov, ne nova večizbira iz M13. Ustvarjanje ostane izrecno op dejanje z lastnikom.
+Sprejeto na poskusu 1 (Q340): unit/build/package, GUI 97 in snapshot regresija 90 PASS na
+`7f086cda…`, pet PNG pregledanih z navedenimi mejami. [Dokazi/meje](meritve/2026-11-03-M11.8a-palica.md).

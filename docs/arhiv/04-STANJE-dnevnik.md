@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 210 → 1)
+# Arhiv: dnevnik sej (vnosi 211 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,17 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (211) — M11.3: čete in trajen ukaz (sprejet)
+
+**Paket:** M11.3 (Q324–Q329, D-099) · **Stanje:** sprejet na poskusu 2; `RwArmies` ostane 0.
+`ArmyOrder` v registru, `ArmyCompanies`, `ArmyMarches`; `RwArmyCompany=8`, deljena pot z makro odmiki in omejitvijo napredka,
+join za zaostale; `/rwarmy move/stop/status` in API z aktualnimi pravicami. Poskus 1 pade na oddaljenem join;
+popravek uporablja pravo pot do vmesnega cilja ≤24 blokov (Q328), harness in merila nespremenjena.
+Na `8582e946…` PASS: unit (+17), build, package, `m113-companies-v1` (50 + JS 52/52 in 41/41), `m111b-regress-v1` 68/68.
+4 × 8, ena pot, restart med MOVING; vseh 32 fizično prispe, najmanjši razmik 1,870, največ 9,463 od cilja.
+Pri 0 register bitno enak, brez ukaza/obnovljenih čet. Omejitve: dev dedicated, legion na ravnem, brez cene (M11.10),
+klienta, dolgih poti, produkcijskih ticketov in boja. Naslednji M11.4. [Dokazi in meje](../meritve/2026-11-03-M11.3-cete.md).
 
 ### 2026-11-03 (210) — M11.2: grozdi in posnetek (sprejet)
 

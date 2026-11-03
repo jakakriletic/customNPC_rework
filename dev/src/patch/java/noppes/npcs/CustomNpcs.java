@@ -360,6 +360,13 @@ public class CustomNpcs {
                 }
             }
         }
+        // M11.8a: stable item registry even at 0; no channel or action then.
+        MinecraftForge.EVENT_BUS.register(new noppes.npcs.rework.army.ArmyStaff.Registration());
+        if (ev.getSide().isClient()) {
+            try {
+                Class.forName("noppes.npcs.rework.army.ArmyStaffClient").getMethod("installModel").invoke(null);
+            } catch (ReflectiveOperationException e) { LogWriter.error("RWARMY staff model", e); }
+        }
         // M11.2 (Q299): the rwarmy channel exists only with the switch.
         if (RwArmies >= 1) {
             ArmyNet.init();

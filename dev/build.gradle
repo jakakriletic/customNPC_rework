@@ -391,6 +391,7 @@ task testOriginal(type: Test) {
     exclude '**/ArmySnapshotTest.class'
     exclude '**/ArmyCompaniesTest.class'
     exclude '**/ArmySwarmTest.class'
+    exclude '**/ArmyStaffTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

@@ -98,6 +98,9 @@ IGuiData {
         this.addButton(new GuiNpcButton(2, this.guiLeft + 86, this.guiTop + 160, 60, 20, "selectServer.edit"));
         // GUI_DATA is routed to the deepest subdialog. Wait for the initial AI reply.
         this.getButton(2).setEnabled(this.aiLoaded);
+        if (noppes.npcs.CustomNpcs.RwArmies >= 1) {
+            this.addButton(new GuiNpcButton(80, this.guiLeft + 230, this.guiTop + 160, 100, 20, "Army..."));
+        }
     }
 
     @Override
@@ -110,7 +113,9 @@ IGuiData {
     @Override
     protected void actionPerformed(GuiButton guibutton) {
         GuiNpcButton button = (GuiNpcButton)guibutton;
-        if (button.id == 0) {
+        if (button.id == 80) {
+            this.mc.displayGuiScreen(new noppes.npcs.rework.army.GuiArmyStaff(this.npc.getEntityId(), this));
+        } else if (button.id == 0) {
             this.ai.onAttack = button.getValue();
             this.initGui();
         } else if (button.id == 1) {

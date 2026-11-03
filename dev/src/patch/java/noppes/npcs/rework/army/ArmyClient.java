@@ -21,6 +21,14 @@ public final class ArmyClient {
     private static int nextRequest;
     private static ArmySnapshot latest;
     private static int replies, malformed;
+    private static ArmyStaffCodec.Response staffReply;
+
+    public static ArmyStaffCodec.Response staffReply() { return staffReply; }
+    public static int action(ArmyStaffCodec.Op op, int npc, String army, int shape, int stance) {
+        int id = nextRequest++ & Integer.MAX_VALUE;
+        send(new ArmyStaffCodec.Request(id, op, npc, army, shape, stance).encode());
+        return id;
+    }
 
     private ArmyClient() {
     }
@@ -66,6 +74,13 @@ public final class ArmyClient {
             data = new byte[size];
             payload.getBytes(payload.readerIndex(), data);
         }
+        if (ArmyStaffCodec.kind(data) == ArmyStaffCodec.RESPONSE) {
+            final ArmyStaffCodec.Response reply = ArmyStaffCodec.response(data);
+            Minecraft.getMinecraft().addScheduledTask(() -> {
+                if (reply == null) { malformed++; } else { staffReply = reply; ArmyStaffClient.received(reply); }
+            });
+            return;
+        }
         final ArmySnapshot snapshot = ArmySnapshot.decode(data);
         Minecraft.getMinecraft().addScheduledTask(() -> {
             if (snapshot == null) {
@@ -81,6 +96,8 @@ public final class ArmyClient {
     public void onDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
         Minecraft.getMinecraft().addScheduledTask(() -> {
             latest = null;
+            staffReply = null;
+            ArmyStaffClient.clear();
         });
     }
 }

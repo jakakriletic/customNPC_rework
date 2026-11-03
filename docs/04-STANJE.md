@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-03** (seja 212) — **M11.4 sprejet na poskusu 1** (Q330–Q335). Vseh pet controller testov PASS na `92c32038…`: pasivni roj po restartu, pravi melee in vrnitev 8/8 ter regresija čet. Naslednji M11.8a. [Dokazi/meje](meritve/2026-11-03-M11.4-roj-drza.md). |
+| Zadnja posodobitev | **2026-11-03** (seja 213) — M11.8a sprejet na poskusu 1 (Q336–Q340). Unit/build/package, GUI 97 in snapshot regresija 90 PASS na `7f086cda…`; pet PNG pregledanih. [Dokazi/meje](meritve/2026-11-03-M11.8a-palica.md). |
 | Trenutni milestone | **M11 — vojske in poveljevanje** (v2, Q295). v1.0 sprejet z omejitvami `UPORABNIKI.md` §6 (P1–P8 zaključeni); M10.3/IO4 ostaneta odprta (Q1). |
-| Naslednji paketi | **M11 po [M11.0 §5.3](raziskave/M11.0-vojske-prek-zemljevida.md):** ~~M11.1~~ register + `RwArmy` + `/rwarmy` (Q303–Q308) → ~~M11.1b~~ dovoljenja (Q309–Q316) → ~~M11.2~~ grozdi/posnetek (Q317–Q323) → ~~M11.3~~ čete (Q324–Q329) → ~~M11.4~~ roj/drža (Q330–Q335) → **M11.8a palica** → M11.5 dolg pohod → M11.6 ticket → M11.8b dovoljenja GUI → M11.7a/b zemljevid → M11.9 → M11.10. Q90/Q92/Q250 veljajo; vsak paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`. |
+| Naslednji paketi | **M11 po [M11.0 §5.3](raziskave/M11.0-vojske-prek-zemljevida.md):** ~~M11.1~~ register + `RwArmy` + `/rwarmy` (Q303–Q308) → ~~M11.1b~~ dovoljenja (Q309–Q316) → ~~M11.2~~ grozdi/posnetek (Q317–Q323) → ~~M11.3~~ čete (Q324–Q329) → ~~M11.4~~ roj/drža (Q330–Q335) → ~~M11.8a~~ palica/GUI (Q340) → **M11.5 dolg pohod** → M11.6 ticket → M11.8b dovoljenja GUI → M11.7a/b zemljevid → M11.9 → M11.10. Q90/Q92/Q250 veljajo; vsak paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **273** datotek `.java` v `src/patch`, od tega **196** rework (nov `ArmySwarm`); build/package PASS na `92c32038…`, 1716 originalnih vnosov in 85 pričakovanih sprememb. |
-| Testi | **699** metod `@Test` v **102** datotekah; novi `ArmySwarmTest` (13) samo v `test`. Na `92c32038…` unit/build/package, `m114-swarm-v1` (49 + JS 25/25 in 141/141) in `m114-companies-regress-v1` (50 + JS 52/52 in 41/41) PASS. Brez ponovitev (Q90). |
+| Prevedljivih razredov | **279** datotek `.java` v `src/patch`, od tega **202** rework (palica/GUI in harness); build/package PASS na `7f086cda…`, 1716 originalnih vnosov in 85 pričakovanih sprememb. |
+| Testi | **709** metod `@Test` v **103** datotekah; novi `ArmyStaffTest` (10) samo v `test`. Na `7f086cda…` unit/build/package, `m118a-gui-v1` (97) in `m112-snapshot-v3` (90) PASS. Brez ponovitev (Q90). |
 | Odprti pojavi | nobenega blokirnega; Q84 (M4.17 + M4.10 zid 6/6 → 5/6, vzrok [H], ovira za privzeti vklop kombinacije); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -45,7 +45,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
 | M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b/d brez sprejema; celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
-| M11 Poveljevanje prek zemljevida | **v teku** (v2, Q295) | M11.0–M11.4 zaključeni; [roj/drža](meritve/2026-11-03-M11.4-roj-drza.md) sprejeta na poskusu 1 (Q335): restart, passive in pravi boj/vrnitev 8/8; naslednji M11.8a palica |
+| M11 Poveljevanje prek zemljevida | **v teku** (v2, Q295) | M11.0–M11.4 in [M11.8a palica/GUI](meritve/2026-11-03-M11.8a-palica.md) zaključeni; palica sprejeta na poskusu 1 (Q340), naslednji M11.5 dolg pohod |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -55,7 +55,20 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 210 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 211 → 1, novejši zgoraj).*
+
+### 2026-11-03 (213) — M11.8a: palica/GUI (sprejet)
+
+**Paket:** M11.8a (Q336–Q340, D-101) · **Stanje:** sprejet na poskusu 1; `RwArmies` ostane 0.
+AI Army polje, palica desni klik NPC, Nearby/All, potrjen krog 16, oblika/roj/drža,
+strežniški žarek, stop/vrnitev; vse prek svežih pravic `ArmyCommandService`, snapshot v1 isti.
+Controller na `7f086cda…`: unit (+10), build, package, `m118a-gui-v1` 97 in
+`m112-snapshot-v3` 90 PASS. Trije člani, fizični premik grozda/vrnitev, restart istega UUID,
+deop/view/revoke in zavrnjen ponarejen stop; pri 0 nedejavna palica in register bitno enak.
+Pet PNG pregledanih: toast delno prekriva Refresh, dolg status omejen na dve vrstici.
+Samo pravi dev klient/dedicated na ravnem, brez cene, integriranega/pakiranega para ali večjih skupin.
+Produkcija/harness po PASS nespremenjena, brez ponovitev Q90. Seja ni zaganjala workloadov.
+Naslednji M11.5; M10.3 ostane blokiran Q1. [Dokazi/meje](meritve/2026-11-03-M11.8a-palica.md).
 
 ### 2026-11-03 (212) — M11.4: roj/drža/vrnitev (sprejet)
 
@@ -69,14 +82,3 @@ Stop sprosti pasivnost, pri 0 register bitno enak. Prvi neveljavni harness ne š
 popravek samo v harnessu, isti config/seed/merila. Omejitve: dev dedicated, ravno, ena četa;
 naravno iskanje tarč, veččetni roj in drugi načini boja še brez dokaza, cena M11.10. Brez ponovitev Q90.
 Naslednji M11.8a; M10.3 ostane blokiran Q1. [Dokazi/meje](meritve/2026-11-03-M11.4-roj-drza.md).
-
-### 2026-11-03 (211) — M11.3: čete in trajen ukaz (sprejet)
-
-**Paket:** M11.3 (Q324–Q329, D-099) · **Stanje:** sprejet na poskusu 2; `RwArmies` ostane 0.
-`ArmyOrder` v registru, `ArmyCompanies`, `ArmyMarches`; `RwArmyCompany=8`, deljena pot z makro odmiki in omejitvijo napredka,
-join za zaostale; `/rwarmy move/stop/status` in API z aktualnimi pravicami. Poskus 1 pade na oddaljenem join;
-popravek uporablja pravo pot do vmesnega cilja ≤24 blokov (Q328), harness in merila nespremenjena.
-Na `8582e946…` PASS: unit (+17), build, package, `m113-companies-v1` (50 + JS 52/52 in 41/41), `m111b-regress-v1` 68/68.
-4 × 8, ena pot, restart med MOVING; vseh 32 fizično prispe, najmanjši razmik 1,870, največ 9,463 od cilja.
-Pri 0 register bitno enak, brez ukaza/obnovljenih čet. Omejitve: dev dedicated, legion na ravnem, brez cene (M11.10),
-klienta, dolgih poti, produkcijskih ticketov in boja. Naslednji M11.4. [Dokazi in meje](meritve/2026-11-03-M11.3-cete.md).
