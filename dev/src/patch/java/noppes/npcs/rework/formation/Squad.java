@@ -628,6 +628,9 @@ public final class Squad {
         return finished;
     }
 
+    /** M11.6: finished because every member died, unloaded or stopped ticking, not because the path failed. */
+    public boolean emptied() { return finished && alive == 0; }
+
     public double progress() { return planner.progress(); }
     public void limitAdvance(double distance) { planner.limitAdvance(distance); }
 

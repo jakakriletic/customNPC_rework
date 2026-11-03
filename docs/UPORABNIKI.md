@@ -74,7 +74,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwNavBackend` | 0 | permits NPCs with per-NPC `RwNavBackend=1` to use Baritone (needs the `npcbaritone` library) |
 | `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`); >=1 also enables `blendTo` and `/npcanim` (set on server and clients) |
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
-| `RwArmies` | 0 | armies: `/rwarmy`, `ArmyApi` and the channel `rwarmy`, register and move orders saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs); also `RwArmyClusterRadius` (48, 1–512), `RwArmyClusterMin` (8, 1–1024), `RwArmyCompany` (8, 1–24; only 8 tested in-world) |
+| `RwArmies` | 0 | armies: `/rwarmy`, `ArmyApi` and the channel `rwarmy`, register and move orders saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs); also `RwArmyClusterRadius` (48, 1–512), `RwArmyClusterMin` (8, 1–1024), `RwArmyCompany` (8, 1–24; only 8 tested in-world), `RwArmyMaxMarches` (2, 0–16: armies with an active move that hold travelling chunk tickets; 0 = no tickets) |
 | `RwJavaClasspath` | empty | enables Java scripts (see §4); `auto` = classpath built from the running server |
 
 ### Per-NPC settings (saved in the NPC)
@@ -272,8 +272,12 @@ Not proven, so not claimed:
   swarm companies and ranged/mounted/flying combat were not tested. Macro offsets keep a constant
   direction around turns. At most 2048 loaded members; no complete path means BLOCKED. Long routes
   (one army path is limited by `NpcNavRange`; split marches, M11.5, were deferred to v2 after 2 attempts, Q348),
-  moving chunk tickets and difficult terrain are M11.6/M11.9; no progress is guaranteed in unloaded
-  chunks. Rebuilding companies can change membership. Cost is pending M11.10; no performance claim.
+  and difficult terrain (M11.9) remain open. M11.6 travelling chunk tickets (`RwArmyMaxMarches`, accepted under the
+  switch, Q355): at most that many armies hold tickets (members' chunks plus one ring, at most 49 chunks); further
+  armies march without tickets and get no progress in unloaded chunks. Resuming from the saved last position
+  after a restart or unload can stop as BLOCKED `no-complete-path` (seen once in testing). Tickets left by a crash
+  are released only at the next world load; members more than about ±32 blocks from the others may be left
+  behind. Tested only on a dev dedicated server on flat ground; ticket cost is pending M11.10. Rebuilding companies can change membership. Cost is pending M11.10; no performance claim.
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).

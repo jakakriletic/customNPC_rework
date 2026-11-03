@@ -392,6 +392,8 @@ task testOriginal(type: Test) {
     exclude '**/ArmyCompaniesTest.class'
     exclude '**/ArmySwarmTest.class'
     exclude '**/ArmyStaffTest.class'
+    // M11.6: travelling chunk tickets are new.
+    exclude '**/ArmyTicketPlanTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

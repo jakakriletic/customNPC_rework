@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 212 → 1)
+# Arhiv: dnevnik sej (vnosi 213 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,19 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (213) — M11.8a: palica/GUI (sprejet)
+
+**Paket:** M11.8a (Q336–Q340, D-101) · **Stanje:** sprejet na poskusu 1; `RwArmies` ostane 0.
+AI Army polje, palica desni klik NPC, Nearby/All, potrjen krog 16, oblika/roj/drža,
+strežniški žarek, stop/vrnitev; vse prek svežih pravic `ArmyCommandService`, snapshot v1 isti.
+Controller na `7f086cda…`: unit (+10), build, package, `m118a-gui-v1` 97 in
+`m112-snapshot-v3` 90 PASS. Trije člani, fizični premik grozda/vrnitev, restart istega UUID,
+deop/view/revoke in zavrnjen ponarejen stop; pri 0 nedejavna palica in register bitno enak.
+Pet PNG pregledanih: toast delno prekriva Refresh, dolg status omejen na dve vrstici.
+Samo pravi dev klient/dedicated na ravnem, brez cene, integriranega/pakiranega para ali večjih skupin.
+Produkcija/harness po PASS nespremenjena, brez ponovitev Q90. Seja ni zaganjala workloadov.
+Naslednji M11.5; M10.3 ostane blokiran Q1. [Dokazi/meje](../meritve/2026-11-03-M11.8a-palica.md).
 
 ### 2026-11-03 (212) — M11.4: roj/drža/vrnitev (sprejet)
 

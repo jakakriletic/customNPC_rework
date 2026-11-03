@@ -152,6 +152,7 @@ import noppes.npcs.rework.anim.CommandNpcAnim;
 import noppes.npcs.rework.army.ArmyCommandService;
 import noppes.npcs.rework.army.ArmyNet;
 import noppes.npcs.rework.army.ArmyMarches;
+import noppes.npcs.rework.army.ArmyTickets;
 import noppes.npcs.rework.army.CommandRwArmy;
 import noppes.npcs.rework.anim.ReloadServer;
 import noppes.npcs.rework.script.AutoClasspath;
@@ -242,6 +243,8 @@ public class CustomNpcs {
     public static int RwArmyClusterMin = 8;
     @ConfigProp(info="Rework M11.3/Q298: with RwArmies=1, members per company (1-24). Only 8 has formation acceptance evidence. Stored with each move; a restart keeps its size. Default 8")
     public static int RwArmyCompany = 8;
+    @ConfigProp(info="Rework M11.6 (Q301, Q349-Q353): with RwArmies=1, how many armies with an active move may hold chunk tickets at once (0-16). The tickets travel with the members (their chunks plus one ring, at most 49 chunks per army), so a march continues without a player nearby; after a restart an active move first holds the area of its saved last known position until its members are loaded. Further armies march without tickets until a slot is free. Tickets are released at arrival, block, stop and server stop. Read at startup. 0 = no tickets (M11.3 behaviour). Default 2")
+    public static int RwArmyMaxMarches = 2;
     public static long ticks;
     @SidedProxy(clientSide="noppes.npcs.client.ClientProxy", serverSide="noppes.npcs.CommonProxy")
     public static CommonProxy proxy;
@@ -390,7 +393,9 @@ public class CustomNpcs {
         MinecraftForge.EVENT_BUS.register((Object)new CustomEntities());
         MinecraftForge.EVENT_BUS.register((Object)proxy);
         NpcAPI.Instance().events().register((Object)new AbilityEventHandler());
-        ForgeChunkManager.setForcedChunkLoadingCallback((Object)this, (ForgeChunkManager.LoadingCallback)new ChunkController());
+        // M11.6: only with armies on, a wrapper first releases army tickets a crash left in forcedchunks.dat.
+        ForgeChunkManager.setForcedChunkLoadingCallback((Object)this, RwArmies >= 1 ? ArmyTickets.callback(new ChunkController())
+                : (ForgeChunkManager.LoadingCallback)new ChunkController());
         proxy.load();
         // M5-K.0: klientski merilni harness, samo z -Drwharness=<navodilo>. Refleksija, da
         // dedicated server razreda s klientskimi tipi nikoli ne nalozi.
@@ -432,6 +437,7 @@ public class CustomNpcs {
         ArmyCommandService.setSwitch(RwArmies);
         ArmyCommandService.setClusters(RwArmyClusterRadius, RwArmyClusterMin);
         ArmyCommandService.setCompanySize(RwArmyCompany);
+        ArmyTickets.setMaxMarches(RwArmyMaxMarches);
         // P5: build the auto Java classpath before the first tick, never on a script event.
         if (EnableScripting && AutoClasspath.isAuto(RwJavaClasspath)) {
             try {
@@ -484,6 +490,8 @@ public class CustomNpcs {
         // P1 (Q241): merilne tickete sprosti, dokler so svetovi se nalozeni in pred zadnjim
         // shranjevanjem; po FMLServerStoppedEvent bi releaseTicket vrgel NPE.
         DiagChunkLoader.disable();
+        // M11.6: army tickets likewise, before the last save.
+        ArmyMarches.releaseTickets();
     }
 
     @Mod.EventHandler

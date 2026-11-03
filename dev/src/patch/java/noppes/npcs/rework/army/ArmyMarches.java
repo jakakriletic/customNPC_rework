@@ -5,11 +5,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -24,13 +27,18 @@ import noppes.npcs.rework.formation.SquadManager;
 import noppes.npcs.rework.formation.SquadOrder;
 
 /** M11.3: server-thread adapter. Durable intent lives in ArmyRegistry; all runtime references die at stop.
- * No chunk loading or long-path continuation here (M11.5/6). Only enabled servers register a listener.
+ * M11.6: chunk tickets travel with up to RwArmyMaxMarches armies (ArmyTickets); no long-path continuation
+ * (M11.5, v2). Only enabled servers register a listener.
  */
 public final class ArmyMarches {
     private static ArmyMarches installed;
     private final MinecraftServer server;
     private final Map<String, Run> runs = new HashMap<String, Run>();
     private final Set<EntityNPCInterface> passive = new HashSet<EntityNPCInterface>();
+    private final ArmyTickets tickets = new ArmyTickets();
+    private final Set<String> queued = new HashSet<String>();
+    /** M11.6: members a run lost because they stopped ticking, with their ticksExisted at the loss. */
+    private final Map<String, Map<EntityNPCInterface, Integer>> stale = new HashMap<String, Map<EntityNPCInterface, Integer>>();
     private int ticks;
 
     private static final class Run {
@@ -59,9 +67,16 @@ public final class ArmyMarches {
         if (installed != null) {
             for (Run r : installed.runs.values()) { r.cancel(); }
             installed.runs.clear();
+            installed.stale.clear();
+            installed.tickets.releaseAll("released");
             MinecraftForge.EVENT_BUS.unregister(installed);
             installed = null;
         }
+    }
+
+    /** M11.6: before the last save at server stopping, so no army ticket reaches forcedchunks.dat. */
+    public static void releaseTickets() {
+        if (installed != null) { installed.tickets.releaseAll("released-at-stop"); }
     }
 
     public static void cancel(String army) {
@@ -87,8 +102,9 @@ public final class ArmyMarches {
 
     public static String status(String army) {
         Run r = installed == null ? null : installed.runs.get(Army.key(army));
-        return r == null ? "companies=0 members=0 paths=0" : "companies=" + r.squads.size()
-                + " members=" + r.members.size() + " paths=" + r.paths + " age=" + r.age;
+        String held = installed == null || ArmyTickets.maxMarches() == 0 ? "" : " " + installed.tickets.status(army);
+        return (r == null ? "companies=0 members=0 paths=0" : "companies=" + r.squads.size()
+                + " members=" + r.members.size() + " paths=" + r.paths + " age=" + r.age) + held;
     }
 
     private void state(ArmyRegistry reg, String name, ArmyOrder.State state) {
@@ -98,6 +114,11 @@ public final class ArmyMarches {
             ArmyWorldData.get(server).markDirty();
             LogWriter.info("RWARMY order " + name + " state=" + state + " " + status(name));
         }
+    }
+
+    private static boolean emptied(Run r) {
+        for (Squad s : r.squads) { if (s.emptied()) { return true; } }
+        return false;
     }
 
     public static boolean eligible(EntityNPCInterface npc) {
@@ -113,11 +134,20 @@ public final class ArmyMarches {
         ArmyRegistry reg = ArmyWorldData.get(server).registry();
         for (Army army : reg.list()) {
             ArmyOrder order = reg.order(army.name());
-            if (order == null || !order.active()) { continue; }
+            if (order == null || !order.active()) { stale.remove(army.key()); continue; }
             Run r = runs.get(army.key());
             if (r == null || ticks % 20 == 0) {
                 List<EntityNPCInterface> live = ArmyCommandService.members(server, army.name());
-                live.removeIf(npc -> !eligible(npc) || npc.world.provider.getDimension() != order.dimension);
+                Map<EntityNPCInterface, Integer> frozen = stale.get(army.key());
+                if (frozen != null) {
+                    // Still listed but not ticking (its chunk is unloading or outside any loaded area) => not live.
+                    frozen.keySet().retainAll(new HashSet<EntityNPCInterface>(live));
+                    frozen.entrySet().removeIf(f -> f.getKey().ticksExisted != f.getValue().intValue());
+                    if (frozen.isEmpty()) { stale.remove(army.key()); frozen = null; }
+                }
+                final Map<EntityNPCInterface, Integer> skip = frozen;
+                live.removeIf(npc -> !eligible(npc) || npc.world.provider.getDimension() != order.dimension
+                        || skip != null && skip.containsKey(npc));
                 Set<EntityNPCInterface> now = new HashSet<EntityNPCInterface>(live);
                 if (r != null && !now.equals(new HashSet<EntityNPCInterface>(r.members))) {
                     r.cancel(); runs.remove(army.key()); r = null;
@@ -152,12 +182,82 @@ public final class ArmyMarches {
             if (done || r.age >= 2400) {
                 if (r.joining && done && arrived) {
                     r.cancel(); runs.remove(army.key()); // rebuild with the reunited membership, same durable goal
+                } else if (done && !arrived && emptied(r)) {
+                    // M11.6: a company lost every member to an unload; that waits for chunks, it is not a blocked
+                    // path. The run is rebuilt once they tick again (a ticket or a player loads them).
+                    Map<EntityNPCInterface, Integer> frozen = new HashMap<EntityNPCInterface, Integer>();
+                    for (EntityNPCInterface npc : r.members) { frozen.put(npc, npc.ticksExisted); }
+                    stale.put(army.key(), frozen);
+                    r.cancel(); runs.remove(army.key());
+                    state(reg, army.name(), ArmyOrder.State.WAITING);
                 } else {
                     state(reg, army.name(), done && arrived ? ArmyOrder.State.ARRIVED : ArmyOrder.State.BLOCKED);
                     r.cancel(); // timeout never implies arrival and never teleports
                 }
             }
         }
+        if (ticks % 20 == 0 && (ArmyTickets.maxMarches() > 0 || !tickets.holders().isEmpty())) { tickets(reg); }
+    }
+
+    /** M11.6: once per second; which armies hold chunks and which chunks. Nothing at RwArmyMaxMarches=0. */
+    private void tickets(ArmyRegistry reg) {
+        List<String> active = new ArrayList<String>();
+        Map<String, String> names = new HashMap<String, String>();
+        Map<String, WorldServer> worlds = new HashMap<String, WorldServer>();
+        for (Army army : reg.list()) {
+            ArmyOrder order = reg.order(army.name());
+            WorldServer world = order == null ? null : DimensionManager.getWorld(order.dimension);
+            if (order == null || !order.active() || world == null) { continue; }
+            active.add(army.key()); names.put(army.key(), army.name()); worlds.put(army.key(), world);
+        }
+        List<String> granted = ArmyTicketPlan.slots(tickets.holders(), active, ArmyTickets.maxMarches());
+        queued.retainAll(active);
+        queued.removeAll(granted);
+        for (String key : active) {
+            if (!granted.contains(key) && queued.add(key)) {
+                LogWriter.info("RWARMY tickets " + names.get(key) + " queued slots=" + granted.size() + "/"
+                        + ArmyTickets.maxMarches() + " (marches without tickets)");
+            }
+        }
+        Map<String, LinkedHashSet<Long>> wanted = new HashMap<String, LinkedHashSet<Long>>();
+        Map<String, Boolean> resume = new HashMap<String, Boolean>();
+        Map<String, List<EntityNPCInterface>> lives = new HashMap<String, List<EntityNPCInterface>>();
+        for (String key : active) {
+            Run r = runs.get(key);
+            List<EntityNPCInterface> live = new ArrayList<EntityNPCInterface>();
+            if (r != null) {
+                for (EntityNPCInterface npc : r.members) {
+                    if (!npc.isDead && npc.world == worlds.get(key)) { live.add(npc); }
+                }
+            }
+            lives.put(key, live);
+            if (live.isEmpty() || ArmyTickets.maxMarches() == 0) { continue; }
+            // Keep the saved last known position current (queued armies too), so a march that lost its
+            // chunks or a restart without players resumes here once it holds a slot.
+            List<ArmyClusters.Point> points = new ArrayList<ArmyClusters.Point>();
+            for (EntityNPCInterface npc : live) {
+                points.add(new ArmyClusters.Point(npc.world.provider.getDimension(), npc.posX, npc.posY, npc.posZ));
+            }
+            ArmyClusters.Cluster main = ArmyClusters.cluster(points, ArmyCommandService.clusterRadius(),
+                    ArmyClusters.DEFAULT_MIN_MEMBERS).get(0);
+            if (reg.noteSeen(key, main.dimension, main.x, main.y, main.z, server.getWorld(0).getTotalWorldTime())) {
+                ArmyWorldData.get(server).markDirty();
+            }
+        }
+        for (String key : granted) {
+            Army army = reg.get(names.get(key));
+            ArmyOrder order = reg.order(army.name());
+            List<EntityNPCInterface> live = lives.get(key);
+            if (!live.isEmpty()) {
+                double[] xs = new double[live.size()], zs = new double[live.size()];
+                for (int i = 0; i < live.size(); i++) { xs[i] = live.get(i).posX; zs[i] = live.get(i).posZ; }
+                wanted.put(key, ArmyTicketPlan.members(xs, zs, ArmyTicketPlan.RADIUS, ArmyTicketPlan.MAX_CHUNKS_PER_MARCH));
+            } else if (army.lastSeen() >= 0 && army.lastDimension() == order.dimension) {
+                wanted.put(key, ArmyTicketPlan.resume(army.lastX(), army.lastZ()));
+                resume.put(key, Boolean.TRUE);
+            }
+        }
+        tickets.apply(granted, names, worlds, wanted, resume);
     }
 
     private Run build(String army, List<EntityNPCInterface> live, ArmyOrder order) {
