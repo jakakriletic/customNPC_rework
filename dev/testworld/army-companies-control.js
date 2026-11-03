@@ -57,7 +57,7 @@ function setup(npc) {
     expect(g, 'rwarmy move north 0 4 24', 'revoked-no-move', 'no command permission');
     expect(g, 'rwarmy stop north', 'revoked-no-stop', 'no command permission');
     check('nan-refused', !A.move('north', 0, NaN, 4, 24, 'legion', 3), 'NaN');
-    check('unsupported-mode', !A.move('north', 0, 0, 4, 24, 'swarm', 3), 'M11.4');
+    check('unsupported-mode', !A.move('north', 0, 0, 4, 24, 'teleport', 3), 'unknown mode');
     check('bad-dimension', !A.move('north', 123456, 0, 4, 24, 'legion', 3), 'not loaded');
     expect(o, 'rwarmy move north 0 4 24 legion 3', 'owner-start', 'company=8');
     finish(npc, 'setup');

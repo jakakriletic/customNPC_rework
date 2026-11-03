@@ -1043,3 +1043,13 @@ Konstantna smer makro odmikov je zavestna začetna meja: ovinki/teren M11.9, dol
 ticket M11.6. Q328: po padcu poskusa 1 join uporablja vmesne cilje ≤24 blokov s popolno pravo potjo;
 po prihodu ponovno grozdenje, brez poti BLOCKED. **Sprejet na poskusu 2 (Q329)**;
 [merila/poskusi in omejitve](meritve/2026-11-03-M11.3-cete.md).
+
+### D-100 — M11.4: pasivnost aktivnega ukaza in ohranjen član med bojem (2026-11-03, Q330–Q333)
+
+Način/drža sta trajen namen, čete in razpršeni odmiki so prehodni. Roj ponovno uporabi zaprto
+zanko skupne poti z neurejenimi stabilnimi odmiki, brez vrst/postrojevanja/slot assignmenta.
+Pasivni runtime ima množico svojih članov; gate pri attack/revenge setterjih zavrne tarčo
+tudi po WorldTick.START, ne spreminja frakcij in ob stop/koncu sprosti člana. Napadalni član
+začasno prepusti gibanje bojnemu AI, zadrži svoj cilj in prepreči prezgodnji konec čete.
+Privzeto `RwArmies=0`, stare namere ostanejo formation/engage. Dokaz in omejitve:
+[M11.4](meritve/2026-11-03-M11.4-roj-drza.md); sprejet na poskusu 1 (Q335), cena v M11.10.

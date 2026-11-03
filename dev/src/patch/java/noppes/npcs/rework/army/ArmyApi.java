@@ -52,6 +52,16 @@ public final class ArmyApi {
         return ArmyCommandService.cancel(server(), ArmyActor.SYSTEM, army).ok;
     }
 
+    /** M11.4: swarm or an existing formation, and passive|engage during the march. */
+    public static boolean move(String army, int dimension, double x, double y, double z, String shape,
+            double speed, String stance) {
+        return ArmyCommandService.submitMove(server(), ArmyActor.SYSTEM, army, dimension, x, y, z, shape, speed, stance).ok;
+    }
+
+    public static boolean engagement(String army, String stance) {
+        return ArmyCommandService.engagement(server(), ArmyActor.SYSTEM, army, stance).ok;
+    }
+
     public static String status(String army) {
         return enabled() ? ArmyCommandService.orderStatus(server(), ArmyActor.SYSTEM, army).message : "";
     }

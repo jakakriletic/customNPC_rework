@@ -124,6 +124,22 @@ public final class SquadPlanner {
     private boolean targetsReady;
     private int stuckEvents;
     private int unsettledAtEnd;
+    private boolean completionBlocked;
+    private double finalGap;
+
+    /** Loose destinations still use native block-centre navigation, with room between members. */
+    public void finalGap(double gap) {
+        finalGap = gap;
+        if (phase == Phase.SETTLING) { enterSettling(); }
+    }
+
+    /** Army fighters retain their place. An absent fighter is never counted as arrived. */
+    public void blockCompletion(boolean blocked) { completionBlocked = blocked; }
+
+    /** A swarm follows the path immediately, without a FORMING phase or aligned rows. */
+    public void beginLooseMarch() {
+        phase = Phase.MARCHING; phaseTicks = 0; anchorS = 0; yaw = startYaw(); targetsReady = false;
+    }
 
     private final double[] finalX;
     private final double[] finalY;
@@ -380,7 +396,8 @@ public final class SquadPlanner {
                 }
                 break;
             case SETTLING:
-                if ((!nobodyNear && allSettled && stragglers == 0) || phaseTicks > SETTLE_TIMEOUT) {
+                if (completionBlocked) { phaseTicks = 0; }
+                if (!completionBlocked && ((!nobodyNear && allSettled && stragglers == 0) || phaseTicks > SETTLE_TIMEOUT)) {
                     unsettledAtEnd = 0;
                     for (int i = 0; i < n; i++) {
                         if (eligible[i] && !settled[i]) {
@@ -719,7 +736,7 @@ public final class SquadPlanner {
                 z = Math.floor(z) + 0.5;
             }
             double y = terrain.standY(x, cy, z);
-            if (Double.isNaN(y) || (snap && taken.contains(key(x, z)))) {
+            if (Double.isNaN(y) || (snap && occupied(x, z, taken))) {
                 double[] found = searchNear(x, cy, z, taken);
                 if (found != null) {
                     x = found[0];
@@ -755,7 +772,7 @@ public final class SquadPlanner {
                     }
                     double cx = x + dx;
                     double cz = z + dz;
-                    if (snap && taken.contains(key(cx, cz))) {
+                    if (snap && occupied(cx, cz, taken)) {
                         continue;
                     }
                     double cy = terrain.standY(cx, y, cz);
@@ -766,6 +783,15 @@ public final class SquadPlanner {
             }
         }
         return null;
+    }
+
+    private boolean occupied(double x, double z, Set<Long> taken) {
+        if (finalGap == 0) { return taken.contains(key(x, z)); }
+        for (long point : taken) {
+            double px = (int) (point >> 32) + 0.5, pz = (int) point + 0.5;
+            if (Math.hypot(x - px, z - pz) < finalGap) { return true; }
+        }
+        return false;
     }
 
     private static long key(double x, double z) {

@@ -390,6 +390,7 @@ task testOriginal(type: Test) {
     // M11.2: clusters and the snapshot channel are new.
     exclude '**/ArmySnapshotTest.class'
     exclude '**/ArmyCompaniesTest.class'
+    exclude '**/ArmySwarmTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

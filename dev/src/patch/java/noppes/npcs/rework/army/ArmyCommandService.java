@@ -263,14 +263,25 @@ public final class ArmyCommandService {
     /** M11.3: one durable army move. Current server authority is checked before touching runtime or saved data. */
     public static Reply submitMove(MinecraftServer server, ArmyActor actor, String name, int dimension,
             double x, double y, double z, String shape, double speed) {
+        return submitMove(server, actor, name, dimension, x, y, z, shape, speed, null);
+    }
+
+    /** M11.4: optional stance; without it keep the previous stance, initially ENGAGE. */
+    public static Reply submitMove(MinecraftServer server, ArmyActor actor, String name, int dimension,
+            double x, double y, double z, String shape, double speed, String stance) {
         if (!enabled()) { return off(); }
         ArmyRegistry reg = registry(server);
         Army a = reg == null ? null : reg.get(name);
         if (a == null || !reg.access(a, actor).canView()) { return unknown(name); }
         if (!reg.access(a, actor).canCommand()) { return new Reply(false, "no command permission for " + a.name()); }
-        noppes.npcs.rework.formation.SquadOrder.Shape form = shape == null ? null
+        boolean swarm = "swarm".equalsIgnoreCase(shape) || "roj".equalsIgnoreCase(shape);
+        noppes.npcs.rework.formation.SquadOrder.Shape form = swarm
+                ? noppes.npcs.rework.formation.SquadOrder.Shape.LEGIJA : shape == null ? null
                 : noppes.npcs.rework.formation.SquadOrder.Shape.parse(shape);
-        if (!ArmyOrder.valid(x, y, z, form, speed)
+        ArmyOrder previous = reg.order(name);
+        ArmyOrder.Stance intent = stance == null ? (previous == null ? ArmyOrder.Stance.ENGAGE : previous.stance)
+                : parseStance(stance);
+        if (intent == null || !ArmyOrder.valid(x, y, z, form, speed)
                 || net.minecraftforge.common.DimensionManager.getWorld(dimension) == null) {
             return new Reply(false, "invalid move " + a.name());
         }
@@ -285,10 +296,35 @@ public final class ArmyCommandService {
             }
         }
         ArmyMarches.cancel(a.name());
-        reg.order(a.name(), new ArmyOrder(dimension, x, y, z, form, speed, companySize, ArmyOrder.State.WAITING));
+        reg.order(a.name(), new ArmyOrder(dimension, x, y, z, form, speed, companySize, ArmyOrder.State.WAITING,
+                swarm ? ArmyOrder.Mode.SWARM : ArmyOrder.Mode.FORMATION, intent));
         dirty(server);
         return new Reply(true, "move " + a.name() + " dim=" + dimension + " target=" + x + "," + y + "," + z
-                + " shape=" + form + " company=" + companySize);
+                + " shape=" + form + " company=" + companySize + " mode=" + (swarm ? "SWARM" : "FORMATION")
+                + " stance=" + intent);
+    }
+
+    public static ArmyOrder.Stance parseStance(String value) {
+        if ("passive".equalsIgnoreCase(value)) { return ArmyOrder.Stance.PASSIVE; }
+        if ("engage".equalsIgnoreCase(value)) { return ArmyOrder.Stance.ENGAGE; }
+        return null;
+    }
+
+    /** Rights are checked on every call, including after a revoke. No implicit destination. */
+    public static Reply engagement(MinecraftServer server, ArmyActor actor, String name, String value) {
+        if (!enabled()) { return off(); }
+        ArmyRegistry reg = registry(server);
+        Army a = reg == null ? null : reg.get(name);
+        if (a == null || !reg.access(a, actor).canView()) { return unknown(name); }
+        if (!reg.access(a, actor).canCommand()) { return new Reply(false, "no command permission for " + a.name()); }
+        ArmyOrder.Stance stance = parseStance(value);
+        ArmyOrder order = reg.order(name);
+        if (stance == null || order == null) { return new Reply(false, "stance needs passive|engage and an existing order"); }
+        if (order.stance != stance) {
+            ArmyMarches.cancel(name);
+            reg.order(name, order.withStance(stance)); dirty(server);
+        }
+        return new Reply(true, "stance " + a.name() + " " + stance);
     }
 
     public static Reply cancel(MinecraftServer server, ArmyActor actor, String name) {
@@ -311,7 +347,8 @@ public final class ArmyCommandService {
         ArmyOrder order = reg.order(name);
         return new Reply(true, "order " + a.name() + " state=" + (order == null ? "NONE" : order.state)
                 + (order == null ? "" : " dim=" + order.dimension + " target=" + order.x + "," + order.y + ","
-                + order.z + " shape=" + order.shape + " company=" + order.companySize)
+                + order.z + " shape=" + order.shape + " company=" + order.companySize
+                + " mode=" + order.mode + " stance=" + order.stance)
                 + " " + ArmyMarches.status(name));
     }
 

@@ -122,7 +122,7 @@ revoke or deop applies to the next one. An army you may not see answers as `unkn
 `RwArmyClusterMin` members is a group, the rest are stragglers. An army with no loaded members stays listed with
 its last known position.
 
-`/rwarmy move <army> <x> <y> <z> [legion|column|ring] [speed]` moves loaded ground members in
+`/rwarmy move <army> <x> <y> <z> [legion|column|ring|swarm] [speed] [passive|engage]` moves loaded ground members in
 the sender's dimension (relative `~` coordinates work; default legion, speed 3, range 0.5–6).
 The army uses companies of 8 sharing one route; stragglers join first. The move stores its company
 size and resumes after a restart when members load. `/rwarmy stop <army>` cancels it;
@@ -130,6 +130,15 @@ size and resumes after a restart when members load. `/rwarmy stop <army>` cancel
 No complete route or a timeout means BLOCKED; issue a new move to retry. Formations must be enabled
 (do not set `-Drwformation=off`). Scripts: `ArmyApi.move(army, dimension, x, y, z, shape, speed)`
 returns a boolean, as does `stop(army)`; `status(army)` returns text.
+
+`swarm` follows the shared route immediately with stable scattered offsets instead of forming rows.
+`passive` rejects attack and revenge targets during an active march or join. `engage` lets a member
+fight, then return to its company destination; a living fighter prevents the company from completing.
+Omitting the stance keeps the previous stance (initially `engage`). `/rwarmy stance <army> passive|engage`
+changes it for an existing order and rebuilds active companies. Both `move` and `stance` need current
+`command` rights. Passive ends at arrival, BLOCKED or stop; it does not change factions or invulnerability.
+Mode and stance survive restart. Scripts can add `stance` after `speed` in `ArmyApi.move(...)`, or call
+`ArmyApi.engagement(army, stance)`; these trusted script calls act with operator rights.
 
 ## 4. Java NPC scripts
 
@@ -220,10 +229,10 @@ Not proven, so not claimed:
   toast covers the new button; its label and bounds were checked by the GUI harness. Packaged
   and dedicated clients were not tested for P6. Momentum flight mode stays v2 and cannot be
   selected in the GUI; an existing NBT value of 2 is preserved.
-- Armies (`RwArmies`, M11.1/M11.1b/M11.2/M11.3, [note](meritve/2026-11-03-M11.1-register.md),
+- Armies (`RwArmies`, M11.1/M11.1b/M11.2/M11.3/M11.4, [note](meritve/2026-11-03-M11.1-register.md),
   [permissions](meritve/2026-11-03-M11.1b-dovoljenja.md), [clusters](meritve/2026-11-03-M11.2-grozdi-posnetek.md),
-  [companies](meritve/2026-11-03-M11.3-cete.md)): short moves now work for loaded ground members;
-  fighting together is not implemented yet. An NPC without an army can be
+  [companies](meritve/2026-11-03-M11.3-cete.md), [swarm/stance](meritve/2026-11-03-M11.4-roj-drza.md)):
+  short moves, passive swarm and combat return work for loaded ground members. An NPC without an army can be
   assigned only by an op or a script. Faction membership gives no rights. Permissions have no GUI yet
   (M11.8b) and were tested with stand-in players, without a real client. `members`, `list` and `info`
   count loaded NPCs only; after `remove`, NPCs in unloaded chunks keep the old name without effect.
@@ -233,7 +242,10 @@ Not proven, so not claimed:
   time of the last position can be older than the last time the army was seen; the position itself is kept.
   Movement was tested with 32 NPCs in four companies of 8, legion on flat ground, on a dev dedicated
   server without a client, including a restart mid-march. Column/ring have unit geometry checks only;
-  larger companies, combat and manual `/rwsquad` takeover were not tested. Macro offsets keep a constant
+  larger companies and manual `/rwsquad` takeover were not tested. M11.4 proved one swarm of 8 after restart,
+  six active passive samples, one real melee kill and return of all 8 to a legion company on flat ground,
+  dev dedicated only. The combat target was assigned by the harness; natural enemy acquisition, multiple
+  swarm companies and ranged/mounted/flying combat were not tested. Macro offsets keep a constant
   direction around turns. At most 2048 loaded members; no complete path means BLOCKED. Long routes,
   moving chunk tickets and difficult terrain are M11.5/M11.6/M11.9; no progress is guaranteed in unloaded
   chunks. Rebuilding companies can change membership. Cost is pending M11.10; no performance claim.

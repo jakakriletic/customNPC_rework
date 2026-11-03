@@ -58,9 +58,16 @@ public final class SquadOrder {
     public final boolean anchor;
     /** Pri daljsi poti se enota najprej postroji (privzeto). */
     public final boolean formFirst;
+    private final Slot[] scatter;
 
     public SquadOrder(Shape shape, double param, double x, double y, double z, double yaw, double speed,
             boolean engage, boolean anchor, boolean formFirst) {
+        this(shape, param, x, y, z, yaw, speed, engage, anchor, formFirst, null);
+    }
+
+    /** Army swarm: per-member loose offsets, already keyed by membership, without slot assignment. */
+    public SquadOrder(Shape shape, double param, double x, double y, double z, double yaw, double speed,
+            boolean engage, boolean anchor, boolean formFirst, Slot[] scatter) {
         this.shape = shape;
         this.param = param;
         this.x = x;
@@ -71,7 +78,10 @@ public final class SquadOrder {
         this.engage = engage;
         this.anchor = anchor;
         this.formFirst = formFirst;
+        this.scatter = scatter == null ? null : scatter.clone();
     }
+
+    public Slot[] scatter() { return scatter == null ? null : scatter.clone(); }
 
     /** Privzeti parameter oblike, ce ga ukaz ne poda. */
     public static double defaultParam(Shape shape) {

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 209 → 1)
+# Arhiv: dnevnik sej (vnosi 210 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (210) — M11.2: grozdi in posnetek (sprejet)
+
+**Paket:** M11.2 (Q317–Q323) · **Stanje:** sprejet na poskusu 1; `RwArmies` privzeto 0.
+Nov `ArmyClusters` (enojna povezava, radij 48, prag 8), `ArmySnapshot`, kanal `rwarmy` (`ArmyNet`, `ArmyClient`) samo na zahtevo in največ
+enkrat na 20 tickov, `/rwarmy clusters`, zadnja lega v registru brez pisanja stoječe vojske. Na 131d8e74… PASS: unit (`ArmySnapshotTest` 21),
+build, package, `m112-snapshot-v3` 90 preverjanj (pravi klient, pravice s konzole, restart, strežnik pri 0), `m112-regress-v1` 68/68. Padca
+`-v1` in `-v2` sta harness, nista poskusa (Q322/Q323). Omejitve: čas zadnje lege po restartu je lahko star, klient še ne riše, samo dev par in
+en igralec. Naslednji M11.3. [Zapis](../meritve/2026-11-03-M11.2-grozdi-posnetek.md).
 
 ### 2026-11-03 (209) — M11.1b: dovoljenja drugim igralcem (sprejet)
 

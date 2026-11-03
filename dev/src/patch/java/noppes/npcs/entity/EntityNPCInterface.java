@@ -766,6 +766,10 @@ IAnimals {
     }
 
     public void setAttackTarget(EntityLivingBase entity) {
+        if (noppes.npcs.rework.army.ArmyMarches.isPassive(this)) {
+            super.setAttackTarget(null);
+            return;
+        }
         Line line;
         if (entity instanceof EntityPlayer && ((EntityPlayer)entity).capabilities.disableDamage || entity != null && entity == this.getOwner() || this.getAttackTarget() == entity) {
             return;
@@ -790,6 +794,11 @@ IAnimals {
             this.saySurrounding(line.formatTarget((EntityLivingBase)entity));
         }
         super.setAttackTarget(entity);
+    }
+
+    @Override
+    public void setRevengeTarget(EntityLivingBase entity) {
+        super.setRevengeTarget(noppes.npcs.rework.army.ArmyMarches.isPassive(this) ? null : entity);
     }
 
     public void attackEntityWithRangedAttack(EntityLivingBase entity, float f) {

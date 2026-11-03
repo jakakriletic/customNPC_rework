@@ -5,20 +5,31 @@ import noppes.npcs.rework.formation.SquadOrder;
 
 /** M11.3/Q300: durable intent, never entity references or transient Squad ids. */
 public final class ArmyOrder {
+    public enum Mode { FORMATION, SWARM }
+    public enum Stance { PASSIVE, ENGAGE }
     public enum State { WAITING, JOINING, MOVING, ARRIVED, BLOCKED, CANCELLED }
     public final int dimension, companySize;
     public final double x, y, z, speed;
     public final SquadOrder.Shape shape;
     public final State state;
+    public final Mode mode;
+    public final Stance stance;
 
     public ArmyOrder(int dimension, double x, double y, double z, SquadOrder.Shape shape,
             double speed, int companySize, State state) {
-        if (!valid(x, y, z, shape, speed) || companySize < 1 || companySize > 24 || state == null) {
+        this(dimension, x, y, z, shape, speed, companySize, state, Mode.FORMATION, Stance.ENGAGE);
+    }
+
+    public ArmyOrder(int dimension, double x, double y, double z, SquadOrder.Shape shape,
+            double speed, int companySize, State state, Mode mode, Stance stance) {
+        if (!valid(x, y, z, shape, speed) || companySize < 1 || companySize > 24 || state == null
+                || mode == null || stance == null) {
             throw new IllegalArgumentException("invalid army order");
         }
         this.dimension = dimension;
         this.x = x; this.y = y; this.z = z;
         this.shape = shape; this.speed = speed; this.companySize = companySize; this.state = state;
+        this.mode = mode; this.stance = stance;
     }
 
     public static boolean valid(double x, double y, double z, SquadOrder.Shape shape, double speed) {
@@ -33,7 +44,11 @@ public final class ArmyOrder {
     }
 
     public ArmyOrder withState(State next) {
-        return new ArmyOrder(dimension, x, y, z, shape, speed, companySize, next);
+        return new ArmyOrder(dimension, x, y, z, shape, speed, companySize, next, mode, stance);
+    }
+
+    public ArmyOrder withStance(Stance next) {
+        return new ArmyOrder(dimension, x, y, z, shape, speed, companySize, state, mode, next);
     }
 
     NBTTagCompound write() {
@@ -42,6 +57,7 @@ public final class ArmyOrder {
         c.setDouble("X", x); c.setDouble("Y", y); c.setDouble("Z", z);
         c.setString("Shape", shape.name()); c.setDouble("Speed", speed);
         c.setInteger("Company", companySize); c.setString("State", state.name());
+        c.setString("Mode", mode.name()); c.setString("Stance", stance.name());
         return c;
     }
 
@@ -53,7 +69,9 @@ public final class ArmyOrder {
         try {
             return new ArmyOrder(c.getInteger("Dimension"), c.getDouble("X"), c.getDouble("Y"), c.getDouble("Z"),
                     SquadOrder.Shape.valueOf(c.getString("Shape")), c.getDouble("Speed"), c.getInteger("Company"),
-                    State.valueOf(c.getString("State")));
+                    State.valueOf(c.getString("State")),
+                    c.hasKey("Mode") ? Mode.valueOf(c.getString("Mode")) : Mode.FORMATION,
+                    c.hasKey("Stance") ? Stance.valueOf(c.getString("Stance")) : Stance.ENGAGE);
         } catch (IllegalArgumentException e) {
             return null; // corrupt intent never becomes a move to the origin
         }

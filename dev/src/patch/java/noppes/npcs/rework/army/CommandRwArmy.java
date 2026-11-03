@@ -38,7 +38,8 @@ import noppes.npcs.entity.EntityNPCInterface;
  * /rwarmy grants [player]
  * /rwarmy players [prefix]                                            (owner or operator)
  * /rwarmy clusters [army]                                             (view right; M11.2)
- * /rwarmy move &lt;army&gt; &lt;x&gt; &lt;y&gt; &lt;z&gt; [legion|column|ring] [speed] (command right; M11.3)
+ * /rwarmy move &lt;army&gt; &lt;x&gt; &lt;y&gt; &lt;z&gt; [legion|column|ring|swarm] [speed] [passive|engage]
+ * /rwarmy stance &lt;army&gt; passive|engage                            (command right; M11.4)
  * /rwarmy stop &lt;army&gt;                                                (command right)
  * /rwarmy status &lt;army&gt;                                              (view right)
  * </pre>
@@ -52,7 +53,7 @@ public class CommandRwArmy extends CommandBase {
     public static final double MAX_RANGE = 220;
     private static final List<String> SUBCOMMANDS =
             Arrays.asList("create", "assign", "unassign", "list", "info", "remove", "grant", "revoke", "grants",
-                    "players", "clusters", "move", "stop", "status");
+                    "players", "clusters", "move", "stop", "status", "stance");
 
     @Override
     public String getName() {
@@ -65,7 +66,8 @@ public class CommandRwArmy extends CommandBase {
                 + " | unassign <npc name|selector> [range] | list | info <army> | remove <army>"
                 + " | grant <player> view|command <army|all> | revoke <player> view|command|all [army|all]"
                 + " | grants [player] | players [prefix] | clusters [army]"
-                + " | move <army> <x> <y> <z> [legion|column|ring] [speed] | stop <army> | status <army>";
+                + " | move <army> <x> <y> <z> [legion|column|ring|swarm] [speed] [passive|engage]"
+                + " | stance <army> passive|engage | stop <army> | status <army>";
     }
 
     @Override
@@ -93,13 +95,17 @@ public class CommandRwArmy extends CommandBase {
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
         ArmyActor actor = actor(sender);
         String action = args.length == 0 ? "list" : args[0].toLowerCase(Locale.ROOT);
-        if (action.equals("move") && args.length >= 5 && args.length <= 7) {
+        if (action.equals("stance") && args.length == 3) {
+            reply(sender, ArmyCommandService.engagement(server, actor, args[1], args[2]).message); return;
+        }
+        if (action.equals("move") && args.length >= 5 && args.length <= 8) {
             BlockPos origin = sender.getPosition();
             reply(sender, ArmyCommandService.submitMove(server, actor, args[1], sender.getEntityWorld().provider.getDimension(),
                     parseCoordinate(origin.getX(), args[2], false).getResult(),
                     parseCoordinate(origin.getY(), args[3], false).getResult(),
                     parseCoordinate(origin.getZ(), args[4], false).getResult(),
-                    args.length >= 6 ? args[5] : "legion", args.length == 7 ? parseDouble(args[6], 0.5, 6) : 3).message);
+                    args.length >= 6 ? args[5] : "legion", args.length >= 7 ? parseDouble(args[6], 0.5, 6) : 3,
+                    args.length == 8 ? args[7] : null).message);
             return;
         }
         if (action.equals("stop") && args.length == 2) {
@@ -239,11 +245,14 @@ public class CommandRwArmy extends CommandBase {
         ArmyActor actor = actor(sender);
         if (args.length == 2 && (action.equals("assign") || action.equals("info") || action.equals("remove")
                 || action.equals("clusters") || action.equals("move") || action.equals("stop")
-                || action.equals("status"))) {
+                || action.equals("status") || action.equals("stance"))) {
             return getListOfStringsMatchingLastWord(args, visibleNames(server, actor));
         }
         if (args.length == 6 && action.equals("move")) {
-            return getListOfStringsMatchingLastWord(args, "legion", "column", "ring");
+            return getListOfStringsMatchingLastWord(args, "legion", "column", "ring", "swarm");
+        }
+        if ((args.length == 3 && action.equals("stance")) || (args.length == 8 && action.equals("move"))) {
+            return getListOfStringsMatchingLastWord(args, "passive", "engage");
         }
         if (args.length == 3 && action.equals("create")) {
             return getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames());

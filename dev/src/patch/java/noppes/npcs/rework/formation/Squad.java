@@ -193,7 +193,10 @@ public final class Squad {
         }
 
         Slot[] slots;
-        if (order.shape == SquadOrder.Shape.MARCH) {
+        if (order.scatter() != null) {
+            slots = order.scatter();
+            if (slots.length != n) { throw new IllegalArgumentException("swarm member count"); }
+        } else if (order.shape == SquadOrder.Shape.MARCH) {
             slots = FormationShape.keep(xs, zs, assignYaw);
         } else {
             Slot[] shape;
@@ -225,6 +228,7 @@ public final class Squad {
         }
         SquadPlanner planner = new SquadPlanner(slots, vmax, track, reaches, order.x, order.y, order.z, finalYaw,
                 new WorldTerrain(world), order.formFirst, order.anchor);
+        if (order.scatter() != null) { planner.finalGap(2); planner.beginLooseMarch(); }
         // Taski se namestijo sele v ticku enote: ukaz lahko pride iz skripte, ki tece med
         // tickom NPC-ja, in takrat se mnozice taskov ne sme spreminjati.
         Squad squad = new Squad(id, world, label, order, members, planner, attr, pathless);
@@ -266,6 +270,7 @@ public final class Squad {
         ticks++;
         pathBudget = PATH_BUDGET;
         alive = 0;
+        boolean fighting = false;
         for (int i = 0; i < members.length; i++) {
             EntityNPCInterface npc = members[i];
             if (npc == null) {
@@ -285,7 +290,8 @@ public final class Squad {
             }
             alive++;
             ensureTask(i);
-            boolean busy = (order.engage && npc.isAttacking()) || npc.isRiding();
+            boolean busy = busy(npc);
+            if (armyPath && busy) { fighting = true; recovery[i] = null; }
             eligible[i] = !busy;
             px[i] = npc.posX;
             py[i] = npc.posY;
@@ -295,6 +301,7 @@ public final class Squad {
             finished = true;
             return;
         }
+        planner.blockCompletion(armyPath && fighting);
         planner.update(px, py, pz, eligible);
         for (int i = 0; i < members.length; i++) {
             if (!Double.isNaN(planner.faceYaw[i])) {
@@ -359,7 +366,15 @@ public final class Squad {
 
     /** Ali task clana {@code i} ta tick vodi NPC-ja. */
     boolean controls(int i) {
-        return !finished && members[i] != null && eligible[i];
+        return !finished && members[i] != null && eligible[i] && (!armyPath || !busy(members[i]));
+    }
+
+    private boolean busy(EntityNPCInterface npc) {
+        // The target can be acquired after WorldTick.START. Yield before the attack AI runs,
+        // including that first tick; retain the member and its destination for its return.
+        return npc.isRiding() || order.engage && (npc.isAttacking() || armyPath &&
+                (npc.getAttackTarget() != null && npc.getAttackTarget().isEntityAlive()
+                || npc.getRevengeTarget() != null && npc.getRevengeTarget().isEntityAlive()));
     }
 
     /** Izvedba ukaza planerja za clana {@code i}; klice ga task v ticku NPC-ja. */

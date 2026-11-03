@@ -30,6 +30,7 @@ public final class ArmyMarches {
     private static ArmyMarches installed;
     private final MinecraftServer server;
     private final Map<String, Run> runs = new HashMap<String, Run>();
+    private final Set<EntityNPCInterface> passive = new HashSet<EntityNPCInterface>();
     private int ticks;
 
     private static final class Run {
@@ -38,7 +39,10 @@ public final class ArmyMarches {
         boolean joining;
         int age, paths;
         Run(List<EntityNPCInterface> members) { this.members = members; }
-        void cancel() { for (Squad s : squads) { s.cancelArmy(); } }
+        void cancel() {
+            if (installed != null) { installed.passive.removeAll(members); }
+            for (Squad s : squads) { s.cancelArmy(); }
+        }
     }
 
     private ArmyMarches(MinecraftServer server) { this.server = server; }
@@ -65,6 +69,12 @@ public final class ArmyMarches {
             Run r = installed.runs.remove(Army.key(army));
             if (r != null) { r.cancel(); }
         }
+    }
+
+    /** Only members controlled by an active passive army order. No world lookup at switch 0. */
+    public static boolean isPassive(EntityNPCInterface npc) {
+        return ArmyCommandService.enabled() && installed != null && !npc.world.isRemote
+                && installed.passive.contains(npc);
     }
 
     /** Membership changes invalidate only army-controlled squads, never an unrelated /rwsquad. */
@@ -119,6 +129,12 @@ public final class ArmyMarches {
                     runs.put(army.key(), r);
                     if (r.squads.isEmpty()) {
                         state(reg, army.name(), ArmyOrder.State.BLOCKED); continue;
+                    }
+                    if (order.stance == ArmyOrder.Stance.PASSIVE) {
+                        passive.addAll(live);
+                        for (EntityNPCInterface npc : live) {
+                            npc.setAttackTarget(null); npc.setRevengeTarget(null);
+                        }
                     }
                     state(reg, army.name(), r.joining ? ArmyOrder.State.JOINING : ArmyOrder.State.MOVING);
                 }
@@ -183,7 +199,7 @@ public final class ArmyMarches {
                     return run;
                 }
                 SquadOrder join = new SquadOrder(SquadOrder.Shape.LEGIJA, 4, target[0], target[1], target[2], 0,
-                        order.speed, true, false, false);
+                        order.speed, order.stance == ArmyOrder.Stance.ENGAGE, false, false);
                 Squad s = SquadManager.start(world, army + "-join-" + i, group, join, approach);
                 if (s != null) { run.squads.add(s); run.paths++; }
             }
@@ -209,18 +225,37 @@ public final class ArmyMarches {
         }
         List<List<EntityNPCInterface>> groups = ArmyCompanies.split(spatial, order.companySize);
         Slot[] slots = ArmyCompanies.macro(groups.size(), order.companySize, order.shape);
+        if (order.mode == ArmyOrder.Mode.SWARM && groups.size() > 1) {
+            long[] seeds = new long[groups.size()];
+            for (int i = 0; i < seeds.length; i++) { seeds[i] = army.hashCode() * 31L + i; }
+            slots = ArmySwarm.scatter(seeds, 2 * ArmySwarm.radius(order.companySize, ArmySwarm.SEPARATION) + 2);
+        }
         double[] cx = new double[groups.size()], cz = new double[groups.size()];
         for (int i = 0; i < groups.size(); i++) {
             for (EntityNPCInterface npc : groups.get(i)) { cx[i] += npc.posX; cz[i] += npc.posZ; }
             cx[i] = cx[i] / groups.get(i).size() - path.x(0);
             cz[i] = cz[i] / groups.get(i).size() - path.z(0);
         }
-        int[] assignment = SlotAssigner.assign(cx, cz, slots, yaw);
+        int[] assignment = order.mode == ArmyOrder.Mode.SWARM ? new int[groups.size()]
+                : SlotAssigner.assign(cx, cz, slots, yaw);
+        if (order.mode == ArmyOrder.Mode.SWARM) {
+            if (groups.size() == 1) { slots = new Slot[] {new Slot(0, 0)}; }
+            for (int i = 0; i < assignment.length; i++) { assignment[i] = i; }
+        }
         for (int i = 0; i < groups.size(); i++) {
             PathTrack lane = ArmyCompanies.lane(path, slots[assignment[i]], yaw);
+            Slot[] scatter = null;
+            if (order.mode == ArmyOrder.Mode.SWARM) {
+                long[] seeds = new long[groups.get(i).size()];
+                for (int j = 0; j < seeds.length; j++) {
+                    java.util.UUID id = groups.get(i).get(j).getUniqueID();
+                    seeds[j] = id.getMostSignificantBits() ^ id.getLeastSignificantBits();
+                }
+                scatter = ArmySwarm.scatter(seeds, ArmySwarm.SEPARATION);
+            }
             SquadOrder company = new SquadOrder(order.shape, order.shape == SquadOrder.Shape.OBRAMBA ? 3 :
                     order.shape == SquadOrder.Shape.KOLONA ? 2 : 4, lane.endX(), lane.endY(), lane.endZ(), yaw,
-                    order.speed, true, true, true);
+                    order.speed, order.stance == ArmyOrder.Stance.ENGAGE, true, true, scatter);
             Squad s = SquadManager.start(world, army + "-company-" + i, groups.get(i), company, lane);
             if (s != null) { run.squads.add(s); }
         }
