@@ -61,7 +61,8 @@ zemljevida)**, ker je lastniku najpomembnejši; ostali v2 paketi pridejo za njim
 
 M3.10, M4.5, M4.6, M4.7, M4.8, M4.11, M4.13, M4.14c, M4.14d, M5.10, M7.11, M9 (chatbot),
 M11 (poveljevanje prek zemljevida), M12 (skini prek URL), M13 (več NPC-jev hkrati),
-M14 (instanciran izris). Odprti Q-ji teh paketov (npr. Q82 vogal → M4.5, Q84) ne blokirajo v1.0.
+M14 (instanciran izris), M15 (bitja iz mape, zahteva lastnika 3. 11.; vrstni red po M11 določi
+lastnik). Odprti Q-ji teh paketov (npr. Q82 vogal → M4.5, Q84) ne blokirajo v1.0.
 
 ## Pravila hitrejšega razvoja
 
