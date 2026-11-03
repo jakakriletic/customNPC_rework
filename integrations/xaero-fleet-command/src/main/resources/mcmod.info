@@ -1,0 +1,10 @@
+[
+  {
+    "modid": "xaerofleetcommand",
+    "name": "Xaero Fleet Command",
+    "description": "Map commands for fleets and CustomNPCs armies, plus winter storms: local blizzards, strong wind and server-side freezing damage.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "dependencies": ["after:davincisvessels", "after:xaeroworldmap"]
+  }
+]

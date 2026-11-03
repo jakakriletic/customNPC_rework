@@ -29,6 +29,13 @@ script API and adds, behind settings:
 - Armies: for the snapshot set `RwArmies=1` on the server and on clients. A client with 1 on a server with
   0 gets no answer and stays connected; a client with 0 on a server with 1 was not tested.
 
+For Xaero army commands install `xaerofleetcommand-1.12.2-v0.1.9.jar` on both client and server;
+the client also needs Xaero's World Map. Enable `RwArmies` and formations on the server.
+Open the **Armies** map tab, select flags and right-click safe loaded ground in the current
+dimension. Formation/Swarm, stance and Stop use current server rights. The tab is hidden
+without a compatible provider or visible positions. See [controls](../integrations/xaero-fleet-command/ARMY-MAP.md).
+This adapter also includes Winter storm. Build validation passed; live map validation is pending.
+
 ## 3. Global settings (`config/CustomNpcs.cfg`)
 
 The config file holds a full English description of every key. Short form, 0 is always the
@@ -280,8 +287,10 @@ Not proven, so not claimed:
   Multiple selected armies are not an atomic transaction. The ray's
   vanilla step limit may shorten its reach. The [bridge API v1](api/ARMY-BRIDGE-V1.md) is frozen
   (M11.7a): reflection contract, build and package passed, including 10 new unit tests. This package
-  installs no map adapter; live Xaero integration follows in M11.7b. Online/offline and wrong-thread
-  calls on a real server, and the production reflection boundary, were not tested here. Cost is M11.10.
+  now has a Xaero adapter v0.1.9 (M11.7b): 83/83 unit/regression tests, build and reobf package passed,
+  installed in six existing mods folders with old jars backed up. Live map, networked rights, ground resolution,
+  online/offline and wrong-thread calls and production reflection remain untested. Only loaded surface targets
+  are accepted; no cave/path safety guarantee, at most 256 markers/16 selected armies. Cost is M11.10.
   After a restart the time of the last position can be older than the last time the army was seen;
   the position itself is kept.
   Movement was tested with 32 NPCs in four companies of 8, legion on flat ground, on a dev dedicated

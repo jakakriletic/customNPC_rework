@@ -1,0 +1,54 @@
+plugins {
+    id 'java'
+    id 'com.gtnewhorizons.retrofuturagradle' version '1.4.9'
+}
+group = 'si.ladja'
+version = '1.12.2-v0.1.9'
+base { archivesName = 'xaerofleetcommand' }
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(8) }
+    withSourcesJar()
+}
+minecraft { mcVersion.set('1.12.2'); username.set('WinterTest') }
+repositories { mavenCentral() }
+dependencies {
+    compileOnly files('libs/XaerosWorldMap_1.37.8_Forge_1.12.jar')
+    testImplementation files('libs/XaerosWorldMap_1.37.8_Forge_1.12.jar')
+    runtimeOnly modUtils.deobfuscate(files('libs/XaerosWorldMap_1.34.1_Forge_1.12.jar'))
+    testImplementation 'junit:junit:4.13.2'
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+test { classpath += sourceSets.main.compileClasspath }
+processResources {
+    filesMatching('mcmod.info') { expand version: '0.6.0-armies', mcversion: '1.12.2' }
+}
+jar { manifest { attributes 'Implementation-Version': project.version } }
+sourceSets {
+    winterQa {
+        java.srcDir 'src/qa/java'
+        compileClasspath = sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath = output + sourceSets.main.runtimeClasspath
+    }
+}
+tasks.register('winterQaJar', Jar) {
+    dependsOn winterQaClasses
+    archiveFileName = 'winter-qa-dev.jar'
+    destinationDirectory = layout.buildDirectory.dir('qa')
+    from sourceSets.winterQa.output
+}
+tasks.register('stageWinterQa', Copy) {
+    dependsOn winterQaJar
+    from tasks.winterQaJar
+    into 'run/mods'
+}
+if (project.hasProperty('winterQa')) {
+    tasks.named('runClient') { dependsOn stageWinterQa }
+    minecraft.extraRunJvmArguments.add('-DxaeroWinterQa=true')
+}
+if (project.hasProperty('winterMapQa')) minecraft.extraRunJvmArguments.add('-DwinterMapQa=true')
+if (project.hasProperty('serverSmoke')) {
+    tasks.named('runServer') {
+        workingDir = file('build/server-smoke')
+        doFirst { workingDir.mkdirs() }
+    }
+}

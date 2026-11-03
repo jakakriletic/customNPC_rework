@@ -1,0 +1,3 @@
+# Frozen byte-for-byte external inputs: preserve manifest SHA256 on every checkout.
+* -text
+inputs.json whitespace=cr-at-eol

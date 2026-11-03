@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 215 → 1)
+# Arhiv: dnevnik sej (vnosi 216 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,18 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (216) — M11.8b: dovoljenja GUI (sprejet)
+
+**Paket:** M11.8b (Q357–Q360, D-102) · **Stanje:** sprejet na poskusu 1; `RwArmies` ostane 0.
+Pregledane in nadaljevane delne spremembe prejšnjega izvajalca. Zavihek Permissions uporablja M11.1b servis,
+online/usercache seznam, predpono in strani, izbor vojsk s kljukicami ter vidi/upravlja none/selected/all.
+Vsaka sprememba preveri palico/sveže pravice; zaporedni večizbor se ustavi ob zavrnitvi, brez rollbacka prejšnjih klikov.
+Na `24828502…` unit (+9)/build/package, m118b-permissions-gui-v1 101 in m118a-gui-v1 97 PASS.
+Potrjeni pravi deop, omejitev na lastne vojske, restart obeh dodeliteljev in bitna enakost registra pri 0; pet PNG pregledanih.
+Meje: en pravi dev klient/dedicated, offline prejemnik, tri vidne vrstice s pomikom; tutorial delno prekriva vrh, cena M11.10.
+Seja ni zaganjala workloadov; nepovezano delo ohranjeno. Naslednji M11.7a, nato M11.7b (Q346), M10.3 ostaja blokiran Q1.
+[Merila/odločitve/meje](../meritve/2026-11-03-M11.8b-dovoljenja-gui.md).
 
 ### 2026-11-03 (215) — M11.6: potujoči chunk ticket (sprejet pod stikalom)
 
