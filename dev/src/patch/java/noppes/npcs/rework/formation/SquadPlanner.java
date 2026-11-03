@@ -111,6 +111,7 @@ public final class SquadPlanner {
     private PathTrack track;
     private boolean reachesGoal;
     private double anchorS;
+    private double advanceLimit = Double.POSITIVE_INFINITY;
     private double yaw;
     private Phase phase;
     private int tick;
@@ -365,7 +366,9 @@ public final class SquadPlanner {
                     ratio = 0.0;
                 }
                 v = cruise * ratio;
-                anchorS = Math.min(anchorS + v, track.length());
+                double before = anchorS;
+                anchorS = Math.min(anchorS + v, Math.min(track.length(), Math.max(anchorS, advanceLimit)));
+                if (Double.isFinite(advanceLimit)) { v = anchorS - before; }
                 if (anchorS >= track.length() - 1.0E-9) {
                     if (reachesGoal || replans >= MAX_REPLANS) {
                         goalUnreachable = !reachesGoal;
@@ -784,6 +787,11 @@ public final class SquadPlanner {
     public boolean needsReplan() {
         return needsReplan;
     }
+
+    /** M11.3: bound the lead over the slowest company. Default infinity leaves ordinary squads unchanged. */
+    public void limitAdvance(double distance) { advanceLimit = distance; }
+
+    public double progress() { return anchorS; }
 
     /** Nadaljevanje poti od sidra naprej (glej {@link PathTrack#fromAnchor}). */
     public void replaceTrack(PathTrack next, boolean nextReachesGoal) {

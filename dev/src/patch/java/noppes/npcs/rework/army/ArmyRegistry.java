@@ -12,7 +12,7 @@ import net.minecraft.nbt.NBTTagList;
 
 /**
  * M11.1 (Q297, Q300): the army register without game state, so its NBT round trip is unit tested.
- * {@link ArmyWorldData} saves it with the world. Later packages add the stored army orders here (Q300).
+ * {@link ArmyWorldData} saves it with the world. M11.3 keeps durable orders here as well (Q300).
  */
 public final class ArmyRegistry {
     public static final int VERSION = 1;
@@ -23,6 +23,7 @@ public final class ArmyRegistry {
 
     private final Map<String, Army> armies = new LinkedHashMap<String, Army>();
     private final ArmyGrants grants = new ArmyGrants();
+    private final Map<String, ArmyOrder> orders = new LinkedHashMap<String, ArmyOrder>();
     private int skippedOnRead;
 
     public Result create(Army army) {
@@ -48,6 +49,7 @@ public final class ArmyRegistry {
         Army army = armies.remove(Army.key(name));
         if (army != null) {
             grants.removeArmy(army.key());
+            orders.remove(army.key());
         }
         return army;
     }
@@ -73,6 +75,14 @@ public final class ArmyRegistry {
 
     public ArmyGrants grants() {
         return grants;
+    }
+
+    public ArmyOrder order(String name) { return orders.get(Army.key(name)); }
+
+    public boolean order(String name, ArmyOrder order) {
+        if (get(name) == null || order == null) { return false; }
+        orders.put(Army.key(name), order);
+        return true;
     }
 
     /** M11.1b: operator and owner have every right, others what the grants say. Checked on every call. */
@@ -132,6 +142,17 @@ public final class ArmyRegistry {
             list.appendTag(a.write());
         }
         c.setTag("Armies", list);
+        NBTTagList savedOrders = new NBTTagList();
+        for (Army a : list()) {
+            ArmyOrder order = order(a.name());
+            if (order != null) {
+                NBTTagCompound tag = order.write();
+                tag.setString("Army", a.key());
+                savedOrders.appendTag(tag);
+            }
+        }
+        if (savedOrders.tagCount() > 0) { c.setTag("Orders", savedOrders); }
+        else { c.removeTag("Orders"); }
         if (grants.size() > 0) {
             c.setTag("Grants", grants.write());
         }
@@ -141,6 +162,7 @@ public final class ArmyRegistry {
     /** Replaces the content. Invalid and duplicate entries are skipped and counted, never thrown. */
     public void read(NBTTagCompound c) {
         armies.clear();
+        orders.clear();
         skippedOnRead = 0;
         NBTTagList list = c.getTagList("Armies", 10);
         for (int i = 0; i < list.tagCount(); i++) {
@@ -150,6 +172,14 @@ public final class ArmyRegistry {
             }
         }
         skippedOnRead += grants.read(c.getTagList("Grants", 10), this);
+        NBTTagList savedOrders = c.getTagList("Orders", 10);
+        for (int i = 0; i < savedOrders.tagCount(); i++) {
+            NBTTagCompound tag = savedOrders.getCompoundTagAt(i);
+            ArmyOrder order = ArmyOrder.read(tag);
+            if (order == null || order(tag.getString("Army")) != null || !order(tag.getString("Army"), order)) {
+                skippedOnRead++;
+            }
+        }
     }
 
     /**

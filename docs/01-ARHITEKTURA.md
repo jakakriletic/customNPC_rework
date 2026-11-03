@@ -1030,3 +1030,16 @@ ločen kanal, revizije in snapshoti po logični strani/seji, tudi za obstoječe 
 Razlog: END polling izgubi zgodovino, cache clear pusti stare NPC knjižnice, play ni blend.
 To je načrt, ne funkcionalni sprejem. Naslednja implementacija P7 mora dokazati server in klient;
 [raziskava/merila](raziskave/P7.0-animacije-razsiritev.md), brez novega merilnega poskusa v tej seji.
+
+### D-099 — M11.3: trajen namen vojske, skupna pot in prehodne čete (2026-11-03, Q324–Q327)
+
+Q298–Q300 se izvedejo v registru ukazov: cilj/dimenzija/oblika/hitrost/velikost/stanje so trajni,
+ID-ji `Squad` in reference na svet niso. Četa ima privzeto 8 članov; po nalaganju se sestavi znova.
+Ena popolna pot vodje se geometrijsko odmakne na makro mesta čet, s skupno omejitvijo napredka
+4 bloke pred najpočasnejšim sidrom; članska obnova ostane obstoječa. Zaostali najprej dobijo join.
+S tem običajni `Squad` brez army ukaza ohrani prejšnjo pot. `RwArmies=0` ne prijavi runtime poslušalca.
+Nepopolna pot/timeout je BLOCKED, prihod zahteva dejanske lege; brez teleporta ali lažnega uspeha.
+Konstantna smer makro odmikov je zavestna začetna meja: ovinki/teren M11.9, dolg pohod M11.5,
+ticket M11.6. Q328: po padcu poskusa 1 join uporablja vmesne cilje ≤24 blokov s popolno pravo potjo;
+po prihodu ponovno grozdenje, brez poti BLOCKED. **Sprejet na poskusu 2 (Q329)**;
+[merila/poskusi in omejitve](meritve/2026-11-03-M11.3-cete.md).

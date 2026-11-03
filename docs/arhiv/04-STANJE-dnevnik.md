@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 208 → 1)
+# Arhiv: dnevnik sej (vnosi 209 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (209) — M11.1b: dovoljenja drugim igralcem (sprejet)
+
+**Paket:** M11.1b (Q309–Q316) · **Stanje:** sprejet na poskusu 1; `RwArmies` privzeto 0.
+Nov `ArmyGrants` (zapis na dajalca in prejemnika, *vidi*/*upravlja*, izbrane ali vse, tudi kasnejše) in `ArmyActor` (op prebran ob
+klicu). `/rwarmy` odprt vsem, vsako dejanje preveri `ArmyCommandService`; nov `grant/revoke/grants/players`, `create` samo op,
+nevidna vojska odgovori kot neobstoječa. Na 0ed5f4aa… PASS: unit (`ArmyGrantsTest` 19), build, package, `m111b-perm-v1` 154/154,
+`m111b-regress-v1` 68/68. Padec `m111b-perm-v1` na ff060f80… (harness, `Vec2f`) ni poskus (Q316). Omejitve: brez pravega klienta,
+GUI z M11.8b, *upravlja* zaenkrat samo `assign`/`unassign`. Naslednji M11.2. [Zapis](../meritve/2026-11-03-M11.1b-dovoljenja.md).
 
 ### 2026-11-03 (208) — M11.1: register vojsk, `RwArmy` in `/rwarmy` (sprejet)
 

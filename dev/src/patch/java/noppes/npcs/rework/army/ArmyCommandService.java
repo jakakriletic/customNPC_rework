@@ -55,6 +55,10 @@ public final class ArmyCommandService {
     /** Copies of RwArmyClusterRadius and RwArmyClusterMin, for the same reason. */
     private static volatile int clusterRadius = ArmyClusters.DEFAULT_RADIUS;
     private static volatile int clusterMin = ArmyClusters.DEFAULT_MIN_MEMBERS;
+    private static volatile int companySize = ArmyCompanies.DEFAULT_SIZE;
+
+    public static void setCompanySize(int size) { companySize = ArmyCompanies.clampSize(size); }
+    static int clusterRadius() { return clusterRadius; }
 
     private ArmyCommandService() {
     }
@@ -161,6 +165,7 @@ public final class ArmyCommandService {
         if (!actor.operator() && !actor.owns(army)) {
             return new Reply(false, "only the owner or an operator can remove " + army.name());
         }
+        ArmyMarches.cancel(name);
         reg.remove(name);
         int cleared = 0;
         for (EntityNPCInterface npc : members(server, army.name())) {
@@ -210,6 +215,7 @@ public final class ArmyCommandService {
                 refused++;
                 continue;
             }
+            ArmyMarches.detach(npc);
             npc.setRwArmy(stored);
             changed++;
         }
@@ -252,6 +258,61 @@ public final class ArmyCommandService {
         }
         ArmyRegistry reg = registry(server);
         return reg == null ? new ArrayList<Army>() : reg.visible(actor);
+    }
+
+    /** M11.3: one durable army move. Current server authority is checked before touching runtime or saved data. */
+    public static Reply submitMove(MinecraftServer server, ArmyActor actor, String name, int dimension,
+            double x, double y, double z, String shape, double speed) {
+        if (!enabled()) { return off(); }
+        ArmyRegistry reg = registry(server);
+        Army a = reg == null ? null : reg.get(name);
+        if (a == null || !reg.access(a, actor).canView()) { return unknown(name); }
+        if (!reg.access(a, actor).canCommand()) { return new Reply(false, "no command permission for " + a.name()); }
+        noppes.npcs.rework.formation.SquadOrder.Shape form = shape == null ? null
+                : noppes.npcs.rework.formation.SquadOrder.Shape.parse(shape);
+        if (!ArmyOrder.valid(x, y, z, form, speed)
+                || net.minecraftforge.common.DimensionManager.getWorld(dimension) == null) {
+            return new Reply(false, "invalid move " + a.name());
+        }
+        if (!noppes.npcs.rework.formation.SquadManager.enabled()) {
+            return new Reply(false, "formations disabled");
+        }
+        List<EntityNPCInterface> live = members(server, a.name());
+        if (live.size() > 2048) { return new Reply(false, "move has more than 2048 loaded members"); }
+        for (EntityNPCInterface npc : live) {
+            if (!ArmyMarches.eligible(npc) || npc.world.provider.getDimension() != dimension) {
+                return new Reply(false, "move needs living ground members in target dimension");
+            }
+        }
+        ArmyMarches.cancel(a.name());
+        reg.order(a.name(), new ArmyOrder(dimension, x, y, z, form, speed, companySize, ArmyOrder.State.WAITING));
+        dirty(server);
+        return new Reply(true, "move " + a.name() + " dim=" + dimension + " target=" + x + "," + y + "," + z
+                + " shape=" + form + " company=" + companySize);
+    }
+
+    public static Reply cancel(MinecraftServer server, ArmyActor actor, String name) {
+        if (!enabled()) { return off(); }
+        ArmyRegistry reg = registry(server);
+        Army a = reg == null ? null : reg.get(name);
+        if (a == null || !reg.access(a, actor).canView()) { return unknown(name); }
+        if (!reg.access(a, actor).canCommand()) { return new Reply(false, "no command permission for " + a.name()); }
+        ArmyMarches.cancel(a.name());
+        ArmyOrder order = reg.order(name);
+        if (order != null) { reg.order(name, order.withState(ArmyOrder.State.CANCELLED)); dirty(server); }
+        return new Reply(true, "cancelled " + a.name());
+    }
+
+    public static Reply orderStatus(MinecraftServer server, ArmyActor actor, String name) {
+        if (!enabled()) { return off(); }
+        ArmyRegistry reg = registry(server);
+        Army a = reg == null ? null : reg.get(name);
+        if (a == null || !reg.access(a, actor).canView()) { return unknown(name); }
+        ArmyOrder order = reg.order(name);
+        return new Reply(true, "order " + a.name() + " state=" + (order == null ? "NONE" : order.state)
+                + (order == null ? "" : " dim=" + order.dimension + " target=" + order.x + "," + order.y + ","
+                + order.z + " shape=" + order.shape + " company=" + order.companySize)
+                + " " + ArmyMarches.status(name));
     }
 
     /** Effective right of the actor over a named army at this moment; NONE also for an unknown army. */

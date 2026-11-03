@@ -38,6 +38,9 @@ import noppes.npcs.entity.EntityNPCInterface;
  * /rwarmy grants [player]
  * /rwarmy players [prefix]                                            (owner or operator)
  * /rwarmy clusters [army]                                             (view right; M11.2)
+ * /rwarmy move &lt;army&gt; &lt;x&gt; &lt;y&gt; &lt;z&gt; [legion|column|ring] [speed] (command right; M11.3)
+ * /rwarmy stop &lt;army&gt;                                                (command right)
+ * /rwarmy status &lt;army&gt;                                              (view right)
  * </pre>
  *
  * An NPC name selects loaded NPCs with exactly that name within the range (default 100, at most 220 blocks)
@@ -49,7 +52,7 @@ public class CommandRwArmy extends CommandBase {
     public static final double MAX_RANGE = 220;
     private static final List<String> SUBCOMMANDS =
             Arrays.asList("create", "assign", "unassign", "list", "info", "remove", "grant", "revoke", "grants",
-                    "players", "clusters");
+                    "players", "clusters", "move", "stop", "status");
 
     @Override
     public String getName() {
@@ -61,7 +64,8 @@ public class CommandRwArmy extends CommandBase {
         return "/rwarmy create <army> [player|uuid:<uuid>|faction:<id>] | assign <army> <npc name|selector> [range]"
                 + " | unassign <npc name|selector> [range] | list | info <army> | remove <army>"
                 + " | grant <player> view|command <army|all> | revoke <player> view|command|all [army|all]"
-                + " | grants [player] | players [prefix] | clusters [army]";
+                + " | grants [player] | players [prefix] | clusters [army]"
+                + " | move <army> <x> <y> <z> [legion|column|ring] [speed] | stop <army> | status <army>";
     }
 
     @Override
@@ -89,6 +93,21 @@ public class CommandRwArmy extends CommandBase {
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
         ArmyActor actor = actor(sender);
         String action = args.length == 0 ? "list" : args[0].toLowerCase(Locale.ROOT);
+        if (action.equals("move") && args.length >= 5 && args.length <= 7) {
+            BlockPos origin = sender.getPosition();
+            reply(sender, ArmyCommandService.submitMove(server, actor, args[1], sender.getEntityWorld().provider.getDimension(),
+                    parseCoordinate(origin.getX(), args[2], false).getResult(),
+                    parseCoordinate(origin.getY(), args[3], false).getResult(),
+                    parseCoordinate(origin.getZ(), args[4], false).getResult(),
+                    args.length >= 6 ? args[5] : "legion", args.length == 7 ? parseDouble(args[6], 0.5, 6) : 3).message);
+            return;
+        }
+        if (action.equals("stop") && args.length == 2) {
+            reply(sender, ArmyCommandService.cancel(server, actor, args[1]).message); return;
+        }
+        if (action.equals("status") && args.length == 2) {
+            reply(sender, ArmyCommandService.orderStatus(server, actor, args[1]).message); return;
+        }
         if (action.equals("list")) {
             for (String line : ArmyCommandService.describe(server, actor)) {
                 reply(sender, line);
@@ -219,8 +238,12 @@ public class CommandRwArmy extends CommandBase {
         String action = args[0].toLowerCase(Locale.ROOT);
         ArmyActor actor = actor(sender);
         if (args.length == 2 && (action.equals("assign") || action.equals("info") || action.equals("remove")
-                || action.equals("clusters"))) {
+                || action.equals("clusters") || action.equals("move") || action.equals("stop")
+                || action.equals("status"))) {
             return getListOfStringsMatchingLastWord(args, visibleNames(server, actor));
+        }
+        if (args.length == 6 && action.equals("move")) {
+            return getListOfStringsMatchingLastWord(args, "legion", "column", "ring");
         }
         if (args.length == 3 && action.equals("create")) {
             return getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames());

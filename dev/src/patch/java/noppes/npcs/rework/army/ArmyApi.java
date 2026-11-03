@@ -43,6 +43,19 @@ public final class ArmyApi {
         return ArmyCommandService.create(server(), name, owner).ok;
     }
 
+    /** M11.3: trusted script move; legion, column or ring. Target dimension must already be loaded. */
+    public static boolean move(String army, int dimension, double x, double y, double z, String shape, double speed) {
+        return ArmyCommandService.submitMove(server(), ArmyActor.SYSTEM, army, dimension, x, y, z, shape, speed).ok;
+    }
+
+    public static boolean stop(String army) {
+        return ArmyCommandService.cancel(server(), ArmyActor.SYSTEM, army).ok;
+    }
+
+    public static String status(String army) {
+        return enabled() ? ArmyCommandService.orderStatus(server(), ArmyActor.SYSTEM, army).message : "";
+    }
+
     /** Removes the army; its loaded members lose RwArmy. */
     public static boolean remove(String name) {
         return ArmyCommandService.remove(server(), name).ok;

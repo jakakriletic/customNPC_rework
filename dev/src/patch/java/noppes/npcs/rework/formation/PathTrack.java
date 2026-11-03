@@ -70,6 +70,13 @@ public final class PathTrack {
         return cumulative[cumulative.length - 1];
     }
 
+    /** M11.3: a parallel company lane, without another path search or changing arc length. */
+    public PathTrack translated(double dx, double dz) {
+        double[] nx = xs.clone(), nz = zs.clone();
+        for (int i = 0; i < nx.length; i++) { nx[i] += dx; nz[i] += dz; }
+        return new PathTrack(nx, ys, nz);
+    }
+
     public int size() {
         return xs.length;
     }

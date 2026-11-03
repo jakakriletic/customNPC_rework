@@ -151,6 +151,7 @@ import noppes.npcs.rework.anim.BlendServer;
 import noppes.npcs.rework.anim.CommandNpcAnim;
 import noppes.npcs.rework.army.ArmyCommandService;
 import noppes.npcs.rework.army.ArmyNet;
+import noppes.npcs.rework.army.ArmyMarches;
 import noppes.npcs.rework.army.CommandRwArmy;
 import noppes.npcs.rework.anim.ReloadServer;
 import noppes.npcs.rework.script.AutoClasspath;
@@ -233,12 +234,14 @@ public class CustomNpcs {
     public static String RwJavaClasspath = "";
     @ConfigProp(info="Rework M7.5 (D-095, Q194): animation script hooks for animated NPCs of the optional mod customnpcentities 0.7.0. With 1 the server calls the NPC script hooks animationStart, animationEvent (timed clip events such as hit or sound) and animationEnd, in JS and Java, at world tick end from an exact log of every action start, fired event and stop (P7a: the loaded class of the optional mod gets journal calls at class load; a mismatch leaves it original and the hooks off). 2 = also the idle, walk and death layers (event source idle/walk/death, server clocks of the optional mod, hooks only). 1 and 2 also enable IAnimator.blendTo (P7b): the server sends the blend on its own channel rwanim and a client with 1 or 2 moves from its last drawn pose to the new clip (the client class of the optional mod gets a pose call at class load; otherwise the clip just plays). Without the optional mod nothing is tracked. Read at startup. 0 = original (no listener, no hooks, class untouched), 1 = action hooks, 2 = action and layer hooks. Default 0")
     public static int RwAnimHooks = 0;
-    @ConfigProp(info="Rework M11.1 (Q297, Q299): armies. With 1 the server has the command /rwarmy (create, assign, unassign, list, info, remove; operators) and the script API noppes.npcs.rework.army.ArmyApi; the army register is saved with the world in data/rwarmies.dat and an NPC stores its army name in NBT RwArmy. An army is owned by a player (UUID) or a CustomNPCs faction. The channel rwarmy only answers requests for the army snapshot: no tick and no AI change in this version. Read at startup. 0 = original: no command, the API changes nothing, the register is not loaded; an RwArmy name already on an NPC is kept unchanged. Default 0")
+    @ConfigProp(info="Rework M11.1 (Q297, Q299): armies. With 1 the server has the command /rwarmy (create, assign, unassign, list, info, remove; operators) and the script API noppes.npcs.rework.army.ArmyApi; the army register is saved with the world in data/rwarmies.dat and an NPC stores its army name in NBT RwArmy. An army is owned by a player (UUID) or a CustomNPCs faction. The channel rwarmy only answers snapshot requests. M11.3 adds move/stop/status: saved orders, companies of RwArmyCompany ground members sharing one army path, and join orders for stragglers. Long paths and chunk tickets are later packages. Read at startup. 0 = original: no command, the API changes nothing, the register is not loaded; an RwArmy name already on an NPC is kept unchanged. Default 0")
     public static int RwArmies = 0;
     @ConfigProp(info="Rework M11.2: with RwArmies=1, members of one army this close (blocks, horizontally, 1-512) are one cluster, the point of the army on a map. Read at startup. Default 48")
     public static int RwArmyClusterRadius = 48;
     @ConfigProp(info="Rework M11.2: with RwArmies=1, a cluster with at least this many members (1-1024) is a group; a smaller one is a straggler. The largest cluster is always the main one. Read at startup. Default 8")
     public static int RwArmyClusterMin = 8;
+    @ConfigProp(info="Rework M11.3/Q298: with RwArmies=1, members per company (1-24). Only 8 has formation acceptance evidence. Stored with each move; a restart keeps its size. Default 8")
+    public static int RwArmyCompany = 8;
     public static long ticks;
     @SidedProxy(clientSide="noppes.npcs.client.ClientProxy", serverSide="noppes.npcs.CommonProxy")
     public static CommonProxy proxy;
@@ -421,6 +424,7 @@ public class CustomNpcs {
         // M11.1 (Q299): the army service reads its own copy, before any world or script loads.
         ArmyCommandService.setSwitch(RwArmies);
         ArmyCommandService.setClusters(RwArmyClusterRadius, RwArmyClusterMin);
+        ArmyCommandService.setCompanySize(RwArmyCompany);
         // P5: build the auto Java classpath before the first tick, never on a script event.
         if (EnableScripting && AutoClasspath.isAuto(RwJavaClasspath)) {
             try {
@@ -481,6 +485,7 @@ public class CustomNpcs {
         // M2.1d: merilni ticketi ne smejo prezivet zaustavitve serverja. Ce bi se zapisali
         // v forcedchunks.dat, bi naslednji zagon tiho tekel pod drugacnim pogojem meritve.
         DiagChunkLoader.disable();
+        ArmyMarches.clear();
         SquadManager.clear();
         HitboxTrack.stop();
         ReloadServer.stopped();
@@ -541,7 +546,10 @@ public class CustomNpcs {
         // P7c: only the switch adds the reload command.
         if (RwAnimHooks >= 1) { event.registerServerCommand((ICommand)new CommandNpcAnim()); }
         // M11.1 (Q299): only the switch adds the army command.
-        if (RwArmies >= 1) { event.registerServerCommand((ICommand)new CommandRwArmy()); }
+        if (RwArmies >= 1) {
+            event.registerServerCommand((ICommand)new CommandRwArmy());
+            ArmyMarches.install(event.getServer());
+        }
         EntityNPCInterface.ChatEventPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.ChatEventProfile);
         EntityNPCInterface.CommandPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.CommandProfile);
         EntityNPCInterface.GenericPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.GenericProfile);

@@ -56,6 +56,12 @@ public final class SquadManager {
      * v eni enoti.
      */
     public static Squad start(World world, String label, List<EntityNPCInterface> npcs, SquadOrder order) {
+        return start(world, label, npcs, order, null);
+    }
+
+    /** M11.3: companies consume the army's path; no company-level A* or continuation. */
+    public static Squad start(World world, String label, List<EntityNPCInterface> npcs, SquadOrder order,
+            PathTrack shared) {
         if (!enabled() || world == null || world.isRemote) {
             return null;
         }
@@ -65,7 +71,7 @@ public final class SquadManager {
                 s.release(npc);
             }
         }
-        Squad squad = Squad.create(nextId++, world, label, npcs, order);
+        Squad squad = Squad.create(nextId++, world, label, npcs, order, shared);
         if (squad == null) {
             m.unregisterIfIdle();
             return null;

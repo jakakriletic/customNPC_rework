@@ -90,6 +90,7 @@ public final class Squad {
     private int alive;
     private boolean finished;
     private final boolean pathless;
+    private boolean armyPath;
 
     private Squad(int id, World world, String label, SquadOrder order, EntityNPCInterface[] members,
             SquadPlanner planner, double[] attr, boolean pathless) {
@@ -128,6 +129,11 @@ public final class Squad {
      * @return enota ali {@code null}, ce ni nobenega uporabnega clana
      */
     static Squad create(int id, World world, String label, List<EntityNPCInterface> candidates, SquadOrder order) {
+        return create(id, world, label, candidates, order, null);
+    }
+
+    static Squad create(int id, World world, String label, List<EntityNPCInterface> candidates, SquadOrder order,
+            PathTrack shared) {
         java.util.List<EntityNPCInterface> list = new java.util.ArrayList<EntityNPCInterface>();
         for (EntityNPCInterface npc : candidates) {
             if (npc != null && npc.world == world && !npc.isDead && !npc.isKilled() && !npc.isRiding()) {
@@ -162,8 +168,8 @@ public final class Squad {
         }
 
         EntityNPCInterface lead = members[leader];
-        Path path = lead.getNavigator().getPathToXYZ(order.x, order.y, order.z);
-        PathTrack track = toTrack(path);
+        Path path = shared == null ? lead.getNavigator().getPathToXYZ(order.x, order.y, order.z) : null;
+        PathTrack track = shared == null ? toTrack(path) : shared;
         boolean pathless = track == null;
         boolean reaches;
         if (pathless) {
@@ -221,10 +227,12 @@ public final class Squad {
                 new WorldTerrain(world), order.formFirst, order.anchor);
         // Taski se namestijo sele v ticku enote: ukaz lahko pride iz skripte, ki tece med
         // tickom NPC-ja, in takrat se mnozice taskov ne sme spreminjati.
-        return new Squad(id, world, label, order, members, planner, attr, pathless);
+        Squad squad = new Squad(id, world, label, order, members, planner, attr, pathless);
+        squad.armyPath = shared != null;
+        return squad;
     }
 
-    private static PathTrack toTrack(Path path) {
+    public static PathTrack toTrack(Path path) {
         if (path == null || path.getCurrentPathLength() == 0) {
             return null;
         }
@@ -297,7 +305,8 @@ public final class Squad {
             replanCooldown--;
         }
         if (planner.needsReplan() && replanCooldown == 0) {
-            replan();
+            if (armyPath) { planner.giveUp(); }
+            else { replan(); }
             replanCooldown = REPLAN_INTERVAL;
         }
         if (planner.phase() == SquadPlanner.Phase.DONE) {
@@ -594,8 +603,29 @@ public final class Squad {
         finished = true;
     }
 
-    boolean isFinished() {
+    /** M11.3: an explicit army stop also clears horizontal input, including during a join. */
+    public void cancelArmy() {
+        for (EntityNPCInterface npc : members) { if (npc != null) { stopHorizontal(npc); } }
+        cancel();
+    }
+
+    public boolean isFinished() {
         return finished;
+    }
+
+    public double progress() { return planner.progress(); }
+    public void limitAdvance(double distance) { planner.limitAdvance(distance); }
+
+    /** Completion is geometric, not merely the planner's settle timeout. */
+    public boolean arrived() {
+        if (!finished || planner.goalUnreachable() || planner.unsettledAtEnd() != 0 || alive == 0) { return false; }
+        for (int i = 0; i < members.length; i++) {
+            EntityNPCInterface npc = members[i];
+            if (npc == null || !eligible[i] || Math.hypot(npc.posX - planner.targetX[i],
+                    npc.posZ - planner.targetZ[i]) > SquadPlanner.UNSETTLE
+                    || Math.abs(npc.posY - planner.targetY[i]) > 1.5) { return false; }
+        }
+        return true;
     }
 
     boolean contains(EntityNPCInterface npc) {

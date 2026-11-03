@@ -74,7 +74,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwNavBackend` | 0 | permits NPCs with per-NPC `RwNavBackend=1` to use Baritone (needs the `npcbaritone` library) |
 | `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`); >=1 also enables `blendTo` and `/npcanim` (set on server and clients) |
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
-| `RwArmies` | 0 | armies: `/rwarmy`, `ArmyApi` and the channel `rwarmy`, register saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs); also `RwArmyClusterRadius` (48, 1–512), `RwArmyClusterMin` (8, 1–1024) |
+| `RwArmies` | 0 | armies: `/rwarmy`, `ArmyApi` and the channel `rwarmy`, register and move orders saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs); also `RwArmyClusterRadius` (48, 1–512), `RwArmyClusterMin` (8, 1–1024), `RwArmyCompany` (8, 1–24; only 8 tested in-world) |
 | `RwJavaClasspath` | empty | enables Java scripts (see §4); `auto` = classpath built from the running server |
 
 ### Per-NPC settings (saved in the NPC)
@@ -108,12 +108,12 @@ owner is required), `assign <army> <npc name|selector> [range]` (name: loaded NP
 at most 220), `unassign <npc name|selector> [range]`, `list`, `info <army>`, `remove <army>`. Army names
 are 1–32 letters, digits, `_` or `-` and ignore case. Scripts: `Java.type("noppes.npcs.rework.army.ArmyApi")`
 with `create`, `remove`, `assign`, `unassign`, `armyOf`, `list`, `exists`, `owner`, `members`, `canView`,
-`canCommand`, `visibleArmies`, `grant`, `revoke`. Scripts act with operator rights.
+`canCommand`, `visibleArmies`, `grant`, `revoke`, `move`, `stop`, `status`. Scripts act with operator rights.
 
 Army permissions: an op creates armies. The owner (own armies) or an op (all armies) gives a player a right:
 `/rwarmy grant <player> view|command <army|all>`, `/rwarmy revoke <player> view|command|all [army|all]`,
 `/rwarmy grants [player]`, `/rwarmy players [prefix]` (online and already seen players). `command` includes
-`view` and allows `assign` and `unassign`. `all` also covers later armies: the owner's own, or every army
+`view` and allows `assign`, `unassign`, `move` and `stop`. `all` also covers later armies: the owner's own, or every army
 when an op grants it. Only the owner or an op removes an army. Rights are checked on every command, so a
 revoke or deop applies to the next one. An army you may not see answers as `unknown army`.
 
@@ -121,6 +121,15 @@ revoke or deop applies to the next one. An army you may not see answers as `unkn
 `RwArmyClusterRadius` blocks horizontally form one cluster. The largest is the main one, a smaller one with at least
 `RwArmyClusterMin` members is a group, the rest are stragglers. An army with no loaded members stays listed with
 its last known position.
+
+`/rwarmy move <army> <x> <y> <z> [legion|column|ring] [speed]` moves loaded ground members in
+the sender's dimension (relative `~` coordinates work; default legion, speed 3, range 0.5–6).
+The army uses companies of 8 sharing one route; stragglers join first. The move stores its company
+size and resumes after a restart when members load. `/rwarmy stop <army>` cancels it;
+`/rwarmy status <army>` needs `view` and reports WAITING/JOINING/MOVING/ARRIVED/BLOCKED/CANCELLED.
+No complete route or a timeout means BLOCKED; issue a new move to retry. Formations must be enabled
+(do not set `-Drwformation=off`). Scripts: `ArmyApi.move(army, dimension, x, y, z, shape, speed)`
+returns a boolean, as does `stop(army)`; `status(army)` returns text.
 
 ## 4. Java NPC scripts
 
@@ -211,9 +220,10 @@ Not proven, so not claimed:
   toast covers the new button; its label and bounds were checked by the GUI harness. Packaged
   and dedicated clients were not tested for P6. Momentum flight mode stays v2 and cannot be
   selected in the GUI; an existing NBT value of 2 is preserved.
-- Armies (`RwArmies`, M11.1/M11.1b/M11.2, [note](meritve/2026-11-03-M11.1-register.md),
-  [permissions](meritve/2026-11-03-M11.1b-dovoljenja.md), [clusters](meritve/2026-11-03-M11.2-grozdi-posnetek.md)): only the register, names, commands, permissions and clusters; armies do not move or
-  fight together yet, so `command` means only `assign` and `unassign`. An NPC without an army can be
+- Armies (`RwArmies`, M11.1/M11.1b/M11.2/M11.3, [note](meritve/2026-11-03-M11.1-register.md),
+  [permissions](meritve/2026-11-03-M11.1b-dovoljenja.md), [clusters](meritve/2026-11-03-M11.2-grozdi-posnetek.md),
+  [companies](meritve/2026-11-03-M11.3-cete.md)): short moves now work for loaded ground members;
+  fighting together is not implemented yet. An NPC without an army can be
   assigned only by an op or a script. Faction membership gives no rights. Permissions have no GUI yet
   (M11.8b) and were tested with stand-in players, without a real client. `members`, `list` and `info`
   count loaded NPCs only; after `remove`, NPCs in unloaded chunks keep the old name without effect.
@@ -221,6 +231,12 @@ Not proven, so not claimed:
   with one real dev client on a dev dedicated server, not on integrated or packaged pairs; nothing on the client draws
   the snapshot yet (staff GUI M11.8a, map M11.7) and its cost was not measured (M11.10). After a restart the
   time of the last position can be older than the last time the army was seen; the position itself is kept.
+  Movement was tested with 32 NPCs in four companies of 8, legion on flat ground, on a dev dedicated
+  server without a client, including a restart mid-march. Column/ring have unit geometry checks only;
+  larger companies, combat and manual `/rwsquad` takeover were not tested. Macro offsets keep a constant
+  direction around turns. At most 2048 loaded members; no complete path means BLOCKED. Long routes,
+  moving chunk tickets and difficult terrain are M11.5/M11.6/M11.9; no progress is guaranteed in unloaded
+  chunks. Rebuilding companies can change membership. Cost is pending M11.10; no performance claim.
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).
