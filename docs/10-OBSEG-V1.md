@@ -55,6 +55,7 @@ zemljevida)**, ker je lastniku najpomembnejši; ostali v2 paketi pridejo za njim
   (DIRECT OWNER INSTRUCTION) in jih zapiše.
 - Pravila Q90, Q92 (stikalo privzeto 0, največ 2 poskusa, kratki zapisi) in Q250 (≤ 30 min na test)
   veljajo naprej. Vsak M11 paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`.
+- ~~M11.0~~ preverjen in razrezan 3. 11. (Q296–Q302, [§5](raziskave/M11.0-vojske-prek-zemljevida.md)); naslednji M11.1.
 
 ## Prestavljeno v v2 (po izdaji v1.0)
 

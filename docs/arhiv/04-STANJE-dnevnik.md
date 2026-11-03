@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 204 → 1)
+# Arhiv: dnevnik sej (vnosi 205 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (205) — P7c: `/npcanim reload` s potrditvijo klientov (sprejet)
+
+**Paket:** P7c (Q248, Q283, Q287–Q291, D-098) · **Stanje:** sprejet na poskusu 1; `RwAnimHooks` privzeto 0.
+`/npcanim reload [entityId]`/`status` (samo pri `RwAnimHooks>=1`) bere `config/customnpcs/animations/<id>.animation.json`
+kot transakcijo: preverjanje vseh datotek, potrditev vseh klientov s hashem, nato commit; zavrnitev/rok → nič se ne spremeni,
+pozni join dobi stanje ali je odklopljen. Posnetek po logični strani prek patcha `animations()`. Na baf07948… PASS: unit
+(616 `@Test`), build, package, `p7c-dedicated-v1` 39/39, `p7c-integrated-v1` 34/34, regresiji `p7-h1-v1` in `p7b-blend-v1`.
+Cena ni izmerjena (Q291); samo dev klient/strežnik. Naslednji P8 (Baritone). [Zapis](../meritve/2026-11-01-P7c-reload.md).
 
 ### 2026-11-01 (204) — P7b: `blendTo` s klientskim prehodom poze (sprejet)
 

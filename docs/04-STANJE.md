@@ -14,14 +14,14 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-03** (seja 206) — **P8 sprejet kot podatek** (poskus 1, Q292–Q294): cena Baritone pri 2000 NPC-jih na široki mreži z živim heapom. Na `dbca5966…` `p8-off-v1`/`p8-on-v1` PASS; nedosegljiva MSPT 87,55 → 65,77, boj 43,89 → 41,46, živi heap +157/+449 MB. Privzeto 0. [Zapis](meritve/2026-11-03-P8-baritone-cena.md). |
-| Trenutni milestone | **M10 — release** (v1 obseg Q92); M7 v1 zaključen (M7.0, M7.V, M7.9, M7.5; D-095); M6 Scripting v1 zaključen (M6.0–M6.12) po D-090/Q92. JDK 8 JavaCompiler (Q141); Java za NPC hooke pri `ScriptLanguage=Java`, privzeto JS. Paketi M4 v1.0 obravnavani z omejitvami; celoten M3/M4 izhodni kriterij ni potrjen. |
-| Naslednji paketi | **Popravki omejitev v1.0 P1–P8** po [Q248](10-OBSEG-V1.md): P1 soak (zaključen z omejitvijo heapa) → P2 klientska matrika (zaključen z omejitvijo) → P3 `RwPathResume`/`RwFlyLineOfSight` (sprejet pod stikali) → P4 formacije (sprejet po Q257) → P5 Java GUI/classpath (sprejet) → P6 GUI `RwFlightMode` (sprejet) → P7a strežniški hooki (sprejet) → P7b `blendTo` (sprejet) → P7c `/npcanim reload` (sprejet, Q291) → P8 cena Baritone (sprejet kot podatek, Q294). **P1–P8 zaključeni. Q295 (3. 11.): v1.0 sprejet z omejitvami §6; naprej v2, najprej M11 (vojske), brez čakanja na stare vhodne pogoje ([10-OBSEG-V1](10-OBSEG-V1.md)).** Q90/Q92 veljata: uspešnih serij ne ponavljamo, največ 2 poskusa/paket. M10.3/IO4 blokirana (Q1). |
+| Zadnja posodobitev | **2026-11-03** (seja 207) — **M11.0 zaključen kot raziskava** (Q295, Q296–Q302): raziskava vojsk preverjena proti kodi in M11 razrezan na 13 paketov z vrstnim redom; koda in testi nespremenjeni. [Zapis §5](raziskave/M11.0-vojske-prek-zemljevida.md). |
+| Trenutni milestone | **M11 — vojske in poveljevanje** (v2, Q295). v1.0 sprejet z omejitvami `UPORABNIKI.md` §6 (P1–P8 zaključeni); M10.3/IO4 ostaneta odprta (Q1). |
+| Naslednji paketi | **M11 po [M11.0 §5.3](raziskave/M11.0-vojske-prek-zemljevida.md):** M11.1 register + `RwArmy` + `/rwarmy` (stikalo `RwArmies`, privzeto 0) → M11.1b dovoljenja → M11.2 grozdi/posnetek → M11.3 čete → M11.4 roj/drža → M11.8a palica → M11.5 dolg pohod → M11.6 ticket → M11.8b dovoljenja GUI → M11.7a/b zemljevid → M11.9 → M11.10. Q90/Q92/Q250 veljajo; vsak paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **247** datotek `.java` v `src/patch`, od tega **170** rework; P7b: `PoseBlend`, `BlendCodec`, `BlendServer`, `BlendClient`, `AnimBlend`, `AnimatedModelPatch`, `AnimBlendHarness`. Build/package PASS na `c5f61924…`. |
 | Testi | **595** metod `@Test` v **94** datotekah; trije novi P7b razredi izključeni iz `testOriginal`. P7b unit/build/package, `p7b-blend-v1`, `p7b-api-v1` PASS na `c5f61924…`. Predhodnih uspešnih serij ne ponavljamo (Q90). |
 | Odprti pojavi | nobenega blokirnega; Q84 (M4.17 + M4.10 zid 6/6 → 5/6, vzrok [H], ovira za privzeti vklop kombinacije); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
-| Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10, Q12 in Q14 odprta; Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
+| Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
 
 Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejših sej v celici
@@ -45,7 +45,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
 | M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b/d brez sprejema; celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
-| M11 Poveljevanje prek zemljevida | ni začeto — **zadnja faza** (D-026, 6. 10.) | R10; vhodni pogoj M4.14b, M4.10, M5; Q14 |
+| M11 Poveljevanje prek zemljevida | **v teku** (v2, Q295) | M11.0 preverjen in razrezan 3. 11. (Q296–Q302); naslednji M11.1 |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -55,7 +55,16 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 204 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 205 → 1, novejši zgoraj).*
+
+### 2026-11-03 (207) — M11.0: preverba raziskave vojsk in razrez M11 (raziskava)
+
+**Paket:** M11.0 (Q295, Q296–Q302) · **Stanje:** zaključen kot raziskava, brez spremembe kode in testov.
+Raziskava 26. 10. preverjena proti kodi: formacije 15 datotek brez roja, `SquadOrder.engage` že da del drže, `SquadManager`
+ni trajen, P4 preverjen samo pri 8 članih, `xaerofleetcommand` 0.4.0 s pogodbo `FleetCommandService` v2. Odločeno: Q14 →
+Xaero prek `xaerofleetcommand` kot dodatek, jedro je CNPC `ArmyCommandService` + palica (Q296); četa 8 (Q298); `RwArmies`
+privzeto 0 (Q299); trajen ukaz v registru (Q300); potujoč ticket (Q301); tuj repo samo lokalno do potrditve (Q302).
+Naslednji M11.1. [Zapis §5](raziskave/M11.0-vojske-prek-zemljevida.md).
 
 ### 2026-11-03 (206) — P8: cena Baritone pri 2000 NPC-jih (sprejet kot podatek)
 
@@ -65,11 +74,3 @@ exit 0, vsa merila OK; U1 1341/1418 (M4.15a padec je bila geometrija, Q292). MSP
 boj 43,89 → 41,46; živi heap +157/+449 MB, možno zadrževanje `Settings$Setting` v knjižnici (Q294). P1–P8 zaključeni;
 čakamo odločitev lastnika o izdaji. [Zapis](meritve/2026-11-03-P8-baritone-cena.md).
 
-### 2026-11-03 (205) — P7c: `/npcanim reload` s potrditvijo klientov (sprejet)
-
-**Paket:** P7c (Q248, Q283, Q287–Q291, D-098) · **Stanje:** sprejet na poskusu 1; `RwAnimHooks` privzeto 0.
-`/npcanim reload [entityId]`/`status` (samo pri `RwAnimHooks>=1`) bere `config/customnpcs/animations/<id>.animation.json`
-kot transakcijo: preverjanje vseh datotek, potrditev vseh klientov s hashem, nato commit; zavrnitev/rok → nič se ne spremeni,
-pozni join dobi stanje ali je odklopljen. Posnetek po logični strani prek patcha `animations()`. Na baf07948… PASS: unit
-(616 `@Test`), build, package, `p7c-dedicated-v1` 39/39, `p7c-integrated-v1` 34/34, regresiji `p7-h1-v1` in `p7b-blend-v1`.
-Cena ni izmerjena (Q291); samo dev klient/strežnik. Naslednji P8 (Baritone). [Zapis](meritve/2026-11-01-P7c-reload.md).

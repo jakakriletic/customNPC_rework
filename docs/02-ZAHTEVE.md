@@ -1032,7 +1032,7 @@ ubežnih narekovajev v ključu.
 ### Kaj manjka (ocena, ne analiza kode)
 
 1. **Oznaka na zemljevidu:** strežnik periodično pošlje povzetek skupine (ime, središče, število,
-   stanje); klient nariše eno ikono. Kateri zemljevid — odprto (Q14).
+   stanje); klient nariše eno ikono. Kateri zemljevid — odločeno 3. 11. (Q296): Xaero prek `xaerofleetcommand` kot dodatek, jedro je poveljniška palica.
 2. **Ukaz s klikom:** paket klient → strežnik »skupina X → (x, z)« s preverbo pravic.
    **Nov kanal** (`rework`), obstoječi packet ID-ji ostanejo nespremenjeni (05 §4).
 3. **Dolg pohod:** razrez poti sidra na vmesne točke; vanilla A* vrne delno pot po ~200 vozliščih,
