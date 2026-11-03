@@ -2,6 +2,7 @@ package noppes.npcs.rework.army;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.server.MinecraftServer;
 import noppes.npcs.CustomNpcs;
@@ -20,8 +21,9 @@ import noppes.npcs.entity.EntityNPCInterface;
  * var members = A.members("north");                        // loaded NPCs of the army
  * </pre>
  *
- * Names are 1-32 letters, digits, '_' or '-' and compared without case. M11.1 has no permission check: the
- * API is for trusted script authors (M11.1b adds view/command grants).
+ * Names are 1-32 letters, digits, '_' or '-' and compared without case. Scripts are trusted code and act with
+ * operator rights. A script acting for a player asks first with {@code canView}/{@code canCommand}; a player is
+ * {@code uuid:<uuid>}, an online name or a name the server has seen (M11.1b).
  */
 public final class ArmyApi {
     private ArmyApi() {
@@ -100,6 +102,44 @@ public final class ArmyApi {
             out[i] = NpcAPI.Instance().getIEntity(list.get(i));
         }
         return out;
+    }
+
+    /** True when the player (owner, operator or grant) may see the army at this moment. */
+    public static boolean canView(String player, String army) {
+        return access(player, army).canView();
+    }
+
+    /** True when the player (owner, operator or grant) may command the army at this moment. */
+    public static boolean canCommand(String player, String army) {
+        return access(player, army).canCommand();
+    }
+
+    /** Names of the armies the player may see, sorted. */
+    public static String[] visibleArmies(String player) {
+        List<String> out = new ArrayList<String>();
+        UUID id = ArmyCommandService.resolvePlayer(server(), player);
+        if (id != null) {
+            for (Army a : ArmyCommandService.list(server(), ArmyCommandService.actorFor(server(), id))) {
+                out.add(a.name());
+            }
+        }
+        return out.toArray(new String[0]);
+    }
+
+    /** Operator grant. @param kind {@code view} or {@code command}; @param army a name or {@code all} */
+    public static boolean grant(String player, String kind, String army) {
+        return ArmyCommandService.grant(server(), ArmyActor.SYSTEM, player, kind, army).ok;
+    }
+
+    /** Clears the player's grants from every grantor. @param kind {@code view}, {@code command} or {@code all} */
+    public static boolean revoke(String player, String kind, String army) {
+        return ArmyCommandService.revoke(server(), ArmyActor.SYSTEM, player, kind, army).ok;
+    }
+
+    private static ArmyGrants.Access access(String player, String army) {
+        UUID id = ArmyCommandService.resolvePlayer(server(), player);
+        return id == null ? ArmyGrants.Access.NONE
+                : ArmyCommandService.access(server(), ArmyCommandService.actorFor(server(), id), army);
     }
 
     /** Reads CustomNpcs.Server only with the switch on, so RwArmies=0 never initializes CustomNpcs here. */

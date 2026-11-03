@@ -386,6 +386,7 @@ task testOriginal(type: Test) {
     exclude '**/ReloadTxnTest.class'
     // M11.1: the army register and the RwArmy NPC key are new.
     exclude '**/ArmyRegistryTest.class'
+    exclude '**/ArmyGrantsTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

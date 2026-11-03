@@ -105,7 +105,15 @@ With `RwArmies=1`: `/rwarmy create <army> [player|uuid:<uuid>|faction:<id>]` (fr
 owner is required), `assign <army> <npc name|selector> [range]` (name: loaded NPCs within 100 blocks,
 at most 220), `unassign <npc name|selector> [range]`, `list`, `info <army>`, `remove <army>`. Army names
 are 1–32 letters, digits, `_` or `-` and ignore case. Scripts: `Java.type("noppes.npcs.rework.army.ArmyApi")`
-with `create`, `remove`, `assign`, `unassign`, `armyOf`, `list`, `exists`, `owner`, `members`.
+with `create`, `remove`, `assign`, `unassign`, `armyOf`, `list`, `exists`, `owner`, `members`, `canView`,
+`canCommand`, `visibleArmies`, `grant`, `revoke`. Scripts act with operator rights.
+
+Army permissions: an op creates armies. The owner (own armies) or an op (all armies) gives a player a right:
+`/rwarmy grant <player> view|command <army|all>`, `/rwarmy revoke <player> view|command|all [army|all]`,
+`/rwarmy grants [player]`, `/rwarmy players [prefix]` (online and already seen players). `command` includes
+`view` and allows `assign` and `unassign`. `all` also covers later armies: the owner's own, or every army
+when an op grants it. Only the owner or an op removes an army. Rights are checked on every command, so a
+revoke or deop applies to the next one. An army you may not see answers as `unknown army`.
 
 ## 4. Java NPC scripts
 
@@ -196,10 +204,13 @@ Not proven, so not claimed:
   toast covers the new button; its label and bounds were checked by the GUI harness. Packaged
   and dedicated clients were not tested for P6. Momentum flight mode stays v2 and cannot be
   selected in the GUI; an existing NBT value of 2 is preserved.
-- Armies (`RwArmies`, M11.1, [note](meritve/2026-11-03-M11.1-register.md)): only the register, names and
-  commands; armies do not move or fight together yet. No permissions yet: the command is for ops and the
-  API for trusted script authors (M11.1b). `members`, `list` and `info` count loaded NPCs only; after
-  `remove`, NPCs in unloaded chunks keep the old name without effect. Tested on a dev dedicated server only.
+- Armies (`RwArmies`, M11.1/M11.1b, [note](meritve/2026-11-03-M11.1-register.md),
+  [permissions](meritve/2026-11-03-M11.1b-dovoljenja.md)): only the register, names, commands and permissions; armies do not move or
+  fight together yet, so `command` means only `assign` and `unassign`. An NPC without an army can be
+  assigned only by an op or a script. Faction membership gives no rights. Permissions have no GUI yet
+  (M11.8b) and were tested with stand-in players, without a real client. `members`, `list` and `info`
+  count loaded NPCs only; after `remove`, NPCs in unloaded chunks keep the old name without effect.
+  Tested on a dev dedicated server only.
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).

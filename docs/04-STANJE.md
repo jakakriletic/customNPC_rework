@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-03** (seja 208) — **M11.1 sprejet** (Q303–Q308): register vojsk, NBT `RwArmy`, `/rwarmy` in `ArmyApi` pod `RwArmies` (privzeto 0); `m111-army-v2` 68/68. [Zapis](meritve/2026-11-03-M11.1-register.md). |
+| Zadnja posodobitev | **2026-11-03** (seja 209) — **M11.1b sprejet** (Q309–Q316): dovoljenja *vidi*/*upravlja* z `/rwarmy grant/revoke`, preverba na strežniku pri vsakem ukazu; `m111b-perm-v1` 154/154. [Zapis](meritve/2026-11-03-M11.1b-dovoljenja.md). |
 | Trenutni milestone | **M11 — vojske in poveljevanje** (v2, Q295). v1.0 sprejet z omejitvami `UPORABNIKI.md` §6 (P1–P8 zaključeni); M10.3/IO4 ostaneta odprta (Q1). |
-| Naslednji paketi | **M11 po [M11.0 §5.3](raziskave/M11.0-vojske-prek-zemljevida.md):** ~~M11.1~~ register + `RwArmy` + `/rwarmy` (Q303–Q308) → **M11.1b dovoljenja** → M11.2 grozdi/posnetek → M11.3 čete → M11.4 roj/drža → M11.8a palica → M11.5 dolg pohod → M11.6 ticket → M11.8b dovoljenja GUI → M11.7a/b zemljevid → M11.9 → M11.10. Q90/Q92/Q250 veljajo; vsak paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`. |
+| Naslednji paketi | **M11 po [M11.0 §5.3](raziskave/M11.0-vojske-prek-zemljevida.md):** ~~M11.1~~ register + `RwArmy` + `/rwarmy` (Q303–Q308) → ~~M11.1b~~ dovoljenja (Q309–Q316) → **M11.2 grozdi/posnetek** → M11.3 čete → M11.4 roj/drža → M11.8a palica → M11.5 dolg pohod → M11.6 ticket → M11.8b dovoljenja GUI → M11.7a/b zemljevid → M11.9 → M11.10. Q90/Q92/Q250 veljajo; vsak paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **247** datotek `.java` v `src/patch`, od tega **170** rework; P7b: `PoseBlend`, `BlendCodec`, `BlendServer`, `BlendClient`, `AnimBlend`, `AnimatedModelPatch`, `AnimBlendHarness`. Build/package PASS na `c5f61924…`. |
-| Testi | **595** metod `@Test` v **94** datotekah; trije novi P7b razredi izključeni iz `testOriginal`. P7b unit/build/package, `p7b-blend-v1`, `p7b-api-v1` PASS na `c5f61924…`. Predhodnih uspešnih serij ne ponavljamo (Q90). |
+| Testi | **648** metod `@Test` v **99** datotekah; `ArmyGrantsTest` in `ArmyRegistryTest` izključena iz `testOriginal`. M11.1b unit/build/package, `m111b-perm-v1`, `m111b-regress-v1` PASS na `0ed5f4aa…`. Predhodnih uspešnih serij ne ponavljamo (Q90). |
 | Odprti pojavi | nobenega blokirnega; Q84 (M4.17 + M4.10 zid 6/6 → 5/6, vzrok [H], ovira za privzeti vklop kombinacije); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -45,7 +45,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
 | M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b/d brez sprejema; celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
-| M11 Poveljevanje prek zemljevida | **v teku** (v2, Q295) | M11.0 preverjen in razrezan 3. 11. (Q296–Q302); [M11.1](meritve/2026-11-03-M11.1-register.md) register sprejet (Q303–Q308); naslednji M11.1b |
+| M11 Poveljevanje prek zemljevida | **v teku** (v2, Q295) | M11.0 preverjen in razrezan 3. 11. (Q296–Q302); [M11.1](meritve/2026-11-03-M11.1-register.md) register sprejet (Q303–Q308); [M11.1b](meritve/2026-11-03-M11.1b-dovoljenja.md) dovoljenja sprejeta (Q309–Q316); naslednji M11.2 |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -55,7 +55,16 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 206 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 207 → 1, novejši zgoraj).*
+
+### 2026-11-03 (209) — M11.1b: dovoljenja drugim igralcem (sprejet)
+
+**Paket:** M11.1b (Q309–Q316) · **Stanje:** sprejet na poskusu 1; `RwArmies` privzeto 0.
+Nov `ArmyGrants` (zapis na dajalca in prejemnika, *vidi*/*upravlja*, izbrane ali vse, tudi kasnejše) in `ArmyActor` (op prebran ob
+klicu). `/rwarmy` odprt vsem, vsako dejanje preveri `ArmyCommandService`; nov `grant/revoke/grants/players`, `create` samo op,
+nevidna vojska odgovori kot neobstoječa. Na 0ed5f4aa… PASS: unit (`ArmyGrantsTest` 19), build, package, `m111b-perm-v1` 154/154,
+`m111b-regress-v1` 68/68. Padec `m111b-perm-v1` na ff060f80… (harness, `Vec2f`) ni poskus (Q316). Omejitve: brez pravega klienta,
+GUI z M11.8b, *upravlja* zaenkrat samo `assign`/`unassign`. Naslednji M11.2. [Zapis](meritve/2026-11-03-M11.1b-dovoljenja.md).
 
 ### 2026-11-03 (208) — M11.1: register vojsk, `RwArmy` in `/rwarmy` (sprejet)
 
@@ -67,12 +76,4 @@ naložen, ime na NPC-ju ohranjeno. Na c9e0493a… PASS: unit (`ArmyRegistryTest`
 poskusa (Q307/Q308). Omejitve: brez dovoljenj, štejejo samo naloženi člani, sirote po `remove`. Naslednji M11.1b.
 [Zapis](meritve/2026-11-03-M11.1-register.md).
 
-### 2026-11-03 (207) — M11.0: preverba raziskave vojsk in razrez M11 (raziskava)
-
-**Paket:** M11.0 (Q295, Q296–Q302) · **Stanje:** zaključen kot raziskava, brez spremembe kode in testov.
-Raziskava 26. 10. preverjena proti kodi: formacije 15 datotek brez roja, `SquadOrder.engage` že da del drže, `SquadManager`
-ni trajen, P4 preverjen samo pri 8 članih, `xaerofleetcommand` 0.4.0 s pogodbo `FleetCommandService` v2. Odločeno: Q14 →
-Xaero prek `xaerofleetcommand` kot dodatek, jedro je CNPC `ArmyCommandService` + palica (Q296); četa 8 (Q298); `RwArmies`
-privzeto 0 (Q299); trajen ukaz v registru (Q300); potujoč ticket (Q301); tuj repo samo lokalno do potrditve (Q302).
-Naslednji M11.1. [Zapis §5](raziskave/M11.0-vojske-prek-zemljevida.md).
 

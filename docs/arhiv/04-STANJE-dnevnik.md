@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 206 → 1)
+# Arhiv: dnevnik sej (vnosi 207 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (207) — M11.0: preverba raziskave vojsk in razrez M11 (raziskava)
+
+**Paket:** M11.0 (Q295, Q296–Q302) · **Stanje:** zaključen kot raziskava, brez spremembe kode in testov.
+Raziskava 26. 10. preverjena proti kodi: formacije 15 datotek brez roja, `SquadOrder.engage` že da del drže, `SquadManager`
+ni trajen, P4 preverjen samo pri 8 članih, `xaerofleetcommand` 0.4.0 s pogodbo `FleetCommandService` v2. Odločeno: Q14 →
+Xaero prek `xaerofleetcommand` kot dodatek, jedro je CNPC `ArmyCommandService` + palica (Q296); četa 8 (Q298); `RwArmies`
+privzeto 0 (Q299); trajen ukaz v registru (Q300); potujoč ticket (Q301); tuj repo samo lokalno do potrditve (Q302).
+Naslednji M11.1. [Zapis §5](../raziskave/M11.0-vojske-prek-zemljevida.md).
 
 ### 2026-11-03 (206) — P8: cena Baritone pri 2000 NPC-jih (sprejet kot podatek)
 

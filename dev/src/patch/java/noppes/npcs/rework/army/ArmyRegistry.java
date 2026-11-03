@@ -22,6 +22,7 @@ public final class ArmyRegistry {
     public enum Result { CREATED, INVALID_NAME, EXISTS, FULL }
 
     private final Map<String, Army> armies = new LinkedHashMap<String, Army>();
+    private final ArmyGrants grants = new ArmyGrants();
     private int skippedOnRead;
 
     public Result create(Army army) {
@@ -44,7 +45,44 @@ public final class ArmyRegistry {
     }
 
     public Army remove(String name) {
-        return armies.remove(Army.key(name));
+        Army army = armies.remove(Army.key(name));
+        if (army != null) {
+            grants.removeArmy(army.key());
+        }
+        return army;
+    }
+
+    public ArmyGrants grants() {
+        return grants;
+    }
+
+    /** M11.1b: operator and owner have every right, others what the grants say. Checked on every call. */
+    public ArmyGrants.Access access(Army army, ArmyActor actor) {
+        if (actor.operator() || actor.owns(army)) {
+            return ArmyGrants.Access.COMMAND;
+        }
+        return grants.access(army, actor.player());
+    }
+
+    /** Armies this actor may see, sorted by name without case. */
+    public List<Army> visible(ArmyActor actor) {
+        List<Army> out = new ArrayList<Army>();
+        for (Army a : list()) {
+            if (access(a, actor).canView()) {
+                out.add(a);
+            }
+        }
+        return out;
+    }
+
+    /** True when the actor is a player who owns at least one army. */
+    public boolean ownsAny(ArmyActor actor) {
+        for (Army a : armies.values()) {
+            if (actor.owns(a)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public int size() {
@@ -75,6 +113,9 @@ public final class ArmyRegistry {
             list.appendTag(a.write());
         }
         c.setTag("Armies", list);
+        if (grants.size() > 0) {
+            c.setTag("Grants", grants.write());
+        }
         return c;
     }
 
@@ -89,6 +130,7 @@ public final class ArmyRegistry {
                 skippedOnRead++;
             }
         }
+        skippedOnRead += grants.read(c.getTagList("Grants", 10), this);
     }
 
     /**

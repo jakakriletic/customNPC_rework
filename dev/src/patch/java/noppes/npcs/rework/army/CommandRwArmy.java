@@ -23,15 +23,20 @@ import noppes.npcs.LogWriter;
 import noppes.npcs.entity.EntityNPCInterface;
 
 /**
- * M11.1: {@code /rwarmy}, registered only with RwArmies>=1 (operators, level 2).
+ * M11.1: {@code /rwarmy}, registered only with RwArmies>=1. M11.1b: open to every player, each action is checked
+ * by {@link ArmyCommandService} against the sender's rights at that moment.
  *
  * <pre>
- * /rwarmy create &lt;army&gt; [&lt;online player&gt;|uuid:&lt;uuid&gt;|faction:&lt;id&gt;]   (default owner: the sender)
- * /rwarmy assign &lt;army&gt; &lt;npc name|selector&gt; [range]
- * /rwarmy unassign &lt;npc name|selector&gt; [range]
- * /rwarmy list
- * /rwarmy info &lt;army&gt;
- * /rwarmy remove &lt;army&gt;
+ * /rwarmy create &lt;army&gt; [&lt;online player&gt;|uuid:&lt;uuid&gt;|faction:&lt;id&gt;]   (operator; default owner: the sender)
+ * /rwarmy assign &lt;army&gt; &lt;npc name|selector&gt; [range]                 (command right)
+ * /rwarmy unassign &lt;npc name|selector&gt; [range]                        (command right)
+ * /rwarmy list                                                        (visible armies)
+ * /rwarmy info &lt;army&gt;                                                  (view right)
+ * /rwarmy remove &lt;army&gt;                                                (owner or operator)
+ * /rwarmy grant &lt;player&gt; view|command &lt;army|all&gt;                       (owner or operator)
+ * /rwarmy revoke &lt;player&gt; view|command|all [&lt;army|all&gt;]                (owner or operator)
+ * /rwarmy grants [player]
+ * /rwarmy players [prefix]                                            (owner or operator)
  * </pre>
  *
  * An NPC name selects loaded NPCs with exactly that name within the range (default 100, at most 220 blocks)
@@ -42,7 +47,8 @@ public class CommandRwArmy extends CommandBase {
     public static final double DEFAULT_RANGE = 100;
     public static final double MAX_RANGE = 220;
     private static final List<String> SUBCOMMANDS =
-            Arrays.asList("create", "assign", "unassign", "list", "info", "remove");
+            Arrays.asList("create", "assign", "unassign", "list", "info", "remove", "grant", "revoke", "grants",
+                    "players");
 
     @Override
     public String getName() {
@@ -52,30 +58,70 @@ public class CommandRwArmy extends CommandBase {
     @Override
     public String getUsage(ICommandSender sender) {
         return "/rwarmy create <army> [player|uuid:<uuid>|faction:<id>] | assign <army> <npc name|selector> [range]"
-                + " | unassign <npc name|selector> [range] | list | info <army> | remove <army>";
+                + " | unassign <npc name|selector> [range] | list | info <army> | remove <army>"
+                + " | grant <player> view|command <army|all> | revoke <player> view|command|all [army|all]"
+                + " | grants [player] | players [prefix]";
     }
 
     @Override
     public int getRequiredPermissionLevel() {
-        return 2;
+        return 0;
+    }
+
+    /** A vanilla player who is not an operator fails canUseCommand at every level, so level 0 alone is not enough. */
+    @Override
+    public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
+        return true;
+    }
+
+    /** The sender's rights at this moment: a deop or a revoked grant applies to the next command. */
+    static ArmyActor actor(ICommandSender sender) {
+        boolean operator = sender.canUseCommand(ArmyCommandService.OPERATOR_LEVEL, ArmyCommandService.COMMAND_NAME);
+        Entity e = sender.getCommandSenderEntity();
+        if (e instanceof EntityPlayerMP) {
+            return ArmyActor.player(e.getUniqueID(), operator);
+        }
+        return operator ? ArmyActor.SYSTEM : ArmyActor.NOBODY;
     }
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+        ArmyActor actor = actor(sender);
         String action = args.length == 0 ? "list" : args[0].toLowerCase(Locale.ROOT);
         if (action.equals("list")) {
-            for (String line : ArmyCommandService.describe(server)) {
+            for (String line : ArmyCommandService.describe(server, actor)) {
                 reply(sender, line);
             }
             return;
         }
+        if (action.equals("grant") && args.length == 4) {
+            reply(sender, ArmyCommandService.grant(server, actor, args[1], args[2].toLowerCase(Locale.ROOT),
+                    args[3]).message);
+            return;
+        }
+        if (action.equals("revoke") && (args.length == 3 || args.length == 4)) {
+            reply(sender, ArmyCommandService.revoke(server, actor, args[1], args[2].toLowerCase(Locale.ROOT),
+                    args.length == 4 ? args[3] : ArmyCommandService.ALL).message);
+            return;
+        }
+        if (action.equals("grants") && args.length <= 2) {
+            for (String line : ArmyCommandService.describeGrants(server, actor, args.length == 2 ? args[1] : null)) {
+                reply(sender, line);
+            }
+            return;
+        }
+        if (action.equals("players") && args.length <= 2) {
+            List<String> names = ArmyCommandService.candidates(server, actor, args.length == 2 ? args[1] : "");
+            reply(sender, "RWARMY players " + String.join(" ", names));
+            return;
+        }
         if (action.equals("create") && (args.length == 2 || args.length == 3)) {
             String owner = args.length == 3 ? ownerSpec(server, args[2]) : senderSpec(sender);
-            if (owner == null) {
+            if (owner == null && actor.operator()) {
                 reply(sender, "RWARMY create needs an owner: an online player, uuid:<uuid> or faction:<id>");
                 return;
             }
-            reply(sender, ArmyCommandService.create(server, args[1], owner).message);
+            reply(sender, ArmyCommandService.create(server, actor, args[1], owner).message);
             return;
         }
         if (action.equals("assign") && (args.length == 3 || args.length == 4)) {
@@ -85,7 +131,7 @@ public class CommandRwArmy extends CommandBase {
                 reply(sender, "RWARMY no NPC matches " + args[2]);
                 return;
             }
-            reply(sender, ArmyCommandService.assign(server, npcs, args[1]).message);
+            reply(sender, ArmyCommandService.assign(server, actor, npcs, args[1]).message);
             return;
         }
         if (action.equals("unassign") && (args.length == 2 || args.length == 3)) {
@@ -95,11 +141,11 @@ public class CommandRwArmy extends CommandBase {
                 reply(sender, "RWARMY no NPC matches " + args[1]);
                 return;
             }
-            reply(sender, ArmyCommandService.assign(server, npcs, "").message);
+            reply(sender, ArmyCommandService.assign(server, actor, npcs, "").message);
             return;
         }
         if (action.equals("info") && args.length == 2) {
-            Army army = ArmyCommandService.get(server, args[1]);
+            Army army = ArmyCommandService.get(server, actor, args[1]);
             if (army == null) {
                 reply(sender, "RWARMY unknown army " + args[1]);
                 return;
@@ -114,7 +160,7 @@ public class CommandRwArmy extends CommandBase {
             return;
         }
         if (action.equals("remove") && args.length == 2) {
-            reply(sender, ArmyCommandService.remove(server, args[1]).message);
+            reply(sender, ArmyCommandService.remove(server, actor, args[1]).message);
             return;
         }
         throw new WrongUsageException(getUsage(sender));
@@ -164,17 +210,36 @@ public class CommandRwArmy extends CommandBase {
             return getListOfStringsMatchingLastWord(args, SUBCOMMANDS);
         }
         String action = args[0].toLowerCase(Locale.ROOT);
+        ArmyActor actor = actor(sender);
         if (args.length == 2 && (action.equals("assign") || action.equals("info") || action.equals("remove"))) {
-            List<String> names = new ArrayList<String>();
-            for (Army a : ArmyCommandService.list(server)) {
-                names.add(a.name());
-            }
-            return getListOfStringsMatchingLastWord(args, names);
+            return getListOfStringsMatchingLastWord(args, visibleNames(server, actor));
         }
         if (args.length == 3 && action.equals("create")) {
             return getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames());
         }
+        if (args.length == 2 && (action.equals("grant") || action.equals("revoke") || action.equals("grants"))) {
+            return getListOfStringsMatchingLastWord(args, ArmyCommandService.candidates(server, actor, args[1]));
+        }
+        if (args.length == 3 && action.equals("grant")) {
+            return getListOfStringsMatchingLastWord(args, "view", "command");
+        }
+        if (args.length == 3 && action.equals("revoke")) {
+            return getListOfStringsMatchingLastWord(args, "view", "command", ArmyCommandService.ALL);
+        }
+        if (args.length == 4 && (action.equals("grant") || action.equals("revoke"))) {
+            List<String> names = visibleNames(server, actor);
+            names.add(ArmyCommandService.ALL);
+            return getListOfStringsMatchingLastWord(args, names);
+        }
         return new ArrayList<String>();
+    }
+
+    private static List<String> visibleNames(MinecraftServer server, ArmyActor actor) {
+        List<String> names = new ArrayList<String>();
+        for (Army a : ArmyCommandService.list(server, actor)) {
+            names.add(a.name());
+        }
+        return names;
     }
 
     private static void reply(ICommandSender sender, String message) {
