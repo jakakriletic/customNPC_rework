@@ -27,6 +27,11 @@ public final class BlendServer {
 
     static boolean enabled() { return channel != null; }
 
+    /** P7c: one reload message to one player. */
+    static void sendRaw(EntityPlayerMP player, byte[] data) {
+        channel.sendTo(new FMLProxyPacket(new PacketBuffer(Unpooled.wrappedBuffer(data)), BlendCodec.CHANNEL), player);
+    }
+
     /** Server thread. @return number of players the blend went to */
     static int send(Entity npc, int token, int ticks) {
         if (channel == null || !(npc.world instanceof WorldServer)) { return 0; }

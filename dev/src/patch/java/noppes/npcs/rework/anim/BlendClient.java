@@ -25,6 +25,23 @@ public final class BlendClient {
     @SubscribeEvent
     public void onClientPacket(FMLNetworkEvent.ClientCustomPacketEvent event) {
         ByteBuf payload = event.getPacket().payload();
+        // P7c: reload messages share the channel; the first byte tells them from a blend.
+        int size = payload.readableBytes();
+        if (size > 0 && ReloadCodec.isReload(payload.getByte(payload.readerIndex()))) {
+            ReloadCodec.Message reload = null;
+            if (size <= ReloadCodec.MAX_MESSAGE) {
+                byte[] data = new byte[size];
+                payload.getBytes(payload.readerIndex(), data);
+                reload = ReloadCodec.decode(data);
+            }
+            if (reload == null) {
+                synchronized (AnimBlend.class) { AnimBlend.rejected++; }
+                return;
+            }
+            final ReloadCodec.Message message = reload;
+            Minecraft.getMinecraft().addScheduledTask(() -> ReloadClient.handle(message));
+            return;
+        }
         BlendCodec.Message m = null;
         if (payload.readableBytes() == BlendCodec.SIZE) {
             byte[] data = new byte[BlendCodec.SIZE];
@@ -47,6 +64,6 @@ public final class BlendClient {
 
     @SubscribeEvent
     public void onDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
-        Minecraft.getMinecraft().addScheduledTask(AnimBlend::clear);
+        Minecraft.getMinecraft().addScheduledTask(() -> { AnimBlend.clear(); ReloadClient.disconnected(); });
     }
 }

@@ -70,7 +70,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwPathResume` | 0 | walking/flying NPCs continue partial paths to goals beyond the navigation range |
 | `RwFlyLineOfSight` | 0 | flying NPCs follow paths around corners instead of flying at walls |
 | `RwNavBackend` | 0 | permits NPCs with per-NPC `RwNavBackend=1` to use Baritone (needs the `npcbaritone` library) |
-| `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`); >=1 also enables `blendTo` (set on server and clients) |
+| `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`); >=1 also enables `blendTo` and `/npcanim` (set on server and clients) |
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
 | `RwJavaClasspath` | empty | enables Java scripts (see §4); `auto` = classpath built from the running server |
 
@@ -93,6 +93,12 @@ the stored flight mode; Hover applies only while flying. A new NPC defaults to O
 `/rwcollide`, `/rwdata`, `/rwmove`, `/rwblink`, `/rwcore`. Runtime changes made by a command
 are not written to the config.
 
+With `RwAnimHooks>=1`: `/npcanim reload [entityId]` loads animations from
+`config/customnpcs/animations/<entityId>.animation.json` (no file = the clips from the mod jar) and
+`/npcanim status` shows the current revision. Every player online must accept the files first;
+otherwise nothing changes. Running actions and `Animators` queues of the changed NPCs are stopped.
+The reload lasts until the server stops.
+
 ## 4. Java NPC scripts
 
 - **Trusted script authors only.** Java runs with the full permissions of the server process;
@@ -112,6 +118,7 @@ are not written to the config.
   items, blocks, quests, dialogs and factions in Java are planned for v2.
 - Animations: `Animators.of(npc)` (`play`, `blendTo`, `queue`, `stop`, `getClip`, `getTick`, `getClips`) works
   only with `customnpcentities` 0.7.0; without it `isAvailable()` is false and calls do nothing.
+  After `/npcanim reload` a queued or running clip of a changed NPC is stopped; play it again.
 
 ## 5. Migration and rollback
 
@@ -165,7 +172,10 @@ Not proven, so not claimed:
   The pose moves linearly from the last drawn pose over 0–200 ticks; a new action interrupts, death is never
   blended. Tested on an integrated dev client only, not on a dedicated server or packaged client; a player
   who starts tracking the NPC mid-blend sees the plain clip; client cost not measured.
-  `/npcanim reload` is still unavailable (P7c).
+- `/npcanim reload` (P7c, [note](meritve/2026-11-01-P7c-reload.md)): needs `RwAnimHooks>=1`. Tested on
+  a dev client with an integrated and a dev dedicated server and one player; packaged pairs not tested
+  and cost not measured. A player who refuses or does not confirm within 10 s aborts the reload; a
+  player joining later who cannot accept the files is disconnected. Not kept across a server restart.
 - Java scripts (P5, Q263–Q268): `RwJavaClasspath=auto` and Java in the player/forge/block/door/item
   GUIs were tested on a packaged Forge server without other mods. Classes that other mods change
   with coremods or mixins are seen in their Forge form; no real modpack was tested (Q1).

@@ -35,7 +35,7 @@ Pravila spodaj (Q90, Q92) veljajo naprej; po popravku kode se zahtevana serija s
 | ~~P4~~ | formacije — sprejet po merilih Q257 (G/O 8/8 mest, FA5 G 1 ≤ 1, zaostanek ≤ 1,1; izvirni skupni cilj/premer NOTE, F1–F12 odprti) | izpolni merila D-079 |
 | ~~P5~~ | Java scripting — sprejet (Java v 5 handlerjih JS = Java, `RwJavaClasspath=auto` na pakiranem Forge; pravi modpack ni preverjen, Q1) | Java tudi v player/forge/block/door/item GUI; samodejni `RwJavaClasspath` |
 | ~~P6~~ | `RwFlightMode` — GUI Original/Hover sprejet (137/137, clone/restart; omejitev PNG Q271) | GUI za izbiro načina |
-| P7 | animacije — [P7.0 raziskava](raziskave/P7.0-animacije-razsiritev.md) (D-098); razdeljen (Q277): ~~P7a~~ točen dnevnik + walk/idle/death sprejet ([zapis](meritve/2026-11-01-P7a-dnevnik-animacij.md)); ~~P7b~~ `blendTo` s klientskim prehodom sprejet ([zapis](meritve/2026-11-01-P7b-blendto.md), Q286); **P7c** `/npcanim reload` naslednji (Q283) | walk/idle/death hooki, dogodki ustavljenega koraka, `blendTo`, `/npcanim reload` |
+| ~~P7~~ | animacije — sprejet v treh delih; [P7.0 raziskava](raziskave/P7.0-animacije-razsiritev.md) (D-098); razdeljen (Q277): ~~P7a~~ točen dnevnik + walk/idle/death sprejet ([zapis](meritve/2026-11-01-P7a-dnevnik-animacij.md)); ~~P7b~~ `blendTo` s klientskim prehodom sprejet ([zapis](meritve/2026-11-01-P7b-blendto.md), Q286); ~~P7c~~ `/npcanim reload` s potrditvijo klientov sprejet ([zapis](meritve/2026-11-01-P7c-reload.md), Q291); **P8 naslednji** | walk/idle/death hooki, dogodki ustavljenega koraka, `blendTo`, `/npcanim reload` |
 | P8 | Baritone | odprte cenovne meje M4.15a |
 
 Ne v tem sklopu: M10.3/IO4 (pravi modpack, blokiran na Q1). Po P1–P8 upravljalnik ne začne v2

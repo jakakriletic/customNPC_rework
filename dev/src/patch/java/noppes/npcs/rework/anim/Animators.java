@@ -66,6 +66,12 @@ public final class Animators {
         return handle;
     }
 
+    /** P7c: a reload changes the clips this NPC's queue names. */
+    static synchronized void clearQueue(EntityNPCInterface npc) {
+        Handle handle = HANDLES.get(npc);
+        if (handle != null) { handle.queue.clear(); update(handle); }
+    }
+
     private static synchronized void update(Handle handle) {
         if (handle.queue.hasPending()) { PENDING.add(handle); }
         else { PENDING.remove(handle); }

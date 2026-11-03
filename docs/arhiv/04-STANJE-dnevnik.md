@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 202 → 1)
+# Arhiv: dnevnik sej (vnosi 203 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-01 (203) — P7a: točen dnevnik animacij in walk/idle/death hooki (sprejet)
+
+**Paket:** P7a (Q248, Q277–Q281, D-098) · **Stanje:** sprejet na poskusu 1; `RwAnimHooks` privzeto 0.
+Coremod pri `RwAnimHooks>=1` ob nalaganju vstavi klice dnevnika v `EntityAnimatedNpc` 0.7.0 (vzorci preverjeni, pri
+neujemanju isti bajti in hooki izklopljeni); hooki tečejo ob END v točnem vrstnem redu. Na 84bbd8da… PASS: bite, 4 prehodi v
+ticku, stop v ticku hita (10, prej izgubljen) in pri 18 (`finished=false`), pri 2 walk→idle in smrt; JS = Java, pri 0
+razred nedotaknjen. Cena v mirovanju 0,35/2,92 µs na tick (podatek). Fikstura h2 popravljena brez novega poskusa (Q281).
+Naslednji P7b (`blendTo`, `/npcanim reload`, klient). [Zapis](../meritve/2026-11-01-P7a-dnevnik-animacij.md).
 
 ### 2026-10-30 (202) — P7.0: izvedbena raziskava animacij (zaključena)
 

@@ -148,6 +148,8 @@ import noppes.npcs.rework.far.FarRegistry;
 import noppes.npcs.rework.far.FarServer;
 import noppes.npcs.rework.anim.AnimationHooks;
 import noppes.npcs.rework.anim.BlendServer;
+import noppes.npcs.rework.anim.CommandNpcAnim;
+import noppes.npcs.rework.anim.ReloadServer;
 import noppes.npcs.rework.script.AutoClasspath;
 import noppes.npcs.rework.script.hooks.JavaLanguage;
 
@@ -336,6 +338,8 @@ public class CustomNpcs {
             AnimationHooks.install(RwAnimHooks);
             // P7b: rwanim channel for IAnimator.blendTo; the client also gets its receiver.
             BlendServer.init();
+            // P7c: /npcanim reload transaction on the same channel.
+            ReloadServer.install();
             if (ev.getSide().isClient()) {
                 try {
                     Class.forName("noppes.npcs.rework.anim.BlendClient").getMethod("install").invoke(null);
@@ -456,6 +460,7 @@ public class CustomNpcs {
         DiagChunkLoader.disable();
         SquadManager.clear();
         HitboxTrack.stop();
+        ReloadServer.stopped();
         if (!WorldSaveSession.end(30L, TimeUnit.SECONDS)) {
             LogWriter.error("CustomNPCs world save queue did not drain cleanly before shutdown");
         }
@@ -510,6 +515,8 @@ public class CustomNpcs {
         event.registerServerCommand((ICommand)new CommandRwSquad());
         event.registerServerCommand((ICommand)new CommandRwNav());
         event.registerServerCommand((ICommand)new CommandRwHitbox());
+        // P7c: only the switch adds the reload command.
+        if (RwAnimHooks >= 1) { event.registerServerCommand((ICommand)new CommandNpcAnim()); }
         EntityNPCInterface.ChatEventPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.ChatEventProfile);
         EntityNPCInterface.CommandPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.CommandProfile);
         EntityNPCInterface.GenericPlayer = new FakePlayer(event.getServer().getWorld(0), (GameProfile)EntityNPCInterface.GenericProfile);

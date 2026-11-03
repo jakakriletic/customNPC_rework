@@ -126,6 +126,14 @@ afterEvaluate {
                     setArgs(launchArgs)
                 }
             }
+            // P7c: a dedicated-server harness needs a known operator name across reconnects.
+            if (taskName == 'runClient' && project.hasProperty('rwUsername')) {
+                def launchArgs = new ArrayList(args)
+                def usernameIndex = launchArgs.indexOf('--username')
+                if (usernameIndex >= 0) { launchArgs.set(usernameIndex + 1, project.property('rwUsername')) }
+                else { launchArgs.addAll(['--username', project.property('rwUsername')]) }
+                setArgs(launchArgs)
+            }
             if (project.hasProperty('npcBaritoneDev')) {
                 classpath += files("${npcBaritoneModDir}/build/classes/java/main",
                                    "${npcBaritoneModDir}/build/resources/main")
@@ -372,6 +380,10 @@ task testOriginal(type: Test) {
     exclude '**/PoseBlendTest.class'
     exclude '**/BlendCodecTest.class'
     exclude '**/AnimatedModelPatchTest.class'
+    // P7c: reload codec, file validator and transaction are new.
+    exclude '**/ReloadCodecTest.class'
+    exclude '**/AnimFileValidatorTest.class'
+    exclude '**/ReloadTxnTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

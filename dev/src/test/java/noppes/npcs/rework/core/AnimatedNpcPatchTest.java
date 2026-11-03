@@ -61,7 +61,7 @@ public class AnimatedNpcPatchTest {
         for (MethodNode m : n.methods) {
             if (!m.name.equals(method)) { continue; }
             for (AbstractInsnNode i = m.instructions.getFirst(); i != null; i = i.getNext()) {
-                if (i instanceof MethodInsnNode && ((MethodInsnNode) i).owner.equals(AnimatedNpcPatch.HOOKS)) { out.add(((MethodInsnNode) i).name); }
+                if (i instanceof MethodInsnNode && (((MethodInsnNode) i).owner.equals(AnimatedNpcPatch.HOOKS) || ((MethodInsnNode) i).owner.equals(AnimatedNpcPatch.RELOAD))) { out.add(((MethodInsnNode) i).name); }
             }
         }
         return out;
@@ -73,6 +73,13 @@ public class AnimatedNpcPatchTest {
         AbstractInsnNode[] all = m.instructions.toArray();
         for (int i = 0; i < all.length; i++) {
             if (all[i].getOpcode() < 0) { continue; }
+            // P7c: aload_0, library call and checkcast before the areturn of animations().
+            if (strip && all[i] instanceof MethodInsnNode && ((MethodInsnNode) all[i]).owner.equals(AnimatedNpcPatch.RELOAD)) {
+                out.remove(out.size() - 1);
+                i++;
+                while (all[i].getOpcode() < 0) { i++; }
+                continue;
+            }
             out.add(all[i].getOpcode());
             if (strip && all[i] instanceof MethodInsnNode && ((MethodInsnNode) all[i]).owner.equals(AnimatedNpcPatch.HOOKS)) {
                 int args = ((MethodInsnNode) all[i]).desc.startsWith("(Ljava/lang/Object;I") ? 4 : 2;
@@ -92,6 +99,7 @@ public class AnimatedNpcPatchTest {
         assertEquals("[beforeStop]", calls(n, "stopAction").toString());
         assertEquals("[serverEvent]", calls(n, "onServerEvent").toString());
         assertEquals("[naturalEnd]", calls(n, "tickAnimation").toString());
+        assertEquals("[library]", calls(n, "animations").toString());
         assertEquals(o.methods.size(), n.methods.size());
         for (int i = 0; i < n.methods.size(); i++) {
             MethodNode m = n.methods.get(i);
@@ -121,6 +129,16 @@ public class AnimatedNpcPatchTest {
                 if (i instanceof MethodInsnNode && ((MethodInsnNode) i).name.equals("onActionEnd")) { ((MethodInsnNode) i).name = "onActionEnded"; }
             }
         }
+        ClassWriter w = new ClassWriter(0);
+        n.accept(w);
+        byte[] changed = w.toByteArray();
+        assertSame(changed, AnimatedNpcPatch.instrument(changed));
+        assertEquals("0", System.getProperty(AnimatedNpcPatch.PROP_PATCH));
+    }
+
+    @Test public void missingAnimationsMethodReturnsTheSameBytes() throws Exception {
+        ClassNode n = node(original());
+        for (MethodNode m : n.methods) { if (m.name.equals("animations")) { m.name = "library"; } }
         ClassWriter w = new ClassWriter(0);
         n.accept(w);
         byte[] changed = w.toByteArray();

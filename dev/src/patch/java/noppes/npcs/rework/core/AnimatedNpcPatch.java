@@ -15,6 +15,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
 /**
@@ -25,7 +26,9 @@ import org.objectweb.asm.tree.VarInsnNode;
  * {@code startAction(I)V}, head of {@code stopAction()V}, head of {@code onServerEvent(I,AnimEvent)V}
  * and right after the one {@code stopAction} in {@code tickAnimation()V} that is followed by
  * {@code onActionEnd} (the natural end). Each insertion leaves the operand stack as it was, so frames
- * stay valid; only max stack is recomputed. Every pattern is checked before anything changes; a
+ * stay valid; only max stack is recomputed. P7c (Q275): the one {@code areturn} of {@code animations()} also
+ * goes through {@code noppes.npcs.rework.anim.AnimReload.library}, which selects a reloaded snapshot.
+ * Every pattern is checked before anything changes; a
  * mismatch returns the original bytes (all or nothing) and the hooks stay off. The entities jar
  * itself is never changed. With 0 the class passes through untouched.
  */
@@ -35,6 +38,7 @@ public final class AnimatedNpcPatch {
     public static final String PROP_PATCH = "rwcore.animpatch";
     static final String HOOKS = "noppes/npcs/rework/anim/AnimJournal";
     static final String EVENT_DESC = "(ILdev/jakak/customnpcentities/anim/AnimEvent;)V";
+    static final String LIBRARY = "dev/jakak/customnpcentities/anim/AnimLibrary", RELOAD = "noppes/npcs/rework/anim/AnimReload";
     private static final String NPC_DESC = "(Ljava/lang/Object;)V";
     private static final Logger LOG = LogManager.getLogger("customnpcs-rework-core");
 
@@ -76,9 +80,18 @@ public final class AnimatedNpcPatch {
             MethodNode stop = method(node, "stopAction", "()V");
             MethodNode event = method(node, "onServerEvent", EVENT_DESC);
             MethodNode tick = method(node, "tickAnimation", "()V");
-            if (start == null || stop == null || event == null || tick == null) {
-                return fail(basicClass, "manjka startAction/stopAction/onServerEvent/tickAnimation");
+            MethodNode animations = method(node, "animations", "()L" + LIBRARY + ";");
+            if (start == null || stop == null || event == null || tick == null || animations == null) {
+                return fail(basicClass, "manjka startAction/stopAction/onServerEvent/tickAnimation/animations");
             }
+            AbstractInsnNode libraryReturn = null;
+            for (AbstractInsnNode n = animations.instructions.getFirst(); n != null; n = n.getNext()) {
+                if (n.getOpcode() == Opcodes.ARETURN) {
+                    if (libraryReturn != null) { return fail(basicClass, "animations ima vec kot en areturn"); }
+                    libraryReturn = n;
+                }
+            }
+            if (libraryReturn == null) { return fail(basicClass, "animations brez areturn"); }
             List<AbstractInsnNode> returns = new ArrayList<>();
             for (AbstractInsnNode n = start.instructions.getFirst(); n != null; n = n.getNext()) {
                 if (n.getOpcode() == Opcodes.RETURN) { returns.add(n); }
@@ -102,6 +115,11 @@ public final class AnimatedNpcPatch {
             stop.instructions.insert(call("beforeStop", false));
             event.instructions.insert(call("serverEvent", true));
             tick.instructions.insert(natural, call("naturalEnd", false));
+            InsnList library = new InsnList();
+            library.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            library.add(new MethodInsnNode(Opcodes.INVOKESTATIC, RELOAD, "library", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", false));
+            library.add(new TypeInsnNode(Opcodes.CHECKCAST, LIBRARY));
+            animations.instructions.insertBefore(libraryReturn, library);
             ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             node.accept(writer);
             byte[] out = writer.toByteArray();
