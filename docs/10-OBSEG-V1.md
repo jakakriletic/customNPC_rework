@@ -41,6 +41,21 @@ Pravila spodaj (Q90, Q92) veljajo naprej; po popravku kode se zahtevana serija s
 Ne v tem sklopu: M10.3/IO4 (pravi modpack, blokiran na Q1). Po P1–P8 upravljalnik ne začne v2
 paketov, ampak počaka na odločitev lastnika o izdaji.
 
+## Odločitev o izdaji in začetek v2 (Q295, odločitev lastnika 3. 11. 2026)
+
+**v1.0 je sprejet z vsemi omejitvami v `UPORABNIKI.md` §6** (P1–P8 zaključeni; M10.3/Q1 ostane
+odprt, ne blokira). Razvoj gre naprej v v2. **Prvi v v2 je M11 (vojske in poveljevanje prek
+zemljevida)**, ker je lastniku najpomembnejši; ostali v2 paketi pridejo za njim.
+
+- Vhodni pogoj M11 iz `03-FAZE.md` (M4.14d, M4.14c, M4.10, M5) **se ne čaka**: velja trenutno stanje
+  z omejitvami (formacije po Q257, M4.14d odložen). Kjer M11 potrebuje manjkajoč del, ga upravljalnik
+  vzame v obseg M11 ali zapiše omejitev.
+- Začni z M11.0: preveri [raziskavo](raziskave/M11.0-vojske-prek-zemljevida.md) proti trenutni kodi
+  in razdeli M11.1–M11.10 na pakete; odprta Q14 in ostala vprašanja M11 odloči upravljalnik sam
+  (DIRECT OWNER INSTRUCTION) in jih zapiše.
+- Pravila Q90, Q92 (stikalo privzeto 0, največ 2 poskusa, kratki zapisi) in Q250 (≤ 30 min na test)
+  veljajo naprej. Vsak M11 paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`.
+
 ## Prestavljeno v v2 (po izdaji v1.0)
 
 M3.10, M4.5, M4.6, M4.7, M4.8, M4.11, M4.13, M4.14c, M4.14d, M5.10, M7.11, M9 (chatbot),
