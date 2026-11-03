@@ -43,8 +43,16 @@ public final class Army {
     private final String owner;
     private final String ownerName;
     private final long created;
+    /** M11.2: last known position of the main cluster; {@link #lastSeen} is negative without one. */
+    private final int lastDimension, lastX, lastY, lastZ;
+    private final long lastSeen;
 
     public Army(String name, OwnerType ownerType, String owner, String ownerName, long created) {
+        this(name, ownerType, owner, ownerName, created, 0, 0, 0, 0, -1);
+    }
+
+    private Army(String name, OwnerType ownerType, String owner, String ownerName, long created, int lastDimension,
+            int lastX, int lastY, int lastZ, long lastSeen) {
         if (!validName(name)) {
             throw new IllegalArgumentException("invalid army name: " + name);
         }
@@ -56,6 +64,16 @@ public final class Army {
         this.owner = canonicalOwner(ownerType, owner);
         this.ownerName = ownerName == null ? "" : ownerName;
         this.created = created;
+        this.lastDimension = lastDimension;
+        this.lastX = lastX;
+        this.lastY = lastY;
+        this.lastZ = lastZ;
+        this.lastSeen = lastSeen;
+    }
+
+    /** The same army with a new last known position. */
+    Army withLast(int dimension, int x, int y, int z, long seen) {
+        return new Army(name, ownerType, owner, ownerName, created, dimension, x, y, z, seen);
     }
 
     /** 1-32 letters, digits, '_' or '-'; the name is a command argument and an NBT string. */
@@ -111,6 +129,27 @@ public final class Army {
         return created;
     }
 
+    public int lastDimension() {
+        return lastDimension;
+    }
+
+    public int lastX() {
+        return lastX;
+    }
+
+    public int lastY() {
+        return lastY;
+    }
+
+    public int lastZ() {
+        return lastZ;
+    }
+
+    /** Total world time of the last known position, negative without one. */
+    public long lastSeen() {
+        return lastSeen;
+    }
+
     /** Owner as written in commands and the script API: {@code uuid:<uuid>} or {@code faction:<id>}. */
     public String ownerSpec() {
         return (ownerType == OwnerType.PLAYER ? "uuid:" : "faction:") + owner;
@@ -125,6 +164,10 @@ public final class Army {
             c.setString("OwnerName", ownerName);
         }
         c.setLong("Created", created);
+        if (lastSeen >= 0) {
+            c.setIntArray("Last", new int[] {lastDimension, lastX, lastY, lastZ});
+            c.setLong("LastSeen", lastSeen);
+        }
         return c;
     }
 
@@ -138,7 +181,11 @@ public final class Army {
         if (type == null || !validName(name) || canonicalOwner(type, c.getString("Owner")) == null) {
             return null;
         }
-        return new Army(name, type, c.getString("Owner"), c.getString("OwnerName"), c.getLong("Created"));
+        Army army = new Army(name, type, c.getString("Owner"), c.getString("OwnerName"), c.getLong("Created"));
+        int[] last = c.getIntArray("Last");
+        // A broken position is only a position less, not a broken army.
+        return last.length == 4 && c.hasKey("LastSeen", 4) && c.getLong("LastSeen") >= 0
+                ? army.withLast(last[0], last[1], last[2], last[3], c.getLong("LastSeen")) : army;
     }
 
     @Override
@@ -148,7 +195,8 @@ public final class Army {
         }
         Army a = (Army) o;
         return name.equals(a.name) && ownerType == a.ownerType && owner.equals(a.owner)
-                && ownerName.equals(a.ownerName) && created == a.created;
+                && ownerName.equals(a.ownerName) && created == a.created && lastSeen == a.lastSeen
+                && lastDimension == a.lastDimension && lastX == a.lastX && lastY == a.lastY && lastZ == a.lastZ;
     }
 
     @Override

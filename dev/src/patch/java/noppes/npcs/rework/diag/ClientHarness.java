@@ -193,6 +193,7 @@ public final class ClientHarness {
             // P7b: blendTo pose acceptance with the optional entities mod, explicit functional job.
             if (AnimBlendHarness.installIfRequested(path)) { return; }
             if (AnimReloadHarness.installIfRequested(path)) { return; }
+            if (ArmySnapshotHarness.installIfRequested(path)) { return; }
             HarnessJob job = HarnessJob.load(new File(path));
             MinecraftForge.EVENT_BUS.register(new ClientHarness(job));
             System.out.println("RWHARNESS-INSTALL world=" + job.world + " out=" + job.out);

@@ -37,6 +37,7 @@ import noppes.npcs.entity.EntityNPCInterface;
  * /rwarmy revoke &lt;player&gt; view|command|all [&lt;army|all&gt;]                (owner or operator)
  * /rwarmy grants [player]
  * /rwarmy players [prefix]                                            (owner or operator)
+ * /rwarmy clusters [army]                                             (view right; M11.2)
  * </pre>
  *
  * An NPC name selects loaded NPCs with exactly that name within the range (default 100, at most 220 blocks)
@@ -48,7 +49,7 @@ public class CommandRwArmy extends CommandBase {
     public static final double MAX_RANGE = 220;
     private static final List<String> SUBCOMMANDS =
             Arrays.asList("create", "assign", "unassign", "list", "info", "remove", "grant", "revoke", "grants",
-                    "players");
+                    "players", "clusters");
 
     @Override
     public String getName() {
@@ -60,7 +61,7 @@ public class CommandRwArmy extends CommandBase {
         return "/rwarmy create <army> [player|uuid:<uuid>|faction:<id>] | assign <army> <npc name|selector> [range]"
                 + " | unassign <npc name|selector> [range] | list | info <army> | remove <army>"
                 + " | grant <player> view|command <army|all> | revoke <player> view|command|all [army|all]"
-                + " | grants [player] | players [prefix]";
+                + " | grants [player] | players [prefix] | clusters [army]";
     }
 
     @Override
@@ -113,6 +114,12 @@ public class CommandRwArmy extends CommandBase {
         if (action.equals("players") && args.length <= 2) {
             List<String> names = ArmyCommandService.candidates(server, actor, args.length == 2 ? args[1] : "");
             reply(sender, "RWARMY players " + String.join(" ", names));
+            return;
+        }
+        if (action.equals("clusters") && args.length <= 2) {
+            for (String line : ArmyCommandService.describeClusters(server, actor, args.length == 2 ? args[1] : null)) {
+                reply(sender, line);
+            }
             return;
         }
         if (action.equals("create") && (args.length == 2 || args.length == 3)) {
@@ -211,7 +218,8 @@ public class CommandRwArmy extends CommandBase {
         }
         String action = args[0].toLowerCase(Locale.ROOT);
         ArmyActor actor = actor(sender);
-        if (args.length == 2 && (action.equals("assign") || action.equals("info") || action.equals("remove"))) {
+        if (args.length == 2 && (action.equals("assign") || action.equals("info") || action.equals("remove")
+                || action.equals("clusters"))) {
             return getListOfStringsMatchingLastWord(args, visibleNames(server, actor));
         }
         if (args.length == 3 && action.equals("create")) {

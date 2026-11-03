@@ -387,6 +387,8 @@ task testOriginal(type: Test) {
     // M11.1: the army register and the RwArmy NPC key are new.
     exclude '**/ArmyRegistryTest.class'
     exclude '**/ArmyGrantsTest.class'
+    // M11.2: clusters and the snapshot channel are new.
+    exclude '**/ArmySnapshotTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

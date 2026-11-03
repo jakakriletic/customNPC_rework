@@ -52,6 +52,25 @@ public final class ArmyRegistry {
         return army;
     }
 
+    /**
+     * M11.2: the main cluster of this army is here now. The position changes only after a move of at least
+     * {@link ArmySnapshot#LAST_MOVE} blocks or to another dimension, so a standing army never makes the file dirty.
+     *
+     * @return true when the position changed and the register has to be saved
+     */
+    boolean noteSeen(String key, int dimension, int x, int y, int z, long time) {
+        Army a = armies.get(key);
+        if (a == null) {
+            return false;
+        }
+        boolean moved = a.lastSeen() < 0 || a.lastDimension() != dimension
+                || Math.abs(a.lastX() - x) >= ArmySnapshot.LAST_MOVE || Math.abs(a.lastY() - y) >= ArmySnapshot.LAST_MOVE
+                || Math.abs(a.lastZ() - z) >= ArmySnapshot.LAST_MOVE;
+        armies.put(key, moved ? a.withLast(dimension, x, y, z, time)
+                : a.withLast(a.lastDimension(), a.lastX(), a.lastY(), a.lastZ(), time));
+        return moved;
+    }
+
     public ArmyGrants grants() {
         return grants;
     }

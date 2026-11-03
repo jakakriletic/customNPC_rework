@@ -26,6 +26,8 @@ script API and adds, behind settings:
 - **Back up the whole world folder and `config/` before the first start** (see §5).
 - On first start, missing `Rw…` keys are added to `config/CustomNpcs.cfg` with the defaults below.
   Keys already present keep their value.
+- Armies: for the snapshot set `RwArmies=1` on the server and on clients. A client with 1 on a server with
+  0 gets no answer and stays connected; a client with 0 on a server with 1 was not tested.
 
 ## 3. Global settings (`config/CustomNpcs.cfg`)
 
@@ -72,7 +74,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwNavBackend` | 0 | permits NPCs with per-NPC `RwNavBackend=1` to use Baritone (needs the `npcbaritone` library) |
 | `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`); >=1 also enables `blendTo` and `/npcanim` (set on server and clients) |
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
-| `RwArmies` | 0 | armies: `/rwarmy` and `ArmyApi`, register saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs) |
+| `RwArmies` | 0 | armies: `/rwarmy`, `ArmyApi` and the channel `rwarmy`, register saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs); also `RwArmyClusterRadius` (48, 1–512), `RwArmyClusterMin` (8, 1–1024) |
 | `RwJavaClasspath` | empty | enables Java scripts (see §4); `auto` = classpath built from the running server |
 
 ### Per-NPC settings (saved in the NPC)
@@ -114,6 +116,11 @@ Army permissions: an op creates armies. The owner (own armies) or an op (all arm
 `view` and allows `assign` and `unassign`. `all` also covers later armies: the owner's own, or every army
 when an op grants it. Only the owner or an op removes an army. Rights are checked on every command, so a
 revoke or deop applies to the next one. An army you may not see answers as `unknown army`.
+
+`/rwarmy clusters [army]` shows the clusters of the armies you may see: members within
+`RwArmyClusterRadius` blocks horizontally form one cluster. The largest is the main one, a smaller one with at least
+`RwArmyClusterMin` members is a group, the rest are stragglers. An army with no loaded members stays listed with
+its last known position.
 
 ## 4. Java NPC scripts
 
@@ -204,13 +211,16 @@ Not proven, so not claimed:
   toast covers the new button; its label and bounds were checked by the GUI harness. Packaged
   and dedicated clients were not tested for P6. Momentum flight mode stays v2 and cannot be
   selected in the GUI; an existing NBT value of 2 is preserved.
-- Armies (`RwArmies`, M11.1/M11.1b, [note](meritve/2026-11-03-M11.1-register.md),
-  [permissions](meritve/2026-11-03-M11.1b-dovoljenja.md)): only the register, names, commands and permissions; armies do not move or
+- Armies (`RwArmies`, M11.1/M11.1b/M11.2, [note](meritve/2026-11-03-M11.1-register.md),
+  [permissions](meritve/2026-11-03-M11.1b-dovoljenja.md), [clusters](meritve/2026-11-03-M11.2-grozdi-posnetek.md)): only the register, names, commands, permissions and clusters; armies do not move or
   fight together yet, so `command` means only `assign` and `unassign`. An NPC without an army can be
   assigned only by an op or a script. Faction membership gives no rights. Permissions have no GUI yet
   (M11.8b) and were tested with stand-in players, without a real client. `members`, `list` and `info`
   count loaded NPCs only; after `remove`, NPCs in unloaded chunks keep the old name without effect.
-  Tested on a dev dedicated server only.
+  The register and permissions were tested on a dev dedicated server only. Clusters and the snapshot were tested
+  with one real dev client on a dev dedicated server, not on integrated or packaged pairs; nothing on the client draws
+  the snapshot yet (staff GUI M11.8a, map M11.7) and its cost was not measured (M11.10). After a restart the
+  time of the last position can be older than the last time the army was seen; the position itself is kept.
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).

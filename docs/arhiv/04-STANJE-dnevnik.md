@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 207 → 1)
+# Arhiv: dnevnik sej (vnosi 208 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,16 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (208) — M11.1: register vojsk, `RwArmy` in `/rwarmy` (sprejet)
+
+**Paket:** M11.1 (Q296–Q299, Q303–Q308) · **Stanje:** sprejet na poskusu 1; `RwArmies` privzeto 0.
+Nov `rework/army`: register v `data/rwarmies.dat` (ime brez velikih črk, lastnik UUID ali frakcija), NBT `RwArmy` na NPC-ju,
+`ArmyCommandService` v0, `ArmyApi` in `/rwarmy create/assign/unassign/list/info/remove` (op). Pri 0 ni ukaza, register ni
+naložen, ime na NPC-ju ohranjeno. Na c9e0493a… PASS: unit (`ArmyRegistryTest` 13), build, package, `m111-army-v2` 68/68
+(create/assign/API 16/16/restart/izklop). Padca unit (inicializacija) in `m111-army-v1` (harness brez vsiljenih chunkov) nista
+poskusa (Q307/Q308). Omejitve: brez dovoljenj, štejejo samo naloženi člani, sirote po `remove`. Naslednji M11.1b.
+[Zapis](../meritve/2026-11-03-M11.1-register.md).
 
 ### 2026-11-03 (207) — M11.0: preverba raziskave vojsk in razrez M11 (raziskava)
 

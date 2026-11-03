@@ -2,8 +2,10 @@ package noppes.npcs.rework.army;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -50,12 +52,22 @@ public final class ArmyCommandService {
     /** Copy of CustomNpcs.RwArmies, set at server start, so this class never initializes CustomNpcs. */
     private static volatile int armies;
 
+    /** Copies of RwArmyClusterRadius and RwArmyClusterMin, for the same reason. */
+    private static volatile int clusterRadius = ArmyClusters.DEFAULT_RADIUS;
+    private static volatile int clusterMin = ArmyClusters.DEFAULT_MIN_MEMBERS;
+
     private ArmyCommandService() {
     }
 
     /** Called from CustomNpcs at server start (and by unit tests). */
     public static void setSwitch(int value) {
         armies = value;
+    }
+
+    /** Called with {@link #setSwitch}; values are clamped to their limits. */
+    public static void setClusters(int radius, int minMembers) {
+        clusterRadius = ArmyClusters.clampRadius(radius);
+        clusterMin = ArmyClusters.clampMinMembers(minMembers);
     }
 
     public static boolean enabled() {
@@ -507,6 +519,69 @@ public final class ArmyCommandService {
             }
         }
         return out;
+    }
+
+    /**
+     * M11.2: what this actor may see right now, on request only; null with RwArmies=0 or without a world. One pass
+     * over the loaded entities. Also keeps the last known positions, the only thing a request writes.
+     */
+    public static ArmySnapshot snapshot(MinecraftServer server, ArmyActor actor, int requestId) {
+        if (!enabled()) {
+            return null;
+        }
+        ArmyRegistry reg = registry(server);
+        if (reg == null) {
+            return null;
+        }
+        Map<String, List<ArmyClusters.Point>> byKey = new HashMap<String, List<ArmyClusters.Point>>();
+        for (WorldServer world : server.worlds) {
+            int dimension = world.provider.getDimension();
+            for (Entity e : world.loadedEntityList) {
+                if (e instanceof EntityNPCInterface && !e.isDead) {
+                    String name = ((EntityNPCInterface) e).getRwArmy();
+                    if (!name.isEmpty()) {
+                        String key = Army.key(name);
+                        List<ArmyClusters.Point> points = byKey.get(key);
+                        if (points == null) {
+                            byKey.put(key, points = new ArrayList<ArmyClusters.Point>());
+                        }
+                        points.add(new ArmyClusters.Point(dimension, e.posX, e.posY, e.posZ));
+                    }
+                }
+            }
+        }
+        ArmySnapshot snapshot = ArmySnapshot.build(requestId, server.getWorld(0).getTotalWorldTime(), clusterRadius,
+                clusterMin, reg, actor, byKey);
+        if (snapshot.lastMoved) {
+            dirty(server);
+        }
+        return snapshot;
+    }
+
+    /** Lines of {@code /rwarmy clusters}: the snapshot of this actor, one army when named. Bounded. */
+    public static List<String> describeClusters(MinecraftServer server, ArmyActor actor, String army) {
+        List<String> out = new ArrayList<String>();
+        ArmySnapshot snapshot = snapshot(server, actor, 0);
+        if (snapshot == null) {
+            out.add(off().message);
+            return out;
+        }
+        out.add("RWARMY clusters armies=" + snapshot.armies.size() + " radius=" + snapshot.radius + " min="
+                + snapshot.minMembers + " " + ArmyNet.counters());
+        for (ArmySnapshot.Entry e : snapshot.armies) {
+            if (army != null && !e.name.equalsIgnoreCase(army)) {
+                continue;
+            }
+            out.add("RWARMY clusterarmy " + e.name + " access=" + (e.command ? "command" : "view") + " loaded="
+                    + e.loaded + " clusters=" + e.clusters.size() + " omitted=" + e.omittedClusters + " last="
+                    + (e.hasLast() ? e.lastDimension + "," + e.lastX + "," + e.lastY + "," + e.lastZ + " seen="
+                            + e.lastSeen : "none"));
+            for (ArmyClusters.Cluster c : e.clusters) {
+                out.add("RWARMY cluster " + e.name + " " + c.kind.id() + " dim=" + c.dimension + " at " + c.x + " "
+                        + c.y + " " + c.z + " size=" + c.size);
+            }
+        }
+        return out.subList(0, Math.min(out.size(), MAX_LINES));
     }
 
     /** One line per visible army with its owner, the number of loaded members and, below operator, the right. */
