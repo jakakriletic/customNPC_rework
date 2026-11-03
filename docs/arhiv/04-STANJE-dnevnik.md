@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 211 → 1)
+# Arhiv: dnevnik sej (vnosi 212 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,19 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (212) — M11.4: roj/drža/vrnitev (sprejet)
+
+**Paket:** M11.4 (Q330–Q335, D-100) · **Stanje:** sprejet na poskusu 1; `RwArmies` ostane 0.
+Trajni Mode/Stance, neurejeni odmiki roja brez postrojevanja, move/stance z aktualnimi pravicami;
+aktivni passive zavrne attack/revenge, engage začasno prepusti gibanje boju in zadrži konec čete do vrnitve.
+Na `92c32038…` PASS: unit (+13), build, package, `m114-swarm-v1` (49 + JS 25/25 in 141/141),
+`m114-companies-regress-v1` (50 + JS 52/52 in 41/41). Šest aktivnih pasivnih vzorcev, roj 8/8 po restartu,
+razmik ≥2,138; AI ubije golema 100→0, član prehodi 5,906 bloka v boj, nato vseh 8 nazaj (razmik ≥1,948).
+Stop sprosti pasivnost, pri 0 register bitno enak. Prvi neveljavni harness ne šteje poskusa (Q334);
+popravek samo v harnessu, isti config/seed/merila. Omejitve: dev dedicated, ravno, ena četa;
+naravno iskanje tarč, veččetni roj in drugi načini boja še brez dokaza, cena M11.10. Brez ponovitev Q90.
+Naslednji M11.8a; M10.3 ostane blokiran Q1. [Dokazi/meje](../meritve/2026-11-03-M11.4-roj-drza.md).
 
 ### 2026-11-03 (211) — M11.3: čete in trajen ukaz (sprejet)
 
@@ -6307,4 +6320,3 @@ veljavno JSON datoteko, če nov zapis ali njegova validacija odpove.
 - **CustomNPC+ ima R7, R4 in del R2 že implementirane**. Glavni referenčni vir.
 
 **Naslednja seja:** začetek razvoja.
-

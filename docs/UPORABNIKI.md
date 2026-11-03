@@ -270,8 +270,9 @@ Not proven, so not claimed:
   six active passive samples, one real melee kill and return of all 8 to a legion company on flat ground,
   dev dedicated only. The combat target was assigned by the harness; natural enemy acquisition, multiple
   swarm companies and ranged/mounted/flying combat were not tested. Macro offsets keep a constant
-  direction around turns. At most 2048 loaded members; no complete path means BLOCKED. Long routes,
-  moving chunk tickets and difficult terrain are M11.5/M11.6/M11.9; no progress is guaranteed in unloaded
+  direction around turns. At most 2048 loaded members; no complete path means BLOCKED. Long routes
+  (one army path is limited by `NpcNavRange`; split marches, M11.5, were deferred to v2 after 2 attempts, Q348),
+  moving chunk tickets and difficult terrain are M11.6/M11.9; no progress is guaranteed in unloaded
   chunks. Rebuilding companies can change membership. Cost is pending M11.10; no performance claim.
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
