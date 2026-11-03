@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 216 → 1)
+# Arhiv: dnevnik sej (vnosi 217 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,19 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (217) — M11.7a: pogodba zunanjih mostov v1 (sprejet)
+
+**Paket:** M11.7a (Q361–Q363, D-103) · **Stanje:** sprejet na poskusu 1.
+Statični UUID klici v ArmyCommandService v1 zahtevajo server nit/prijavljenega igralca ter sveže pravice.
+Immutable ArmyMapMarker kopira obstoječe grozde in stanje namere, Reply ima odsevna getterja;
+interni/skriptni klici, kanal in tick nespremenjeni, `RwArmies` ostane 0.
+Deset novih unit preverb zamrzne podpise in odsevno uporabo, podatke, pravice, dimenzije in fallback.
+Dokumentirana meja zaupanja/omrežja; živi zunanji most je naslednji paket M11.7b po Q346.
+Controller unit (+10)/build/package PASS na `05586c4b…`; 475 class datotek, 85 pričakovanih sprememb originala.
+Živ most, offline/wrong-thread na pravem strežniku in produkcijska reobf meja še niso dokazani; cena M11.10.
+Brez zagona workloadov iz seje; nepovezano delo ohranjeno. Naslednji obvezni M11.7b, M10.3 blokiran Q1.
+[Pogodba](../api/ARMY-BRIDGE-V1.md), [dokazi/meje](../meritve/2026-11-03-M11.7a-pogodba.md).
 
 ### 2026-11-03 (216) — M11.8b: dovoljenja GUI (sprejet)
 

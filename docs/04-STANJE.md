@@ -14,9 +14,9 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-03** (seja 218) — M11.7b sprejet na poskusu 1 (Q369): controller v3 83/83 JUnit + build/package PASS na `7d693d32…`. Sinhroniziranih 72 vhodov, jar v0.1.9 nameščen v 6/6 mapah s preverjenimi backupi; živa mapa še ni preverjena. [Dokazi/meje](meritve/2026-11-03-M11.7b-xaero-most.md). |
+| Zadnja posodobitev | **2026-11-03** (seja 219) — M11.9 sprejet na poskusu 1 (Q373): `m119-edges-v2` PASS na `3d4cbf3a…`, brez spremembe produkcije. Voda, grlo, prepad, zaprti član, izgube, reload in stikalo 0 dokazani na dev dedicated. [Zapis Q370–Q373](meritve/2026-11-03-M11.9-robni-primeri.md). |
 | Trenutni milestone | **M11 — vojske in poveljevanje** (v2, Q295). v1.0 sprejet z omejitvami `UPORABNIKI.md` §6 (P1–P8 zaključeni); M10.3/IO4 ostaneta odprta (Q1). |
-| Naslednji paketi | **M11 po [M11.0 §5.3](raziskave/M11.0-vojske-prek-zemljevida.md):** ~~M11.1~~ register + `RwArmy` + `/rwarmy` (Q303–Q308) → ~~M11.1b~~ dovoljenja (Q309–Q316) → ~~M11.2~~ grozdi/posnetek (Q317–Q323) → ~~M11.3~~ čete (Q324–Q329) → ~~M11.4~~ roj/drža (Q330–Q335) → ~~M11.8a~~ palica/GUI (Q340) → M11.5 dolg pohod (odložen v2, Q348) → ~~M11.6~~ ticket (Q349–Q356) → ~~M11.8b~~ dovoljenja GUI (Q360) → ~~M11.7a~~ pogodba v1 (Q361–Q363) → ~~M11.7b zemljevid~~ (Q346/Q369) → **M11.9** → M11.10. Q90/Q92/Q250 veljajo; vsak paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`. |
+| Naslednji paketi | **M11 po [M11.0 §5.3](raziskave/M11.0-vojske-prek-zemljevida.md):** ~~M11.1~~ register + `RwArmy` + `/rwarmy` (Q303–Q308) → ~~M11.1b~~ dovoljenja (Q309–Q316) → ~~M11.2~~ grozdi/posnetek (Q317–Q323) → ~~M11.3~~ čete (Q324–Q329) → ~~M11.4~~ roj/drža (Q330–Q335) → ~~M11.8a~~ palica/GUI (Q340) → M11.5 dolg pohod (odložen v2, Q348) → ~~M11.6~~ ticket (Q349–Q356) → ~~M11.8b~~ dovoljenja GUI (Q360) → ~~M11.7a~~ pogodba v1 (Q361–Q363) → ~~M11.7b zemljevid~~ (Q346/Q369) → ~~M11.9~~ robni primeri (Q370–Q373) → **M11.10**. Q90/Q92/Q250 veljajo; vsak paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **283** datotek `.java` v `src/patch`, od tega **206** rework (+ArmyMapMarker); build/package PASS na `05586c4b…` (475 class datotek, 85 pričakovanih sprememb originala). |
 | Testi | **740** metod `@Test` v **106** datotekah (+10 `ArmyBridgeContractTest`). Na `05586c4b…` unit/build/package PASS; brez ponovitev GUI/gibanja (Q90). |
@@ -45,7 +45,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
 | M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b/d brez sprejema; celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
-| M11 Poveljevanje prek zemljevida | **v teku** (v2, Q295) | M11.0–M11.4, M11.8a/b in M11.6 ticket (pod stikalom, Q355) zaključeni; M11.5 odložen v v2 (Q348); M11.7a pogodba v1 sprejeta (Q361–Q363); M11.7b most/build in 6 namestitev zaključeni (Q369); naslednji M11.9 |
+| M11 Poveljevanje prek zemljevida | **v teku** (v2, Q295) | M11.0–M11.4, M11.8a/b in M11.6 ticket (pod stikalom, Q355) zaključeni; M11.5 odložen v v2 (Q348); M11.7a pogodba v1 sprejeta (Q361–Q363); M11.7b most/build in 6 namestitev zaključeni (Q369); M11.9 robni primeri sprejeti (Q373); naslednji M11.10 |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -55,7 +55,18 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 216 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 217 → 1, novejši zgoraj).*
+
+### 2026-11-03 (219) — M11.9: robni primeri (sprejet)
+
+**Paket:** M11.9 (Q370–Q373) · **Stanje:** sprejet na poskusu 1, produkcija nespremenjena; `RwArmies` ostane 0.
+Pet vojsk po 8: voda/grlo ARRIVED 8/8, prepad BLOCKED brez padca, zaprti član BLOCKED ob age 753 brez lažnega prihoda.
+Dve pravi smrti + unassign med pohodom: 5 prispe in drži položaj; reload nadaljuje povratek brez novega ukaza, stop CANCELLED.
+Stikalo 0: brez ukaza/runtima, `rwarmies.dat` bajtno enak. v1 FAIL je bila napaka harnessa (Q372), ni produkcijski poskus.
+Controller `m119-edges-v2` PASS na `3d4cbf3a…`; unit/build/package se ne ponavljajo, ker produkcija ni spremenjena (Q90).
+Meje: dev dedicated, prisilni chunki, ena četa, kratek cilj; `maxStep` 5,95 od 6; `ArmyApi.members` vrača umirajoče do 20 tickov.
+Noben workload zagnan iz seje; nepovezano delo ohranjeno. Naslednji M11.10; M10.3 blokiran Q1.
+[Dokazi in omejitve](meritve/2026-11-03-M11.9-robni-primeri.md).
 
 ### 2026-11-03 (218) — M11.7b: Xaero most (sprejet)
 
@@ -70,16 +81,3 @@ Pred zamenjavami nobenega Java/Minecraft procesa; pirate-mca, stari arhivi, svet
 Živi Xaero, produkcijski odsev/teren/omrežne pravice še niso dokazani; ročni pregled ostane lastniku, cena M11.10.
 Noben workload zagnan iz seje; nepovezano delo ohranjeno. Naslednji M11.9; M10.3 blokiran Q1.
 [Dokazi, namestitve in omejitve](meritve/2026-11-03-M11.7b-xaero-most.md).
-
-### 2026-11-03 (217) — M11.7a: pogodba zunanjih mostov v1 (sprejet)
-
-**Paket:** M11.7a (Q361–Q363, D-103) · **Stanje:** sprejet na poskusu 1.
-Statični UUID klici v ArmyCommandService v1 zahtevajo server nit/prijavljenega igralca ter sveže pravice.
-Immutable ArmyMapMarker kopira obstoječe grozde in stanje namere, Reply ima odsevna getterja;
-interni/skriptni klici, kanal in tick nespremenjeni, `RwArmies` ostane 0.
-Deset novih unit preverb zamrzne podpise in odsevno uporabo, podatke, pravice, dimenzije in fallback.
-Dokumentirana meja zaupanja/omrežja; živi zunanji most je naslednji paket M11.7b po Q346.
-Controller unit (+10)/build/package PASS na `05586c4b…`; 475 class datotek, 85 pričakovanih sprememb originala.
-Živ most, offline/wrong-thread na pravem strežniku in produkcijska reobf meja še niso dokazani; cena M11.10.
-Brez zagona workloadov iz seje; nepovezano delo ohranjeno. Naslednji obvezni M11.7b, M10.3 blokiran Q1.
-[Pogodba](api/ARMY-BRIDGE-V1.md), [dokazi/meje](meritve/2026-11-03-M11.7a-pogodba.md).

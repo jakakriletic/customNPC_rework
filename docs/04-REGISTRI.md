@@ -104,6 +104,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-03 | M11.9 robni primeri, poskus 1: `army-edge-run.ps1` dev dedicated, 4 zagoni, pet vojsk po 8, prisilni chunki | Na `3d4cbf3a…` `m119-edges-v2` PASS (p2 126, p3 15, stikalo 0 bajtno enako): voda/grlo ARRIVED, prepad/zaprti član BLOCKED, 5 preživelih prispe, drži in po reloadu konča povratek. Produkcija nespremenjena; cena M11.10 | [zapis](meritve/2026-11-03-M11.9-robni-primeri.md) |
 | 2026-11-03 | M11.7b Xaero most, poskus 1; 72 vhodov zamrznjenih/sinhroniziranih, v0.1.9 nameščen v 6/6 mods mapah z backupi | Na `7d693d32…` controller m117b-bridge-v3 83/83 JUnit (21 novih + 62 regresij), build/reobf paket PASS; živa mapa/produkcijski odsev/teren še nepreverjeni, cena M11.10 | [zapis](meritve/2026-11-03-M11.7b-xaero-most.md) |
 | 2026-11-03 | M11.7a odsevna pogodba v1, poskus 1 | Na `05586c4b…` controller unit (+10)/build/package PASS; 475 class datotek, samo 85 pričakovanih sprememb / 1716 originalnih vnosov. Brez živih workloadov ali meritve cene; M11.7b naslednji | [zapis](meritve/2026-11-03-M11.7a-pogodba.md) |
 | 2026-11-03 | M11.8b dovoljenja GUI, poskus 1: pravi dev klient + dev dedicated, cached offline prejemnik, deop/restart/0, pet pregledanih PNG | Na `24828502…` unit (+9)/build/package, `m118b-permissions-gui-v1` 101 in `m118a-gui-v1` 97 PASS; selected/all/none, dve kljukici, sveže pravice/ustavitev vrste, register bitno enak pri 0. Cena M11.10 | [zapis](meritve/2026-11-03-M11.8b-dovoljenja-gui.md) |

@@ -301,7 +301,11 @@ Not proven, so not claimed:
   swarm companies and ranged/mounted/flying combat were not tested. Macro offsets keep a constant
   direction around turns. At most 2048 loaded members; no complete path means BLOCKED. Long routes
   (one army path is limited by `NpcNavRange`; split marches, M11.5, were deferred to v2 after 2 attempts, Q348),
-  and difficult terrain (M11.9) remain open. M11.6 travelling chunk tickets (`RwArmyMaxMarches`, accepted under the
+  remain open. M11.9 edge cases passed on a dev dedicated server without a player, with forced chunks and one
+  company of 8 per army on a short route: shallow water and a two-block throat arrive; a wide gap blocks without a
+  fall; two deaths and a departure during a march leave five who arrive and hold; a world reload resumes the saved
+  order. One member closed in stops the whole army as BLOCKED even when the other seven are at the goal.
+  `ArmyApi.members` can return a dying member for up to 20 ticks, so scripts should check health. M11.6 travelling chunk tickets (`RwArmyMaxMarches`, accepted under the
   switch, Q355): at most that many armies hold tickets (members' chunks plus one ring, at most 49 chunks); further
   armies march without tickets and get no progress in unloaded chunks. Resuming from the saved last position
   after a restart or unload can stop as BLOCKED `no-complete-path` (seen once in testing). Tickets left by a crash
