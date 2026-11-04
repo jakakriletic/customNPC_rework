@@ -31,6 +31,7 @@ public final class LinkedNet {
         if (channel == null) {
             channel = NetworkRegistry.INSTANCE.newEventDrivenChannel(LinkedGuiCodec.CHANNEL);
             channel.register(new LinkedNet());
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new LinkedUpdates());
             LogWriter.info("RWLINKED channel " + LinkedGuiCodec.CHANNEL + " registered");
         }
     }
@@ -71,7 +72,8 @@ public final class LinkedNet {
         }
         LinkedNpcController linked = LinkedNpcController.Instance;
         if (r.group.isEmpty() && r.op == LinkedGuiCodec.Op.GET) {
-            return new LinkedGuiCodec.Response(r.id, LinkedGuiCodec.RESULT_OK, LinkedCategories.DEFAULT, false, 0, "", "");
+            return new LinkedGuiCodec.Response(r.id, LinkedGuiCodec.RESULT_OK, LinkedCategories.DEFAULT, false, 0, "",
+                    r.mask == LinkedCategories.ALL ? LinkedGuiCodec.CLONER_CAPABILITY : "");
         }
         LinkedNpcController.LinkedData data = linked.getData(r.group);
         if (data == null) {

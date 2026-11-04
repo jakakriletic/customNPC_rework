@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). v2 M11 sprejet z omejitvami, M11.5 sprejet po ponovnem odprtju Q418; M13.0–M13.3 zaključeni (Q411). Naslednji M13.4 po Q407. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; pri privzeto 0 ni cenovne meje, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
+**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). v2 M11 sprejet z omejitvami, M11.5 sprejet po ponovnem odprtju Q418; M13.0–M13.4 zaključeni (Q429). Naslednji M13.5 (izhodni dokaz 100 NPC-jev, Q430), nato omejitve §6 po Q407. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; pri privzeto 0 ni cenovne meje, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -684,7 +684,7 @@ kot skrite »Linked NPC« (`LinkedNpcController`), ki pa prepišejo usmerjenost 
 članov s potjo (Q384), prenesejo vse ali nič, ne prenesejo skript in zahtevajo povezovanje enega po
 enega. Zasnova popravi in razširi ta mehanizem namesto novega identifikatorja.
 
-**Vhodni pogoj:** nič iz M4–M11. **Vrstni red:** Q407: po M13.3 najprej M11.5, nato M13.4
+**Vhodni pogoj:** nič iz M4–M11. **Vrstni red:** Q407: po M13.3 najprej M11.5, nato M13.4, nato M13.5 (Q430)
 (uporabnik ga lahko prestavi).
 
 ### Paketi
@@ -696,7 +696,8 @@ enega. Zasnova popravi in razširi ta mehanizem namesto novega identifikatorja.
 | ~~M13.2~~ | **Sprejet 4. 11., poskus 1** (Q389–Q394, [zapis](meritve/2026-11-04-M13.2-kategorije.md)): `RwLinkedGroups` (privzeto 0): kategorije na skupino, skripte nova kategorija, razveljavitev `.json_prev`, `RwLinkedBudget`, `/rwlinked`. Brez igralca/GUI-ja; 200 članov v 80 tickih, MSPT ni merjen | M |
 | ~~M13.2b~~ | **Sprejet 4. 11., poskus 1** (Q395–Q399, [zapis](meritve/2026-11-04-M13.2b-gui.md)): polja kategorij, Apply in razveljavitev v *Global → Linked NPCs* pod `RwLinkedGroups`, kanal `rwlinked`, pravice ob vsakem zahtevku. En pravi dev klient, dva člana; zastarel prikaz Q399 popravljen in dokazan v M13.3 (Q405) | S |
 | ~~M13.3~~ | **Sprejet 4. 11.** (Q400–Q411, [zapis](meritve/2026-11-04-M13.3-palica.md)): več izbir, filter, isto ime v radiu; povezava, enkratna kopija kategorij, delete/reset, skupina in števec pod `RwLinkedGroups` (0). Unit/build/package in palica v2 (96) + GUI regresija (120) PASS na `6f69c790…`, 14 PNG pregledanih; Q399 popravljena, footer brez preseka. En dev par/6 NPC-jev; M11.5 naslednji po Q407, nato M13.4 | M |
-| M13.4 | Kloner »postavi kot povezan«; obvestilo »posodobljeno N NPC-jev«; preverba v klientu z igralcem (GUI, nenaloženi chunki, ponovno nalaganje sveta, dedicirani strežnik) | S |
+| ~~M13.4~~ | **Sprejet 4. 11.** (Q419–Q429, [zapis](meritve/2026-11-04-M13.4-kloner.md)): kloner »Linked« (ime klona = skupina, obstoječa se ne prepiše), obvestilo o posodobljenih/čakajočih naloženih članih pod `RwLinkedGroups` (0). `m134-cloner-v7` PASS (127 preverb, 9 PNG): član v resnično nenaloženem chunku in po restartu, lastna polja, deop, 0/mešani par. En dev par, trije člani | S |
+| M13.5 | Izhodni dokaz M13 (Q430): 100 že postavljenih NPC-jev se poveže z eno izbiro v seznamu palice in prejme spremembo; pravi dev klient/dedicated, stikalo 0 ostane izvirno | S |
 
 **Izhodni kriterij:** sprememba enega povezanega NPC-ja se prenese na vse povezane, tudi v
 nenaloženih chunkih ob nalaganju, samo v izbranih kategorijah; dom in lega vsakega ostaneta

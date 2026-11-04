@@ -83,6 +83,8 @@ public final class LinkedClient {
                 ((GuiNPCManageLinkedNpc) screen).rwReply(reply);
             } else if (screen instanceof GuiNpcRemoteEditor) {
                 ((GuiNpcRemoteEditor) screen).rwReply(reply);
+            } else if (screen instanceof noppes.npcs.client.gui.GuiNpcMobSpawner) {
+                ((noppes.npcs.client.gui.GuiNpcMobSpawner) screen).rwReply(reply);
             }
         });
     }

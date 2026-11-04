@@ -9,6 +9,8 @@ import java.util.List;
 /** M13.2b (Q395): bounded messages of the {@value #CHANNEL} channel between Global, Linked NPCs and the server. */
 public final class LinkedGuiCodec {
     public static final String CHANNEL = "rwlinked";
+    /** GET(empty, ALL) asks for this capability; older rwlinked servers answer with empty text. */
+    public static final String CLONER_CAPABILITY = "Linked cloner v1";
     public static final int REQUEST = 1, RESPONSE = 2, BATCH = 3, LIST = 4;
     public static final int MAX_NAME = 255, MAX_TEXT = 512;
     private static final int REQUEST_HEADER = 12, RESPONSE_HEADER = 19;

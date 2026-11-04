@@ -208,7 +208,11 @@ public class PacketHandlerServer {
         } else if (type == EnumPacketServer.NpcMenuClose) {
             npc.reset();
             if (npc.linkedData != null) {
+                long revision = npc.linkedData.time;
                 LinkedNpcController.Instance.saveNpcData(npc);
+                if (CustomNpcs.RwLinkedGroups == 1 && npc.linkedData.time != revision) {
+                    noppes.npcs.rework.linked.LinkedUpdates.saved(player, npc);
+                }
             }
             NoppesUtilServer.setEditingNpc((EntityPlayer)player, null);
         } else if (type == EnumPacketServer.BanksGet) {
@@ -581,10 +585,21 @@ public class PacketHandlerServer {
             if (compound == null) {
                 return;
             }
+            String linkedGroup = null;
+            if (buffer.isReadable()) {
+                if (!buffer.readBoolean()) return;
+                linkedGroup = Server.readString(buffer);
+                if (buffer.isReadable() || !noppes.npcs.rework.linked.LinkedCloner.allowed(player, compound, linkedGroup, x, y, z)) return;
+                compound = compound.copy();
+                compound.removeTag("LinkedNpcName");
+            }
             Entity entity = NoppesUtilServer.spawnClone(compound, (double)x + 0.5, y + 1, (double)z + 0.5, player.world);
             if (entity == null) {
                 player.sendMessage((ITextComponent)new TextComponentString("Failed to create an entity out of your clone"));
                 return;
+            }
+            if (linkedGroup != null) {
+                noppes.npcs.rework.linked.LinkedCloner.link(player, (EntityNPCInterface)entity, linkedGroup);
             }
         } else if (type == EnumPacketServer.MobSpawner) {
             boolean server = buffer.readBoolean();

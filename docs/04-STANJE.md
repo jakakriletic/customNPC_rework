@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-04** (seja 225) — M11.5 sprejet (Q418): vseh devet controller testov PASS na `299d947a…`, dolg/kratek pohod in obe ticket nadaljevanji ARRIVED. Dokumentacija zaključena, brez ponovitev (Q90). [Zapis](meritve/2026-11-03-M11.5-dolg-pohod.md). |
-| Trenutni milestone | **M11.5 zaključen pod stikalom**, M13.0–M13.3 zaključeni; **naslednji M13.4**. v1.0 sprejet z omejitvami; M10.3/IO4 odprta (Q1). |
-| Naslednji paketi | **M13.4** kloner kot povezan, obvestilo in preverba z igralcem/nenaloženimi chunki → omejitve `UPORABNIKI.md` §6, odložene samo zaradi 2 poskusov (Q407). M11.5 sprejet Q418. M12 na koncu; M15 po odločitvi lastnika. Q90/Q92 veljata s spremembami Q407: brez meje poskusov ali proračuna testov, timeout ≤14400 s; kratki zapisi in privzeto izklopljena stikala brez cenovne meje. |
+| Zadnja posodobitev | **2026-11-04** (seja 226) — M13.4 sprejet (Q429): `m134-cloner-v7` PASS na `4ccc5cf1…` (127 preverb, 9 PNG pregledanih); unit/build/package na enaki prevedeni kodi `9966cac7…`. [Zapis](meritve/2026-11-04-M13.4-kloner.md). |
+| Trenutni milestone | **M13.4 zaključen pod stikalom**, M11.5 in M13.0–M13.4 zaključeni; **naslednji M13.5** (izhodni dokaz 100 NPC-jev, Q430). v1.0 sprejet z omejitvami; M10.3/IO4 odprta (Q1). |
+| Naslednji paketi | **M13.5** 100 že postavljenih NPC-jev z eno izbiro v seznamu palice (izhod M13, Q430) → omejitve `UPORABNIKI.md` §6, odložene samo zaradi 2 poskusov (Q407). M13.4 sprejet Q429. M12 na koncu; M15 po odločitvi lastnika. Q90/Q92 veljata s spremembami Q407: brez meje poskusov ali proračuna testov, timeout ≤14400 s; kratki zapisi in privzeto izklopljena stikala brez cenovne meje. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **301** datoteka `.java` v `src/patch`, od tega **222** rework (+1 v M11.5). Build/package PASS na `299d947a…`; 1716 originalnih vnosov, 87 pričakovanih sprememb. |
-| Testi | **812** metod `@Test` v **113** datotekah (+17 v M11.5). Vseh devet sprejemnih testov na `299d947a…` PASS; short 50, long 70, swarm 49, teren 53, strict ticket 94 in parna cena 200. |
+| Prevedljivih razredov | **306** datotek `.java` v `src/patch`, od tega **226** rework (+4 v M13.4). Build/package PASS na `9966cac7…` (enaka prevedena koda kot `4ccc5cf1…`). |
+| Testi | **818** metod `@Test` v **115** datotekah (+2 baseline, +4 `LinkedClonerTest`). Unit PASS na `9966cac7…`; `m134-cloner-v7` PASS na `4ccc5cf1…`. |
 | Odprti pojavi | nobenega blokirnega; Q84 (M4.17 + M4.10 zid 6/6 → 5/6, vzrok [H], ovira za privzeti vklop kombinacije); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -56,7 +56,18 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 223 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 224 → 1, novejši zgoraj).*
+
+### 2026-11-04 (226) — M13.4: kloner kot povezan in obvestilo (sprejet)
+
+**Paket:** M13.4 (Q419–Q430) · **Stanje:** sprejet pod stikalom; `RwLinkedGroups` ostane 0.
+Izvirni `GuiNpcMobSpawner` najprej prenesen dobesedno in commitan ločeno (`252cc13`). Nato izbira »Linked« (ime klona = skupina,
+obstoječa se ne prepiše), sveže strežniške pravice ob postavitvi in obvestilo o posodobljenih/čakajočih naloženih članih.
+v1–v6 so padli na harnessu (ime predmeta, sonda, handshake, Nashorn `BlockPos` Double; Q423–Q428), produkcija se ni spreminjala zaradi njih.
+`m134-cloner-v7` PASS na `4ccc5cf1…` (127 preverb): tri povezane postavitve, član v resnično nenaloženem chunku in po restartu,
+lastna polja, točno en naložen prejemnik v obvestilu, deop zavrnitev, 0/mešani par izviren. Vseh 9 PNG pregledanih.
+Unit/build/package na enaki prevedeni kodi `9966cac7…`; brez ponovitev (Q90). Meje: en dev par, trije člani, MSPT ni merjen.
+Naslednji M13.5 (Q430): izhodni dokaz 100 NPC-jev z eno izbiro. M10.3 blokiran Q1. [Zapis](meritve/2026-11-04-M13.4-kloner.md).
 
 ### 2026-11-04 (225) — M11.5: dolg pohod in popravek nadaljevanja (sprejet)
 
@@ -72,15 +83,3 @@ Meje: ravni dolg pohod 32, ločeni ticket 8/2/2 in kratki teren/roj; dolgi pohod
 Po seriji samo dokumentacija, brez ponavljanja PASS (Q90). Noben workload iz seje, nepovezano delo ohranjeno.
 Dokumentacija in kazala posodobljeni; commit/push zaključi paket. Naslednji M13.4; Q1 ostane.
 [Dokazi, hipoteza in merila](meritve/2026-11-03-M11.5-dolg-pohod.md).
-
-### 2026-11-04 (224) — M13.3: več izbir v seznamu palice (sprejet)
-
-**Paket:** M13.3 (Q400–Q411; Q407 odločitev lastnika) · **Stanje:** sprejet pod stikalom (Q411); `RwLinkedGroups` ostane 0.
-Na odtisu `6f69c790…` controller unit/build/package, `m133-wand-v2` (96) in `m132b-gui-v2` (120) PASS; vseh 14 PNG pregledanih.
-Potrjeni filter, isto ime v radiu, Ctrl/Shift izbor, kopija videza 3, povezava 3, reset 1, delete 2, urejanje primarnega in zavrnitev po deop.
-Q405 (stara polja po odvzemu pravic) dokazan tudi vizualno: prazna polja, Loaded members: 0.
-Q410 potrjen: `footer-within-frame` in linked PNG pokažeta izbor pred Freeze in status pod njim, oba v okvirju.
-Po seriji samo dokumentacija; brez ponavljanja uspešnih testov (Q90). Uporabniški vodič, changelog, register in kazala posodobljeni.
-Meje: en klient/dev par, šest NPC-jev; Shift/Ctrl vstavi harness; cena ni merjena, največ 1000 vrstic. Noben workload iz seje; nepovezano delo ohranjeno.
-Naslednji paket po sprejemu je M11.5 (Q407), nato M13.4; M10.3 blokiran Q1.
-[Dokazi in meje](meritve/2026-11-04-M13.3-palica.md).

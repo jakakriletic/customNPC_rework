@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 223 → 1)
+# Arhiv: dnevnik sej (vnosi 224 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,18 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-04 (224) — M13.3: več izbir v seznamu palice (sprejet)
+
+**Paket:** M13.3 (Q400–Q411; Q407 odločitev lastnika) · **Stanje:** sprejet pod stikalom (Q411); `RwLinkedGroups` ostane 0.
+Na odtisu `6f69c790…` controller unit/build/package, `m133-wand-v2` (96) in `m132b-gui-v2` (120) PASS; vseh 14 PNG pregledanih.
+Potrjeni filter, isto ime v radiu, Ctrl/Shift izbor, kopija videza 3, povezava 3, reset 1, delete 2, urejanje primarnega in zavrnitev po deop.
+Q405 (stara polja po odvzemu pravic) dokazan tudi vizualno: prazna polja, Loaded members: 0.
+Q410 potrjen: `footer-within-frame` in linked PNG pokažeta izbor pred Freeze in status pod njim, oba v okvirju.
+Po seriji samo dokumentacija; brez ponavljanja uspešnih testov (Q90). Uporabniški vodič, changelog, register in kazala posodobljeni.
+Meje: en klient/dev par, šest NPC-jev; Shift/Ctrl vstavi harness; cena ni merjena, največ 1000 vrstic. Noben workload iz seje; nepovezano delo ohranjeno.
+Naslednji paket po sprejemu je M11.5 (Q407), nato M13.4; M10.3 blokiran Q1.
+[Dokazi in meje](../meritve/2026-11-04-M13.3-palica.md).
 
 ### 2026-11-04 (223) — M13.2b: polja kategorij in razveljavitev v GUI-ju (sprejet)
 

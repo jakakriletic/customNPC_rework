@@ -104,6 +104,9 @@ afterEvaluate {
             }) + files(snap)
             // M5.15 (D-031): v dev okolju coremod ni v mods/, zato ga FML dobi prek lastnosti.
             systemProperty 'fml.coreMods.load', 'noppes.npcs.rework.core.RwCoreMod'
+            if (taskName == 'runServer' && project.hasProperty('m134Probe')) {
+                systemProperty 'rw.m134Probe', 'true'
+            }
             if (project.hasProperty('m10Job')) {
                 // Remove main output as well as the runtime jar in the O arm. No patched
                 // CustomNpcs or diagnostic class may leak into an original-client claim.
@@ -409,6 +412,7 @@ task testOriginal(type: Test) {
     exclude '**/LinkedGuiCodecTest.class'
     // M13.3: the wand selection and list classes are new.
     exclude '**/LinkedWandTest.class'
+    exclude '**/LinkedClonerTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

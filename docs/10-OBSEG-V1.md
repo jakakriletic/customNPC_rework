@@ -113,7 +113,8 @@ lastnik). Odprti Q-ji teh paketov (npr. Q82 vogal → M4.5, Q84) ne blokirajo v1
 **Q407 (odločitev lastnika 4. 11. 2026):** lastnik je umaknil umetne omejitve načrta (2 poskusa,
 proračun testov, odlaganje v v2 namesto popravka). Upravljalnik rešuje probleme in popravlja
 zadeve, dokler funkcija ne deluje. **Prvi naslednji paket po M13.3 je M11.5 (dolg pohod čez
-`NpcNavRange`)**, ki je bil odložen samo zaradi pravila 2 poskusov; nato M13 naprej, nato
+`NpcNavRange`)**, ki je bil odložen samo zaradi pravila 2 poskusov (~~sprejet Q418~~); nato M13 naprej
+(~~M13.4~~ sprejet Q429; naslednji M13.5, izhodni dokaz 100 NPC-jev, Q430), nato
 odpravljanje omejitev iz `UPORABNIKI.md` §6, ki so ostale zaradi pravila 2 poskusov (M10.1d, M10.4 ...).
 
 ## Ocena

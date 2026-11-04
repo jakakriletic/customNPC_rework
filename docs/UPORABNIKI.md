@@ -130,6 +130,14 @@ the selection. Rows show the group and its loaded member count. **Reset All** an
 The server checks operator level 2, the wand in the main hand and the original action permission on every batch;
 copying scripts also requires the scripter permission. Without the switch or batch rights, the list stays original.
 
+With the switch on both sides, the mob cloner (*Clones* and *Server* tabs) has a **Linked: Yes/No** button
+(`Clone = group`): with Yes, **Spawn** places the clone linked to the group named after the clone. A new group starts
+from the clone; an existing group is used as it is and is not overwritten. **MobSpawner** is disabled while Yes is set.
+The server checks operator level 2, the Linked NPCs and mob spawner permissions, the cloner in hand, a safe group name
+and a nearby loaded target before placing. After you close the menu of a linked NPC whose group changed, chat reports
+how many loaded members were updated and how many are pending; unloaded members update when their chunk loads
+(their number is not known).
+
 With `RwArmies=1`: `/rwarmy create <army> [player|uuid:<uuid>|faction:<id>]` (from the console the
 owner is required), `assign <army> <npc name|selector> [range]` (name: loaded NPCs within 100 blocks,
 at most 220), `unassign <npc name|selector> [range]`, `list`, `info <army>`, `remove <army>`. Army names
@@ -376,7 +384,13 @@ Not proven, so not claimed:
   Shift/Ctrl states were inserted by the harness; physical modifier keys, 100+ selections, all copy categories, packaged/integrated
   pairs and simultaneous editors were not tested. Server MSPT, allocation and packet cost were not measured.
   The original tutorial overlay can cover the top right button. The original list can merge same-name rows at the same distance;
-  the new list uses entity IDs. Unloaded chunks with a real client remain for M13.4.
+  the new list uses entity IDs. 100+ selections at once are still unproven.
+- **Cloner "place as linked" and update message ([M13.4](meritve/2026-11-04-M13.4-kloner.md), `RwLinkedGroups`, off by default):**
+  tested with one real dev client, a dev dedicated server and one group of three members: new and existing group from a
+  local and a server clone, a member in a truly unloaded chunk (no forced chunks) that updates when loaded and after a
+  restart while keeping its own home, orientation and path, rights removed with the cloner open, both sides at 0 and
+  client 1/server 0. The message counts only loaded members. Packaged/integrated pairs, simultaneous editors and large
+  groups were not tested; MSPT was not measured (one transfer about 0.6 ms as data).
 - **Original bug, not fixed:** removing a Linked NPC group does not delete its file, so the group comes back after a
   restart (from the code, not run).
 

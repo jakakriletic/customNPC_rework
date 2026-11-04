@@ -42,6 +42,9 @@ import noppes.npcs.client.gui.util.GuiNpcButton;
 import noppes.npcs.client.gui.util.GuiNpcTextField;
 import noppes.npcs.client.gui.util.IGuiData;
 import noppes.npcs.constants.EnumPacketServer;
+import noppes.npcs.CustomNpcs;
+import noppes.npcs.rework.linked.LinkedClient;
+import noppes.npcs.rework.linked.LinkedGuiCodec;
 
 public class GuiNpcMobSpawner
 extends GuiNPCInterface
@@ -54,6 +57,8 @@ implements IGuiData {
     private static int showingClones = 0;
     private static String search = "";
     private int activeTab = 1;
+    private int rwRequest = -1;
+    private boolean rwAllowed, rwLinked;
 
     public GuiNpcMobSpawner(int i, int j, int k) {
         this.xSize = 256;
@@ -62,6 +67,9 @@ implements IGuiData {
         this.posZ = k;
         this.closeOnEsc = true;
         this.setBackground("menubg.png");
+        if (CustomNpcs.RwLinkedGroups == 1) {
+            this.rwRequest = LinkedClient.send(LinkedGuiCodec.Op.GET, noppes.npcs.rework.linked.LinkedCategories.ALL, "");
+        }
     }
 
     @Override
@@ -89,6 +97,12 @@ implements IGuiData {
         button.active = showingClones == 2;
         this.addButton(new GuiNpcButton(1, this.guiLeft + 170, this.guiTop + 6, 82, 20, "item.monsterPlacer.name"));
         this.addButton(new GuiNpcButton(2, this.guiLeft + 170, this.guiTop + 100, 82, 20, "spawner.mobspawner"));
+        if (this.rwAllowed && showingClones != 1) {
+            this.getButton(2).enabled = !this.rwLinked;
+            this.addButton(new GuiNpcButton(7, this.guiLeft + 170, this.guiTop + 56, 82, 20,
+                    this.rwLinked ? "Linked: Yes" : "Linked: No"));
+            this.addLabel(new noppes.npcs.client.gui.util.GuiNpcLabel(7, "Clone = group", this.guiLeft + 170, this.guiTop + 80));
+        }
         if (showingClones == 0 || showingClones == 2) {
             this.addSideButton(new GuiMenuSideButton(21, this.guiLeft - 69, this.guiTop + 2, 70, 22, "Tab 1"));
             this.addSideButton(new GuiMenuSideButton(22, this.guiLeft - 69, this.guiTop + 23, 70, 22, "Tab 2"));
@@ -181,6 +195,12 @@ implements IGuiData {
         NBTTagCompound compound;
         String sel;
         int id = guibutton.id;
+        if (id == 7) {
+            this.rwLinked = !this.rwLinked;
+            ((GuiNpcButton)guibutton).displayString = this.rwLinked ? "Linked: Yes" : "Linked: No";
+            this.getButton(2).enabled = !this.rwLinked;
+            return;
+        }
         if (id == 0) {
             this.close();
         }
@@ -190,14 +210,22 @@ implements IGuiData {
                 if (sel == null) {
                     return;
                 }
-                Client.sendData(EnumPacketServer.SpawnMob, true, this.posX, this.posY, this.posZ, sel, this.activeTab);
+                if (this.rwAllowed && this.rwLinked) {
+                    Client.sendData(EnumPacketServer.SpawnMob, true, this.posX, this.posY, this.posZ, sel, this.activeTab, true, sel);
+                } else {
+                    Client.sendData(EnumPacketServer.SpawnMob, true, this.posX, this.posY, this.posZ, sel, this.activeTab);
+                }
                 this.close();
             } else {
                 compound = this.getCompound();
                 if (compound == null) {
                     return;
                 }
-                Client.sendData(EnumPacketServer.SpawnMob, false, this.posX, this.posY, this.posZ, compound);
+                if (this.rwAllowed && this.rwLinked && showingClones == 0) {
+                    Client.sendData(EnumPacketServer.SpawnMob, false, this.posX, this.posY, this.posZ, compound, true, this.scroll.getSelected());
+                } else {
+                    Client.sendData(EnumPacketServer.SpawnMob, false, this.posX, this.posY, this.posZ, compound);
+                }
                 this.close();
             }
         }
@@ -247,6 +275,14 @@ implements IGuiData {
 
     @Override
     public void save() {
+    }
+
+    /** Capability and rights must come from this server, never from a previous screen. */
+    public void rwReply(LinkedGuiCodec.Response reply) {
+        if (reply.id != this.rwRequest) return;
+        this.rwAllowed = reply.result == LinkedGuiCodec.RESULT_OK && LinkedGuiCodec.CLONER_CAPABILITY.equals(reply.text);
+        this.rwLinked = false;
+        this.initGui();
     }
 
     @Override

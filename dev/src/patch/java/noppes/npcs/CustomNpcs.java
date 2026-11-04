@@ -502,6 +502,7 @@ public class CustomNpcs {
         QuestController.instance.load();
         ScriptController.HasStart = true;
         ServerCloneController.Instance = new ServerCloneController();
+        noppes.npcs.rework.diag.LinkedProbeDiagnostics.start();
     }
 
     @Mod.EventHandler
@@ -520,6 +521,8 @@ public class CustomNpcs {
         // v forcedchunks.dat, bi naslednji zagon tiho tekel pod drugacnim pogojem meritve.
         DiagChunkLoader.disable();
         ArmyMarches.clear();
+        noppes.npcs.rework.linked.LinkedUpdates.clear();
+        noppes.npcs.rework.diag.LinkedProbeDiagnostics.stop();
         SquadManager.clear();
         HitboxTrack.stop();
         ReloadServer.stopped();
