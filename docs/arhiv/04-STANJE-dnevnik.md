@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 222 → 1)
+# Arhiv: dnevnik sej (vnosi 223 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,16 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-04 (223) — M13.2b: polja kategorij in razveljavitev v GUI-ju (sprejet)
+
+**Paket:** M13.2b (Q395–Q399) · **Stanje:** sprejet na poskusu 1 pod stikalom; `RwLinkedGroups` ostane 0.
+Pri 1 ima *Global → Linked NPCs* osem polj, Apply in Undo; polje samo ne pošlje ničesar, vsak zahtevek strežnik preveri ob prejemu.
+Pravi klient: izklop imena drži, dva Undo dosežeta člana, izbor in razveljavitev preživita restart; po `deop` ponarejena SET/UNDO zavrnjena, datoteki bitno enaki.
+Pri obeh 0 in pri klientu 1 s strežnikom 0 ostane prvotni GUI (gumba 1 in 2, 0 odgovorov). Controller unit, build, package in `m132b-gui-v1` (119 preverb) PASS na `c223704d…`; 7 PNG pregledanih.
+Meje: en klient, dva člana, dev par; klient 0 s strežnikom 1 in igralec, ki odpre zaslon brez pravic, nista pognana. Po odvzemu pravic polja ob izbiri druge skupine kažejo vrednosti prejšnje (samo prikaz, Q399, ni popravljeno). Cena ni merjena.
+Noben workload zagnan iz seje; nepovezano delo ohranjeno. Naslednji M13.3; M10.3 blokiran Q1.
+[Dokazi in omejitve](../meritve/2026-11-04-M13.2b-gui.md).
 
 ### 2026-11-04 (222) — M13.2: kategorije, razveljavitev in postopen prenos (sprejet)
 

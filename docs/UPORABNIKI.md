@@ -151,8 +151,10 @@ its last known position.
 
 `/rwarmy move <army> <x> <y> <z> [legion|column|ring|swarm] [speed] [passive|engage]` moves loaded ground members in
 the sender's dimension (relative `~` coordinates work; default legion, speed 3, range 0.5–6).
-The army uses companies of 8 sharing one route; stragglers join first. The move stores its company
-size and resumes after a restart when members load. `/rwarmy stop <army>` cancels it;
+The army uses companies of 8 sharing one route per leg; stragglers join first. Long moves use
+bounded real paths (at most 24 Manhattan blocks, also limited by navigation range minus 8).
+All companies must arrive before the next leg; intermediate legs keep the original home and final intent.
+The move stores its company size and resumes after a restart when members load. `/rwarmy stop <army>` cancels it;
 `/rwarmy status <army>` needs `view` and reports WAITING/JOINING/MOVING/ARRIVED/BLOCKED/CANCELLED.
 No complete route or a timeout means BLOCKED; issue a new move to retry. Formations must be enabled
 (do not set `-Drwformation=off`). Scripts: `ArmyApi.move(army, dimension, x, y, z, shape, speed)`
@@ -319,16 +321,23 @@ Not proven, so not claimed:
   six active passive samples, one real melee kill and return of all 8 to a legion company on flat ground,
   dev dedicated only. The combat target was assigned by the harness; natural enemy acquisition, multiple
   swarm companies and ranged/mounted/flying combat were not tested. Macro offsets keep a constant
-  direction around turns. At most 2048 loaded members; no complete path means BLOCKED. Long routes
-  (one army path is limited by `NpcNavRange`; split marches, M11.5, were deferred to v2 after 2 attempts, Q348),
-  remain open. M11.9 edge cases passed on a dev dedicated server without a player, with forced chunks and one
+  direction around turns. At most 2048 loaded members; no complete path means BLOCKED.
+  [M11.5 long marches](meritve/2026-11-03-M11.5-dolg-pohod.md) now pass: 32 ground members in four companies
+  walk at least 238 blocks to a 240-block goal with a restart, `NpcNavRange=32` and forced chunks.
+  Legs keep company membership, offsets and direction; only the final leg anchors home. Each leg requests
+  a real path within `min(24, NpcNavRange-8, FOLLOW_RANGE-8)` Manhattan blocks. A blocked intermediate point
+  or a leg that does not reduce distance stops the march, even if a larger detour exists. This is not a global
+  route planner. Long routes with 200, difficult terrain or multiple swarm companies remain untested.
+  M11.9 edge cases passed on a dev dedicated server without a player, with forced chunks and one
   company of 8 per army on a short route: shallow water and a two-block throat arrive; a wide gap blocks without a
   fall; two deaths and a departure during a march leave five who arrive and hold; a world reload resumes the saved
   order. One member closed in stops the whole army as BLOCKED even when the other seven are at the goal.
   `ArmyApi.members` can return a dying member for up to 20 ticks, so scripts should check health. M11.6 travelling chunk tickets (`RwArmyMaxMarches`, accepted under the
   switch, Q355): at most that many armies hold tickets (members' chunks plus one ring, at most 49 chunks); further
-  armies march without tickets and get no progress in unloaded chunks. Resuming from the saved last position
-  after a restart or unload can stop as BLOCKED `no-complete-path` (seen once in testing). Tickets left by a crash
+  armies march without tickets and get no progress in unloaded chunks. M11.5 clears a stale member path before
+  each new anchor request; the strict ticket regression now requires and proves ARRIVED after both unload
+  and restart on flat ground (8/2/2 members, no player or diagnostic tickets). This separate short scene does
+  not prove a 200-member long route through unloaded chunks. Tickets left by a crash
   are released only at the next world load; members more than about ±32 blocks from the others may be left
   behind. Tested only on a dev dedicated server on flat ground; no separate ticket cost was visible in M11.10. Rebuilding companies can change membership.
   [M11.10 cost](meritve/2026-11-03-M11.10-cena.md), one repetition on a dev dedicated server on flat ground: one army
@@ -336,7 +345,11 @@ Not proven, so not claimed:
   allocation, against 6.42 ms and 50.4 MB/s for the same 200 idle NPCs (+67 % p95, +44 % allocation); no tick
   over 50 ms. With only M11.6 tickets loading the world: p95 9.70 ms. With a real client commanding 200 through the
   staff: server p95 10.22 ms and the army arrived. Combat, terrain, 50/500 and several armies were not measured.
-  A 200 army can end a short leg as BLOCKED with its centre 1.4 blocks from the goal (v2, with M11.5).
+  With M11.5, the final walkable metre uses the same move helper to reach the unchanged arrival radius;
+  ordinary `/rwsquad` keeps its old behaviour. The 200-member short final leg now ARRIVED, with all 25 companies
+  settled in the final log. New paired cost data (one repetition, same fixture and 60+180 s window): idle p95
+  6.685 ms / 48.2 MB/s, march 10.748 ms / 74.1 MB/s, no tick over 50 ms. The active-company sample in the cost
+  JSON is incomplete and is not a final settling check; the final company summaries are the evidence.
   The live Xaero map with an army must be checked by hand in a real modpack client.
 - **Linked NPCs (`RwLinkedOwnFields`, off by default):** with 0 the original behaviour stays: every member takes the
   orientation and path index of the NPC edited last, and a member with a path gets the first point of its own path

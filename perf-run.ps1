@@ -1339,7 +1339,7 @@ try {
             Start-Sleep -Seconds 30
             Send-Command $srv 'rwsquad status'
             Start-Sleep -Seconds 2
-            $sq = [regex]::Matches((Get-LogText $srv.Log), 'RWSQUAD enota=d+ ime=pohod-company-d+ .*?faza=(w+) clanov=(d+)/d+ .*?na_mestu=(d+)')
+            $sq = [regex]::Matches((Get-LogText $srv.Log), 'RWSQUAD enota=\d+ ime=pohod-company-\d+ .*?faza=(\w+) clanov=(\d+)/\d+ .*?na_mestu=(\d+)')
             $sqZadnje = @($sq | Select-Object -Last 25)
             $pohodVel['pohod.konec.vzorecCet'] = $sqZadnje.Count
             $pohodVel['pohod.konec.vzorecNeumirjenih'] = (@($sqZadnje | ForEach-Object { [int]$_.Groups[2].Value - [int]$_.Groups[3].Value }) | Measure-Object -Sum).Sum
@@ -1355,7 +1355,7 @@ try {
             $pohodVel['pohod.konec.arrived'] = $(if ($konec -eq 'ARRIVED') { 1 } else { 0 })
             $pohodVel['pohod.konec.odCilja'] = $odCilja
             Write-Host ("  kratka noga: stanje={0}, sredisce {1} blokov od cilja, neumirjenih po 30 s {2} v {3} cetah" -f $konec, $odCilja, $pohodVel['pohod.konec.vzorecNeumirjenih'], $pohodVel['pohod.konec.vzorecCet'])
-            Check ("A1: kratka noga ima koncno stanje ({0}) in sredisce je pri cilju ({1} blokov, najvec 4)" -f $konec, $odCilja) (($konec -ne '') -and ($odCilja -le 4))
+            Check ("A1: kratka noga ARRIVED ({0}) in sredisce je pri cilju ({1} blokov, najvec 4)" -f $konec, $odCilja) (($konec -eq 'ARRIVED') -and ($odCilja -le 4))
             $pohodVel['pohod.blocked'] = ([regex]::Matches((Get-LogText $srv.Log), 'RWARMY order pohod state=BLOCKED')).Count
             $tkt = [regex]::Matches((Get-LogText $srv.Log), 'RWARMY tickets pohod chunks=(\d+) tickets=(\d+) added=(\d+) mode=\w+ centre=\S+ refused=(\d+)')
             $pohodVel['pohod.ticket.vrstic'] = $tkt.Count

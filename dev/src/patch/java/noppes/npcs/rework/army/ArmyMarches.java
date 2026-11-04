@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.pathfinding.PathNavigate;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -17,6 +18,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import noppes.npcs.LogWriter;
+import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.rework.formation.FormationMath;
 import noppes.npcs.rework.formation.PathTrack;
@@ -27,8 +29,8 @@ import noppes.npcs.rework.formation.SquadManager;
 import noppes.npcs.rework.formation.SquadOrder;
 
 /** M11.3: server-thread adapter. Durable intent lives in ArmyRegistry; all runtime references die at stop.
- * M11.6: chunk tickets travel with up to RwArmyMaxMarches armies (ArmyTickets); no long-path continuation
- * (M11.5, v2). Only enabled servers register a listener.
+ * M11.5: bounded legs keep company membership and lanes until the durable goal is reached.
+ * M11.6: chunk tickets travel with up to RwArmyMaxMarches armies. Only enabled servers register a listener.
  */
 public final class ArmyMarches {
     private static ArmyMarches installed;
@@ -45,7 +47,11 @@ public final class ArmyMarches {
         final List<EntityNPCInterface> members;
         final List<Squad> squads = new ArrayList<Squad>();
         boolean joining;
-        int age, paths;
+        boolean finalLeg;
+        int age, paths, legs, totalPaths;
+        double yaw, remaining = Double.POSITIVE_INFINITY;
+        List<List<EntityNPCInterface>> companies;
+        Slot[] lanes;
         Run(List<EntityNPCInterface> members) { this.members = members; }
         void cancel() {
             if (installed != null) { installed.passive.removeAll(members); }
@@ -104,7 +110,8 @@ public final class ArmyMarches {
         Run r = installed == null ? null : installed.runs.get(Army.key(army));
         String held = installed == null || ArmyTickets.maxMarches() == 0 ? "" : " " + installed.tickets.status(army);
         return (r == null ? "companies=0 members=0 paths=0" : "companies=" + r.squads.size()
-                + " members=" + r.members.size() + " paths=" + r.paths + " age=" + r.age) + held;
+                + " members=" + r.members.size() + " paths=" + r.paths + " age=" + r.age
+                + " legs=" + r.legs + " totalPaths=" + r.totalPaths) + held;
     }
 
     private void state(ArmyRegistry reg, String name, ArmyOrder.State state) {
@@ -182,6 +189,12 @@ public final class ArmyMarches {
             if (done || r.age >= 2400) {
                 if (r.joining && done && arrived) {
                     r.cancel(); runs.remove(army.key()); // rebuild with the reunited membership, same durable goal
+                } else if (!r.joining && done && arrived && !r.finalLeg) {
+                    // A geometric arrival ends ONE leg. Keep the membership, lanes and durable goal.
+                    for (Squad s : r.squads) { s.cancelArmy(); }
+                    r.squads.clear(); r.age = 0;
+                    startLeg(army.name(), r, order);
+                    if (r.squads.isEmpty()) { state(reg, army.name(), ArmyOrder.State.BLOCKED); r.cancel(); }
                 } else if (done && !arrived && emptied(r)) {
                     // M11.6: a company lost every member to an unload; that waits for chunks, it is not a blocked
                     // path. The run is rebuilt once they tick again (a ticket or a player loads them).
@@ -290,9 +303,10 @@ public final class ArmyMarches {
                 final double groupX = gx / group.size(), groupZ = gz / group.size();
                 EntityNPCInterface joinLeader = Collections.min(group, Comparator.comparingDouble(npc ->
                         Math.hypot(npc.posX - groupX, npc.posZ - groupZ)));
-                double[] target = ArmyCompanies.joinTarget(joinLeader.posX, joinLeader.posY, joinLeader.posZ,
-                        x, leader.posY, z);
-                PathTrack approach = Squad.toTrack(joinLeader.getNavigator().getPathToXYZ(target[0], target[1], target[2]));
+                double[] target = ArmyWaypoints.next(joinLeader.posX, joinLeader.posY, joinLeader.posZ,
+                        x, leader.posY, z, CustomNpcs.NpcNavRange, joinLeader.getNavigator().getPathSearchRange());
+                PathTrack approach = target == null ? null : anchorPath(joinLeader.getNavigator(), target);
+                if (target == null) { run.cancel(); run.squads.clear(); return run; }
                 if (!complete(approach, target[0], target[1], target[2])) {
                     run.cancel(); run.squads.clear();
                     LogWriter.info("RWARMY blocked " + army + " reason=no-complete-join-path");
@@ -306,44 +320,80 @@ public final class ArmyMarches {
             LogWriter.info("RWARMY join " + army + " stragglers=" + behind.size());
             return run;
         }
-        PathTrack path = Squad.toTrack(leader.getNavigator().getPathToXYZ(order.x, order.y, order.z));
-        run.paths = 1;
-        if (!complete(path, order.x, order.y, order.z)) {
-            LogWriter.info("RWARMY blocked " + army + " reason=no-complete-path (long paths in M11.5)");
-            return run;
+        startLeg(army, run, order);
+        return run;
+    }
+
+    private void startLeg(String army, Run run, ArmyOrder order) {
+        List<EntityNPCInterface> live = run.members;
+        double centreX = 0, centreZ = 0;
+        for (EntityNPCInterface npc : live) { centreX += npc.posX; centreZ += npc.posZ; }
+        final double x = centreX / live.size(), z = centreZ / live.size();
+        EntityNPCInterface leader = Collections.min(live, Comparator.comparingDouble(npc ->
+                Math.hypot(npc.posX - x, npc.posZ - z)));
+        double distance = ArmyWaypoints.distance(leader.posX, leader.posY, leader.posZ, order.x, order.y, order.z);
+        if (run.legs > 0 && distance > run.remaining - 1) {
+            LogWriter.info("RWARMY blocked " + army + " reason=no-leg-progress"); return;
         }
-        double yaw = path.yawAt(path.length(), 6, 0);
-        if (Double.isNaN(yaw)) { yaw = leader.rotationYaw; }
-        // Neighbours go into the same company. A deterministic UUID breaks distance ties.
-        List<EntityNPCInterface> spatial = new ArrayList<EntityNPCInterface>();
-        List<EntityNPCInterface> remaining = new ArrayList<EntityNPCInterface>(live);
-        while (!remaining.isEmpty()) {
-            EntityNPCInterface first = remaining.get(0);
-            remaining.sort(Comparator.comparingDouble(npc -> npc.getDistanceSq(first)));
-            int n = Math.min(order.companySize, remaining.size());
-            spatial.addAll(remaining.subList(0, n)); remaining.subList(0, n).clear();
+        double range = Math.min(CustomNpcs.NpcNavRange, leader.getNavigator().getPathSearchRange());
+        double[] target = ArmyWaypoints.next(leader.posX, leader.posY, leader.posZ, order.x, order.y, order.z,
+                CustomNpcs.NpcNavRange, leader.getNavigator().getPathSearchRange());
+        if (target == null) { LogWriter.info("RWARMY blocked " + army + " reason=invalid-range"); return; }
+        run.finalLeg = ArmyWaypoints.finalLeg(target, order.x, order.y, order.z);
+        LogWriter.info("RWARMY waypoint " + army + " from=" + leader.posX + "," + leader.posY + "," + leader.posZ
+                + " target=" + target[0] + "," + target[1] + "," + target[2] + " manhattan="
+                + ArmyWaypoints.distance(leader.posX, leader.posY, leader.posZ, target[0], target[1], target[2])
+                + " range=" + range + " final=" + run.finalLeg);
+        PathTrack path = anchorPath(leader.getNavigator(), target);
+        run.paths = 1; run.totalPaths++; run.legs++; run.remaining = distance;
+        if (!complete(path, target[0], target[1], target[2])) {
+            LogWriter.info("RWARMY blocked " + army + " reason=no-complete-path ticks=" + leader.ticksExisted
+                    + " onGround=" + leader.onGround + " updateAI=" + leader.updateAI
+                    + " end=" + (path == null ? "null" : path.endX() + "," + path.endY() + "," + path.endZ()));
+            return;
         }
-        List<List<EntityNPCInterface>> groups = ArmyCompanies.split(spatial, order.companySize);
-        Slot[] slots = ArmyCompanies.macro(groups.size(), order.companySize, order.shape);
-        if (order.mode == ArmyOrder.Mode.SWARM && groups.size() > 1) {
-            long[] seeds = new long[groups.size()];
-            for (int i = 0; i < seeds.length; i++) { seeds[i] = army.hashCode() * 31L + i; }
-            slots = ArmySwarm.scatter(seeds, 2 * ArmySwarm.radius(order.companySize, ArmySwarm.SEPARATION) + 2);
+        if (run.companies == null) {
+            run.yaw = path.yawAt(path.length(), 6, 0);
+            if (Double.isNaN(run.yaw)) { run.yaw = leader.rotationYaw; }
         }
-        double[] cx = new double[groups.size()], cz = new double[groups.size()];
+        double yaw = run.yaw;
+        World world = leader.world;
+        if (run.companies == null) {
+            // Neighbours go into the same company. A deterministic UUID breaks distance ties.
+            List<EntityNPCInterface> spatial = new ArrayList<EntityNPCInterface>();
+            List<EntityNPCInterface> remaining = new ArrayList<EntityNPCInterface>(live);
+            while (!remaining.isEmpty()) {
+                EntityNPCInterface first = remaining.get(0);
+                remaining.sort(Comparator.comparingDouble(npc -> npc.getDistanceSq(first)));
+                int n = Math.min(order.companySize, remaining.size());
+                spatial.addAll(remaining.subList(0, n)); remaining.subList(0, n).clear();
+            }
+            List<List<EntityNPCInterface>> groups = ArmyCompanies.split(spatial, order.companySize);
+            Slot[] slots = ArmyCompanies.macro(groups.size(), order.companySize, order.shape);
+            if (order.mode == ArmyOrder.Mode.SWARM && groups.size() > 1) {
+                long[] seeds = new long[groups.size()];
+                for (int i = 0; i < seeds.length; i++) { seeds[i] = army.hashCode() * 31L + i; }
+                slots = ArmySwarm.scatter(seeds, 2 * ArmySwarm.radius(order.companySize, ArmySwarm.SEPARATION) + 2);
+            }
+            double[] cx = new double[groups.size()], cz = new double[groups.size()];
+            for (int i = 0; i < groups.size(); i++) {
+                for (EntityNPCInterface npc : groups.get(i)) { cx[i] += npc.posX; cz[i] += npc.posZ; }
+                cx[i] = cx[i] / groups.get(i).size() - path.x(0);
+                cz[i] = cz[i] / groups.get(i).size() - path.z(0);
+            }
+            int[] assignment = order.mode == ArmyOrder.Mode.SWARM ? new int[groups.size()]
+                    : SlotAssigner.assign(cx, cz, slots, yaw);
+            if (order.mode == ArmyOrder.Mode.SWARM) {
+                if (groups.size() == 1) { slots = new Slot[] {new Slot(0, 0)}; }
+                for (int i = 0; i < assignment.length; i++) { assignment[i] = i; }
+            }
+            run.companies = groups;
+            run.lanes = new Slot[groups.size()];
+            for (int i = 0; i < groups.size(); i++) { run.lanes[i] = slots[assignment[i]]; }
+        }
+        List<List<EntityNPCInterface>> groups = run.companies;
         for (int i = 0; i < groups.size(); i++) {
-            for (EntityNPCInterface npc : groups.get(i)) { cx[i] += npc.posX; cz[i] += npc.posZ; }
-            cx[i] = cx[i] / groups.get(i).size() - path.x(0);
-            cz[i] = cz[i] / groups.get(i).size() - path.z(0);
-        }
-        int[] assignment = order.mode == ArmyOrder.Mode.SWARM ? new int[groups.size()]
-                : SlotAssigner.assign(cx, cz, slots, yaw);
-        if (order.mode == ArmyOrder.Mode.SWARM) {
-            if (groups.size() == 1) { slots = new Slot[] {new Slot(0, 0)}; }
-            for (int i = 0; i < assignment.length; i++) { assignment[i] = i; }
-        }
-        for (int i = 0; i < groups.size(); i++) {
-            PathTrack lane = ArmyCompanies.lane(path, slots[assignment[i]], yaw);
+            PathTrack lane = ArmyCompanies.lane(path, run.lanes[i], yaw);
             Slot[] scatter = null;
             if (order.mode == ArmyOrder.Mode.SWARM) {
                 long[] seeds = new long[groups.get(i).size()];
@@ -355,13 +405,29 @@ public final class ArmyMarches {
             }
             SquadOrder company = new SquadOrder(order.shape, order.shape == SquadOrder.Shape.OBRAMBA ? 3 :
                     order.shape == SquadOrder.Shape.KOLONA ? 2 : 4, lane.endX(), lane.endY(), lane.endZ(), yaw,
-                    order.speed, order.stance == ArmyOrder.Stance.ENGAGE, true, true, scatter);
+                    order.speed, order.stance == ArmyOrder.Stance.ENGAGE, run.finalLeg, true, scatter);
             Squad s = SquadManager.start(world, army + "-company-" + i, groups.get(i), company, lane);
             if (s != null) { run.squads.add(s); }
         }
         LogWriter.info("RWARMY march " + army + " companies=" + run.squads.size() + " members=" + live.size()
                 + " paths=1 size=" + order.companySize);
-        return run;
+    }
+
+    /**
+     * A new army leg takes ownership of the leader's navigation. A dormant chunk can retain
+     * its old, unfinished member path; vanilla returns that path for the same target without
+     * searching the newly loaded terrain. Invalidate it BEFORE the single anchor request.
+     * Do not retry a fresh failure or reinterpret an incomplete path as arrival.
+     */
+    static PathTrack anchorPath(PathNavigate navigator, double[] target) {
+        PathTrack old = Squad.toTrack(navigator.getPath());
+        navigator.clearPath();
+        PathTrack fresh = Squad.toTrack(navigator.getPathToXYZ(target[0], target[1], target[2]));
+        if (old != null) {
+            LogWriter.info("RWARMY anchor-refresh oldEnd=" + old.endX() + "," + old.endY() + "," + old.endZ()
+                    + " freshEnd=" + (fresh == null ? "null" : fresh.endX() + "," + fresh.endY() + "," + fresh.endZ()));
+        }
+        return fresh;
     }
 
     private static boolean complete(PathTrack path, double x, double y, double z) {

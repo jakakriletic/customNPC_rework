@@ -189,9 +189,10 @@ try {
     Expect 'RWARMY tickets bravo released' 'bravo ticket released at arrival' 30
     ExpectRx 'RWARMY tickets charlie granted slots=\d/2' 'a freed slot goes to charlie' 30
     ExpectRx 'RWARMY tickets charlie chunks=25 tickets=\d+ added=25 mode=resume' 'charlie held at its saved position' 30
-    # Q355: resuming from the saved position is a recorded limit (v2 run: BLOCKED no-complete-path); data only.
-    ExpectRx 'RWARMY order charlie state=(ARRIVED|BLOCKED)' 'charlie resume ended (arrived or blocked)' 180
+    # M11.5/Q415: BLOCKED is a real failure, even though the old M11.6 harness allowed it as data.
+    ExpectRx 'RWARMY order charlie state=(ARRIVED|BLOCKED)' 'charlie resume reached a terminal state' 180
     $data['charlieResume'] = [regex]::Match((Log), 'RWARMY order charlie state=(ARRIVED|BLOCKED)').Groups[1].Value
+    Assert ($data['charlieResume'] -ceq 'ARRIVED') 'charlie resumed from unloaded chunks and ARRIVED'
     Expect 'RWARMY tickets charlie released' 'charlie ticket released when its order ended' 30
     Assert ((At 'RWARMY order alpha state=ARRIVED') -gt $unload) 'alpha arrived after the unload'
     Assert ((At 'RWARMY tickets charlie granted') -gt [Math]::Min((At 'RWARMY tickets alpha released'), (At 'RWARMY tickets bravo released'))) 'charlie waited for a free slot'
@@ -213,9 +214,10 @@ try {
     Assert (-not (Log).Contains('RWARMY tickets stale-released')) 'no army ticket survived in forcedchunks.dat'
     ExpectRx 'RWARMY tickets alpha granted slots=1/2' 'alpha granted after restart' 60
     ExpectRx 'RWARMY tickets alpha chunks=25 tickets=\d+ added=25 mode=resume' 'alpha held at its saved position' 60
-    # Q355: restart resume is data only, like charlie's; the ticket must still end with the order.
-    ExpectRx 'RWARMY order alpha state=(ARRIVED|BLOCKED)' 'alpha resume ended (arrived or blocked)' 240
+    # M11.5/Q415: the resumed order must really arrive after restart, too.
+    ExpectRx 'RWARMY order alpha state=(ARRIVED|BLOCKED)' 'alpha resume reached a terminal state' 240
     $data['alphaRestartResume'] = [regex]::Match((Log), 'RWARMY order alpha state=(ARRIVED|BLOCKED)').Groups[1].Value
+    Assert ($data['alphaRestartResume'] -ceq 'ARRIVED') 'alpha resumed after restart and ARRIVED'
     Expect 'RWARMY tickets alpha released' 'ticket released when the resumed order ended' 30
     Stop-Phase 'p3-resume'
 
@@ -242,7 +244,7 @@ try {
     Unchanged
     @{success=$true; package='M11.6'; checks=@($checks); data=$data; logs=@(Get-ChildItem -Path "$prefix-*.log" | Select-Object -ExpandProperty Name);
       inputs=$hashes; harness=(Get-FileHash -LiteralPath $PSCommandPath).Hash;
-      condition='dev dedicated server, isolated copied flat config, no player and no rwdiag forced chunks in any phase; scene at x=400 loaded only as spawn chunks until spawn moves to the origin; alpha 8 / bravo 2 / charlie 2 ground workers, RwArmyMaxMarches=2; single path per march (M11.5 in v2); cost in M11.10'} |
+      condition='dev dedicated server, isolated copied flat config, no player and no rwdiag forced chunks in any phase; scene at x=400 loaded only as spawn chunks until spawn moves to the origin; alpha 8 / bravo 2 / charlie 2 ground workers, RwArmyMaxMarches=2; bounded paths per leg (M11.5); both unloaded and restart resumes must ARRIVE; cost measured separately'} |
         ConvertTo-Json -Depth 6 | Set-Content -LiteralPath "$prefix.json" -Encoding UTF8
     Write-Host "M116 evidence: $prefix.json"
     $exitCode = 0

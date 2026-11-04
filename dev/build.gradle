@@ -390,6 +390,9 @@ task testOriginal(type: Test) {
     // M11.2: clusters and the snapshot channel are new.
     exclude '**/ArmySnapshotTest.class'
     exclude '**/ArmyCompaniesTest.class'
+    exclude '**/ArmyWaypointsTest.class'
+    exclude '**/ArmyAnchorPathTest.class'
+    exclude '**/ArmyArrivalTest.class'
     exclude '**/ArmySwarmTest.class'
     exclude '**/ArmyStaffTest.class'
     // M11.6: travelling chunk tickets are new.

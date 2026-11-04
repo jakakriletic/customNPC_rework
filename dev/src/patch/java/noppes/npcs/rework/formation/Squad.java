@@ -53,6 +53,7 @@ public final class Squad {
 
     private final int id;
     private final World world;
+    private final Terrain terrain;
     private final String label;
     private final SquadOrder order;
     private final EntityNPCInterface[] members;
@@ -96,6 +97,7 @@ public final class Squad {
             SquadPlanner planner, double[] attr, boolean pathless) {
         this.id = id;
         this.world = world;
+        this.terrain = new WorldTerrain(world);
         this.label = label;
         this.order = order;
         this.members = members;
@@ -398,6 +400,10 @@ public final class Squad {
         double ty = planner.targetY[i];
         double tz = planner.targetZ[i];
         boolean detour = activeRecovery(i, nav);
+        if (refineArmyArrival(armyPath, detour, planner, i, npc, terrain, speedIn)) {
+            nav.clearPath();
+            return;
+        }
         if (mode == SquadPlanner.STEER) {
             if (detour) {
                 // Nedokoncan obvoz ohranimo tudi ob novem STEER cilju: blizina
@@ -461,6 +467,24 @@ public final class Squad {
         } else {
             nav.setSpeed(speedIn);
         }
+    }
+
+    /**
+     * Native pathFollow accepts a box (0.45 per axis for a normal NPC), wider than
+     * the planner's 0.4 radius. Finish that last, walkable metre using the SAME
+     * move helper. Never widen arrival, teleport, interrupt a detour or change /rwsquad.
+     */
+    static boolean refineArmyArrival(boolean army, boolean detour, SquadPlanner planner, int i,
+            EntityNPCInterface npc, Terrain terrain, double speedIn) {
+        if (!army || detour || planner.phase() != SquadPlanner.Phase.SETTLING
+                || planner.mode[i] == SquadPlanner.HOLD) { return false; }
+        double distance = Math.hypot(planner.targetX[i] - npc.posX, planner.targetZ[i] - npc.posZ);
+        if (distance > 1
+                || Math.abs(planner.targetY[i] - npc.posY) > 0.5
+                || !SquadPlanner.straightWalkable(terrain, npc.posX, npc.posY, npc.posZ,
+                        planner.targetX[i], planner.targetZ[i])) { return false; }
+        npc.getMoveHelper().setMoveTo(planner.targetX[i], planner.targetY[i], planner.targetZ[i], speedIn);
+        return true;
     }
 
     /**
@@ -586,6 +610,17 @@ public final class Squad {
 
     /** Konec: sidranje na koncna mesta, smer pogleda, odstranitev taskov. */
     private void finish() {
+        if (armyPath && planner.unsettledAtEnd() != 0) {
+            for (int i = 0; i < members.length; i++) {
+                EntityNPCInterface npc = members[i];
+                if (npc != null && !planner.settled[i]) {
+                    noppes.npcs.LogWriter.info("RWARMY unsettled " + label + " uuid=" + npc.getUniqueID()
+                            + " position=" + npc.posX + "," + npc.posY + "," + npc.posZ
+                            + " target=" + planner.targetX[i] + "," + planner.targetY[i] + "," + planner.targetZ[i]
+                            + " error=" + planner.error[i]);
+                }
+            }
+        }
         for (int i = 0; i < members.length; i++) {
             EntityNPCInterface npc = members[i];
             if (npc == null) {

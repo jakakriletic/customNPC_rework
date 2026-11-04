@@ -1085,3 +1085,17 @@ tipe. Most upravlja omejen kodek, rate limit in schedule, brez novega kanala ali
 `RwArmies` ostane 0. Sprejeto z unit odsevno pogodbo (+10)/build/package na `05586c4b…`;
 živ most in produkcijska reobf meja sledita v M11.7b po Q346.
 [Pogodba](api/ARMY-BRIDGE-V1.md), [dokazi/meje](meritve/2026-11-03-M11.7a-pogodba.md).
+
+### D-104 — M11.5: omejene etape in natančen zadnji korak (2026-11-04, Q412–Q418)
+
+Pod `RwArmies` (privzeto 0) ena prava pot na etapo ≤ min(24, NpcNavRange−8, FOLLOW_RANGE−8).
+Čete/pasovi/smer ostanejo iste do spremembe članstva ali restarta; napreduje šele geometrijski
+prihod vseh čet. Namen se ne spreminja, vmesna etapa ne sidra doma, timeout je na etapo.
+Native zaključni okvir (0,45 po oseh pri navadnem NPC-ju) je širši od SETTLED=0,4.
+Zadnji prehodni meter vojaškega SETTLING brez aktivnega obvoza vodi isti move helper;
+merila prihoda se ne širijo in položaj se ne zapisuje. Nevojska ostane na stari veji.
+Pred enim iskanjem sidrne poti nove etape/join počistimo staro nameščeno pot vodje:
+vanilla za isti cilj vrne tudi staro delno pot brez iskanja; dormant chunk lahko ohrani navigator.
+Nov neuspeh ostane BLOCKED, brez retry ali širjenja meril. Vseh devet controller testov na
+`299d947a…` PASS, oba ticket resume ARRIVED; sprejet Q418. Celoten izhod M11 še ni dokazan.
+[Zapis](meritve/2026-11-03-M11.5-dolg-pohod.md).
