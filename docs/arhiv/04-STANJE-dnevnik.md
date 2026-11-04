@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 220 → 1)
+# Arhiv: dnevnik sej (vnosi 221 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,16 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-04 (221) — M13.1: povezani NPC-ji ohranijo svoja polja (sprejet)
+
+**Paket:** M13.1 (Q380–Q388) · **Stanje:** sprejet na poskusu 2 pod stikalom; `RwLinkedOwnFields` ostane 0.
+Pri 1 član s potjo ohrani dom, usmerjenost, pot in indeks poti, tudi po ponovnem nalaganju sveta; ime in statistike se še prenesejo.
+Pri 0 reproducirano: usmerjenost 270 in indeks 0 od urejenega, dom na prvo točko lastne poti (ne dom urejenega; hipoteza M13.0 §2.1 popravljena, Q384).
+`RwArmy` in `RwNavBackend` ostaneta članova v obeh načinih. Controller `m131-linked-v4` PASS na `9a23c60a…`; unit/build/package PASS na `d8a328b1…` (nato samo trditev harnessa, Q386).
+v1, v2 in v3 so bile napake harnessa (Q383, Q384, Q386). Meje: brez igralca/GUI-ja, dva člana, člani brez poti niso preverjeni, vklop ne popravi že prepisanih vrednosti, besedilo `@ConfigProp` popravi M13.2 (Q388).
+Noben workload zagnan iz seje; nepovezano delo ohranjeno. Naslednji M13.2; M10.3 blokiran Q1.
+[Dokazi in omejitve](../meritve/2026-11-04-M13.1-povezani.md).
 
 ### 2026-11-04 (220) — M11.10: cena pohoda, ticketov in klient (sprejet)
 

@@ -13,9 +13,11 @@ import java.util.List;
 import java.util.Vector;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import noppes.npcs.CustomNpcs;
 import noppes.npcs.client.Client;
 import noppes.npcs.client.gui.SubGuiEditText;
 import noppes.npcs.client.gui.util.GuiCustomScroll;
+import noppes.npcs.client.gui.util.ICustomScrollListener;
 import noppes.npcs.client.gui.util.GuiNPCInterface2;
 import noppes.npcs.client.gui.util.GuiNpcButton;
 import noppes.npcs.client.gui.util.IScrollData;
@@ -23,19 +25,24 @@ import noppes.npcs.client.gui.util.ISubGuiListener;
 import noppes.npcs.client.gui.util.SubGuiInterface;
 import noppes.npcs.constants.EnumPacketServer;
 import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.rework.linked.LinkedGroupPanel;
+import noppes.npcs.rework.linked.LinkedGuiCodec;
 
 public class GuiNPCManageLinkedNpc
 extends GuiNPCInterface2
 implements IScrollData,
-ISubGuiListener {
+ISubGuiListener,
+ICustomScrollListener {
     private GuiCustomScroll scroll;
     private List<String> data = new ArrayList<String>();
     public static GuiScreen Instance;
+    private final LinkedGroupPanel rwPanel;
 
     public GuiNPCManageLinkedNpc(EntityNPCInterface npc) {
         super(npc);
         Instance = this;
         Client.sendData(EnumPacketServer.LinkedGetAll, new Object[0]);
+        this.rwPanel = CustomNpcs.RwLinkedGroups == 1 ? new LinkedGroupPanel() : null;
     }
 
     @Override
@@ -51,10 +58,34 @@ ISubGuiListener {
         this.scroll.guiTop = this.guiTop + 4;
         this.scroll.setList(this.data);
         this.addScroll(this.scroll);
+        if (this.rwPanel != null) {
+            this.rwPanel.init(this, this.scroll.getSelected());
+        }
+    }
+
+    /** M13.2b: an answer on the rwlinked channel while this screen is open. */
+    public void rwReply(LinkedGuiCodec.Response reply) {
+        if (this.rwPanel != null && this.rwPanel.reply(reply)) {
+            this.initGui();
+        }
+    }
+
+    @Override
+    public void scrollClicked(int i, int j, int k, GuiCustomScroll scroll) {
+        if (this.rwPanel != null) {
+            this.rwPanel.select(scroll.getSelected());
+        }
+    }
+
+    @Override
+    public void scrollDoubleClicked(String selection, GuiCustomScroll scroll) {
     }
 
     @Override
     public void buttonEvent(GuiButton button) {
+        if (this.rwPanel != null && this.rwPanel.button(button.id)) {
+            return;
+        }
         if (button.id == 1) {
             this.save();
             this.setSubGui(new SubGuiEditText("New"));

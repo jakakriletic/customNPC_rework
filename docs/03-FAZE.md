@@ -694,8 +694,8 @@ enega. Zasnova popravi in razširi ta mehanizem namesto novega identifikatorja.
 | ~~M13.0~~ | Raziskava — **narejeno 26. 10.** ([zapis](raziskave/M13.0-mnozicno-urejanje.md)); ob začetku preveri na kodi v `src/patch` | S |
 | ~~M13.1~~ | **Sprejet 4. 11., poskus 2** (Q380–Q388, [zapis](meritve/2026-11-04-M13.1-povezani.md)): `RwLinkedOwnFields` (privzeto 0) ohrani dom, usmerjenost, pot in indeks poti; svetovna lega in oznake entitete niso podatki skupine. Brez igralca/GUI-ja, dva člana | S |
 | ~~M13.2~~ | **Sprejet 4. 11., poskus 1** (Q389–Q394, [zapis](meritve/2026-11-04-M13.2-kategorije.md)): `RwLinkedGroups` (privzeto 0): kategorije na skupino, skripte nova kategorija, razveljavitev `.json_prev`, `RwLinkedBudget`, `/rwlinked`. Brez igralca/GUI-ja; 200 članov v 80 tickih, MSPT ni merjen | M |
-| M13.2b | Polja kategorij in gumb razveljavitve v *Global → Linked NPCs*, preverba s pravim klientom (Q392); naslednji | S |
-| M13.3 | Seznam palice z več izbirami: Shift/Ctrl-klik, filter po imenu, »vsi z istim imenom v radiu«; dejanja: poveži s skupino, kopiraj nastavitve z izbranega NPC-ja (enkratno, s kategorijami), izbriši, ponastavi; prikaz skupine in števila članov | M |
+| ~~M13.2b~~ | **Sprejet 4. 11., poskus 1** (Q395–Q399, [zapis](meritve/2026-11-04-M13.2b-gui.md)): polja kategorij, Apply in razveljavitev v *Global → Linked NPCs* pod `RwLinkedGroups`, kanal `rwlinked`, pravice ob vsakem zahtevku. En pravi dev klient, dva člana; zastarel prikaz po odvzemu pravic (Q399) | S |
+| M13.3 | Naslednji. Seznam palice z več izbirami: Shift/Ctrl-klik, filter po imenu, »vsi z istim imenom v radiu«; dejanja: poveži s skupino, kopiraj nastavitve z izbranega NPC-ja (enkratno, s kategorijami), izbriši, ponastavi; prikaz skupine in števila članov | M |
 | M13.4 | Kloner »postavi kot povezan«; obvestilo »posodobljeno N NPC-jev«; preverba v klientu z igralcem (GUI, nenaloženi chunki, ponovno nalaganje sveta, dedicirani strežnik) | S |
 
 **Izhodni kriterij:** sprememba enega povezanega NPC-ja se prenese na vse povezane, tudi v

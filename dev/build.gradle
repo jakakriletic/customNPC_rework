@@ -402,6 +402,8 @@ task testOriginal(type: Test) {
     exclude '**/LinkedOwnFieldsTest.class'
     // M13.2: linked group categories and transfer budget are new.
     exclude '**/LinkedCategoriesTest.class'
+    // M13.2b: the rwlinked channel codec is new.
+    exclude '**/LinkedGuiCodecTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

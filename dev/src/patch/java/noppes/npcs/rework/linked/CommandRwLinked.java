@@ -82,16 +82,20 @@ public class CommandRwLinked extends CommandBase {
     }
 
     private static String describe(MinecraftServer server, LinkedNpcController.LinkedData data) {
+        return "RWLINKED group=" + data.name + " categories=" + LinkedCategories.toText(data.categories)
+                + " loaded=" + loadedMembers(server, data.name) + " undo=" + (LinkedNpcController.Instance.hasPrevious(data) ? 1 : 0);
+    }
+
+    static int loadedMembers(MinecraftServer server, String group) {
         int members = 0;
         for (WorldServer world : server.worlds) {
             for (Entity entity : world.loadedEntityList) {
-                if (entity instanceof EntityNPCInterface && data.name.equalsIgnoreCase(((EntityNPCInterface) entity).linkedName)) {
+                if (entity instanceof EntityNPCInterface && group.equalsIgnoreCase(((EntityNPCInterface) entity).linkedName)) {
                     members++;
                 }
             }
         }
-        return "RWLINKED group=" + data.name + " categories=" + LinkedCategories.toText(data.categories)
-                + " loaded=" + members + " undo=" + (LinkedNpcController.Instance.hasPrevious(data) ? 1 : 0);
+        return members;
     }
 
     private static void reply(ICommandSender sender, String message) {

@@ -155,6 +155,7 @@ import noppes.npcs.rework.army.ArmyMarches;
 import noppes.npcs.rework.army.ArmyTickets;
 import noppes.npcs.rework.army.CommandRwArmy;
 import noppes.npcs.rework.linked.CommandRwLinked;
+import noppes.npcs.rework.linked.LinkedNet;
 import noppes.npcs.rework.anim.ReloadServer;
 import noppes.npcs.rework.script.AutoClasspath;
 import noppes.npcs.rework.script.hooks.JavaLanguage;
@@ -248,7 +249,7 @@ public class CustomNpcs {
     public static int RwArmyMaxMarches = 2;
     @ConfigProp(info="Rework M13.1 (Q380): 1 = a linked NPC keeps its own home, orientation, moving path and place on that path when its Linked NPC group data is applied; 0 = original behaviour, every member takes the orientation and path index of the NPC edited last, and a member with a path has its home moved to the first point of its own path. Position, rotation, RwArmy, RwNavBackend and RwFlightMode are never group data. Default 0")
     public static int RwLinkedOwnFields = 0;
-    @ConfigProp(info="Rework M13.2 (Q389): 1 = Linked NPC groups pass on only their selected categories (appearance, name, stats, ai, inventory, advanced, scripts, transform; scripts off by default), keep the last version in <group>.json_prev for undo and spread transfers with RwLinkedBudget; adds the operator command /rwlinked. Read at startup. 0 = original: everything but scripts, at once, no undo, no command. Default 0")
+    @ConfigProp(info="Rework M13.2 (Q389): 1 = Linked NPC groups pass on only their selected categories (appearance, name, stats, ai, inventory, advanced, scripts, transform; scripts off by default), keep the last version in <group>.json_prev for undo and spread transfers with RwLinkedBudget; adds the operator command /rwlinked and the boxes and undo button in Global, Linked NPCs (channel rwlinked, both sides need 1). Read at startup. 0 = original: everything but scripts, at once, no undo, no command. Default 0")
     public static int RwLinkedGroups = 0;
     @ConfigProp(info="Rework M13.2 (Q391): with RwLinkedGroups=1, at most this many group transfers per server tick; a member over the budget waits for its next check, 20 ticks later. Transfers when a chunk loads are not limited. 0 = no limit. Default 50")
     public static int RwLinkedBudget = 50;
@@ -385,6 +386,17 @@ public class CustomNpcs {
                     Class.forName("noppes.npcs.rework.army.ArmyClient").getMethod("install").invoke(null);
                 } catch (ReflectiveOperationException e) {
                     LogWriter.error("RWARMY client not installed", e);
+                }
+            }
+        }
+        // M13.2b (Q395): the rwlinked channel exists only with the switch.
+        if (RwLinkedGroups == 1) {
+            LinkedNet.init();
+            if (ev.getSide().isClient()) {
+                try {
+                    Class.forName("noppes.npcs.rework.linked.LinkedClient").getMethod("install").invoke(null);
+                } catch (ReflectiveOperationException e) {
+                    LogWriter.error("RWLINKED client not installed", e);
                 }
             }
         }
