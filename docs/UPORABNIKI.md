@@ -82,6 +82,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`); >=1 also enables `blendTo` and `/npcanim` (set on server and clients) |
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
 | `RwArmies` | 0 | armies: `/rwarmy`, `ArmyApi` and the channel `rwarmy`, register and move orders saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs); also `RwArmyClusterRadius` (48, 1–512), `RwArmyClusterMin` (8, 1–1024), `RwArmyCompany` (8, 1–24; only 8 tested in-world), `RwArmyMaxMarches` (2, 0–16: armies with an active move that hold travelling chunk tickets; 0 = no tickets) |
+| `RwLinkedOwnFields` | 0 | Linked NPCs: each member keeps its own home, orientation, moving path and place on that path when group data is applied; 0 = original (see §6). Does not repair values already overwritten |
 | `RwJavaClasspath` | empty | enables Java scripts (see §4); `auto` = classpath built from the running server |
 
 ### Per-NPC settings (saved in the NPC)
@@ -318,6 +319,14 @@ Not proven, so not claimed:
   staff: server p95 10.22 ms and the army arrived. Combat, terrain, 50/500 and several armies were not measured.
   A 200 army can end a short leg as BLOCKED with its centre 1.4 blocks from the goal (v2, with M11.5).
   The live Xaero map with an army must be checked by hand in a real modpack client.
+- **Linked NPCs (`RwLinkedOwnFields`, off by default):** with 0 the original behaviour stays: every member takes the
+  orientation and path index of the NPC edited last, and a member with a path gets the first point of its own path
+  as its home, so it can walk there. With 1 a member with a path keeps these
+  ([M13.1](meritve/2026-11-04-M13.1-povezani.md)), also after a world reload. Turning the switch on does not restore
+  values that were already overwritten. Tested on a dev dedicated server with two members, without a player or the GUI;
+  members without a path, a chunk unloading while the server runs, rotation and `RwFlightMode` were not tested in the world.
+  Cost was not measured (it runs only on a link, an edit or a load). Group transfer stays all-or-nothing and without
+  scripts or undo until M13.2. The config text of this key still wrongly says a member takes the edited NPC's home.
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).

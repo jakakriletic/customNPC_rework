@@ -14,11 +14,13 @@ import java.util.Iterator;
 import java.util.List;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.LogWriter;
 import noppes.npcs.NBTTags;
 import noppes.npcs.entity.EntityCustomNpc;
 import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.rework.linked.LinkedOwnFields;
 import noppes.npcs.util.NBTJsonUtil;
 
 public class LinkedNpcController {
@@ -106,7 +108,11 @@ public class LinkedNpcController {
             }
             npc.linkedLast = data.time;
             List<int[]> points = npc.ais.getMovingPath();
-            NBTTagCompound compound = NBTTags.NBTMerge(this.readNpcData(npc), data.data);
+            NBTTagCompound own = this.readNpcData(npc);
+            NBTTagCompound compound = NBTTags.NBTMerge(own, data.data);
+            if (CustomNpcs.RwLinkedOwnFields == 1) {
+                LinkedOwnFields.restore(own, compound);
+            }
             npc.display.readToNBT(compound);
             npc.stats.readToNBT(compound);
             npc.advanced.readToNBT(compound);
@@ -117,6 +123,13 @@ public class LinkedNpcController {
             npc.ais.readToNBT(compound);
             npc.transform.readToNBT(compound);
             npc.ais.setMovingPath(points);
+            if (CustomNpcs.RwLinkedOwnFields == 1) {
+                // setMovingPath moves the home to the first path point (Q384); put the member's own home back.
+                BlockPos home = LinkedOwnFields.home(own);
+                if (home != null) {
+                    npc.ais.setStartPos(home);
+                }
+            }
             npc.updateClient = true;
         }
     }

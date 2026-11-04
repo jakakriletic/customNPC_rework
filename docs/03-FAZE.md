@@ -680,8 +680,8 @@ izmerjeno proti originalu (3 ponovitve, D-016); prikaz skinov enak originalu.
 NPC-je v svetu, tudi na nenaložene, brez ponovnega postavljanja; v seznamu palice (desni klik v
 zrak) se da izbrati in urejati več NPC-jev. Zahteva uporabnika 26. 10. 2026.
 **Raziskava M13.0 (26. 10.):** [zapis](raziskave/M13.0-mnozicno-urejanje.md) — CNPC to že ima
-kot skrite »Linked NPC« (`LinkedNpcController`), ki pa prepišejo dom in usmerjenost vseh
-povezanih NPC-jev, prenesejo vse ali nič, ne prenesejo skript in zahtevajo povezovanje enega po
+kot skrite »Linked NPC« (`LinkedNpcController`), ki pa prepišejo usmerjenost in indeks poti ter premaknejo dom
+članov s potjo (Q384), prenesejo vse ali nič, ne prenesejo skript in zahtevajo povezovanje enega po
 enega. Zasnova popravi in razširi ta mehanizem namesto novega identifikatorja.
 
 **Vhodni pogoj:** nič iz M4–M11. **Vrstni red:** neodvisen; izvede se po M4, pred M6
@@ -692,7 +692,7 @@ enega. Zasnova popravi in razširi ta mehanizem namesto novega identifikatorja.
 | ID | Paket | Vel. |
 |---|---|---|
 | ~~M13.0~~ | Raziskava — **narejeno 26. 10.** ([zapis](raziskave/M13.0-mnozicno-urejanje.md)); ob začetku preveri na kodi v `src/patch` | S |
-| M13.1 | Reprodukcija in popravek: povezani NPC-ji ohranijo svoj dom, usmerjenost, pot, lego, `RwArmy`, `RwNavBackend` (stikalo, privzeto original, D-007); scenarij z dvema povezanima NPC-jema na različnih mestih | S |
+| ~~M13.1~~ | **Sprejet 4. 11., poskus 2** (Q380–Q388, [zapis](meritve/2026-11-04-M13.1-povezani.md)): `RwLinkedOwnFields` (privzeto 0) ohrani dom, usmerjenost, pot in indeks poti; svetovna lega in oznake entitete niso podatki skupine. Brez igralca/GUI-ja, dva člana; naslednji M13.2 | S |
 | M13.2 | Kategorije prenosa na skupino (videz, ime in naslov, statistike, AI, inventar, advanced, skripte, transform), skripte nova kategorija; razveljavitev zadnje spremembe (`.json_prev`); postopen prenos pri velikem številu naloženih članov | M |
 | M13.3 | Seznam palice z več izbirami: Shift/Ctrl-klik, filter po imenu, »vsi z istim imenom v radiu«; dejanja: poveži s skupino, kopiraj nastavitve z izbranega NPC-ja (enkratno, s kategorijami), izbriši, ponastavi; prikaz skupine in števila članov | M |
 | M13.4 | Kloner »postavi kot povezan«; obvestilo »posodobljeno N NPC-jev«; preverba v klientu z igralcem (GUI, nenaloženi chunki, ponovno nalaganje sveta, dedicirani strežnik) | S |

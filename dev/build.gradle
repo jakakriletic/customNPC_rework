@@ -398,6 +398,8 @@ task testOriginal(type: Test) {
     exclude '**/ArmyStaffPermTest.class'
     // M11.7a: the reflection bridge contract does not exist in the original.
     exclude '**/ArmyBridgeContractTest.class'
+    // M13.1: the linked NPC own-field helper does not exist in the original.
+    exclude '**/LinkedOwnFieldsTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

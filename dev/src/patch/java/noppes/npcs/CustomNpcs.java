@@ -245,6 +245,8 @@ public class CustomNpcs {
     public static int RwArmyCompany = 8;
     @ConfigProp(info="Rework M11.6 (Q301, Q349-Q353): with RwArmies=1, how many armies with an active move may hold chunk tickets at once (0-16). The tickets travel with the members (their chunks plus one ring, at most 49 chunks per army), so a march continues without a player nearby; after a restart an active move first holds the area of its saved last known position until its members are loaded. Further armies march without tickets until a slot is free. Tickets are released at arrival, block, stop and server stop. Read at startup. 0 = no tickets (M11.3 behaviour). Default 2")
     public static int RwArmyMaxMarches = 2;
+    @ConfigProp(info="Rework M13.1 (Q380): 1 = a linked NPC keeps its own home, orientation, moving path and place on that path when its Linked NPC group data is applied; 0 = original behaviour, every member takes the home, orientation and path index of the NPC edited last. Position, rotation, RwArmy, RwNavBackend and RwFlightMode are never group data. Default 0")
+    public static int RwLinkedOwnFields = 0;
     public static long ticks;
     @SidedProxy(clientSide="noppes.npcs.client.ClientProxy", serverSide="noppes.npcs.CommonProxy")
     public static CommonProxy proxy;

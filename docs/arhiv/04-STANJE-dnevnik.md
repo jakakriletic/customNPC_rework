@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 218 → 1)
+# Arhiv: dnevnik sej (vnosi 219 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,17 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (219) — M11.9: robni primeri (sprejet)
+
+**Paket:** M11.9 (Q370–Q373) · **Stanje:** sprejet na poskusu 1, produkcija nespremenjena; `RwArmies` ostane 0.
+Pet vojsk po 8: voda/grlo ARRIVED 8/8, prepad BLOCKED brez padca, zaprti član BLOCKED ob age 753 brez lažnega prihoda.
+Dve pravi smrti + unassign med pohodom: 5 prispe in drži položaj; reload nadaljuje povratek brez novega ukaza, stop CANCELLED.
+Stikalo 0: brez ukaza/runtima, `rwarmies.dat` bajtno enak. v1 FAIL je bila napaka harnessa (Q372), ni produkcijski poskus.
+Controller `m119-edges-v2` PASS na `3d4cbf3a…`; unit/build/package se ne ponavljajo, ker produkcija ni spremenjena (Q90).
+Meje: dev dedicated, prisilni chunki, ena četa, kratek cilj; `maxStep` 5,95 od 6; `ArmyApi.members` vrača umirajoče do 20 tickov.
+Noben workload zagnan iz seje; nepovezano delo ohranjeno. Naslednji M11.10; M10.3 blokiran Q1.
+[Dokazi in omejitve](../meritve/2026-11-03-M11.9-robni-primeri.md).
 
 ### 2026-11-03 (218) — M11.7b: Xaero most (sprejet)
 
