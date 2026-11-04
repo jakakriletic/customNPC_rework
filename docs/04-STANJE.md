@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-04** (seja 226) — M13.4 sprejet (Q429): `m134-cloner-v7` PASS na `4ccc5cf1…` (127 preverb, 9 PNG pregledanih); unit/build/package na enaki prevedeni kodi `9966cac7…`. [Zapis](meritve/2026-11-04-M13.4-kloner.md). |
-| Trenutni milestone | **M13.4 zaključen pod stikalom**, M11.5 in M13.0–M13.4 zaključeni; **naslednji M13.5** (izhodni dokaz 100 NPC-jev, Q430). v1.0 sprejet z omejitvami; M10.3/IO4 odprta (Q1). |
-| Naslednji paketi | **M13.5** 100 že postavljenih NPC-jev z eno izbiro v seznamu palice (izhod M13, Q430) → omejitve `UPORABNIKI.md` §6, odložene samo zaradi 2 poskusov (Q407). M13.4 sprejet Q429. M12 na koncu; M15 po odločitvi lastnika. Q90/Q92 veljata s spremembami Q407: brez meje poskusov ali proračuna testov, timeout ≤14400 s; kratki zapisi in privzeto izklopljena stikala brez cenovne meje. |
+| Zadnja posodobitev | **2026-11-04** (seja 227) — M13.5 sprejet (Q433): `m135-hundred-v3` PASS na `715c381a…` (62 preverb, 5 PNG pregledanih); unit/build/package na enaki Javi `d6a6ed39…`. [Zapis](meritve/2026-11-04-M13.5-sto.md). |
+| Trenutni milestone | **M13 zaključen pod stikali** (M13.0–M13.5; izhod pokrit z ločenimi scenariji, Q433), M11.5 sprejet; **naslednje omejitve `UPORABNIKI.md` §6 po Q407**. v1.0 sprejet z omejitvami; M10.3/IO4 odprta (Q1). |
+| Naslednji paketi | **Omejitve `UPORABNIKI.md` §6, odložene samo zaradi 2 poskusov (Q407)**. M13.5 sprejet Q433. M12 na koncu; M15 po odločitvi lastnika. Q90/Q92 veljata s spremembami Q407: brez meje poskusov ali proračuna testov, timeout ≤14400 s; kratki zapisi in privzeto izklopljena stikala brez cenovne meje. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **306** datotek `.java` v `src/patch`, od tega **226** rework (+4 v M13.4). Build/package PASS na `9966cac7…` (enaka prevedena koda kot `4ccc5cf1…`). |
-| Testi | **818** metod `@Test` v **115** datotekah (+2 baseline, +4 `LinkedClonerTest`). Unit PASS na `9966cac7…`; `m134-cloner-v7` PASS na `4ccc5cf1…`. |
+| Prevedljivih razredov | **307** datotek `.java` v `src/patch`, od tega **227** rework (+1 harness v M13.5). Build/package PASS na `d6a6ed39…` (enaka prevedena koda kot `715c381a…`). |
+| Testi | **818** metod `@Test` v **115** datotekah. Unit PASS na `d6a6ed39…`; `m135-hundred-v3` PASS na `715c381a…`. |
 | Odprti pojavi | nobenega blokirnega; Q84 (M4.17 + M4.10 zid 6/6 → 5/6, vzrok [H], ovira za privzeti vklop kombinacije); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -46,7 +46,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
 | M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b/d brez sprejema; celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
 | M11 Poveljevanje prek zemljevida | **M11.5 sprejet po Q407** | 32 članov prehodi ≥200 z restartom, oba ticket resume in kratka noga 200 ARRIVED; devet PASS na `299d947a…` (Q418). Celoten izhod M11 (dolgi pohod 200 skozi teren/nenaložen svet in živa mapa) ostaja nepokrit. |
-| M13 Povezani NPC-ji | **M13.0–M13.3 zaključeni** (v2, Q379) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun in GUI (`RwLinkedGroups`), [M13.3 seznam palice](meritve/2026-11-04-M13.3-palica.md) sprejet Q411; obe stikali privzeto 0. M13.4 po M11.5 (Q407); celoten M13 izhod še ni potrjen. |
+| M13 Povezani NPC-ji | **M13.0–M13.5 zaključeni pod stikali** (v2, Q433) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun, GUI, seznam palice, kloner (`RwLinkedGroups`); obe stikali privzeto 0. [M13.5](meritve/2026-11-04-M13.5-sto.md): 100 z eno izbiro in sprememba do vseh. Izhod pokrit z ločenimi scenariji, ne z enim skupnim. |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -56,7 +56,16 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 224 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 225 → 1, novejši zgoraj).*
+
+### 2026-11-04 (227) — M13.5: 100 NPC-jev z eno izbiro (sprejet)
+
+**Paket:** M13.5 (Q430–Q433) · **Stanje:** sprejet pod stikalom; `RwLinkedGroups` ostane 0. M13 zaključen pod stikali.
+Pravi dev klient/dedicated: 100 že postavljenih NPC-jev izbranih s prvo vrstico in *Same name*, ena povezava (`LINK:LW1:100:100`), sprememba enega člana doseže vseh 100.
+Oba 0 po restartu: izviren seznam, datoteke skupin bitno enake. `m135-hundred-v3` PASS na `715c381a…` (62 preverb, 5 PNG pregledanih); unit/build/package na enaki Javi `d6a6ed39…` (Q90).
+v1 našel napako noge seznama (Q431, popravljena); v2 padel na semenu harnessa (Q432).
+Meje: en dev par, vsi člani naloženi v radiu 32, MSPT/paketi niso merjeni; `save()` izvirno prepiše vse skupine. Izhod M13 pokrit z ločenimi scenariji.
+Naslednje omejitve §6 po Q407. M10.3 blokiran Q1. [Zapis](meritve/2026-11-04-M13.5-sto.md).
 
 ### 2026-11-04 (226) — M13.4: kloner kot povezan in obvestilo (sprejet)
 
@@ -68,18 +77,3 @@ v1–v6 so padli na harnessu (ime predmeta, sonda, handshake, Nashorn `BlockPos`
 lastna polja, točno en naložen prejemnik v obvestilu, deop zavrnitev, 0/mešani par izviren. Vseh 9 PNG pregledanih.
 Unit/build/package na enaki prevedeni kodi `9966cac7…`; brez ponovitev (Q90). Meje: en dev par, trije člani, MSPT ni merjen.
 Naslednji M13.5 (Q430): izhodni dokaz 100 NPC-jev z eno izbiro. M10.3 blokiran Q1. [Zapis](meritve/2026-11-04-M13.4-kloner.md).
-
-### 2026-11-04 (225) — M11.5: dolg pohod in popravek nadaljevanja (sprejet)
-
-**Paket:** M11.5 (Q412–Q418, D-104) · **Stanje:** sprejet pod stikalom; `RwArmies` ostane 0.
-Omejene prave poti ohranijo čete/pasove/smer; zadnji prehodni meter vodi isti move helper, brez širjenja prihoda.
-Staro pot vodje pred sidrnim iskanjem počisti: native isti cilj sicer vrne tudi staro delno pot (Q416).
-Na `299d947a…` vseh devet controller testov PASS: unit (+17), build/package, long 70, short 50,
-swarm 49, teren 53, strict ticket 94 in parna cena. Oba ticket resume ARRIVED; 32 članov prehodi
-najmanj 238,267, konča največ 9,440 od cilja z razmikom ≥2,000; po restartu 8 etap. Ovira BLOCKED, pri 0 bitna enakost.
-Cena 200, ena ponovitev 60+180 s: p95 idle/pohod 6,685/10,748 ms, alokacija 48,2/74,1 MB/s, nič tickov >50 ms.
-Kratka noga ARRIVED; zadnjih 25 končnih čet v logu 200 na mestu/0 neporavnanih (aktivni vzorec ni dokaz).
-Meje: ravni dolg pohod 32, ločeni ticket 8/2/2 in kratki teren/roj; dolgi pohod 200 skozi teren/nenaložen svet in živa mapa še nista dokazana.
-Po seriji samo dokumentacija, brez ponavljanja PASS (Q90). Noben workload iz seje, nepovezano delo ohranjeno.
-Dokumentacija in kazala posodobljeni; commit/push zaključi paket. Naslednji M13.4; Q1 ostane.
-[Dokazi, hipoteza in merila](meritve/2026-11-03-M11.5-dolg-pohod.md).

@@ -381,16 +381,22 @@ Not proven, so not claimed:
   tested with one real dev client, a dev dedicated server and six NPCs: filter, same-name radius, selection, appearance copy,
   link, delete, reset, primary edit, rights removed, both sides at 0 and client 1/server 0. At most 1000 nearest loaded NPCs
   in the player's dimension are listed; group counts include only loaded members. Long footer text is shortened.
-  Shift/Ctrl states were inserted by the harness; physical modifier keys, 100+ selections, all copy categories, packaged/integrated
+  Shift/Ctrl states were inserted by the harness; physical modifier keys, all copy categories, packaged/integrated
   pairs and simultaneous editors were not tested. Server MSPT, allocation and packet cost were not measured.
   The original tutorial overlay can cover the top right button. The original list can merge same-name rows at the same distance;
-  the new list uses entity IDs. 100+ selections at once are still unproven.
+  the new list uses entity IDs.
 - **Cloner "place as linked" and update message ([M13.4](meritve/2026-11-04-M13.4-kloner.md), `RwLinkedGroups`, off by default):**
   tested with one real dev client, a dev dedicated server and one group of three members: new and existing group from a
   local and a server clone, a member in a truly unloaded chunk (no forced chunks) that updates when loaded and after a
   restart while keeping its own home, orientation and path, rights removed with the cloner open, both sides at 0 and
   client 1/server 0. The message counts only loaded members. Packaged/integrated pairs, simultaneous editors and large
   groups were not tested; MSPT was not measured (one transfer about 0.6 ms as data).
+- **100 linked NPCs ([M13.5](meritve/2026-11-04-M13.5-sto.md), `RwLinkedGroups`, off by default):** with one real dev client and a dev dedicated
+  server, 100 placed NPCs were selected with *Same name*, linked with one action and all received an edit of one member;
+  both sides at 0 kept the original list. All 100 were loaded and within the 32 block radius, with `RwLinkedOwnFields=0`.
+  The M13 exit rests on separate scenarios: unloaded members, categories, undo and own fields were tested with a few members,
+  not with 100. Packaged/integrated pairs and physical Shift/Ctrl were not tested; MSPT and packets were not measured.
+  Saving one group rewrites the files of all groups (original behaviour).
 - **Original bug, not fixed:** removing a Linked NPC group does not delete its file, so the group comes back after a
   restart (from the code, not run).
 

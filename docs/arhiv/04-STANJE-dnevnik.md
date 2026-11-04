@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 224 → 1)
+# Arhiv: dnevnik sej (vnosi 225 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,21 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-04 (225) — M11.5: dolg pohod in popravek nadaljevanja (sprejet)
+
+**Paket:** M11.5 (Q412–Q418, D-104) · **Stanje:** sprejet pod stikalom; `RwArmies` ostane 0.
+Omejene prave poti ohranijo čete/pasove/smer; zadnji prehodni meter vodi isti move helper, brez širjenja prihoda.
+Staro pot vodje pred sidrnim iskanjem počisti: native isti cilj sicer vrne tudi staro delno pot (Q416).
+Na `299d947a…` vseh devet controller testov PASS: unit (+17), build/package, long 70, short 50,
+swarm 49, teren 53, strict ticket 94 in parna cena. Oba ticket resume ARRIVED; 32 članov prehodi
+najmanj 238,267, konča največ 9,440 od cilja z razmikom ≥2,000; po restartu 8 etap. Ovira BLOCKED, pri 0 bitna enakost.
+Cena 200, ena ponovitev 60+180 s: p95 idle/pohod 6,685/10,748 ms, alokacija 48,2/74,1 MB/s, nič tickov >50 ms.
+Kratka noga ARRIVED; zadnjih 25 končnih čet v logu 200 na mestu/0 neporavnanih (aktivni vzorec ni dokaz).
+Meje: ravni dolg pohod 32, ločeni ticket 8/2/2 in kratki teren/roj; dolgi pohod 200 skozi teren/nenaložen svet in živa mapa še nista dokazana.
+Po seriji samo dokumentacija, brez ponavljanja PASS (Q90). Noben workload iz seje, nepovezano delo ohranjeno.
+Dokumentacija in kazala posodobljeni; commit/push zaključi paket. Naslednji M13.4; Q1 ostane.
+[Dokazi, hipoteza in merila](../meritve/2026-11-03-M11.5-dolg-pohod.md).
 
 ### 2026-11-04 (224) — M13.3: več izbir v seznamu palice (sprejet)
 

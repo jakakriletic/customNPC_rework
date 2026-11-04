@@ -161,10 +161,13 @@ public final class LinkedWandPanel {
         this.gui.getButton(LINK).enabled = count > 0 && !this.groups.isEmpty();
         this.gui.getButton(COPY).enabled = count > 1;
         String group = main == null ? null : this.selection.group(main);
-        String summary = "Selected " + count + " of " + this.selection.visibleCount()
+        String summary = count + " of " + this.selection.visibleCount()
                 + (this.total > LinkedGuiCodec.MAX_ROWS ? " (nearest of " + this.total + ")" : "")
                 + (group == null ? "" : "; " + group + " loaded");
-        this.gui.getLabel(LABEL_SELECTION).label = fitLine(summary, 163);
+        // Three digit counts do not fit with the first word, and the count of the group must stay readable (Q431).
+        String full = "Selected " + summary;
+        boolean fits = Minecraft.getMinecraft().fontRenderer.getStringWidth(full) <= 163;
+        this.gui.getLabel(LABEL_SELECTION).label = fitLine(fits ? full : summary, 163);
         this.gui.getLabel(LABEL_STATUS).label = fitLine(this.status, 247);
     }
 
