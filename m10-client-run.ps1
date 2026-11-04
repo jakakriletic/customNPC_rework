@@ -137,7 +137,10 @@ try{
         $null=Read-Checks "$base-$pass-server.json" $serverKeys
         $proofs+= $proof
         if($pass -eq 'edit'){
-            if($integrated){Start-Server 'offline' "saves/$world"}
+            # Q434: PlayerDataController.nameUUIDs is filled only at server start (original), so a
+            # recipient from this server session needs a restart first, on every server kind.
+            if(-not $integrated){Stop-Server}
+            Start-Server 'offline' $(if($integrated){"saves/$world"}else{$world})
             $name=[IO.File]::ReadAllText("$base-player.txt")
             Assert-JavaPrototype ($name -cmatch '^[A-Za-z0-9_]+$') 'fixture player name'
             Send "m10probe offline $name"

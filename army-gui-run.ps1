@@ -179,6 +179,7 @@ try {
     $datHash = Fingerprint $dat
     Start-Phase 'p3-off' 0
     Assert (-not (Log).Contains('RWARMY channel')) 'no channel with RwArmies=0'
+    Assert (-not (Log).Contains('Unidentified mapping from registry')) 'Q435: saved staff entry ignored at 0, no startup query'
     Start-Client 'off'
     [void](Finish-Client 'off' @('off-no-gui','off-no-channel','off-item','off-hidden'))
     Stop-Phase 'p3-off'

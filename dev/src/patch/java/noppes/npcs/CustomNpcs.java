@@ -371,7 +371,7 @@ public class CustomNpcs {
                 }
             }
         }
-        // M11.8a: stable item registry even at 0; no channel or action then.
+        // M11.8a/Q435: staff on every client, on a dedicated server only with the switch; no channel or action at 0.
         MinecraftForge.EVENT_BUS.register(new noppes.npcs.rework.army.ArmyStaff.Registration());
         if (ev.getSide().isClient()) {
             try {

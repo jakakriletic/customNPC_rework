@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-04** (seja 227) — M13.5 sprejet (Q433): `m135-hundred-v3` PASS na `715c381a…` (62 preverb, 5 PNG pregledanih); unit/build/package na enaki Javi `d6a6ed39…`. [Zapis](meritve/2026-11-04-M13.5-sto.md). |
-| Trenutni milestone | **M13 zaključen pod stikali** (M13.0–M13.5; izhod pokrit z ločenimi scenariji, Q433), M11.5 sprejet; **naslednje omejitve `UPORABNIKI.md` §6 po Q407**. v1.0 sprejet z omejitvami; M10.3/IO4 odprta (Q1). |
-| Naslednji paketi | **Omejitve `UPORABNIKI.md` §6, odložene samo zaradi 2 poskusov (Q407)**. M13.5 sprejet Q433. M12 na koncu; M15 po odločitvi lastnika. Q90/Q92 veljata s spremembami Q407: brez meje poskusov ali proračuna testov, timeout ≤14400 s; kratki zapisi in privzeto izklopljena stikala brez cenovne meje. |
+| Zadnja posodobitev | **2026-11-04** (seja 228) — matrika P2 zelena (Q436): štiri celice, regresija palice in unit/build/package PASS na `e22ef824…`; popravek palice Q435. [Zapis](meritve/2026-10-30-P2-klientska-matrika.md). |
+| Trenutni milestone | **Omejitve `UPORABNIKI.md` §6 po Q407**: matrika P2 zaprta (Q436), naslednji soak heap (Q437). M13 zaključen pod stikali, M11.5 sprejet. v1.0 sprejet z omejitvami; M10.3/IO4 odprta (Q1). |
+| Naslednji paketi | **Soak: rast heapa po full GC (P1, Q437)**, nato ostale omejitve `UPORABNIKI.md` §6 po Q407. M12 na koncu; M15 po odločitvi lastnika. Q90/Q92 veljata s spremembami Q407: brez meje poskusov ali proračuna testov, timeout ≤14400 s; kratki zapisi in privzeto izklopljena stikala brez cenovne meje. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **307** datotek `.java` v `src/patch`, od tega **227** rework (+1 harness v M13.5). Build/package PASS na `d6a6ed39…` (enaka prevedena koda kot `715c381a…`). |
-| Testi | **818** metod `@Test` v **115** datotekah. Unit PASS na `d6a6ed39…`; `m135-hundred-v3` PASS na `715c381a…`. |
+| Prevedljivih razredov | **307** datotek `.java` v `src/patch`, od tega **227** rework. Build/package PASS na `e22ef824…`. |
+| Testi | **818** metod `@Test` v **115** datotekah. Unit in klientska matrika PASS na `e22ef824…`. |
 | Odprti pojavi | nobenega blokirnega; Q84 (M4.17 + M4.10 zid 6/6 → 5/6, vzrok [H], ovira za privzeti vklop kombinacije); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -44,7 +44,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M7 Animacije | **jedro narejeno v ločenem modu** `customNPC_entities_mod` (v0.7.0, D-024) | [M7.0 raziskava](raziskave/M7.0-animacije-integracija.md) (D-095); [M7.V zagon](meritve/2026-10-29-M7.V-entities-zagon.md) 37/37 klipov (Q199); [M7.9 `Animators`](meritve/2026-10-29-M7.9-animator-api.md) (Q202); [M7.5 hooki](meritve/2026-10-29-M7.5-animacijski-hooki.md) (Q206); prvotni v1 zaključen; P7.0 raziskava (D-098); [P7a strežniški hooki](meritve/2026-11-01-P7a-dnevnik-animacij.md) sprejeti (Q281); [P7b `blendTo`](meritve/2026-11-01-P7b-blendto.md) sprejet (Q286); [P7c reload](meritve/2026-11-01-P7c-reload.md) sprejet (Q291) |
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
-| M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b/d brez sprejema; celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
+| M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b brez sprejema, M10.1d kot [P2 zelen](meritve/2026-10-30-P2-klientska-matrika.md) (Q436); celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
 | M11 Poveljevanje prek zemljevida | **M11.5 sprejet po Q407** | 32 članov prehodi ≥200 z restartom, oba ticket resume in kratka noga 200 ARRIVED; devet PASS na `299d947a…` (Q418). Celoten izhod M11 (dolgi pohod 200 skozi teren/nenaložen svet in živa mapa) ostaja nepokrit. |
 | M13 Povezani NPC-ji | **M13.0–M13.5 zaključeni pod stikali** (v2, Q433) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun, GUI, seznam palice, kloner (`RwLinkedGroups`); obe stikali privzeto 0. [M13.5](meritve/2026-11-04-M13.5-sto.md): 100 z eno izbiro in sprememba do vseh. Izhod pokrit z ločenimi scenariji, ne z enim skupnim. |
 
@@ -56,7 +56,15 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 225 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 226 → 1, novejši zgoraj).*
+
+### 2026-11-04 (228) — P2: klientska matrika zelena (sprejet)
+
+**Paket:** P2/M10.1d po Q407 (Q434–Q437) · **Stanje:** sprejet; vse štiri celice PASS na `e22ef824…`, `RwArmies` ostane 0.
+Q434: harness restart pred offline mailom tudi na dedicated. Q435: napaka produkcije iz M11.8a, palica na strežniku je originalnemu klientu zaprla povezavo; dedicated jo zdaj registrira samo pri `RwArmies>=1`, shranjeni vnos se prezre. D-101 zožen.
+`p2b-dedicated`, `-original-client`, `-original-server`, `-integrated`, `m118a-gui-v1` (98), `m118b-permissions-gui-v1` (102), unit/build/package PASS. Pet PNG pregledanih.
+Meje: en dev par, privzeta stikala, ni pakiranega klienta (Q22); O klient pri 1 ni pognan na končni kodi. Palice se pri 1→0 na dedicated izgubijo.
+Naslednji soak heap (Q437). M10.3 blokiran Q1. [Zapis](meritve/2026-10-30-P2-klientska-matrika.md).
 
 ### 2026-11-04 (227) — M13.5: 100 NPC-jev z eno izbiro (sprejet)
 
@@ -66,14 +74,3 @@ Oba 0 po restartu: izviren seznam, datoteke skupin bitno enake. `m135-hundred-v3
 v1 našel napako noge seznama (Q431, popravljena); v2 padel na semenu harnessa (Q432).
 Meje: en dev par, vsi člani naloženi v radiu 32, MSPT/paketi niso merjeni; `save()` izvirno prepiše vse skupine. Izhod M13 pokrit z ločenimi scenariji.
 Naslednje omejitve §6 po Q407. M10.3 blokiran Q1. [Zapis](meritve/2026-11-04-M13.5-sto.md).
-
-### 2026-11-04 (226) — M13.4: kloner kot povezan in obvestilo (sprejet)
-
-**Paket:** M13.4 (Q419–Q430) · **Stanje:** sprejet pod stikalom; `RwLinkedGroups` ostane 0.
-Izvirni `GuiNpcMobSpawner` najprej prenesen dobesedno in commitan ločeno (`252cc13`). Nato izbira »Linked« (ime klona = skupina,
-obstoječa se ne prepiše), sveže strežniške pravice ob postavitvi in obvestilo o posodobljenih/čakajočih naloženih članih.
-v1–v6 so padli na harnessu (ime predmeta, sonda, handshake, Nashorn `BlockPos` Double; Q423–Q428), produkcija se ni spreminjala zaradi njih.
-`m134-cloner-v7` PASS na `4ccc5cf1…` (127 preverb): tri povezane postavitve, član v resnično nenaloženem chunku in po restartu,
-lastna polja, točno en naložen prejemnik v obvestilu, deop zavrnitev, 0/mešani par izviren. Vseh 9 PNG pregledanih.
-Unit/build/package na enaki prevedeni kodi `9966cac7…`; brez ponovitev (Q90). Meje: en dev par, trije člani, MSPT ni merjen.
-Naslednji M13.5 (Q430): izhodni dokaz 100 NPC-jev z eno izbiro. M10.3 blokiran Q1. [Zapis](meritve/2026-11-04-M13.4-kloner.md).

@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). v2 M11 sprejet z omejitvami, M11.5 sprejet po ponovnem odprtju Q418; M13.0–M13.5 zaključeni (Q433). Naslednje omejitve §6 po Q407. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; pri privzeto 0 ni cenovne meje, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
+**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). v2 M11 sprejet z omejitvami, M11.5 sprejet po ponovnem odprtju Q418; M13.0–M13.5 zaključeni (Q433). Matrika P2 zelena (Q436); naslednja omejitev §6: soak heap (Q437). Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; pri privzeto 0 ni cenovne meje, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -579,7 +579,7 @@ CustomNPC+ repozitorija se ne prenesejo.
 | ~~M10.1a~~ | **Zaprt 29. 10. brez sprejema (Q220):** oba poskusa padla v harnessu na kraku O, K se ni zagnal; vse vrstice prestavljene v M10.1b. [Zapis](meritve/2026-10-29-M10.1a-matrika.md) | M |
 | ~~M10.1b~~ | **Zaprt 29. 10. brez sprejema (Q223):** oba kraka zelena po vrsticah, O = K padel samo na naključni `Eyes.Color`; [zapis](meritve/2026-10-29-M10.1b-matrika.md) | M |
 | ~~M10.1c~~ | **Primerjalni paket sprejet 29. 10. (Q225):** `m101c-matrika-v1` PASS, O/K 13/13 + 9/9 in NBT/sledi enaki; IN3/IA3/IS3/IL5/IL6 ostanejo delno pokriti. [Zapis](meritve/2026-10-29-M10.1c-matrika.md); naslednji M10.1d po Q92 | S |
-| ~~M10.1d~~ | **Zaprt brez sprejema 30. 10. (Q233), validacija v2:** oba poskusa porabljena, prevod v2 PASS, vse 4 funkcionalne celice FAIL; [zapis](meritve/2026-10-30-M10.1d-klient.md). Naslednji M10.5 → M10.4 (4 h) → M10.2 → M10.6 → M10.7 po Q92; release merila ostanejo odprta | M |
+| ~~M10.1d~~ | **Matrika zelena 4. 11. kot P2 (Q436, [zapis](meritve/2026-10-30-P2-klientska-matrika.md)).** Prej zaprt brez sprejema 30. 10. (Q233), validacija v2: oba poskusa porabljena, prevod v2 PASS, vse 4 funkcionalne celice FAIL; [zapis](meritve/2026-10-30-M10.1d-klient.md). Naslednji M10.5 → M10.4 (4 h) → M10.2 → M10.6 → M10.7 po Q92; release merila ostanejo odprta | M |
 | ~~M10.2~~ | **Sprejet 30. 10. (Q242):** kandidat `-Privzeto 1` proti baselineu 5. 10., vseh 9 celic brez alarma p95, 8/9 hitrejših; [zapis](meritve/2026-10-30-M10.2-baseline.md). Naslednji M10.6 → M10.7 po Q92 | S |
 | M10.3 | Test na **kopiji** uporabnikovega pravega sveta | M |
 | ~~M10.4~~ | **Zaprt brez sprejema 30. 10. (Q240), polni soak v2:** soak-v2 padel po 2 h 25 min, ker so bojni pari odtavali in diag chunkloader dosegel 2000 chunkov; [zapis](meritve/2026-10-30-M10.4-soak.md). Naslednji M10.2 → M10.6 → M10.7 po Q92 | S |

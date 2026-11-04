@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 225 → 1)
+# Arhiv: dnevnik sej (vnosi 226 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,17 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-04 (226) — M13.4: kloner kot povezan in obvestilo (sprejet)
+
+**Paket:** M13.4 (Q419–Q430) · **Stanje:** sprejet pod stikalom; `RwLinkedGroups` ostane 0.
+Izvirni `GuiNpcMobSpawner` najprej prenesen dobesedno in commitan ločeno (`252cc13`). Nato izbira »Linked« (ime klona = skupina,
+obstoječa se ne prepiše), sveže strežniške pravice ob postavitvi in obvestilo o posodobljenih/čakajočih naloženih članih.
+v1–v6 so padli na harnessu (ime predmeta, sonda, handshake, Nashorn `BlockPos` Double; Q423–Q428), produkcija se ni spreminjala zaradi njih.
+`m134-cloner-v7` PASS na `4ccc5cf1…` (127 preverb): tri povezane postavitve, član v resnično nenaloženem chunku in po restartu,
+lastna polja, točno en naložen prejemnik v obvestilu, deop zavrnitev, 0/mešani par izviren. Vseh 9 PNG pregledanih.
+Unit/build/package na enaki prevedeni kodi `9966cac7…`; brez ponovitev (Q90). Meje: en dev par, trije člani, MSPT ni merjen.
+Naslednji M13.5 (Q430): izhodni dokaz 100 NPC-jev z eno izbiro. M10.3 blokiran Q1. [Zapis](../meritve/2026-11-04-M13.4-kloner.md).
 
 ### 2026-11-04 (225) — M11.5: dolg pohod in popravek nadaljevanja (sprejet)
 

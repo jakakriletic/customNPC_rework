@@ -30,7 +30,7 @@ Pravila spodaj (Q90, Q92) veljajo naprej; po popravku kode se zahtevana serija s
 | # | Paket | Cilj |
 |---|---|---|
 | ~~P1~~ | soak (M10.4) — zaključen z omejitvijo (heap +44 % v 4 h odprt) | popravi diag nalagalnik chunkov (sprošča chunke, brez NPE ob stop, Q241) in zanos bojnih parov (Q240); 4 h soak zelen |
-| ~~P2~~ | klientska matrika (M10.1) — zaključen z omejitvijo (login sync popravljen; dedicated mail/relogin in mešana O/K para v2, Q254) | determinističen scenarij (barva oči ipd.), prijava, dialog/quest kliki, mail, mešani O/K pari; matrika zelena |
+| ~~P2~~ | klientska matrika (M10.1) — zelena 4. 11. v vseh štirih celicah (Q436, po Q407; login sync, dedicated mail/relogin in mešana O/K para) | determinističen scenarij (barva oči ipd.), prijava, dialog/quest kliki, mail, mešani O/K pari; matrika zelena |
 | ~~P3~~ | `RwPathResume` / `RwFlyLineOfSight` — sprejet pod stikali (vogal in labirint 6/6 z obema, Q256; samo nadaljevanje vogala ne reši) | vogal in labirint (Q82) |
 | ~~P4~~ | formacije — sprejet po merilih Q257 (G/O 8/8 mest, FA5 G 1 ≤ 1, zaostanek ≤ 1,1; izvirni skupni cilj/premer NOTE, F1–F12 odprti) | izpolni merila D-079 |
 | ~~P5~~ | Java scripting — sprejet (Java v 5 handlerjih JS = Java, `RwJavaClasspath=auto` na pakiranem Forge; pravi modpack ni preverjen, Q1) | Java tudi v player/forge/block/door/item GUI; samodejni `RwJavaClasspath` |
@@ -115,7 +115,7 @@ proračun testov, odlaganje v v2 namesto popravka). Upravljalnik rešuje problem
 zadeve, dokler funkcija ne deluje. **Prvi naslednji paket po M13.3 je M11.5 (dolg pohod čez
 `NpcNavRange`)**, ki je bil odložen samo zaradi pravila 2 poskusov (~~sprejet Q418~~); nato M13 naprej
 (~~M13.4~~ sprejet Q429; ~~M13.5~~ izhodni dokaz 100 NPC-jev sprejet Q433), nato
-odpravljanje omejitev iz `UPORABNIKI.md` §6, ki so ostale zaradi pravila 2 poskusov (M10.1d, M10.4 ...).
+odpravljanje omejitev iz `UPORABNIKI.md` §6, ki so ostale zaradi pravila 2 poskusov (~~M10.1d~~ sprejet Q436; naslednji M10.4 soak heap, Q437).
 
 ## Ocena
 

@@ -21,8 +21,9 @@ script API and adds, behind settings:
 
 - Minecraft 1.12.2, Forge 14.23.5.2847 (the tested version), Java 8.
 - Replace `CustomNPCs_1.12.2-(01Oct19).jar` in `mods/` with the rework jar. Do not keep both.
-- Put the **same jar on the server and on every client.** Mixing an original client with a rework
-  server (or the reverse) was not validated (see §6).
+- Put the **same jar on the server and on every client** where you can. Mixed pairs passed the client
+  matrix with default settings: an original client on a rework server, and a rework client on an
+  original server (see §6). An original client cannot join a dedicated server with `RwArmies=1`.
 - **Back up the whole world folder and `config/` before the first start** (see §5).
 - On first start, missing `Rw…` keys are added to `config/CustomNpcs.cfg` with the defaults below.
   Keys already present keep their value.
@@ -179,7 +180,8 @@ Mode and stance survive restart. Scripts can add `stance` after `speed` in `Army
 
 ### Army Command Staff (M11.8a)
 
-Set `RwArmies=1` on both sides. Get `customnpcs:army_staff` from Creative Tools or
+Set `RwArmies=1` on both sides. A dedicated server has the staff only with `RwArmies=1`, and an original
+client cannot join such a server. Get `customnpcs:army_staff` from Creative Tools or
 `/give <player> customnpcs:army_staff` (no recipe). Hold it in the main hand and right-click
 an NPC to edit its army, or air/ground to open the army list. An op holding the NPC wand
 can also use AI → Army.... Enter an existing army name and click **Set NPC army**; empty
@@ -194,7 +196,9 @@ keeps the previous order. **Stop** cancels; **Return here** uses your current po
 Staff moves use speed 1. **Assign within 16** asks for confirmation and assigns loaded NPCs
 in a 16-block sphere (up to 256; more changes nothing). Existing assignment permissions apply
 to each NPC; an unassigned NPC still needs an op or script. Every action checks current rights.
-The staff remains registered but inactive when armies are disabled.
+With `RwArmies=0` the staff is inactive on a client and in single player. A dedicated server at 0 does not
+have the item at all: a world saved at 1 starts without a question, but staves are dropped from inventories
+and do not come back when you return to 1.
 
 **Permissions (M11.8b):** owners and ops can choose an online or cached player (four per
 page); enter a name prefix and use **Find players** to narrow the list (up to 50 matches).
@@ -243,15 +247,18 @@ the remaining changes and keeps those already confirmed. Closing the GUI stops t
 
 Not proven, so not claimed:
 
-- **Client compatibility matrix only partly passed** (P2, Q254): with the rework on both sides,
-  login sync, dialog/quest clicks, trader, bank, skin download failure and resource reload pass on
-  an integrated and a dedicated server; mail to an offline player and relogin pass on integrated
-  only. Mixed original/rework client–server pairs are not validated. An original client on a
-  dedicated server can miss the CustomNPCs login sync (an original bug, fixed only in the rework
-  client). Mail cannot be sent to a player who first joined after the server started until the
-  next restart (original behaviour). Tested on a dev client with an offline player, not a
-  packaged client (Q22). Server-side original vs rework comparison passed only on a partial
-  matrix (M10.1c, Q225).
+- **Client compatibility matrix passed in all four cells on a dev pair** (Q436): rework on both sides on
+  an integrated and a dedicated server, an original client on a rework dedicated server, and a rework
+  client on an original dedicated server. Login sync, dialog/quest clicks, trader, bank, skin download
+  failure, resource reload, mail to an offline player and relogin all pass. This covers default settings
+  only (`RwArmies=0`), one offline player and a few close NPCs, on a dev client and not a packaged
+  client (Q22). Mixed pairs with features switched on were not run. An original client on a server at
+  `RwArmies=1` was not run on the final code; Forge refused it for the staff entry in an earlier run,
+  so expect a refusal. An original client on a dedicated server can miss the CustomNPCs login sync (an
+  original bug, fixed only in the rework client; the harness asked for one extra sync there). Mail
+  cannot be sent to a player who first joined after the server started until the next restart
+  (original behaviour). Server-side original vs rework comparison passed only on a partial matrix
+  (M10.1c, Q225).
 - **Long-run stability:** a 4 h soak with 200 NPCs ran without a server fault (49/49 samples, p95
   MSPT 3.28 → 3.47 ms), but the heap after full GC grew 168 → 242 MB (+44 %) while the test world
   kept expanding; a slow leak is not ruled out (P1). `/rwdiag chunks` is a diagnostic tool only.

@@ -1065,6 +1065,11 @@ blokov do 256 članov, ne nova večizbira iz M13. Ustvarjanje ostane izrecno op 
 Sprejeto na poskusu 1 (Q340): unit/build/package, GUI 97 in snapshot regresija 90 PASS na
 `7f086cda…`, pet PNG pregledanih z navedenimi mejami. [Dokazi/meje](meritve/2026-11-03-M11.8a-palica.md).
 
+**Zoženo s Q435 (2026-11-04):** vedno registrirana palica je za originalnega klienta manjkajoč vnos, zato se ta ni mogel
+povezati na dedicated strežnik niti pri 0. Klient palico registrira vedno, dedicated strežnik samo pri `RwArmies>=1`.
+Vnos iz sveta, shranjenega pri 1, se pri 0 prezre brez vprašanja v konzoli; palice iz inventarjev tam izginejo.
+[Dokaz](meritve/2026-10-30-P2-klientska-matrika.md).
+
 ### D-102 — M11.8b: dovoljenja prek iste strežniške avtoritete (2026-11-03, Q357–Q359)
 
 Kind 5 (≤58 B) na `rwarmy` doda players/grants/grant/revoke; odgovor ostane kind 4, snapshot v1 nespremenjen.

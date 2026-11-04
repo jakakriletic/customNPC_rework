@@ -139,7 +139,7 @@ public final class ArmyGuiHarness {
             act("off assertions",()->{
                 check("off-no-gui",mc.currentScreen==null,"inert staff");
                 check("off-no-channel",ArmyClient.latest()==null,"no snapshot");
-                check("off-item",mc.player.getHeldItemMainhand().getItem()==ArmyStaff.item,"same registered item");
+                check("off-item",mc.player.getHeldItemMainhand().getItem()!=ArmyStaff.item && net.minecraft.item.Item.getByNameOrId("customnpcs:army_staff")==null,"Q435: no staff from a dedicated server at 0");
             });
             cmd("replaceitem entity @p slot.hotbar.0 customnpcs:npcwand");
             add("wand off",20,()->mc.playerController.interactWithEntity(mc.player,npc("AGUI_A"),EnumHand.MAIN_HAND),()->mc.currentScreen instanceof GuiNPCInterface2);

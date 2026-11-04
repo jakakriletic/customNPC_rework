@@ -12,16 +12,31 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import noppes.npcs.entity.EntityNPCInterface;
 
-/** Always registered for save/mixed-switch compatibility; inert with RwArmies=0. */
+/**
+ * Q435: a client always registers it (saves, client 0 on server 1; an entry the server lacks is simply
+ * inactive for that session). A dedicated server registers it only with RwArmies>=1, because Forge refuses
+ * a client that lacks an entry of the server, so an original client could not join a server at 0.
+ * Inert with RwArmies=0.
+ */
 public final class ArmyStaff extends Item {
+    private static final net.minecraft.util.ResourceLocation REGISTRY_NAME = new net.minecraft.util.ResourceLocation("customnpcs", "army_staff");
     public static ArmyStaff item;
     private ArmyStaff() {
-        setRegistryName("customnpcs", "army_staff"); setUnlocalizedName("army_staff"); setMaxStackSize(1);
+        setRegistryName(REGISTRY_NAME); setUnlocalizedName("army_staff"); setMaxStackSize(1);
         setCreativeTab(net.minecraft.creativetab.CreativeTabs.TOOLS);
     }
     public static final class Registration {
         @SubscribeEvent public void items(RegistryEvent.Register<Item> event) {
-            item = new ArmyStaff(); event.getRegistry().register(item);
+            if (noppes.npcs.CustomNpcs.RwArmies >= 1
+                    || net.minecraftforge.fml.common.FMLCommonHandler.instance().getSide().isClient()) {
+                item = new ArmyStaff(); event.getRegistry().register(item);
+            }
+        }
+        /** A world saved with the entry must still start on a dedicated server at 0, without a console query. */
+        @SubscribeEvent public void missing(RegistryEvent.MissingMappings<Item> event) {
+            for (RegistryEvent.MissingMappings.Mapping<Item> mapping : event.getAllMappings()) {
+                if (REGISTRY_NAME.equals(mapping.key)) { mapping.ignore(); }
+            }
         }
         @SubscribeEvent public void interact(net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteract e) {
             if (active(e) && e.getTarget() instanceof EntityNPCInterface) {

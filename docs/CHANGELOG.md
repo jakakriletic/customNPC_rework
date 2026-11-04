@@ -7,8 +7,8 @@ rollback: [UPORABNIKI.md](UPORABNIKI.md). Source of every entry: the register
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja) and the `@ConfigProp` text in
 `CustomNpcs.java`. 0 is always the original behaviour.
 
-This is a release **candidate**: the client matrix (M10.1a/b/d), the 4 h soak (M10.4) and a real
-modpack test (M10.3, Q1) did not pass or were not run. See [UPORABNIKI.md §6](UPORABNIKI.md#6-known-limitations-of-this-release).
+This is a release **candidate**: the 4 h soak (M10.4) left an open heap question and a real
+modpack test (M10.3, Q1) was not run. The client matrix passed later on a dev pair (Q436). See [UPORABNIKI.md §6](UPORABNIKI.md#6-known-limitations-of-this-release).
 
 ### Behaviour changes ON by default
 
@@ -93,7 +93,11 @@ Diagnostic commands: `/rwtarget`, `/rwhitbox`, `/rwfar`, `/rwimpostor`, `/rwcoll
   original drops `Rw…` keys on its next save and keeps Java scripts as text without running them.
 - Same jar on server and every client; mixed original/rework pairs are not validated.
 
+**Later fix (Q435):** a dedicated server at `RwArmies=0` no longer registers `customnpcs:army_staff`, so an
+original client can join it. A world saved at 1 still starts at 0 without a question, but staves leave inventories.
+An original client cannot join a dedicated server at 1.
+
 ### Moved to v2
 
-Full client matrix and 4 h soak, Momentum flight mode,
+4 h soak, Momentum flight mode,
 Java API for items/blocks/quests/dialogs/factions.

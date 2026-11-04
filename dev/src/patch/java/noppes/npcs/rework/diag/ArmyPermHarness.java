@@ -127,7 +127,7 @@ public final class ArmyPermHarness {
             act("off assertions",()->{
                 check("off-no-gui",!(mc.currentScreen instanceof GuiArmyStaff),String.valueOf(mc.currentScreen));
                 check("off-no-reply",ArmyClient.staffReply()==null && ArmyClient.latest()==null,"no army state or reply");
-                check("off-item",mc.player.getHeldItemMainhand().getItem()==ArmyStaff.item,"stable registered staff");
+                check("off-item",mc.player.getHeldItemMainhand().getItem()!=ArmyStaff.item && net.minecraft.item.Item.getByNameOrId("customnpcs:army_staff")==null,"Q435: no staff from a dedicated server at 0");
             });
         } else if("verify".equals(phase)) {
             cmd("replaceitem entity @p slot.hotbar.0 customnpcs:army_staff"); openAir();

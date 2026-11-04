@@ -1,7 +1,7 @@
 # P2 — klientska matrika (popravek omejitve M10.1d)
 
-**Stanje:** zaključen z omejitvijo po poskusu 2 (zadnji, Q92; Q254–Q255). Popravek login synca (Q251) ostane v
-produkciji; celotna matrika ni zelena, preostanek (dedicated relogin/offline mail, mešana O/K para) je v2.
+**Stanje:** matrika zelena v vseh štirih celicah po ponovnem odprtju (Q407, Q434–Q436, 4. 11.; zadnji razdelek). Prvotni
+zaključek z omejitvijo (Q254–Q255) je spodaj ohranjen kot zgodovina. Popravek login synca (Q251) ostane v produkciji.
 
 ## Vzroki padcev M10.1d (iz obstoječih logov, `audit/m101d-*-2026-10-30-*`)
 
@@ -49,3 +49,36 @@ in pogoji nespremenjeni. Sprememba harnessa = poskus 2, novi ID-ji `p2-*-v2`.
 **Zaključek:** popravek Q251 je dokazan na integrated in na dedicated K/K (login sync 3/3 trditve na dedicated, prej
 JOIN timeout). Ni dokazano: dedicated relogin/offline mail/playerdata po restartu, mešana para O-klient/K-strežnik in
 K-klient/O-strežnik. Popravek harnessa (restart pred offline mailom ali prejemnik iz `nameUUIDs`) je v2.
+
+## Dokončanje 4. 11. (Q407, Q434–Q436)
+
+**Q434, harness:** pred offline mailom se tudi dedicated strežnik znova zažene, ker izvirni `nameUUIDs` nastane samo ob
+zagonu. Merila in ključi so nespremenjeni. Na `e48eda6d…` je `p2b-dedicated-v1` s tem prešel.
+
+**Q435, napaka produkcije:** `p2b-original-client-v1` je na `e48eda6d…` padel: `Fatally missing registry entries`,
+`customnpcs:army_staff` (M11.8a, Q336). Originalni klient se sploh ni mogel povezati na K strežnik, tudi pri `RwArmies=0`.
+Popravek: dedicated strežnik registrira palico samo pri `RwArmies>=1`, klient vedno; `MissingMappings` prezre shranjeni
+vnos. Harness `off-item` (`m118a`, `m118b`) zdaj zahteva, da predmeta na strežniku pri 0 ni.
+
+**Rezultati na `e22ef824…` (controller PASS):**
+
+| Test | Klient/strežnik | Rezultat |
+|---|---|---|
+| `p2b-dedicated-v1` | K/K dedicated | klient 13 + 5, strežnik 13 + 5, offline 1 |
+| `p2b-original-client-v1` | O/K | enako; originalni klient enkrat `resync` (izvirna napaka, Q251) |
+| `p2b-original-server-v1` | K/O | enako; brez `resync`, register brez napake |
+| `p2b-integrated-v1` | K/K integrated | enako |
+| `m118a-gui-v1` | K/K, `RwArmies` 1→0 | 98 preverb; svet pri 0: `Found a missing id`, brez `Unidentified mapping`, `rwarmies.dat` bitno enak |
+| `m118b-permissions-gui-v1` | K/K, `RwArmies` 1→0 | 102 preverbi; isti pogoj pri 0 |
+| unit, build, package | | PASS |
+
+Pet PNG pregledanih (Mailbox z `M101D_Offline` v O/K, K/O in K/K dedicated; trader O/K, bank K/O): pravilni GUI, brez napak.
+Ostali PNG niso bili pregledani; njihovo prisotnost preveri harness.
+
+**Cena Q435:** pri prehodu 1→0 na dedicated strežniku palice izginejo iz inventarjev in se pri vrnitvi na 1 ne vrnejo. To je
+sklep iz vedenja Forge; samega izgubljanja predmeta harness ne preveri. Sprejeto, ker `RwArmies=1` ostaja izbira, privzeta
+nastavitev pa originalnemu klientu ne sme zapreti povezave.
+
+**Meje:** en dev par, en offline igralec, nekaj bližnjih NPC-jev, privzeta stikala (`RwArmies=0`), ni pakiranega klienta (Q22).
+O klient na strežniku pri 1 ni bil pognan na končni kodi; zavrnitev sledi iz padca na `e48eda6d…` z istim mehanizmom.
+K klient na O strežniku: nedejavnost palice izhaja iz vira Forge, predmet se v tej celici ni uporabljal.
