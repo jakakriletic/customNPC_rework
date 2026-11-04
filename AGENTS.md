@@ -49,5 +49,8 @@ controller, the owner has authorized continuous autonomous development until Sto
   tests or repeats (Q90 stays). Only a hang guard remains (`timeoutSeconds` <= 14400). After M13.3,
   do M11.5 (long march beyond `NpcNavRange`) next, then continue M13, then fix limits in
   `docs/UPORABNIKI.md` §6 that were left only by the 2-attempt rule.
+- Owner decision Q444 (4. 11. 2026): after the §6 fixes, do M16 (built-in animation core modelled on
+  `../ladja_mod` clips/controls/`scripts/gusarji`, read-only) before M12, M14 and M15; new animations
+  must be one data file for the AI, no Java or rebuild. Details in `docs/03-FAZE.md` M16.
 - Keep state/docs current; commit only your package and push without force. Native CLI
   permissions are configured per process by the controller, not by changing global settings.

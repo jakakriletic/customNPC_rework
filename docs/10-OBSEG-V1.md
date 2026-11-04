@@ -117,6 +117,13 @@ zadeve, dokler funkcija ne deluje. **Prvi naslednji paket po M13.3 je M11.5 (dol
 (~~M13.4~~ sprejet Q429; ~~M13.5~~ izhodni dokaz 100 NPC-jev sprejet Q433), nato
 odpravljanje omejitev iz `UPORABNIKI.md` §6, ki so ostale zaradi pravila 2 poskusov (~~M10.1d~~ sprejet Q436; naslednji M10.4 soak heap, Q437).
 
+**Q444 (odločitev lastnika 4. 11. 2026): vgrajeno animacijsko jedro (M16).** Po odpravi omejitev §6
+(M10.4 in ostale) je naslednji **M16** (`03-FAZE.md`), pred M12, M14 in M15. Rework dobi lastno
+animacijsko jedro po vzoru `ladja_mod` (semantične kontrole v stopinjah, utripi z easingom, dogodki,
+prevajalnik poz/YAML → JSON), tako da je nova animacija za AI samo podatkovna datoteka, brez Jave in
+rebuilda. `customnpcentities` ni več pogoj; obstoječi API `Animators`/hooki ostanejo združljivi. M15
+(bitja iz mape) gradi na M16.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela

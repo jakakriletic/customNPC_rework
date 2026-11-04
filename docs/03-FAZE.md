@@ -777,6 +777,41 @@ notranjost `customNPC_entities_mod` 0.7.0 (refleksija kot P7c); GUI se dokončno
 
 ---
 
+## M16 — Vgrajeno animacijsko jedro (Q444, zahteva lastnika 4. 11.)
+
+**Cilj:** rework sam animira NPC-je, brez `customNPC_entities_mod`, in to tako, da je nova
+animacija za AI (ali lastnika) **ena podatkovna datoteka**: brez Jave, brez rebuilda, brez ročnega
+računanja radianov in pivotov. Vrstni red: po odpravi omejitev §6 (Q407), pred M12, M14 in M15.
+
+**Vzor (preberi najprej):** `../ladja_mod` (samo branje, brez git operacij, `mod/pirate-mca` se ne
+dotika):
+- `mod/davincis-vessels/src/main/resources/assets/davincisvessels/animations/*.json` — format:
+  seznam `controls` (`arm_r.raise`, `elbow_r.bend`, `knee_l.bend`, `head.nod`, `torso.twist`,
+  `weapon.pitch`, `root.lift` …, vse v stopinjah, z vidika lika), `clips` z `length` in `beats`
+  (`t`, `ease`, `v`), dogodki v času (zvok, orožje v roko/stran);
+- `common/entity/PirateClips.java`, `SpiritClips.java` (nalaganje, dolžine in dogodki tudi na
+  strežniku), `client/render/ClipPoser.java` (mešanje, vrtenje zgornjega dela okoli pasu),
+  `AdmiralAnimator.java`, `SpiritAnimator.java` (predvajanje, prehodi);
+- `scripts/gusarji/` (`rig.py`, `anim.py`, `body.py`): okostje, knjižnica poimenovanih poz,
+  `*.anim.yaml` → JSON prevajalnik z IK za roke ob prevajanju, predogled v sliko.
+
+| Paket | Vsebina | Velikost |
+|---|---|---|
+| M16.0 | Raziskava: primerjaj `ladja_mod` sistem, `customnpcentities` 0.7.0 (geo/animacije, ki jih rework že podpira prek `Animators`/`RwAnimHooks`) in CNPC modele (biped, MorePlayerModels deli). Odloči format (semantične kontrole za biped + neposredne kosti za poljuben `geo`), kje teče predvajanje (klient) in kaj ve strežnik (dolžine, dogodki), sinhronizacija | S |
+| M16.1 | Jedro v reworku: format klipa (kontrole/kosti, utripi, easing, zanka, dogodki), nalagalnik z validacijo (slaba datoteka → jasna napaka, ne crash), poser za biped NPC (vključno s komolci/koleni, pasom, orožjem) in za `geo` modele; mešanje in prehodi med klipi, plast nad vanilla hojo | M–L |
+| M16.2 | Strežnik in omrežje: ukaz za klip, dolžine/dogodki na strežniku (zvok, škoda, orožje), sinhronizacija na klient tudi za pozni vstop; obstoječi `Animators.of(npc)` in hooki `animationStart/Event/End` delajo na novem jedru (ko `customnpcentities` ni nameščen) in ostanejo združljivi, ko je | M |
+| M16.3 | Orodja za AI: knjižnica poimenovanih poz, `*.anim.yaml` → JSON prevajalnik z IK (po vzoru `scripts/gusarji`), predogled klipa v PNG brez Minecrafta, `/npcanim reload` brez restarta, datoteke iz `config/customnpcs/animations/` | M |
+| M16.4 | Privzeta knjižnica klipov za biped NPC (napad z mečem, blok, strel, met, pitje, pozdrav, smrt, idle variante), izbira v GUI-ju NPC-ja in vezava na dogodke (napad, zadetek, smrt, idle); navodila v `UPORABNIKI.md` »kako AI naredi novo animacijo v 5 minutah« | M |
+| M16.5 | Preverba: nova animacija iz same datoteke na dedicated strežniku z dvema klientoma, reload, pozni vstop, 200 animiranih NPC-jev (cena enkrat kot podatek), stikalo 0 = original | S |
+
+Pod stikalom (novo, npr. `RwAnimCore`, privzeto 0); pravila Q407 (brez omejitve poskusov, testi po
+potrebi). M15 nato uporablja M16 namesto notranjosti `customnpcentities`.
+
+**Izhodni kriterij:** AI napiše eno YAML/JSON datoteko z novo animacijo, jo prevede, vidi predogled,
+`/npcanim reload` jo prikaže na živem NPC-ju brez restarta; deluje brez `customnpcentities`.
+
+---
+
 ## Kaj je izrecno izven obsega
 
 Do nadaljnjega, ne glede na to, kako mamljivo se zdi:
