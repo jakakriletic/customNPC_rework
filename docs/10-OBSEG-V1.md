@@ -53,8 +53,8 @@ zemljevida)**, ker je lastniku najpomembnejši; ostali v2 paketi pridejo za njim
 - Začni z M11.0: preveri [raziskavo](raziskave/M11.0-vojske-prek-zemljevida.md) proti trenutni kodi
   in razdeli M11.1–M11.10 na pakete; odprta Q14 in ostala vprašanja M11 odloči upravljalnik sam
   (DIRECT OWNER INSTRUCTION) in jih zapiše.
-- Pravila Q90, Q92 (stikalo privzeto 0, največ 2 poskusa, kratki zapisi) in Q250 (≤ 30 min na test)
-  veljajo naprej. Vsak M11 paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`.
+- Pravila Q90 in Q92 (stikalo privzeto 0, kratki zapisi) veljajo naprej; omejitev 2 poskusov in
+  Q250 (≤ 30 min na test) je 4. 11. odpravila Q407 (glej pravila spodaj). Vsak M11 paket posodobi `UPORABNIKI.md` in `CHANGELOG.md`.
 - ~~M11.0~~ preverjen in razrezan 3. 11. (Q296–Q302, [§5](raziskave/M11.0-vojske-prek-zemljevida.md)); ~~M11.1~~ register vojsk sprejet (Q303–Q308, [zapis](meritve/2026-11-03-M11.1-register.md)); ~~M11.1b~~ dovoljenja sprejeta (Q309–Q316, [zapis](meritve/2026-11-03-M11.1b-dovoljenja.md)); ~~M11.2~~ grozdi in posnetek sprejeti (Q317–Q323, [zapis](meritve/2026-11-03-M11.2-grozdi-posnetek.md)); ~~M11.3~~ čete in trajen ukaz sprejeti na poskusu 2 (Q324–Q329, [zapis](meritve/2026-11-03-M11.3-cete.md)); ~~M11.4~~ roj/drža in vrnitev sprejeti na poskusu 1 (Q335, [zapis](meritve/2026-11-03-M11.4-roj-drza.md)); ~~M11.8a~~ palica/GUI sprejet na poskusu 1 (Q340, [zapis](meritve/2026-11-03-M11.8a-palica.md)); M11.5 dolg pohod odložen po 2 poskusih, produkcijska sprememba umaknjena (Q348, [zapis](meritve/2026-11-03-M11.5-dolg-pohod.md)); ~~M11.6~~ potujoči chunk ticket sprejet pod stikalom po 2 poskusih (Q355, [zapis](meritve/2026-11-03-M11.6-ticket.md)); ~~M11.8b~~ dovoljenja GUI sprejeta na poskusu 1 (Q360, [zapis](meritve/2026-11-03-M11.8b-dovoljenja-gui.md)); ~~M11.7a~~ pogodba mostu v1 sprejeta na poskusu 1 (Q361–Q363, [zapis](meritve/2026-11-03-M11.7a-pogodba.md)); ~~M11.7b~~ Xaero most sprejet na poskusu 1, v3 83/83 + build/package in 6/6 namestitev (Q369, [zapis](meritve/2026-11-03-M11.7b-xaero-most.md)); ~~M11.9~~ robni primeri sprejeti na poskusu 1 (Q373, [zapis](meritve/2026-11-03-M11.9-robni-primeri.md)); ~~M11.10~~ cena izmerjena na poskusu 2 (Q378, [zapis](meritve/2026-11-03-M11.10-cena.md)). **M11 zaključen z omejitvami** (M11.5 in izhod čez `NpcNavRange` v2, živi Xaero ročno); v2 M13 (Q379): ~~M13.1~~ lastna polja povezanih NPC-jev sprejeta na poskusu 2 pod stikalom (Q387, [zapis](meritve/2026-11-04-M13.1-povezani.md)), ~~M13.2~~ kategorije, razveljavitev in proračun sprejeti na poskusu 1 pod stikalom (Q389, [zapis](meritve/2026-11-04-M13.2-kategorije.md)), ~~M13.2b~~ polja in razveljavitev v GUI-ju sprejeti na poskusu 1 pod stikalom (Q399, [zapis](meritve/2026-11-04-M13.2b-gui.md)), naslednji M13.3; M12 na koncu, M15 po odločitvi lastnika.
 - **Q346 (odločitev lastnika 3. 11., zemljevid Xaero je ključen):** M11.7a/b **nista izbirna** —
   vojske se morajo videti in premikati na Xaero zemljevidu prek `xaerofleetcommand`
@@ -95,20 +95,26 @@ lastnik). Odprti Q-ji teh paketov (npr. Q82 vogal → M4.5, Q84) ne blokirajo v1
    test, ki pokaže, da funkcija pri 1 deluje. Cena pri 1 se izmeri **enkrat** (ena ponovitev)
    in zapiše kot podatek, ne kot pogoj. Cenovna meja (+10 % p95) velja šele za paket, ki
    stikalo privzeto vklopi (D-032), in takrat s tremi ponovitvami.
-3. **Največ 2 poskusa na paket.** Če drugi poskus ne izpolni meril, se paket sprejme pod
-   stikalom (privzeto 0) z zapisanimi omejitvami, ali pa se odloži v v2. Tretjega poskusa ni.
+3. **Brez omejitve poskusov (Q407, nadomesti »največ 2 poskusa«).** Paket se dela, dokler funkcija
+   ne deluje: napako se diagnosticira, popravi in ponovno testira, kolikorkrat je treba. Odloži se
+   samo ob resnični zunanji nemožnosti (manjkajoča strojna oprema, podatki, poverilnice).
 4. **Kratka dokumentacija.** Na paket: en zapis v `docs/meritve/` (rezultat, številke, odločitev)
    in en kratek vnos v `04-STANJE.md` (dnevnik + vrstici »Zadnja posodobitev« in »Naslednji
    paketi«). D-zapis v `01-ARHITEKTURA.md` samo za novo arhitekturno odločitev, največ 10 vrstic.
    `04-REGISTRI.md`, `03-FAZE.md` in README samo ob zaključku paketa, ena vrstica. Brez vmesnih
    »nadaljevanje seje« razdelkov, ki ponavljajo stanje.
 
-5. **Časovni proračun testov (Q250, 30. 10.).** Od 25. 10. so testi porabili ~23 h, AI ~10 h;
-   največ dolge serije (perf ×3 po ~25 min, baseline 3,3 h, soak 4 h). Odslej: noben test ne
-   traja več kot 30 min (upravljalnik zavrne `timeoutSeconds` > 1800), na paket skupaj ~30 min
-   testov; prednost imajo unit testi in funkcionalni preizkusi pod 5 min; primerjava
-   zmogljivosti 1 ponovitev (3 samo ob privzetem vklopu stikala); baseline en prehod; soak
-   največ 1 h. Že uspešen rezultat se ne meri znova.
+5. **Testi po potrebi (Q407, nadomesti časovni proračun Q250).** Ni proračuna testov na paket in
+   ne meje 30 min. Testira se toliko, kolikor je potrebno, da se pokaže, da funkcija deluje, in
+   tam, kjer je to potrebno; nepotrebnih testov in ponovitev ni (Q90 velja). Upravljalnik ima samo
+   še tehnično mejo proti zataknjenemu testu (`timeoutSeconds` ≤ 14400). Cilj je implementirana,
+   delujoča funkcija, ne dolg seznam meritev.
+
+**Q407 (odločitev lastnika 4. 11. 2026):** lastnik je umaknil umetne omejitve načrta (2 poskusa,
+proračun testov, odlaganje v v2 namesto popravka). Upravljalnik rešuje probleme in popravlja
+zadeve, dokler funkcija ne deluje. **Prvi naslednji paket po M13.3 je M11.5 (dolg pohod čez
+`NpcNavRange`)**, ki je bil odložen samo zaradi pravila 2 poskusov; nato M13 naprej, nato
+odpravljanje omejitev iz `UPORABNIKI.md` §6, ki so ostale zaradi pravila 2 poskusov (M10.1d, M10.4 ...).
 
 ## Ocena
 

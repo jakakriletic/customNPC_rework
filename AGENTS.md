@@ -29,22 +29,25 @@ controller, the owner has authorized continuous autonomous development until Sto
   require revalidation (see `docs/05-SEJA-PROTOKOL.md` §2 Meritve).
 - Owner decision Q92: `docs/10-OBSEG-V1.md` defines the v1.0 scope and order and overrides
   `docs/03-FAZE.md`; packages outside it are v2 and are not started. Switches that stay
-  default 0 have no cost gate (measure cost once as data); at most 2 attempts per package,
-  then accept under the switch with noted limits or defer to v2; keep docs short (one
+  default 0 have no cost gate (measure cost once as data); the attempt limit is removed by Q407;
+  keep docs short (one
   measurement note + one 04-STANJE entry per package).
 - Owner decision Q248: the v1.0 scope is done; next work is the ordered fix list P1–P8 in
   `docs/10-OBSEG-V1.md` ("Popravki omejitev v1.0"). Each fix updates `docs/UPORABNIKI.md` §6.
   P1–P8 are done.
 - Owner decision Q295 (3. 11. 2026): v1.0 is accepted with all limits in `docs/UPORABNIKI.md` §6.
   Continue with v2, **M11 (armies and map command) first**, without waiting for its old entry
-  conditions; see "Odločitev o izdaji in začetek v2" in `docs/10-OBSEG-V1.md`. Q90/Q92/Q250 still apply.
+  conditions; see "Odločitev o izdaji in začetek v2" in `docs/10-OBSEG-V1.md`. Q90/Q92 still apply, as changed by Q407.
 - Owner decision Q346: the Xaero map bridge (M11.7a/b, `../ladja_mod/milestones/xaero-fleet-command`)
   is required, not optional. Build on the newest source `../advantura_estetika_mod/xaero-winter-storm`
   (v0.1.8-winter), sync the result into `ladja_mod/milestones/xaero-fleet-command`, and install the
   new jar in every `mods/` folder that has `xaerofleetcommand` (old jar moved to `.overnight/` backup).
   No git on the owner's `ladja_mod` branch; never touch `mod/pirate-mca`. Details in `docs/10-OBSEG-V1.md`.
-- Owner time budget Q250: no test longer than 30 min (controller rejects `timeoutSeconds` > 1800),
-  ~30 min of tests per package, 1 performance repetition (3 only when turning a switch on by
-  default), one-pass baselines, soak at most 1 h (rule 5 in `docs/10-OBSEG-V1.md`).
+- Owner decision Q407 (4. 11. 2026) replaces the 2-attempt limit of Q92 and the Q250 time budget:
+  no attempt limit and no per-package test budget. Diagnose, fix and retest until the feature works;
+  defer only on a real external impossibility. Test as much as needed and where needed, no needless
+  tests or repeats (Q90 stays). Only a hang guard remains (`timeoutSeconds` <= 14400). After M13.3,
+  do M11.5 (long march beyond `NpcNavRange`) next, then continue M13, then fix limits in
+  `docs/UPORABNIKI.md` §6 that were left only by the 2-attempt rule.
 - Keep state/docs current; commit only your package and push without force. Native CLI
   permissions are configured per process by the controller, not by changing global settings.
