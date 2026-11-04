@@ -14,18 +14,22 @@ import java.util.Iterator;
 import java.util.List;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.BlockPos;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.LogWriter;
 import noppes.npcs.NBTTags;
 import noppes.npcs.entity.EntityCustomNpc;
 import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.rework.linked.LinkedBudget;
+import noppes.npcs.rework.linked.LinkedCategories;
 import noppes.npcs.rework.linked.LinkedOwnFields;
 import noppes.npcs.util.NBTJsonUtil;
 
 public class LinkedNpcController {
     public static LinkedNpcController Instance;
     public List<LinkedData> list = new ArrayList<LinkedData>();
+    public final LinkedBudget budget = new LinkedBudget();
 
     public LinkedNpcController() {
         Instance = this;
@@ -107,6 +111,12 @@ public class LinkedNpcController {
                 return;
             }
             npc.linkedLast = data.time;
+            if (CustomNpcs.RwLinkedGroups == 1) {
+                long start = System.nanoTime();
+                this.applyCategories(npc, data);
+                this.budget.nanos += System.nanoTime() - start;
+                return;
+            }
             List<int[]> points = npc.ais.getMovingPath();
             NBTTagCompound own = this.readNpcData(npc);
             NBTTagCompound compound = NBTTags.NBTMerge(own, data.data);
@@ -132,6 +142,129 @@ public class LinkedNpcController {
             }
             npc.updateClient = true;
         }
+    }
+
+    /**
+     * M13.2 (Q389): only the group's selected categories reach the member, and only their readers run. With AI off
+     * setMovingPath is skipped too, because it would move the member's home (Q384).
+     */
+    private void applyCategories(EntityNPCInterface npc, LinkedData data) {
+        int mask = data.categories;
+        List<int[]> points = npc.ais.getMovingPath();
+        NBTTagCompound own = this.readNpcData(npc);
+        NBTTagCompound compound = NBTTags.NBTMerge(own, LinkedCategories.filter(data.data, mask));
+        if (CustomNpcs.RwLinkedOwnFields == 1) {
+            LinkedOwnFields.restore(own, compound);
+        }
+        if (LinkedCategories.has(mask, LinkedCategories.APPEARANCE | LinkedCategories.NAME)) {
+            npc.display.readToNBT(compound);
+        }
+        if (LinkedCategories.has(mask, LinkedCategories.STATS)) {
+            npc.stats.readToNBT(compound);
+        }
+        if (LinkedCategories.has(mask, LinkedCategories.ADVANCED)) {
+            npc.advanced.readToNBT(compound);
+        }
+        if (LinkedCategories.has(mask, LinkedCategories.INVENTORY)) {
+            npc.inventory.readEntityFromNBT(compound);
+        }
+        if (LinkedCategories.has(mask, LinkedCategories.APPEARANCE) && compound.hasKey("ModelData")) {
+            ((EntityCustomNpc)npc).modelData.readFromNBT(compound.getCompoundTag("ModelData"));
+        }
+        if (LinkedCategories.has(mask, LinkedCategories.AI)) {
+            npc.ais.readToNBT(compound);
+            npc.ais.setMovingPath(points);
+            if (CustomNpcs.RwLinkedOwnFields == 1) {
+                BlockPos home = LinkedOwnFields.home(own);
+                if (home != null) {
+                    npc.ais.setStartPos(home);
+                }
+            }
+        }
+        if (LinkedCategories.has(mask, LinkedCategories.TRANSFORM)) {
+            npc.transform.readToNBT(compound);
+        }
+        if (LinkedCategories.has(mask, LinkedCategories.SCRIPTS) && data.data.hasKey("Scripts")) {
+            NBTTagCompound scripts = LinkedCategories.filter(data.data, LinkedCategories.SCRIPTS);
+            // Rereading would drop the running engines, so a member with the same scripts keeps them (Q390).
+            if (!scripts.equals(this.readScripts(npc))) {
+                npc.script.readFromNBT(scripts);
+                npc.updateAI = true;
+                npc.script.lastInited = -1L;
+            }
+        }
+        npc.updateClient = true;
+    }
+
+    /** The NPC's scripts without the per-NPC console text. */
+    private NBTTagCompound readScripts(EntityNPCInterface npc) {
+        NBTTagCompound compound = npc.script.writeToNBT(new NBTTagCompound());
+        NBTTagList tabs = compound.getTagList("Scripts", 10);
+        for (int i = 0; i < tabs.tagCount(); i++) {
+            tabs.getCompoundTagAt(i).removeTag("Console");
+        }
+        return compound;
+    }
+
+    /** False when a member over this tick's budget has to wait for its next check (Q391). */
+    public boolean mayApply(EntityNPCInterface npc) {
+        if (CustomNpcs.RwLinkedGroups != 1) {
+            return true;
+        }
+        return this.budget.tryAcquire(npc.world.getMinecraftServer().getTickCounter(), CustomNpcs.RwLinkedBudget);
+    }
+
+    private File previousFile(LinkedData data) {
+        return new File(this.getDir(), data.name + ".json_prev");
+    }
+
+    public boolean hasPrevious(LinkedData data) {
+        return this.previousFile(data).isFile();
+    }
+
+    private void keepPrevious(LinkedData data) {
+        if (data.data.hasNoTags()) {
+            return;
+        }
+        try {
+            NBTJsonUtil.SaveFile(this.previousFile(data), data.getNBT());
+        }
+        catch (IOException | NBTJsonUtil.JsonException e) {
+            LogWriter.except(e);
+        }
+    }
+
+    /** M13.2 (Q390): swaps the group data with the kept version, so a second undo brings the change back. */
+    public boolean undo(LinkedData data) {
+        File file = this.previousFile(data);
+        if (!file.isFile()) {
+            return false;
+        }
+        NBTTagCompound previous;
+        try {
+            previous = NBTJsonUtil.LoadFile(file).getCompoundTag("NPCData");
+        }
+        catch (IOException | NBTJsonUtil.JsonException e) {
+            LogWriter.except(e);
+            return false;
+        }
+        if (previous.hasNoTags()) {
+            return false;
+        }
+        this.keepPrevious(data);
+        data.data = previous;
+        this.changed(data);
+        return true;
+    }
+
+    public void setCategories(LinkedData data, int mask) {
+        data.categories = mask;
+        this.changed(data);
+    }
+
+    private void changed(LinkedData data) {
+        data.time = Math.max(System.currentTimeMillis(), data.time + 1L);
+        this.save();
     }
 
     private void cleanTags(NBTTagCompound compound) {
@@ -161,12 +294,34 @@ public class LinkedNpcController {
     public void saveNpcData(EntityNPCInterface npc) {
         NBTTagCompound compound = this.readNpcData(npc);
         this.cleanTags(compound);
+        if (CustomNpcs.RwLinkedGroups == 1) {
+            this.saveCategories(npc, compound);
+            return;
+        }
         if (npc.linkedData.data.equals((Object)compound)) {
             return;
         }
         npc.linkedData.data = compound;
         npc.linkedData.time = System.currentTimeMillis();
         this.save();
+    }
+
+    private void saveCategories(EntityNPCInterface npc, NBTTagCompound compound) {
+        LinkedData data = npc.linkedData;
+        if (LinkedCategories.has(data.categories, LinkedCategories.SCRIPTS)) {
+            NBTTagCompound scripts = this.readScripts(npc);
+            for (String key : scripts.getKeySet()) {
+                compound.setTag(key, scripts.getTag(key));
+            }
+        }
+        // With own fields on, a member walking its path is no change of the group and must not use up the undo (Q390).
+        boolean same = CustomNpcs.RwLinkedOwnFields == 1 ? LinkedOwnFields.sameShared(data.data, compound) : data.data.equals((Object)compound);
+        if (same) {
+            return;
+        }
+        this.keepPrevious(data);
+        data.data = compound;
+        this.changed(data);
     }
 
     public void removeData(String name) {
@@ -192,6 +347,8 @@ public class LinkedNpcController {
         public String name = "LinkedNpc";
         public long time = 0L;
         public NBTTagCompound data = new NBTTagCompound();
+        /** M13.2: read by RwLinkedGroups=1 only; the file gets the key only when it differs from the default. */
+        public int categories = LinkedCategories.DEFAULT;
 
         public LinkedData() {
             this.time = System.currentTimeMillis();
@@ -200,12 +357,17 @@ public class LinkedNpcController {
         public void setNBT(NBTTagCompound compound) {
             this.name = compound.getString("LinkedName");
             this.data = compound.getCompoundTag("NPCData");
+            int mask = compound.hasKey("RwCategories", 8) ? LinkedCategories.parse(compound.getString("RwCategories")) : -1;
+            this.categories = mask < 0 ? LinkedCategories.DEFAULT : mask;
         }
 
         public NBTTagCompound getNBT() {
             NBTTagCompound compound = new NBTTagCompound();
             compound.setString("LinkedName", this.name);
             compound.setTag("NPCData", (NBTBase)this.data);
+            if (this.categories != LinkedCategories.DEFAULT) {
+                compound.setString("RwCategories", LinkedCategories.toText(this.categories));
+            }
             return compound;
         }
     }

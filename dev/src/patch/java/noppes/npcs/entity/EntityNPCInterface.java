@@ -535,7 +535,7 @@ IAnimals {
                         mob.setAttackTarget((EntityLivingBase)this);
                     }
                 }
-                if (this.linkedData != null && this.linkedData.time > this.linkedLast) {
+                if (this.linkedData != null && this.linkedData.time > this.linkedLast && LinkedNpcController.Instance.mayApply(this)) {
                     LinkedNpcController.Instance.loadNpcData(this);
                 }
                 if (this.updateClient) {

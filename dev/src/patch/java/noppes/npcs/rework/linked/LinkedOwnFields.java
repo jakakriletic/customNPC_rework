@@ -7,9 +7,9 @@ import net.minecraft.util.math.BlockPos;
  * M13.1 (Q380): fields a linked NPC keeps as its own when its group data is merged over it.
  *
  * <p>The original {@code LinkedNpcController.loadNpcData} merges the group's data (written by the
- * NPC edited last) over every member, so all members took that NPC's home ({@code StartPosNew}),
- * orientation and current path index. Its path itself was already kept, and a member with a path
- * then had its home moved to its own first path point by {@code DataAI.setMovingPath} (Q384). With
+ * NPC edited last) over every member, so all members took that NPC's orientation and current path
+ * index. Its path itself was already kept, and {@code DataAI.setMovingPath} then moved the home of a
+ * member with a path to its own first path point, so that member lost its own home (Q384, Q388). With
  * {@code RwLinkedOwnFields=1} these keys are restored from the member's own data after the merge,
  * and the own home is set again after {@code setMovingPath}.
  * World position, rotation, {@code RwArmy}, {@code RwNavBackend} and {@code RwFlightMode} are
@@ -31,6 +31,17 @@ public final class LinkedOwnFields {
                 merged.removeTag(key);
             }
         }
+    }
+
+    /** True when the two versions of group data differ at most in {@link #KEYS}. */
+    public static boolean sameShared(NBTTagCompound a, NBTTagCompound b) {
+        NBTTagCompound left = a.copy();
+        NBTTagCompound right = b.copy();
+        for (String key : KEYS) {
+            left.removeTag(key);
+            right.removeTag(key);
+        }
+        return left.equals(right);
     }
 
     /** The member's own home from its data, or null when it has none. */

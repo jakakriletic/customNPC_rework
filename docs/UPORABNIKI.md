@@ -83,6 +83,8 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
 | `RwArmies` | 0 | armies: `/rwarmy`, `ArmyApi` and the channel `rwarmy`, register and move orders saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs); also `RwArmyClusterRadius` (48, 1–512), `RwArmyClusterMin` (8, 1–1024), `RwArmyCompany` (8, 1–24; only 8 tested in-world), `RwArmyMaxMarches` (2, 0–16: armies with an active move that hold travelling chunk tickets; 0 = no tickets) |
 | `RwLinkedOwnFields` | 0 | Linked NPCs: each member keeps its own home, orientation, moving path and place on that path when group data is applied; 0 = original (see §6). Does not repair values already overwritten |
+| `RwLinkedGroups` | 0 | Linked NPCs: per-group transfer categories (scripts off by default), undo of the last change and `/rwlinked` (read at startup); 0 = original (see §6) |
+| `RwLinkedBudget` | 50 | with `RwLinkedGroups=1`: group transfers per server tick; a member over the budget waits 20 ticks. Transfers when a chunk loads are not limited. 0 = no limit |
 | `RwJavaClasspath` | empty | enables Java scripts (see §4); `auto` = classpath built from the running server |
 
 ### Per-NPC settings (saved in the NPC)
@@ -110,6 +112,11 @@ With `RwAnimHooks>=1`: `/npcanim reload [entityId]` loads animations from
 `/npcanim status` shows the current revision. Every player online must accept the files first;
 otherwise nothing changes. Running actions and `Animators` queues of the changed NPCs are stopped.
 The reload lasts until the server stops.
+
+With `RwLinkedGroups=1`: `/rwlinked list`, `/rwlinked info <group>`, `/rwlinked undo <group>` and
+`/rwlinked categories <group> default|none|all|<names>|+name|-name ...`, with the names `appearance`, `name`, `stats`,
+`ai`, `inventory`, `advanced`, `scripts`, `transform`. `undo` swaps the group with `<group>.json_prev`, so a second
+`undo` brings the change back. There is no GUI for this yet.
 
 With `RwArmies=1`: `/rwarmy create <army> [player|uuid:<uuid>|faction:<id>]` (from the console the
 owner is required), `assign <army> <npc name|selector> [range]` (name: loaded NPCs within 100 blocks,
@@ -323,10 +330,19 @@ Not proven, so not claimed:
   orientation and path index of the NPC edited last, and a member with a path gets the first point of its own path
   as its home, so it can walk there. With 1 a member with a path keeps these
   ([M13.1](meritve/2026-11-04-M13.1-povezani.md)), also after a world reload. Turning the switch on does not restore
-  values that were already overwritten. Tested on a dev dedicated server with two members, without a player or the GUI;
-  members without a path, a chunk unloading while the server runs, rotation and `RwFlightMode` were not tested in the world.
-  Cost was not measured (it runs only on a link, an edit or a load). Group transfer stays all-or-nothing and without
-  scripts or undo until M13.2. The config text of this key still wrongly says a member takes the edited NPC's home.
+  values that were already overwritten. Tested on a dev dedicated server without a player or the GUI;
+  a chunk unloading while the server runs, rotation and `RwFlightMode` were not tested in the world.
+  A member without a path keeps its home with 0 too, but takes the orientation.
+- **Linked NPC groups (`RwLinkedGroups`, off by default):** with 1 a group passes on only its selected categories, and
+  scripts are a new category, off by default ([M13.2](meritve/2026-11-04-M13.2-kategorije.md)). Tested with `/rwlinked` and script calls on a dev dedicated
+  server: three members, then 200 for the budget; no player, no GUI (the *Global → Linked NPCs* boxes and undo button are
+  not there yet). `advanced` and `transform` were checked only by key lists, scripts only in JS. Undo has one level.
+  With `RwLinkedOwnFields=0`, linking still moves the home of a member with a path, as in the original; turn both on to
+  keep it. Saving after the `scripts` category is turned off removes the scripts from the group, members keep theirs.
+  Going from 1 back to 0 in the same world was not tested. Budget: 200 members got a change in 80 ticks at 50 per tick,
+  about 91 µs each; server MSPT and client packets were not measured, and transfers when a chunk loads are not limited.
+- **Original bug, not fixed:** removing a Linked NPC group does not delete its file, so the group comes back after a
+  restart (from the code, not run).
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).

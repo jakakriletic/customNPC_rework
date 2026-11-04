@@ -692,8 +692,9 @@ enega. Zasnova popravi in razširi ta mehanizem namesto novega identifikatorja.
 | ID | Paket | Vel. |
 |---|---|---|
 | ~~M13.0~~ | Raziskava — **narejeno 26. 10.** ([zapis](raziskave/M13.0-mnozicno-urejanje.md)); ob začetku preveri na kodi v `src/patch` | S |
-| ~~M13.1~~ | **Sprejet 4. 11., poskus 2** (Q380–Q388, [zapis](meritve/2026-11-04-M13.1-povezani.md)): `RwLinkedOwnFields` (privzeto 0) ohrani dom, usmerjenost, pot in indeks poti; svetovna lega in oznake entitete niso podatki skupine. Brez igralca/GUI-ja, dva člana; naslednji M13.2 | S |
-| M13.2 | Kategorije prenosa na skupino (videz, ime in naslov, statistike, AI, inventar, advanced, skripte, transform), skripte nova kategorija; razveljavitev zadnje spremembe (`.json_prev`); postopen prenos pri velikem številu naloženih članov | M |
+| ~~M13.1~~ | **Sprejet 4. 11., poskus 2** (Q380–Q388, [zapis](meritve/2026-11-04-M13.1-povezani.md)): `RwLinkedOwnFields` (privzeto 0) ohrani dom, usmerjenost, pot in indeks poti; svetovna lega in oznake entitete niso podatki skupine. Brez igralca/GUI-ja, dva člana | S |
+| ~~M13.2~~ | **Sprejet 4. 11., poskus 1** (Q389–Q394, [zapis](meritve/2026-11-04-M13.2-kategorije.md)): `RwLinkedGroups` (privzeto 0): kategorije na skupino, skripte nova kategorija, razveljavitev `.json_prev`, `RwLinkedBudget`, `/rwlinked`. Brez igralca/GUI-ja; 200 članov v 80 tickih, MSPT ni merjen | M |
+| M13.2b | Polja kategorij in gumb razveljavitve v *Global → Linked NPCs*, preverba s pravim klientom (Q392); naslednji | S |
 | M13.3 | Seznam palice z več izbirami: Shift/Ctrl-klik, filter po imenu, »vsi z istim imenom v radiu«; dejanja: poveži s skupino, kopiraj nastavitve z izbranega NPC-ja (enkratno, s kategorijami), izbriši, ponastavi; prikaz skupine in števila članov | M |
 | M13.4 | Kloner »postavi kot povezan«; obvestilo »posodobljeno N NPC-jev«; preverba v klientu z igralcem (GUI, nenaloženi chunki, ponovno nalaganje sveta, dedicirani strežnik) | S |
 

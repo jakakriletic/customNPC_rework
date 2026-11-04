@@ -400,6 +400,8 @@ task testOriginal(type: Test) {
     exclude '**/ArmyBridgeContractTest.class'
     // M13.1: the linked NPC own-field helper does not exist in the original.
     exclude '**/LinkedOwnFieldsTest.class'
+    // M13.2: linked group categories and transfer budget are new.
+    exclude '**/LinkedCategoriesTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

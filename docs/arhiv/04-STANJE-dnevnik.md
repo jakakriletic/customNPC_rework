@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 219 → 1)
+# Arhiv: dnevnik sej (vnosi 220 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,19 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-04 (220) — M11.10: cena pohoda, ticketov in klient (sprejet)
+
+**Paket:** M11.10 (Q374–Q378) · **Stanje:** sprejet na poskusu 2 kot meritev; produkcija nespremenjena, `RwArmies` ostane 0.
+Fixture M2.6 (`PERF_Idle` 200, 60+180 s, ena ponovitev), ena vojska iz 25 čet po 8, noga 28 blokov vsakih 20 s, hitrost 1.
+Pohod s prisilnimi chunki: p95 10,75 ms, alok. 72,7 MB/s proti parnemu idle 6,42/50,4 in M2.6 idle-200 6,16/48,3; ni ticka >50 ms.
+Samo ticketi M11.6: p95 9,70, alok. 72,9; ≤2 ticketa, ≤30 chunkov, 86 dodanih, 0 zavrnjenih — cena ticketa ni vidna nad šumom.
+Klient s palico: 200 v enem grozdu, All, žarek move in ARRIVED 25 čet; strežnik p95 10,22; FPS 120/120 (meja sličic). Dva PNG pregledana.
+Controller unit/build/package, `m1110-cost-pair-v2`, `m1110-cost-tickets-v1`, `m1110-load-v1` PASS na `e6fb9f2f…`; poskus 1 padel samo na A1.
+Meje: kratka noga 200 konča BLOCKED 1,4 bloka od cilja (v2, družina M11.5); diagnostika umirjanja zaradi regexa harnessa ni veljavna;
+živi Xaero ostane ročna preverba lastnika (Q22). M11 zaključen z omejitvami; izhodni kriterij čez `NpcNavRange` je v2 (M11.5).
+Noben workload zagnan iz seje; nepovezano delo ohranjeno. Naslednji: naslednji v2 milestone po `03-FAZE.md`; M10.3 blokiran Q1.
+[Dokazi in omejitve](../meritve/2026-11-03-M11.10-cena.md).
 
 ### 2026-11-03 (219) — M11.9: robni primeri (sprejet)
 

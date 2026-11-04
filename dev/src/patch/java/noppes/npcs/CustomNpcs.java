@@ -154,6 +154,7 @@ import noppes.npcs.rework.army.ArmyNet;
 import noppes.npcs.rework.army.ArmyMarches;
 import noppes.npcs.rework.army.ArmyTickets;
 import noppes.npcs.rework.army.CommandRwArmy;
+import noppes.npcs.rework.linked.CommandRwLinked;
 import noppes.npcs.rework.anim.ReloadServer;
 import noppes.npcs.rework.script.AutoClasspath;
 import noppes.npcs.rework.script.hooks.JavaLanguage;
@@ -245,8 +246,12 @@ public class CustomNpcs {
     public static int RwArmyCompany = 8;
     @ConfigProp(info="Rework M11.6 (Q301, Q349-Q353): with RwArmies=1, how many armies with an active move may hold chunk tickets at once (0-16). The tickets travel with the members (their chunks plus one ring, at most 49 chunks per army), so a march continues without a player nearby; after a restart an active move first holds the area of its saved last known position until its members are loaded. Further armies march without tickets until a slot is free. Tickets are released at arrival, block, stop and server stop. Read at startup. 0 = no tickets (M11.3 behaviour). Default 2")
     public static int RwArmyMaxMarches = 2;
-    @ConfigProp(info="Rework M13.1 (Q380): 1 = a linked NPC keeps its own home, orientation, moving path and place on that path when its Linked NPC group data is applied; 0 = original behaviour, every member takes the home, orientation and path index of the NPC edited last. Position, rotation, RwArmy, RwNavBackend and RwFlightMode are never group data. Default 0")
+    @ConfigProp(info="Rework M13.1 (Q380): 1 = a linked NPC keeps its own home, orientation, moving path and place on that path when its Linked NPC group data is applied; 0 = original behaviour, every member takes the orientation and path index of the NPC edited last, and a member with a path has its home moved to the first point of its own path. Position, rotation, RwArmy, RwNavBackend and RwFlightMode are never group data. Default 0")
     public static int RwLinkedOwnFields = 0;
+    @ConfigProp(info="Rework M13.2 (Q389): 1 = Linked NPC groups pass on only their selected categories (appearance, name, stats, ai, inventory, advanced, scripts, transform; scripts off by default), keep the last version in <group>.json_prev for undo and spread transfers with RwLinkedBudget; adds the operator command /rwlinked. Read at startup. 0 = original: everything but scripts, at once, no undo, no command. Default 0")
+    public static int RwLinkedGroups = 0;
+    @ConfigProp(info="Rework M13.2 (Q391): with RwLinkedGroups=1, at most this many group transfers per server tick; a member over the budget waits for its next check, 20 ticks later. Transfers when a chunk loads are not limited. 0 = no limit. Default 50")
+    public static int RwLinkedBudget = 50;
     public static long ticks;
     @SidedProxy(clientSide="noppes.npcs.client.ClientProxy", serverSide="noppes.npcs.CommonProxy")
     public static CommonProxy proxy;
@@ -562,6 +567,8 @@ public class CustomNpcs {
         event.registerServerCommand((ICommand)new CommandRwHitbox());
         // P7c: only the switch adds the reload command.
         if (RwAnimHooks >= 1) { event.registerServerCommand((ICommand)new CommandNpcAnim()); }
+        // M13.2: only the switch adds the linked group command.
+        if (RwLinkedGroups == 1) { event.registerServerCommand((ICommand)new CommandRwLinked()); }
         // M11.1 (Q299): only the switch adds the army command.
         if (RwArmies >= 1) {
             event.registerServerCommand((ICommand)new CommandRwArmy());
