@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 217 → 1)
+# Arhiv: dnevnik sej (vnosi 218 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,20 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-03 (218) — M11.7b: Xaero most (sprejet)
+
+**Paket:** M11.7b (Q346, Q364–Q369) · **Stanje:** sprejet na poskusu 1, `RwArmies` ostane 0.
+Winter v0.1.8 osnova: četrti zavihek Armies, prapori/grozdi, izbor cele vojske, oblika/roj/drža/stop,
+odsevni v1 servis in sveže pravice; omejeni novi paketi, varen naložen cilj, flota/nevihta ohranjeni.
+Controller `m117b-bridge-v3` 83/83 JUnit + build/reobf paket PASS na `7d693d32…`; 21 novih testov.
+v1 gradilna priprava, v2 priprava testnega podatka FAIL; v3 zaključi isto serijo, brez ponovitev Q90.
+Vseh 72 vhodov s SHA256 zamrznjenih v integrations/ in sinhroniziranih v ladja_mod brez git.
+Preverjeni jar v0.1.9 v obeh dist/novih finisher arhivih in 6/6 najdenih mods mapah; stari premaknjeni v backup.
+Pred zamenjavami nobenega Java/Minecraft procesa; pirate-mca, stari arhivi, svetovi/nastavitve nedotaknjeni.
+Živi Xaero, produkcijski odsev/teren/omrežne pravice še niso dokazani; ročni pregled ostane lastniku, cena M11.10.
+Noben workload zagnan iz seje; nepovezano delo ohranjeno. Naslednji M11.9; M10.3 blokiran Q1.
+[Dokazi, namestitve in omejitve](../meritve/2026-11-03-M11.7b-xaero-most.md).
 
 ### 2026-11-03 (217) — M11.7a: pogodba zunanjih mostov v1 (sprejet)
 

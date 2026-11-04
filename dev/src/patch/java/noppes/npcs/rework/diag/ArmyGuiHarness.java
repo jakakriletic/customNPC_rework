@@ -41,7 +41,8 @@ public final class ArmyGuiHarness {
     private final JsonObject data = new JsonObject();
     private final Deque<Step> steps = new ArrayDeque<Step>();
     private Step step;
-    private int delay, sent, before, poll;
+    private int delay, sent, before, poll, fpsMin;
+    private long fpsSum;
     private boolean acted, finished;
     private long since;
     private ArmyGuiHarness(Properties p) { job=p; out=new File(p.getProperty("out")); }
@@ -146,6 +147,8 @@ public final class ArmyGuiHarness {
             add("off AI check",20,()->{},()->mc.currentScreen instanceof GuiNpcAI);
             act("off-hidden",()->check("off-hidden",((GuiNpcAI)mc.currentScreen).getButton(80)==null,"no army editor button"));
             act("off close",()->top(0));
+        } else if("load".equals(phase)) {
+            planLoad(mc);
         } else if("verify".equals(phase)) {
             cmd("replaceitem entity @p slot.hotbar.0 customnpcs:army_staff"); openNpc("AGUI_A");
             act("persist check",()->{
@@ -208,6 +211,48 @@ public final class ArmyGuiHarness {
             act("end main",()->{check("connection-alive",mc.player!=null && mc.getConnection()!=null,"rights changes kept connection"); click(12);});
         }
         act("finish",()->finish(true,""));
+    }
+    /** M11.10: a real player with the staff commands one army of 200; server cost and FPS are data, arrival state too. */
+    private void planLoad(Minecraft mc) {
+        cmd("gamerule maxEntityCramming 0");
+        cmd("rwarmy create host uuid:0b5a1c2e-1111-4a2b-9c3d-123456789abc");
+        cmd("noppes clone grid AGUI_L 1 25 8 590,4,8");
+        add("load settle",60,()->{},()->true);
+        cmd("rwarmy assign host @e[name=AGUI_L]");
+        snapshot("load-count",()->names().contains("host:200:true"));
+        act("load clusters",()->{ ArmySnapshot.Entry e=entry("host"); check("load-clusters",e.clusters.size()==1 && e.clusters.get(0).size==200 && e.omittedMembers==0,e.clusters.size()+" clusters"); });
+        fps("fpsBefore",200);
+        cmd("replaceitem entity @p slot.hotbar.0 customnpcs:army_staff"); openAir();
+        act("all tab",()->click(1));
+        add("all wait",45,()->{},()->rows().size()==1);
+        act("all assertion",()->{ check("load-all-tab",((ArmySnapshot.Entry)rows().get(0)).loaded==200,"one row, 200 loaded"); screen("load-all"); });
+        act("sync measure",()->System.out.println("ARMYGUI SYNC measure"));
+        add("measure settle",60,()->{},()->true);
+        act("select host",()->type("host"));
+        act("arm move",()->click(8));
+        act("aim",()->{ check("load-aim-closes",mc.currentScreen==null,"aim in world"); mc.player.rotationYaw=0; mc.player.rotationPitch=3; });
+        add("ray move",20,()->{ before=ArmyClient.staffReply()==null?-1:ArmyClient.staffReply().id; air(); },()->ArmyClient.staffReply()!=null && ArmyClient.staffReply().id!=before);
+        act("ray check",()->check("load-ray-move",ArmyClient.staffReply().ok && ArmyClient.staffReply().text.contains("mode=FORMATION"),ArmyClient.staffReply().text));
+        fps("fpsMarch",200);
+        act("march image",()->screen("load-march"));
+        snapshot("load-physical-move",()->{ ArmySnapshot.Entry e=entry("host"); return !e.clusters.isEmpty() && e.clusters.get(0).z>=22; });
+        add("load end",10,()->{ sent=-5; poll=0; },()->{
+            if(--poll<=0) { sent=ArmyClient.action(ArmyStaffCodec.Op.STATUS,-1,"host",0,0); poll=40; }
+            String t=ArmyClient.staffReply()!=null && ArmyClient.staffReply().id==sent ? ArmyClient.staffReply().text : "";
+            return t.contains("state=ARRIVED") || t.contains("state=BLOCKED");
+        });
+        act("end check",()->{ check("load-march-ended",true,ArmyClient.staffReply().text); data.addProperty("endState",ArmyClient.staffReply().text); });
+        act("sync dump",()->System.out.println("ARMYGUI SYNC dump"));
+        add("dump settle",60,()->{},()->true);
+        act("end load",()->check("connection-alive",mc.player!=null && mc.getConnection()!=null,"200 member snapshots kept the connection"));
+    }
+    private ArmySnapshot.Entry entry(String army) {
+        for(ArmySnapshot.Entry e:ArmyClient.latest().armies) { if(e.name.equals(army)) { return e; } }
+        throw new IllegalStateException("army "+army);
+    }
+    private void fps(String key, int ticks) {
+        add(key,0,()->{ poll=0; fpsSum=0; fpsMin=Integer.MAX_VALUE; },()->{ int f=Minecraft.getDebugFPS(); fpsSum+=f; fpsMin=Math.min(fpsMin,f); return ++poll>=ticks; });
+        act(key+" data",()->{ data.addProperty(key+"Avg",fpsSum/ticks); data.addProperty(key+"Min",fpsMin); });
     }
     private GuiButton buttonById(int id) throws Exception {
         Field f=GuiScreen.class.getDeclaredField("buttonList"); f.setAccessible(true);

@@ -170,6 +170,17 @@
 # histogram is saved next to the cell JSON (-histo.txt). Data only, no limit.
 #     .\p8-baritone-run.ps1 -Backend 0   # then 1
 #
+# Varianta 'pohod' (M11.10, Q374-Q376): isti PERF_Idle mreza in pogoji kot 'idle', a vseh N je ena vojska
+# (zahteva RwArmies=1, nastavi army-cost-run.ps1) in koraka: vsakih -PohodNogaS sekund (privzeto 20) nov
+# 'rwarmy move' 28 blokov naprej od sredisca glavnega grozda, s hitrostjo 1 (~1,3 bloka/s), da pohod ne
+# pride do cilja in ostane ves cas aktiven. Pohod je ena pot <= NpcNavRange (M11.5 v2), zato vsaka noga
+# znova zgradi cete; ta cena je v meritvi. Po merilnem oknu ena kratka noga: A1 zahteva koncno stanje in
+# sredisce <= 4 bloke od cilja; ARRIVED/BLOCKED je podatek (Q377, cena ni odvisna od koncnega stanja).
+# -PohodBrezChunkov: po prvem ukazu se spawn premakne stran, 'rwdiag chunks off' in save-all; svet naprej
+# nalagajo samo ticketi M11.6 (cena ticketa). P4b tam velja za max, ker je pogoj merjenja ticket in ne rwdiag.
+#     .\army-cost-run.ps1 -Cell pair     # idle + pohod, RwArmyMaxMarches=0, rwdiag chunki
+#     .\army-cost-run.ps1 -Cell tickets  # pohod, RwArmyMaxMarches=2, brez rwdiag chunkov
+#
 # M2.6b: scenarij drzi zaklep .scenarij.lock v korenu (drug zagon v isti mapi takoj pade),
 # pred zagonom in vsakih 5 s med celico preveri, da ne tece tuj gradle build ali Minecraft
 # (merilo P9), in ob sesutju serverja takoj konca z vzrokom iz loga.
@@ -185,7 +196,8 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [switch]$RwPathIskanje, [int]$RwPathNeg = -1, [int]$RwPathNegTtl = 0, [switch]$RwPathNegDelne, [int]$RwPathMemo = -1, [int]$RwData = -1, [int]$RwMove = -1, [int]$RwBlink = -1, [switch]$RwBlinkCas, [Alias('RwBlinkAB')][string]$RwBlinkABNiz = '', [int]$RwBlinkOkno = 15, [int]$RwVidno = -1,
       [ValidateSet(-1, 0, 1, 2)][int]$FlightMode = -1,
       [ValidateSet(-1, 0, 1)][int]$NavBackend = -1, [string]$BaritoneRoot = '',
-      [ValidateSet(25, 50)][int]$MrezaSirina = 25, [switch]$ZiviHeap)
+      [ValidateSet(25, 50)][int]$MrezaSirina = 25, [switch]$ZiviHeap,
+      [switch]$PohodBrezChunkov, [ValidateRange(5, 120)][int]$PohodNogaS = 20)
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -219,7 +231,7 @@ $gridZ     = -12     # severni rob mreze
 $gridW     = $MrezaSirina  # NPC-jev v vrsti (os x), privzeto 25; N mora biti veckratnik 2*gridW
 $bojGap    = 4       # prazne vrste med skupinama A in B (AggroRange 16 jih pokrije)
 $kontrolaAt = '60,4,30'
-$znaneVariante = @('idle', 'boj', 'skripte', 'nedosegljiva', 'leteci', 'leteci-boj')
+$znaneVariante = @('idle', 'boj', 'skripte', 'nedosegljiva', 'leteci', 'leteci-boj', 'pohod')
 # Varianti z dvema sovraznima skupinama (A od $gridZ, B za $bojGap praznimi vrstami).
 $dvoSkupinske = @('boj', 'nedosegljiva', 'leteci-boj')
 # -Razprseno: skupina po 5 NPC-jev na ukaz, ukazi ~7 tickov narazen. 7 je tuje 10, zato
@@ -623,6 +635,64 @@ function Wait-SPreverbo([int]$Sekund) {
     }
 }
 
+# M11.10: pohod ene vojske. Sredisce pride iz '/rwarmy clusters', ne iz harnessa: to je polozaj, ki ga vidi igralec.
+$script:pohodSmer = 1; $script:pohodNog = 0; $script:pohodPremik = 0.0; $script:pohodX = $null; $script:pohodZ = $null
+$script:pohodStevecMove = 0; $script:pohodStevecGrozd = 0
+# LogWriter.info gre samo v [FINE/CustomNPCs], ki ga Wait-ForCount namenoma izloci (odgovori ukazov bi bili dvojni).
+function Wait-Pohodni([string]$Marker, [int]$Count, [int]$TimeoutSec) {
+    $deadline = (Get-Date).AddSeconds($TimeoutSec)
+    while ((Get-Date) -lt $deadline) {
+        if (([regex]::Matches((Get-LogText $srv.Log), [regex]::Escape($Marker))).Count -ge $Count) { return $true }
+        if ($srv.Proc.HasExited) { return $false }
+        Start-Sleep -Seconds 1
+    }
+    Write-Host ("  ! timeout {0} s pri cakanju na {1}" -f $TimeoutSec, $Marker)
+    return $false
+}
+function Read-PohodSredisce {
+    $script:pohodStevecGrozd++
+    Send-Command $srv 'rwarmy clusters pohod'
+    if (-not (Wait-ForCount $srv 'RWARMY cluster pohod main ' $script:pohodStevecGrozd 60)) { throw 'Vojska pohod nima glavnega grozda.' }
+    $m = [regex]::Matches((Get-MarkerText $srv.Log), 'RWARMY cluster pohod main dim=0 at (\S+) (\S+) (\S+) size=(\d+)')
+    $g = $m[$m.Count - 1].Groups
+    $x = [double]::Parse($g[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+    $z = [double]::Parse($g[3].Value, [Globalization.CultureInfo]::InvariantCulture)
+    if ($null -ne $script:pohodX) { $script:pohodPremik += [math]::Sqrt(($x - $script:pohodX) * ($x - $script:pohodX) + ($z - $script:pohodZ) * ($z - $script:pohodZ)) }
+    $script:pohodX = $x; $script:pohodZ = $z
+}
+function Send-PohodNoga([int]$Dolzina = 28) {
+    Read-PohodSredisce
+    # Zahodno od mreze so ovire testnega sveta, vzhodno od x~170 pa bi obroc ticketa segel v negeneriran svet (spawn +-192).
+    if ($script:pohodX -ge 120) { $script:pohodSmer = -1 } elseif ($script:pohodX -le 62) { $script:pohodSmer = 1 }
+    $cilj = [int][math]::Round($script:pohodX) + $script:pohodSmer * $Dolzina
+    $script:pohodStevecMove++
+    $script:pohodCiljX = $cilj
+    Send-Command $srv ('rwarmy move pohod {0} 4 -8 legion 1 passive' -f $cilj)
+    if (-not (Wait-ForCount $srv 'RWARMY move pohod dim=0 target=' $script:pohodStevecMove 60)) { throw "Ukaz pohoda ni bil sprejet (cilj x=$cilj)." }
+    $script:pohodNog++
+}
+# Prvo koncno stanje po stevcu $Pred; prazno ob timeoutu.
+function Wait-PohodKonec([int]$Pred, [int]$TimeoutSec) {
+    $deadline = (Get-Date).AddSeconds($TimeoutSec)
+    while ((Get-Date) -lt $deadline) {
+        $m = [regex]::Matches((Get-LogText $srv.Log), 'RWARMY order pohod state=(ARRIVED|BLOCKED)')
+        if ($m.Count -gt $Pred) { return $m[$Pred].Groups[1].Value }
+        if ($srv.Proc.HasExited) { return '' }
+        Start-Sleep -Seconds 1
+    }
+    Write-Host ("  ! timeout {0} s pri cakanju na koncno stanje pohoda" -f $TimeoutSec)
+    return ''
+}
+function Wait-Pohod([int]$Sekund) {
+    $konec = (Get-Date).AddSeconds($Sekund)
+    while ($true) {
+        $ostane = ($konec - (Get-Date)).TotalSeconds
+        if ($ostane -le 0) { break }
+        Wait-SPreverbo ([int][math]::Min($PohodNogaS, [math]::Ceiling($ostane)))
+        if (($konec - (Get-Date)).TotalSeconds -ge 1) { Send-PohodNoga }
+    }
+}
+
 # Ena skupina (ime, N NPC-jev od vrste z0 naprej) kot ukazi. Brez -Razprseno en sam
 # 'clone grid'; z -Razprseno kosi po $razKos NPC-jev, vsak na svojem mestu mreze.
 function Get-GroupCommands([string]$Ime, [int]$N, [int]$Z0) {
@@ -681,7 +751,7 @@ function Get-SpawnCommands([string]$Variant, [int]$N) {
         $cmds += Get-GroupCommands $imeA ($N / 2) $gridZ
         $cmds += Get-GroupCommands $imeB ($N / 2) $zB
     } else {
-        $ime = switch ($Variant) { 'idle' { 'PERF_Idle' } 'leteci' { 'PERF_Leteci' } default { 'PERF_Skripte' } }
+        $ime = switch ($Variant) { 'idle' { 'PERF_Idle' } 'pohod' { 'PERF_Idle' } 'leteci' { 'PERF_Leteci' } default { 'PERF_Skripte' } }
         $cmds += Get-GroupCommands $ime $N $gridZ
     }
     return $cmds
@@ -1014,7 +1084,7 @@ try {
         if (-not $okK) { throw 'PERF_Kontrola se ni oglasil; brez tega ni dokaza, kaj je v svetu.' }
         $k0 = Read-Kontrola $srv.Log
         $want = @{ Idle = 0; BojA = 0; BojB = 0; Skripte = 0; Leteci = 0; LetA = 0; LetB = 0 }
-        if ($v -eq 'idle')    { $want.Idle = $N }
+        if ($v -eq 'idle' -or $v -eq 'pohod') { $want.Idle = $N }
         if ($v -eq 'skripte') { $want.Skripte = $N }
         if ($v -eq 'leteci')  { $want.Leteci = $N }
         if ($v -eq 'boj' -or $v -eq 'nedosegljiva') { $want.BojA = $N / 2; $want.BojB = $N / 2 }
@@ -1038,10 +1108,31 @@ try {
             if ($failures.Count -gt $cellFailStart) { throw 'Backend/scene proof failed before measurement.' }
         }
 
+        if ($v -eq 'pohod') {
+            Check 'A0: RwArmies=1 v configu' ((Get-Content -Raw (Join-Path $run 'config\CustomNpcs.cfg')) -match '(?m)^RwArmies=1\s*$')
+            Send-Command $srv 'rwarmy create pohod faction:0'
+            Check 'A0: vojska ustvarjena' (Wait-ForMarker $srv 'RWARMY created pohod' 60)
+            Send-Command $srv 'rwarmy assign pohod @e[name=PERF_Idle]'
+            Check ("A0: vseh {0} NPC-jev v vojski" -f $N) (Wait-ForMarker $srv ("RWARMY assigned pohod npcs={0} changed={0}" -f $N) 60)
+            Send-PohodNoga
+            Check ("A0: {0} cet po 8" -f [int]($N / 8)) (Wait-Pohodni ("RWARMY march pohod companies={0} members={1} paths=1 size=8" -f [int]($N / 8), $N) 1 60)
+            if ($PohodBrezChunkov) {
+                Check 'T0: ticket drzi chunke vojske' (Wait-Pohodni 'RWARMY tickets pohod chunks=' 1 60)
+                Send-Command $srv 'setworldspawn 2000 4 2000'
+                Check 'T0: prizorisce ni vec spawn chunki' (Wait-ForMarker $srv 'Set the world spawn point to (2000, 4, 2000)' 60)
+                Send-Command $srv 'rwdiag chunks off'
+                $nChunks++
+                Check 'T0: rwdiag chunki izklopljeni' (Wait-ForCount $srv 'RWDIAG-CHUNKS stanje=' $nChunks 60)
+                $predSave = ([regex]::Matches((Get-MarkerText $srv.Log), 'Saved the world')).Count
+                Send-Command $srv 'save-all'
+                Check 'T0: save-all raztovori vse brez ticketa' (Wait-ForCount $srv 'Saved the world' ($predSave + 1) 120)
+            }
+        }
         if ($WarmupSeconds -gt 0) {
             Write-Host ("  ogrevanje {0} s" -f $WarmupSeconds)
-            Wait-SPreverbo $WarmupSeconds
+            if ($v -eq 'pohod') { Wait-Pohod $WarmupSeconds } else { Wait-SPreverbo $WarmupSeconds }
         }
+        $pohodNogPred = $script:pohodNog; $pohodPremikPred = $script:pohodPremik
 
         if ($RwTarget -ge 0) { $null = Send-RwTarget $srv 'rwtarget reset' }
         # M5.11: A/B v istem boju zacne vsako celico v prvem nacinu (prejsnja je lahko koncala v drugem).
@@ -1087,6 +1178,8 @@ try {
             }
             $ostanek = $Seconds - $oknaBlinkAB * $RwBlinkOkno
             if ($ostanek -gt 0) { Wait-SPreverbo $ostanek }
+        } elseif ($v -eq 'pohod') {
+            Wait-Pohod $Seconds
         } else {
             Wait-SPreverbo $Seconds
         }
@@ -1231,7 +1324,57 @@ try {
         $navPerf = $null
         if ($NavBackend -ge 0) { $navPerf = Send-NavPerf $srv 'npcb perf' }
 
-        Send-Command $srv ('noppes clone spawn PERF_Kontrola 1 {0}' -f $kontrolaAt)
+        $kontrolaKonec = $kontrolaAt
+        $pohodVel = @{}
+        if ($v -eq 'pohod') {
+            Read-PohodSredisce
+            $pohodVel['pohod.nog'] = $script:pohodNog - $pohodNogPred
+            $pohodVel['pohod.premikBlokov'] = [math]::Round($script:pohodPremik - $pohodPremikPred, 1)
+            # Pod tretjino bloka na sekundo vojska v oknu ni res korakala (rebuild bi lahko ves cas samo postrojeval).
+            $minPremik = [int](0.33 * $Seconds)
+            Check ("A2: vojska je v oknu res korakala ({0} blokov, vsaj {1})" -f $pohodVel['pohod.premikBlokov'], $minPremik) ($pohodVel['pohod.premikBlokov'] -ge $minPremik)
+            Send-PohodNoga 14
+            $predA = ([regex]::Matches((Get-LogText $srv.Log), 'RWARMY order pohod state=(ARRIVED|BLOCKED)')).Count
+            # Diagnostika Q377: kdo se po 30 s kratke noge se ni umiril (po koncnem stanju so cete ze preklicane).
+            Start-Sleep -Seconds 30
+            Send-Command $srv 'rwsquad status'
+            Start-Sleep -Seconds 2
+            $sq = [regex]::Matches((Get-LogText $srv.Log), 'RWSQUAD enota=d+ ime=pohod-company-d+ .*?faza=(w+) clanov=(d+)/d+ .*?na_mestu=(d+)')
+            $sqZadnje = @($sq | Select-Object -Last 25)
+            $pohodVel['pohod.konec.vzorecCet'] = $sqZadnje.Count
+            $pohodVel['pohod.konec.vzorecNeumirjenih'] = (@($sqZadnje | ForEach-Object { [int]$_.Groups[2].Value - [int]$_.Groups[3].Value }) | Measure-Object -Sum).Sum
+            $konec = Wait-PohodKonec $predA 150
+            if ($PohodBrezChunkov) {
+                # Ticket je ob koncnem stanju sproscen; autosave bi vojsko raztovoril pred koncnim branjem.
+                Send-Command $srv ("rwdiag chunks on {0}" -f $ChunkRadius)
+                $nChunks++
+                Check 'T3: rwdiag chunki za koncno kontrolo' (Wait-ForCount $srv 'RWDIAG-CHUNKS stanje=' $nChunks 60)
+            }
+            Read-PohodSredisce
+            $odCilja = [math]::Round([math]::Sqrt(($script:pohodX - $script:pohodCiljX) * ($script:pohodX - $script:pohodCiljX) + ($script:pohodZ + 8) * ($script:pohodZ + 8)), 1)
+            $pohodVel['pohod.konec.arrived'] = $(if ($konec -eq 'ARRIVED') { 1 } else { 0 })
+            $pohodVel['pohod.konec.odCilja'] = $odCilja
+            Write-Host ("  kratka noga: stanje={0}, sredisce {1} blokov od cilja, neumirjenih po 30 s {2} v {3} cetah" -f $konec, $odCilja, $pohodVel['pohod.konec.vzorecNeumirjenih'], $pohodVel['pohod.konec.vzorecCet'])
+            Check ("A1: kratka noga ima koncno stanje ({0}) in sredisce je pri cilju ({1} blokov, najvec 4)" -f $konec, $odCilja) (($konec -ne '') -and ($odCilja -le 4))
+            $pohodVel['pohod.blocked'] = ([regex]::Matches((Get-LogText $srv.Log), 'RWARMY order pohod state=BLOCKED')).Count
+            $tkt = [regex]::Matches((Get-LogText $srv.Log), 'RWARMY tickets pohod chunks=(\d+) tickets=(\d+) added=(\d+) mode=\w+ centre=\S+ refused=(\d+)')
+            $pohodVel['pohod.ticket.vrstic'] = $tkt.Count
+            if ($tkt.Count -gt 0) {
+                $pohodVel['pohod.ticket.maxChunkov'] = (@($tkt | ForEach-Object { [int]$_.Groups[1].Value }) | Measure-Object -Maximum).Maximum
+                $pohodVel['pohod.ticket.maxTicketov'] = (@($tkt | ForEach-Object { [int]$_.Groups[2].Value }) | Measure-Object -Maximum).Maximum
+                $pohodVel['pohod.ticket.dodanih'] = (@($tkt | ForEach-Object { [int]$_.Groups[3].Value }) | Measure-Object -Sum).Sum
+                $pohodVel['pohod.ticket.zavrnjenih'] = [int]$tkt[$tkt.Count - 1].Groups[4].Value
+            }
+            if ($PohodBrezChunkov) {
+                Check ("T1: ticket je potoval (dodanih chunkov {0})" -f $pohodVel['pohod.ticket.dodanih']) ($pohodVel['pohod.ticket.dodanih'] -gt $pohodVel['pohod.ticket.maxChunkov'])
+                Check ("T2: noben chunk ni bil zavrnjen ({0})" -f $pohodVel['pohod.ticket.zavrnjenih']) ($pohodVel['pohod.ticket.zavrnjenih'] -eq 0)
+            }
+            # Prisilen chunk ne potrebuje nalozene okolice; kontrola mora stati pri vojski, ne na zacetni tocki.
+            Read-PohodSredisce
+            $kontrolaKonec = '{0},4,{1}' -f [int][math]::Round($script:pohodX), [int][math]::Round($script:pohodZ)
+        }
+
+        Send-Command $srv ('noppes clone spawn PERF_Kontrola 1 {0}' -f $kontrolaKonec)
         $nKontrola++
         $okK = Wait-ForCount $srv 'PERF-KONTROLA idle=' $nKontrola 120
         Check 'PERF_Kontrola se je oglasil (konec)' $okK
@@ -1339,7 +1482,13 @@ try {
             $p4 = ($null -ne $loaded) -and ($loaded.min -eq $N) -and ($loaded.max -eq $N) -and `
                   ($null -ne $killed) -and ($killed.max -eq 0)
             Check ("P4: NPC-jev ves cas {0} (loaded min={1} max={2}, killed max={3})" -f $N, $loaded.min, $loaded.max, $killed.max) $p4
-            Check ("P4b: pogoj meritve je veljal ves cas (world.chunks.forced min={0})" -f $forced.min) (($null -ne $forced) -and ($forced.min -gt 0))
+            if ($v -eq 'pohod' -and $PohodBrezChunkov) {
+                # Med nogama je mogoc trenutek brez ticketa; dokaz, da je svet tekel, sta tu P3 in P4 za vseh N.
+                $vel['pohod.forced.min'] = [long]$forced.min; $vel['pohod.forced.p50'] = [long]$forced.p50; $vel['pohod.forced.max'] = [long]$forced.max
+                Check ("P4b: svet so nalagali ticketi (world.chunks.forced max={0}, min={1})" -f $forced.max, $forced.min) ($forced.max -gt 0)
+            } else {
+                Check ("P4b: pogoj meritve je veljal ves cas (world.chunks.forced min={0})" -f $forced.min) (($null -ne $forced) -and ($forced.min -gt 0))
+            }
             # P4c (M5.8, 15. 10.): nabor prisilnih chunkov ni dosegel meje DiagChunkLoader. Na meji se
             # NPC-ji, ki odidejo iz pokritega obmocja, raztovorijo (S-boj 2500 pri stari meji 400).
             Check ("P4c: meja prisilnih chunkov ni bila dosezena (world.chunks.forced max={0}, meja {1})" -f $forced.max, $chunkMax) (($null -ne $forced) -and ($forced.max -lt $chunkMax))
@@ -1352,7 +1501,7 @@ try {
                 (Test-HoverProof (Get-MarkerText $srv.Log) $FlightMode $expectedFlyers 2)
         }
         if ($null -ne $k1) {
-            if ($v -eq 'idle') {
+            if ($v -eq 'idle' -or $v -eq 'pohod') {
                 Check ("P5: idle NPC-ji se niso borili (cilj={0}, ranjenih={1})" -f $k1.Cilj, $k1.Ranjenih) (($k1.Cilj -eq 0) -and ($k1.Ranjenih -eq 0))
             }
             if ($v -eq 'boj') {
@@ -1410,6 +1559,11 @@ try {
         $odtis = @{ razprseno = $(if ($Razprseno) { 1 } else { 0 }); varianta = $v; npc = $N; sekund = $Seconds; ogrevanje = $WarmupSeconds; obroc = $ChunkRadius
                     celica = $idx; celic = $cells.Count; mrezaX = $gridX; mrezaZ = $gridZ; mrezaSirina = $gridW }
         if ($FlightMode -ge 0) { $odtis['flightMode'] = $FlightMode }
+        if ((Get-Content -Raw (Join-Path $run 'config\CustomNpcs.cfg')) -match '(?m)^RwArmies=1\s*$') { $odtis['rwArmies'] = 1 }
+        if ($v -eq 'pohod') {
+            $odtis['pohodNogaS'] = $PohodNogaS; $odtis['pohodBrezChunkov'] = $(if ($PohodBrezChunkov) { 1 } else { 0 })
+            foreach ($key in $pohodVel.Keys) { $vel[$key] = $pohodVel[$key] }
+        }
         if ($ZiviHeap) { $odtis['ziviHeap'] = 1; if ($null -ne $ziv) { foreach ($key in $ziv.Keys) { $vel[$key] = $ziv[$key] } } }
         if ($NavBackend -ge 0) {
             $odtis['navBackend'] = $NavBackend

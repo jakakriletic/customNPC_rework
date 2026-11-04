@@ -290,7 +290,7 @@ Not proven, so not claimed:
   now has a Xaero adapter v0.1.9 (M11.7b): 83/83 unit/regression tests, build and reobf package passed,
   installed in six existing mods folders with old jars backed up. Live map, networked rights, ground resolution,
   online/offline and wrong-thread calls and production reflection remain untested. Only loaded surface targets
-  are accepted; no cave/path safety guarantee, at most 256 markers/16 selected armies. Cost is M11.10.
+  are accepted; no cave/path safety guarantee, at most 256 markers/16 selected armies.
   After a restart the time of the last position can be older than the last time the army was seen;
   the position itself is kept.
   Movement was tested with 32 NPCs in four companies of 8, legion on flat ground, on a dev dedicated
@@ -310,7 +310,14 @@ Not proven, so not claimed:
   armies march without tickets and get no progress in unloaded chunks. Resuming from the saved last position
   after a restart or unload can stop as BLOCKED `no-complete-path` (seen once in testing). Tickets left by a crash
   are released only at the next world load; members more than about ±32 blocks from the others may be left
-  behind. Tested only on a dev dedicated server on flat ground; ticket cost is pending M11.10. Rebuilding companies can change membership. Cost is pending M11.10; no performance claim.
+  behind. Tested only on a dev dedicated server on flat ground; no separate ticket cost was visible in M11.10. Rebuilding companies can change membership.
+  [M11.10 cost](meritve/2026-11-03-M11.10-cena.md), one repetition on a dev dedicated server on flat ground: one army
+  of 200 (25 companies) marching with new 28-block orders every 20 s costs server MSPT p95 10.75 ms and 72.7 MB/s
+  allocation, against 6.42 ms and 50.4 MB/s for the same 200 idle NPCs (+67 % p95, +44 % allocation); no tick
+  over 50 ms. With only M11.6 tickets loading the world: p95 9.70 ms. With a real client commanding 200 through the
+  staff: server p95 10.22 ms and the army arrived. Combat, terrain, 50/500 and several armies were not measured.
+  A 200 army can end a short leg as BLOCKED with its centre 1.4 blocks from the goal (v2, with M11.5).
+  The live Xaero map with an army must be checked by hand in a real modpack client.
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).
