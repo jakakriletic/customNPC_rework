@@ -117,6 +117,10 @@ zadeve, dokler funkcija ne deluje. **Prvi naslednji paket po M13.3 je M11.5 (dol
 (~~M13.4~~ sprejet Q429; ~~M13.5~~ izhodni dokaz 100 NPC-jev sprejet Q433), nato
 odpravljanje omejitev iz `UPORABNIKI.md` §6, ki so ostale zaradi pravila 2 poskusov (~~M10.1d~~ sprejet Q436; naslednji M10.4 soak heap, Q437).
 
+**Q445 (odločitev lastnika 4. 11. 2026): M11.11 `freeforall` je naslednji paket**, pred nadaljevanjem
+M10.4 in ostalih popravkov §6: vojska se premakne tako, da vsak član takoj sam gre od svoje pozicije
+do cilja, brez čet in čakanja (podrobnosti v `03-FAZE.md` M11.11), tudi v Xaero.
+
 **Q444 (odločitev lastnika 4. 11. 2026): vgrajeno animacijsko jedro (M16).** Po odpravi omejitev §6
 (M10.4 in ostale) je naslednji **M16** (`03-FAZE.md`), pred M12, M14 in M15. Rework dobi lastno
 animacijsko jedro po vzoru `ladja_mod` (semantične kontrole v stopinjah, utripi z easingom, dogodki,

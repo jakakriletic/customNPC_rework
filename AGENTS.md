@@ -49,6 +49,9 @@ controller, the owner has authorized continuous autonomous development until Sto
   tests or repeats (Q90 stays). Only a hang guard remains (`timeoutSeconds` <= 14400). After M13.3,
   do M11.5 (long march beyond `NpcNavRange`) next, then continue M13, then fix limits in
   `docs/UPORABNIKI.md` §6 that were left only by the 2-attempt rule.
+- Owner decision Q445 (4. 11. 2026): next package is M11.11, army move mode `freeforall` (each member
+  goes from its own position at once, no companies, no waiting; also a Xaero button), before
+  continuing M10.4 and the other §6 fixes. Details in `docs/03-FAZE.md` M11.11.
 - Owner decision Q444 (4. 11. 2026): after the §6 fixes, do M16 (built-in animation core modelled on
   `../ladja_mod` clips/controls/`scripts/gusarji`, read-only) before M12, M14 and M15; new animations
   must be one data file for the AI, no Java or rebuild. Details in `docs/03-FAZE.md` M16.
