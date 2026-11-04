@@ -172,7 +172,7 @@ try {
         'undo-enabled-after-edit', 'loaded-count', 'box-needs-apply', 'apply-saved', 'other-group-own-categories',
         'name-off-blocks-name', 'server-keeps-selection', 'undo-button', 'undo-reaches-members', 'name-on-restores-name',
         'second-undo-brings-back', 'final-selection', 'forged-set-denied', 'forged-undo-denied',
-        'controls-disabled-without-rights', 'connection-alive')
+        'controls-disabled-without-rights', 'denied-shows-no-previous-group', 'connection-alive')
     $main = Finish-Client 'main' $keys
     Send 'save-all flush'
     Expect 'Saved the world' 'world saved' 180

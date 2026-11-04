@@ -197,6 +197,7 @@ public final class ClientHarness {
             if (ArmyGuiHarness.installIfRequested(path)) { return; }
             if (ArmyPermHarness.installIfRequested(path)) { return; }
             if (LinkedGuiHarness.installIfRequested(path)) { return; }
+            if (LinkedWandHarness.installIfRequested(path)) { return; }
             HarnessJob job = HarnessJob.load(new File(path));
             MinecraftForge.EVENT_BUS.register(new ClientHarness(job));
             System.out.println("RWHARNESS-INSTALL world=" + job.world + " out=" + job.out);

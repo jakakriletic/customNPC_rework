@@ -121,7 +121,7 @@ da je premisa paketa napačna: ustavi se, zapiši, prilagodi plan, šele nato na
 ## 3. Zaključek seje — obvezno
 
 > **Q92 (29. 10. 2026):** obseg v1.0, cenovna meja samo za privzeto vklopljena stikala,
-> največ 2 poskusa na paket in **kratka dokumentacija** so v
+> **kratka dokumentacija** in Q407 (brez meje poskusov ali testnega proračuna, timeout ≤14400 s) so v
 > [`10-OBSEG-V1.md`](10-OBSEG-V1.md) in imajo prednost pred podrobnostmi spodaj. Na paket:
 > en zapis meritve + en kratek vnos v `04-STANJE.md`; ostale datoteke samo ob zaključku paketa.
 

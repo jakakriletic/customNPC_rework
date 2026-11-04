@@ -83,7 +83,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
 | `RwArmies` | 0 | armies: `/rwarmy`, `ArmyApi` and the channel `rwarmy`, register and move orders saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs); also `RwArmyClusterRadius` (48, 1–512), `RwArmyClusterMin` (8, 1–1024), `RwArmyCompany` (8, 1–24; only 8 tested in-world), `RwArmyMaxMarches` (2, 0–16: armies with an active move that hold travelling chunk tickets; 0 = no tickets) |
 | `RwLinkedOwnFields` | 0 | Linked NPCs: each member keeps its own home, orientation, moving path and place on that path when group data is applied; 0 = original (see §6). Does not repair values already overwritten |
-| `RwLinkedGroups` | 0 | Linked NPCs: per-group transfer categories (scripts off by default), undo of the last change, `/rwlinked` and the boxes in *Global → Linked NPCs* (read at startup); 0 = original (see §6) |
+| `RwLinkedGroups` | 0 | Linked NPCs: per-group transfer categories (scripts off by default), undo of the last change, `/rwlinked`, the boxes in *Global → Linked NPCs* and multiple selection in the wand list (read at startup); 0 = original (see §6) |
 | `RwLinkedBudget` | 50 | with `RwLinkedGroups=1`: group transfers per server tick; a member over the budget waits 20 ticks. Transfers when a chunk loads are not limited. 0 = no limit |
 | `RwJavaClasspath` | empty | enables Java scripts (see §4); `auto` = classpath built from the running server |
 
@@ -118,6 +118,17 @@ With `RwLinkedGroups=1`: `/rwlinked list`, `/rwlinked info <group>`, `/rwlinked 
 `ai`, `inventory`, `advanced`, `scripts`, `transform`. `undo` swaps the group with `<group>.json_prev`, so a second
 `undo` brings the change back. In the NPC menu, *Global → Linked NPCs* has the same boxes, **Apply** and **Undo last change**
 (server and client both need the switch; a box changes nothing until you press Apply).
+
+With the switch on both sides, right-click the NPC wand in the air to open its list. Click a row to select it,
+Ctrl-click to add or remove a row, and Shift-click to select a range. Type in the top field to filter by name;
+rows hidden by the filter leave the selection. **Same name** selects matching visible NPCs within the radius of
+the player (default 32 blocks, 0 = any distance); the primary row itself stays selected even outside that radius.
+The last selected row is primary: **Edit** and **Tp to** use it. **Copy from** copies selected categories from it
+to the other selected NPCs once, without making a link, and keeps each target's home, orientation and path.
+**Link to group** uses an existing group and its categories. **Delete** (after confirmation) and **Reset** act on
+the selection. Rows show the group and its loaded member count. **Reset All** and **Freeze NPCs** keep their original scope.
+The server checks operator level 2, the wand in the main hand and the original action permission on every batch;
+copying scripts also requires the scripter permission. Without the switch or batch rights, the list stays original.
 
 With `RwArmies=1`: `/rwarmy create <army> [player|uuid:<uuid>|faction:<id>]` (from the console the
 owner is required), `assign <army> <npc name|selector> [range]` (name: loaded NPCs within 100 blocks,
@@ -343,8 +354,16 @@ Not proven, so not claimed:
   about 91 µs each; server MSPT and client packets were not measured, and transfers when a chunk loads are not limited.
   The *Global → Linked NPCs* boxes and undo button ([M13.2b](meritve/2026-11-04-M13.2b-gui.md)) were tested with one real dev client, a dev
   dedicated server and two members; packaged and integrated pairs and several editors at once were not. With a server at 0
-  the screen stays the original; a client at 0 with a server at 1 was not run. The server checks rights on every request. If you lose
-  your rights with the screen open and select another group, the disabled boxes still show the previous group (display only).
+  the screen stays the original; a client at 0 with a server at 1 was not run. The server checks rights on every request.
+  M13.3 fixes the stale display after rights are removed: a denied reply clears the previous group's boxes and loaded count.
+- **Wand multiple selection ([M13.3](meritve/2026-11-04-M13.3-palica.md), `RwLinkedGroups`, off by default):**
+  tested with one real dev client, a dev dedicated server and six NPCs: filter, same-name radius, selection, appearance copy,
+  link, delete, reset, primary edit, rights removed, both sides at 0 and client 1/server 0. At most 1000 nearest loaded NPCs
+  in the player's dimension are listed; group counts include only loaded members. Long footer text is shortened.
+  Shift/Ctrl states were inserted by the harness; physical modifier keys, 100+ selections, all copy categories, packaged/integrated
+  pairs and simultaneous editors were not tested. Server MSPT, allocation and packet cost were not measured.
+  The original tutorial overlay can cover the top right button. The original list can merge same-name rows at the same distance;
+  the new list uses entity IDs. Unloaded chunks with a real client remain for M13.4.
 - **Original bug, not fixed:** removing a Linked NPC group does not delete its file, so the group comes back after a
   restart (from the code, not run).
 

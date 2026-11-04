@@ -330,6 +330,9 @@ public final class LinkedGuiHarness {
         reply("reselect", () -> row("LG2"));
         act("disabled check", () -> check("controls-disabled-without-rights", !enabled(LinkedGroupPanel.APPLY) && !enabled(LinkedGroupPanel.UNDO) && !enabled(LinkedGroupPanel.FIRST_BOX)
                 && "No rights to change groups".equals(gui().getLabel(102).label), gui().getLabel(102).label));
+        // LG1 held the final selection and two members; none of it may stay on screen for LG2 (Q399).
+        act("cleared check", () -> check("denied-shows-no-previous-group", boxes() == 0 && "Loaded members: 0".equals(gui().getLabel(101).label),
+                LinkedCategories.toText(boxes()) + " / " + gui().getLabel(101).label));
         image("denied");
         act("command denied", () -> Minecraft.getMinecraft().player.sendChatMessage("/rwlinked undo LG1"));
         act("malformed", () -> LinkedClient.send(new byte[]{1, 1, 0}));

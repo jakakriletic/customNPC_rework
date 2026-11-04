@@ -17,7 +17,7 @@ import noppes.npcs.client.gui.util.GuiNpcLabel;
 public final class LinkedGroupPanel {
     public static final int FIRST_BOX = 100, APPLY = 110, UNDO = 111;
     private static final int LABEL_TITLE = 100, LABEL_GROUP = 101, LABEL_STATUS = 102;
-    private static final String[] LABELS =
+    static final String[] LABELS =
             {"Appearance", "Name and title", "Stats", "AI", "Inventory", "Advanced", "Scripts", "Transform"};
 
     private GuiNPCInterface gui;
@@ -105,7 +105,11 @@ public final class LinkedGroupPanel {
             this.pending = reply.mask;
             this.loaded = reply.loaded;
             this.undo = reply.undo;
-        } else if (reply.result == LinkedGuiCodec.RESULT_UNKNOWN) {
+        } else {
+            // Without an answer about this group nothing of the previous one may stay on the screen (Q399).
+            this.saved = 0;
+            this.pending = 0;
+            this.loaded = 0;
             this.undo = false;
         }
         if (!first) {

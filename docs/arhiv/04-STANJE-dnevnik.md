@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 221 → 1)
+# Arhiv: dnevnik sej (vnosi 222 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,17 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-04 (222) — M13.2: kategorije, razveljavitev in postopen prenos (sprejet)
+
+**Paket:** M13.2 (Q389–Q394) · **Stanje:** sprejet na poskusu 1 pod stikalom; `RwLinkedGroups` ostane 0.
+Pri 1 skupina prenese samo izbrane kategorije (privzeto vse razen skript, kar je original), skripte brez konzole, `/rwlinked undo` zamenja z `.json_prev`, največ `RwLinkedBudget` (50) prenosov na tick.
+Pri 0 prvotna pot: brez ukaza, ključa, `.json_prev` in števcev; član brez poti obdrži dom (zapre omejitev M13.1).
+Controller `m132-groups-v2` PASS (100 skriptnih preverb) na `8f1ad57c…`; unit/build/package PASS na `ae658355…` (nato samo skripta harnessa, Q394). v1 je bila napaka harnessa.
+Cena: 200 članov v 80 tickih, največ 50/tick, ~91 µs/prenos; največji tick 68,3 ms ni pripisan prenosu, MSPT ni merjen.
+Meje: brez igralca/GUI-ja (M13.2b, Q392); `advanced`/`transform` samo razvrstitev; pri `RwLinkedOwnFields=0` povezava še premakne dom člana s potjo; nalaganje chunka zunaj proračuna; `removeData` originala ne izbriše datoteke (Q393, ni popravljeno).
+Noben workload zagnan iz seje; nepovezano delo ohranjeno. Naslednji M13.2b; M10.3 blokiran Q1.
+[Dokazi in omejitve](../meritve/2026-11-04-M13.2-kategorije.md).
 
 ### 2026-11-04 (221) — M13.1: povezani NPC-ji ohranijo svoja polja (sprejet)
 

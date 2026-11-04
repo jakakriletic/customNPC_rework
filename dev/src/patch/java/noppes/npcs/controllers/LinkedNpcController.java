@@ -113,7 +113,7 @@ public class LinkedNpcController {
             npc.linkedLast = data.time;
             if (CustomNpcs.RwLinkedGroups == 1) {
                 long start = System.nanoTime();
-                this.applyCategories(npc, data);
+                this.applyCategories(npc, data, CustomNpcs.RwLinkedOwnFields == 1);
                 this.budget.nanos += System.nanoTime() - start;
                 return;
             }
@@ -148,12 +148,12 @@ public class LinkedNpcController {
      * M13.2 (Q389): only the group's selected categories reach the member, and only their readers run. With AI off
      * setMovingPath is skipped too, because it would move the member's home (Q384).
      */
-    private void applyCategories(EntityNPCInterface npc, LinkedData data) {
+    private void applyCategories(EntityNPCInterface npc, LinkedData data, boolean keepOwn) {
         int mask = data.categories;
         List<int[]> points = npc.ais.getMovingPath();
         NBTTagCompound own = this.readNpcData(npc);
         NBTTagCompound compound = NBTTags.NBTMerge(own, LinkedCategories.filter(data.data, mask));
-        if (CustomNpcs.RwLinkedOwnFields == 1) {
+        if (keepOwn) {
             LinkedOwnFields.restore(own, compound);
         }
         if (LinkedCategories.has(mask, LinkedCategories.APPEARANCE | LinkedCategories.NAME)) {
@@ -174,7 +174,7 @@ public class LinkedNpcController {
         if (LinkedCategories.has(mask, LinkedCategories.AI)) {
             npc.ais.readToNBT(compound);
             npc.ais.setMovingPath(points);
-            if (CustomNpcs.RwLinkedOwnFields == 1) {
+            if (keepOwn) {
                 BlockPos home = LinkedOwnFields.home(own);
                 if (home != null) {
                     npc.ais.setStartPos(home);
@@ -204,6 +204,30 @@ public class LinkedNpcController {
             tabs.getCompoundTagAt(i).removeTag("Console");
         }
         return compound;
+    }
+
+    /** M13.3: a snapshot of an NPC for a one-time copy with the given categories. */
+    public LinkedData copyOf(EntityNPCInterface source, int mask) {
+        LinkedData once = new LinkedData();
+        once.data = this.readNpcData(source);
+        this.cleanTags(once.data);
+        if (LinkedCategories.has(mask, LinkedCategories.SCRIPTS)) {
+            this.addScripts(source, once.data);
+        }
+        once.categories = mask;
+        return once;
+    }
+
+    /** M13.3 (Q403): no link is made, and a copy always keeps the target's own home, orientation and path. */
+    public void copyTo(EntityNPCInterface target, LinkedData once) {
+        this.applyCategories(target, once, true);
+    }
+
+    private void addScripts(EntityNPCInterface npc, NBTTagCompound compound) {
+        NBTTagCompound scripts = this.readScripts(npc);
+        for (String key : scripts.getKeySet()) {
+            compound.setTag(key, scripts.getTag(key));
+        }
     }
 
     /** False when a member over this tick's budget has to wait for its next check (Q391). */
@@ -309,10 +333,7 @@ public class LinkedNpcController {
     private void saveCategories(EntityNPCInterface npc, NBTTagCompound compound) {
         LinkedData data = npc.linkedData;
         if (LinkedCategories.has(data.categories, LinkedCategories.SCRIPTS)) {
-            NBTTagCompound scripts = this.readScripts(npc);
-            for (String key : scripts.getKeySet()) {
-                compound.setTag(key, scripts.getTag(key));
-            }
+            this.addScripts(npc, compound);
         }
         // With own fields on, a member walking its path is no change of the group and must not use up the undo (Q390).
         boolean same = CustomNpcs.RwLinkedOwnFields == 1 ? LinkedOwnFields.sameShared(data.data, compound) : data.data.equals((Object)compound);

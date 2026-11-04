@@ -10,6 +10,7 @@ import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.common.network.internal.FMLProxyPacket;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import noppes.npcs.client.gui.GuiNpcRemoteEditor;
 import noppes.npcs.client.gui.global.GuiNPCManageLinkedNpc;
 
 /**
@@ -35,6 +36,13 @@ public final class LinkedClient {
         return id;
     }
 
+    /** M13.3: a request of the wand list. */
+    public static int send(LinkedGuiCodec.BatchOp op, int mask, int source, String group, int[] ids) {
+        int id = nextRequest++ & Integer.MAX_VALUE;
+        send(new LinkedGuiCodec.Batch(id, op, mask, source, group, ids).encode());
+        return id;
+    }
+
     /** Any bytes on the channel; the harness also sends malformed ones. */
     public static void send(byte[] data) {
         LinkedNet.channel().sendToServer(new FMLProxyPacket(new PacketBuffer(Unpooled.wrappedBuffer(data)), LinkedGuiCodec.CHANNEL));
@@ -51,21 +59,30 @@ public final class LinkedClient {
     @SubscribeEvent
     public void onClientPacket(FMLNetworkEvent.ClientCustomPacketEvent event) {
         ByteBuf payload = event.getPacket().payload();
-        if (payload.readableBytes() > LinkedGuiCodec.MAX_RESPONSE) {
+        if (payload.readableBytes() > LinkedGuiCodec.MAX_LIST) {
             return;
         }
         byte[] data = new byte[payload.readableBytes()];
         payload.getBytes(payload.readerIndex(), data);
         final LinkedGuiCodec.Response reply = LinkedGuiCodec.response(data);
-        if (reply == null) {
+        final LinkedGuiCodec.ListResponse list = reply == null ? LinkedGuiCodec.list(data) : null;
+        if (reply == null && list == null) {
             return;
         }
         Minecraft.getMinecraft().addScheduledTask(() -> {
+            GuiScreen screen = Minecraft.getMinecraft().currentScreen;
+            if (list != null) {
+                if (screen instanceof GuiNpcRemoteEditor) {
+                    ((GuiNpcRemoteEditor) screen).rwRows(list);
+                }
+                return;
+            }
             latest = reply;
             replies++;
-            GuiScreen screen = Minecraft.getMinecraft().currentScreen;
             if (screen instanceof GuiNPCManageLinkedNpc) {
                 ((GuiNPCManageLinkedNpc) screen).rwReply(reply);
+            } else if (screen instanceof GuiNpcRemoteEditor) {
+                ((GuiNpcRemoteEditor) screen).rwReply(reply);
             }
         });
     }

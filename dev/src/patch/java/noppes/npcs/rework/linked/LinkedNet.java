@@ -47,19 +47,20 @@ public final class LinkedNet {
         final EntityPlayerMP player = ((NetHandlerPlayServer) event.getHandler()).player;
         final MinecraftServer server = player.getServer();
         ByteBuf payload = event.getPacket().payload();
-        if (server == null || payload.readableBytes() > LinkedGuiCodec.MAX_REQUEST) {
+        if (server == null || payload.readableBytes() > LinkedGuiCodec.MAX_BATCH) {
             return;
         }
         byte[] data = new byte[payload.readableBytes()];
         payload.getBytes(payload.readerIndex(), data);
         final LinkedGuiCodec.Request request = LinkedGuiCodec.request(data);
-        if (request == null) {
+        final LinkedGuiCodec.Batch batch = request == null ? LinkedGuiCodec.batch(data) : null;
+        if (request == null && batch == null) {
             return;
         }
         server.addScheduledTask(() -> {
             if (!player.hasDisconnected()) {
-                channel.sendTo(new FMLProxyPacket(new PacketBuffer(Unpooled.wrappedBuffer(execute(server, player, request).encode())),
-                        LinkedGuiCodec.CHANNEL), player);
+                byte[] reply = request != null ? execute(server, player, request).encode() : LinkedWand.execute(server, player, batch);
+                channel.sendTo(new FMLProxyPacket(new PacketBuffer(Unpooled.wrappedBuffer(reply)), LinkedGuiCodec.CHANNEL), player);
             }
         });
     }
