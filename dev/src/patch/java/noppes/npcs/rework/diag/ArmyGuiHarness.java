@@ -187,7 +187,7 @@ public final class ArmyGuiHarness {
             add("mass response",20,()->{},()->ArmyClient.staffReply().id!=before);
             act("mass check",()->check("bulk-assign",ArmyClient.staffReply().ok && ArmyClient.staffReply().text.contains("changed=3"),ArmyClient.staffReply().text));
             snapshot("bulk-count",()->names().contains("alpha:3:true"));
-            act("swarm",()->{ click(6); click(6); click(6); });
+            act("swarm",()->{ click(6); click(6); click(6); click(6); }); // M11.11: starts at freeforall
             act("arm move",()->click(8));
             act("aim",()->{ check("aim-closes",mc.currentScreen==null,"aim in world"); mc.player.rotationYaw=0; mc.player.rotationPitch=5; });
             add("ray move",20,()->{ before=ArmyClient.staffReply().id; air(); },()->ArmyClient.staffReply().id!=before);

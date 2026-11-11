@@ -1,6 +1,6 @@
-# Armies on Xaero's World Map — v0.1.11
+# Armies on Xaero's World Map — v0.1.12
 
-Install the same `xaerofleetcommand-1.12.2-v0.1.11.jar` on client and server.
+Install the same `xaerofleetcommand-1.12.2-v0.1.12.jar` on client and server.
 The client needs Xaero's World Map; the server needs CustomNPC Rework with
 `RwArmies=1` and formations enabled. This module has no required CNPC/DaVinci
 dependency: without either provider its other features continue to work.

@@ -3,7 +3,7 @@ plugins {
     id 'com.gtnewhorizons.retrofuturagradle' version '1.4.9'
 }
 group = 'si.ladja'
-version = '1.12.2-v0.1.11'
+version = '1.12.2-v0.1.12'
 base { archivesName = 'xaerofleetcommand' }
 java {
     toolchain { languageVersion = JavaLanguageVersion.of(8) }

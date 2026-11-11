@@ -30,7 +30,7 @@ script API and adds, behind settings:
 - Armies: for the snapshot set `RwArmies=1` on the server and on clients. A client with 1 on a server with
   0 gets no answer and stays connected; a client with 0 on a server with 1 was not tested.
 
-For Xaero army commands install `xaerofleetcommand-1.12.2-v0.1.11.jar` on both client and server;
+For Xaero army commands install `xaerofleetcommand-1.12.2-v0.1.12.jar` on both client and server;
 the client also needs Xaero's World Map. Enable `RwArmies` and formations on the server.
 Open the **Armies** map tab, select flags and right-click a destination at any distance in the current
 dimension (an unloaded chunk is loaded or generated for the click; water or lava moves the target to the nearest
@@ -177,7 +177,8 @@ search (bounded like a leg, sideways on repeated failures). A member that still 
 blocked and never holds the others. Each member has its own slot in the chosen shape around the goal. The army
 is ARRIVED when every loaded member holds its slot or has stayed blocked for 30 s (BLOCKED if nobody arrived);
 `status` shows arrived/moving/blocked/fighting counts. A member that joins or leaves does not restart the others.
-The map and the staff offer it as **Free for all**; on the Xaero map it is the default.
+The map and the staff offer it as **Free for all**, the default on both (in single player too). Legion, column,
+ring and swarm still use companies, which can block in rough terrain when stragglers find no path to the main group.
 
 `swarm` follows the shared route immediately with stable scattered offsets instead of forming rows.
 `passive` rejects attack and revenge targets during an active march or join. `engage` lets a member

@@ -18,7 +18,9 @@ public final class GuiArmyStaff extends GuiScreen {
     private final GuiScreen parent;
     private GuiTextField name;
     private String chosen = "", message = "Waiting for server...", player = "";
-    private int tab, page, shape, stance, ticks, sentAt, lastId = -1;
+    private int tab, page, stance, ticks, sentAt, lastId = -1;
+    /** M11.11: free-for-all is the default move, as on the Xaero map; companies block in rough terrain. */
+    private int shape = java.util.Arrays.asList(ArmyStaffCodec.SHAPES).indexOf("freeforall");
     private boolean awaitingInspect, awaitingPlayers;
     private boolean armySelection, batch;
     private final Set<String> selectedArmies = new LinkedHashSet<String>();

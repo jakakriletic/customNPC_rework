@@ -45,6 +45,10 @@ public final class ArmyMapLayer {
     @SubscribeEvent public void disconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent e){
         Minecraft.getMinecraft().addScheduledTask(()->{ArmyClient.clear();targets.clear();view=null;});
     }
+    /** Single player runs the same jar on its integrated server, where FML may not report the remote version. */
+    private static boolean freeForAll(){
+        return XaeroFleetCommandMod.serverSupportsFreeForAll() || Minecraft.getMinecraft().isIntegratedServerRunning();
+    }
     private boolean active(){return MapMode.isArmyMap() && ArmyClient.available() && XaeroFleetCommandMod.serverSupportsArmies();}
     @SubscribeEvent(priority=EventPriority.LOW) public void draw(GuiScreenEvent.DrawScreenEvent.Post e){
         if(!(e.getGui() instanceof GuiMap) || !active())return;
@@ -75,7 +79,7 @@ public final class ArmyMapLayer {
         MapDraw.rect(6,27,174,204,0xE6192532);
         text(mc,"ARMIES "+ArmyClient.selection().size()+"/16",12,33,COLOR);
         text(mc,"Click flag; Shift adds",12,46,0xDDE4E8);
-        if(shape==4 && !XaeroFleetCommandMod.serverSupportsFreeForAll())shape=0;
+        if(shape==4 && !freeForAll())shape=0;
         button(mc,0,"Shape: "+SHAPES[shape]);button(mc,1,"Speed: "+speed);
         button(mc,2,"New order: "+(engage?"Engage":"Passive"));
         button(mc,3,"Apply stance to selection");button(mc,4,"Stop selection [X]");
@@ -127,7 +131,7 @@ public final class ArmyMapLayer {
         if(panel(x,y)){
             if(b==0 && down){tookPress=true;int i=(int)((y-60)/19);
                 if(y>=60 && i<5){
-                    if(i==0)shape=(shape+1)%(XaeroFleetCommandMod.serverSupportsFreeForAll()?5:4);
+                    if(i==0)shape=(shape+1)%(freeForAll()?5:4);
                     if(i==1)speed=speed>=6?0.5:speed+0.5;
                     if(i==2)engage=!engage;
                     if(i==3)send(ArmyAction.ENGAGEMENT,0,0);
