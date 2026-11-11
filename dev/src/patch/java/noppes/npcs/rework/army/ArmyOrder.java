@@ -5,7 +5,7 @@ import noppes.npcs.rework.formation.SquadOrder;
 
 /** M11.3/Q300: durable intent, never entity references or transient Squad ids. */
 public final class ArmyOrder {
-    public enum Mode { FORMATION, SWARM }
+    public enum Mode { FORMATION, SWARM, FREEFORALL }
     public enum Stance { PASSIVE, ENGAGE }
     public enum State { WAITING, JOINING, MOVING, ARRIVED, BLOCKED, CANCELLED }
     public final int dimension, companySize;

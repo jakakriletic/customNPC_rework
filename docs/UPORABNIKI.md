@@ -30,10 +30,10 @@ script API and adds, behind settings:
 - Armies: for the snapshot set `RwArmies=1` on the server and on clients. A client with 1 on a server with
   0 gets no answer and stays connected; a client with 0 on a server with 1 was not tested.
 
-For Xaero army commands install `xaerofleetcommand-1.12.2-v0.1.9.jar` on both client and server;
+For Xaero army commands install `xaerofleetcommand-1.12.2-v0.1.10.jar` on both client and server;
 the client also needs Xaero's World Map. Enable `RwArmies` and formations on the server.
 Open the **Armies** map tab, select flags and right-click safe loaded ground in the current
-dimension. Formation/Swarm, stance and Stop use current server rights. The tab is hidden
+dimension. Free for all (default), Formation/Swarm, stance and Stop use current server rights. The tab is hidden
 without a compatible provider or visible positions. See [controls](../integrations/xaero-fleet-command/ARMY-MAP.md).
 This adapter also includes Winter storm. Build validation passed; live map validation is pending.
 
@@ -158,7 +158,7 @@ revoke or deop applies to the next one. An army you may not see answers as `unkn
 `RwArmyClusterMin` members is a group, the rest are stragglers. An army with no loaded members stays listed with
 its last known position.
 
-`/rwarmy move <army> <x> <y> <z> [legion|column|ring|swarm] [speed] [passive|engage]` moves loaded ground members in
+`/rwarmy move <army> <x> <y> <z> [legion|column|ring|swarm|freeforall[:shape]] [speed] [passive|engage]` moves loaded ground members in
 the sender's dimension (relative `~` coordinates work; default legion, speed 3, range 0.5–6).
 The army uses companies of 8 sharing one route per leg; stragglers join first. Long moves use
 bounded real paths (at most 24 Manhattan blocks, also limited by navigation range minus 8).
@@ -168,6 +168,15 @@ The move stores its company size and resumes after a restart when members load. 
 No complete route or a timeout means BLOCKED; issue a new move to retry. Formations must be enabled
 (do not set `-Drwformation=off`). Scripts: `ArmyApi.move(army, dimension, x, y, z, shape, speed)`
 returns a boolean, as does `stop(army)`; `status(army)` returns text.
+
+`freeforall` (M11.11; also `freeforall:column`, `freeforall:ring`, default legion at the goal) does not wait:
+there are no companies and no join phase. One route is searched per leg as before, but every member walks it
+at its own pace; a member pushed aside walks back onto it, one that starts away from it or gets stuck runs its own
+search (bounded like a leg, sideways on repeated failures). A member that still cannot get through is reported
+blocked and never holds the others. Each member has its own slot in the chosen shape around the goal. The army
+is ARRIVED when every loaded member holds its slot or has stayed blocked for 30 s (BLOCKED if nobody arrived);
+`status` shows arrived/moving/blocked/fighting counts. A member that joins or leaves does not restart the others.
+The map and the staff offer it as **Free for all**; on the Xaero map it is the default.
 
 `swarm` follows the shared route immediately with stable scattered offsets instead of forming rows.
 `passive` rejects attack and revenge targets during an active march or join. `engage` lets a member
@@ -189,7 +198,7 @@ clears membership. Creating an army remains an op command with an owner.
 
 **Nearby (256)** lists loaded clusters within 256 horizontal blocks in your dimension;
 **All armies** includes visible empty/unloaded armies and their last position. Counts are
-loaded members only. Select an army, choose legion/column/ring/swarm and passive/engage,
+loaded members only. Select an army, choose legion/column/ring/swarm/freeforall and passive/engage,
 then **Aim / right-click**: look at safe ground and right-click again. Sneak + right-click
 cancels aiming. The server checks the ray through loaded chunks, up to 256 blocks; a miss
 keeps the previous order. **Stop** cancels; **Return here** uses your current position.
@@ -346,7 +355,13 @@ Not proven, so not claimed:
   M11.9 edge cases passed on a dev dedicated server without a player, with forced chunks and one
   company of 8 per army on a short route: shallow water and a two-block throat arrive; a wide gap blocks without a
   fall; two deaths and a departure during a march leave five who arrive and hold; a world reload resumes the saved
-  order. One member closed in stops the whole army as BLOCKED even when the other seven are at the goal.
+  order. With companies, one member closed in stops the whole army as BLOCKED even when the other seven are at the goal.
+  [M11.11 `freeforall`](meritve/2026-11-11-M11.11-freeforall.md) removes that dependency: 199 scattered members crossed
+  a wall with one 3-wide gap, a stepped hill, pillars and a pond to their own legion slots after a restart, while the
+  walled-in member alone was reported blocked. Dev dedicated without a client, flat world with a built course and forced
+  chunks; unloaded terrain, combat during the march, column/ring at the goal and the live map were not tested. It costs
+  more than companies: march p95 15.2 ms against idle 7.1 ms with 200 (companies 10.75 against 6.42, another day).
+  The route is still searched in bounded legs (turned up to ±90° when a leg fails); it is not a global planner.
   `ArmyApi.members` can return a dying member for up to 20 ticks, so scripts should check health. M11.6 travelling chunk tickets (`RwArmyMaxMarches`, accepted under the
   switch, Q355): at most that many armies hold tickets (members' chunks plus one ring, at most 49 chunks); further
   armies march without tickets and get no progress in unloaded chunks. M11.5 clears a stale member path before

@@ -11,6 +11,8 @@ import si.ladja.xaerofleet.integration.CnpcArmyBridge;
 /** No identity or authority in the payload. Every selected army receives an independent result. */
 public final class ArmyAction implements IMessage {
     public static final int MOVE=0, CANCEL=1, ENGAGEMENT=2, MAX_ARMIES=16;
+    /** Wire value of the shape index; 4 = free-for-all march (CNPC M11.11, protocol 0.6.1-armies). */
+    public static final String[] SHAPES={"legion","column","ring","swarm","freeforall"};
     private static final PacketRate RATE=new PacketRate(500);
     public List<String> names=Collections.emptyList();
     public int action,dimension,shape;
@@ -22,7 +24,7 @@ public final class ArmyAction implements IMessage {
         this.dimension=dimension;this.x=x;this.z=z;this.shape=shape;this.speed=speed;this.engage=engage;validate();
     }
     void validate(){
-        if(action<0 || action>2 || names.isEmpty() || names.size()>MAX_ARMIES || shape<0 || shape>3
+        if(action<0 || action>2 || names.isEmpty() || names.size()>MAX_ARMIES || shape<0 || shape>4
                 || !Double.isFinite(x) || !Double.isFinite(z) || Math.abs(x)>29999984 || Math.abs(z)>29999984
                 || !Double.isFinite(speed) || speed<0.5 || speed>6)throw new IllegalArgumentException("Invalid army action");
         for(String n:names)if(n==null || n.isEmpty() || n.length()>64)throw new IllegalArgumentException("Invalid army name");
@@ -56,7 +58,7 @@ public final class ArmyAction implements IMessage {
             int accepted=0,rejected=0;String reason="";
             for(String name:m.names){
                 CommandFeedback f=m.action==MOVE?bridge.move(p.getServer(),p.getUniqueID(),name,p.dimension,
-                        m.x,ground.getY(),m.z,new String[]{"legion","column","ring","swarm"}[m.shape],m.speed,m.engage?"engage":"passive")
+                        m.x,ground.getY(),m.z,SHAPES[m.shape],m.speed,m.engage?"engage":"passive")
                         :m.action==CANCEL?bridge.cancel(p.getServer(),p.getUniqueID(),name)
                         :bridge.engagement(p.getServer(),p.getUniqueID(),name,m.engage?"engage":"passive");
                 accepted+=f.acceptedCount;rejected+=f.rejectedCount;reason=f.reason;

@@ -68,7 +68,7 @@ public final class RwNavBackend {
         try {
             boolean use = selected(globalMode(), npc.getRwNavBackend(),
                     npc.ais.movementType, npc.isRiding(), npc.isBeingRidden(),
-                    SquadManager.contains(npc), npc.isKilled());
+                    SquadManager.contains(npc) || noppes.npcs.rework.army.ArmyFreeMarch.contains(npc), npc.isKilled());
             if (use) {
                 if (afterRebuild || !NpcBaritoneBridge.attached(npc)) {
                     NpcBaritoneBridge.attach(npc);

@@ -38,7 +38,7 @@ import noppes.npcs.entity.EntityNPCInterface;
  * /rwarmy grants [player]
  * /rwarmy players [prefix]                                            (owner or operator)
  * /rwarmy clusters [army]                                             (view right; M11.2)
- * /rwarmy move &lt;army&gt; &lt;x&gt; &lt;y&gt; &lt;z&gt; [legion|column|ring|swarm] [speed] [passive|engage]
+ * /rwarmy move &lt;army&gt; &lt;x&gt; &lt;y&gt; &lt;z&gt; [legion|column|ring|swarm|freeforall[:shape]] [speed] [passive|engage]
  * /rwarmy stance &lt;army&gt; passive|engage                            (command right; M11.4)
  * /rwarmy stop &lt;army&gt;                                                (command right)
  * /rwarmy status &lt;army&gt;                                              (view right)
@@ -66,7 +66,7 @@ public class CommandRwArmy extends CommandBase {
                 + " | unassign <npc name|selector> [range] | list | info <army> | remove <army>"
                 + " | grant <player> view|command <army|all> | revoke <player> view|command|all [army|all]"
                 + " | grants [player] | players [prefix] | clusters [army]"
-                + " | move <army> <x> <y> <z> [legion|column|ring|swarm] [speed] [passive|engage]"
+                + " | move <army> <x> <y> <z> [legion|column|ring|swarm|freeforall[:shape]] [speed] [passive|engage]"
                 + " | stance <army> passive|engage | stop <army> | status <army>";
     }
 
@@ -249,7 +249,8 @@ public class CommandRwArmy extends CommandBase {
             return getListOfStringsMatchingLastWord(args, visibleNames(server, actor));
         }
         if (args.length == 6 && action.equals("move")) {
-            return getListOfStringsMatchingLastWord(args, "legion", "column", "ring", "swarm");
+            return getListOfStringsMatchingLastWord(args, "legion", "column", "ring", "swarm", "freeforall",
+                    "freeforall:column", "freeforall:ring");
         }
         if ((args.length == 3 && action.equals("stance")) || (args.length == 8 && action.equals("move"))) {
             return getListOfStringsMatchingLastWord(args, "passive", "engage");

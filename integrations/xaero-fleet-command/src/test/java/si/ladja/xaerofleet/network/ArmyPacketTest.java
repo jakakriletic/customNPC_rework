@@ -55,6 +55,15 @@ public class ArmyPacketTest {
         for(int action:new int[]{-1,3,255}){
             try{new ArmyAction(action,Arrays.asList("North"),0,0,0,0,1,true);fail();}catch(IllegalArgumentException expected){}
         }
+        for(int shape:new int[]{-1,5,255}){
+            try{new ArmyAction(0,Arrays.asList("North"),0,0,0,shape,1,true);fail();}catch(IllegalArgumentException expected){}
+        }
+    }
+    @Test public void freeForAllShapeRoundTripsAsItsOwnWireValue(){
+        ArmyAction p=new ArmyAction(0,Arrays.asList("North"),0,1,2,4,3,false);
+        ByteBuf b=Unpooled.buffer();p.toBytes(b);ArmyAction q=new ArmyAction();q.fromBytes(b);b.release();
+        assertEquals(4,q.shape);assertEquals("freeforall",ArmyAction.SHAPES[q.shape]);
+        assertEquals(Arrays.asList("legion","column","ring","swarm","freeforall"),Arrays.asList(ArmyAction.SHAPES));
     }
     @Test public void malformedSnapshotsAreRejected(){
         reject(Unpooled.buffer().writeShort(257),true);

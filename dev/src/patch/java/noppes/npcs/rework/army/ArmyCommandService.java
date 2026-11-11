@@ -323,9 +323,14 @@ public final class ArmyCommandService {
         if (a == null || !reg.access(a, actor).canView()) { return unknown(name); }
         if (!reg.access(a, actor).canCommand()) { return new Reply(false, "no command permission for " + a.name()); }
         boolean swarm = "swarm".equalsIgnoreCase(shape) || "roj".equalsIgnoreCase(shape);
+        // M11.11: "freeforall" or "freeforall:<shape>" = no waiting while walking, the shape at the goal.
+        String free = shape == null ? null : freeShape(shape);
         noppes.npcs.rework.formation.SquadOrder.Shape form = swarm
                 ? noppes.npcs.rework.formation.SquadOrder.Shape.LEGIJA : shape == null ? null
+                : free != null ? noppes.npcs.rework.formation.SquadOrder.Shape.parse(free)
                 : noppes.npcs.rework.formation.SquadOrder.Shape.parse(shape);
+        ArmyOrder.Mode mode = swarm ? ArmyOrder.Mode.SWARM : free != null ? ArmyOrder.Mode.FREEFORALL
+                : ArmyOrder.Mode.FORMATION;
         ArmyOrder previous = reg.order(name);
         ArmyOrder.Stance intent = stance == null ? (previous == null ? ArmyOrder.Stance.ENGAGE : previous.stance)
                 : parseStance(stance);
@@ -345,11 +350,21 @@ public final class ArmyCommandService {
         }
         ArmyMarches.cancel(a.name());
         reg.order(a.name(), new ArmyOrder(dimension, x, y, z, form, speed, companySize, ArmyOrder.State.WAITING,
-                swarm ? ArmyOrder.Mode.SWARM : ArmyOrder.Mode.FORMATION, intent));
+                mode, intent));
         dirty(server);
         return new Reply(true, "move " + a.name() + " dim=" + dimension + " target=" + x + "," + y + "," + z
-                + " shape=" + form + " company=" + companySize + " mode=" + (swarm ? "SWARM" : "FORMATION")
+                + " shape=" + form + " company=" + companySize + " mode=" + mode
                 + " stance=" + intent);
+    }
+
+    /** The destination shape of a free-for-all move, or null when the value is not a free-for-all move. */
+    static String freeShape(String value) {
+        String v = value.toLowerCase(java.util.Locale.ROOT);
+        if (v.equals("freeforall") || v.equals("ffa")) { return "legion"; }
+        for (String p : new String[] {"freeforall:", "ffa:"}) {
+            if (v.startsWith(p) && v.length() > p.length()) { return v.substring(p.length()); }
+        }
+        return null;
     }
 
     public static ArmyOrder.Stance parseStance(String value) {

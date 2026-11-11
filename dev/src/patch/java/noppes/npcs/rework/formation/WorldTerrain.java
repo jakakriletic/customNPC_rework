@@ -10,7 +10,7 @@ import net.minecraft.world.World;
  * prehodna (in ne lava) ter blok pod stopali blokira gibanje. Nenalozenih chunkov ne bere,
  * da planer nikoli ne sprozi nalaganja chunka.
  */
-final class WorldTerrain implements Terrain {
+public final class WorldTerrain implements Terrain {
     /** Iskanje od enega bloka nad namigom do treh pod njim: stopnica gor ali tri dol. */
     private static final int UP = 1;
     private static final int DOWN = 3;
@@ -18,7 +18,7 @@ final class WorldTerrain implements Terrain {
     private final World world;
     private final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
-    WorldTerrain(World world) {
+    public WorldTerrain(World world) {
         this.world = world;
     }
 

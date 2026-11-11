@@ -197,7 +197,8 @@ param([string[]]$Variants = @('idle', 'boj', 'skripte'), [Alias('Counts')][strin
       [ValidateSet(-1, 0, 1, 2)][int]$FlightMode = -1,
       [ValidateSet(-1, 0, 1)][int]$NavBackend = -1, [string]$BaritoneRoot = '',
       [ValidateSet(25, 50)][int]$MrezaSirina = 25, [switch]$ZiviHeap,
-      [switch]$PohodBrezChunkov, [ValidateRange(5, 120)][int]$PohodNogaS = 20)
+      [switch]$PohodBrezChunkov, [ValidateRange(5, 120)][int]$PohodNogaS = 20,
+      [ValidateSet('legion', 'freeforall')][string]$PohodOblika = 'legion')
 
 $ErrorActionPreference = 'Stop'
 $root   = $PSScriptRoot
@@ -667,7 +668,7 @@ function Send-PohodNoga([int]$Dolzina = 28) {
     $cilj = [int][math]::Round($script:pohodX) + $script:pohodSmer * $Dolzina
     $script:pohodStevecMove++
     $script:pohodCiljX = $cilj
-    Send-Command $srv ('rwarmy move pohod {0} 4 -8 legion 1 passive' -f $cilj)
+    Send-Command $srv ('rwarmy move pohod {0} 4 -8 {1} 1 passive' -f $cilj, $PohodOblika)
     if (-not (Wait-ForCount $srv 'RWARMY move pohod dim=0 target=' $script:pohodStevecMove 60)) { throw "Ukaz pohoda ni bil sprejet (cilj x=$cilj)." }
     $script:pohodNog++
 }
@@ -1115,7 +1116,11 @@ try {
             Send-Command $srv 'rwarmy assign pohod @e[name=PERF_Idle]'
             Check ("A0: vseh {0} NPC-jev v vojski" -f $N) (Wait-ForMarker $srv ("RWARMY assigned pohod npcs={0} changed={0}" -f $N) 60)
             Send-PohodNoga
-            Check ("A0: {0} cet po 8" -f [int]($N / 8)) (Wait-Pohodni ("RWARMY march pohod companies={0} members={1} paths=1 size=8" -f [int]($N / 8), $N) 1 60)
+            if ($PohodOblika -eq 'freeforall') {
+                Check ("A0: freeforall z {0} clani, brez cet" -f $N) (Wait-Pohodni ("RWARMY freeforall pohod members={0}" -f $N) 1 60)
+            } else {
+                Check ("A0: {0} cet po 8" -f [int]($N / 8)) (Wait-Pohodni ("RWARMY march pohod companies={0} members={1} paths=1 size=8" -f [int]($N / 8), $N) 1 60)
+            }
             if ($PohodBrezChunkov) {
                 Check 'T0: ticket drzi chunke vojske' (Wait-Pohodni 'RWARMY tickets pohod chunks=' 1 60)
                 Send-Command $srv 'setworldspawn 2000 4 2000'

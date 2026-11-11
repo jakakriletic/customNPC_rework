@@ -52,10 +52,13 @@ public final class ArmyMarches {
         double yaw, remaining = Double.POSITIVE_INFINITY;
         List<List<EntityNPCInterface>> companies;
         Slot[] lanes;
+        /** M11.11: a free-for-all march replaces companies and squads. */
+        ArmyFreeMarch free;
         Run(List<EntityNPCInterface> members) { this.members = members; }
         void cancel() {
             if (installed != null) { installed.passive.removeAll(members); }
             for (Squad s : squads) { s.cancelArmy(); }
+            if (free != null) { free.cancel(); }
         }
     }
 
@@ -75,6 +78,7 @@ public final class ArmyMarches {
             installed.runs.clear();
             installed.stale.clear();
             installed.tickets.releaseAll("released");
+            ArmyFreeMarch.clearAll();
             MinecraftForge.EVENT_BUS.unregister(installed);
             installed = null;
         }
@@ -109,6 +113,7 @@ public final class ArmyMarches {
     public static String status(String army) {
         Run r = installed == null ? null : installed.runs.get(Army.key(army));
         String held = installed == null || ArmyTickets.maxMarches() == 0 ? "" : " " + installed.tickets.status(army);
+        if (r != null && r.free != null) { return r.free.status() + held; }
         return (r == null ? "companies=0 members=0 paths=0" : "companies=" + r.squads.size()
                 + " members=" + r.members.size() + " paths=" + r.paths + " age=" + r.age
                 + " legs=" + r.legs + " totalPaths=" + r.totalPaths) + held;
@@ -137,6 +142,7 @@ public final class ArmyMarches {
         if (e.world.isRemote || e.phase != TickEvent.Phase.END || e.world != server.getWorld(0)) { return; }
         if (!ArmyCommandService.enabled()) { clear(); return; }
         ticks++;
+        ArmyFreeMarch.flushRemovals();
         // Intent is loaded even before the first NPC appears; active orders resume as chunks load.
         ArmyRegistry reg = ArmyWorldData.get(server).registry();
         for (Army army : reg.list()) {
@@ -156,7 +162,21 @@ public final class ArmyMarches {
                 live.removeIf(npc -> !eligible(npc) || npc.world.provider.getDimension() != order.dimension
                         || skip != null && skip.containsKey(npc));
                 Set<EntityNPCInterface> now = new HashSet<EntityNPCInterface>(live);
-                if (r != null && !now.equals(new HashSet<EntityNPCInterface>(r.members))) {
+                if (r != null && r.free != null && !now.equals(new HashSet<EntityNPCInterface>(r.members))) {
+                    // M11.11: a member that joins or leaves never restarts the others.
+                    if (live.isEmpty()) {
+                        r.cancel(); runs.remove(army.key());
+                        state(reg, army.name(), ArmyOrder.State.WAITING); continue;
+                    }
+                    if (order.stance == ArmyOrder.Stance.PASSIVE) {
+                        passive.removeAll(r.members); passive.addAll(live);
+                        for (EntityNPCInterface npc : live) {
+                            if (!r.members.contains(npc)) { npc.setAttackTarget(null); npc.setRevengeTarget(null); }
+                        }
+                    }
+                    r.free.sync(live);
+                    r.members.clear(); r.members.addAll(live);
+                } else if (r != null && !now.equals(new HashSet<EntityNPCInterface>(r.members))) {
                     r.cancel(); runs.remove(army.key()); r = null;
                 }
                 if (r == null) {
@@ -164,7 +184,7 @@ public final class ArmyMarches {
                     if (live.size() > 2048) { state(reg, army.name(), ArmyOrder.State.BLOCKED); continue; }
                     r = build(army.name(), live, order);
                     runs.put(army.key(), r);
-                    if (r.squads.isEmpty()) {
+                    if (r.squads.isEmpty() && r.free == null) {
                         state(reg, army.name(), ArmyOrder.State.BLOCKED); continue;
                     }
                     if (order.stance == ArmyOrder.Stance.PASSIVE) {
@@ -177,6 +197,24 @@ public final class ArmyMarches {
                 }
             }
             r.age++;
+            if (r.free != null) {
+                r.free.tick();
+                if (r.free.emptied()) {
+                    // Like a company that lost every member to an unload: wait for chunks, not blocked.
+                    Map<EntityNPCInterface, Integer> frozen = new HashMap<EntityNPCInterface, Integer>();
+                    for (EntityNPCInterface npc : r.members) { frozen.put(npc, npc.ticksExisted); }
+                    stale.put(army.key(), frozen);
+                    r.cancel(); runs.remove(army.key());
+                    state(reg, army.name(), ArmyOrder.State.WAITING);
+                } else if (r.free.done()) {
+                    LogWriter.info("RWARMY freeforall-end " + army.name() + " " + r.free.status());
+                    int arrived = r.free.arrived();
+                    r.free.finish();
+                    r.cancel();
+                    state(reg, army.name(), arrived > 0 ? ArmyOrder.State.ARRIVED : ArmyOrder.State.BLOCKED);
+                }
+                continue;
+            }
             double slowest = Double.POSITIVE_INFINITY;
             boolean done = true, arrived = true;
             for (Squad s : r.squads) {
@@ -276,6 +314,12 @@ public final class ArmyMarches {
     private Run build(String army, List<EntityNPCInterface> live, ArmyOrder order) {
         Collections.sort(live, Comparator.comparing(npc -> npc.getUniqueID().toString()));
         Run run = new Run(live);
+        if (order.mode == ArmyOrder.Mode.FREEFORALL) {
+            // M11.11: no join phase, no companies; every member starts from where it stands.
+            noppes.npcs.rework.formation.SquadManager.stop(live);
+            run.free = ArmyFreeMarch.start(army, live, order);
+            return run;
+        }
         double[] xs = new double[live.size()], zs = new double[live.size()];
         for (int i = 0; i < live.size(); i++) { xs[i] = live.get(i).posX; zs[i] = live.get(i).posZ; }
         boolean[] inMain = ArmyCompanies.mainMembers(xs, zs, ArmyCommandService.clusterRadius());

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 226 → 1)
+# Arhiv: dnevnik sej (vnosi 227 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-04 (227) — M13.5: 100 NPC-jev z eno izbiro (sprejet)
+
+**Paket:** M13.5 (Q430–Q433) · **Stanje:** sprejet pod stikalom; `RwLinkedGroups` ostane 0. M13 zaključen pod stikali.
+Pravi dev klient/dedicated: 100 že postavljenih NPC-jev izbranih s prvo vrstico in *Same name*, ena povezava (`LINK:LW1:100:100`), sprememba enega člana doseže vseh 100.
+Oba 0 po restartu: izviren seznam, datoteke skupin bitno enake. `m135-hundred-v3` PASS na `715c381a…` (62 preverb, 5 PNG pregledanih); unit/build/package na enaki Javi `d6a6ed39…` (Q90).
+v1 našel napako noge seznama (Q431, popravljena); v2 padel na semenu harnessa (Q432).
+Meje: en dev par, vsi člani naloženi v radiu 32, MSPT/paketi niso merjeni; `save()` izvirno prepiše vse skupine. Izhod M13 pokrit z ločenimi scenariji.
+Naslednje omejitve §6 po Q407. M10.3 blokiran Q1. [Zapis](../meritve/2026-11-04-M13.5-sto.md).
 
 ### 2026-11-04 (226) — M13.4: kloner kot povezan in obvestilo (sprejet)
 

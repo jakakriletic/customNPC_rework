@@ -52,7 +52,8 @@ public final class ArmyApi {
         return ArmyCommandService.cancel(server(), ArmyActor.SYSTEM, army).ok;
     }
 
-    /** M11.4: swarm or an existing formation, and passive|engage during the march. */
+    /** M11.4: swarm or an existing formation, and passive|engage during the march.
+     * M11.11: {@code freeforall} or {@code freeforall:<legion|column|ring>} walks without waiting, shape at the goal. */
     public static boolean move(String army, int dimension, double x, double y, double z, String shape,
             double speed, String stance) {
         return ArmyCommandService.submitMove(server(), ArmyActor.SYSTEM, army, dimension, x, y, z, shape, speed, stance).ok;

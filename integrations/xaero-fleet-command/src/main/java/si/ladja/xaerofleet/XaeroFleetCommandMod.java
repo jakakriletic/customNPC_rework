@@ -30,13 +30,16 @@ import java.util.Map;
 )
 public final class XaeroFleetCommandMod {
     public static final String MOD_ID = "xaerofleetcommand";
-    public static final String VERSION = "0.6.0-armies";
+    public static final String VERSION = "0.6.1-armies";
+    /** Armies without the free-for-all shape; a new client still commands armies on such a server. */
+    public static final String ARMIES_V0 = "0.6.0-armies";
     public static final Logger LOG = LogManager.getLogger(MOD_ID);
 
     /** Whether the server this client is connected to runs the same version of this mod. */
     private static volatile boolean serverSupportsFleet = true;
     private static volatile boolean serverSupportsWinter;
     private static volatile boolean serverSupportsArmies;
+    private static volatile boolean serverSupportsFreeForAll;
 
     /**
      * Never refuses a connection over this mod.
@@ -51,7 +54,8 @@ public final class XaeroFleetCommandMod {
     public boolean acceptRemote(Map<String, String> remoteMods, Side remoteSide) {
         if (remoteSide == Side.SERVER) {
             String remote = remoteMods.get(MOD_ID);
-            serverSupportsArmies = VERSION.equals(remote);
+            serverSupportsFreeForAll = VERSION.equals(remote);
+            serverSupportsArmies = serverSupportsFreeForAll || ARMIES_V0.equals(remote);
             serverSupportsWinter = serverSupportsArmies || "0.5.0-winter".equals(remote);
             serverSupportsFleet = serverSupportsWinter || "0.4.0-milestone".equals(remote);
             if (!serverSupportsFleet) {
@@ -68,6 +72,7 @@ public final class XaeroFleetCommandMod {
 
     public static boolean serverSupportsWinter() { return serverSupportsWinter; }
     public static boolean serverSupportsArmies() { return serverSupportsArmies; }
+    public static boolean serverSupportsFreeForAll() { return serverSupportsFreeForAll; }
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {

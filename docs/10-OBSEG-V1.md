@@ -119,7 +119,8 @@ odpravljanje omejitev iz `UPORABNIKI.md` §6, ki so ostale zaradi pravila 2 posk
 
 **Q445 (odločitev lastnika 4. 11. 2026): M11.11 `freeforall` je naslednji paket**, pred nadaljevanjem
 M10.4 in ostalih popravkov §6: vojska se premakne tako, da vsak član takoj sam gre od svoje pozicije
-do cilja, brez čet in čakanja (podrobnosti v `03-FAZE.md` M11.11), tudi v Xaero.
+do cilja, brez čet in čakanja (podrobnosti v `03-FAZE.md` M11.11), tudi v Xaero. **Sprejet 11. 11.** po
+hibridu Q446 (skupna pot brez čakanja); naprej M10.4 in ostali popravki §6.
 
 **Q444 (odločitev lastnika 4. 11. 2026): vgrajeno animacijsko jedro (M16).** Po odpravi omejitev §6
 (M10.4 in ostale) je naslednji **M16** (`03-FAZE.md`), pred M12, M14 in M15. Rework dobi lastno

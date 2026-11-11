@@ -1,6 +1,6 @@
-# Armies on Xaero's World Map — v0.1.9
+# Armies on Xaero's World Map — v0.1.10
 
-Install the same `xaerofleetcommand-1.12.2-v0.1.9.jar` on client and server.
+Install the same `xaerofleetcommand-1.12.2-v0.1.10.jar` on client and server.
 The client needs Xaero's World Map; the server needs CustomNPC Rework with
 `RwArmies=1` and formations enabled. This module has no required CNPC/DaVinci
 dependency: without either provider its other features continue to work.
@@ -14,7 +14,10 @@ The army count is loaded members, not a saved total. The layer sends at most 256
 
 - Click a flag to select its whole army; Shift-click adds/removes. Double click
   selects armies of the same owner. Ctrl+drag selects a rectangle; Ctrl+A all.
-- Choose Legion, Column, Ring or Swarm, speed 0.5–6, and the stance for new orders.
+- Choose Free for all (default), Legion, Column, Ring or Swarm, speed 0.5–6, and the stance for new orders.
+  **Free for all** walks the shared route without waiting: every member goes at its own pace,
+  a stuck member searches its own way, one that cannot get through is reported blocked and
+  never holds the others; the army takes a legion only at the destination (CNPC M11.11).
   Right click a destination to move. It must be safe, already loaded ground in
   your current dimension; unloaded terrain, water/lava and hazardous surfaces are refused.
 - **Apply stance** changes existing orders; **Stop** or X cancels them. Escape
@@ -29,7 +32,7 @@ your connected identity and checks rights again for every action. A stale select
 does not retain authority after revoke/deop. No CNPC or no visible positions means
 no army controls. The existing World, Ship's map and Winter storm tabs remain.
 
-New army packets require FML version `0.6.0-armies` at the other end. A new client
+New army packets require FML version `0.6.1-armies` (or `0.6.0-armies` without Free for all) at the other end. A new client
 can still use fleet/winter on old servers, but not armies; update both ends to use
 armies. Artifact version and FML wire version are intentionally distinct, following
 the existing v0.1.8-winter convention.

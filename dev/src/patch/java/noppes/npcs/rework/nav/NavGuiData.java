@@ -58,7 +58,7 @@ public final class NavGuiData {
         if (npc.ais.movementType != 0) { return "movement"; }
         if (npc.isRiding()) { return "riding"; }
         if (npc.isBeingRidden()) { return "carrying"; }
-        if (SquadManager.contains(npc)) { return "squad"; }
+        if (SquadManager.contains(npc) || noppes.npcs.rework.army.ArmyFreeMarch.contains(npc)) { return "squad"; }
         if (npc.isKilled()) { return "killed"; }
         try {
             return NpcBaritoneBridge.fallbackReason(npc);

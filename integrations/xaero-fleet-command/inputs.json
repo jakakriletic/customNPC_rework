@@ -1,367 +1,368 @@
 {
-    "package":  "M11.7b",
-    "project":  "../advantura_estetika_mod/xaero-winter-storm",
-    "artifact":  "xaerofleetcommand-1.12.2-v0.1.9.jar",
-    "files":  [
-                  {
-                      "path":  "ARMY-MAP.md",
-                      "sha256":  "921290921279986285137C6D5350BCFC583801CE2F916B8D1215A8E3BCC6E1D9",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "build.gradle",
-                      "sha256":  "75A8C8BF7B96A6B54B3076B5097121A626A09FEEF74075D8BFC355555B6DABF7",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "gradle.properties",
-                      "sha256":  "900C303A1C85D91293943A462096880005F5B63B2CEB6E49FF642176F3B6AD7A",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "gradle/wrapper/gradle-wrapper.jar",
-                      "sha256":  "2DB75C40782F5E8BA1FC278A5574BAB070ADCCB2D21CA5A6E5ED840888448046",
-                      "sourceCopy":  false
-                  },
-                  {
-                      "path":  "gradle/wrapper/gradle-wrapper.properties",
-                      "sha256":  "FF27F2701F204C648A4322FCC1CBD1126764F9538D59C06532D014EAF7FF2B08",
-                      "sourceCopy":  false
-                  },
-                  {
-                      "path":  "gradlew",
-                      "sha256":  "C07475B363508DBE7CF7D1DED1B31F6D44BB97D98D069A455AB862B1FB9B25F0",
-                      "sourceCopy":  false
-                  },
-                  {
-                      "path":  "gradlew.bat",
-                      "sha256":  "57931B17DD228E5C24DAC90E815D0BF82477E831A4618DFAB4136F5446B42A9F",
-                      "sourceCopy":  false
-                  },
-                  {
-                      "path":  "libs/XaerosWorldMap_1.34.1_Forge_1.12.jar",
-                      "sha256":  "3625E007BB2286B78846D2EA57565C76AC58B672CCA5F8556B6B5599A2100031",
-                      "sourceCopy":  false
-                  },
-                  {
-                      "path":  "libs/XaerosWorldMap_1.37.8_Forge_1.12.jar",
-                      "sha256":  "7FCE3BD3AE8EF1FE7337AD8CF6F0441D6A7DEE1348F9BF3E23F9EDC97163220B",
-                      "sourceCopy":  false
-                  },
-                  {
-                      "path":  "settings.gradle",
-                      "sha256":  "2F8A179C26F2F3C62E373BAE84CA5EB47C2C6028B8DFE43BBCA5FF4EA992D4A7",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/client/ArmyClient.java",
-                      "sha256":  "B118360CDA917068910C6D51985B250433CD3E6F30BD5036282D656DE3DFA731",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/client/ArmyMapLayer.java",
-                      "sha256":  "F7C1514A2714C032A0F6607680702C4519F41E6A0F4EFB4B5601BC00E2F1F1B8",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/client/CaptainIcon.java",
-                      "sha256":  "3A6C4986B384A2661CF682622D4A3205FD758DAAA75AA10E9233E0FFF73C957E",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/client/ClientCaptainStore.java",
-                      "sha256":  "7DE3DECC4AA1B28B21261516DE12028050CD1B52675DE8C8AA71DD1594E0A467",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/client/ClientMapEvents.java",
-                      "sha256":  "94EF0E26C51865411CDC4D598354172E1BC5BED6482934AE75BDB23F5C1F881D",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/client/MapDraw.java",
-                      "sha256":  "642250A09F6C47015F956F729771D9EEC8D5273FD0BB9AB395ED57D8DC111791",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/client/MapMode.java",
-                      "sha256":  "923875F157E9D54A2081A7E1C93528AD90C37CA731888B9BAF6032F6E1852048",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/client/MapModeSwitch.java",
-                      "sha256":  "41C0BEFC5CF6B6ABD7CB4845822434298C07C6B6B2EBA25B85337B7CD7A32B93",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/client/MapToast.java",
-                      "sha256":  "D0506E71BE2B2EE53BF5CDDE4443D120A88539CFB5C306FC3E13E9569AB7B1A4",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/client/SelectionModel.java",
-                      "sha256":  "5278C0F82488FDA5187A6B77C77CF7C472B9C885480D731DCEC1E7417F3EBFC9",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/client/StormClient.java",
-                      "sha256":  "6D75DC9CBA575A1D24A17D285F95ADA0D84B864888322FF6A60320815B7CDFA5",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/client/StormMapLayer.java",
-                      "sha256":  "98E133C6E7B5539082186890915A4F17AA1A2405D867A51B6E61563A24F960CC",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/client/xaero/MapViewTransform.java",
-                      "sha256":  "EB0A8995DF088235066E15CBC1C64245DC1A47E6C340BA55EE00955D1CBF54A3",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/integration/ArmyGround.java",
-                      "sha256":  "BB59AF6620771C311B668BBA2BF14B8A164C73FA40A05C9EA63BB7AF910F4484",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/integration/CnpcArmyBridge.java",
-                      "sha256":  "47D77CD0B140D7B6F35B75FF8A07320E464033F2797AA96B878C3A0DAA4F79AF",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/integration/DavincisFleetBridge.java",
-                      "sha256":  "83DF9F8A3DD80EAFF627BD22BF7FCBEFA6E4CB51700BBD0A2543B0043D106CDC",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/ArmyAction.java",
-                      "sha256":  "1FD6716F4A6C6F894F6EFF76F13CEFC0949AE97D01A2A0CF78E2F2BFA1680A0C",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/ArmyFeedback.java",
-                      "sha256":  "DCD65C95E12002347FB14DC824A1BAE5D660D48405D06189080CFE0856E9AFD6",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/ArmyMarker.java",
-                      "sha256":  "1C5E9B66A78B510008F01447F4067161EF75DFA50C86CE623F36AFE92B2064BE",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/ArmyRequest.java",
-                      "sha256":  "27ECB636528ACF80EA0295C1FF399738C60B1F12CA96922BA4CAF7BD92F9DB2E",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/ArmySnapshot.java",
-                      "sha256":  "C5C1AC1B1D9ACD06863FC4BCA65FC1347E8E77247B9BCFC5AC0F410C792D0F2A",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/CancelOrderPacket.java",
-                      "sha256":  "FD6C01850DB338846C89525897AA3E776A6854DCF2BE7091B1BF875795AEC3BA",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/CaptainSnapshotPacket.java",
-                      "sha256":  "C01531CE2882554DE8C5656038E737C252E4E59040AA418CC4D4AE0862390B9A",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/CaptainView.java",
-                      "sha256":  "BC290B27782CD74DC179511C0FCAF0A0C1B05F9A80F8433720D289BA20E48E7A",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/CommandFeedback.java",
-                      "sha256":  "D234A5225707BDCD5F7D9B65357F062F4258A80248CF49D9B30291820CB2CF2D",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/CommandResultPacket.java",
-                      "sha256":  "C48D13C89714FFE118F1F0C6BB6FCB8FCD3BD693C86A25A4FE494C98DE9052BC",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/EngagementOrderPacket.java",
-                      "sha256":  "AE7556527034361310FE71C3B96BC609590C2D249A02DF32C96CDBEA68FDC093",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/FleetNetwork.java",
-                      "sha256":  "B92C024516B29BDB04C9F14D223C8FEE0604239B7CBD615ED978E16D7E389835",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/MoveOrderPacket.java",
-                      "sha256":  "7AC5D49F366482732ECF79F140143CC05654840323D576576ED93C74B709BED3",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/PacketRate.java",
-                      "sha256":  "42E1F39C6EBA950C9843FE5EE7C117F434B41D214B7D457998F52A471B7D55D1",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/RequestCaptains.java",
-                      "sha256":  "B0685ECC1B1FF6ABCF69C247CBC300A021CFAE9DA999F865978EDDA88B146EA5",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/RequestStormsPacket.java",
-                      "sha256":  "5A1761151A35393B272E8B73CD0A42D199933D7CFB14DB5620D65E7DC9B4EB49",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/StormControlPacket.java",
-                      "sha256":  "9550591E8DF42BCDF1C91B6681B6B8D0EB2CF5305426CB9FE63FB464810BCF2A",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/StormFeedbackPacket.java",
-                      "sha256":  "C0F93F06CC7048FCFAA163984D922950DDC7A056298FE7CF2C6A485547986081",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/network/StormSnapshotPacket.java",
-                      "sha256":  "E4735FF7871857F01A069D9F758A10C2B8719DC949D4F6DDAE7B878D49D43505",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/storm/ColdModel.java",
-                      "sha256":  "13ED7E6255CBBFDB62999CD60C1E67EE3F114CDA6DA36E3FAA9005D40B42EF34",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/storm/GridArea.java",
-                      "sha256":  "8BF5D1C5F467A46EFC23E274FE5ABC6069616609A4C84AC9F57E0B8BE48A3689",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/storm/StormConfig.java",
-                      "sha256":  "E9C3A4735A47BC5DA277FE367E8825C61D97393E9530A77952BA1CAEC73F1DCD",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/storm/StormData.java",
-                      "sha256":  "F7E71BC863EB2762CD1EF5323D4419B9E76FCDBC317E27C907EE934966C6D218",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/storm/StormRegion.java",
-                      "sha256":  "4C31871171D1D6578EF0DCCF56CCC205161CFFB07B5F7D267A0E21D10F49BA6A",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/storm/StormService.java",
-                      "sha256":  "237B6D45331735A56E9F257418010BB7E8A6A6EFB1E4526BC197E8E96988025D",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/java/si/ladja/xaerofleet/XaeroFleetCommandMod.java",
-                      "sha256":  "6D548455CB8E09EDF33DB602963438B536057245D3F5C66EA4EF75981D44BA42",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/resources/assets/xaerofleetcommand/lang/en_us.lang",
-                      "sha256":  "CD355FE72BAACE1B6A1D353CFCBFF1431E705A7CA47007D47715D973A2FF7895",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/resources/mcmod.info",
-                      "sha256":  "DC82B84E2495693A4214D6AA80AB8CBBAD8B2CDE59BE8FCCB380E3A767BE55CE",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/main/resources/pack.mcmeta",
-                      "sha256":  "EDB59A981A3087A1CF498A2ADA19DD0FD87C0E5FCEC84124C4513C160F0AD76E",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/qa/java/si/ladja/xaerofleet/qa/WinterQa.java",
-                      "sha256":  "E482426CAE4CEF840661428A84D75C02914CAA53DCED5B83B9F3B22253521B4D",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/client/ArmyClientTest.java",
-                      "sha256":  "0808A49503D4AB2D18C95BB25C922DE5D73CF82C794E8C4458ACBFED303776F0",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/client/CaptainIconTest.java",
-                      "sha256":  "C474F0D38FF7E754C7156067BB1B2D34CB8F66F7A84A28D51F26E507B6E49419",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/client/MapModeSwitchTest.java",
-                      "sha256":  "0178F17A93650849A89CADBCC8B77301C60A56011D9959F513155B66C38CE491",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/client/MapModeTest.java",
-                      "sha256":  "3A5EB2122949A03958B2B3E3CA720767B0A8BB843CF41EDC0D057534F8C4190C",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/client/SelectionModelTest.java",
-                      "sha256":  "027FF3620085875493A2CF8923091349EF0CF989CD3B7A03082F23F89ACBAC07",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/client/StormLayerTest.java",
-                      "sha256":  "143A95D532BE542FD8E9B50969D9341399525B44F1439828B1CD44597EF73D2C",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/client/xaero/MapViewTransformTest.java",
-                      "sha256":  "F2C8A76F3AEE67A257CC86BAB2EB2F81AD39C4E318C395ED5AF731997CC57A6E",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/integration/CnpcArmyBridgeTest.java",
-                      "sha256":  "9DD5C1892CECA28A63F06BDFEE941938F6BA0C048595AD063302C3E273F97FB2",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/network/ArmyPacketTest.java",
-                      "sha256":  "2B0709173AF257A5931AA47B32EED901F2B70F8FD4683935010420C2049B14FC",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/network/CaptainSnapshotPacketTest.java",
-                      "sha256":  "13AA06DF980EAA59FC72F868EC98F61CA52A00D77746EFB502926ED6B6004CBE",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/network/EngagementOrderPacketTest.java",
-                      "sha256":  "1A46175F8B2F9160A462E4BDB48B9D30E399944E33C7A073FE5C4D969D71621F",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/network/MoveOrderPacketTest.java",
-                      "sha256":  "9624BE23198F7F04B1A91CF317BA724FD48A3C9A758A0D5B0229F207F1A97F8E",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/network/PacketRateTest.java",
-                      "sha256":  "5A3C9D7542075D4E69ECB3DA2BD82608DE9C09C0FD82B1FBD57C9F56F8AEE7CF",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/network/StormPacketTest.java",
-                      "sha256":  "800B2D73D78360C1797F4A715446FB9A6881944C5B1AD0417A2521656C47D8A4",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "src/test/java/si/ladja/xaerofleet/storm/StormRulesTest.java",
-                      "sha256":  "CA051DCE9FC5C8E0839C5558C792E36059133CB2DA9A1E86023888BB2ED10FD1",
-                      "sourceCopy":  true
-                  },
-                  {
-                      "path":  "WINTER-STORMS.md",
-                      "sha256":  "5C9EC7200D380BB654B4750EE76F97F4102891E23B27474D094FF2E2D0014852",
-                      "sourceCopy":  true
-                  }
-              ]
+    "package": "M11.11",
+    "project": "../advantura_estetika_mod/xaero-winter-storm",
+    "artifact": "xaerofleetcommand-1.12.2-v0.1.10.jar",
+    "wire": "0.6.1-armies",
+    "files": [
+        {
+            "path": "ARMY-MAP.md",
+            "sha256": "2734F9AA9DB2FB1DC2FEAE5537A6CB989CCD0ADA9399ADC1C93619EDEC5F243B",
+            "sourceCopy": true
+        },
+        {
+            "path": "build.gradle",
+            "sha256": "45679C3B45968777556DC9B0ADDDCDBB5CCE34390A45B3988F096FA768868B9F",
+            "sourceCopy": true
+        },
+        {
+            "path": "gradle.properties",
+            "sha256": "900C303A1C85D91293943A462096880005F5B63B2CEB6E49FF642176F3B6AD7A",
+            "sourceCopy": true
+        },
+        {
+            "path": "gradle/wrapper/gradle-wrapper.jar",
+            "sha256": "2DB75C40782F5E8BA1FC278A5574BAB070ADCCB2D21CA5A6E5ED840888448046",
+            "sourceCopy": false
+        },
+        {
+            "path": "gradle/wrapper/gradle-wrapper.properties",
+            "sha256": "FF27F2701F204C648A4322FCC1CBD1126764F9538D59C06532D014EAF7FF2B08",
+            "sourceCopy": false
+        },
+        {
+            "path": "gradlew",
+            "sha256": "C07475B363508DBE7CF7D1DED1B31F6D44BB97D98D069A455AB862B1FB9B25F0",
+            "sourceCopy": false
+        },
+        {
+            "path": "gradlew.bat",
+            "sha256": "57931B17DD228E5C24DAC90E815D0BF82477E831A4618DFAB4136F5446B42A9F",
+            "sourceCopy": false
+        },
+        {
+            "path": "libs/XaerosWorldMap_1.34.1_Forge_1.12.jar",
+            "sha256": "3625E007BB2286B78846D2EA57565C76AC58B672CCA5F8556B6B5599A2100031",
+            "sourceCopy": false
+        },
+        {
+            "path": "libs/XaerosWorldMap_1.37.8_Forge_1.12.jar",
+            "sha256": "7FCE3BD3AE8EF1FE7337AD8CF6F0441D6A7DEE1348F9BF3E23F9EDC97163220B",
+            "sourceCopy": false
+        },
+        {
+            "path": "settings.gradle",
+            "sha256": "2F8A179C26F2F3C62E373BAE84CA5EB47C2C6028B8DFE43BBCA5FF4EA992D4A7",
+            "sourceCopy": true
+        },
+        {
+            "path": "WINTER-STORMS.md",
+            "sha256": "5C9EC7200D380BB654B4750EE76F97F4102891E23B27474D094FF2E2D0014852",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/XaeroFleetCommandMod.java",
+            "sha256": "66CFCBB85E89A3E9E791BCDC7DE2055E84127BA9739A0269A342CD606AE4F121",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/client/ArmyClient.java",
+            "sha256": "B118360CDA917068910C6D51985B250433CD3E6F30BD5036282D656DE3DFA731",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/client/ArmyMapLayer.java",
+            "sha256": "FAFA45050086F7B9C778515BF6782B8C7EF1660ED8BF904896C0946B92E56D6E",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/client/CaptainIcon.java",
+            "sha256": "3A6C4986B384A2661CF682622D4A3205FD758DAAA75AA10E9233E0FFF73C957E",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/client/ClientCaptainStore.java",
+            "sha256": "7DE3DECC4AA1B28B21261516DE12028050CD1B52675DE8C8AA71DD1594E0A467",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/client/ClientMapEvents.java",
+            "sha256": "94EF0E26C51865411CDC4D598354172E1BC5BED6482934AE75BDB23F5C1F881D",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/client/MapDraw.java",
+            "sha256": "642250A09F6C47015F956F729771D9EEC8D5273FD0BB9AB395ED57D8DC111791",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/client/MapMode.java",
+            "sha256": "923875F157E9D54A2081A7E1C93528AD90C37CA731888B9BAF6032F6E1852048",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/client/MapModeSwitch.java",
+            "sha256": "41C0BEFC5CF6B6ABD7CB4845822434298C07C6B6B2EBA25B85337B7CD7A32B93",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/client/MapToast.java",
+            "sha256": "D0506E71BE2B2EE53BF5CDDE4443D120A88539CFB5C306FC3E13E9569AB7B1A4",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/client/SelectionModel.java",
+            "sha256": "5278C0F82488FDA5187A6B77C77CF7C472B9C885480D731DCEC1E7417F3EBFC9",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/client/StormClient.java",
+            "sha256": "6D75DC9CBA575A1D24A17D285F95ADA0D84B864888322FF6A60320815B7CDFA5",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/client/StormMapLayer.java",
+            "sha256": "98E133C6E7B5539082186890915A4F17AA1A2405D867A51B6E61563A24F960CC",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/client/xaero/MapViewTransform.java",
+            "sha256": "EB0A8995DF088235066E15CBC1C64245DC1A47E6C340BA55EE00955D1CBF54A3",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/integration/ArmyGround.java",
+            "sha256": "BB59AF6620771C311B668BBA2BF14B8A164C73FA40A05C9EA63BB7AF910F4484",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/integration/CnpcArmyBridge.java",
+            "sha256": "47D77CD0B140D7B6F35B75FF8A07320E464033F2797AA96B878C3A0DAA4F79AF",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/integration/DavincisFleetBridge.java",
+            "sha256": "83DF9F8A3DD80EAFF627BD22BF7FCBEFA6E4CB51700BBD0A2543B0043D106CDC",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/ArmyAction.java",
+            "sha256": "CE98B1150F6F1D5A85EA79B92C580A199D3D099942A7EF263FD779288C0C6147",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/ArmyFeedback.java",
+            "sha256": "DCD65C95E12002347FB14DC824A1BAE5D660D48405D06189080CFE0856E9AFD6",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/ArmyMarker.java",
+            "sha256": "1C5E9B66A78B510008F01447F4067161EF75DFA50C86CE623F36AFE92B2064BE",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/ArmyRequest.java",
+            "sha256": "27ECB636528ACF80EA0295C1FF399738C60B1F12CA96922BA4CAF7BD92F9DB2E",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/ArmySnapshot.java",
+            "sha256": "C5C1AC1B1D9ACD06863FC4BCA65FC1347E8E77247B9BCFC5AC0F410C792D0F2A",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/CancelOrderPacket.java",
+            "sha256": "FD6C01850DB338846C89525897AA3E776A6854DCF2BE7091B1BF875795AEC3BA",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/CaptainSnapshotPacket.java",
+            "sha256": "C01531CE2882554DE8C5656038E737C252E4E59040AA418CC4D4AE0862390B9A",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/CaptainView.java",
+            "sha256": "BC290B27782CD74DC179511C0FCAF0A0C1B05F9A80F8433720D289BA20E48E7A",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/CommandFeedback.java",
+            "sha256": "D234A5225707BDCD5F7D9B65357F062F4258A80248CF49D9B30291820CB2CF2D",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/CommandResultPacket.java",
+            "sha256": "C48D13C89714FFE118F1F0C6BB6FCB8FCD3BD693C86A25A4FE494C98DE9052BC",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/EngagementOrderPacket.java",
+            "sha256": "AE7556527034361310FE71C3B96BC609590C2D249A02DF32C96CDBEA68FDC093",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/FleetNetwork.java",
+            "sha256": "B92C024516B29BDB04C9F14D223C8FEE0604239B7CBD615ED978E16D7E389835",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/MoveOrderPacket.java",
+            "sha256": "7AC5D49F366482732ECF79F140143CC05654840323D576576ED93C74B709BED3",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/PacketRate.java",
+            "sha256": "42E1F39C6EBA950C9843FE5EE7C117F434B41D214B7D457998F52A471B7D55D1",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/RequestCaptains.java",
+            "sha256": "B0685ECC1B1FF6ABCF69C247CBC300A021CFAE9DA999F865978EDDA88B146EA5",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/RequestStormsPacket.java",
+            "sha256": "5A1761151A35393B272E8B73CD0A42D199933D7CFB14DB5620D65E7DC9B4EB49",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/StormControlPacket.java",
+            "sha256": "9550591E8DF42BCDF1C91B6681B6B8D0EB2CF5305426CB9FE63FB464810BCF2A",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/StormFeedbackPacket.java",
+            "sha256": "C0F93F06CC7048FCFAA163984D922950DDC7A056298FE7CF2C6A485547986081",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/StormSnapshotPacket.java",
+            "sha256": "E4735FF7871857F01A069D9F758A10C2B8719DC949D4F6DDAE7B878D49D43505",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/storm/ColdModel.java",
+            "sha256": "13ED7E6255CBBFDB62999CD60C1E67EE3F114CDA6DA36E3FAA9005D40B42EF34",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/storm/GridArea.java",
+            "sha256": "8BF5D1C5F467A46EFC23E274FE5ABC6069616609A4C84AC9F57E0B8BE48A3689",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/storm/StormConfig.java",
+            "sha256": "E9C3A4735A47BC5DA277FE367E8825C61D97393E9530A77952BA1CAEC73F1DCD",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/storm/StormData.java",
+            "sha256": "F7E71BC863EB2762CD1EF5323D4419B9E76FCDBC317E27C907EE934966C6D218",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/storm/StormRegion.java",
+            "sha256": "4C31871171D1D6578EF0DCCF56CCC205161CFFB07B5F7D267A0E21D10F49BA6A",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/storm/StormService.java",
+            "sha256": "237B6D45331735A56E9F257418010BB7E8A6A6EFB1E4526BC197E8E96988025D",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/resources/assets/xaerofleetcommand/lang/en_us.lang",
+            "sha256": "CD355FE72BAACE1B6A1D353CFCBFF1431E705A7CA47007D47715D973A2FF7895",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/resources/mcmod.info",
+            "sha256": "DC82B84E2495693A4214D6AA80AB8CBBAD8B2CDE59BE8FCCB380E3A767BE55CE",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/resources/pack.mcmeta",
+            "sha256": "EDB59A981A3087A1CF498A2ADA19DD0FD87C0E5FCEC84124C4513C160F0AD76E",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/qa/java/si/ladja/xaerofleet/qa/WinterQa.java",
+            "sha256": "E482426CAE4CEF840661428A84D75C02914CAA53DCED5B83B9F3B22253521B4D",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/client/ArmyClientTest.java",
+            "sha256": "0808A49503D4AB2D18C95BB25C922DE5D73CF82C794E8C4458ACBFED303776F0",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/client/CaptainIconTest.java",
+            "sha256": "C474F0D38FF7E754C7156067BB1B2D34CB8F66F7A84A28D51F26E507B6E49419",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/client/MapModeSwitchTest.java",
+            "sha256": "0178F17A93650849A89CADBCC8B77301C60A56011D9959F513155B66C38CE491",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/client/MapModeTest.java",
+            "sha256": "3A5EB2122949A03958B2B3E3CA720767B0A8BB843CF41EDC0D057534F8C4190C",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/client/SelectionModelTest.java",
+            "sha256": "027FF3620085875493A2CF8923091349EF0CF989CD3B7A03082F23F89ACBAC07",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/client/StormLayerTest.java",
+            "sha256": "143A95D532BE542FD8E9B50969D9341399525B44F1439828B1CD44597EF73D2C",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/client/xaero/MapViewTransformTest.java",
+            "sha256": "F2C8A76F3AEE67A257CC86BAB2EB2F81AD39C4E318C395ED5AF731997CC57A6E",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/integration/CnpcArmyBridgeTest.java",
+            "sha256": "9DD5C1892CECA28A63F06BDFEE941938F6BA0C048595AD063302C3E273F97FB2",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/network/ArmyPacketTest.java",
+            "sha256": "77D4921AC4A34B24419943F733FDB360FE6561BD338FDD8F5BA48011DD47F977",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/network/CaptainSnapshotPacketTest.java",
+            "sha256": "13AA06DF980EAA59FC72F868EC98F61CA52A00D77746EFB502926ED6B6004CBE",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/network/EngagementOrderPacketTest.java",
+            "sha256": "1A46175F8B2F9160A462E4BDB48B9D30E399944E33C7A073FE5C4D969D71621F",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/network/MoveOrderPacketTest.java",
+            "sha256": "9624BE23198F7F04B1A91CF317BA724FD48A3C9A758A0D5B0229F207F1A97F8E",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/network/PacketRateTest.java",
+            "sha256": "5A3C9D7542075D4E69ECB3DA2BD82608DE9C09C0FD82B1FBD57C9F56F8AEE7CF",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/network/StormPacketTest.java",
+            "sha256": "800B2D73D78360C1797F4A715446FB9A6881944C5B1AD0417A2521656C47D8A4",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/test/java/si/ladja/xaerofleet/storm/StormRulesTest.java",
+            "sha256": "CA051DCE9FC5C8E0839C5558C792E36059133CB2DA9A1E86023888BB2ED10FD1",
+            "sourceCopy": true
+        }
+    ]
 }

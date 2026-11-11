@@ -6,7 +6,7 @@ $snapshot = Join-Path $root 'integrations/xaero-fleet-command'
 $manifestPath = Join-Path $snapshot 'inputs.json'
 $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $stamp = Get-Date -Format 'yyyy-MM-dd-HHmmss'
-$report = Join-Path $root "audit/m117b-bridge-$stamp.json"
+$report = Join-Path $root ("audit/" + ($manifest.package -replace '\.', '').ToLower() + "-bridge-$stamp.json")
 $oldJava = $env:JAVA_HOME
 
 function Assert([bool]$Ok, [string]$Text) {
@@ -57,8 +57,8 @@ try {
     foreach ($required in @('si.ladja.xaerofleet.integration.CnpcArmyBridgeTest','si.ladja.xaerofleet.network.ArmyPacketTest','si.ladja.xaerofleet.client.ArmyClientTest')) {
         Assert (@($suites | Where-Object name -eq $required).Count -eq 1) "new suite executed: $required"
     }
-    $jar = Join-Path $project 'build/libs/xaerofleetcommand-1.12.2-v0.1.9.jar'
-    Assert (Test-Path -LiteralPath $jar) 'release v0.1.9 jar exists (not the dev jar)'
+    $jar = Join-Path $project ('build/libs/' + $manifest.artifact)
+    Assert (Test-Path -LiteralPath $jar) "release $($manifest.artifact) exists (not the dev jar)"
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $zip=[IO.Compression.ZipFile]::OpenRead($jar)
     try {
@@ -70,9 +70,10 @@ try {
         Assert (@($zip.Entries | Where-Object { $_.FullName -like 'noppes/*' -or $_.FullName -like '*/qa/*' -or $_.FullName -like '*Test.class' }).Count -eq 0) 'release embeds no CNPC, QA or test classes'
         $reader=New-Object IO.StreamReader($zip.GetEntry('mcmod.info').Open())
         try { $info=$reader.ReadToEnd() } finally { $reader.Dispose() }
-        Assert ($info -match '0.6.0-armies') 'release metadata has the new wire compatibility version'
+        $wire = if ($manifest.wire) { $manifest.wire } else { '0.6.0-armies' }
+        Assert ($info.Contains($wire)) "release metadata has wire compatibility version $wire"
     } finally { $zip.Dispose() }
-    $proof=[ordered]@{package='M11.7b'; result='PASS'; sourceManifestSha256=(Get-FileHash -LiteralPath $manifestPath).Hash;
+    $proof=[ordered]@{package=$manifest.package; result='PASS'; sourceManifestSha256=(Get-FileHash -LiteralPath $manifestPath).Hash;
         sourceFiles=$manifest.files; jar=$jar; jarSha256=(Get-FileHash -LiteralPath $jar).Hash; tests=$total; suites=$suites;
         limitations=@('No live Minecraft or manual map validation in this build scenario','No production runtime reflection/ground-height proof','CNPC source unchanged; no repeat of M11.7a')}
     $proof | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $report -Encoding UTF8

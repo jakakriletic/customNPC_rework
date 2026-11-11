@@ -14,12 +14,12 @@ odprta vprašanja in odprti pojavi.
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-04** (seja 228) — matrika P2 zelena (Q436): štiri celice, regresija palice in unit/build/package PASS na `e22ef824…`; popravek palice Q435. [Zapis](meritve/2026-10-30-P2-klientska-matrika.md). |
+| Zadnja posodobitev | **2026-11-11** (seja 230) — M11.11 `freeforall` sprejet: 199/199 skozi progo z grlom po restartu, zaprti član edini blokiran, Xaero v0.1.10 nameščen (Q446). [Zapis](meritve/2026-11-11-M11.11-freeforall.md). |
 | Trenutni milestone | **Omejitve `UPORABNIKI.md` §6 po Q407**: matrika P2 zaprta (Q436), naslednji soak heap (Q437). M13 zaključen pod stikali, M11.5 sprejet. v1.0 sprejet z omejitvami; M10.3/IO4 odprta (Q1). |
 | Naslednji paketi | **Soak: rast heapa po full GC (P1, Q437)**, nato ostale omejitve `UPORABNIKI.md` §6 po Q407. M12 na koncu; M15 po odločitvi lastnika. Q90/Q92 veljata s spremembami Q407: brez meje poskusov ali proračuna testov, timeout ≤14400 s; kratki zapisi in privzeto izklopljena stikala brez cenovne meje. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **307** datotek `.java` v `src/patch`, od tega **227** rework. Build/package PASS na `e22ef824…`. |
-| Testi | **818** metod `@Test` v **115** datotekah. Unit in klientska matrika PASS na `e22ef824…`. |
+| Prevedljivih razredov | **309** datotek `.java` v `src/patch`, od tega **229** rework. Build/package PASS na M11.11. |
+| Testi | **827** testov v **116** razredih (826 metod `@Test`). Unit PASS na M11.11; klientska matrika PASS na `e22ef824…`. |
 | Odprti pojavi | nobenega blokirnega; Q84 (M4.17 + M4.10 zid 6/6 → 5/6, vzrok [H], ovira za privzeti vklop kombinacije); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -45,7 +45,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | ~~M8 CustomNPC+~~ | **izločeno** (D-023, 3. 10.) | [pregled in plan](08-PREGLED-IN-PLAN.md) |
 | M9 Chatbot | ni začeto | analiza narejena, glej R8 |
 | M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b brez sprejema, M10.1d kot [P2 zelen](meritve/2026-10-30-P2-klientska-matrika.md) (Q436); celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
-| M11 Poveljevanje prek zemljevida | **M11.5 sprejet po Q407** | 32 članov prehodi ≥200 z restartom, oba ticket resume in kratka noga 200 ARRIVED; devet PASS na `299d947a…` (Q418). Celoten izhod M11 (dolgi pohod 200 skozi teren/nenaložen svet in živa mapa) ostaja nepokrit. |
+| M11 Poveljevanje prek zemljevida | **M11.11 sprejet** (`freeforall`) | 199/199 razmetanih skozi progo z grlom po restartu, zaprti član edini blokiran ([zapis](meritve/2026-11-11-M11.11-freeforall.md)); Xaero v0.1.10 nameščen. M11.5 sprejet po Q407. Celoten izhod M11 (200 skozi nenaložen svet in živa mapa) ostaja nepokrit. |
 | M13 Povezani NPC-ji | **M13.0–M13.5 zaključeni pod stikali** (v2, Q433) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun, GUI, seznam palice, kloner (`RwLinkedGroups`); obe stikali privzeto 0. [M13.5](meritve/2026-11-04-M13.5-sto.md): 100 z eno izbiro in sprememba do vseh. Izhod pokrit z ločenimi scenariji, ne z enim skupnim. |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
@@ -56,7 +56,16 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 226 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 227 → 1, novejši zgoraj).*
+
+### 2026-11-11 (230) — M11.11: pohod `freeforall` brez čakanja (sprejet)
+
+**Paket:** M11.11 (Q445, Q446) · **Stanje:** sprejet pod stikalom; `RwArmies` ostane 0. Interaktivna seja na zahtevo lastnika.
+Q446: hibrid namesto »vsak svojo pot«: ena skupna pot po odsekih, vsak član hodi s svojo hitrostjo, lastno iskanje samo odrinjen, obtičal ali oddaljen član; mesto v obliki šele na cilju, blokiran ne zadrži nikogar.
+`army-ffa-run.ps1` PASS (`m1111-ffa-2026-11-11-221824`): 199 razmetanih + 1 zaprt, zid z grlom 3, hrib, stebri, ribnik, restart pri 139 za zidom; 199/199 na mestu, zaprti edini blokiran, 0 skokov, razmik ≥0,83. Unit 827/827, build, paket PASS.
+Cena `army-cost-run.ps1 -Cell ffa`: pohod p95 15,20 / idle 7,08 ms, 110 MB/s (čete M11.10: 10,75 / 6,42). Trije neuspeli teki zapisani (luknja v poti, `fill hollow`, razmik).
+Xaero v0.1.10 (`0.6.1-armies`, gumb Free for all privzet): 84 JUnit + reobf PASS, sinhroniziran v `ladja_mod`, nameščen v 7/7 mods mapah z backupom. Živa mapa ostane ročna.
+Meje: dev dedicated, ploska proga, brez nenaloženega sveta, klienta in boja med pohodom. Naslednje: M10.4 heap (229, v delu) in ostale §6. [Zapis](meritve/2026-11-11-M11.11-freeforall.md).
 
 ### 2026-11-04 (228) — P2: klientska matrika zelena (sprejet)
 
@@ -65,12 +74,3 @@ Q434: harness restart pred offline mailom tudi na dedicated. Q435: napaka produk
 `p2b-dedicated`, `-original-client`, `-original-server`, `-integrated`, `m118a-gui-v1` (98), `m118b-permissions-gui-v1` (102), unit/build/package PASS. Pet PNG pregledanih.
 Meje: en dev par, privzeta stikala, ni pakiranega klienta (Q22); O klient pri 1 ni pognan na končni kodi. Palice se pri 1→0 na dedicated izgubijo.
 Naslednji soak heap (Q437). M10.3 blokiran Q1. [Zapis](meritve/2026-10-30-P2-klientska-matrika.md).
-
-### 2026-11-04 (227) — M13.5: 100 NPC-jev z eno izbiro (sprejet)
-
-**Paket:** M13.5 (Q430–Q433) · **Stanje:** sprejet pod stikalom; `RwLinkedGroups` ostane 0. M13 zaključen pod stikali.
-Pravi dev klient/dedicated: 100 že postavljenih NPC-jev izbranih s prvo vrstico in *Same name*, ena povezava (`LINK:LW1:100:100`), sprememba enega člana doseže vseh 100.
-Oba 0 po restartu: izviren seznam, datoteke skupin bitno enake. `m135-hundred-v3` PASS na `715c381a…` (62 preverb, 5 PNG pregledanih); unit/build/package na enaki Javi `d6a6ed39…` (Q90).
-v1 našel napako noge seznama (Q431, popravljena); v2 padel na semenu harnessa (Q432).
-Meje: en dev par, vsi člani naloženi v radiu 32, MSPT/paketi niso merjeni; `save()` izvirno prepiše vse skupine. Izhod M13 pokrit z ločenimi scenariji.
-Naslednje omejitve §6 po Q407. M10.3 blokiran Q1. [Zapis](meritve/2026-11-04-M13.5-sto.md).

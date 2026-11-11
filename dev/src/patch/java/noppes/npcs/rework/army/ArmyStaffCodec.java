@@ -13,7 +13,7 @@ public final class ArmyStaffCodec {
     private static final java.util.regex.Pattern PLAYER = java.util.regex.Pattern.compile("[A-Za-z0-9_]{1,16}");
     public static boolean validPlayer(String name) { return name != null && PLAYER.matcher(name).matches(); }
     public enum Op { INSPECT, ASSIGN, NEAR, MOVE, STOP, RETURN, STATUS }
-    public static final String[] SHAPES = {"legion", "column", "ring", "swarm"};
+    public static final String[] SHAPES = {"legion", "column", "ring", "swarm", "freeforall"};
     public static final String[] STANCES = {"passive", "engage"};
     public static final class Request {
         public final int id, npc, shape, stance;

@@ -103,7 +103,8 @@ Do not sum `getLoadedCount()` across multiple markers of the same army.
 ## Actions and replies
 
 Move accepts the same canonical shape words as `/rwarmy`: `legion`, `column`, `ring`,
-`swarm` (the existing Slovenian aliases also work). Speed is finite in [0.5, 6.0].
+`swarm`, and since M11.11 `freeforall` / `freeforall:column|ring` (a new value, the v1 methods are unchanged;
+an older CNPC answers it as an invalid move). The existing Slovenian aliases also work. Speed is finite in [0.5, 6.0].
 Coordinates must be finite, |x| and |z| <= 29999984, and 0 <= y < 256; the target
 dimension must be loaded. This API does **not** infer terrain height from x/z.
 The adapter must resolve a safe ground y on the server or refuse the destination.

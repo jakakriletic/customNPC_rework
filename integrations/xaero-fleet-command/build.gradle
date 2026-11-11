@@ -3,7 +3,7 @@ plugins {
     id 'com.gtnewhorizons.retrofuturagradle' version '1.4.9'
 }
 group = 'si.ladja'
-version = '1.12.2-v0.1.9'
+version = '1.12.2-v0.1.10'
 base { archivesName = 'xaerofleetcommand' }
 java {
     toolchain { languageVersion = JavaLanguageVersion.of(8) }
@@ -20,7 +20,9 @@ dependencies {
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 test { classpath += sourceSets.main.compileClasspath }
 processResources {
-    filesMatching('mcmod.info') { expand version: '0.6.0-armies', mcversion: '1.12.2' }
+    // The wire version is an input, so a version change never reuses a stale mcmod.info.
+    inputs.property 'wireVersion', '0.6.1-armies'
+    filesMatching('mcmod.info') { expand version: '0.6.1-armies', mcversion: '1.12.2' }
 }
 jar { manifest { attributes 'Implementation-Version': project.version } }
 sourceSets {

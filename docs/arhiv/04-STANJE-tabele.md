@@ -94,6 +94,7 @@ nove omejitve/pasti se dopisujejo na konec §5.
 
 | # | Vprašanje | Vpliva na | Stanje |
 |---|---|---|---|
+| Q446 | Vsak član svojo pot ali skupna pot brez čakanja (M11.11)? | M11.11 | **odločeno 11. 11. z lastnikom:** hibrid. Ena skupna pot po odsekih (eno iskanje na odsek), vsak član jo hodi s svojo hitrostjo brez sidra, čet in čakanja; lastno omejeno iskanje samo član daleč od poti, za oviro, pred koncem poti ali obtičal; po 6 neuspehih blokiran in ne zadrži nikogar; oblika šele na cilju. Na Xaero privzet. Teleport za zataknjene ni dodan (pohod nikoli ne teleportira). [Zapis](../meritve/2026-11-11-M11.11-freeforall.md). |
 | Q437 | Kaj je naslednji paket po matriki? | §6 | **odločeno 4. 11. samostojno:** soak: rast heapa po full GC ob širjenju sveta (P1). Kratek test s fiksnim svetom in izpisom heapa loči uhajanje od rasti sveta, brez ponovitve 4 h. |
 | Q436 | Ali je matrika P2 sprejeta? | P2 | **odločeno 4. 11. samostojno:** da, vse štiri celice in regresija palice PASS na `e22ef824…`; §6 skrčen na preostale meje (en dev par, privzeta stikala, Q22). |
 | Q435 | Originalni klient se ne more povezati na K dedicated strežnik: manjka `army_staff` (Q336) | P2, M11.8a | **odločeno 4. 11. samostojno:** dedicated strežnik registrira palico samo pri `RwArmies>=1`, klient vedno; `MissingMappings` prezre shranjeni vnos, zato svet iz 1 steče pri 0 brez vprašanja. Palice se pri 1→0 na dedicated izgubijo. Vrnitev na Q336 bi trajno zaprla mešani par. D-101 dopolnjen. |

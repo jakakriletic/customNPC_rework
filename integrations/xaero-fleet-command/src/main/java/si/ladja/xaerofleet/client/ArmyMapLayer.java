@@ -18,14 +18,14 @@ import xaero.map.gui.GuiMap;
 /** Same map gestures as the fleet, with army-only identity and formation settings. */
 public final class ArmyMapLayer {
     private MapViewTransform view;
-    private int ticks=40,shape;
+    private int ticks=40,shape=4;
     private double speed=1.0,boxX,boxY;
     private boolean engage=true,boxing,add,tookPress,tookRight,emptyPress;
     private double pressX,pressY;
     private UUID lastClick;
     private long lastClickAt,lastOrder;
     private final Map<UUID,double[]> targets=new HashMap<>();
-    private static final String[] SHAPES={"Legion","Column","Ring","Swarm"};
+    private static final String[] SHAPES={"Legion","Column","Ring","Swarm","Free for all"};
     private static final int COLOR=0xFF9BE38A;
 
     @SubscribeEvent public void tick(TickEvent.ClientTickEvent e){
@@ -75,6 +75,7 @@ public final class ArmyMapLayer {
         MapDraw.rect(6,27,174,204,0xE6192532);
         text(mc,"ARMIES "+ArmyClient.selection().size()+"/16",12,33,COLOR);
         text(mc,"Click flag; Shift adds",12,46,0xDDE4E8);
+        if(shape==4 && !XaeroFleetCommandMod.serverSupportsFreeForAll())shape=0;
         button(mc,0,"Shape: "+SHAPES[shape]);button(mc,1,"Speed: "+speed);
         button(mc,2,"New order: "+(engage?"Engage":"Passive"));
         button(mc,3,"Apply stance to selection");button(mc,4,"Stop selection [X]");
@@ -126,7 +127,7 @@ public final class ArmyMapLayer {
         if(panel(x,y)){
             if(b==0 && down){tookPress=true;int i=(int)((y-60)/19);
                 if(y>=60 && i<5){
-                    if(i==0)shape=(shape+1)%4;
+                    if(i==0)shape=(shape+1)%(XaeroFleetCommandMod.serverSupportsFreeForAll()?5:4);
                     if(i==1)speed=speed>=6?0.5:speed+0.5;
                     if(i==2)engage=!engage;
                     if(i==3)send(ArmyAction.ENGAGEMENT,0,0);
