@@ -30,9 +30,10 @@ script API and adds, behind settings:
 - Armies: for the snapshot set `RwArmies=1` on the server and on clients. A client with 1 on a server with
   0 gets no answer and stays connected; a client with 0 on a server with 1 was not tested.
 
-For Xaero army commands install `xaerofleetcommand-1.12.2-v0.1.12.jar` on both client and server;
+For Xaero army commands install `xaerofleetcommand-1.12.2-v0.1.13.jar` on both client and server;
 the client also needs Xaero's World Map. Enable `RwArmies` and formations on the server.
-Open the **Armies** map tab, select flags and right-click a destination at any distance in the current
+Open the **Armies** map tab, click a flag to select only that group (double click: every flag of its
+army) and right-click a destination at any distance in the current
 dimension (an unloaded chunk is loaded or generated for the click; water or lava moves the target to the nearest
 safe ground within 8 blocks). Free for all (default), Formation/Swarm, stance and Stop use current server rights. The tab is hidden
 without a compatible provider or visible positions. See [controls](../integrations/xaero-fleet-command/ARMY-MAP.md).
@@ -164,7 +165,10 @@ the sender's dimension (relative `~` coordinates work; default legion, speed 3, 
 The army uses companies of 8 sharing one route per leg; stragglers join first. Long moves use
 bounded real paths (at most 24 Manhattan blocks, also limited by navigation range minus 8).
 All companies must arrive before the next leg; intermediate legs keep the original home and final intent.
-The move stores its company size and resumes after a restart when members load. `/rwarmy stop <army>` cancels it;
+The move stores its company size and resumes after a restart when members load. `/rwarmy moveflag <army> <flagX> <flagZ> <x> <y> <z> [shape] [speed] [passive|engage]` moves only the cluster
+(map flag) nearest flagX/flagZ (default shape `freeforall`): when it is not the whole army its members are split off
+into a new army `<army>-2` (then `-3`, ...) with the same owner and selected grants, and only that army moves; the
+rest keeps its order. The map does the same when you select single flags. `/rwarmy stop <army>` cancels it;
 `/rwarmy status <army>` needs `view` and reports WAITING/JOINING/MOVING/ARRIVED/BLOCKED/CANCELLED.
 No complete route or a timeout means BLOCKED; issue a new move to retry. Formations must be enabled
 (do not set `-Drwformation=off`). Scripts: `ArmyApi.move(army, dimension, x, y, z, shape, speed)`

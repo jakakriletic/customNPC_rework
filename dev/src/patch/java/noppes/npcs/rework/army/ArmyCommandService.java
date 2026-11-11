@@ -101,6 +101,72 @@ public final class ArmyCommandService {
         return refused != null ? refused : engagement(server, actorFor(server, player), name, stance);
     }
 
+    /**
+     * M11.11d (additive to v1, discovered by reflection): move only the members of one map flag. The flag is the
+     * cluster whose centre is nearest to flagX/flagZ (within the cluster radius). A flag that is the whole army is a
+     * normal move; otherwise those members are split off into a new army ({@code <name>-2}, ...) with the same owner
+     * and the same selected grants, and only the new army moves. The rest keeps its own order.
+     */
+    public static Reply submitFlagMoveOrder(MinecraftServer server, UUID player, String name, int dimension,
+            double flagX, double flagZ, double x, double y, double z, String shape, double speed, String stance) {
+        Reply refused = bridgeRefusal(server, player);
+        return refused != null ? refused : submitFlagMove(server, actorFor(server, player), name, dimension,
+                flagX, flagZ, x, y, z, shape, speed, stance);
+    }
+
+    public static Reply submitFlagMove(MinecraftServer server, ArmyActor actor, String name, int dimension,
+            double flagX, double flagZ, double x, double y, double z, String shape, double speed, String stance) {
+        if (!enabled()) { return off(); }
+        ArmyRegistry reg = registry(server);
+        Army a = reg == null ? null : reg.get(name);
+        if (a == null || !reg.access(a, actor).canView()) { return unknown(name); }
+        if (!reg.access(a, actor).canCommand()) { return new Reply(false, "no command permission for " + a.name()); }
+        List<EntityNPCInterface> live = members(server, a.name());
+        live.removeIf(npc -> npc.world.provider.getDimension() != dimension);
+        List<ArmyClusters.Point> points = new ArrayList<ArmyClusters.Point>();
+        for (EntityNPCInterface npc : live) { points.add(new ArmyClusters.Point(dimension, npc.posX, npc.posY, npc.posZ)); }
+        List<Integer> picked = ArmyClusters.flag(points, clusterRadius, flagX, flagZ, Math.max(16, clusterRadius));
+        if (picked.isEmpty()) { return new Reply(false, "that flag of " + a.name() + " is gone; select it again"); }
+        if (picked.size() == live.size()) {
+            return submitMove(server, actor, a.name(), dimension, x, y, z, shape, speed, stance);
+        }
+        String split = splitName(reg, a.name());
+        if (split == null) { return new Reply(false, "no free name to split " + a.name()); }
+        Army part = new Army(split, a.ownerType(), a.owner(), a.ownerName(), server.getWorld(0).getTotalWorldTime());
+        ArmyRegistry.Result made = reg.create(part);
+        if (made != ArmyRegistry.Result.CREATED) { return new Reply(false, "split of " + a.name() + " refused: " + made); }
+        reg.grants().copySelected(a.key(), part.key());
+        List<EntityNPCInterface> moved = new ArrayList<EntityNPCInterface>();
+        for (int i : picked) {
+            EntityNPCInterface npc = live.get(i);
+            ArmyMarches.detach(npc); // the rest of the source army rebuilds its march with the same order
+            npc.setRwArmy(split);
+            moved.add(npc);
+        }
+        Reply reply = submitMove(server, actor, split, dimension, x, y, z, shape, speed, stance);
+        if (!reply.ok) {
+            // A refused move never leaves a split behind.
+            for (EntityNPCInterface npc : moved) { ArmyMarches.detach(npc); npc.setRwArmy(a.name()); }
+            reg.remove(split);
+            dirty(server);
+            return reply;
+        }
+        dirty(server);
+        noppes.npcs.LogWriter.info("RWARMY split " + a.name() + " -> " + split + " members=" + moved.size());
+        return new Reply(true, "split " + a.name() + " -> " + split + " members=" + moved.size() + "; " + reply.message);
+    }
+
+    /** {@code name-2}, {@code name-3}, ... shortened to fit the 32 character limit; null when all 98 are taken. */
+    static String splitName(ArmyRegistry reg, String name) {
+        for (int k = 2; k < 100; k++) {
+            String suffix = "-" + k;
+            String base = name.length() + suffix.length() > 32 ? name.substring(0, 32 - suffix.length()) : name;
+            String candidate = base + suffix;
+            if (Army.validName(candidate) && reg.get(candidate) == null) { return candidate; }
+        }
+        return null;
+    }
+
     private static Reply bridgeRefusal(MinecraftServer server, UUID player) {
         if (!enabled()) { return off(); }
         if (server == null || player == null || !server.isCallingFromMinecraftThread()) {

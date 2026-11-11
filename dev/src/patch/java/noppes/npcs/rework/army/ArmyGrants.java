@@ -186,6 +186,16 @@ public final class ArmyGrants {
         return changed;
     }
 
+    /** M11.11d: an army split off from another gets the same selected view/command grants (no new records). */
+    void copySelected(String fromKey, String toKey) {
+        for (Map<String, Grant> grants : byGrantee.values()) {
+            for (Grant grant : grants.values()) {
+                if (grant.view.contains(fromKey)) { grant.view.add(toKey); }
+                if (grant.command.contains(fromKey)) { grant.command.add(toKey); }
+            }
+        }
+    }
+
     /** A removed army takes its selected grants along, so a new army of that name starts without any. */
     void removeArmy(String armyKey) {
         for (String grantee : new ArrayList<String>(byGrantee.keySet())) {

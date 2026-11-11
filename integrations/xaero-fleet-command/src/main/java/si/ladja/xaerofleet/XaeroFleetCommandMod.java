@@ -30,7 +30,9 @@ import java.util.Map;
 )
 public final class XaeroFleetCommandMod {
     public static final String MOD_ID = "xaerofleetcommand";
-    public static final String VERSION = "0.6.1-armies";
+    public static final String VERSION = "0.6.2-armies";
+    /** Free for all without single-flag moves (v0.1.10-v0.1.12). */
+    public static final String ARMIES_V1 = "0.6.1-armies";
     /** Armies without the free-for-all shape; a new client still commands armies on such a server. */
     public static final String ARMIES_V0 = "0.6.0-armies";
     public static final Logger LOG = LogManager.getLogger(MOD_ID);
@@ -40,6 +42,7 @@ public final class XaeroFleetCommandMod {
     private static volatile boolean serverSupportsWinter;
     private static volatile boolean serverSupportsArmies;
     private static volatile boolean serverSupportsFreeForAll;
+    private static volatile boolean serverSupportsFlags;
 
     /**
      * Never refuses a connection over this mod.
@@ -54,7 +57,8 @@ public final class XaeroFleetCommandMod {
     public boolean acceptRemote(Map<String, String> remoteMods, Side remoteSide) {
         if (remoteSide == Side.SERVER) {
             String remote = remoteMods.get(MOD_ID);
-            serverSupportsFreeForAll = VERSION.equals(remote);
+            serverSupportsFlags = VERSION.equals(remote);
+            serverSupportsFreeForAll = serverSupportsFlags || ARMIES_V1.equals(remote);
             serverSupportsArmies = serverSupportsFreeForAll || ARMIES_V0.equals(remote);
             serverSupportsWinter = serverSupportsArmies || "0.5.0-winter".equals(remote);
             serverSupportsFleet = serverSupportsWinter || "0.4.0-milestone".equals(remote);
@@ -73,6 +77,7 @@ public final class XaeroFleetCommandMod {
     public static boolean serverSupportsWinter() { return serverSupportsWinter; }
     public static boolean serverSupportsArmies() { return serverSupportsArmies; }
     public static boolean serverSupportsFreeForAll() { return serverSupportsFreeForAll; }
+    public static boolean serverSupportsFlags() { return serverSupportsFlags; }
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {

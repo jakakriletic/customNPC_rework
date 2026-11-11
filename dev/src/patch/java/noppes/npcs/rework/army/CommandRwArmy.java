@@ -39,6 +39,7 @@ import noppes.npcs.entity.EntityNPCInterface;
  * /rwarmy players [prefix]                                            (owner or operator)
  * /rwarmy clusters [army]                                             (view right; M11.2)
  * /rwarmy move &lt;army&gt; &lt;x&gt; &lt;y&gt; &lt;z&gt; [legion|column|ring|swarm|freeforall[:shape]] [speed] [passive|engage]
+ * /rwarmy moveflag &lt;army&gt; &lt;flagX&gt; &lt;flagZ&gt; &lt;x&gt; &lt;y&gt; &lt;z&gt; [shape] [speed] [passive|engage] (M11.11d)
  * /rwarmy stance &lt;army&gt; passive|engage                            (command right; M11.4)
  * /rwarmy stop &lt;army&gt;                                                (command right)
  * /rwarmy status &lt;army&gt;                                              (view right)
@@ -53,7 +54,7 @@ public class CommandRwArmy extends CommandBase {
     public static final double MAX_RANGE = 220;
     private static final List<String> SUBCOMMANDS =
             Arrays.asList("create", "assign", "unassign", "list", "info", "remove", "grant", "revoke", "grants",
-                    "players", "clusters", "move", "stop", "status", "stance");
+                    "players", "clusters", "move", "moveflag", "stop", "status", "stance");
 
     @Override
     public String getName() {
@@ -67,6 +68,7 @@ public class CommandRwArmy extends CommandBase {
                 + " | grant <player> view|command <army|all> | revoke <player> view|command|all [army|all]"
                 + " | grants [player] | players [prefix] | clusters [army]"
                 + " | move <army> <x> <y> <z> [legion|column|ring|swarm|freeforall[:shape]] [speed] [passive|engage]"
+                + " | moveflag <army> <flagX> <flagZ> <x> <y> <z> [shape] [speed] [passive|engage]"
                 + " | stance <army> passive|engage | stop <army> | status <army>";
     }
 
@@ -106,6 +108,19 @@ public class CommandRwArmy extends CommandBase {
                     parseCoordinate(origin.getZ(), args[4], false).getResult(),
                     args.length >= 6 ? args[5] : "legion", args.length >= 7 ? parseDouble(args[6], 0.5, 6) : 3,
                     args.length == 8 ? args[7] : null).message);
+            return;
+        }
+        if (action.equals("moveflag") && args.length >= 7 && args.length <= 10) {
+            // M11.11d: only the map flag (cluster) nearest flagX/flagZ moves; it is split off when it is not the whole army.
+            BlockPos origin = sender.getPosition();
+            reply(sender, ArmyCommandService.submitFlagMove(server, actor, args[1], sender.getEntityWorld().provider.getDimension(),
+                    parseCoordinate(origin.getX(), args[2], false).getResult(),
+                    parseCoordinate(origin.getZ(), args[3], false).getResult(),
+                    parseCoordinate(origin.getX(), args[4], false).getResult(),
+                    parseCoordinate(origin.getY(), args[5], false).getResult(),
+                    parseCoordinate(origin.getZ(), args[6], false).getResult(),
+                    args.length >= 8 ? args[7] : "freeforall", args.length >= 9 ? parseDouble(args[8], 0.5, 6) : 3,
+                    args.length == 10 ? args[9] : null).message);
             return;
         }
         if (action.equals("stop") && args.length == 2) {

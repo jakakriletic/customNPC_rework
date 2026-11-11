@@ -10,9 +10,9 @@ import si.ladja.xaerofleet.network.CommandFeedback;
 /** Optional static v1 API. Never imports CNPC or falls back to privileged scripts/commands. */
 public final class CnpcArmyBridge {
     private static final String SERVICE = "noppes.npcs.rework.army.ArmyCommandService";
-    private final Method visible, move, cancel, engagement;
-    private CnpcArmyBridge(Method visible, Method move, Method cancel, Method engagement) {
-        this.visible=visible; this.move=move; this.cancel=cancel; this.engagement=engagement;
+    private final Method visible, move, cancel, engagement, flagMove;
+    private CnpcArmyBridge(Method visible, Method move, Method cancel, Method engagement, Method flagMove) {
+        this.visible=visible; this.move=move; this.cancel=cancel; this.engagement=engagement; this.flagMove=flagMove;
     }
     public static CnpcArmyBridge discover() {
         try { return discover(Class.forName(SERVICE)); }
@@ -33,7 +33,14 @@ public final class CnpcArmyBridge {
                 method(m.getReturnType(),"isAccepted",boolean.class);
                 method(m.getReturnType(),"getMessage",String.class);
             }
-            return new CnpcArmyBridge(visible,move,cancel,engagement);
+            // M11.11d: optional, additive to v1; an older CNPC moves whole armies only.
+            Method flag=null;
+            try {
+                flag=type.getMethod("submitFlagMoveOrder",MinecraftServer.class,UUID.class,String.class,int.class,
+                        double.class,double.class,double.class,double.class,double.class,String.class,double.class,String.class);
+                if(!Modifier.isStatic(flag.getModifiers()) || flag.getReturnType()!=move.getReturnType())flag=null;
+            } catch (NoSuchMethodException old) { flag=null; }
+            return new CnpcArmyBridge(visible,move,cancel,engagement,flag);
         } catch (ReflectiveOperationException | LinkageError | RuntimeException ex) { return unavailable(); }
     }
     private static Method method(Class<?> type,String name,Class<?> result,Class<?>... parameters) throws NoSuchMethodException {
@@ -44,7 +51,8 @@ public final class CnpcArmyBridge {
         }
         return m;
     }
-    private static CnpcArmyBridge unavailable(){return new CnpcArmyBridge(null,null,null,null);}
+    private static CnpcArmyBridge unavailable(){return new CnpcArmyBridge(null,null,null,null,null);}
+    public boolean supportsFlags(){return flagMove!=null;}
     public boolean isAvailable(){return visible!=null;}
     private Object invoke(Method m,Object... args) {
         if(m==null)return null;
@@ -79,6 +87,11 @@ public final class CnpcArmyBridge {
     private static int num(Object s,String n)throws ReflectiveOperationException{return (Integer)get(s,n,int.class);}
     public CommandFeedback move(MinecraftServer s,UUID p,String name,int d,double x,double y,double z,String shape,double speed,String stance) {
         return reply(invoke(move,s,p,name,d,x,y,z,shape,speed,stance));
+    }
+    /** One map flag: only its members move (split off by CNPC when they are not the whole army). */
+    public CommandFeedback flagMove(MinecraftServer s,UUID p,String name,int d,double fx,double fz,double x,double y,double z,String shape,double speed,String stance) {
+        if(flagMove==null)return new CommandFeedback(false,0,1,"CustomNPC Rework too old to move a single flag");
+        return reply(invoke(flagMove,s,p,name,d,fx,fz,x,y,z,shape,speed,stance));
     }
     public CommandFeedback cancel(MinecraftServer s,UUID p,String name){return reply(invoke(cancel,s,p,name));}
     public CommandFeedback engagement(MinecraftServer s,UUID p,String name,String stance){return reply(invoke(engagement,s,p,name,stance));}

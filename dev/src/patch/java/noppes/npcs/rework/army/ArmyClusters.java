@@ -74,6 +74,50 @@ public final class ArmyClusters {
         return Math.max(1, Math.min(MAX_MIN_MEMBERS, min));
     }
 
+    /**
+     * M11.11d: indexes of the points that form the cluster (map flag) whose rounded centre is nearest to x/z, within
+     * {@code reach} blocks; empty when no flag is there any more. Same linking as {@link #cluster}.
+     */
+    public static List<Integer> flag(List<Point> points, int radius, double x, double z, double reach) {
+        int[] parent = new int[points.size()];
+        Map<Integer, List<Integer>> dimensions = new HashMap<Integer, List<Integer>>();
+        for (int i = 0; i < parent.length; i++) {
+            parent[i] = i;
+            List<Integer> list = dimensions.get(points.get(i).dimension);
+            if (list == null) {
+                dimensions.put(points.get(i).dimension, list = new ArrayList<Integer>());
+            }
+            list.add(i);
+        }
+        for (List<Integer> members : dimensions.values()) {
+            linkDimension(points, members, radius, parent);
+        }
+        Map<Integer, List<Integer>> roots = new HashMap<Integer, List<Integer>>();
+        for (int i = 0; i < parent.length; i++) {
+            int root = find(parent, i);
+            List<Integer> list = roots.get(root);
+            if (list == null) {
+                roots.put(root, list = new ArrayList<Integer>());
+            }
+            list.add(i);
+        }
+        List<Integer> best = new ArrayList<Integer>();
+        double bestD = reach;
+        for (List<Integer> list : roots.values()) {
+            double cx = 0, cz = 0;
+            for (int i : list) {
+                cx += points.get(i).x;
+                cz += points.get(i).z;
+            }
+            double d = Math.hypot(Math.round(cx / list.size()) - x, Math.round(cz / list.size()) - z);
+            if (d <= bestD) {
+                bestD = d;
+                best = list;
+            }
+        }
+        return best;
+    }
+
     /** Clusters sorted by size (largest first), then dimension, x and z; the first one is the main one. */
     public static List<Cluster> cluster(List<Point> points, int radius, int minMembers) {
         int[] parent = new int[points.size()];

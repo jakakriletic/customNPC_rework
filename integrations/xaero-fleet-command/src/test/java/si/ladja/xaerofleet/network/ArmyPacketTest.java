@@ -59,6 +59,18 @@ public class ArmyPacketTest {
             try{new ArmyAction(0,Arrays.asList("North"),0,0,0,shape,1,true);fail();}catch(IllegalArgumentException expected){}
         }
     }
+    @Test public void flagActionRoundTripsAndRefusesBadInput(){
+        ArmyFlagAction p=new ArmyFlagAction(Arrays.asList("North","North"),new double[]{1,200},new double[]{2,100},0,-32.25,44.5,4,3,true);
+        ByteBuf b=Unpooled.buffer();p.toBytes(b);ArmyFlagAction q=new ArmyFlagAction();q.fromBytes(b);b.release();
+        assertEquals(Arrays.asList("North","North"),q.names);assertEquals(200,q.flagX[1],0);assertEquals(100,q.flagZ[1],0);
+        assertEquals(4,q.shape);assertEquals(-32.25,q.x,0);assertTrue(q.engage);
+        try{new ArmyFlagAction(Arrays.asList("North"),new double[]{1,2},new double[]{1},0,0,0,0,1,true);fail();}catch(IllegalArgumentException expected){}
+        try{new ArmyFlagAction(Arrays.asList("North"),new double[]{Double.NaN},new double[]{1},0,0,0,0,1,true);fail();}catch(IllegalArgumentException expected){}
+        try{new ArmyFlagAction(Collections.<String>emptyList(),new double[0],new double[0],0,0,0,0,1,true);fail();}catch(IllegalArgumentException expected){}
+        ByteBuf good=Unpooled.buffer();p.toBytes(good);byte[] valid=new byte[good.readableBytes()];good.readBytes(valid);good.release();
+        for(int n=0;n<valid.length;n++){ByteBuf cut=Unpooled.wrappedBuffer(Arrays.copyOf(valid,n));
+            try{new ArmyFlagAction().fromBytes(cut);fail("accepted length "+n);}catch(IllegalArgumentException expected){}finally{cut.release();}}
+    }
     @Test public void freeForAllShapeRoundTripsAsItsOwnWireValue(){
         ArmyAction p=new ArmyAction(0,Arrays.asList("North"),0,1,2,4,3,false);
         ByteBuf b=Unpooled.buffer();p.toBytes(b);ArmyAction q=new ArmyAction();q.fromBytes(b);b.release();

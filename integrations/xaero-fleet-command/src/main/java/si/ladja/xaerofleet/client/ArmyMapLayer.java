@@ -59,7 +59,7 @@ public final class ArmyMapLayer {
             if(m.dimension!=view.dimension)continue;
             int x=view.screenX(m.x),y=view.screenY(m.z);
             if(x<2 || x>map.width-20 || y<25 || y>map.height-32)continue;
-            UUID id=ArmyClient.id(m.name);boolean selected=ArmyClient.selection().contains(id);
+            UUID id=ArmyClient.flagId(m);boolean selected=ArmyClient.selection().contains(id);
             double[] target=targets.get(id);
             if(selected && target!=null)MapDraw.line(x,y,view.screenX(target[0]),view.screenY(target[1]),1,0x709BE38A,0,0);
             int color=selected?0xFFFFD54A:m.commandable?COLOR:0xFF9AA7BB;
@@ -78,7 +78,7 @@ public final class ArmyMapLayer {
         }
         MapDraw.rect(6,27,174,204,0xE6192532);
         text(mc,"ARMIES "+ArmyClient.selection().size()+"/16",12,33,COLOR);
-        text(mc,"Click flag; Shift adds",12,46,0xDDE4E8);
+        text(mc,"Click flag; 2x whole army",12,46,0xDDE4E8);
         if(shape==4 && !freeForAll())shape=0;
         button(mc,0,"Shape: "+SHAPES[shape]);button(mc,1,"Speed: "+speed);
         button(mc,2,"New order: "+(engage?"Engage":"Passive"));
@@ -124,7 +124,7 @@ public final class ArmyMapLayer {
             if(b==0 && !down){
                 boxing=false;List<UUID> ids=new ArrayList<>();
                 for(ArmyMarker m:ArmyClient.markers())if(m.commandable && m.dimension==view.dimension
-                        && SelectionModel.inBox(view.screenX(m.x),view.screenY(m.z),boxX,boxY,x,y))ids.add(ArmyClient.id(m.name));
+                        && SelectionModel.inBox(view.screenX(m.x),view.screenY(m.z),boxX,boxY,x,y))ids.add(ArmyClient.flagId(m));
                 select(new LinkedHashSet<>(ids),add?SelectionModel.Mode.ADD:SelectionModel.Mode.REPLACE);
             }e.setCanceled(true);return;
         }
@@ -143,10 +143,10 @@ public final class ArmyMapLayer {
             if(GuiScreen.isCtrlKeyDown()){boxing=true;emptyPress=false;add=GuiScreen.isShiftKeyDown();boxX=x;boxY=y;e.setCanceled(true);return;}
             ArmyMarker m=hit(x,y);
             if(m!=null){
-                UUID id=ArmyClient.id(m.name);long now=System.currentTimeMillis();
+                // v0.1.13: a click selects this flag only (like a ship); a double click selects every flag of its army.
+                UUID id=ArmyClient.flagId(m);long now=System.currentTimeMillis();
                 List<UUID> ids=new ArrayList<>();ids.add(id);
-                if(id.equals(lastClick) && now-lastClickAt<320)for(ArmyMarker a:ArmyClient.markers())
-                    if(a.commandable && a.dimension==view.dimension && a.owner.equals(m.owner))ids.add(ArmyClient.id(a.name));
+                if(id.equals(lastClick) && now-lastClickAt<320)ids.addAll(ArmyClient.armyFlags(m.name));
                 select(new LinkedHashSet<>(ids),GuiScreen.isShiftKeyDown()?SelectionModel.Mode.TOGGLE:SelectionModel.Mode.REPLACE);
                 lastClick=id;lastClickAt=now;tookPress=true;e.setCanceled(true);
             }else{
@@ -157,13 +157,32 @@ public final class ArmyMapLayer {
             send(ArmyAction.MOVE,view.worldX(x),view.worldZ(y));tookRight=true;e.setCanceled(true);
         }
     }
+    private static boolean flags(){
+        return XaeroFleetCommandMod.serverSupportsFlags() || Minecraft.getMinecraft().isIntegratedServerRunning();
+    }
     private void send(int action,double x,double z){
         if(view==null)return;
         List<String> names=ArmyClient.names();if(names.isEmpty())return;
         long now=System.currentTimeMillis();
         if(now-lastOrder<650){MapToast.show("Wait a moment before the next army order",MapToast.INFO);return;}
         lastOrder=now;
-        FleetNetwork.CHANNEL.sendToServer(new ArmyAction(action,names,view.dimension,x,z,shape,speed,engage));
+        if(action==ArmyAction.MOVE){
+            // Whole armies go as before; selected single flags move alone (the server splits them off).
+            List<String> whole=new ArrayList<>(),parts=new ArrayList<>();List<double[]> at=new ArrayList<>();
+            for(String name:names){
+                if(ArmyClient.wholeArmySelected(name) || !flags()){whole.add(name);continue;}
+                for(ArmyMarker m:ArmyClient.selectedFlags())if(m.name.equalsIgnoreCase(name)){parts.add(m.name);at.add(new double[]{m.x,m.z});}
+            }
+            if(!flags() && whole.size()<ArmyClient.selectedFlags().size())
+                MapToast.show("This server moves whole armies only (needs map v0.1.13)",MapToast.INFO);
+            if(!whole.isEmpty())FleetNetwork.CHANNEL.sendToServer(new ArmyAction(action,whole,view.dimension,x,z,shape,speed,engage));
+            for(int from=0;from<parts.size();from+=ArmyFlagAction.MAX_FLAGS){
+                int to=Math.min(parts.size(),from+ArmyFlagAction.MAX_FLAGS);
+                double[] fx=new double[to-from],fz=new double[to-from];
+                for(int i=from;i<to;i++){fx[i-from]=at.get(i)[0];fz[i-from]=at.get(i)[1];}
+                FleetNetwork.CHANNEL.sendToServer(new ArmyFlagAction(parts.subList(from,to),fx,fz,view.dimension,x,z,shape,speed,engage));
+            }
+        } else FleetNetwork.CHANNEL.sendToServer(new ArmyAction(action,names,view.dimension,x,z,shape,speed,engage));
         for(UUID id:ArmyClient.selection().ids()){
             if(action==ArmyAction.MOVE)targets.put(id,new double[]{x,z});
             if(action==ArmyAction.CANCEL)targets.remove(id);
@@ -178,7 +197,7 @@ public final class ArmyMapLayer {
         if(key==Keyboard.KEY_X && !selection.isEmpty()){send(ArmyAction.CANCEL,0,0);e.setCanceled(true);}
         if(key==Keyboard.KEY_SPACE && !selection.isEmpty()){
             double x=0,z=0;int n=0;
-            for(ArmyMarker m:ArmyClient.markers())if(selection.contains(ArmyClient.id(m.name)) && m.dimension==view.dimension){x+=m.x;z+=m.z;n++;}
+            for(ArmyMarker m:ArmyClient.markers())if(selection.contains(ArmyClient.flagId(m)) && m.dimension==view.dimension){x+=m.x;z+=m.z;n++;}
             if(n>0)view.centreOn((GuiMap)e.getGui(),x/n,z/n);e.setCanceled(true);
         }
         if(key>=Keyboard.KEY_1 && key<=Keyboard.KEY_9){

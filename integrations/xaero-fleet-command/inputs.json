@@ -1,17 +1,17 @@
 {
-    "package": "M11.11c",
+    "package": "M11.11d",
     "project": "../advantura_estetika_mod/xaero-winter-storm",
-    "artifact": "xaerofleetcommand-1.12.2-v0.1.12.jar",
-    "wire": "0.6.1-armies",
+    "artifact": "xaerofleetcommand-1.12.2-v0.1.13.jar",
+    "wire": "0.6.2-armies",
     "files": [
         {
             "path": "ARMY-MAP.md",
-            "sha256": "BB7C50F1E3EE1280FA595B3800850E801A5376A6D74BBA33DF66AA761167095F",
+            "sha256": "EFB2D21A030AEAC9FF6C66FDE6E187F7A4F995AD564752284A3EA45AD683201F",
             "sourceCopy": true
         },
         {
             "path": "build.gradle",
-            "sha256": "AA2A67CFBCE671013FBFBA800C128EEDAEE20A2C5E74DC5CBAAECE7029939EB1",
+            "sha256": "BEB9AD7DA1C58FA89452CAEDAAAC173107692BE1BB36C55C142B3B1C456E5609",
             "sourceCopy": true
         },
         {
@@ -61,17 +61,17 @@
         },
         {
             "path": "src/main/java/si/ladja/xaerofleet/XaeroFleetCommandMod.java",
-            "sha256": "66CFCBB85E89A3E9E791BCDC7DE2055E84127BA9739A0269A342CD606AE4F121",
+            "sha256": "4F912A68EEEE0C5A3F2D029BECE015D336C3598A254A30AB1E3AA97D6B08B7DF",
             "sourceCopy": true
         },
         {
             "path": "src/main/java/si/ladja/xaerofleet/client/ArmyClient.java",
-            "sha256": "B118360CDA917068910C6D51985B250433CD3E6F30BD5036282D656DE3DFA731",
+            "sha256": "1A95213C3D6735796E3573249E9795A47A6C0CF90584CF98767BDE7157E78499",
             "sourceCopy": true
         },
         {
             "path": "src/main/java/si/ladja/xaerofleet/client/ArmyMapLayer.java",
-            "sha256": "610EF0CA011417768060263E85DB9B43A34048E8BEDCB86D2C55B1C975404966",
+            "sha256": "0761046F552830FA7F08AD09E571761AD5C686614EB8E53215F6209BAC71C786",
             "sourceCopy": true
         },
         {
@@ -136,7 +136,7 @@
         },
         {
             "path": "src/main/java/si/ladja/xaerofleet/integration/CnpcArmyBridge.java",
-            "sha256": "47D77CD0B140D7B6F35B75FF8A07320E464033F2797AA96B878C3A0DAA4F79AF",
+            "sha256": "F2FF05C348F3C83B078F19EBD48BF85DCDA449916FC05896422556AD40502B32",
             "sourceCopy": true
         },
         {
@@ -152,6 +152,11 @@
         {
             "path": "src/main/java/si/ladja/xaerofleet/network/ArmyFeedback.java",
             "sha256": "DCD65C95E12002347FB14DC824A1BAE5D660D48405D06189080CFE0856E9AFD6",
+            "sourceCopy": true
+        },
+        {
+            "path": "src/main/java/si/ladja/xaerofleet/network/ArmyFlagAction.java",
+            "sha256": "8E24C105222F66EF8290604F950F9EDDFB82B81AE029446564F21BADF872DB54",
             "sourceCopy": true
         },
         {
@@ -201,7 +206,7 @@
         },
         {
             "path": "src/main/java/si/ladja/xaerofleet/network/FleetNetwork.java",
-            "sha256": "B92C024516B29BDB04C9F14D223C8FEE0604239B7CBD615ED978E16D7E389835",
+            "sha256": "DE563331D01E4094E90A1F09765AA4F2F8C785EFB3FA581C47E79EC5CDA7606F",
             "sourceCopy": true
         },
         {
@@ -291,7 +296,7 @@
         },
         {
             "path": "src/test/java/si/ladja/xaerofleet/client/ArmyClientTest.java",
-            "sha256": "0808A49503D4AB2D18C95BB25C922DE5D73CF82C794E8C4458ACBFED303776F0",
+            "sha256": "AA061BC28A660627D31C9B66285479E8EE9493143503E7CB276362E99CF2F2DE",
             "sourceCopy": true
         },
         {
@@ -331,7 +336,7 @@
         },
         {
             "path": "src/test/java/si/ladja/xaerofleet/network/ArmyPacketTest.java",
-            "sha256": "77D4921AC4A34B24419943F733FDB360FE6561BD338FDD8F5BA48011DD47F977",
+            "sha256": "ADD62E5A2DEB1645B1BEC7E26D8BC0F32D29E337E772AC1955B9050813A59AE9",
             "sourceCopy": true
         },
         {

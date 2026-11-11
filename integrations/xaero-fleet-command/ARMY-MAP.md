@@ -1,6 +1,6 @@
-# Armies on Xaero's World Map — v0.1.12
+# Armies on Xaero's World Map — v0.1.13
 
-Install the same `xaerofleetcommand-1.12.2-v0.1.12.jar` on client and server.
+Install the same `xaerofleetcommand-1.12.2-v0.1.13.jar` on client and server.
 The client needs Xaero's World Map; the server needs CustomNPC Rework with
 `RwArmies=1` and formations enabled. This module has no required CNPC/DaVinci
 dependency: without either provider its other features continue to work.
@@ -12,8 +12,11 @@ has a position in your current dimension, open Xaero's world map and choose
 show last known positions. Hover for army/owner, kind, loaded count, state and stance.
 The army count is loaded members, not a saved total. The layer sends at most 256 markers.
 
-- Click a flag to select its whole army; Shift-click adds/removes. Double click
-  selects armies of the same owner. Ctrl+drag selects a rectangle; Ctrl+A all.
+- Click a flag to select **that flag only**, like a ship; Shift-click adds/removes. Double click
+  selects every flag of its army. Ctrl+drag selects the flags in a rectangle; Ctrl+A all.
+  Moving some flags of an army splits them off into a new army (`name-2`, same owner and grants)
+  that gets the order; the rest keeps its own. Moving all flags of an army moves the army.
+  Stance and Stop act on the whole armies of the selected flags.
 - Choose Free for all (default), Legion, Column, Ring or Swarm, speed 0.5–6, and the stance for new orders.
   **Free for all** walks the shared route without waiting: every member goes at its own pace,
   a stuck member searches its own way, one that cannot get through is reported blocked and
@@ -34,7 +37,8 @@ your connected identity and checks rights again for every action. A stale select
 does not retain authority after revoke/deop. No CNPC or no visible positions means
 no army controls. The existing World, Ship's map and Winter storm tabs remain.
 
-New army packets require FML version `0.6.1-armies` (or `0.6.0-armies` without Free for all) at the other end. A new client
+New army packets require FML version `0.6.2-armies` at the other end (`0.6.1-armies`: no single-flag moves;
+`0.6.0-armies`: also no Free for all). In single player everything is available. A new client
 can still use fleet/winter on old servers, but not armies; update both ends to use
 armies. Artifact version and FML wire version are intentionally distinct, following
 the existing v0.1.8-winter convention.

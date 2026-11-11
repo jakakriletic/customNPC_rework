@@ -26,5 +26,7 @@ public final class FleetNetwork {
         CHANNEL.registerMessage(ArmySnapshot.Handler.class, ArmySnapshot.class, 11, Side.CLIENT);
         CHANNEL.registerMessage(ArmyAction.Handler.class, ArmyAction.class, 12, Side.SERVER);
         CHANNEL.registerMessage(ArmyFeedback.Handler.class, ArmyFeedback.class, 13, Side.CLIENT);
+        // 0.6.2-armies: single-flag moves; sent only to a server that announced this version.
+        CHANNEL.registerMessage(ArmyFlagAction.Handler.class, ArmyFlagAction.class, 14, Side.SERVER);
     }
 }
