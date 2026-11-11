@@ -30,10 +30,11 @@ script API and adds, behind settings:
 - Armies: for the snapshot set `RwArmies=1` on the server and on clients. A client with 1 on a server with
   0 gets no answer and stays connected; a client with 0 on a server with 1 was not tested.
 
-For Xaero army commands install `xaerofleetcommand-1.12.2-v0.1.10.jar` on both client and server;
+For Xaero army commands install `xaerofleetcommand-1.12.2-v0.1.11.jar` on both client and server;
 the client also needs Xaero's World Map. Enable `RwArmies` and formations on the server.
-Open the **Armies** map tab, select flags and right-click safe loaded ground in the current
-dimension. Free for all (default), Formation/Swarm, stance and Stop use current server rights. The tab is hidden
+Open the **Armies** map tab, select flags and right-click a destination at any distance in the current
+dimension (an unloaded chunk is loaded or generated for the click; water or lava moves the target to the nearest
+safe ground within 8 blocks). Free for all (default), Formation/Swarm, stance and Stop use current server rights. The tab is hidden
 without a compatible provider or visible positions. See [controls](../integrations/xaero-fleet-command/ARMY-MAP.md).
 This adapter also includes Winter storm. Build validation passed; live map validation is pending.
 
@@ -335,8 +336,8 @@ Not proven, so not claimed:
   (M11.7a): reflection contract, build and package passed, including 10 new unit tests. This package
   now has a Xaero adapter v0.1.9 (M11.7b): 83/83 unit/regression tests, build and reobf package passed,
   installed in six existing mods folders with old jars backed up. Live map, networked rights, ground resolution,
-  online/offline and wrong-thread calls and production reflection remain untested. Only loaded surface targets
-  are accepted; no cave/path safety guarantee, at most 256 markers/16 selected armies.
+  online/offline and wrong-thread calls and production reflection remain untested. Since v0.1.11 a map target may be in an unloaded chunk (loaded or generated
+  for the click, nearest safe surface within 8 blocks; not runtime-tested from the map); no cave/path safety guarantee, at most 256 markers/16 selected armies.
   After a restart the time of the last position can be older than the last time the army was seen;
   the position itself is kept.
   Movement was tested with 32 NPCs in four companies of 8, legion on flat ground, on a dev dedicated
@@ -362,6 +363,9 @@ Not proven, so not claimed:
   chunks; unloaded terrain, combat during the march, column/ring at the goal and the live map were not tested. It costs
   more than companies: march p95 15.2 ms against idle 7.1 ms with 200 (companies 10.75 against 6.42, another day).
   The route is still searched in bounded legs (turned up to ±90° when a leg fails); it is not a global planner.
+  A far march passed too: 100 members walked to a target 600 blocks away in never generated flat terrain with no
+  player, held only by the army's own chunk tickets (`RwArmyMaxMarches`, a free-for-all army may hold up to 400
+  chunks); all 100 took their slot. Natural terrain far away and a restart during such a march were not tested.
   `ArmyApi.members` can return a dying member for up to 20 ticks, so scripts should check health. M11.6 travelling chunk tickets (`RwArmyMaxMarches`, accepted under the
   switch, Q355): at most that many armies hold tickets (members' chunks plus one ring, at most 49 chunks); further
   armies march without tickets and get no progress in unloaded chunks. M11.5 clears a stale member path before

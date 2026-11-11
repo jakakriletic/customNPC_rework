@@ -1,6 +1,6 @@
-# Armies on Xaero's World Map — v0.1.10
+# Armies on Xaero's World Map — v0.1.11
 
-Install the same `xaerofleetcommand-1.12.2-v0.1.10.jar` on client and server.
+Install the same `xaerofleetcommand-1.12.2-v0.1.11.jar` on client and server.
 The client needs Xaero's World Map; the server needs CustomNPC Rework with
 `RwArmies=1` and formations enabled. This module has no required CNPC/DaVinci
 dependency: without either provider its other features continue to work.
@@ -18,8 +18,10 @@ The army count is loaded members, not a saved total. The layer sends at most 256
   **Free for all** walks the shared route without waiting: every member goes at its own pace,
   a stuck member searches its own way, one that cannot get through is reported blocked and
   never holds the others; the army takes a legion only at the destination (CNPC M11.11).
-  Right click a destination to move. It must be safe, already loaded ground in
-  your current dimension; unloaded terrain, water/lava and hazardous surfaces are refused.
+  Right click a destination to move, at any distance in your current dimension. An unloaded target
+  chunk is loaded (or generated) once for the click; the army's chunk tickets (CNPC `RwArmyMaxMarches`)
+  carry the march there without a player. Water, lava and hazardous surfaces are not targets: the nearest
+  safe ground within 8 blocks is used instead, otherwise the move is refused.
 - **Apply stance** changes existing orders; **Stop** or X cancels them. Escape
   clears selection, Space centres it. Ctrl+1–9 saves a selection; 1–9 recalls it.
 - Up to 16 armies can be selected. Each receives an independent server result.

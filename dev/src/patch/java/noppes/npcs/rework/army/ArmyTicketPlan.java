@@ -16,6 +16,9 @@ public final class ArmyTicketPlan {
     public static final int RESUME_RADIUS = 2;
     /** Upper bound per march; member chunks come first, so a cut drops outer rings, never a member chunk. */
     public static final int MAX_CHUNKS_PER_MARCH = 49;
+    /** M11.11: a free-for-all army spreads along its route; every member chunk (and its ring) must stay loaded,
+     * or members left behind stop ticking. 400 chunks = 16 Forge tickets of the default 25. */
+    public static final int MAX_CHUNKS_FREE = 400;
     /** A chunk is released after this many one-second scans without need (no flapping at a chunk border). */
     public static final int GRACE_SCANS = 3;
 

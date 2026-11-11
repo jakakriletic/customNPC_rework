@@ -1,17 +1,17 @@
 {
-    "package": "M11.11",
+    "package": "M11.11b",
     "project": "../advantura_estetika_mod/xaero-winter-storm",
-    "artifact": "xaerofleetcommand-1.12.2-v0.1.10.jar",
+    "artifact": "xaerofleetcommand-1.12.2-v0.1.11.jar",
     "wire": "0.6.1-armies",
     "files": [
         {
             "path": "ARMY-MAP.md",
-            "sha256": "2734F9AA9DB2FB1DC2FEAE5537A6CB989CCD0ADA9399ADC1C93619EDEC5F243B",
+            "sha256": "8F5811F07D32B074DAD561214B11D629504EB89EB9EC972E8A70B9721D1D03F0",
             "sourceCopy": true
         },
         {
             "path": "build.gradle",
-            "sha256": "45679C3B45968777556DC9B0ADDDCDBB5CCE34390A45B3988F096FA768868B9F",
+            "sha256": "F71AC4832CCDE053C2E481B2B2FAA1DABE55D683F13601E178F5D228053A53D6",
             "sourceCopy": true
         },
         {
@@ -131,7 +131,7 @@
         },
         {
             "path": "src/main/java/si/ladja/xaerofleet/integration/ArmyGround.java",
-            "sha256": "BB59AF6620771C311B668BBA2BF14B8A164C73FA40A05C9EA63BB7AF910F4484",
+            "sha256": "347C0FE809F30B4B4712783E8F24C51E86BFCC6CE020314956050C6B6F4B11DF",
             "sourceCopy": true
         },
         {
@@ -146,7 +146,7 @@
         },
         {
             "path": "src/main/java/si/ladja/xaerofleet/network/ArmyAction.java",
-            "sha256": "CE98B1150F6F1D5A85EA79B92C580A199D3D099942A7EF263FD779288C0C6147",
+            "sha256": "D087F03F0A1EC9F2CAF98DEC864E1FECBA754B1FFC461C0176046EB31B2F026A",
             "sourceCopy": true
         },
         {

@@ -54,7 +54,7 @@ public final class ArmyAction implements IMessage {
             CnpcArmyBridge bridge=CnpcArmyBridge.discover();
             if(!bridge.isAvailable() || m.dimension!=p.dimension){send(p,new CommandFeedback(false,0,m.names.size(),"army_integration_unavailable"));return;}
             BlockPos ground=m.action==MOVE?ArmyGround.resolve(p.getServerWorld(),m.x,m.z):null;
-            if(m.action==MOVE && ground==null){send(p,new CommandFeedback(false,0,m.names.size(),"Army target needs loaded, safe ground"));return;}
+            if(m.action==MOVE && ground==null){send(p,new CommandFeedback(false,0,m.names.size(),"Army target needs safe ground within 8 blocks"));return;}
             int accepted=0,rejected=0;String reason="";
             for(String name:m.names){
                 CommandFeedback f=m.action==MOVE?bridge.move(p.getServer(),p.getUniqueID(),name,p.dimension,

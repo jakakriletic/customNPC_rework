@@ -64,7 +64,8 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 Q446: hibrid namesto »vsak svojo pot«: ena skupna pot po odsekih, vsak član hodi s svojo hitrostjo, lastno iskanje samo odrinjen, obtičal ali oddaljen član; mesto v obliki šele na cilju, blokiran ne zadrži nikogar.
 `army-ffa-run.ps1` PASS (`m1111-ffa-2026-11-11-221824`): 199 razmetanih + 1 zaprt, zid z grlom 3, hrib, stebri, ribnik, restart pri 139 za zidom; 199/199 na mestu, zaprti edini blokiran, 0 skokov, razmik ≥0,83. Unit 827/827, build, paket PASS.
 Cena `army-cost-run.ps1 -Cell ffa`: pohod p95 15,20 / idle 7,08 ms, 110 MB/s (čete M11.10: 10,75 / 6,42). Trije neuspeli teki zapisani (luknja v poti, `fill hollow`, razmik).
-Xaero v0.1.10 (`0.6.1-armies`, gumb Free for all privzet): 84 JUnit + reobf PASS, sinhroniziran v `ladja_mod`, nameščen v 7/7 mods mapah z backupom. Živa mapa ostane ročna.
+Xaero v0.1.11 (`0.6.1-armies`, gumb Free for all privzet, cilj na poljubni razdalji): 84 JUnit + reobf PASS, sinhroniziran v `ladja_mod`, nameščen v 7/7 mods mapah z backupom. Živa mapa ostane ročna.
+M11.11b dolg pohod `army-ffa-far-run.ps1` PASS: 100/100 do cilja 600 blokov v negeneriranem svetu brez igralca, samo tiketi vojske (`freeforall` do 400 chunkov).
 Meje: dev dedicated, ploska proga, brez nenaloženega sveta, klienta in boja med pohodom. Naslednje: M10.4 heap (229, v delu) in ostale §6. [Zapis](meritve/2026-11-11-M11.11-freeforall.md).
 
 ### 2026-11-04 (228) — P2: klientska matrika zelena (sprejet)

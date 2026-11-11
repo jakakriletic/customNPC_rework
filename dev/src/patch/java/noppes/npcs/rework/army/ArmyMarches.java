@@ -302,7 +302,9 @@ public final class ArmyMarches {
             if (!live.isEmpty()) {
                 double[] xs = new double[live.size()], zs = new double[live.size()];
                 for (int i = 0; i < live.size(); i++) { xs[i] = live.get(i).posX; zs[i] = live.get(i).posZ; }
-                wanted.put(key, ArmyTicketPlan.members(xs, zs, ArmyTicketPlan.RADIUS, ArmyTicketPlan.MAX_CHUNKS_PER_MARCH));
+                wanted.put(key, ArmyTicketPlan.members(xs, zs, ArmyTicketPlan.RADIUS,
+                        order.mode == ArmyOrder.Mode.FREEFORALL ? ArmyTicketPlan.MAX_CHUNKS_FREE
+                        : ArmyTicketPlan.MAX_CHUNKS_PER_MARCH));
             } else if (army.lastSeen() >= 0 && army.lastDimension() == order.dimension) {
                 wanted.put(key, ArmyTicketPlan.resume(army.lastX(), army.lastZ()));
                 resume.put(key, Boolean.TRUE);

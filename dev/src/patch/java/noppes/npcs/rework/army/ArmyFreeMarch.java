@@ -35,6 +35,8 @@ public final class ArmyFreeMarch {
     public static final int PATH_BUDGET = 4;
     static final int DECIDE = 10, MEMBER_SEARCH = 20, WINDOW = 32, EXT_RETRY = 40, EXT_TRIES = 5, STALE = 40;
     static final double ON_ROUTE = 3.0, REJOIN = 10.0, SETTLE = 10.0, ARRIVE = 0.5, LEAVE = 1.5, REFINE = 1.5, SNAP = 0.3;
+    /** Blocks around the goal that must be loaded before slots are placed on real ground. */
+    static final int GOAL_AREA = 24;
     private static final double[] TURN = {0, 45, -45, 90, -90};
 
     private static final List<EntityNPCInterface> removeFrom = new ArrayList<EntityNPCInterface>();
@@ -82,6 +84,8 @@ public final class ArmyFreeMarch {
     private int[] rx = new int[256], ry = new int[256], rz = new int[256];
     private int size, extFails, extAt = -1000, ticks, budget, searches, legs;
     private boolean routeFinal, finished;
+    /** Slots were placed on real ground; false while the goal area was not loaded (a far target). */
+    private boolean grounded;
     private double yaw = Double.NaN;
 
     private ArmyFreeMarch(String army, World world, ArmyOrder order) {
@@ -126,6 +130,7 @@ public final class ArmyFreeMarch {
     /** Every member gets its own destination slot around the goal, on standable ground where possible.
      * A new member reassigns all slots, so the formation stays complete; nobody restarts its walk. */
     private void assignSlots() {
+        grounded = goalLoaded();
         int n = members.size();
         double[] xs = new double[n], zs = new double[n];
         for (int i = 0; i < n; i++) { xs[i] = members.get(i).npc.posX; zs[i] = members.get(i).npc.posZ; }
@@ -137,6 +142,11 @@ public final class ArmyFreeMarch {
             m.sx = spot[0]; m.sy = spot[1]; m.sz = spot[2]; m.face = dest[i][2];
             if (m.phase == Phase.HOLD) { m.phase = Phase.SLOT; }
         }
+    }
+
+    /** The whole slot area around the goal is loaded, so every slot can stand on real ground. */
+    private boolean goalLoaded() {
+        return world.isAreaLoaded(new BlockPos(order.x, order.y, order.z), GOAL_AREA);
     }
 
     private double[] standable(double x, double y, double z, Set<Long> used) {
@@ -212,6 +222,11 @@ public final class ArmyFreeMarch {
             if (was && !m.busy) { m.idx = -1; m.windowEnd = -1; m.walk.reset(ticks, npc.posX, npc.posZ); }
         }
         if (ticking == 0) { return; }
+        if (!grounded && ticks % 20 == 0 && goalLoaded()) {
+            // A far target: its terrain is known only now that the march (or its tickets) reached it.
+            assignSlots();
+            LogWriter.info("RWARMY freeforall-slots " + army + " grounded at goal");
+        }
         if (!routeFinal && extFails < EXT_TRIES && ticks - extAt >= (extFails > 0 ? EXT_RETRY : DECIDE)) {
             Member front = null;
             for (Member m : members) {
@@ -251,6 +266,9 @@ public final class ArmyFreeMarch {
             last = false;
         }
         if (!last) {
+            // The search below loads (or generates) the chunks around the searching member anyway;
+            // load the leg's end column first so its height is real ground, not an interpolated guess.
+            world.getChunkFromChunkCoords((int) Math.floor(t[0]) >> 4, (int) Math.floor(t[2]) >> 4);
             double sy = surfaceY(t[0], t[1], t[2]);
             if (!Double.isNaN(sy)) { t[1] = sy; }
         }
