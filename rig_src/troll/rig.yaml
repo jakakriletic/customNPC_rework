@@ -1,0 +1,86 @@
+# Rig trolla: kateri model, kateri kontrolniki in kaj preverja predogled.
+# Model nastane s:  py -3 tools/models/build_troll.py
+geo: dev/src/patch/resources/assets/customnpcs/rig/troll.geo.json
+texture: dev/src/patch/resources/assets/customnpcs/textures/rig/troll.png
+output: dev/src/patch/resources/assets/customnpcs/rig/troll.animation.json
+copies: [ogre]
+
+# Kosti, katerih spodnji rob mora stati na tleh (ground: auto jih postavi na tla).
+feet: [shinR, shinL]
+
+# Točke, ki jih predogled sledi in preverja.  `at` je točka v Bedrock
+# koordinatah modela v osnovni pozi (x < 0 je NJEGOVA desna, -z je naprej).
+tips:
+  club:   {bone: club,  at: [-23, 18, -53]}   # konica kija
+  hand_l: {bone: handL, at: [23, 13, -2]}     # prosta leva pest
+  hand_r: {bone: handR, at: [-23, 13, -2]}
+  foot_r: {bone: shinR, at: [-8.5, 0, -5]}
+  foot_l: {bone: shinL, at: [8.5, 0, -5]}
+  rock:   {bone: prop_rock, at: [23, 9, -3]}  # sredina skale v levi roki (throw)
+weapon_tip: club          # privzeta točka, ki mora pri udarcu pristati v območju škode
+trace: [club, hand_l]     # privzete sledi na sliki
+solid: [torso, head]      # konice ne smejo skozi te kosti
+
+# kontrolnik: [kost, kanal, os, predznak]  — vse v stopinjah (body.x/y/z v px).
+# Pomen + vrednosti je preverjen na predogledu (glej README).
+controls:
+  arm_r.raise:   [armR, rotation, x, -1]     # roka naprej/gor (180 = navpično gor)
+  arm_r.out:     [armR, rotation, z, 1]      # roka vstran od telesa
+  arm_r.swing:   [armR, rotation, y, 1]      # zasuk nadlakti okoli svoje osi
+  arm_l.raise:   [armL, rotation, x, -1]
+  arm_l.out:     [armL, rotation, z, -1]
+  arm_l.swing:   [armL, rotation, y, -1]
+  elbow_r.bend:  [lowerArmR, rotation, x, -1]   # pokrčen komolec (0..150)
+  elbow_l.bend:  [lowerArmL, rotation, x, -1]
+  wrist_r.bend:  [handR, rotation, x, -1]    # zapestje: + dvigne konico kija
+  wrist_r.in:    [handR, rotation, y, -1]    # zapestje: + obrne konico kija proti telesu
+  wrist_l.bend:  [handL, rotation, x, -1]
+  wrist_l.in:    [handL, rotation, y, 1]
+  leg_r.raise:   [legR, rotation, x, -1]     # stegno naprej
+  leg_r.out:     [legR, rotation, z, 1]      # noga vstran
+  leg_l.raise:   [legL, rotation, x, -1]
+  leg_l.out:     [legL, rotation, z, -1]
+  knee_r.bend:   [shinR, rotation, x, 1]     # koleno nazaj (0..140)
+  knee_l.bend:   [shinL, rotation, x, 1]
+  head.nod:      [head, rotation, x, 1]      # pogled dol
+  head.turn:     [head, rotation, y, -1]     # glava na NJEGOVO levo
+  head.tilt:     [head, rotation, z, -1]     # uho proti NJEGOVI desni rami
+  jaw.open:      [jaw, rotation, x, 1]       # odprta usta (0..35)
+  torso.bend:    [torso, rotation, x, 1]     # predklon
+  torso.twist:   [torso, rotation, y, -1]    # zasuk trupa na NJEGOVO levo
+  torso.lean:    [torso, rotation, z, -1]    # nagib na NJEGOVO desno
+  body.turn:     [body, rotation, y, -1]     # celo telo na NJEGOVO levo
+  body.pitch:    [body, rotation, x, 1]      # celo telo naprej (padec)
+  body.roll:     [body, rotation, z, -1]     # celo telo na njegovo desno
+  body.x:        [body, position, x, -1]     # premik na NJEGOVO desno (px)
+  body.y:        [body, position, y, 1]      # gor (px)
+  body.z:        [body, position, z, -1]     # naprej (px)
+  rock.show:     [prop_rock, scale, xyz, 1]  # 1 = skala v levi roki, 0 = je ni
+
+limits:
+  arm_r.raise: [-70, 200]
+  arm_l.raise: [-70, 200]
+  arm_r.out: [-30, 120]
+  arm_l.out: [-30, 120]
+  elbow_r.bend: [-5, 150]
+  elbow_l.bend: [-5, 150]
+  wrist_r.bend: [-90, 90]
+  wrist_l.bend: [-90, 90]
+  leg_r.raise: [-60, 110]
+  leg_l.raise: [-60, 110]
+  knee_r.bend: [-3, 140]
+  knee_l.bend: [-3, 140]
+  head.nod: [-50, 50]
+  head.turn: [-80, 80]
+  jaw.open: [-2, 40]
+  torso.bend: [-30, 80]
+  torso.twist: [-60, 60]
+  torso.lean: [-35, 35]
+
+# Pari kosti za `mirror: true` (zamenja levo in desno).
+mirror:
+  armR: armL
+  lowerArmR: lowerArmL
+  handR: handL
+  legR: legL
+  shinR: shinL

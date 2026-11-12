@@ -1,0 +1,8 @@
+# Smrt: pade na kolena in na obraz (Minecraft telo odstrani po 1 s).
+name: death
+length: 1.0
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.35, pose: death_kneel, ease: in}
+  - {t: 0.85, pose: death_fall, ease: strike, airborne: true, add: {body.y: 4}}
+  - {t: 1.00, pose: death_fall, airborne: true, add: {body.y: 4}}

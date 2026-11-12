@@ -1,0 +1,15 @@
+# Rjovenje: ob prvem opazu sovražnika in občasno v boju.  Val zraka odrine
+# bližnje nasprotnike, škode ni.
+name: roar
+length: 2.2
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.50, pose: roar, ease: out}
+  - {t: 1.00, pose: roar, add: {head.turn: 12, torso.twist: 6}}
+  - {t: 1.45, pose: roar, add: {head.turn: -12, torso.twist: -6}, hold: 0.1}
+  - {t: 2.20, pose: stand, ease: smooth}
+events:
+  - {t: 0.40, type: sound, sound: [troll.roar, troll.roar_rumble]}
+  - {t: 0.50, type: shake, strength: 0.45, radius: 22, duration: 1.3}
+  - {t: 0.55, type: hit, id: roar, shape: circle, forward: 1.0, side: 0, radius: 6.0, tip: hand_l,
+     damage: 0.0, knockback: 1.0, lift: 0.2}

@@ -1,0 +1,11 @@
+# Smrt: opoteče se in pade na desni bok.
+name: death
+length: 1.0
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.35, pose: death_stagger, ease: in}
+  - {t: 0.80, pose: death_lie, ease: strike, airborne: true}
+  - {t: 1.00, pose: death_lie, airborne: true}
+events:
+  - {t: 0.80, type: sound, sound: cave_bear.land}
+  - {t: 0.80, type: dust, forward: 0, side: 1.0, radius: 1.5, count: 20}

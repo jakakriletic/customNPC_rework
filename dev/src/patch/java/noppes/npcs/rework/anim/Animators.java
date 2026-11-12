@@ -59,6 +59,8 @@ public final class Animators {
         Object raw = npc == null ? null : npc.getMCEntity();
         if (!(raw instanceof EntityNPCInterface)) { return ABSENT; }
         EntityNPCInterface entity = (EntityNPCInterface) raw;
+        // M16: an NPC wearing a rig is animated by the built-in core.
+        if (noppes.npcs.rework.rig.RigAnimator.handles(entity)) { return new noppes.npcs.rework.rig.RigAnimator(entity); }
         Binding binding = BINDINGS.get(entity.getClass());
         if (binding == null) { return ABSENT; }
         Handle handle = HANDLES.get(entity);

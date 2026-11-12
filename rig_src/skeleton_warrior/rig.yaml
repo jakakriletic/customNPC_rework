@@ -1,0 +1,77 @@
+# Rig človeške družine (humanoid, knight, skeleton_warrior: isto okostje, iste kosti).
+# Model nastane s:  py -3 tools/rig/models/build_humanoid.py
+# Klipi so v rig_src/humanoid/ (compile.py humanoid jih prepiše sem); ta rig.yaml je za predogled.
+geo: dev/src/patch/resources/assets/customnpcs/rig/skeleton_warrior.geo.json
+texture: dev/src/patch/resources/assets/customnpcs/textures/rig/skeleton_warrior.png
+output: dev/src/patch/resources/assets/customnpcs/rig/skeleton_warrior.animation.json
+
+feet: [shinR, shinL]
+
+tips:
+  sword:  {bone: weapon, at: [-5.75, 11, -17.5]}    # konica meča
+  hand_r: {bone: handR, at: [-5.75, 11, 0]}
+  hand_l: {bone: handL, at: [5.75, 11, 0]}
+  foot_r: {bone: shinR, at: [-2, 0, -2]}
+  foot_l: {bone: shinL, at: [2, 0, -2]}
+weapon_tip: sword
+trace: [sword, hand_l]
+solid: [torso, head]
+
+preview: {scale: 3.2, side: 0.42}
+
+controls:
+  arm_r.raise:   [armR, rotation, x, -1]     # roka naprej/gor (180 = navpično gor)
+  arm_r.out:     [armR, rotation, z, 1]      # roka vstran od telesa
+  arm_r.swing:   [armR, rotation, y, 1]      # zasuk nadlakti okoli svoje osi
+  arm_l.raise:   [armL, rotation, x, -1]
+  arm_l.out:     [armL, rotation, z, -1]
+  arm_l.swing:   [armL, rotation, y, -1]
+  elbow_r.bend:  [lowerArmR, rotation, x, -1]
+  elbow_l.bend:  [lowerArmL, rotation, x, -1]
+  wrist_r.bend:  [handR, rotation, x, -1]    # + dvigne konico meča
+  wrist_r.in:    [handR, rotation, y, -1]    # + obrne konico meča proti telesu
+  wrist_l.bend:  [handL, rotation, x, -1]
+  leg_r.raise:   [legR, rotation, x, -1]
+  leg_r.out:     [legR, rotation, z, 1]
+  leg_l.raise:   [legL, rotation, x, -1]
+  leg_l.out:     [legL, rotation, z, -1]
+  knee_r.bend:   [shinR, rotation, x, 1]
+  knee_l.bend:   [shinL, rotation, x, 1]
+  head.nod:      [head, rotation, x, 1]
+  head.turn:     [head, rotation, y, -1]
+  head.tilt:     [head, rotation, z, -1]
+  torso.bend:    [torso, rotation, x, 1]
+  torso.twist:   [torso, rotation, y, -1]
+  torso.lean:    [torso, rotation, z, -1]
+  body.turn:     [body, rotation, y, -1]
+  body.pitch:    [body, rotation, x, 1]
+  body.roll:     [body, rotation, z, -1]
+  body.x:        [body, position, x, -1]
+  body.y:        [body, position, y, 1]
+  body.z:        [body, position, z, -1]
+
+limits:
+  arm_r.raise: [-70, 200]
+  arm_l.raise: [-70, 200]
+  arm_r.out: [-30, 130]
+  arm_l.out: [-30, 130]
+  elbow_r.bend: [-5, 150]
+  elbow_l.bend: [-5, 150]
+  wrist_r.bend: [-100, 100]
+  wrist_l.bend: [-100, 100]
+  leg_r.raise: [-60, 110]
+  leg_l.raise: [-60, 110]
+  knee_r.bend: [-3, 140]
+  knee_l.bend: [-3, 140]
+  head.nod: [-50, 50]
+  head.turn: [-80, 80]
+  torso.bend: [-30, 80]
+  torso.twist: [-70, 70]
+  torso.lean: [-35, 35]
+
+mirror:
+  armR: armL
+  lowerArmR: lowerArmL
+  handR: handL
+  legR: legL
+  shinR: shinL

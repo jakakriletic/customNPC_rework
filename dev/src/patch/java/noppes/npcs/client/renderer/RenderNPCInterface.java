@@ -178,6 +178,12 @@ extends RenderLiving<T> {
         if (((EntityNPCInterface)((Object)npc)).ais.getStandingType() == 3 && !((EntityNPCInterface)((Object)npc)).isWalking() && !((EntityNPCInterface)((Object)npc)).isInteracting()) {
             ((EntityNPCInterface)((Object)npc)).prevRenderYawOffset = ((EntityNPCInterface)((Object)npc)).renderYawOffset = (float)((EntityNPCInterface)((Object)npc)).ais.orientation;
         }
+        // M16: an NPC wearing a rig is drawn as that model (name label as usual).
+        if (noppes.npcs.rework.rig.client.RigClient.active((EntityNPCInterface)((Object)npc))) {
+            noppes.npcs.rework.rig.client.RigClient.render(this, (EntityNPCInterface)((Object)npc), d, d1, d2, f1);
+            this.renderName(npc, d, d1, d2);
+            return;
+        }
         super.doRender(npc, d, d1, d2, f, f1);
     }
 

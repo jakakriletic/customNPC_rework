@@ -1,0 +1,545 @@
+{
+ "cave_bear.bite": {
+  "sounds": [
+   "rwrig:cave_bear/bite1",
+   "rwrig:cave_bear/bite2",
+   "rwrig:cave_bear/bite3"
+  ]
+ },
+ "cave_bear.claw": {
+  "sounds": [
+   "rwrig:cave_bear/claw1",
+   "rwrig:cave_bear/claw2"
+  ]
+ },
+ "cave_bear.death": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/polarbear/death1",
+    "pitch": 0.55,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/death2",
+    "pitch": 0.55,
+    "volume": 1
+   }
+  ]
+ },
+ "cave_bear.growl": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/polarbear/warning1",
+    "pitch": 0.7,
+    "volume": 0.8
+   },
+   {
+    "name": "minecraft:mob/polarbear/warning3",
+    "pitch": 0.72,
+    "volume": 0.8
+   }
+  ]
+ },
+ "cave_bear.hurt": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/polarbear/hurt1",
+    "pitch": 0.6,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/hurt2",
+    "pitch": 0.6,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/hurt3",
+    "pitch": 0.62,
+    "volume": 1
+   }
+  ]
+ },
+ "cave_bear.idle": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/polarbear/idle1",
+    "pitch": 0.6,
+    "volume": 0.8
+   },
+   {
+    "name": "minecraft:mob/polarbear/idle2",
+    "pitch": 0.6,
+    "volume": 0.8
+   },
+   {
+    "name": "minecraft:mob/polarbear/idle3",
+    "pitch": 0.62,
+    "volume": 0.8
+   }
+  ]
+ },
+ "cave_bear.land": {
+  "sounds": [
+   "rwrig:cave_bear/land1",
+   "rwrig:cave_bear/land2"
+  ]
+ },
+ "cave_bear.roar": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/polarbear/warning1",
+    "pitch": 0.55,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/warning2",
+    "pitch": 0.55,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/warning3",
+    "pitch": 0.6,
+    "volume": 1
+   }
+  ]
+ },
+ "cave_bear.snarl": {
+  "sounds": [
+   "rwrig:cave_bear/snarl1",
+   "rwrig:cave_bear/snarl2"
+  ]
+ },
+ "cave_bear.step": {
+  "sounds": [
+   "rwrig:cave_bear/step1",
+   "rwrig:cave_bear/step2",
+   "rwrig:cave_bear/step3",
+   "rwrig:cave_bear/step4"
+  ]
+ },
+ "giant_spider.bite": {
+  "sounds": [
+   "rwrig:giant_spider/bite1",
+   "rwrig:giant_spider/bite2",
+   "rwrig:giant_spider/bite3"
+  ]
+ },
+ "giant_spider.death": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/spider/death",
+    "pitch": 0.55,
+    "volume": 1
+   }
+  ]
+ },
+ "giant_spider.hiss": {
+  "sounds": [
+   "rwrig:giant_spider/hiss1",
+   "rwrig:giant_spider/hiss2",
+   "rwrig:giant_spider/hiss3"
+  ]
+ },
+ "giant_spider.hurt": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/spider/say2",
+    "pitch": 0.7,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/spider/say4",
+    "pitch": 0.72,
+    "volume": 1
+   }
+  ]
+ },
+ "giant_spider.idle": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/spider/say1",
+    "pitch": 0.6,
+    "volume": 0.8
+   },
+   {
+    "name": "minecraft:mob/spider/say2",
+    "pitch": 0.6,
+    "volume": 0.8
+   },
+   {
+    "name": "minecraft:mob/spider/say3",
+    "pitch": 0.62,
+    "volume": 0.8
+   },
+   {
+    "name": "minecraft:mob/spider/say4",
+    "pitch": 0.6,
+    "volume": 0.8
+   }
+  ]
+ },
+ "giant_spider.land": {
+  "sounds": [
+   "rwrig:giant_spider/land1",
+   "rwrig:giant_spider/land2"
+  ]
+ },
+ "giant_spider.spit": {
+  "sounds": [
+   "rwrig:giant_spider/spit1",
+   "rwrig:giant_spider/spit2"
+  ]
+ },
+ "giant_spider.step": {
+  "sounds": [
+   "rwrig:giant_spider/step1",
+   "rwrig:giant_spider/step2",
+   "rwrig:giant_spider/step3",
+   "rwrig:giant_spider/step4"
+  ]
+ },
+ "giant_spider.web": {
+  "sounds": [
+   "rwrig:giant_spider/web1",
+   "rwrig:giant_spider/web2"
+  ]
+ },
+ "troll.angry": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/polarbear/warning1",
+    "pitch": 0.6,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/warning3",
+    "pitch": 0.62,
+    "volume": 1
+   }
+  ]
+ },
+ "troll.body_fall": {
+  "sounds": [
+   "rwrig:troll/body_fall1",
+   "rwrig:troll/body_fall2"
+  ]
+ },
+ "troll.club_impact": {
+  "sounds": [
+   "rwrig:troll/club_impact1",
+   "rwrig:troll/club_impact2",
+   "rwrig:troll/club_impact3"
+  ]
+ },
+ "troll.death": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/polarbear/death1",
+    "pitch": 0.5,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/death2",
+    "pitch": 0.5,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/death3",
+    "pitch": 0.5,
+    "volume": 1
+   }
+  ]
+ },
+ "troll.ground_pound": {
+  "sounds": [
+   "rwrig:troll/ground_pound1",
+   "rwrig:troll/ground_pound2"
+  ]
+ },
+ "troll.grunt": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/polarbear/hurt1",
+    "pitch": 0.5,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/hurt3",
+    "pitch": 0.5,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/zombiepig/zpigangry1",
+    "pitch": 0.5,
+    "volume": 0.9
+   },
+   {
+    "name": "minecraft:mob/zombiepig/zpigangry3",
+    "pitch": 0.5,
+    "volume": 0.9
+   }
+  ]
+ },
+ "troll.hurt": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/polarbear/hurt2",
+    "pitch": 0.55,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/hurt4",
+    "pitch": 0.55,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/zombie/hurt1",
+    "pitch": 0.5,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/zombie/hurt2",
+    "pitch": 0.5,
+    "volume": 1
+   }
+  ]
+ },
+ "troll.idle": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/polarbear/idle1",
+    "pitch": 0.5,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/idle2",
+    "pitch": 0.5,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/idle3",
+    "pitch": 0.5,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/zombie/say1",
+    "pitch": 0.5,
+    "volume": 0.9
+   },
+   {
+    "name": "minecraft:mob/zombie/say3",
+    "pitch": 0.5,
+    "volume": 0.9
+   }
+  ]
+ },
+ "troll.punch": {
+  "sounds": [
+   "rwrig:troll/punch1",
+   "rwrig:troll/punch2"
+  ]
+ },
+ "troll.roar": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/polarbear/warning1",
+    "pitch": 0.5,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/warning2",
+    "pitch": 0.5,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/polarbear/warning3",
+    "pitch": 0.55,
+    "volume": 1
+   }
+  ]
+ },
+ "troll.roar_rumble": {
+  "sounds": [
+   "rwrig:troll/roar_rumble1",
+   "rwrig:troll/roar_rumble2"
+  ]
+ },
+ "troll.step": {
+  "sounds": [
+   "rwrig:troll/step1",
+   "rwrig:troll/step2",
+   "rwrig:troll/step3",
+   "rwrig:troll/step4"
+  ]
+ },
+ "troll.stomp": {
+  "sounds": [
+   "rwrig:troll/stomp1",
+   "rwrig:troll/stomp2",
+   "rwrig:troll/stomp3"
+  ]
+ },
+ "troll.swing": {
+  "sounds": [
+   "rwrig:troll/swing1",
+   "rwrig:troll/swing2",
+   "rwrig:troll/swing3"
+  ]
+ },
+ "troll.wood_crack": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/zombie/wood1",
+    "pitch": 0.55,
+    "volume": 0.8
+   },
+   {
+    "name": "minecraft:mob/zombie/wood2",
+    "pitch": 0.55,
+    "volume": 0.8
+   },
+   {
+    "name": "minecraft:mob/zombie/wood3",
+    "pitch": 0.6,
+    "volume": 0.8
+   },
+   {
+    "name": "minecraft:mob/zombie/wood4",
+    "pitch": 0.55,
+    "volume": 0.8
+   }
+  ]
+ },
+ "warg.bark": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/wolf/bark1",
+    "pitch": 0.55,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/wolf/bark2",
+    "pitch": 0.55,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/wolf/bark3",
+    "pitch": 0.58,
+    "volume": 1
+   }
+  ]
+ },
+ "warg.bite": {
+  "sounds": [
+   "rwrig:warg/bite1",
+   "rwrig:warg/bite2",
+   "rwrig:warg/bite3"
+  ]
+ },
+ "warg.claw": {
+  "sounds": [
+   "rwrig:warg/claw1",
+   "rwrig:warg/claw2"
+  ]
+ },
+ "warg.death": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/wolf/death",
+    "pitch": 0.55,
+    "volume": 1
+   }
+  ]
+ },
+ "warg.growl": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/wolf/growl1",
+    "pitch": 0.6,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/wolf/growl2",
+    "pitch": 0.6,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/wolf/growl3",
+    "pitch": 0.62,
+    "volume": 1
+   }
+  ]
+ },
+ "warg.howl": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/wolf/howl1",
+    "pitch": 0.62,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/wolf/howl2",
+    "pitch": 0.6,
+    "volume": 1
+   }
+  ]
+ },
+ "warg.hurt": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/wolf/hurt1",
+    "pitch": 0.6,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/wolf/hurt2",
+    "pitch": 0.6,
+    "volume": 1
+   },
+   {
+    "name": "minecraft:mob/wolf/hurt3",
+    "pitch": 0.62,
+    "volume": 1
+   }
+  ]
+ },
+ "warg.idle": {
+  "sounds": [
+   {
+    "name": "minecraft:mob/wolf/growl2",
+    "pitch": 0.55,
+    "volume": 0.5
+   },
+   {
+    "name": "minecraft:mob/wolf/panting",
+    "pitch": 0.6,
+    "volume": 0.7
+   },
+   {
+    "name": "minecraft:mob/wolf/growl3",
+    "pitch": 0.55,
+    "volume": 0.5
+   }
+  ]
+ },
+ "warg.land": {
+  "sounds": [
+   "rwrig:warg/land1",
+   "rwrig:warg/land2"
+  ]
+ },
+ "warg.snarl": {
+  "sounds": [
+   "rwrig:warg/snarl1",
+   "rwrig:warg/snarl2"
+  ]
+ },
+ "warg.step": {
+  "sounds": [
+   "rwrig:warg/step1",
+   "rwrig:warg/step2",
+   "rwrig:warg/step3",
+   "rwrig:warg/step4"
+  ]
+ }
+}

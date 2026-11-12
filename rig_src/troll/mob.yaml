@@ -1,0 +1,65 @@
+# Vedenje trolla: statistike, tabela napadov, zvoki.  compile.py ga preveri in
+# zapiše v troll.animation.json (ključ "mob"), igra ga bere na strežniku in
+# odjemalcu.  Kdaj, kje in koliko napad zadane, je v klipih (*.anim.yaml).
+name: Troll
+title: Cave Troll               # napis pod imenom
+boss_bar: 2                 # CustomNPCs boss bar: 0 brez, 1 vedno, 2 ko ima tarčo
+boss_color: green
+hitbox: [2.6, 5.6]          # širina, višina v blokih
+step_height: 1.1
+shadow: 2.2
+health: 400
+melee: 40                   # osnovna škoda; vsak `hit` dogodek jo pomnoži z `damage`
+melee_range: 4
+speed: 4                    # CustomNPCs hitrost hoje (1..10)
+knockback_resist: true      # ga ne odrivajo
+talk_interval: 260
+volume: 2.5                 # glasnost glasu (idle, hurt ...)
+voice:                      # CustomNPCs zvoki: idle, angry, hurt, death
+  idle: troll.idle
+  angry: troll.angry
+  hurt: troll.hurt
+  death: troll.death
+
+# Napadi.  Izbere se naključno po teži med tistimi, ki so izven cooldowna in
+# katerih razdalja (min..max blokov do tarče) ustreza.
+#   crowd:  dodatna teža za vsakega dodatnega sovražnika v 5 blokih
+#   wounded: dodatna teža pod polovico zdravja
+#   cooldown/recover: tiki (20 = 1 s); recover = premor po napadu
+attacks:
+  - {clip: smash,    min: 2.5, max: 7.0, weight: 4, cooldown: 60,  recover: 14}
+  - {clip: sweep,    min: 0.0, max: 6.2, weight: 3, cooldown: 50,  recover: 12, crowd: 1.5}
+  - {clip: stomp,    min: 0.0, max: 4.0, weight: 3, cooldown: 70,  recover: 12, crowd: 2.0}
+  - {clip: pound,    min: 2.0, max: 8.0, weight: 2, cooldown: 220, recover: 22, crowd: 2.0, wounded: 2}
+  - {clip: backhand, min: 0.0, max: 4.6, weight: 3, cooldown: 40,  recover: 10}
+  - {clip: throw,    min: 8.0, max: 22,  weight: 4, cooldown: 120, recover: 12}
+
+# Rjovenje ob novi tarči (bližje kot `range`), največ enkrat na `cooldown` tikov.
+greet: {clip: roar, range: 20, cooldown: 600, recover: 10}
+
+# Bes: pod 35 % zdravja enkrat zarjove, nato +30 % škode, hitrejši (×1.25)
+# in krajši cooldowni (×0.7).  Ob zdravljenju nad mejo se umiri.
+enrage: {below: 0.35, clip: roar, damage: 1.3, speed: 1.25, cooldown: 0.7}
+
+# Korak (`step` dogodek v hoji): kje je stopalo in kako močan je.
+step:
+  sound: troll.step
+  forward: 0.25
+  side: 0.55
+  volume: 1.5
+  heavy_volume: 2.6
+  shake: 0.12
+  heavy_shake: 0.35
+
+# Glasnost posameznih zvokov (Minecraft jih sliši do 16 x glasnost blokov daleč).
+sound_volume:
+  troll.club_impact: 3.0
+  troll.ground_pound: 4.5
+  troll.wood_crack: 2.0
+  troll.stomp: 3.0
+  troll.roar: 4.0
+  troll.roar_rumble: 4.0
+  troll.body_fall: 3.0
+  troll.grunt: 2.0
+  troll.swing: 1.6
+  troll.punch: 1.8

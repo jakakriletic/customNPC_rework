@@ -1,0 +1,16 @@
+# Mreža: dvigne zadek čez hrbet in iz predilnice izstreli kepo mreže,
+# ki tarčo močno upočasni (6-18 blokov).
+name: spit
+length: 1.5
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.45, pose: spit_aim, ease: out, hold: 0.15}
+  - {t: 0.72, pose: spit_shoot, ease: strike, hold: 0.12}
+  - {t: 1.50, pose: stand, ease: smooth}
+events:
+  - {t: 0.10, type: sound, sound: giant_spider.hiss}
+  - {t: 0.40, type: lock}
+  - {t: 0.72, type: projectile, kind: web, from: spinneret, speed: 1.1, damage: 0.3, radius: 1.8,
+     knockback: 0, size: 0.8, effect: slowness, effect_seconds: 4, effect_level: 4,
+     impact_sound: giant_spider.web, shake: 0}
+  - {t: 0.72, type: sound, sound: giant_spider.spit}

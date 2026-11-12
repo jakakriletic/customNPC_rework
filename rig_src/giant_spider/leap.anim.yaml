@@ -1,0 +1,18 @@
+# Skok: se stisne k tlom in skoči na tarčo 4-9 blokov stran.
+# up 0.45 -> ~13 tikov v zraku; lunge pri 0.40 s -> pristanek ~1.10 s.
+name: leap
+length: 1.6
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.35, pose: leap_crouch, ease: out, hold: 0.05}
+  - {t: 0.55, pose: leap_air, ease: strike, airborne: true, hold: 0.4}
+  - {t: 1.10, pose: leap_land, ease: in, hold: 0.1}
+  - {t: 1.60, pose: stand, ease: smooth}
+events:
+  - {t: 0.05, type: sound, sound: giant_spider.hiss}
+  - {t: 0.35, type: lock}
+  - {t: 0.40, type: lunge, forward: 0.5, up: 0.45, ticks: 13}
+  - {t: 1.10, type: hit, id: leap, shape: circle, forward: 1.0, side: 0, radius: 2.2, tip: fangs,
+     damage: 1.2, knockback: 0.8, lift: 0.25}
+  - {t: 1.10, type: sound, sound: [giant_spider.land, giant_spider.bite]}
+  - {t: 1.10, type: dust, forward: 0.5, side: 0, radius: 1.6, count: 20}

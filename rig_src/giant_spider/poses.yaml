@@ -1,0 +1,166 @@
+# Knjižnica poz za orjaškega pajka.  Osnovna poza ima noge vodoravno vstran,
+# zato vse poze dedujejo `stand`.  Smeri:  lift + = stegno gor,
+# knee + = goleno dol, swing + = noga naprej, head.nod + = glava dol.
+# Skupine: legs.* (vseh 8), gait_a.* (D1 L2 D3 L4), gait_b.* (L1 D2 L3 D4), front.* (par 1).
+# Preveri:  py -3 tools/anim/preview.py poses giant_spider <ime> --views front,side,top
+
+neutral: {}
+
+stand:
+  opis: stoji na osmih nogah, kolena visoko nad telesom
+  legs.lift: 46
+  legs.knee: 104
+  leg_r1.swing: 64
+  leg_l1.swing: 64
+  leg_r2.swing: 24
+  leg_l2.swing: 24
+  leg_r3.swing: -20
+  leg_l3.swing: -20
+  leg_r4.swing: -54
+  leg_l4.swing: -54
+  abdomen.raise: 6
+  fangs.open: 4
+
+stand_breathe:
+  base: stand
+  abdomen.raise: 11
+  fangs.open: 12
+  legs.knee: 100
+
+# ---------------------------------------------------------------- hoja (dve četverici nog)
+walk_a_plant:
+  opis: četverica A spredaj na tleh, B zadaj
+  base: stand
+  gait_a.swing: 14
+  gait_b.swing: -14
+
+walk_b_lift:
+  opis: B dvignjena gre naprej
+  base: stand
+  gait_b.lift: 18
+  gait_b.knee: -10
+  gait_a.swing: 0
+  gait_b.swing: 0
+  body.y: 0.6
+
+walk_b_plant:
+  base: stand
+  gait_b.swing: 14
+  gait_a.swing: -14
+
+walk_a_lift:
+  base: stand
+  gait_a.lift: 18
+  gait_a.knee: -10
+  gait_a.swing: 0
+  gait_b.swing: 0
+  body.y: 0.6
+
+# ---------------------------------------------------------------- ugriz
+bite_rear:
+  opis: dvigne prednji par nog, čeljustnika narazen
+  base: stand
+  front.lift: 36
+  front.swing: 10
+  thorax.pitch: -14
+  head.nod: -18
+  fangs.open: 34
+  fangs.raise: 20
+  abdomen.raise: 14
+
+bite_strike:
+  opis: sune naprej in zapre čeljustnika
+  base: stand
+  front.lift: 10
+  front.swing: 26
+  thorax.pitch: 14
+  head.nod: 16
+  fangs.open: -4
+  fangs.raise: -10
+  body.z: 7
+
+# ---------------------------------------------------------------- mreža
+spit_aim:
+  opis: zadek dvignjen čez hrbet, predilnica meri naprej
+  base: stand
+  abdomen.raise: 78
+  thorax.pitch: 8
+  head.nod: 10
+  legs.knee: 110
+  gait_b.lift: 6
+  body.z: -3
+
+spit_shoot:
+  base: spit_aim
+  abdomen.raise: 70
+  thorax.pitch: 14
+  body.z: -5
+
+# ---------------------------------------------------------------- skok
+leap_crouch:
+  opis: pritisnjen k tlom
+  base: stand
+  legs.lift: 62
+  legs.knee: 132
+  thorax.pitch: 6
+  fangs.open: 20
+
+leap_air:
+  opis: v zraku, prednje noge iztegnjene naprej
+  base: stand
+  legs.lift: 26
+  legs.knee: 70
+  front.lift: 44
+  front.swing: 16
+  leg_r2.swing: 40
+  leg_l2.swing: 40
+  thorax.pitch: -12
+  fangs.open: 36
+
+leap_land:
+  base: stand
+  legs.knee: 118
+  legs.lift: 54
+  thorax.pitch: 10
+  fangs.open: 8
+
+# ---------------------------------------------------------------- grožnja (ob novi tarči)
+threat:
+  opis: se vzpne, prva dva para nog visoko, čeljustnika na široko
+  base: stand
+  front.lift: 74
+  front.swing: 18
+  leg_r2.lift: 30
+  leg_l2.lift: 30
+  thorax.pitch: -24
+  head.nod: -12
+  fangs.open: 42
+  fangs.raise: 24
+  abdomen.raise: 26
+
+# ---------------------------------------------------------------- udarec in smrt
+hurt:
+  base: stand
+  thorax.pitch: -10
+  legs.knee: 112
+  fangs.open: 30
+  abdomen.raise: -8
+  front.lift: 20
+
+death_curl:
+  opis: noge se zvijejo pod telo
+  base: stand
+  legs.lift: 70
+  legs.knee: 170
+  abdomen.raise: -10
+  fangs.open: 30
+
+# ---------------------------------------------------------------- leženje mladičev
+brood_lay:
+  opis: zadek pritisne k tlom, noge napete
+  base: stand
+  abdomen.raise: -22
+  thorax.pitch: -8
+  legs.knee: 112
+  gait_a.lift: 6
+  fangs.open: 18

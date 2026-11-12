@@ -1,0 +1,17 @@
+# Vzpon: se dvigne na zadnje noge in z vso težo udari s tacama v tla pred sabo.
+name: maul
+length: 1.6
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.50, pose: maul_rear, ease: out, hold: 0.12}
+  - {t: 0.82, pose: maul_slam, ease: strike, hold: 0.25}
+  - {t: 1.60, pose: stand, ease: smooth}
+events:
+  - {t: 0.10, type: sound, sound: warg.snarl}
+  - {t: 0.45, type: lock}
+  - {t: 0.70, type: sound, sound: warg.claw}
+  - {t: 0.82, type: hit, id: maul, shape: circle, forward: 2.6, side: 0, radius: 2.0, tip: paw_fr,
+     damage: 1.4, knockback: 1.6, lift: 0.35}
+  - {t: 0.82, type: sound, sound: warg.land}
+  - {t: 0.82, type: shake, strength: 0.35, radius: 12, duration: 0.35}
+  - {t: 0.82, type: dust, forward: 2.6, side: 0, radius: 1.6, count: 22}

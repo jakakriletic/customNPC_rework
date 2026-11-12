@@ -1,0 +1,16 @@
+# Kas: diagonalna para nog (desna sprednja + leva zadnja, nato obratno).
+# stride = bloki na en cel cikel; čas klipa v igri teče z razdaljo.
+name: walk
+length: 0.8
+loop: true
+stride: 3.2
+beats:
+  - {t: 0.0, pose: trot_a}
+  - {t: 0.2, pose: trot_pass_a, ease: out}
+  - {t: 0.4, pose: trot_b, ease: in}
+  - {t: 0.6, pose: trot_pass_b, ease: out}
+events:
+  - {t: 0.0, type: step, forward: 1.3, side: 0.35}
+  - {t: 0.02, type: step, forward: -0.8, side: -0.4}
+  - {t: 0.4, type: step, forward: 1.3, side: -0.35}
+  - {t: 0.42, type: step, forward: -0.8, side: 0.4}

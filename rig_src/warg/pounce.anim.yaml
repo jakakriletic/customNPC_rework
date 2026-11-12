@@ -1,0 +1,21 @@
+# Skok: se pritaji in skoči ~5 blokov na tarčo (pravi skok: `lunge` z `up`),
+# ob pristanku podre vse pod sabo in jih upočasni.
+# Fizika: up 0.42 -> ~12 tikov v zraku; lunge pri 0.45 s -> pristanek ~1.05 s.
+name: pounce
+length: 1.7
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.38, pose: pounce_crouch, ease: out, hold: 0.05}
+  - {t: 0.58, pose: pounce_leap, ease: strike, airborne: true, add: {body.y: 5}, hold: 0.3}
+  - {t: 1.05, pose: pounce_land, ease: in, hold: 0.15}
+  - {t: 1.70, pose: stand, ease: smooth}
+events:
+  - {t: 0.05, type: sound, sound: warg.snarl}
+  - {t: 0.40, type: lock}
+  - {t: 0.45, type: lunge, forward: 0.42, up: 0.42, ticks: 12}
+  - {t: 0.45, type: sound, sound: warg.bark}
+  - {t: 1.05, type: hit, id: pounce, shape: circle, forward: 1.6, side: 0, radius: 2.4, tip: paw_fr,
+     damage: 1.2, knockback: 1.2, lift: 0.3, effect: slowness, effect_seconds: 3, effect_level: 2}
+  - {t: 1.05, type: sound, sound: [warg.land, warg.bite]}
+  - {t: 1.05, type: shake, strength: 0.4, radius: 12, duration: 0.4}
+  - {t: 1.05, type: dust, forward: 1.2, side: 0, radius: 1.8, count: 26}

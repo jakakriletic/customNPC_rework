@@ -1,0 +1,15 @@
+# Pozdrav: vzpne se na zadnje noge in zarjove; val odrine bližnje.
+name: rear_roar
+length: 2.4
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.55, pose: rear_roar, ease: out}
+  - {t: 1.20, pose: rear_roar, add: {head.turn: 10, jaw.open: -4}}
+  - {t: 1.70, pose: rear_roar, add: {head.turn: -10}, hold: 0.1}
+  - {t: 2.40, pose: stand, ease: smooth}
+events:
+  - {t: 0.45, type: sound, sound: cave_bear.roar}
+  - {t: 0.55, type: shake, strength: 0.4, radius: 18, duration: 1.0}
+  - {t: 0.60, type: hit, id: roar, shape: circle, forward: 1.5, side: 0, radius: 5.0, tip: jaw,
+     damage: 0.0, knockback: 1.0, lift: 0.2}
+  - {t: 2.05, type: step, foot: r, heavy: true}

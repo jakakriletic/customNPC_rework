@@ -1,0 +1,8 @@
+# Bojna drža v zanki (predvajaj z queue/play, ko ima tarčo).
+name: guard
+length: 2.0
+loop: true
+beats:
+  - {t: 0.0, pose: guard}
+  - {t: 1.0, pose: guard_breathe, ease: smooth}
+  - {t: 2.0, pose: guard, ease: smooth}

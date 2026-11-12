@@ -1,0 +1,320 @@
+# Knjižnica poz človeške družine (humanoid, knight, skeleton_warrior).
+# Vrednosti so kontrolniki iz rig.yaml v stopinjah, glede na NJEGOVO levo/desno.
+# Preveri:  py -3 tools/rig/anim/preview.py poses humanoid <ime>
+
+neutral: {}
+
+# ---------------------------------------------------------------- stoja
+stand:
+  opis: sproščena stoja, meč v desni s konico naprej-navzdol, ščit ob levi
+  leg_r.out: 3
+  leg_l.out: 3
+  knee_r.bend: 4
+  knee_l.bend: 4
+  leg_r.raise: 2
+  leg_l.raise: 2
+  arm_r.raise: 14
+  arm_r.out: 8
+  elbow_r.bend: 24
+  wrist_r.bend: -48
+  arm_l.raise: 6
+  arm_l.out: 8
+  elbow_l.bend: 14
+
+stand_breathe:
+  base: stand
+  torso.bend: 2
+  head.nod: -3
+  arm_r.out: 10
+  arm_l.out: 10
+  elbow_r.bend: 27
+
+guard:
+  opis: bojna drža, meč pred sabo konica gor, ščit pred prsmi
+  leg_r.raise: 18
+  leg_l.raise: -14
+  knee_r.bend: 18
+  knee_l.bend: 12
+  leg_r.out: 4
+  leg_l.out: 6
+  torso.twist: 12
+  torso.bend: 6
+  head.turn: -10
+  arm_r.raise: 40
+  arm_r.out: 10
+  elbow_r.bend: 62
+  wrist_r.bend: -18
+  arm_l.raise: 52
+  arm_l.out: -4
+  elbow_l.bend: 74
+
+guard_breathe:
+  base: guard
+  torso.bend: 8
+  knee_r.bend: 21
+  knee_l.bend: 15
+  wrist_r.bend: -22
+
+# ---------------------------------------------------------------- hoja
+walk_contact_r:
+  base: stand
+  leg_r.raise: 28
+  knee_r.bend: 6
+  leg_l.raise: -18
+  knee_l.bend: 14
+  arm_l.raise: 24
+  arm_r.raise: 2
+  torso.twist: -5
+
+walk_pass_l:
+  base: stand
+  leg_r.raise: 2
+  knee_r.bend: 6
+  leg_l.raise: 18
+  knee_l.bend: 55
+  arm_l.raise: 8
+  arm_r.raise: 14
+  body.y: 0.6
+
+walk_contact_l:
+  base: stand
+  leg_l.raise: 28
+  knee_l.bend: 6
+  leg_r.raise: -18
+  knee_r.bend: 14
+  arm_l.raise: -14
+  arm_r.raise: 32
+  torso.twist: 5
+
+walk_pass_r:
+  base: stand
+  leg_l.raise: 2
+  knee_l.bend: 6
+  leg_r.raise: 18
+  knee_r.bend: 55
+  arm_l.raise: 6
+  arm_r.raise: 16
+  body.y: 0.6
+
+# ---------------------------------------------------------------- poševni zamah
+slash_windup:
+  opis: meč visoko nad desno ramo, trup zasukan na desno
+  base: guard
+  torso.twist: -32
+  torso.lean: 6
+  arm_r.raise: 118
+  arm_r.out: 84
+  elbow_r.bend: 40
+  wrist_r.bend: 30
+  head.turn: 6
+
+slash_hit:
+  opis: meč je šel diagonalno čez telo do leve noge
+  base: guard
+  torso.twist: 42
+  torso.bend: 16
+  leg_r.raise: 34
+  knee_r.bend: 30
+  arm_r.raise: 52
+  arm_r.out: -26
+  arm_r.swing: 30
+  elbow_r.bend: 6
+  wrist_r.bend: -20
+  head.turn: -20
+
+# ---------------------------------------------------------------- udarec od zgoraj
+overhead_windup:
+  opis: meč za glavo, telo nazaj
+  base: guard
+  torso.bend: -12
+  torso.twist: -6
+  arm_r.raise: 196
+  arm_r.out: 12
+  elbow_r.bend: 64
+  wrist_r.bend: 40
+  head.nod: -12
+
+overhead_hit:
+  opis: meč udari v tla pred njim
+  base: guard
+  torso.bend: 26
+  torso.twist: 4
+  leg_r.raise: 40
+  knee_r.bend: 44
+  knee_l.bend: 20
+  arm_r.raise: 78
+  arm_r.out: 4
+  elbow_r.bend: 0
+  wrist_r.bend: -62
+  head.nod: 18
+
+# ---------------------------------------------------------------- vbod
+thrust_windup:
+  base: guard
+  torso.twist: -28
+  arm_r.raise: 24
+  arm_r.out: 16
+  elbow_r.bend: 96
+  wrist_r.bend: -78
+  leg_r.raise: 8
+  knee_l.bend: 22
+
+thrust_hit:
+  base: guard
+  torso.twist: 30
+  torso.bend: 12
+  leg_r.raise: 48
+  knee_r.bend: 34
+  leg_l.raise: -26
+  knee_l.bend: 8
+  arm_r.raise: 84
+  arm_r.out: -4
+  elbow_r.bend: 0
+  wrist_r.bend: -86
+  body.z: 3
+
+# ---------------------------------------------------------------- blok s ščitom
+block:
+  opis: ščit dvignjen pred obraz, meč umaknjen
+  base: guard
+  torso.twist: -18
+  torso.bend: 10
+  arm_l.raise: 86
+  arm_l.out: -12
+  elbow_l.bend: 70
+  arm_r.raise: 30
+  elbow_r.bend: 70
+  wrist_r.bend: 50
+  head.nod: 10
+  knee_r.bend: 26
+  knee_l.bend: 22
+
+# ---------------------------------------------------------------- brca
+kick_windup:
+  base: guard
+  leg_r.raise: 70
+  knee_r.bend: 100
+  torso.bend: -10
+  arm_l.out: 30
+
+kick_hit:
+  base: guard
+  leg_r.raise: 82
+  knee_r.bend: 6
+  leg_l.raise: -6
+  knee_l.bend: 10
+  torso.bend: -22
+  arm_l.out: 36
+  arm_r.out: 28
+  body.z: 2
+
+# ---------------------------------------------------------------- vrtinec (boss)
+spin_ready:
+  opis: meč iztegnjen vstran za vrtenje
+  base: guard
+  arm_r.raise: 10
+  arm_r.out: 86
+  elbow_r.bend: 0
+  wrist_r.bend: 0
+  arm_r.swing: 0
+  arm_l.raise: 70
+  arm_l.out: 60
+  elbow_l.bend: 10
+  torso.bend: 10
+  knee_r.bend: 30
+  knee_l.bend: 30
+
+# ---------------------------------------------------------------- skok in udarec
+crouch:
+  base: guard
+  leg_r.raise: 46
+  leg_l.raise: 30
+  knee_r.bend: 92
+  knee_l.bend: 92
+  torso.bend: 30
+  arm_r.raise: 30
+  elbow_r.bend: 90
+  wrist_r.bend: 60
+
+airborne:
+  base: overhead_windup
+  leg_r.raise: 50
+  knee_r.bend: 80
+  leg_l.raise: 20
+  knee_l.bend: 70
+
+# ---------------------------------------------------------------- bojni krik
+warcry:
+  opis: meč visoko v zrak, glava nazaj
+  base: stand
+  leg_r.raise: 12
+  leg_l.raise: -8
+  leg_r.out: 8
+  leg_l.out: 8
+  torso.bend: -14
+  head.nod: -30
+  arm_r.raise: 172
+  arm_r.out: 14
+  elbow_r.bend: 4
+  wrist_r.bend: -88
+  arm_l.raise: 40
+  arm_l.out: 60
+  elbow_l.bend: 40
+
+# ---------------------------------------------------------------- pozdrav
+salute:
+  opis: meč pokonci pred obrazom
+  base: stand
+  arm_r.raise: 70
+  arm_r.out: -18
+  elbow_r.bend: 124
+  wrist_r.bend: -30
+  head.nod: 6
+
+wave_up:
+  base: stand
+  arm_l.raise: 150
+  arm_l.out: 30
+  elbow_l.bend: 30
+
+wave_side:
+  base: stand
+  arm_l.raise: 150
+  arm_l.out: 50
+  elbow_l.bend: 50
+
+# ---------------------------------------------------------------- škoda in smrt
+hurt:
+  base: stand
+  torso.bend: -10
+  torso.lean: 6
+  head.nod: -24
+  head.tilt: 10
+  arm_l.out: 30
+  arm_l.raise: 24
+  arm_r.out: 26
+
+death_kneel:
+  base: stand
+  leg_r.raise: 6
+  leg_l.raise: 74
+  knee_r.bend: 104
+  knee_l.bend: 96
+  torso.bend: 26
+  head.nod: 22
+  arm_r.raise: 10
+  arm_r.out: 26
+  arm_l.out: 26
+  wrist_r.bend: 0
+
+death_fall:
+  base: death_kneel
+  body.pitch: 84
+  leg_l.raise: 10
+  knee_l.bend: 26
+  knee_r.bend: 26
+  arm_r.raise: 118
+  arm_l.raise: 104
+  arm_r.out: 30
+  arm_l.out: 40
+  head.nod: -16

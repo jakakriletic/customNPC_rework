@@ -1,0 +1,17 @@
+# 3. Teptanje: dvigne desno nogo in tresne ob tla; val odrine vse okoli njega
+#    za približno blok nazaj.
+name: stomp
+length: 1.6
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.55, pose: stomp_lift, ease: out, hold: 0.15}
+  - {t: 0.82, pose: stomp_hit, ease: strike, overshoot: 0.05, hold: 0.2}
+  - {t: 1.60, pose: stand, ease: smooth}
+events:
+  - {t: 0.10, type: sound, sound: troll.grunt}
+  - {t: 0.82, type: step, foot: r, heavy: true}
+  - {t: 0.82, type: hit, id: stomp, shape: circle, forward: 0.6, side: 0.3, radius: 4.2, tip: foot_r,
+     damage: 0.6, knockback: 1.0, lift: 0.3}
+  - {t: 0.82, type: sound, sound: troll.stomp}
+  - {t: 0.82, type: shake, strength: 0.7, radius: 18, duration: 0.5}
+  - {t: 0.82, type: dust, forward: 0.6, side: 0.3, radius: 3.5, count: 50}

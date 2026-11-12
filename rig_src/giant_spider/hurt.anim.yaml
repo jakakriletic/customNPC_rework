@@ -1,0 +1,6 @@
+name: hurt
+length: 0.4
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.10, pose: hurt, ease: out}
+  - {t: 0.40, pose: stand, ease: soft}

@@ -1,0 +1,14 @@
+# Zamah s šapo: desna prednja šapa čez sprednjo stran (lok), močan odriv vstran.
+name: swipe
+length: 1.2
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.38, pose: swipe_windup, ease: out, hold: 0.08}
+  - {t: 0.60, pose: swipe_hit, ease: strike, overshoot: 0.08}
+  - {t: 1.20, pose: stand, ease: smooth}
+events:
+  - {t: 0.05, type: sound, sound: cave_bear.snarl}
+  - {t: 0.35, type: lock}
+  - {t: 0.50, type: sound, sound: cave_bear.claw}
+  - {t: 0.60, type: hit, id: swipe, shape: arc, forward: 0, side: 0, radius: 4.4, arc: 120, dir: 0,
+     tip: paw_fr, damage: 1.0, knockback: 2.4, lift: 0.4}

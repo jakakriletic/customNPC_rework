@@ -1,0 +1,22 @@
+# 6. Met skale: pobere skalo s tal, jo dvigne za glavo in vrže v tarčo (8-22 blokov).
+#    Skala je prop (prop_rock): vidna samo med t=0.42 in t=1.25.  `projectile`
+#    jo izstreli iz konice `rock` (compile.py zapiše njen položaj kot `origin`).
+name: throw
+length: 2.3
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.40, pose: throw_pick, add: {rock.show: -1.25}, ease: out}
+  - {t: 0.42, pose: throw_pick, hold: 0.08}
+  - {t: 0.95, pose: throw_windup, ease: out, hold: 0.14}
+  - {t: 1.25, pose: throw_release, ease: strike}
+  - {t: 1.27, pose: throw_release, add: {rock.show: -1.25}}
+  - {t: 1.55, pose: throw_follow, ease: out}
+  - {t: 2.30, pose: stand, ease: smooth}
+events:
+  - {t: 0.05, type: sound, sound: troll.grunt}
+  - {t: 0.40, type: dust, forward: 0.0, side: -2.0, radius: 0.8, count: 12}
+  - {t: 0.90, type: lock}
+  - {t: 1.10, type: sound, sound: troll.swing}
+  - {t: 1.25, type: projectile, kind: rock, from: rock, speed: 0.75, damage: 0.9, radius: 2.2,
+     knockback: 1.0, lift: 0.3, impact_sound: troll.club_impact}
+  - {t: 1.25, type: sound, sound: troll.grunt, pitch: 1.1}

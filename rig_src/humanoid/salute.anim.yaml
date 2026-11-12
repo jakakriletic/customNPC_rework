@@ -1,0 +1,7 @@
+# Pozdrav z mečem.
+name: salute
+length: 1.6
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.40, pose: salute, ease: out, hold: 0.6}
+  - {t: 1.60, pose: stand, ease: smooth}

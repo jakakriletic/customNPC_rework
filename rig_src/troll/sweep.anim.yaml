@@ -1,0 +1,15 @@
+# 2. Vodoravni zamah s kijem od desne proti levi v višini pasu.
+name: sweep
+length: 1.7
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.50, pose: sweep_windup, ease: out, hold: 0.14}
+  - {t: 0.82, pose: sweep_hit, ease: in}
+  - {t: 1.00, pose: sweep_follow, ease: out, hold: 0.2}
+  - {t: 1.70, pose: stand, ease: smooth}
+events:
+  - {t: 0.05, type: sound, sound: troll.grunt}
+  - {t: 0.50, type: lock}
+  - {t: 0.70, type: sound, sound: troll.swing}
+  - {t: 0.82, type: hit, id: sweep, shape: arc, forward: 0, side: 0, radius: 6.4, arc: 170, dir: 0,
+     damage: 0.8, knockback: 2.2, lift: 0.4}

@@ -1,0 +1,67 @@
+# Rig warga (štirinožec).  Model:  py -3 tools/models/build_warg.py
+geo: dev/src/patch/resources/assets/customnpcs/rig/warg.geo.json
+texture: dev/src/patch/resources/assets/customnpcs/textures/rig/warg.png
+output: dev/src/patch/resources/assets/customnpcs/rig/warg.animation.json
+
+feet: [pawFR, pawFL, pawHR, pawHL]
+
+tips:
+  jaw:     {bone: jaw,   at: [0, 27, -48]}    # konica spodnje čeljusti (ugriz)
+  nose:    {bone: head,  at: [0, 33, -50]}
+  paw_fr:  {bone: pawFR, at: [-5.5, 0, -20]}
+  paw_fl:  {bone: pawFL, at: [5.5, 0, -20]}
+  paw_hr:  {bone: pawHR, at: [-6, 0, 11]}
+  paw_hl:  {bone: pawHL, at: [6, 0, 11]}
+  tail:    {bone: tail2, at: [0, 12, 36]}
+weapon_tip: jaw
+trace: [jaw, paw_fr]
+solid: [chest]
+
+controls:
+  spine.bend:    [chest, rotation, x, 1]     # prednji del dol (+) / gor (-)
+  hips.bend:     [hips, rotation, x, -1]     # zadnji del dol (+) — čepenje
+  neck.raise:    [neck, rotation, x, -1]     # vrat gor
+  head.nod:      [head, rotation, x, 1]      # gobec dol
+  head.turn:     [head, rotation, y, -1]     # glava na NJEGOVO levo
+  head.tilt:     [head, rotation, z, -1]
+  jaw.open:      [jaw, rotation, x, 1]       # odprta usta (0..45)
+  leg_fr.swing:  [legFR, rotation, x, -1]    # prednja noga naprej
+  leg_fl.swing:  [legFL, rotation, x, -1]
+  knee_fr.bend:  [legFR2, rotation, x, 1]    # zapestje: tačka nazaj
+  knee_fl.bend:  [legFL2, rotation, x, 1]
+  paw_fr.bend:   [pawFR, rotation, x, 1]
+  paw_fl.bend:   [pawFL, rotation, x, 1]
+  leg_hr.swing:  [legHR, rotation, x, -1]    # zadnja noga naprej
+  leg_hl.swing:  [legHL, rotation, x, -1]
+  hock_hr.bend:  [legHR2, rotation, x, -1]   # skočni sklep: tačka naprej
+  hock_hl.bend:  [legHL2, rotation, x, -1]
+  paw_hr.bend:   [pawHR, rotation, x, 1]
+  paw_hl.bend:   [pawHL, rotation, x, 1]
+  leg_fr.out:    [legFR, rotation, z, 1]
+  leg_fl.out:    [legFL, rotation, z, -1]
+  tail.raise:    [tail, rotation, x, 1]      # rep gor
+  tail.wag:      [tail, rotation, y, 1]
+  tail2.curl:    [tail2, rotation, x, 1]
+  body.pitch:    [body, rotation, x, 1]      # celo telo z glavo dol
+  body.turn:     [body, rotation, y, -1]
+  body.roll:     [body, rotation, z, -1]     # na NJEGOVO desno
+  body.x:        [body, position, x, -1]
+  body.y:        [body, position, y, 1]
+  body.z:        [body, position, z, -1]     # naprej
+
+limits:
+  jaw.open: [-2, 50]
+  head.nod: [-60, 60]
+  neck.raise: [-50, 80]
+  spine.bend: [-60, 40]
+
+mirror:
+  legFR: legFL
+  legFR2: legFL2
+  pawFR: pawFL
+  legHR: legHL
+  legHR2: legHL2
+  pawHR: pawHL
+
+# Predogled: warg je manjši in dolg, zato večje merilo in bolj na sredini.
+preview: {scale: 1.65, side: 0.42, three_quarter: 0.5}

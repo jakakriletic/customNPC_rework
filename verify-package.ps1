@@ -5,6 +5,14 @@ $candidatePath = Join-Path $PSScriptRoot 'dev\build\libs\CustomNPCs_1.12.2-01Oct
 $allowed = @(Get-ChildItem (Join-Path $PSScriptRoot 'dev\build\classes\java\main') -Recurse -Filter '*.class' | ForEach-Object {
     $_.FullName.Substring((Join-Path $PSScriptRoot 'dev\build\classes\java\main').Length + 1).Replace('\', '/')
 })
+# M16: built-in rigged models (new files only, never an original entry).
+$rigRoot = Join-Path $PSScriptRoot 'dev\build\resources\main'
+foreach ($sub in @('assets\rwrig', 'assets\customnpcs\rig', 'assets\customnpcs\textures\rig')) {
+    $dir = Join-Path $rigRoot $sub
+    if (Test-Path -LiteralPath $dir) {
+        $allowed += @(Get-ChildItem $dir -Recurse -File | ForEach-Object { $_.FullName.Substring($rigRoot.Length + 1).Replace('\', '/') })
+    }
+}
 $original = [System.IO.Compression.ZipFile]::OpenRead($originalPath)
 $candidate = [System.IO.Compression.ZipFile]::OpenRead($candidatePath)
 function Get-EntryHash($entry) {

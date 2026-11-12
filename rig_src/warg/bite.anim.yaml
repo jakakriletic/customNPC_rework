@@ -1,0 +1,16 @@
+# Ugriz: kratek poskok naprej in hlast z gobcem.
+name: bite
+length: 0.95
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.22, pose: bite_crouch, ease: out}
+  - {t: 0.40, pose: bite_lunge, ease: strike}
+  - {t: 0.48, pose: bite_snap, ease: in, hold: 0.1}
+  - {t: 0.95, pose: stand, ease: smooth}
+events:
+  - {t: 0.05, type: sound, sound: warg.growl}
+  - {t: 0.25, type: lock}
+  - {t: 0.25, type: lunge, forward: 0.32, ticks: 3}
+  - {t: 0.48, type: hit, id: bite, shape: arc, forward: 0, side: 0, radius: 4.2, arc: 60, dir: 0,
+     damage: 1.0, knockback: 0.6, lift: 0.2}
+  - {t: 0.48, type: sound, sound: warg.bite}

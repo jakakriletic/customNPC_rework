@@ -1,0 +1,91 @@
+# Rig orjaškega pajka.  Model:  py -3 tools/models/build_giant_spider.py
+# Ta datoteka je napisana ročno po vzorcu; noge so oštevilčene od spredaj (1) nazaj (4).
+geo: dev/src/patch/resources/assets/customnpcs/rig/giant_spider.geo.json
+texture: dev/src/patch/resources/assets/customnpcs/textures/rig/giant_spider.png
+output: dev/src/patch/resources/assets/customnpcs/rig/giant_spider.animation.json
+
+# Osnovna poza ni stoja (noge so vodoravne), zato tla podamo: y = 0 px.
+floor: 0
+feet: [legR1b, legR2b, legR3b, legR4b, legL1b, legL2b, legL3b, legL4b]
+
+tips:
+  fangs:     {bone: fangR, at: [-2.5, 1.5, -19.5]}   # konica desnega čeljustnika (ugriz)
+  spinneret: {bone: abdomen, at: [0, 14.5, 29.5]}   # predilnica (mreža)
+  mouth:     {bone: head, at: [0, 9, -19]}
+  foot_r1:  {bone: legR1b, at: [-43.5, 14, -9]}
+  foot_r2:  {bone: legR2b, at: [-43.5, 14, -5]}
+  foot_r3:  {bone: legR3b, at: [-43.5, 14, -1]}
+  foot_r4:  {bone: legR4b, at: [-43.5, 14, 3]}
+  foot_l1:  {bone: legL1b, at: [43.5, 14, -9]}
+  foot_l2:  {bone: legL2b, at: [43.5, 14, -5]}
+  foot_l3:  {bone: legL3b, at: [43.5, 14, -1]}
+  foot_l4:  {bone: legL4b, at: [43.5, 14, 3]}
+weapon_tip: fangs
+trace: [fangs, foot_r1]
+solid: [thorax, abdomen]
+
+# kontrolnik: [kost, kanal, os, predznak] ali seznam takih (premakne več kosti hkrati).
+# Za vsako nogo:  lift + = stegno gor,  knee + = goleno navzdol,  swing + = noga naprej.
+controls:
+  leg_r1.lift:  [legR1, rotation, z, 1]
+  leg_r1.knee:  [legR1b, rotation, z, -1]
+  leg_r1.swing: [legR1, rotation, y, -1]
+  leg_r2.lift:  [legR2, rotation, z, 1]
+  leg_r2.knee:  [legR2b, rotation, z, -1]
+  leg_r2.swing: [legR2, rotation, y, -1]
+  leg_r3.lift:  [legR3, rotation, z, 1]
+  leg_r3.knee:  [legR3b, rotation, z, -1]
+  leg_r3.swing: [legR3, rotation, y, -1]
+  leg_r4.lift:  [legR4, rotation, z, 1]
+  leg_r4.knee:  [legR4b, rotation, z, -1]
+  leg_r4.swing: [legR4, rotation, y, -1]
+  leg_l1.lift:  [legL1, rotation, z, -1]
+  leg_l1.knee:  [legL1b, rotation, z, 1]
+  leg_l1.swing: [legL1, rotation, y, 1]
+  leg_l2.lift:  [legL2, rotation, z, -1]
+  leg_l2.knee:  [legL2b, rotation, z, 1]
+  leg_l2.swing: [legL2, rotation, y, 1]
+  leg_l3.lift:  [legL3, rotation, z, -1]
+  leg_l3.knee:  [legL3b, rotation, z, 1]
+  leg_l3.swing: [legL3, rotation, y, 1]
+  leg_l4.lift:  [legL4, rotation, z, -1]
+  leg_l4.knee:  [legL4b, rotation, z, 1]
+  leg_l4.swing: [legL4, rotation, y, 1]
+  # skupine
+  legs.lift: [[legR1, rotation, z, 1], [legR2, rotation, z, 1], [legR3, rotation, z, 1], [legR4, rotation, z, 1], [legL1, rotation, z, -1], [legL2, rotation, z, -1], [legL3, rotation, z, -1], [legL4, rotation, z, -1]]
+  legs.knee: [[legR1b, rotation, z, -1], [legR2b, rotation, z, -1], [legR3b, rotation, z, -1], [legR4b, rotation, z, -1], [legL1b, rotation, z, 1], [legL2b, rotation, z, 1], [legL3b, rotation, z, 1], [legL4b, rotation, z, 1]]
+  gait_a.lift: [[legR1, rotation, z, 1], [legL2, rotation, z, -1], [legR3, rotation, z, 1], [legL4, rotation, z, -1]]
+  gait_a.knee: [[legR1b, rotation, z, -1], [legL2b, rotation, z, 1], [legR3b, rotation, z, -1], [legL4b, rotation, z, 1]]
+  gait_a.swing: [[legR1, rotation, y, -1], [legL2, rotation, y, 1], [legR3, rotation, y, -1], [legL4, rotation, y, 1]]
+  gait_b.lift: [[legL1, rotation, z, -1], [legR2, rotation, z, 1], [legL3, rotation, z, -1], [legR4, rotation, z, 1]]
+  gait_b.knee: [[legL1b, rotation, z, 1], [legR2b, rotation, z, -1], [legL3b, rotation, z, 1], [legR4b, rotation, z, -1]]
+  gait_b.swing: [[legL1, rotation, y, 1], [legR2, rotation, y, -1], [legL3, rotation, y, 1], [legR4, rotation, y, -1]]
+  front.lift: [[legR1, rotation, z, 1], [legL1, rotation, z, -1]]
+  front.knee: [[legR1b, rotation, z, -1], [legL1b, rotation, z, 1]]
+  front.swing: [[legR1, rotation, y, -1], [legL1, rotation, y, 1]]
+  # telo
+  head.nod:      [head, rotation, x, 1]       # glava dol
+  head.turn:     [head, rotation, y, -1]      # na NJEGOVO levo
+  fangs.open:    [[fangR, rotation, z, -1], [fangL, rotation, z, 1]]   # čeljustnika narazen
+  fangs.raise:   [[fangR, rotation, x, -1], [fangL, rotation, x, -1]]  # čeljustnika naprej/gor
+  abdomen.raise: [abdomen, rotation, x, 1]    # zadek gor
+  thorax.pitch:  [thorax, rotation, x, 1]     # prednji del dol
+  body.pitch:    [body, rotation, x, 1]
+  body.roll:     [body, rotation, z, -1]
+  body.turn:     [body, rotation, y, -1]
+  body.x:        [body, position, x, -1]
+  body.y:        [body, position, y, 1]
+  body.z:        [body, position, z, -1]
+
+mirror:
+  legR1: legL1
+  legR1b: legL1b
+  legR2: legL2
+  legR2b: legL2b
+  legR3: legL3
+  legR3b: legL3b
+  legR4: legL4
+  legR4b: legL4b
+  fangR: fangL
+
+preview: {scale: 1.9, side: 0.45, three_quarter: 0.5}

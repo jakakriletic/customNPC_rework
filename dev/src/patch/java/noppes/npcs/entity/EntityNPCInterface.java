@@ -300,6 +300,10 @@ IAnimals {
     private int rwFlightMode;
     /** M3.8 (R6): nacin hitboxa (HitboxWeights); na klientu ze ucinkovit nacin iz spawn podatkov. */
     private int rwHitboxMode;
+    /** M16: rigged model and its clips (NBT RwRig, also in spawn data); kept unchanged with RwAnimCore=0. */
+    public noppes.npcs.rework.rig.RigData rwRig = new noppes.npcs.rework.rig.RigData();
+    /** M16: the action clip being played (not saved). */
+    public final noppes.npcs.rework.rig.RigPlayer rwRigPlayer = new noppes.npcs.rework.rig.RigPlayer();
     /** M11.1 (Q297): army name (NBT RwArmy, string); empty = no army, no key. Kept with RwArmies=0 too. */
     private String rwArmy = "";
     /** M3.8b: na klientu shranjeni nacin iz spawn podatkov (za GUI Display); na serverju se ne rabi. */
@@ -457,6 +461,9 @@ IAnimals {
             EventHooks.onNPCTick(this);
         }
         this.timers.update();
+        if (CustomNpcs.RwAnimCore == 1 && this.rwRig.active()) {
+            this.rwRigPlayer.tick(this);
+        }
         if (this.world.isRemote && this.wasKilled != this.isKilled()) {
             this.deathTime = 0;
             this.updateHitbox();
@@ -1156,6 +1163,7 @@ IAnimals {
         this.rwFlightMode = FlightMode.read(compound).id();
         this.rwHitboxMode = HitboxWeights.sanitize(compound.getInteger("RwHitboxMode"));
         this.rwArmy = ArmyRegistry.readNpc(compound);
+        this.rwRig = noppes.npcs.rework.rig.RigData.read(compound);
         this.script.readFromNBT(compound);
         this.timers.readFromNBT(compound);
         this.advanced.readToNBT(compound);
@@ -1194,6 +1202,7 @@ IAnimals {
             compound.removeTag("RwHitboxMode");
         }
         ArmyRegistry.writeNpc(compound, this.rwArmy);
+        this.rwRig.write(compound);
         this.script.writeToNBT(compound);
         this.timers.writeToNBT(compound);
         this.advanced.writeToNBT(compound);
@@ -1726,6 +1735,10 @@ IAnimals {
             compound.setInteger("RwHitboxMode", hitbox);
         }
         HitboxGui.writeSpawn(compound, this.rwHitboxMode);
+        if (CustomNpcs.RwAnimCore == 1 && this.rwRig.active()) {
+            this.rwRig.write(compound);
+            this.rwRigPlayer.writeSpawn(compound);
+        }
         return compound;
     }
 
@@ -1743,6 +1756,9 @@ IAnimals {
         ++this.rwLookVersion;
         this.rwHitboxMode = HitboxWeights.sanitize(compound.getInteger("RwHitboxMode"));
         this.rwHitboxStored = HitboxGui.readStored(compound);
+        noppes.npcs.rework.rig.RigData rig = noppes.npcs.rework.rig.RigData.read(compound);
+        if (!rig.sameAs(this.rwRig)) { this.rwRig = rig; }
+        this.rwRigPlayer.readSpawn(compound);
         this.stats.setMaxHealth(compound.getInteger("MaxHealth"));
         this.ais.setWalkingSpeed(compound.getInteger("Speed"));
         this.stats.hideKilledBody = compound.getBoolean("DeadBody");

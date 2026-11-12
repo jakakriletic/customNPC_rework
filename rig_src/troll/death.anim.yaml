@@ -1,0 +1,13 @@
+# Smrt: pade na kolena in na trebuh (Minecraft telo odstrani po 1 s).
+name: death
+length: 1.0
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.35, pose: death_kneel, ease: in}
+  - {t: 0.85, pose: death_fall, ease: strike, airborne: true, add: {body.y: 14}}
+  - {t: 1.00, pose: death_fall, airborne: true, add: {body.y: 14}}
+events:
+  - {t: 0.35, type: step, foot: r, heavy: true}
+  - {t: 0.85, type: sound, sound: troll.body_fall}
+  - {t: 0.85, type: shake, strength: 0.9, radius: 20, duration: 0.6}
+  - {t: 0.85, type: dust, forward: 3.0, side: 0, radius: 2.5, count: 40}

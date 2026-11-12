@@ -1,0 +1,8 @@
+# Mirovanje: težko dihanje, kij počiva na tleh.
+name: idle
+length: 3.2
+loop: true
+beats:
+  - {t: 0.0, pose: stand}
+  - {t: 1.6, pose: stand_breathe, ease: smooth}
+  - {t: 3.2, pose: stand, ease: smooth}

@@ -1,0 +1,12 @@
+# Hiter vbod z izpadnim korakom.
+name: thrust
+length: 0.8
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.25, pose: thrust_windup, ease: out, hold: 0.05}
+  - {t: 0.40, pose: thrust_hit, ease: strike, hold: 0.1}
+  - {t: 0.80, pose: stand, ease: smooth}
+events:
+  - {t: 0.30, type: sound, sound: minecraft:entity.player.attack.knockback}
+  - {t: 0.40, type: hit, id: thrust, shape: arc, radius: 3.2, arc: 40, damage: 1.2, knockback: 0.4, lift: 0.1}
+  - {t: 0.36, type: lunge, forward: 0.35}

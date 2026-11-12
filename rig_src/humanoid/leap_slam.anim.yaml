@@ -1,0 +1,14 @@
+# Skok naprej in udarec v tla (boss): odrine vse okoli mesta pristanka.
+name: leap_slam
+length: 1.8
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.35, pose: crouch, ease: out}
+  - {t: 0.70, pose: airborne, ease: out, airborne: true}
+  - {t: 1.00, pose: overhead_hit, ease: strike, hold: 0.3}
+  - {t: 1.80, pose: stand, ease: smooth}
+events:
+  - {t: 0.35, type: lunge, forward: 0.55, up: 0.55}
+  - {t: 0.35, type: sound, sound: minecraft:entity.player.attack.strong}
+  - {t: 1.00, type: hit, id: slam, shape: circle, forward: 1.5, radius: 3.0, damage: 1.8, falloff: 0.5, knockback: 2.0, lift: 0.5}
+  - {t: 1.00, type: sound, sound: minecraft:entity.generic.explode, volume: 0.7}

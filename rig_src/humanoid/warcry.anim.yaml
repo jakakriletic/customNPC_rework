@@ -1,0 +1,10 @@
+# Bojni krik: meč v zrak, zaceli se in prestraši (zvok), ob novi tarči ali pod polovico zdravja.
+name: warcry
+length: 1.8
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.40, pose: warcry, ease: out, hold: 0.8}
+  - {t: 1.80, pose: stand, ease: smooth}
+events:
+  - {t: 0.40, type: sound, sound: minecraft:entity.ravager.roar}
+  - {t: 0.45, type: heal, amount: 4}

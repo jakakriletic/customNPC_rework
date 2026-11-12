@@ -1,0 +1,42 @@
+# Vedenje warga: hiter, a krhek plenilec, ki lovi v tropu.
+name: Warg
+hitbox: [1.7, 2.3]
+step_height: 1.1
+shadow: 1.3
+health: 120
+melee: 14
+melee_range: 3
+speed: 7
+knockback_resist: false
+talk_interval: 200
+volume: 1.6
+voice:
+  idle: warg.idle
+  angry: warg.growl
+  hurt: warg.hurt
+  death: warg.death
+
+attacks:
+  - {clip: bite,   min: 0.0, max: 3.6, weight: 5, cooldown: 18,  recover: 6}
+  - {clip: maul,   min: 0.5, max: 3.4, weight: 3, cooldown: 60,  recover: 10, crowd: 1.0}
+  - {clip: pounce, min: 3.5, max: 7.5, weight: 4, cooldown: 100, recover: 12, wounded: 2}
+
+greet: {clip: howl, range: 24, cooldown: 900, recover: 6}
+
+# Ranjen warg postane besen: hitrejši in pogostejši napadi.
+enrage: {below: 0.3, damage: 1.2, speed: 1.3, cooldown: 0.6}
+
+step:
+  sound: warg.step
+  volume: 0.6
+  heavy_volume: 1.0
+  shake: 0
+
+sound_volume:
+  warg.howl: 6.0
+  warg.bite: 1.4
+  warg.land: 1.6
+  warg.claw: 1.2
+  warg.snarl: 1.6
+  warg.bark: 1.8
+  warg.growl: 1.5

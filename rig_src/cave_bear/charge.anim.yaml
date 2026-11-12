@@ -1,0 +1,30 @@
+# Naskok: steče ~6 blokov naravnost; kar je na poti, zbije in odrine.
+# lunge 0.5 bloka/tik × 12 tikov; zadetki vsakih 0.2 s pred njim.
+name: charge
+length: 1.5
+beats:
+  - {t: 0.00, pose: growl}
+  - {t: 0.30, pose: charge_a, ease: out}
+  - {t: 0.45, pose: charge_b, ease: linear}
+  - {t: 0.60, pose: charge_a, ease: linear}
+  - {t: 0.75, pose: charge_b, ease: linear}
+  - {t: 0.90, pose: charge_a, ease: linear}
+  - {t: 1.05, pose: maul_slam, ease: out, hold: 0.1}
+  - {t: 1.50, pose: stand, ease: smooth}
+events:
+  - {t: 0.05, type: sound, sound: [cave_bear.roar, cave_bear.snarl]}
+  - {t: 0.28, type: lock}
+  - {t: 0.30, type: lunge, forward: 0.5, ticks: 12}
+  - {t: 0.30, type: step, forward: 1.5, side: 0.5, heavy: true}
+  - {t: 0.45, type: step, forward: 1.5, side: -0.5, heavy: true}
+  - {t: 0.60, type: step, forward: 1.5, side: 0.5, heavy: true}
+  - {t: 0.75, type: step, forward: 1.5, side: -0.5, heavy: true}
+  - {t: 0.90, type: step, forward: 1.5, side: 0.5, heavy: true}
+  - {t: 0.45, type: hit, id: charge1, shape: circle, forward: 2.2, side: 0, radius: 1.8, tip: jaw,
+     damage: 1.2, knockback: 3.0, lift: 0.5}
+  - {t: 0.70, type: hit, id: charge2, shape: circle, forward: 2.2, side: 0, radius: 1.8, tip: jaw,
+     damage: 1.2, knockback: 3.0, lift: 0.5}
+  - {t: 0.95, type: hit, id: charge3, shape: circle, forward: 2.2, side: 0, radius: 1.8, tip: jaw,
+     damage: 1.2, knockback: 3.0, lift: 0.5}
+  - {t: 1.05, type: shake, strength: 0.5, radius: 14, duration: 0.4}
+  - {t: 1.05, type: dust, forward: 2.0, side: 0, radius: 1.6, count: 26}

@@ -193,6 +193,8 @@ public final class ClientHarness {
             // P7b: blendTo pose acceptance with the optional entities mod, explicit functional job.
             if (AnimBlendHarness.installIfRequested(path)) { return; }
             if (AnimReloadHarness.installIfRequested(path)) { return; }
+            // M16: built-in animation core acceptance, explicit functional job.
+            if (RigHarness.installIfRequested(path)) { return; }
             if (ArmySnapshotHarness.installIfRequested(path)) { return; }
             if (ArmyGuiHarness.installIfRequested(path)) { return; }
             if (ArmyPermHarness.installIfRequested(path)) { return; }

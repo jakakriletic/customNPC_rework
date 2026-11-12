@@ -1,0 +1,15 @@
+# Ugriz: dvigne prednje noge in sune s strupenima čeljustnikoma.
+name: bite
+length: 1.0
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.32, pose: bite_rear, ease: out, hold: 0.08}
+  - {t: 0.50, pose: bite_strike, ease: strike, hold: 0.12}
+  - {t: 1.00, pose: stand, ease: smooth}
+events:
+  - {t: 0.05, type: sound, sound: giant_spider.hiss}
+  - {t: 0.30, type: lock}
+  - {t: 0.38, type: lunge, forward: 0.25, ticks: 3}
+  - {t: 0.50, type: hit, id: bite, shape: arc, forward: 0, side: 0, radius: 3.2, arc: 70, dir: 0,
+     damage: 1.0, knockback: 0.4, lift: 0.15, effect: poison, effect_seconds: 5, effect_level: 1}
+  - {t: 0.50, type: sound, sound: giant_spider.bite}

@@ -1,0 +1,10 @@
+# Grožnja ob novi tarči: se vzpne in zasika.
+name: threat
+length: 1.8
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.45, pose: threat, ease: back}
+  - {t: 1.20, pose: threat, add: {fangs.open: 8, front.swing: 6}, hold: 0.1}
+  - {t: 1.80, pose: stand, ease: smooth}
+events:
+  - {t: 0.35, type: sound, sound: giant_spider.hiss, volume: 2.5, pitch: 0.8}

@@ -1,0 +1,14 @@
+# Mladiči: pritisne zadek k tlom in za sabo izleže dva jamska pajka
+# (največ 6 živih v okolici).
+name: brood
+length: 1.8
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.50, pose: brood_lay, ease: out}
+  - {t: 0.80, pose: brood_lay, add: {abdomen.raise: -6}, hold: 0.25}
+  - {t: 1.80, pose: stand, ease: smooth}
+events:
+  - {t: 0.10, type: sound, sound: giant_spider.hiss}
+  - {t: 0.80, type: summon, entity: "minecraft:cave_spider", count: 2, max_alive: 6, forward: -2.2, side: 0, radius: 1.0}
+  - {t: 0.80, type: sound, sound: giant_spider.web}
+  - {t: 0.80, type: dust, forward: -2.0, side: 0, radius: 1.2, count: 16}

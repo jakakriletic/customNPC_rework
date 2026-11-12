@@ -1,0 +1,9 @@
+# Dvigne ščit in ga drži.
+name: block
+length: 1.2
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.15, pose: block, ease: out, hold: 0.8}
+  - {t: 1.20, pose: stand, ease: smooth}
+events:
+  - {t: 0.15, type: sound, sound: minecraft:item.shield.block, volume: 0.5}

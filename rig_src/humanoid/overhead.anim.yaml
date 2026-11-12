@@ -1,0 +1,12 @@
+# Močan udarec od zgoraj v tla pred sabo.
+name: overhead
+length: 1.3
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.45, pose: overhead_windup, ease: out, hold: 0.12}
+  - {t: 0.70, pose: overhead_hit, ease: strike, hold: 0.2}
+  - {t: 1.30, pose: stand, ease: smooth}
+events:
+  - {t: 0.55, type: sound, sound: minecraft:entity.player.attack.strong}
+  - {t: 0.70, type: hit, id: overhead, shape: circle, forward: 1.8, radius: 1.4, damage: 1.5, knockback: 1.0, lift: 0.3}
+  - {t: 0.70, type: sound, sound: minecraft:entity.zombie.attack_iron_door, volume: 0.6}

@@ -1,0 +1,17 @@
+# 1. Udarec od zgoraj: kij visoko za glavo in z vso težo v tla pred njim.
+name: smash
+length: 2.0
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.55, pose: smash_windup, ease: out, hold: 0.22}
+  - {t: 0.95, pose: smash_hit, ease: strike, hold: 0.35}
+  - {t: 2.00, pose: stand, ease: smooth}
+events:
+  - {t: 0.10, type: sound, sound: troll.grunt}
+  - {t: 0.60, type: lock}
+  - {t: 0.78, type: sound, sound: troll.swing}
+  - {t: 0.95, type: hit, id: smash, shape: circle, forward: 5.1, side: 0.8, radius: 2.6,
+     damage: 1.0, knockback: 1.2, lift: 0.35}
+  - {t: 0.95, type: sound, sound: [troll.club_impact, troll.wood_crack]}
+  - {t: 0.95, type: shake, strength: 1.0, radius: 24, duration: 0.7}
+  - {t: 0.95, type: dust, forward: 5.1, side: 0.8, radius: 2.4, count: 40}

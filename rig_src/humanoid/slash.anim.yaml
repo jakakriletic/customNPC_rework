@@ -1,0 +1,11 @@
+# Poševni zamah od desne rame čez telo.
+name: slash
+length: 0.9
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.30, pose: slash_windup, ease: out, hold: 0.06}
+  - {t: 0.48, pose: slash_hit, ease: strike}
+  - {t: 0.90, pose: stand, ease: smooth}
+events:
+  - {t: 0.36, type: sound, sound: minecraft:entity.player.attack.sweep}
+  - {t: 0.48, type: hit, id: slash, shape: arc, radius: 2.8, arc: 120, dir: 0, damage: 1.0, knockback: 0.6, lift: 0.25}

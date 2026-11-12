@@ -1,0 +1,7 @@
+# Trzaj ob prejeti škodi (samo odjemalec; primeša se na hojo/napad).
+name: hurt
+length: 0.5
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.12, pose: hurt, ease: out}
+  - {t: 0.50, pose: stand, ease: soft}

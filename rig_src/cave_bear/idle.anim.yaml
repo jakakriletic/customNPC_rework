@@ -1,0 +1,8 @@
+# Mirovanje: diha s priprtimi usti, rep počasi niha.
+name: idle
+length: 3.0
+loop: true
+beats:
+  - {t: 0.0, pose: stand}
+  - {t: 1.5, pose: stand_breathe, ease: smooth}
+  - {t: 3.0, pose: stand, ease: smooth}

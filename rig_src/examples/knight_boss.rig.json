@@ -1,0 +1,36 @@
+{
+  "model": "knight",
+  "name": "Sir Varn",
+  "scale": 1.25,
+  "idle": "idle",
+  "clips": {
+    "animations": {
+      "taunt": {
+        "animation_length": 1.2,
+        "bones": {
+          "armR": {"rotation": {"0.0": [-14, 0, 8], "0.4": {"vector": [-150, 0, 20], "easing": "easeOutQuad"}, "0.8": [-150, 0, 20], "1.2": {"vector": [-14, 0, 8], "easing": "easeInOutSine"}}},
+          "head": {"rotation": {"0.0": [0, 0, 0], "0.4": [-20, 0, 0], "0.8": [-20, 0, 0], "1.2": [0, 0, 0]}}
+        },
+        "events": [{"t": 0.4, "type": "sound", "sound": "minecraft:entity.evocation_illager.prepare_attack"}]
+      }
+    }
+  },
+  "script": [
+    "// Knight boss: picks an attack by distance; damage comes from the clips' hit events.",
+    "var Animators = Java.type('noppes.npcs.rework.anim.Animators');",
+    "var cooldown = 0, raged = false;",
+    "function tick(e) {",
+    "  var npc = e.npc, a = Animators.of(npc), t = npc.getAttackTarget();",
+    "  if (cooldown > 0) { cooldown -= 10; }",
+    "  if (t == null || a.getClip() != '' || cooldown > 0) { return; }",
+    "  var dx = t.getX() - npc.getX(), dz = t.getZ() - npc.getZ(), d = Math.sqrt(dx * dx + dz * dz);",
+    "  if (!raged && npc.getHealth() < npc.getMaxHealth() / 2) { raged = true; a.play('warcry'); cooldown = 40; return; }",
+    "  if (d < 3.2) { a.play(['slash', 'overhead', 'thrust', 'kick'][Math.floor(Math.random() * 4)]); cooldown = 20; }",
+    "  else if (d < 4.5 && raged) { a.play('spin'); cooldown = 60; }",
+    "  else if (d < 9) { a.play('leap_slam'); cooldown = 80; }",
+    "}",
+    "function target(e) { Animators.of(e.npc).play('taunt'); }",
+    "function meleeAttack(e) { e.setCanceled(true); }",
+    "function animationEvent(e) { if (e.type == 'hit') { e.npc.getWorld().playSoundAt(e.npc.getPos(), 'minecraft:block.anvil.land', 0.3, 1.6); } }"
+  ]
+}

@@ -1,0 +1,10 @@
+# Mahanje z levo roko.
+name: wave
+length: 1.6
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.30, pose: wave_up, ease: out}
+  - {t: 0.55, pose: wave_side, ease: smooth}
+  - {t: 0.80, pose: wave_up, ease: smooth}
+  - {t: 1.05, pose: wave_side, ease: smooth}
+  - {t: 1.60, pose: stand, ease: smooth}

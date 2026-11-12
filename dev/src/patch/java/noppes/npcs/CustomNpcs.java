@@ -237,6 +237,8 @@ public class CustomNpcs {
     public static String RwJavaClasspath = "";
     @ConfigProp(info="Rework M7.5 (D-095, Q194): animation script hooks for animated NPCs of the optional mod customnpcentities 0.7.0. With 1 the server calls the NPC script hooks animationStart, animationEvent (timed clip events such as hit or sound) and animationEnd, in JS and Java, at world tick end from an exact log of every action start, fired event and stop (P7a: the loaded class of the optional mod gets journal calls at class load; a mismatch leaves it original and the hooks off). 2 = also the idle, walk and death layers (event source idle/walk/death, server clocks of the optional mod, hooks only). 1 and 2 also enable IAnimator.blendTo (P7b): the server sends the blend on its own channel rwanim and a client with 1 or 2 moves from its last drawn pose to the new clip (the client class of the optional mod gets a pose call at class load; otherwise the clip just plays). Without the optional mod nothing is tracked. Read at startup. 0 = original (no listener, no hooks, class untouched), 1 = action hooks, 2 = action and layer hooks. Default 0")
     public static int RwAnimHooks = 0;
+    @ConfigProp(info="Rework M16 (Q444): built-in animation core. With 1 an NPC with NBT RwRig (a model with bones: humanoid, knight, skeleton_warrior, ogre, troll, warg, giant_spider, cave_bear, or one from customnpcs/rigs/) is drawn as that model and animated: idle and walk loops, hurt and death clips, and action clips started by /rwrig play, scripts (noppes.npcs.rework.anim.Animators.of(npc), noppes.npcs.rework.rig.RigApi) or the clip queue. Timed clip events hit, sound, lunge and heal act on the server; every event also calls the script hook animationEvent (and animationStart/animationEnd). The own clips of an NPC are kept in its NBT (RwRig.Clips), so a clone carries them. The server sends clip starts on channel rwrig. Read at startup; client and server should match. 0 = original: RwRig is kept in NBT but not drawn, played or sent. Default 0")
+    public static int RwAnimCore = 0;
     @ConfigProp(info="Rework M11.1 (Q297, Q299): armies. With 1 the server has the command /rwarmy (create, assign, unassign, list, info, remove; operators) and the script API noppes.npcs.rework.army.ArmyApi; the army register is saved with the world in data/rwarmies.dat and an NPC stores its army name in NBT RwArmy. An army is owned by a player (UUID) or a CustomNPCs faction. The channel rwarmy only answers snapshot requests. M11.3 adds move/stop/status: saved orders, companies of RwArmyCompany ground members sharing one army path, and join orders for stragglers. Long paths and chunk tickets are later packages. Read at startup. 0 = original: no command, the API changes nothing, the register is not loaded; an RwArmy name already on an NPC is kept unchanged. Default 0")
     public static int RwArmies = 0;
     @ConfigProp(info="Rework M11.2: with RwArmies=1, members of one army this close (blocks, horizontally, 1-512) are one cluster, the point of the army on a map. Read at startup. Default 48")
@@ -368,6 +370,18 @@ public class CustomNpcs {
                     Class.forName("noppes.npcs.rework.anim.BlendClient").getMethod("install").invoke(null);
                 } catch (ReflectiveOperationException e) {
                     LogWriter.error("RWANIM blend client not installed", e);
+                }
+            }
+        }
+        // M16: built-in animation core; nothing registered with 0.
+        if (RwAnimCore == 1) {
+            noppes.npcs.rework.rig.RigNet.init();
+            MinecraftForge.EVENT_BUS.register(new noppes.npcs.rework.rig.RigSounds());
+            if (ev.getSide().isClient()) {
+                try {
+                    Class.forName("noppes.npcs.rework.rig.client.RigClient").getMethod("install").invoke(null);
+                } catch (ReflectiveOperationException e) {
+                    LogWriter.error("RWRIG client not installed", e);
                 }
             }
         }
@@ -582,6 +596,8 @@ public class CustomNpcs {
         event.registerServerCommand((ICommand)new CommandRwHitbox());
         // P7c: only the switch adds the reload command.
         if (RwAnimHooks >= 1) { event.registerServerCommand((ICommand)new CommandNpcAnim()); }
+        // M16: only the switch adds the rig command.
+        if (RwAnimCore == 1) { event.registerServerCommand((ICommand)new noppes.npcs.rework.rig.CommandRwRig()); }
         // M13.2: only the switch adds the linked group command.
         if (RwLinkedGroups == 1) { event.registerServerCommand((ICommand)new CommandRwLinked()); }
         // M11.1 (Q299): only the switch adds the army command.

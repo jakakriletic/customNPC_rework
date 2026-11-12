@@ -1,0 +1,13 @@
+# Hoja: dve četverici nog (D1 L2 D3 L4 / L1 D2 L3 D4) izmenično.
+name: walk
+length: 0.6
+loop: true
+stride: 1.8
+beats:
+  - {t: 0.00, pose: walk_a_plant}
+  - {t: 0.15, pose: walk_b_lift, ease: linear}
+  - {t: 0.30, pose: walk_b_plant, ease: linear}
+  - {t: 0.45, pose: walk_a_lift, ease: linear}
+events:
+  - {t: 0.00, type: step, forward: 1.0, side: 1.4}
+  - {t: 0.30, type: step, forward: 1.0, side: -1.4}

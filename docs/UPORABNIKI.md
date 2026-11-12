@@ -83,6 +83,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwFlyLineOfSight` | 0 | flying NPCs follow paths around corners instead of flying at walls |
 | `RwNavBackend` | 0 | permits NPCs with per-NPC `RwNavBackend=1` to use Baritone (needs the `npcbaritone` library) |
 | `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`); >=1 also enables `blendTo` and `/npcanim` (set on server and clients) |
+| `RwAnimCore` | 0 | built-in animation core: NPCs with `RwRig` drawn as models with bones, clips, data attacks, `/rwrig` (server and clients; see "Animated NPCs") |
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
 | `RwArmies` | 0 | armies: `/rwarmy`, `ArmyApi` and the channel `rwarmy`, register and move orders saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs); also `RwArmyClusterRadius` (48, 1–512), `RwArmyClusterMin` (8, 1–1024), `RwArmyCompany` (8, 1–24; only 8 tested in-world), `RwArmyMaxMarches` (2, 0–16: armies with an active move that hold travelling chunk tickets; 0 = no tickets) |
 | `RwLinkedOwnFields` | 0 | Linked NPCs: each member keeps its own home, orientation, moving path and place on that path when group data is applied; 0 = original (see §6). Does not repair values already overwritten |
@@ -96,6 +97,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 |---|---|---|
 | `RwHitboxMode` | NPC GUI (hitbox) | 0 vanilla, 1 solid, 2 smart; needs `RwHitbox=1` |
 | `RwNavBackend` | AI → Movement → Backend | 0 vanilla, 1 Baritone; needs the global permission |
+| `RwRig` | `/rwrig set/apply`, `RigApi`, clone JSON | compound: `Model`, `Texture`, `Scale`, `Clips`, `Idle`/`Walk`/`Hurt`/`Death`; drawn and played with `RwAnimCore=1`, kept with 0 |
 | `RwArmy` | AI → Army..., command staff, `/rwarmy assign`, `ArmyApi.assign` | army name (string); none = no key; needs `RwArmies=1` to change |
 | `RwFlightMode` | AI → Movement, first row (`Fly: Orig` / `Fly: Hover`), visible when Navigation = Flying | 0 original, 1 Hover (holds position, stops without sliding); saved Momentum (2) is shown disabled |
 
@@ -226,6 +228,64 @@ for the checked/typed armies; an all-armies grant or another grantor's rights ma
 select the next action, rather than showing current grants. Changes are checked on the
 server at every click. Multiple armies are processed in order; denial or timeout stops
 the remaining changes and keeps those already confirmed. Closing the GUI stops the queue.
+
+### Animated NPCs: models with bones (M16, `RwAnimCore=1`)
+
+Set `RwAnimCore=1` on the server **and** every client. Then any NPC can wear a model with bones
+instead of the biped, with its own animations and attacks, without `customnpcentities` and without
+rebuilding the jar:
+
+| Model | Bones / clips |
+|---|---|
+| `humanoid`, `knight`, `skeleton_warrior` | one human skeleton (elbows, knees, sword, shield); idle, walk, guard, slash, overhead, thrust, block, kick, spin, leap_slam, warcry, salute, wave, hurt, death |
+| `troll`, `ogre` | giant with a club; idle, walk, smash, sweep, stomp, pound, backhand, throw, roar, hurt, death |
+| `warg` | bite, maul, pounce, howl (+ idle, walk, hurt, death) |
+| `giant_spider` | bite, spit, leap, brood, threat (+ idle, walk, hurt, death) |
+| `cave_bear` | bite, swipe, maul, charge, rear_roar (+ idle, walk, hurt, death) |
+
+`/rwrig models` lists them with their clips. More models: put `<id>.geo.json` (Bedrock/Blockbench
+geometry), `<id>.png` and `<id>.animation.json` in `customnpcs/rigs/` (next to `clones/`) on the
+server and the clients, then `/rwrig reload`.
+
+**In game:** `/rwrig set @near knight` (nearest NPC within 16 blocks, or a name prefix),
+`/rwrig play @near leap_slam`, `/rwrig clear @near` (back to the original look).
+
+**Everything is in the NPC (`RwRig` in its NBT)**, so the clone tab, `/noppes clone` and spawners
+keep it:
+
+```json
+"RwRig": {"Model": "knight", "Scale": 1.25, "Clips": "{\"animations\":{...}}", "Idle": "guard"}
+```
+
+`Clips` holds the NPC's own clips (Bedrock `.animation.json` format: bones, rotation/position/scale
+keyframes in seconds, `easing`, `loop`); they add to and replace the model's by name.
+
+**Attacks are data.** A clip's `events` act on the server at their time: `hit` (area damage =
+`damage` x the NPC's melee strength; `shape` circle|arc, `forward`/`side`/`radius`/`arc`/`dir` in
+blocks and degrees, `knockback`, `lift`, `effect`, `fire`; only enemies by faction), `sound`
+(`minecraft:...` or a built-in `troll.roar`), `lunge` (`forward`, `up`), `heal` (`amount`). Every
+event also calls the script hook `animationEvent` (`event.type`, `event.data` = the event's JSON),
+plus `animationStart` and `animationEnd`.
+
+**How an AI makes an animated boss in 5 minutes (no Java, no rebuild):**
+
+1. Write one *rig package* `customnpcs/rigs/<name>.rig.json` (example:
+   `rig_src/examples/knight_boss.rig.json`): `model`, optional `name`, `scale`, `idle`/`walk`/
+   `hurt`/`death`, `clips` (own clips) and `script` (JS lines). The script picks attacks, e.g.
+   in `tick`: `Animators.of(e.npc).play('slash')` when the target is close; `meleeAttack`:
+   `e.setCanceled(true)` so damage comes only from the clips' `hit` events.
+2. In game: `/rwrig apply @near <name>.rig.json` (problems are listed in chat).
+3. Save the NPC with the clone tool. The clone carries model, clips and script.
+
+Scripts: `var Animators = Java.type('noppes.npcs.rework.anim.Animators')` (`play`, `queue`, `stop`,
+`blendTo(clip, ticks)`, `getClip`, `getClips`) and `var Rig = Java.type('noppes.npcs.rework.rig.RigApi')`
+(`setModel`, `setTexture`, `setScale`, `setClips`, `bind(role, clip)`, `applyPackage`, `models`).
+
+New clips with preview pictures (Python 3 with numpy, pyyaml, Pillow): named poses in
+`rig_src/<model>/poses.yaml`, a clip in `rig_src/<model>/<clip>.anim.yaml` (beats of poses, easing,
+events), `py -3 tools/rig/anim/preview.py clip <model> <clip>` draws it with the hit areas,
+`py -3 tools/rig/anim/compile.py <model>` writes the JSON. Copy a clip from the result into an
+NPC's `Clips` (or a package), or rebuild to ship it built in.
 
 ## 4. Java NPC scripts
 

@@ -1,0 +1,10 @@
+# Smrt: noge se zvijejo pod telo.
+name: death
+length: 1.0
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.25, pose: hurt, ease: out}
+  - {t: 0.90, pose: death_curl, ease: in}
+  - {t: 1.00, pose: death_curl}
+events:
+  - {t: 0.05, type: sound, sound: giant_spider.death}

@@ -1,0 +1,15 @@
+# Hoja: težki koraki.  Čas klipa v igri teče z razdaljo (stride = bloki na en
+# cel cikel = dva koraka), zato se noge ne drsajo.  `step` dogodki ob pristanku
+# noge sprožijo zvok koraka, malo prahu in rahlo tresenje za bližnje igralce.
+name: walk
+length: 1.2
+loop: true
+stride: 3.0
+beats:
+  - {t: 0.0, pose: walk_contact_r}
+  - {t: 0.3, pose: walk_pass_l, ease: out}
+  - {t: 0.6, pose: walk_contact_l, ease: in}
+  - {t: 0.9, pose: walk_pass_r, ease: out}
+events:
+  - {t: 0.0, type: step, foot: r}
+  - {t: 0.6, type: step, foot: l}

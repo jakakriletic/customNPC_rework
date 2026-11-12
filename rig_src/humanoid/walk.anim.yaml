@@ -1,0 +1,10 @@
+# Hoja: čas teče z razdaljo (stride = bloki na cel cikel = dva koraka).
+name: walk
+length: 1.0
+loop: true
+stride: 1.6
+beats:
+  - {t: 0.0, pose: walk_contact_r}
+  - {t: 0.25, pose: walk_pass_l, ease: out}
+  - {t: 0.5, pose: walk_contact_l, ease: in}
+  - {t: 0.75, pose: walk_pass_r, ease: out}

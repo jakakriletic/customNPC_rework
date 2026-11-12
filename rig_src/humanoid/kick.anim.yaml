@@ -1,0 +1,11 @@
+# Brca, ki odrine nasprotnika.
+name: kick
+length: 0.9
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.25, pose: kick_windup, ease: out}
+  - {t: 0.40, pose: kick_hit, ease: strike, hold: 0.08}
+  - {t: 0.90, pose: stand, ease: smooth}
+events:
+  - {t: 0.40, type: hit, id: kick, shape: arc, radius: 2.2, arc: 70, damage: 0.5, knockback: 3.0, lift: 0.4}
+  - {t: 0.40, type: sound, sound: minecraft:entity.player.attack.knockback}

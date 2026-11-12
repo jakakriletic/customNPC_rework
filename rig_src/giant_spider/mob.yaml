@@ -1,0 +1,43 @@
+# Vedenje orjaškega pajka: drži razdaljo z mrežo, skoči na tarčo, ugrizne s strupom.
+name: Giant Spider
+title: Broodmother               # napis pod imenom
+boss_bar: 2                 # CustomNPCs boss bar: 0 brez, 1 vedno, 2 ko ima tarčo
+boss_color: purple
+hitbox: [2.2, 1.4]
+step_height: 1.1
+shadow: 1.6
+health: 90
+melee: 10
+melee_range: 2
+speed: 6
+knockback_resist: false
+talk_interval: 180
+volume: 1.4
+voice:
+  idle: giant_spider.idle
+  angry: giant_spider.hiss
+  hurt: giant_spider.hurt
+  death: giant_spider.death
+
+attacks:
+  - {clip: bite, min: 0.0, max: 3.0, weight: 5, cooldown: 20,  recover: 6}
+  - {clip: spit, min: 5.0, max: 18,  weight: 4, cooldown: 90,  recover: 8}
+  - {clip: leap, min: 3.5, max: 9.0, weight: 3, cooldown: 110, recover: 10, wounded: 2}
+  - {clip: brood, min: 0.0, max: 16,  weight: 1.5, cooldown: 500, recover: 10, wounded: 3}
+
+greet: {clip: threat, range: 18, cooldown: 700, recover: 4}
+
+# Pod 40 % zdravja zasika in pogosteje leže mladiče.
+enrage: {below: 0.4, clip: threat, damage: 1.2, speed: 1.15, cooldown: 0.6}
+
+step:
+  sound: giant_spider.step
+  volume: 0.5
+  heavy_volume: 0.9
+
+sound_volume:
+  giant_spider.hiss: 1.8
+  giant_spider.bite: 1.3
+  giant_spider.spit: 1.4
+  giant_spider.web: 1.2
+  giant_spider.land: 1.4

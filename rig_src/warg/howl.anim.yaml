@@ -1,0 +1,12 @@
+# Tuljenje: ob novi tarči.  Zavezniki (ista frakcija) v 16 blokih dobijo hitrost.
+name: howl
+length: 2.6
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.45, pose: howl, ease: out}
+  - {t: 1.20, pose: howl, add: {neck.raise: 6, jaw.open: 6}}
+  - {t: 1.90, pose: howl, add: {head.turn: 6}, hold: 0.1}
+  - {t: 2.60, pose: stand, ease: smooth}
+events:
+  - {t: 0.40, type: sound, sound: warg.howl}
+  - {t: 0.60, type: buff, effect: speed, effect_seconds: 10, effect_level: 2, radius: 16}

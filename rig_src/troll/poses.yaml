@@ -1,0 +1,401 @@
+# Knjižnica poz za trolla.  Vrednosti so kontrolniki iz rig.yaml (stopinje,
+# glede na NJEGOVO levo/desno).  `base:` podeduje drugo pozo, `opis:` je komentar.
+# Surove kosti: "kost.kanal.os: vrednost", npr. "club.rotation.x: 10".
+# Vsako novo pozo preveri:  py -3 tools/anim/preview.py poses troll <ime>
+
+neutral: {}
+
+# ---------------------------------------------------------------- stoja
+stand:
+  opis: težka sključena stoja, kij visi v desni s konico ob tleh pred njim
+  solve: {tip: club, using: wrist_r.bend, height: 0.12}   # konica kija se dotika tal
+  leg_r.out: 4
+  leg_l.out: 4
+  leg_r.raise: 8
+  leg_l.raise: 8
+  knee_r.bend: 14
+  knee_l.bend: 14
+  torso.bend: 14
+  head.nod: -14
+  arm_r.raise: 12
+  arm_r.out: 12
+  elbow_r.bend: 22
+  wrist_r.bend: -62
+  arm_l.raise: 8
+  arm_l.out: 12
+  elbow_l.bend: 28
+
+stand_breathe:
+  opis: vdih (za idle zanko)
+  base: stand
+  torso.bend: 11
+  head.nod: -16
+  arm_r.out: 14
+  arm_l.out: 15
+  arm_l.raise: 10
+  jaw.open: 5
+
+# ---------------------------------------------------------------- hoja
+walk_contact_r:
+  opis: desna noga pristane spredaj
+  solve: {tip: club, using: wrist_r.bend, height: 0.45}
+  base: stand
+  leg_r.raise: 26
+  knee_r.bend: 6
+  leg_l.raise: -14
+  knee_l.bend: 18
+  torso.twist: 8
+  torso.lean: 4
+  arm_l.raise: 22
+  arm_r.raise: 2
+  head.nod: -12
+
+walk_pass_l:
+  opis: leva noga gre mimo, telo najvišje
+  solve: {tip: club, using: wrist_r.bend, height: 0.45}
+  base: stand
+  leg_r.raise: 2
+  knee_r.bend: 8
+  leg_l.raise: 22
+  knee_l.bend: 58
+  torso.lean: -3
+  arm_l.raise: 10
+  arm_r.raise: 12
+
+walk_contact_l:
+  opis: leva noga pristane spredaj
+  solve: {tip: club, using: wrist_r.bend, height: 0.45}
+  base: stand
+  leg_l.raise: 26
+  knee_l.bend: 6
+  leg_r.raise: -14
+  knee_r.bend: 18
+  torso.twist: -8
+  torso.lean: -4
+  arm_l.raise: -6
+  arm_r.raise: 22
+  head.nod: -12
+
+walk_pass_r:
+  opis: desna noga gre mimo
+  solve: {tip: club, using: wrist_r.bend, height: 0.45}
+  base: stand
+  leg_l.raise: 2
+  knee_l.bend: 8
+  leg_r.raise: 22
+  knee_r.bend: 58
+  torso.lean: 3
+  arm_l.raise: 10
+  arm_r.raise: 12
+
+# ---------------------------------------------------------------- 1. udarec od zgoraj
+smash_windup:
+  opis: kij visoko za glavo, leva noga stopi naprej
+  base: stand
+  torso.bend: -14
+  torso.twist: -10
+  head.nod: -22
+  arm_r.raise: 172
+  arm_r.out: 12
+  elbow_r.bend: 70
+  wrist_r.bend: -35
+  arm_l.raise: 60
+  arm_l.out: 28
+  elbow_l.bend: 40
+  leg_l.raise: 26
+  knee_l.bend: 22
+  leg_r.raise: -8
+  jaw.open: 18
+
+smash_hit:
+  opis: kij udari ob tla pred njim
+  solve: {tip: club, using: arm_r.raise, height: 0.1}   # roka + kij v eni črti do tal
+  base: stand
+  torso.bend: 38
+  torso.twist: 8
+  head.nod: 6
+  arm_r.raise: 70
+  arm_r.out: 6
+  elbow_r.bend: 18
+  wrist_r.bend: -55
+  arm_l.raise: 36
+  arm_l.out: 32
+  elbow_l.bend: 30
+  leg_l.raise: 36
+  knee_l.bend: 42
+  leg_r.raise: -18
+  knee_r.bend: 26
+  jaw.open: 26
+
+# ---------------------------------------------------------------- 2. vodoravni zamah
+sweep_windup:
+  opis: trup zasukan na desno, kij nazaj in vstran
+  base: stand
+  torso.twist: -52
+  torso.bend: 8
+  head.turn: 30
+  arm_r.raise: 10
+  arm_r.out: 68
+  elbow_r.bend: 10
+  wrist_r.bend: -80
+  arm_l.raise: 52
+  arm_l.out: -12
+  elbow_l.bend: 75
+  leg_r.raise: -6
+  knee_r.bend: 22
+  leg_l.raise: 18
+
+sweep_hit:
+  opis: kij vodoravno pred njim, v višini pasu
+  base: stand
+  torso.twist: 6
+  torso.bend: 14
+  head.turn: 0
+  arm_r.raise: 66
+  arm_r.out: 14
+  elbow_r.bend: 8
+  wrist_r.bend: -80
+  arm_l.raise: 30
+  arm_l.out: 30
+  elbow_l.bend: 40
+  leg_l.raise: 20
+  knee_l.bend: 24
+  jaw.open: 20
+
+sweep_follow:
+  opis: zamah se konča na njegovi levi
+  base: sweep_hit
+  torso.twist: 48
+  head.turn: -20
+  arm_r.raise: 62
+  arm_r.out: -24
+  arm_l.out: 50
+  arm_l.raise: 14
+  wrist_r.bend: -80
+
+# ---------------------------------------------------------------- 3. teptanje
+stomp_lift:
+  opis: desna noga visoko, roke vstran za ravnotežje
+  base: stand
+  leg_r.raise: 72
+  knee_r.bend: 88
+  leg_l.raise: 4
+  knee_l.bend: 20
+  torso.bend: -4
+  torso.lean: -8
+  head.nod: 14
+  arm_r.raise: 30
+  arm_r.out: 38
+  wrist_r.bend: -55
+  arm_l.raise: 22
+  arm_l.out: 48
+  elbow_l.bend: 40
+  jaw.open: 10
+
+stomp_hit:
+  opis: noga tresne ob tla, kolena pokrčena
+  solve: {tip: club, using: wrist_r.bend, height: 0.3}
+  base: stand
+  leg_r.raise: 30
+  knee_r.bend: 34
+  leg_l.raise: 0
+  knee_l.bend: 34
+  torso.bend: 26
+  torso.lean: 4
+  head.nod: 18
+  arm_r.raise: 18
+  arm_r.out: 30
+  arm_l.raise: 12
+  arm_l.out: 40
+  elbow_l.bend: 30
+  jaw.open: 28
+
+# ---------------------------------------------------------------- 4. udarec z obema rokama (ground pound)
+pound_windup:
+  opis: oba roki visoko nad glavo, kij za hrbtom
+  base: stand
+  torso.bend: -20
+  head.nod: -28
+  arm_r.raise: 178
+  arm_r.out: -14
+  elbow_r.bend: 42
+  wrist_r.bend: -40
+  arm_l.raise: 178
+  arm_l.out: -14
+  elbow_l.bend: 42
+  leg_r.out: 10
+  leg_l.out: 10
+  knee_r.bend: 8
+  knee_l.bend: 8
+  jaw.open: 34
+
+pound_hit:
+  opis: kij z obema rokama v tla, globoko v počep
+  solve: {tip: club, using: wrist_r.bend, height: 0.1}
+  base: stand
+  torso.bend: 52
+  head.nod: 10
+  arm_r.raise: 76
+  arm_r.out: -10
+  elbow_r.bend: 4
+  wrist_r.bend: -58
+  arm_l.raise: 76
+  arm_l.out: -14
+  elbow_l.bend: 4
+  leg_r.out: 12
+  leg_l.out: 12
+  leg_r.raise: 30
+  leg_l.raise: 30
+  knee_r.bend: 52
+  knee_l.bend: 52
+  jaw.open: 30
+
+# ---------------------------------------------------------------- 5. zamah s prosto roko
+backhand_windup:
+  opis: leva roka čez prsi, trup zasukan na desno
+  solve: {tip: club, using: wrist_r.bend, height: 0.4}
+  base: stand
+  torso.twist: -38
+  head.turn: 10
+  arm_l.raise: 72
+  arm_l.out: -28
+  elbow_l.bend: 85
+  arm_r.raise: -4
+  arm_r.out: 20
+  leg_l.raise: 16
+  knee_l.bend: 20
+
+backhand_hit:
+  opis: leva roka zamahne navzven, z hrbtom pesti
+  solve: {tip: club, using: wrist_r.bend, height: 0.5}
+  base: stand
+  torso.twist: 40
+  torso.bend: 30
+  head.turn: -10
+  arm_l.raise: 55
+  arm_l.out: 70
+  elbow_l.bend: 12
+  arm_r.raise: 10
+  arm_r.out: 26
+  leg_l.raise: 20
+  knee_l.bend: 26
+  jaw.open: 18
+
+# ---------------------------------------------------------------- rjovenje
+roar:
+  opis: prsi ven, roki vstran, usta na široko
+  base: stand
+  torso.bend: -16
+  head.nod: -34
+  jaw.open: 36
+  arm_r.raise: 22
+  arm_r.out: 56
+  elbow_r.bend: 50
+  wrist_r.bend: -10
+  arm_l.raise: 26
+  arm_l.out: 62
+  elbow_l.bend: 70
+  leg_r.out: 10
+  leg_l.out: 10
+  knee_r.bend: 18
+  knee_l.bend: 18
+
+# ---------------------------------------------------------------- smrt
+death_kneel:
+  opis: pade na kolena
+  solve: {tip: club, using: wrist_r.bend, height: 0.0}
+  base: stand
+  leg_r.raise: 8
+  leg_l.raise: 70
+  knee_r.bend: 100
+  knee_l.bend: 95
+  torso.bend: 30
+  head.nod: 20
+  arm_r.raise: 10
+  arm_l.raise: 10
+  arm_r.out: 20
+  arm_l.out: 24
+  jaw.open: 30
+
+death_fall:
+  opis: obleži na trebuhu
+  base: death_kneel
+  body.pitch: 82
+  leg_l.raise: 10
+  knee_l.bend: 30
+  knee_r.bend: 30
+  arm_r.raise: 150
+  arm_l.raise: 120
+  arm_r.out: 30
+  arm_l.out: 40
+  head.nod: -20
+  jaw.open: 12
+
+# ---------------------------------------------------------------- met skale
+throw_pick:
+  opis: skloni se in z levo pobere skalo s tal
+  base: stand
+  solve: [{tip: club, using: wrist_r.bend, height: 0.12}, {tip: hand_l, using: arm_l.raise, height: 0.35}]
+  torso.bend: 52
+  head.nod: -30
+  knee_r.bend: 34
+  knee_l.bend: 40
+  leg_r.raise: 30
+  leg_l.raise: 36
+  arm_l.out: 10
+  elbow_l.bend: 6
+  rock.show: 1.25
+
+throw_windup:
+  opis: skala visoko za glavo, trup zasukan nazaj
+  base: stand
+  solve: {tip: club, using: wrist_r.bend, height: 0.5}
+  rock.show: 1.25
+  torso.bend: -6
+  torso.twist: -28
+  head.nod: -22
+  head.turn: 18
+  arm_l.raise: 165
+  arm_l.out: 30
+  elbow_l.bend: 80
+  leg_l.raise: 20
+  knee_l.bend: 10
+
+throw_release:
+  opis: roka sune naprej, trup za njo
+  base: stand
+  solve: {tip: club, using: wrist_r.bend, height: 0.3}
+  rock.show: 1.25
+  torso.bend: 26
+  torso.twist: 14
+  head.nod: -8
+  arm_l.raise: 100
+  arm_l.out: -22
+  arm_l.swing: -10
+  elbow_l.bend: 4
+  wrist_l.bend: 20
+  leg_l.raise: 24
+  knee_l.bend: 18
+
+throw_follow:
+  opis: po metu, roka spodaj spredaj
+  base: stand
+  solve: {tip: club, using: wrist_r.bend, height: 0.2}
+  torso.bend: 30
+  torso.twist: 18
+  arm_l.raise: 45
+  arm_l.out: -18
+  elbow_l.bend: 10
+
+# ---------------------------------------------------------------- udarec
+hurt:
+  opis: trzaj ob udarcu, glava nazaj, trup se odmakne
+  base: stand
+  solve: {tip: club, using: wrist_r.bend, height: 0.15}
+  torso.bend: 4
+  torso.lean: 6
+  head.nod: -28
+  head.tilt: 10
+  jaw.open: 14
+  arm_l.out: 24
+  arm_l.raise: 20

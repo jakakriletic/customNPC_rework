@@ -1,0 +1,333 @@
+# Knjižnica poz za warga.  Vrednosti so kontrolniki iz rig.yaml (stopinje,
+# glede na NJEGOVO levo/desno).  `base:` podeduje drugo pozo, `opis:` je komentar.
+# Smeri:  spine.bend + = prednji del dol,  hips.bend + = zadek dol,
+#         leg_*.swing + = noga naprej,  knee_f*.bend + = tačka nazaj,
+#         hock_h*.bend + = tačka naprej,  head.nod + = gobec dol,  tail.raise + = rep gor.
+# Preveri:  py -3 tools/anim/preview.py poses warg <ime> --views side,front
+
+neutral: {}
+
+# ---------------------------------------------------------------- stoja
+stand:
+  opis: budna stoja, glava rahlo spuščena, rep visi
+  head.nod: 6
+  neck.raise: -4
+  tail.raise: 6
+  leg_hr.swing: -4
+  leg_hl.swing: -4
+
+stand_breathe:
+  base: stand
+  spine.bend: -2
+  neck.raise: -2
+  jaw.open: 7
+  tail.wag: 8
+
+growl:
+  opis: preži, glava nizko, zobje pokazani, rep napet
+  base: stand
+  spine.bend: 8
+  hips.bend: -4
+  neck.raise: -14
+  head.nod: 2
+  jaw.open: 16
+  tail.raise: 22
+  leg_fr.swing: 8
+  leg_fl.swing: 8
+  knee_fr.bend: 6
+  knee_fl.bend: 6
+
+# ---------------------------------------------------------------- kas (diagonalna para)
+# A = desna sprednja + leva zadnja, B = leva sprednja + desna zadnja.
+trot_a:
+  opis: par A seže naprej, par B se odriva zadaj
+  base: stand
+  leg_fr.swing: 30
+  knee_fr.bend: 0
+  leg_hl.swing: 24
+  hock_hl.bend: -6
+  leg_fl.swing: -24
+  knee_fl.bend: 22
+  paw_fl.bend: 10
+  leg_hr.swing: -26
+  hock_hr.bend: 8
+  paw_hr.bend: 22
+  spine.bend: 2
+  head.nod: 4
+  tail.wag: 8
+
+trot_pass_a:
+  opis: par A pod telesom, par B dvignjen in gre naprej
+  base: stand
+  leg_fr.swing: 0
+  leg_hl.swing: 0
+  leg_fl.swing: 8
+  knee_fl.bend: 64
+  paw_fl.bend: 24
+  leg_hr.swing: 12
+  hock_hr.bend: 44
+  paw_hr.bend: 10
+  head.nod: 8
+  body.y: 1.0
+
+trot_b:
+  base: stand
+  leg_fl.swing: 30
+  knee_fl.bend: 0
+  leg_hr.swing: 24
+  hock_hr.bend: -6
+  leg_fr.swing: -24
+  knee_fr.bend: 22
+  paw_fr.bend: 10
+  leg_hl.swing: -26
+  hock_hl.bend: 8
+  paw_hl.bend: 22
+  spine.bend: 2
+  head.nod: 4
+  tail.wag: -8
+
+trot_pass_b:
+  base: stand
+  leg_fl.swing: 0
+  leg_hr.swing: 0
+  leg_fr.swing: 8
+  knee_fr.bend: 64
+  paw_fr.bend: 24
+  leg_hl.swing: 12
+  hock_hl.bend: 44
+  paw_hl.bend: 10
+  head.nod: 8
+  body.y: 1.0
+
+# ---------------------------------------------------------------- ugriz
+bite_crouch:
+  opis: se skrči pred ugrizom, gobec že odprt
+  base: stand
+  spine.bend: 10
+  hips.bend: 6
+  neck.raise: -16
+  head.nod: -8
+  jaw.open: 14
+  leg_fr.swing: -6
+  leg_fl.swing: -6
+  knee_fr.bend: 14
+  knee_fl.bend: 14
+  tail.raise: 16
+
+bite_lunge:
+  opis: iztegnjen naprej, gobec na široko
+  base: stand
+  spine.bend: 0
+  neck.raise: -4
+  head.nod: -22
+  jaw.open: 46
+  leg_fr.swing: 34
+  leg_fl.swing: 28
+  leg_hr.swing: -28
+  leg_hl.swing: -32
+  paw_hr.bend: 20
+  paw_hl.bend: 20
+  body.z: 8
+  tail.raise: 24
+
+bite_snap:
+  base: bite_lunge
+  jaw.open: 0
+  head.nod: -10
+  neck.raise: -8
+  body.z: 10
+
+# ---------------------------------------------------------------- vzpon in udarec s tacami
+maul_rear:
+  opis: vzpne se na zadnje noge, tace visoko
+  base: stand
+  body.pitch: -27
+  body.z: -4
+  leg_fr.swing: 80
+  knee_fr.bend: 70
+  leg_fl.swing: 70
+  knee_fl.bend: 80
+  leg_hr.swing: 34
+  leg_hl.swing: 30
+  hock_hr.bend: -10
+  hock_hl.bend: -10
+  neck.raise: 10
+  head.nod: -6
+  jaw.open: 32
+  tail.raise: 26
+
+maul_slam:
+  opis: z vso težo na tla pred seboj
+  base: stand
+  body.pitch: 8
+  spine.bend: 8
+  body.z: 7
+  leg_fr.swing: 48
+  knee_fr.bend: 0
+  leg_fl.swing: 42
+  knee_fl.bend: 4
+  leg_hr.swing: -14
+  leg_hl.swing: -14
+  neck.raise: -6
+  head.nod: 6
+  jaw.open: 28
+  tail.raise: 18
+
+# ---------------------------------------------------------------- skok
+pounce_crouch:
+  opis: nizko na tleh, zadnje noge napete za skok
+  base: stand
+  spine.bend: 12
+  hips.bend: 20
+  leg_fr.swing: -4
+  knee_fr.bend: 34
+  leg_fl.swing: -4
+  knee_fl.bend: 34
+  leg_hr.swing: 18
+  leg_hl.swing: 18
+  hock_hr.bend: 42
+  hock_hl.bend: 42
+  neck.raise: -20
+  head.nod: -4
+  jaw.open: 8
+  tail.raise: 4
+
+pounce_leap:
+  opis: v zraku, sprednje tace iztegnjene, zadnje nazaj
+  base: stand
+  body.pitch: -12
+  leg_fr.swing: 62
+  knee_fr.bend: 18
+  leg_fl.swing: 56
+  knee_fl.bend: 22
+  leg_hr.swing: -52
+  leg_hl.swing: -56
+  paw_hr.bend: 30
+  paw_hl.bend: 30
+  neck.raise: -10
+  head.nod: -16
+  jaw.open: 42
+  tail.raise: 26
+
+pounce_land:
+  opis: pristanek na tarči, sprednje noge blažijo
+  base: stand
+  spine.bend: 16
+  hips.bend: 6
+  leg_fr.swing: 30
+  knee_fr.bend: 34
+  leg_fl.swing: 26
+  knee_fl.bend: 30
+  leg_hr.swing: -10
+  leg_hl.swing: -10
+  neck.raise: -22
+  head.nod: 18
+  jaw.open: 22
+  tail.raise: 14
+
+# ---------------------------------------------------------------- tuljenje
+howl:
+  opis: gobec proti nebu, usta odprta
+  base: stand
+  spine.bend: -10
+  hips.bend: 10
+  leg_hr.swing: 10
+  leg_hl.swing: 10
+  hock_hr.bend: 16
+  hock_hl.bend: 16
+  neck.raise: 36
+  head.nod: -28
+  jaw.open: 30
+  tail.raise: -4
+
+# ---------------------------------------------------------------- smrt
+death_stagger:
+  base: stand
+  spine.bend: 14
+  knee_fr.bend: 40
+  knee_fl.bend: 20
+  head.nod: 26
+  neck.raise: -24
+  jaw.open: 12
+  tail.raise: -10
+
+death_lie:
+  opis: leži na desnem boku, noge iztegnjene
+  base: stand
+  body.roll: 88
+  body.y: 9
+  body.x: 4
+  leg_fr.swing: 14
+  leg_fl.swing: 24
+  leg_hr.swing: -10
+  leg_hl.swing: 4
+  neck.raise: -6
+  head.nod: 10
+  jaw.open: 18
+  tail.raise: -6
+
+# ---------------------------------------------------------------- udarec
+hurt:
+  opis: trzaj, glava sunkovito vstran in gor, zadek se pogrezne
+  base: stand
+  hips.bend: 8
+  spine.bend: -6
+  neck.raise: 14
+  head.nod: -16
+  head.turn: 18
+  jaw.open: 24
+  tail.raise: -14
+
+# ================================================================ medved
+# Poze zgoraj so podedovane od warga (ogrodje); spodaj so medvedje.
+
+swipe_windup:
+  opis: dvigne desno prednjo šapo visoko in vstran, telo se zasuka desno
+  base: stand
+  leg_fr.swing: 70
+  leg_fr.out: 34
+  knee_fr.bend: 40
+  body.turn: -16
+  spine.bend: -6
+  hips.bend: 6
+  neck.raise: 6
+  head.turn: -14
+  jaw.open: 22
+  leg_fl.swing: 8
+
+swipe_hit:
+  opis: šapa zamahne čez sprednjo stran od desne proti levi
+  base: stand
+  leg_fr.swing: 46
+  leg_fr.out: -18
+  knee_fr.bend: 6
+  body.turn: 18
+  spine.bend: 8
+  neck.raise: -6
+  head.turn: 12
+  jaw.open: 28
+  leg_fl.swing: -6
+
+charge_a:
+  opis: galop z glavo nizko (para A naprej)
+  base: trot_a
+  neck.raise: -18
+  head.nod: 6
+  spine.bend: 6
+  jaw.open: 18
+
+charge_b:
+  base: trot_b
+  neck.raise: -18
+  head.nod: 6
+  spine.bend: 6
+  jaw.open: 18
+
+rear_roar:
+  opis: stoji na zadnjih nogah, tace narazen, rjove v nebo
+  base: maul_rear
+  leg_fr.out: 24
+  leg_fl.out: 24
+  neck.raise: 30
+  head.nod: -26
+  jaw.open: 48

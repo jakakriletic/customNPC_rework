@@ -1,0 +1,16 @@
+# Vrtinec (boss): dvakrat se zavrti z iztegnjenim mečem, zadene vse okoli sebe.
+name: spin
+length: 1.6
+beats:
+  - {t: 0.00, pose: stand}
+  - {t: 0.25, pose: spin_ready, ease: out}
+  - {t: 0.55, pose: spin_ready, ease: linear, add: {body.turn: 180}}
+  - {t: 0.85, pose: spin_ready, ease: linear, add: {body.turn: 360}}
+  - {t: 1.15, pose: spin_ready, ease: linear, add: {body.turn: 540}}
+  - {t: 1.30, pose: spin_ready, ease: out, add: {body.turn: 720}}
+  - {t: 1.60, pose: stand, ease: smooth, add: {body.turn: 720}}
+events:
+  - {t: 0.30, type: sound, sound: minecraft:entity.player.attack.sweep}
+  - {t: 0.55, type: hit, id: spin1, shape: circle, forward: 0, radius: 3.0, damage: 0.8, knockback: 1.2, lift: 0.3}
+  - {t: 0.85, type: sound, sound: minecraft:entity.player.attack.sweep}
+  - {t: 1.15, type: hit, id: spin2, shape: circle, forward: 0, radius: 3.0, damage: 0.8, knockback: 1.6, lift: 0.4}
