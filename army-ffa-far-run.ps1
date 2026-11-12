@@ -151,7 +151,7 @@ try {
     $until = (Get-Date).AddSeconds(1500)
     while ((Get-Date) -lt $until) {
         Send 'rwarmy status far'
-        Start-Sleep -Seconds 15
+        Start-Sleep -Seconds 8
         $all = [regex]::Matches((Log), 'RWARMY order far state=(\w+)[^\r\n]*')
         if ($all.Count -gt 0) {
             $last = $all[$all.Count - 1].Value
@@ -161,6 +161,12 @@ try {
         }
     }
     Assert ($state -eq 'ARRIVED') "march reached the far target ($last)"
+    # M11.11e: mid-march (10+ legs, nobody arrived yet) the army walks in lanes, as wide as it stood, not a file.
+    $mid = @([regex]::Matches((Log), 'RWARMY order far state=MOVING[^\r\n]* arrived=0 [^\r\n]* legs=(\d+) [^\r\n]* spread=(\d+)') |
+        Where-Object { [int]$_.Groups[1].Value -ge 10 })
+    Assert ($mid.Count -gt 0) 'a status sample in the middle of the march'
+    $widths = @($mid | ForEach-Object { [int]$_.Groups[2].Value })
+    Assert (($widths | Measure-Object -Minimum).Minimum -ge 30) ("mid-march width stays at least 30 blocks (" + ($widths -join ',') + ")")
     $arrived = [int][regex]::Match($last, 'arrived=(\d+)').Groups[1].Value
     Assert ($arrived -ge 98) "at least 98 of 100 hold their slot ($arrived)"
     $text = Log

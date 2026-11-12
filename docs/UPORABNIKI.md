@@ -176,7 +176,8 @@ returns a boolean, as does `stop(army)`; `status(army)` returns text.
 
 `freeforall` (M11.11; also `freeforall:column`, `freeforall:ring`, default legion at the goal) does not wait:
 there are no companies and no join phase. One route is searched per leg as before, but every member walks it
-at its own pace; a member pushed aside walks back onto it, one that starts away from it or gets stuck runs its own
+at its own pace on its own lane (the route shifted sideways by where it stood, up to 32 blocks), so the army keeps
+its width instead of a column; where a lane is blocked the member takes the shared route and fans out again after it. A member pushed aside walks back onto it, one that starts away from it or gets stuck runs its own
 search (bounded like a leg, sideways on repeated failures). A member that still cannot get through is reported
 blocked and never holds the others. Each member has its own slot in the chosen shape around the goal. The army
 is ARRIVED when every loaded member holds its slot or has stayed blocked for 30 s (BLOCKED if nobody arrived);

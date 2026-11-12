@@ -37,6 +37,10 @@ public final class ArmyFreeMarch {
     static final double ON_ROUTE = 3.0, REJOIN = 10.0, SETTLE = 10.0, ARRIVE = 0.5, LEAVE = 1.5, REFINE = 1.5, SNAP = 0.3;
     /** Blocks around the goal that must be loaded before slots are placed on real ground. */
     static final int GOAL_AREA = 24;
+    /** Widest side offset of a lane; members farther out walk the outermost lane. */
+    static final double LANE = 32;
+    /** Route points walked centrally after a failed lane, and points to ramp back out to the lane. */
+    static final int CENTRE = 24, RAMP = 16;
     private static final double[] TURN = {0, 45, -45, 90, -90};
 
     private static final List<EntityNPCInterface> removeFrom = new ArrayList<EntityNPCInterface>();
@@ -52,6 +56,10 @@ public final class ArmyFreeMarch {
         Phase phase = Phase.ROUTE;
         int idx = -1, windowEnd = -1, lastSearch = -1000, lastTicks, stale;
         double sx, sy, sz, face;
+        /** M11.11e: own lane, the shared route shifted sideways by where the member stood (lat along the side). */
+        double ox, oz, lat;
+        /** Up to this route index the member walks the shared route (its lane failed: a wall, a gap); ramps out after. */
+        int centre = -1000;
         boolean busy, ticking = true;
         Member(EntityNPCInterface npc) { this.npc = npc; this.task = new Task(this); lastTicks = npc.ticksExisted; }
         boolean controls() { return !finished && ticking && !busy && !npc.isDead; }
@@ -71,6 +79,10 @@ public final class ArmyFreeMarch {
                 m.npc.getMoveHelper().setMoveTo(m.sx, m.sy, m.sz, 0.6);
             } else {
                 stopHorizontal(m.npc);
+                // Settle onto the slot centre: a held member pressed by a neighbour drifts back, it does not stay
+                // up to SNAP off (two such neighbours would stand 0.4 apart). A small step, no turning.
+                m.npc.motionX = settle(m.sx - m.npc.posX);
+                m.npc.motionZ = settle(m.sz - m.npc.posZ);
                 face(m.npc, m.face, false);
             }
         }
@@ -87,6 +99,8 @@ public final class ArmyFreeMarch {
     /** Slots were placed on real ground; false while the goal area was not loaded (a far target). */
     private boolean grounded;
     private double yaw = Double.NaN;
+    /** Origin and side direction of the lanes (fixed at the start of the march). */
+    private double laneX, laneZ, sideX, sideZ;
 
     private ArmyFreeMarch(String army, World world, ArmyOrder order) {
         this.army = army; this.world = world; this.order = order; this.terrain = new WorldTerrain(world);
@@ -106,6 +120,11 @@ public final class ArmyFreeMarch {
         }
         f.extend(lead);
         f.yaw = Math.hypot(order.x - cx, order.z - cz) < 1 ? lead.npc.rotationYaw : FormationMath.yawOf(order.x - cx, order.z - cz);
+        f.laneX = lead.npc.posX; f.laneZ = lead.npc.posZ;
+        double dx = order.x - lead.npc.posX, dz = order.z - lead.npc.posZ, len = Math.hypot(dx, dz);
+        if (len < 1) { dx = FormationMath.forwardX(f.yaw); dz = FormationMath.forwardZ(f.yaw); len = 1; }
+        f.sideX = -dz / len; f.sideZ = dx / len;
+        for (Member m : f.members) { f.lane(m); }
         f.assignSlots();
         live.add(f);
         LogWriter.info("RWARMY freeforall " + army + " members=" + f.members.size() + " route=" + f.size
@@ -194,8 +213,45 @@ public final class ArmyFreeMarch {
             Member m = members.get(i);
             if (!want.remove(m.npc)) { release(m); members.remove(i); }
         }
-        for (EntityNPCInterface npc : want) { members.add(new Member(npc)); }
+        for (EntityNPCInterface npc : want) { Member m = new Member(npc); lane(m); members.add(m); }
         if (!want.isEmpty()) { assignSlots(); }
+    }
+
+    /** Side offset of the member from the leader at the start, perpendicular to the march, clamped. */
+    private void lane(Member m) {
+        double lat = (m.npc.posX - laneX) * sideX + (m.npc.posZ - laneZ) * sideZ;
+        m.lat = Math.max(-LANE, Math.min(LANE, lat));
+        m.ox = sideX * m.lat; m.oz = sideZ * m.lat;
+    }
+
+    /** Route point k on the member's own lane, or the shared route where the lane is not standable there. */
+    private PathPoint lanePoint(Member m, int k) {
+        double s = laneScale(m, k);
+        if (Math.abs(m.lat) * s < 0.5) { return new PathPoint(rx[k], ry[k], rz[k]); }
+        double x = rx[k] + 0.5 + m.ox * s, z = rz[k] + 0.5 + m.oz * s;
+        double sy = surfaceY(x, ry[k], z);
+        if (Double.isNaN(sy) || Math.abs(sy - ry[k]) > 3) { return new PathPoint(rx[k], ry[k], rz[k]); }
+        return new PathPoint((int) Math.floor(x), (int) sy, (int) Math.floor(z));
+    }
+
+    /** Distance to route point k: on the member's lane or on the shared route, whichever is nearer. */
+    private double laneDistance(Member m, double x, double z, int k) {
+        double s = laneScale(m, k);
+        return Math.min(Math.hypot(rx[k] + 0.5 + m.ox * s - x, rz[k] + 0.5 + m.oz * s - z),
+                Math.hypot(rx[k] + 0.5 - x, rz[k] + 0.5 - z));
+    }
+
+    /** 0 on the shared route up to m.centre, then back out to the full lane over RAMP route points. */
+    static double laneScale(int centre, int k) {
+        return Math.max(0, Math.min(1, (k - centre) / (double) RAMP));
+    }
+
+    private double laneScale(Member m, int k) { return laneScale(m.centre, k); }
+
+    /** The lane did not get the member through here: the shared route for the next CENTRE points. */
+    private void centre(Member m) {
+        m.centre = Math.max(m.centre, Math.max(0, m.idx) + CENTRE);
+        m.windowEnd = -1;
     }
 
     private void release(Member m) {
@@ -228,18 +284,26 @@ public final class ArmyFreeMarch {
             LogWriter.info("RWARMY freeforall-slots " + army + " grounded at goal");
         }
         if (!routeFinal && extFails < EXT_TRIES && ticks - extAt >= (extFails > 0 ? EXT_RETRY : DECIDE)) {
-            Member front = null;
+            Member front = null, onLane = null;
             for (Member m : members) {
-                // Only a member standing at the route continues it; one that went its own way elsewhere
-                // (e.g. already behind a wall) would leave a gap the others walk into.
-                if (m.controls() && m.phase == Phase.ROUTE && m.idx >= 0 && (front == null || m.idx > front.idx)
-                        && Math.hypot(m.npc.posX - (rx[m.idx] + 0.5), m.npc.posZ - (rz[m.idx] + 0.5)) <= ON_ROUTE
-                        && Math.abs(m.npc.posY - ry[m.idx]) <= 1.5) { front = m; }
+                // Only a member standing at the shared route continues it; one that went its own way elsewhere
+                // (e.g. already behind a wall) would leave a gap the others walk into. A member on its own lane
+                // never searches the shared route: a lane leg moved back to the centre may cross a wall.
+                if (!m.controls() || m.phase != Phase.ROUTE || m.idx < 0 || m.idx < size - 6) { continue; }
+                if (Math.hypot(m.npc.posX - (rx[m.idx] + 0.5), m.npc.posZ - (rz[m.idx] + 0.5)) <= ON_ROUTE
+                        && Math.abs(m.npc.posY - ry[m.idx]) <= 1.5) {
+                    if (front == null || m.idx > front.idx) { front = m; }
+                } else if (laneDistance(m, m.npc.posX, m.npc.posZ, m.idx) <= ON_ROUTE
+                        && (onLane == null || m.idx > onLane.idx)) { onLane = m; }
             }
-            if (size == 0 ? front == null : front != null && front.idx >= size - 6) {
-                Member src = front;
-                if (src == null) { for (Member m : members) { if (m.controls()) { src = m; break; } } }
-                if (src != null) { extend(src); }
+            if (size == 0) {
+                for (Member m : members) { if (m.controls()) { extend(m); break; } }
+            } else if (front != null) {
+                extend(front);
+            } else if (onLane != null && onLane.centre < onLane.idx) {
+                // Only lane members at the front: the foremost walks over to the route end and continues it.
+                centre(onLane);
+                extAt = ticks;
             }
         }
         for (int i = 0; i < members.size(); i++) {
@@ -342,22 +406,29 @@ public final class ArmyFreeMarch {
             toSlot(m); // already ahead of the route (e.g. after a restart): never walk back to it
             return;
         }
-        double off =Math.hypot(npc.posX - (rx[m.idx] + 0.5), npc.posZ - (rz[m.idx] + 0.5));
-        // Pushed aside by the crowd: walk straight back onto the route when the line is clear.
+        double off = laneDistance(m, npc.posX, npc.posZ, m.idx);
+        PathPoint here = lanePoint(m, m.idx);
+        // Pushed aside by the crowd: walk straight back onto the lane when the line is clear.
         // Only a member really away from it (or behind a wall) runs its own search.
-        if (off > ON_ROUTE && (off > REJOIN || Math.abs(npc.posY - ry[m.idx]) > 1.5
-                || !SquadPlanner.straightWalkable(terrain, npc.posX, npc.posY, npc.posZ, rx[m.idx] + 0.5, rz[m.idx] + 0.5))) {
-            int j = off > REJOIN ? m.idx : Math.min(size - 1, m.idx + 4);
-            own(m, rx[j] + 0.5, ry[j], rz[j] + 0.5, 0);
+        if (off > ON_ROUTE && (off > REJOIN || Math.abs(npc.posY - here.y) > 1.5
+                || !SquadPlanner.straightWalkable(terrain, npc.posX, npc.posY, npc.posZ, here.x + 0.5, here.z + 0.5))) {
+            // Away from the lane or cut off from it: rejoin the shared route, which is known to go through.
+            centre(m);
+            int k = off > REJOIN ? m.idx : Math.min(size - 1, m.idx + 4);
+            own(m, rx[k] + 0.5, ry[k], rz[k] + 0.5, 0);
             return;
         }
         m.phase = Phase.ROUTE;
-        if (m.idx >= size - 2) { return; } // at the front, the next leg comes from this member
+        if (m.idx >= size - 2) {
+            // At the front, the next leg comes from this member; one sent over from its lane walks onto the end.
+            if (off > ON_ROUTE) { own(m, rx[m.idx] + 0.5, ry[m.idx], rz[m.idx] + 0.5, 0); }
+            return;
+        }
         PathNavigate nav = npc.getNavigator();
         if (nav.noPath() || m.windowEnd < 0 || m.idx > m.windowEnd - WINDOW / 2 || m.windowEnd < Math.min(size - 1, m.idx + WINDOW) && m.idx > m.windowEnd - 8) {
             int from = m.idx + 1, to = Math.min(size - 1, m.idx + WINDOW);
             PathPoint[] pts = new PathPoint[to - from + 1];
-            for (int k = from; k <= to; k++) { pts[k - from] = new PathPoint(rx[k], ry[k], rz[k]); }
+            for (int k = from; k <= to; k++) { pts[k - from] = lanePoint(m, k); }
             Path current = nav.getPath();
             if (current != null && current.isFinished()) { nav.clearPath(); }
             nav.setPath(new Path(pts), speedIn());
@@ -377,13 +448,13 @@ public final class ArmyFreeMarch {
         int best = -1; double bestD = Double.MAX_VALUE;
         if (m.idx >= 0) {
             for (int k = Math.max(0, m.idx - 8); k < Math.min(size, m.idx + 48); k++) {
-                double d = Math.hypot(rx[k] + 0.5 - x, rz[k] + 0.5 - z);
+                double d = laneDistance(m, x, z, k);
                 if (d <= bestD) { bestD = d; best = k; }
             }
         }
         if (best < 0 || bestD > ON_ROUTE) {
             for (int k = 0; k < size; k++) {
-                double d = Math.hypot(rx[k] + 0.5 - x, rz[k] + 0.5 - z);
+                double d = laneDistance(m, x, z, k);
                 if (d <= bestD) { bestD = d; best = k; }
             }
         }
@@ -433,6 +504,7 @@ public final class ArmyFreeMarch {
         boolean toGoal = size == 0 || routeFrozen() && m.idx >= size - 2 || routeFinal && m.idx >= 0 && remaining(m.idx) <= SETTLE
                 || Math.hypot(npc.posX - m.sx, npc.posZ - m.sz) <= SETTLE;
         if (!toGoal && m.idx < size - 2) {
+            centre(m); // stuck on its lane: the shared route gets through, the lane resumes after it
             int j = Math.min(size - 1, m.idx + 8);
             tx = rx[j] + 0.5; ty = ry[j]; tz = rz[j] + 0.5;
         } else {
@@ -507,7 +579,13 @@ public final class ArmyFreeMarch {
 
     String status() {
         int arrived = 0, blocked = 0, moving = 0, fighting = 0, waiting = 0;
+        double lo = Double.MAX_VALUE, hi = -Double.MAX_VALUE;
         for (Member m : members) {
+            if (m.ticking && m.phase != Phase.HOLD) {
+                // Width of the marching army across its direction (M11.11e: lanes, not a single file).
+                double side = (m.npc.posX - laneX) * sideX + (m.npc.posZ - laneZ) * sideZ;
+                lo = Math.min(lo, side); hi = Math.max(hi, side);
+            }
             if (!m.ticking) { waiting++; }
             else if (m.busy) { fighting++; }
             else if (m.phase == Phase.HOLD) { arrived++; }
@@ -516,7 +594,8 @@ public final class ArmyFreeMarch {
         }
         return "mode=freeforall members=" + members.size() + " arrived=" + arrived + " moving=" + moving
                 + " blocked=" + blocked + " fighting=" + fighting + " unloaded=" + waiting + " route=" + size
-                + " legs=" + legs + " final=" + routeFinal + " searches=" + searches + " age=" + ticks;
+                + " legs=" + legs + " final=" + routeFinal + " searches=" + searches + " age=" + ticks
+                + " spread=" + (hi < lo ? 0 : Math.round(hi - lo));
     }
 
     /** End: arrived members take their slot as home and face the formation direction; tasks go away. */
@@ -555,6 +634,11 @@ public final class ArmyFreeMarch {
         for (ArmyFreeMarch f : new ArrayList<ArmyFreeMarch>(live)) { f.cancel(); }
         live.clear();
         flushRemovals();
+    }
+
+    /** Horizontal step toward the slot centre while holding: a fraction of the offset, none within 2 cm. */
+    static double settle(double off) {
+        return Math.abs(off) < 0.02 ? 0 : Math.max(-0.05, Math.min(0.05, off * 0.3));
     }
 
     private static void stopHorizontal(EntityNPCInterface npc) {
