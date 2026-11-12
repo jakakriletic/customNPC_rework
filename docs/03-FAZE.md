@@ -804,6 +804,7 @@ dotika):
 | M16.3 | Orodja za AI: knjižnica poimenovanih poz, `*.anim.yaml` → JSON prevajalnik z IK (po vzoru `scripts/gusarji`), predogled klipa v PNG brez Minecrafta, `/npcanim reload` brez restarta, datoteke iz `config/customnpcs/animations/` | M |
 | M16.4 | Privzeta knjižnica klipov za biped NPC (napad z mečem, blok, strel, met, pitje, pozdrav, smrt, idle variante), izbira v GUI-ju NPC-ja in vezava na dogodke (napad, zadetek, smrt, idle); navodila v `UPORABNIKI.md` »kako AI naredi novo animacijo v 5 minutah« | M |
 | M16.5 | Preverba: nova animacija iz same datoteke na dedicated strežniku z dvema klientoma, reload, pozni vstop, 200 animiranih NPC-jev (cena enkrat kot podatek), stikalo 0 = original | S |
+| M16.6 | Zahteva lastnika 12. 11.: predelava shranjenih NPC-jev (clone tab, `/noppes clone`) v datoteko, ki je za AI najbolj intuitivna: berljiva imena ključev namesto CNPC okrajšav, privzete vrednosti izpuščene, sklopi (videz, statistike, AI, inventar, skripte kot vrstice, `RwRig`), kratek opis polj ob datoteki; uvoz in izvoz brez izgub ter združljivost s starimi klonami (stari JSON se še vedno bere) | M |
 
 Pod stikalom (novo, npr. `RwAnimCore`, privzeto 0); pravila Q407 (brez omejitve poskusov, testi po
 potrebi). M15 nato uporablja M16 namesto notranjosti `customnpcentities`.
