@@ -1,0 +1,27 @@
+{
+  "model": "legionary",
+  "name": "Legionarius",
+  "skinTexture": "customnpcs:textures/entity/humanmale/legionary.png",
+  "script": [
+    "// Legionary: on a new target it raises the scutum and advances behind it (shield_advance loops on the",
+    "// upper body while the legs walk); in reach it stabs past the shield or bashes, then raises it again.",
+    "// Damage comes from the clips' hit events, so the CustomNPCs melee swing is cancelled.",
+    "var Animators = Java.type('noppes.npcs.rework.anim.Animators');",
+    "var cooldown = 0;",
+    "function engaged(npc) { var t = npc.getAttackTarget(); return t != null && t.isAlive(); }",
+    "function target(e) { Animators.of(e.npc).blendTo('shield_advance', 6); }",
+    "function tick(e) {",
+    "  var npc = e.npc, a = Animators.of(npc), clip = a.getClip();",
+    "  if (cooldown > 0) { cooldown -= 10; }",
+    "  if (!engaged(npc)) { if (clip == 'shield_advance') { a.stop(); } return; }",
+    "  if (clip == '') { a.blendTo('shield_advance', 6); clip = 'shield_advance'; }",
+    "  var t = npc.getAttackTarget(), dx = t.getX() - npc.getX(), dz = t.getZ() - npc.getZ();",
+    "  if (Math.sqrt(dx * dx + dz * dz) < 2.4 && cooldown <= 0 && clip == 'shield_advance') {",
+    "    a.play(Math.random() < 0.7 ? 'shield_stab' : 'shield_bash');",
+    "    cooldown = 20;",
+    "  }",
+    "}",
+    "function animationEnd(e) { if (engaged(e.npc) && (e.clip == 'shield_stab' || e.clip == 'shield_bash')) { Animators.of(e.npc).blendTo('shield_advance', 4); } }",
+    "function meleeAttack(e) { e.setCanceled(true); }"
+  ]
+}

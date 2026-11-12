@@ -2,7 +2,9 @@
 # run directory (RwAnimCore=1 in its config copy, no customnpcentities). NPCs summoned with only NBT RwRig
 # are drawn as rigged models, clips reach the client, a data-only hit event hurts a zombie, rig and own
 # clips survive the clone NBT round trip. Two PNGs. No dedicated server.
-param([string]$Models='humanoid,knight,skeleton_warrior,ogre,troll,warg,giant_spider,cave_bear',
+param([string]$Models='steve,legionary,humanoid,knight,skeleton_warrior,ogre,troll,warg,giant_spider,cave_bear',
+      [string]$Legion=(Join-Path $PSScriptRoot 'rig_src/examples/legionary.rig.json'),
+      [string]$LegionSkin=(Join-Path $PSScriptRoot 'rig_src/steve/preview_skin.png'),
       [string]$Package=(Join-Path $PSScriptRoot 'rig_src/examples/knight_boss.rig.json'))
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
@@ -61,10 +63,14 @@ try {
     [IO.File]::WriteAllText($cfg, $cfgText, (New-Object Text.UTF8Encoding $false))
     Assert (@([regex]::Matches($cfgText, '(?m)^RwAnimCore=')).Count -eq 1) 'config copy has exactly one RwAnimCore=1'
     Assert (-not (Test-Path -LiteralPath (Join-Path $work 'mods'))) 'no optional entities mod'
+    # The legionary package names this skin; the run's customnpcs/ folder is a resource pack of CustomNPCs.
+    $skinDir = Join-Path $work 'customnpcs/assets/customnpcs/textures/entity/humanmale'
+    New-Item -ItemType Directory -Path $skinDir -Force | Out-Null
+    Copy-Item -LiteralPath $LegionSkin -Destination (Join-Path $skinDir 'legionary.png')
     $out = "$prefix.proof.json"
     $job = "$prefix.job"
     $log = "$prefix-client.log"
-    [IO.File]::WriteAllLines($job, @('rigCore=1', "world=$world", "models=$Models", ('package=' + $Package.Replace('\', '/')), ('out=' + $out.Replace('\', '/'))), (New-Object Text.UTF8Encoding $false))
+    [IO.File]::WriteAllLines($job, @('rigCore=1', "world=$world", "models=$Models", ('package=' + $Package.Replace('\', '/')), ('legion=' + $Legion.Replace('\', '/')), ('out=' + $out.Replace('\', '/'))), (New-Object Text.UTF8Encoding $false))
     $env:JAVA_HOME = Join-Path $root '.tools/jdk8'
     $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
     $psi = New-Object Diagnostics.ProcessStartInfo
@@ -85,11 +91,12 @@ try {
     $proof = [IO.File]::ReadAllText($out) | ConvertFrom-Json
     Assert ($proof.success -eq $true) 'proof success'
     $keys = @('server-rigs','client-rigs','client-meshes','rig-frames','client-clip-synced','hit-event-damage','own-clips-valid',
-        'clone-keeps-rig','clone-keeps-own-clips','own-clip-plays','own-clip-synced','package-applied','package-own-clip','js-attack-damage')
+        'clone-keeps-rig','clone-keeps-own-clips','own-clip-plays','own-clip-synced','package-applied','package-own-clip','js-attack-clips','js-attack-damage',
+        'legion-shield-advance','legion-shield-on-client','legion-attack','legion-damage')
     $rows = @($proof.checks)
     Assert ($rows.Count -eq $keys.Count) "exactly $($keys.Count) checks"
     Assert (@($rows | Where-Object { $_.ok -ne $true }).Count -eq 0) 'all checks passed'
-    Assert (@($proof.screenshots).Count -eq 3) 'three screenshots'
+    Assert (@($proof.screenshots).Count -eq 5) 'five screenshots'
     foreach ($image in $proof.screenshots) {
         $path = Join-Path (Join-Path $root 'audit/screenshots') $image
         Assert ((Test-Path -LiteralPath $path) -and (Get-Item -LiteralPath $path).Length -gt 1000) "screenshot $image"

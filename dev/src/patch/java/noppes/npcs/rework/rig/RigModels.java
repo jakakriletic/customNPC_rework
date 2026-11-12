@@ -25,8 +25,10 @@ import noppes.npcs.LogWriter;
  * model is logged once and gives an empty clip library (the NPC is drawn as the original biped).
  */
 public final class RigModels {
-    /** Built-in models: id, head bone (null for none), shadow size. */
+    /** Built-in models: id, head bone (null for none), shadow size, drawn with the NPC's own skin, has gear. */
     private static final Object[][] BUILT_IN = {
+            {"steve", "head", 0.5F, true, false},
+            {"legionary", "head", 0.5F, true, true},
             {"humanoid", "head", 0.5F},
             {"knight", "head", 0.5F},
             {"skeleton_warrior", "head", 0.5F},
@@ -48,10 +50,14 @@ public final class RigModels {
         public final File folder;
         public final AnimLibrary clips;
         public final List<String> errors;
+        /** The body has player-skin UVs (64x64) and is drawn with the NPC's CustomNPCs skin. */
+        public final boolean skin;
+        /** A second mesh {@code <id>_gear} (weapon, shield ...) with its own texture, same bones. */
+        public final boolean gear;
 
-        Model(String id, String headBone, float shadow, File folder, AnimLibrary clips, List<String> errors) {
+        Model(String id, String headBone, float shadow, File folder, AnimLibrary clips, List<String> errors, boolean skin, boolean gear) {
             this.id = id; this.headBone = headBone; this.shadow = shadow; this.folder = folder;
-            this.clips = clips; this.errors = Collections.unmodifiableList(errors);
+            this.clips = clips; this.errors = Collections.unmodifiableList(errors); this.skin = skin; this.gear = gear;
         }
 
         public boolean builtIn() { return folder == null; }
@@ -113,9 +119,12 @@ public final class RigModels {
     private static Model load(String id) {
         String head = "head";
         float shadow = 0.6F;
-        boolean builtIn = false;
+        boolean builtIn = false, skin = false, gear = false;
         for (Object[] b : BUILT_IN) {
-            if (b[0].equals(id)) { head = (String) b[1]; shadow = (Float) b[2]; builtIn = true; }
+            if (b[0].equals(id)) {
+                head = (String) b[1]; shadow = (Float) b[2]; builtIn = true;
+                if (b.length > 3) { skin = (Boolean) b[3]; gear = (Boolean) b[4]; }
+            }
         }
         File dir = folder();
         File geo = new File(dir, id + ".geo.json");
@@ -132,6 +141,8 @@ public final class RigModels {
                     JsonObject rig = root.getAsJsonObject("rig");
                     if (rig.has("head")) { head = rig.get("head").isJsonNull() ? null : rig.get("head").getAsString(); }
                     if (rig.has("shadow")) { shadow = rig.get("shadow").getAsFloat(); }
+                    if (rig.has("skin")) { skin = rig.get("skin").getAsBoolean(); }
+                    if (rig.has("gear")) { gear = rig.get("gear").getAsBoolean(); }
                 }
             } else {
                 errors.add("no " + id + ".animation.json");
@@ -140,7 +151,7 @@ public final class RigModels {
             errors.add(id + ".animation.json: " + e);
         }
         for (String e : errors) { LogWriter.error("RWRIG model " + id + ": " + e); }
-        return new Model(id, head, shadow, user ? dir : null, clips, errors);
+        return new Model(id, head, shadow, user ? dir : null, clips, errors, skin, gear);
     }
 
     private static InputStream open(File f) throws java.io.IOException {

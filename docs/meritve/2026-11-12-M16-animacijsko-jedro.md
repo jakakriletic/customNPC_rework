@@ -42,9 +42,30 @@ napad na tarčo: zombi 20 → 14. Slike `audit/screenshots/m16-rig-idle.png`, `m
 klip zaradi pozne asinhrone posodobitve NPC-ja (oboje popravljeno). Unit 842 (+8 `RigCoreTest`), build in
 paket PASS (novi vnosi samo pod `assets/customnpcs/rig/`, `textures/rig/`, `assets/rwrig/`).
 
+## Legionar (Steve), privzetki NPC-ja (zahteva lastnika 12. 11.)
+
+Lastnik: legionar naj bo navaden Steve s preneseno kožo legionarja; ob napadu na sovražnika dvigne ščit,
+nato napade. `steve` in `legionary`: telo igralca z UV-ji kože 64x64 (notranji in zunanji sloj), razdeljeno na
+komolce in kolena (iste kosti kot človeška družina, vsi klipi veljajo), nariše se s CustomNPCs kožo NPC-ja;
+legionar ima še gladius in scutum kot ločen `legionary_gear` z lastno teksturo. Klipi `shield_advance` (zanka,
+samo zgornji del telesa: noge hodijo naprej; akcija se zdaj meša samo na kosteh, ki jih klip premika),
+`shield_stab`, `shield_bash`; paket `rig_src/examples/legionary.rig.json` (JS: `target` dvigne ščit, `tick`
+napade v dosegu, `animationEnd` ga spet dvigne). Paket sprejme `skinTexture`/`skinUrl`/`skinPlayer`.
+Nov NPC privzeto brez dodatnih oči (Eyes Type -1) in brez respawna (SpawnCycle 3); shranjeni obdržijo svoje.
+
+Popravki po meritvi: `hit` je meril od točke 1 blok pred NPC-jem (privzeto `forward` 1 namesto 0 kot v
+izvirniku), doseg se zdaj skalira z velikostjo NPC-ja. **Pomembno:** prejšnja meritev
+`m16-rig-2026-11-12-123724` ni dokazala škode iz `hit`: zombi je izgubljal zdravje zaradi sonca. Harness zdaj
+uporablja vindicatorja (ne gori) in šteje samo škodo z NPC-jem kot virom (`LivingHurtEvent`).
+
+`rig-run.ps1` **PASS** `audit/m16-rig-2026-11-12-132013.json`, 21/21: 10 modelov, troll `smash` brez AI zada
+5,0 (1,0 x melee 5), JS vitez (taunt, thrust, kick, overhead, slash) 26+ škode, legionar dvigne ščit (tudi na
+klientu), napreduje 5,7 → 1,3 bloka, `shield_stab` 6,0 in `shield_bash` 2,0, sovražnik mrtev. Slike
+`audit/screenshots/m16-legionary-advance.png`, `-attack.png`. Unit 844, paket PASS.
+
 ## Omejitve
 
 Samo integriran klient (en igralec); dedicated z dvema klientoma, pozni vstop, 200 animiranih NPC-jev (cena)
 in `/rwrig reload` na več klientih še niso izmerjeni (M16.5). Uporabniški modeli iz `customnpcs/rigs/` morajo
-biti tudi na klientih. Rig nariše samo model (brez oklepa, predmetov v roki in CNPC delov). Ni GUI-ja za
+biti tudi na klientih. Rig nariše samo model (brez oklepa, predmetov v roki in CNPC delov); `steve`/`legionary` podpirata samo kože 64x64 (ne stare 64x32). Ni GUI-ja za
 izbiro modela in klipa (M16.4); stari `customnpcentities` hooki ostanejo za tiste entitete.

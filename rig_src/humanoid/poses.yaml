@@ -318,3 +318,52 @@ death_fall:
   arm_r.out: 30
   arm_l.out: 40
   head.nod: -16
+
+# ---------------------------------------------------------------- ščit (legionar)
+shield_wall:
+  opis: scutum pred telesom (zgornji del telesa; noge ostanejo hoji), gladius ob boku konica naprej
+  arm_l.swing: -90
+  arm_l.raise: 24
+  arm_l.out: -3
+  elbow_l.bend: 22
+  torso.twist: -8
+  torso.bend: 8
+  head.nod: 6
+  arm_r.raise: 18
+  arm_r.out: 6
+  elbow_r.bend: 84
+  wrist_r.bend: -72
+
+shield_wall_breathe:
+  base: shield_wall
+  torso.bend: 10
+  head.nod: 8
+  arm_l.raise: 30
+
+shield_stab_windup:
+  base: shield_wall
+  torso.twist: -22
+  arm_r.raise: 8
+  elbow_r.bend: 100
+  wrist_r.bend: -80
+
+shield_stab_hit:
+  opis: gladius sune naprej mimo desnega roba ščita
+  base: shield_wall
+  torso.twist: 8
+  torso.bend: 12
+  arm_r.raise: 74
+  arm_r.out: -4
+  elbow_r.bend: 0
+  wrist_r.bend: -74
+  body.z: 2
+
+shield_bash:
+  opis: sunek s ščitom naprej
+  base: shield_wall
+  arm_l.raise: 46
+  arm_l.out: -6
+  elbow_l.bend: 4
+  torso.twist: -26
+  torso.bend: 14
+  body.z: 3

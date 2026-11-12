@@ -1,0 +1,12 @@
+# Vbod z gladiusom mimo roba ščita, ščit ostane spredaj.
+name: shield_stab
+length: 0.8
+ground: off
+beats:
+  - {t: 0.00, pose: shield_wall}
+  - {t: 0.22, pose: shield_stab_windup, ease: out, hold: 0.05}
+  - {t: 0.36, pose: shield_stab_hit, ease: strike, hold: 0.1}
+  - {t: 0.80, pose: shield_wall, ease: smooth}
+events:
+  - {t: 0.30, type: sound, sound: minecraft:entity.player.attack.knockback}
+  - {t: 0.36, type: hit, id: stab, shape: arc, radius: 2.6, arc: 50, damage: 1.2, knockback: 0.3, lift: 0.1}

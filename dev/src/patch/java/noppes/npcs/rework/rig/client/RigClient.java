@@ -95,7 +95,7 @@ public final class RigClient {
         }
         if (MESHES.containsKey(id)) { return MESHES.get(id); }
         GeoMesh mesh = null;
-        RigModels.Model m = RigModels.get(id);
+        RigModels.Model m = RigModels.get(id.endsWith("_gear") ? id.substring(0, id.length() - 5) : id);
         if (m != null) {
             try {
                 if (m.builtIn()) {
@@ -113,11 +113,26 @@ public final class RigClient {
         return mesh;
     }
 
-    static synchronized ResourceLocation texture(RigData rig) {
+    static synchronized ResourceLocation texture(Render<?> render, EntityNPCInterface npc, RigData rig) {
         if (!rig.texture.isEmpty()) { return new ResourceLocation(rig.texture); }
-        RigModels.Model m = RigModels.get(rig.model);
-        if (m == null || m.builtIn()) { return new ResourceLocation("customnpcs", "textures/rig/" + rig.model + ".png"); }
+        RigModels.Model def = RigModels.get(rig.model);
+        // A player-shaped model wears the NPC's own skin (file, URL or player, as CustomNPCs loads it).
+        if (def != null && def.skin && render instanceof noppes.npcs.client.renderer.RenderNPCInterface) {
+            @SuppressWarnings({"unchecked", "rawtypes"})
+            ResourceLocation skin = ((noppes.npcs.client.renderer.RenderNPCInterface) render).getEntityTexture(npc);
+            if (skin != null) { return skin; }
+        }
+        return ownTexture(rig.model);
+    }
+
+    /** The model's own (or its gear's) texture: in the jar, or a file of a user model. */
+    static synchronized ResourceLocation ownTexture(String id) {
+        RigModels.Model m = RigModels.get(id.endsWith("_gear") ? id.substring(0, id.length() - 5) : id);
+        if (m == null || m.builtIn()) { return new ResourceLocation("customnpcs", "textures/rig/" + id + ".png"); }
+        RigData rig = new RigData();
+        rig.model = id;
         ResourceLocation loc = FILE_TEXTURES.get(rig.model);
+        if (loc == null && !new File(m.folder, rig.model + ".png").isFile()) { return new ResourceLocation("customnpcs", "textures/rig/" + rig.model + ".png"); }
         if (loc == null) {
             loc = new ResourceLocation("customnpcs", "rigfile/" + rig.model);
             try {
@@ -162,8 +177,15 @@ public final class RigClient {
         GlStateManager.disableCull();
         boolean hurt = npc.hurtTime > 0 || npc.deathTime > 0 && npc.deathTime <= 20;
         if (hurt) { GlStateManager.color(1, 0.6F, 0.6F, 1); } else { GlStateManager.color(1, 1, 1, 1); }
-        Minecraft.getMinecraft().getTextureManager().bindTexture(texture(rig));
+        Minecraft.getMinecraft().getTextureManager().bindTexture(texture(render, npc, rig));
         mesh.render(pose);
+        if (def != null && def.gear) {
+            GeoMesh gear = mesh(rig.model + "_gear");
+            if (gear != null) {
+                Minecraft.getMinecraft().getTextureManager().bindTexture(ownTexture(rig.model + "_gear"));
+                gear.render(pose);
+            }
+        }
         frames++;
         GlStateManager.color(1, 1, 1, 1);
         GlStateManager.enableCull();
@@ -208,7 +230,7 @@ public final class RigClient {
                 actionWeight = MathHelper.clamp(Math.min(1, t / in) * Math.min(1, (clip.length - t) / FADE_OUT), 0, 1);
                 if (clip.loop) { actionWeight = Math.min(1, t / in); }
                 Pose action = clip.sample(t, new Pose());
-                pose.blend(action, actionWeight);
+                pose.blendOnly(action, actionWeight);
                 props = action;
             }
         }
@@ -216,7 +238,7 @@ public final class RigClient {
         if (hurt != null && npc.hurtTime > 0 && npc.deathTime <= 0) {
             float t = Math.min(hurt.length, (npc.maxHurtTime - npc.hurtTime + partial) / 20F);
             float w = (actionWeight > 0.5F ? 0.35F : 0.85F) * MathHelper.sin((float) Math.PI * t / hurt.length);
-            if (w > 0) { pose.blend(hurt.sample(t, new Pose()), w); }
+            if (w > 0) { pose.blendOnly(hurt.sample(t, new Pose()), w); }
         }
         pose.bones.keySet().removeIf(Pose::isProp);
         if (props != null) {

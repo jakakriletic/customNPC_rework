@@ -4,7 +4,7 @@
 geo: dev/src/patch/resources/assets/customnpcs/rig/humanoid.geo.json
 texture: dev/src/patch/resources/assets/customnpcs/textures/rig/humanoid.png
 output: dev/src/patch/resources/assets/customnpcs/rig/humanoid.animation.json
-copies: [knight, skeleton_warrior]
+copies: [knight, skeleton_warrior, steve, legionary]
 
 feet: [shinR, shinL]
 

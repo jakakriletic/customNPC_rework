@@ -108,6 +108,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-12 | M16 legionar (Steve + scutum, JS dvigne ščit in napade), privzetki NPC-ja (brez oči, brez respawna), pošteno štetje škode: `rig-run.ps1` 10 modelov | PASS `m16-rig-2026-11-12-132013` 21/21: troll smash 5,0, JS vitez 26+, legionar ščit → vbod 6,0 + sunek 2,0; unit 844, paket PASS; prejšnja vrstica M16 ni dokazala `hit` (sonce) | [zapis](meritve/2026-11-12-M16-animacijsko-jedro.md) |
 | 2026-11-12 | M16 animacijsko jedro: `rig-run.ps1` integriran dev klient, `RwAnimCore=1`, brez customnpcentities, 8 modelov le z NBT `RwRig`, paket `knight_boss.rig.json` z JS | PASS `m16-rig-2026-11-12-123724` 14/14: risanje, sinhronizacija klipa, `hit` škoda, klon ohrani rig in klipe, JS napad zombi 20 → 14; unit 842, paket PASS | [zapis](meritve/2026-11-12-M16-animacijsko-jedro.md) |
 | 2026-11-12 | M11.11e pasovi Free for all: `army-ffa-far-run.ps1` (+ širina ≥30) in `army-ffa-run.ps1` dev dedicated | PASS `m1111-far-2026-11-12-120245` širina 58–60, 100/100; PASS `m1111-ffa-2026-11-12-115915` 199/199, razmik ≥0,96; unit 834, paket PASS | [zapis](meritve/2026-11-11-M11.11-freeforall.md) |
 | 2026-11-11 | M11.11d ena zastavica: `army-flag-run.ps1` dev dedicated, vojska 22 v dveh skupinah 150 blokov narazen, `moveflag`; Xaero v0.1.13 build | PASS `m1111-flag-2026-11-11-232223`: odcep natanko 10 v `flag-2`, 10/10 na mestu, 12 ostane brez ukaza, cela vojska brez odcepa; unit 831, paket PASS; adapter 86 JUnit + reobf PASS, 7/7 mods | [zapis](meritve/2026-11-11-M11.11-freeforall.md) |

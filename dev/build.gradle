@@ -404,6 +404,8 @@ task testOriginal(type: Test) {
     exclude '**/ArmyFreeLaneTest.class'
     // M16: the built-in animation core is new.
     exclude '**/rework/rig/**'
+    // Owner request 12. 11.: new NPC defaults (no eye layer, no respawn) differ from the original.
+    exclude '**/rework/defaults/**'
     // M11.6: travelling chunk tickets are new.
     exclude '**/ArmyTicketPlanTest.class'
     // M11.8b: new permission packet codec, absent from the original.

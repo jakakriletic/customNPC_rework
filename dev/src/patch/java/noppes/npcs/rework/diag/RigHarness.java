@@ -16,7 +16,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
-import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.entity.monster.EntityVindicator;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ScreenShotHelper;
@@ -56,6 +56,12 @@ public final class RigHarness {
     private volatile float zombieBefore, zombieAfter = -1;
     private volatile String cloneModel = "", cloneClips = "", ownPlayed = "", ownErrors = "";
     private volatile int trollId = -1;
+    private volatile int legionId = -1, legionZombie = -1;
+    private volatile float legionBefore, legionAfter = -1;
+    private final java.util.List<String> legionSeen = new java.util.ArrayList<String>();
+    private boolean legionClientAdvance;
+    private int legionTicks, bossTicks;
+    private final java.util.List<String> bossSeen = new java.util.ArrayList<String>();
     private String syncedClip = "";
     private volatile int knightId = -1, bossZombie = -1;
     private volatile boolean knightScript;
@@ -141,7 +147,7 @@ public final class RigHarness {
                                 "gamerule doDaylightCycle false", "time set 6000", "tp " + player + " 0 7 -9 0 12"}) { cmds.add(c); }
                         for (int i = 0; i < MODELS.length; i++) {
                             int x = -((MODELS.length - 1) * 5) / 2 + i * 5;
-                            cmds.add("summon customnpcs:customnpc " + x + " 4 10 {Name:\"rig_" + MODELS[i] + "\",MovingState:0,StandingState:1,Orientation:180,"
+                            cmds.add("summon customnpcs:customnpc " + x + " 4 10 {Name:\"rig_" + MODELS[i] + "\",MovingState:0,StandingState:1,Orientation:180,StartPosNew:[I;" + x + ",4,10],"
                                     + "RwRig:{Model:\"" + MODELS[i] + "\"}}");
                         }
                         for (String c : cmds) {
@@ -173,8 +179,11 @@ public final class RigHarness {
                     submit(mc, () -> {
                         WorldServer w = mc.getIntegratedServer().getWorld(0);
                         EntityNPCInterface troll = (EntityNPCInterface) w.getEntityByID(trollId);
-                        EntityZombie z = new EntityZombie(w);
-                        z.setLocationAndAngles(troll.posX, troll.posY, troll.posZ - 4, 0, 0);
+                        EntityVindicator z = new EntityVindicator(w);
+                        // Data-only attack: the troll stands still (no AI) facing -Z; the target is where smash lands
+                        // (forward 5.1, his right 0.8: his right is +X when he faces -Z).
+                        troll.setNoAI(true);
+                        z.setLocationAndAngles(troll.posX + 0.8, troll.posY, troll.posZ - 5.1, 0, 0);
                         z.setNoAI(true);
                         w.spawnEntity(z);
                         zombieId = z.getEntityId();
@@ -204,7 +213,7 @@ public final class RigHarness {
                     submit(mc, () -> {
                         WorldServer w = mc.getIntegratedServer().getWorld(0);
                         Entity z = w.getEntityByID(zombieId);
-                        zombieAfter = z instanceof EntityZombie ? ((EntityZombie) z).getHealth() : 0;
+                        zombieAfter = z instanceof EntityVindicator ? ((EntityVindicator) z).getHealth() : 0;
                         EntityNPCInterface troll = (EntityNPCInterface) w.getEntityByID(trollId);
                         // Clone round trip: the saved NBT makes a new NPC that wears the same rig and own clips.
                         String own = "{\"animations\":{\"wave\":{\"animation_length\":3.0,\"bones\":{\"armL\":{\"rotation\":{\"0.0\":[0,0,0],\"0.5\":[-150,0,-20],\"3.0\":[0,0,0]}}},"
@@ -230,7 +239,8 @@ public final class RigHarness {
                     break;
                 }
                 case "CHECK":
-                    check("hit-event-damage", zombieAfter >= 0 && zombieAfter < zombieBefore, "zombie " + zombieBefore + " -> " + zombieAfter);
+                    System.out.println("M16 EVENTS events=" + noppes.npcs.rework.rig.RigEvents.events + " hits=" + noppes.npcs.rework.rig.RigEvents.hits + " landed=" + noppes.npcs.rework.rig.RigEvents.hitsLanded + " last=" + noppes.npcs.rework.rig.RigEvents.lastHit);
+                    check("hit-event-damage", dealt(zombieId) > 0, "npc damage " + dealt(zombieId) + " (health " + zombieBefore + " -> " + zombieAfter + ")");
                     check("own-clips-valid", ownErrors.isEmpty(), "problems=" + ownErrors);
                     check("clone-keeps-rig", cloneModel.equals("troll"), "model=" + cloneModel);
                     check("clone-keeps-own-clips", cloneClips.contains("wave") && cloneClips.contains("smash"), "clips=" + cloneClips);
@@ -256,7 +266,7 @@ public final class RigHarness {
                             knightId = knight.getEntityId();
                             knightScript = knight.script.isEnabled();
                             knightModel = knight.rwRig.model + "@" + knight.rwRig.scale;
-                            EntityZombie z = new EntityZombie(w);
+                            EntityVindicator z = new EntityVindicator(w);
                             z.setLocationAndAngles(knight.posX, knight.posY, knight.posZ - 2.5, 0, 0);
                             z.setNoAI(true);
                             w.spawnEntity(z);
@@ -265,14 +275,32 @@ public final class RigHarness {
                             knight.setAttackTarget(z);
                         } catch (java.io.IOException io) { throw new IllegalStateException(io); }
                     });
-                    enter("BOSS", 120);
+                    bossTicks = 0;
+                    enter("BOSS", 2);
                     break;
                 case "BOSS":
                     if (!serverDone) { break; }
+                    {
+                        Entity k = mc.getIntegratedServer().getWorld(0).getEntityByID(knightId);
+                        if (k instanceof EntityNPCInterface) {
+                            String c = ((EntityNPCInterface) k).rwRigPlayer.clip();
+                            if (!c.isEmpty() && !bossSeen.contains(c)) { bossSeen.add(c); System.out.println("M16 BOSS clip " + c + " at " + bossTicks); }
+                        }
+                    }
+                    if (++bossTicks < 160) { break; }
+                    {
+                        Entity k = mc.getIntegratedServer().getWorld(0).getEntityByID(knightId);
+                        if (k instanceof EntityNPCInterface) {
+                            for (noppes.npcs.controllers.ScriptContainer sc : ((EntityNPCInterface) k).script.getScripts()) {
+                                for (String line : sc.console.values()) { System.out.println("M16 BOSS console " + line.replace('\n', ' ')); }
+                            }
+                        }
+                        System.out.println("M16 BOSS clips " + bossSeen + " " + noppes.npcs.rework.rig.RigEvents.lastHit);
+                    }
                     submit(mc, () -> {
                         WorldServer w = mc.getIntegratedServer().getWorld(0);
                         Entity z = w.getEntityByID(bossZombie);
-                        bossAfter = z instanceof EntityZombie ? ((EntityZombie) z).getHealth() : 0;
+                        bossAfter = z instanceof EntityVindicator ? ((EntityVindicator) z).getHealth() : 0;
                         EntityNPCInterface knight = (EntityNPCInterface) w.getEntityByID(knightId);
                         bossClips = knight == null ? "" : String.join(",", knight.rwRig.library().sortedClipNames());
                     });
@@ -283,7 +311,78 @@ public final class RigHarness {
                     if (!serverDone) { break; }
                     check("package-applied", knightModel.equals("knight@1.25") && knightScript, "model=" + knightModel + " script=" + knightScript);
                     check("package-own-clip", bossClips.contains("taunt") && bossClips.contains("leap_slam"), "clips=" + bossClips);
-                    check("js-attack-damage", bossAfter >= 0 && bossAfter < bossBefore, "zombie " + bossBefore + " -> " + bossAfter);
+                    check("js-attack-clips", !bossSeen.isEmpty(), "clips=" + bossSeen);
+                    check("js-attack-damage", dealt(bossZombie) > 0, "npc damage " + dealt(bossZombie) + " (health " + bossBefore + " -> " + bossAfter + ")");
+                    if (job.getProperty("legion", "").isEmpty()) {
+                        data.addProperty("frames", RigClient.frames);
+                        finish(mc, true, "");
+                        break;
+                    }
+                    submit(mc, () -> {
+                        try {
+                            File src = new File(job.getProperty("legion"));
+                            File dir = noppes.npcs.rework.rig.RigModels.folder();
+                            Files.copy(src.toPath(), new File(dir, src.getName()).toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            MinecraftServer s = mc.getIntegratedServer();
+                            if (s.getCommandManager().executeCommand(s, "rwrig apply rig_legionary " + src.getName()) < 1) { throw new IllegalStateException("legion apply failed"); }
+                            WorldServer w = s.getWorld(0);
+                            EntityNPCInterface leg = null;
+                            for (EntityNPCInterface n : rigged(w)) { if (n.getName().equals("Legionarius")) { leg = n; } }
+                            if (leg == null) { throw new IllegalStateException("no Legionarius after apply"); }
+                            legionId = leg.getEntityId();
+                            EntityVindicator z = new EntityVindicator(w);
+                            z.setLocationAndAngles(leg.posX, leg.posY, leg.posZ - 6, 0, 0);
+                            z.setNoAI(true);
+                            w.spawnEntity(z);
+                            legionZombie = z.getEntityId();
+                            legionBefore = z.getHealth();
+                            leg.setAttackTarget(z);
+                            // Camera beside the fight, looking at it from his left (-X is ahead of the yaw 90 view).
+                            s.getCommandManager().executeCommand(s, "tp " + mc.player.getName() + " " + (leg.posX + 4.5) + " " + (leg.posY + 1.2) + " " + (leg.posZ - 3) + " 90 12");
+                        } catch (java.io.IOException io) { throw new IllegalStateException(io); }
+                    });
+                    legionTicks = 0;
+                    enter("LEGION", 2);
+                    break;
+                case "LEGION": {
+                    // Watch the server clips of the legionary while it engages (integrated server, read only).
+                    Entity l = mc.getIntegratedServer().getWorld(0).getEntityByID(legionId);
+                    if (l instanceof EntityNPCInterface) {
+                        String c = ((EntityNPCInterface) l).rwRigPlayer.clip();
+                        if (!c.isEmpty() && !legionSeen.contains(c)) { legionSeen.add(c); System.out.println("M16 LEGION clip " + c + " at " + legionTicks); }
+                    }
+                    Entity lc = mc.world.getEntityByID(legionId);
+                    if (lc instanceof EntityNPCInterface && "shield_advance".equals(((EntityNPCInterface) lc).rwRigPlayer.clip())) { legionClientAdvance = true; }
+                    if (legionTicks % 20 == 0 && l != null) {
+                        Entity zz = mc.getIntegratedServer().getWorld(0).getEntityByID(legionZombie);
+                        EntityNPCInterface ln = (EntityNPCInterface) l;
+                        System.out.println("M16 LEGION t=" + legionTicks + " dist=" + (zz == null ? -1 : (float) Math.hypot(zz.posX - l.posX, zz.posZ - l.posZ))
+                                + " target=" + (ln.getAttackTarget() == null ? "none" : ln.getAttackTarget().getName()) + " pos=" + (int) l.posX + "," + (int) l.posZ);
+                    }
+                    if (legionTicks == 30) { shot(mc, "m16-legionary-advance.png"); }
+                    if (++legionTicks < 160) { break; }
+                    {
+                        Entity lk = mc.getIntegratedServer().getWorld(0).getEntityByID(legionId);
+                        if (lk instanceof EntityNPCInterface) {
+                            for (noppes.npcs.controllers.ScriptContainer sc : ((EntityNPCInterface) lk).script.getScripts()) {
+                                for (String line : sc.console.values()) { System.out.println("M16 LEGION console " + line); }
+                            }
+                        }
+                    }
+                    submit(mc, () -> {
+                        Entity z = mc.getIntegratedServer().getWorld(0).getEntityByID(legionZombie);
+                        legionAfter = z instanceof EntityVindicator ? ((EntityVindicator) z).getHealth() : 0;
+                    });
+                    shot(mc, "m16-legionary-attack.png");
+                    enter("LEGION_CHECK", 5);
+                    break;
+                }
+                case "LEGION_CHECK":
+                    if (!serverDone) { break; }
+                    check("legion-shield-advance", legionSeen.contains("shield_advance"), "clips=" + legionSeen);
+                    check("legion-shield-on-client", legionClientAdvance, "client saw shield_advance=" + legionClientAdvance);
+                    check("legion-attack", legionSeen.contains("shield_stab") || legionSeen.contains("shield_bash"), "clips=" + legionSeen);
+                    check("legion-damage", dealt(legionZombie) > 0, "npc damage " + dealt(legionZombie) + " (health " + legionBefore + " -> " + legionAfter + ")");
                     data.addProperty("frames", RigClient.frames);
                     finish(mc, true, "");
                     break;
@@ -294,6 +393,21 @@ public final class RigHarness {
             problem.printStackTrace();
             finish(mc, false, problem.toString());
         }
+    }
+
+    /** Damage dealt by NPCs to each entity (no fire, no sun): the only proof of a hit. */
+    private final java.util.Map<Integer, Float> npcDamage = new java.util.concurrent.ConcurrentHashMap<Integer, Float>();
+
+    @SubscribeEvent
+    public void hurt(net.minecraftforge.event.entity.living.LivingHurtEvent e) {
+        if (e.getEntity().world.isRemote || !(e.getSource().getTrueSource() instanceof EntityNPCInterface)) { return; }
+        npcDamage.merge(e.getEntity().getEntityId(), e.getAmount(), Float::sum);
+        System.out.println("M16 HURT " + e.getEntity().getName() + " by " + e.getSource().getTrueSource().getName() + " " + e.getAmount());
+    }
+
+    private float dealt(int id) {
+        Float f = npcDamage.get(id);
+        return f == null ? 0 : f;
     }
 
     private void shot(Minecraft mc, String name) {

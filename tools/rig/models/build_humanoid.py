@@ -176,6 +176,93 @@ def skeleton_warrior():
     return assemble(parts), mats, {"skull": skull, "ribs": ribs, "claw": fist, "blade": blade}
 
 
+# ------------------------------------------------------------------ legionary
+def legionary():
+    arm_r = [box((-7.25, 17.5, -1.75), (3.5, 5.5, 3.5), "tunic", 1.0),
+             box((-7.75, 19.5, -2.25), (4.5, 3.75, 4.5), "segmenta", 1.0, tag="bands")]
+    fore_r = [box((-7.25, 12.5, -1.75), (3.5, 5, 3.5), "skin", 1.0),
+              box((-7.5, 12.5, -2), (4, 2.5, 4), "leather", 1.0)]
+    hand_r = [box((-7.25, 10.5, -1.75), (3, 2, 3.5), "skin", 1.0, tag="fist")]
+    leg_r = [box((-4, 6.5, -2), (4, 6, 4), "skin", 1.0),
+             box((-4.1, 9.5, -2.1), (4.2, 3, 4.2), "tunic", 1.0)]
+    shin_r = [box((-3.9, 1.5, -1.9), (3.8, 5, 3.8), "skin", 1.0),
+              box((-4.1, 0, -2.6), (4.2, 2.5, 4.6), "leather", 1.0, tag="caliga"),
+              box((-4.05, 2.5, -2.05), (4.1, 1, 4.1), "leather", 1.0)]
+    parts = {
+        "hips": [box((-4.25, 8.5, -2.4), (8.5, 4.5, 4.8), "tunic", 1.0, tag="skirt"),
+                 box((-4.5, 11.5, -2.75), (9, 1.5, 5.5), "belt", 1.0, tag="belt"),
+                 box((-2.5, 6, -2.9), (5, 5.5, 0.5), "strips", 1.0, tag="apron")],      # studded belt apron
+        "torso": [box((-4.25, 13, -2.25), (8.5, 11, 4.5), "segmenta", 1.0, tag="lorica"),
+                  box((-4.5, 21.5, -2.5), (9, 2.5, 5), "segmenta_dark", 1.0),
+                  box((-2, 23.5, -2.6), (4, 1, 0.5), "tunic", 1.0)],
+        "head": [box((-4, 24, -4), (8, 8, 8), "skin", 2.0, tag="face"),
+                 box((-4.4, 28.5, -4.4), (8.8, 4, 8.8), "bronze", 1.0, tag="galea"),
+                 box((-4.6, 24.5, -3), (1, 4.5, 3.5), "bronze", 1.0),                      # cheek guards
+                 box((3.6, 24.5, -3), (1, 4.5, 3.5), "bronze", 1.0),
+                 box((-4.4, 24.5, 3), (8.8, 4.5, 1.8), "bronze", 1.0),                    # neck guard
+                 box((-4.6, 28.5, -4.9), (9.2, 0.8, 1), "bronze_dark", 1.0),             # brow ridge
+                 box((-0.75, 32.5, -4), (1.5, 3, 8.5), "crest", 1.0, tag="crest")],
+        "armR": arm_r, "lowerArmR": fore_r, "handR": hand_r,
+        "weapon": sword(blade="steel", grip="wood", guard="bronze", length=9),     # gladius
+        "armL": mirrored(arm_r), "lowerArmL": mirrored(fore_r), "handL": mirrored(hand_r),
+        # Scutum: tall curved rectangle on the left forearm, its face to the outside (+X).
+        "shield": [box((8, 3, -6.5), (1, 19, 13), "scutum", 1.0, tag="scutum"),
+                   box((7.6, 3, -7), (1.6, 19, 0.5), "bronze_dark", 1.0),                # curved rims
+                   box((7.6, 3, 6.5), (1.6, 19, 0.5), "bronze_dark", 1.0),
+                   box((8.8, 10.5, -2), (1.2, 4, 4), "bronze", 1.0, tag="umbo")],
+        "legR": leg_r, "shinR": shin_r, "legL": mirrored(leg_r), "shinL": mirrored(shin_r),
+    }
+    mats = {
+        "skin": ((200, 150, 110), 6, (182, 134, 98), 0.03),
+        "tunic": ((150, 30, 28), 8, (124, 24, 22), 0.05, "stitch"),
+        "segmenta": ((168, 172, 178), 6, (140, 144, 150), 0.02, "plain"),
+        "segmenta_dark": ((118, 122, 128), 6, None, 0.0, "plain"),
+        "bronze": ((190, 140, 60), 8, (160, 112, 44), 0.05, "plain"),
+        "bronze_dark": ((140, 100, 40), 6, None, 0.0, "plain"),
+        "crest": ((190, 26, 30), 10, (150, 20, 24), 0.2, "fur"),
+        "steel": ((214, 220, 228), 4, None, 0.0, "plain"),
+        "wood": ((110, 76, 44), 8, None, 0.0, "grain"),
+        "leather": ((100, 66, 38), 6, None, 0.0, "strap"),
+        "belt": ((84, 56, 32), 4, None, 0.0, "strap"),
+        "strips": ((92, 60, 34), 4, None, 0.0, "strap"),
+        "scutum": ((156, 26, 26), 6, (130, 22, 22), 0.03, "plain"),
+    }
+    return assemble(parts), mats, {"face": face_human, "fist": fist, "blade": blade, "belt": belt,
+                                   "bands": bands, "lorica": bands, "scutum": scutum, "apron": apron}
+
+
+def bands(img, face):
+    if face in ("north", "south", "east", "west"):
+        for v in range(1, img.shape[0], 2):
+            img[v, :] *= 0.72                         # overlapping iron bands
+
+
+def apron(img, face):
+    if face == "north":
+        w = img.shape[1]
+        for u in range(0, w, 2):
+            img[:, u] *= 0.6
+            px(img, u, img.shape[0] - 1, (200, 160, 70))   # bronze studs
+
+
+def scutum(img, face):
+    if face == "west":   # the outside (see shield_face)
+        h, w = img.shape[:2]                          # 13 wide x 19 high, as seen from outside
+        gold = (222, 186, 70)
+        img[0, :] = gold
+        img[-1, :] = gold
+        img[:, 0] = gold
+        img[:, -1] = gold
+        cy, cx = h // 2, w // 2
+        for u in range(1, w - 1):
+            px(img, u, cy, gold)                      # horizontal bar
+        for v in range(2, h - 2):
+            px(img, cx, v, gold)                      # vertical bar
+        for d in range(1, 5):                         # wings / thunderbolts toward the corners
+            for sx, sy in ((1, 1), (-1, 1), (1, -1), (-1, -1)):
+                px(img, cx + sx * (d + 1), cy + sy * d, gold)
+
+
 # ------------------------------------------------------------------ decals
 def face_human(img, face):
     if face != "north":
@@ -259,7 +346,7 @@ def tabard(img, face):
 
 
 def shield_face(img, face):
-    if face == "east":
+    if face == "west":   # Bedrock west = the outside of a shield on his left (+X, mirrored)
         h, w = img.shape[:2]
         gold = (214, 172, 56)
         img[0, :] = gold

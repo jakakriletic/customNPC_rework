@@ -27,6 +27,8 @@ extends ModelPartData {
 
     public ModelEyeData() {
         super("eyes");
+        // Owner request 12. 11.: a new NPC has the plain eyes of its skin, not the extra eye layer (Eyes Type -1).
+        this.type = (byte)-1;
         this.color = (new Integer[]{8368696, 16247203, 0xA0A0FF, 0xA7A7A7, 10791096, 0x4040FF, 14188339, 11685080, 6724056, 0xE5E533, 8375321, 15892389, 0x999999, 5013401, 8339378, 3361970, 6704179, 6717235, 0x993333, 16445005, 6085589, 4882687, 55610})[this.r.nextInt(23)];
     }
 

@@ -387,6 +387,8 @@ IAnimals {
         this.abilities = new DataAbilities(this);
         this.display = new DataDisplay(this);
         this.stats = new DataStats(this);
+        // Owner request 12. 11.: a new NPC does not respawn (Stats -> Respawn: No); saved NPCs keep their value.
+        this.stats.spawnCycle = 3;
         this.ais = new DataAI(this);
         this.advanced = new DataAdvanced(this);
         this.inventory = new DataInventory(this);

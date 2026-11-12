@@ -131,6 +131,10 @@ public final class RigApi {
             if (!role.isEmpty() && r.library().clipOrNull(role) == null) { problems.add("no clip '" + role + "' (idle/walk/hurt/death)"); }
         }
         if (p.has("name")) { e.display.setName(p.get("name").getAsString()); }
+        // Skin of a player-shaped model (steve, legionary): a resource, a URL or a player name, as in Display.
+        if (p.has("skinTexture")) { e.display.setSkinTexture(p.get("skinTexture").getAsString()); }
+        if (p.has("skinUrl")) { e.display.setSkinUrl(p.get("skinUrl").getAsString()); }
+        if (p.has("skinPlayer")) { e.display.setSkinPlayer(p.get("skinPlayer").getAsString()); }
         if (p.has("script")) {
             com.google.gson.JsonElement s = p.get("script");
             StringBuilder src = new StringBuilder();

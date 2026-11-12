@@ -1,0 +1,13 @@
+# Sunek s ščitom: odrine sovražnika nazaj.
+name: shield_bash
+length: 0.9
+ground: off
+beats:
+  - {t: 0.00, pose: shield_wall}
+  - {t: 0.20, pose: shield_wall, ease: smooth, add: {torso.twist: 10}}
+  - {t: 0.38, pose: shield_bash, ease: strike, hold: 0.08}
+  - {t: 0.90, pose: shield_wall, ease: smooth}
+events:
+  - {t: 0.38, type: hit, id: bash, shape: arc, radius: 2.0, arc: 80, damage: 0.4, knockback: 2.5, lift: 0.3}
+  - {t: 0.38, type: sound, sound: minecraft:item.shield.block}
+  - {t: 0.34, type: lunge, forward: 0.3}

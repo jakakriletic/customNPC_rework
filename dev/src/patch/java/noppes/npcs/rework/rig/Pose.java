@@ -32,6 +32,17 @@ public final class Pose {
         return bones.computeIfAbsent(bone, b -> IDENTITY.clone());
     }
 
+    /** M16: like {@link #blend} but only the bones other has (a clip that moves only the arms leaves the walking legs). */
+    public Pose blendOnly(Pose other, float w) {
+        if (w <= 0) return this;
+        for (Map.Entry<String, float[]> e : other.bones.entrySet()) {
+            float[] a = edit(e.getKey());
+            float[] b = e.getValue();
+            for (int i = 0; i < 9; i++) a[i] += (b[i] - a[i]) * w;
+        }
+        return this;
+    }
+
     /** this = lerp(this, other, w), bone by bone. */
     public Pose blend(Pose other, float w) {
         if (w <= 0) return this;

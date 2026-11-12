@@ -42,8 +42,10 @@ public class ModelEyeDataBaselineTest {
 
     @Test
     public void vklopljenDoklerTipNiNegativen() {
+        // Privzeti tip novega NPC-ja (original 0, rework -1 po zahtevi lastnika 12. 11.) preveri ReworkNpcDefaultsTest.
         ModelEyeData eyes = new ModelEyeData();
-        assertTrue("privzeti tip 0 je vklopljen", eyes.isEnabled());
+        eyes.setType(0);
+        assertTrue(eyes.isEnabled());
         eyes.setType(-1);
         assertFalse(eyes.isEnabled());
         eyes.setType(0);

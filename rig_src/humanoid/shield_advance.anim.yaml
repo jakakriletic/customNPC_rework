@@ -1,0 +1,9 @@
+# Legionar napreduje za ščitom (zanka, samo zgornji del telesa: noge hodijo naprej). Predvaja jo JS, ko gre nad sovražnika.
+name: shield_advance
+length: 1.6
+loop: true
+ground: off
+beats:
+  - {t: 0.0, pose: shield_wall}
+  - {t: 0.8, pose: shield_wall_breathe, ease: smooth}
+  - {t: 1.6, pose: shield_wall, ease: smooth}

@@ -31,10 +31,16 @@ import noppes.npcs.entity.EntityNPCInterface;
  * Any other type does nothing here; scripts get every event through {@code animationEvent}.
  */
 public final class RigEvents {
+    /** Diagnostics: server events handled, hit events, entities hit. */
+    public static volatile int events, hits, hitsLanded;
+    /** Diagnostics: the last hit event, its centre and why candidates were left out. */
+    public static volatile String lastHit = "";
+
     private RigEvents() {
     }
 
     static void server(EntityNPCInterface npc, AnimEvent e) {
+        events++;
         switch (e.type) {
             case "hit": hit(npc, e); break;
             case "sound": for (String s : e.getStrings("sound")) { sound(npc, s, e.getFloat("volume", 1), e.getFloat("pitch", 1)); } break;
@@ -54,8 +60,10 @@ public final class RigEvents {
     /** @return entities hit */
     static int hit(EntityNPCInterface npc, AnimEvent e) {
         String shape = e.getString("shape", "circle");
-        double radius = e.getFloat("radius", 2);
-        double[] c = local(npc, e.getFloat("forward", 1), e.getFloat("side", 0));
+        // Distances are for the model at its own size: a bigger NPC (rig Scale, CustomNPCs size) reaches further.
+        double k = Math.max(0.05, npc.rwRig.scale * npc.display.getSize() / 5.0);
+        double radius = e.getFloat("radius", 2) * k;
+        double[] c = local(npc, e.getFloat("forward", 0) * k, e.getFloat("side", 0) * k);
         float damage = e.getFloat("damage", 1) * Math.max(1, npc.stats.melee.getStrength());
         float falloff = e.getFloat("falloff", 1);
         float knock = e.getFloat("knockback", 1);
@@ -69,10 +77,12 @@ public final class RigEvents {
                 c[0] + radius + 2, npc.posY + above, c[1] + radius + 2);
         List<EntityLivingBase> victims = new ArrayList<EntityLivingBase>(npc.world.getEntitiesWithinAABB(EntityLivingBase.class, box));
         int count = 0;
+        hits++;
+        StringBuilder why = new StringBuilder();
         for (EntityLivingBase victim : victims) {
-            if (!canHit(npc, victim)) { continue; }
+            if (!canHit(npc, victim)) { why.append(victim.getName()).append(":friend "); continue; }
             double dx = victim.posX - c[0], dz = victim.posZ - c[1], dist = Math.sqrt(dx * dx + dz * dz);
-            if (dist > radius + victim.width / 2) { continue; }
+            if (dist > radius + victim.width / 2) { why.append(victim.getName()).append(":far ").append((float) dist).append(' '); continue; }
             if (shape.equals("arc") && dist > 0.5) {
                 double cos = (dx * ax + dz * az) / dist;
                 if (Math.acos(MathHelper.clamp(cos, -1, 1)) > halfArc + Math.atan2(victim.width / 2, dist)) { continue; }
@@ -82,8 +92,9 @@ public final class RigEvents {
                 float scale = 1 - (1 - falloff) * (float) MathHelper.clamp(dist / radius, 0, 1);
                 landed = victim.attackEntityFrom(DamageSource.causeMobDamage(npc), damage * scale);
             }
-            if (!landed) { continue; }
+            if (!landed) { why.append(victim.getName()).append(":refused "); continue; }
             count++;
+            hitsLanded++;
             if (knock > 0) { launch(npc, victim, c, dist, knock, lift); }
             String effect = e.getString("effect", null);
             if (effect != null) {
@@ -93,6 +104,8 @@ public final class RigEvents {
             int fire = (int) e.getFloat("fire", 0);
             if (fire > 0) { victim.setFire(fire); }
         }
+        lastHit = npc.getName() + " at " + (float) c[0] + "," + (float) c[1] + " yaw " + npc.rotationYaw + " candidates "
+                + victims.size() + " hit " + count + " " + why;
         return count;
     }
 

@@ -93,6 +93,9 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 
 ### Per-NPC settings (saved in the NPC)
 
+A new NPC (since 12. 11. 2026) has no extra eye layer (the eyes of its skin) and does not respawn
+(Stats -> Respawn: No); saved and cloned NPCs keep their own values.
+
 | NBT key | Where to set | Values |
 |---|---|---|
 | `RwHitboxMode` | NPC GUI (hitbox) | 0 vanilla, 1 solid, 2 smart; needs `RwHitbox=1` |
@@ -237,6 +240,7 @@ rebuilding the jar:
 
 | Model | Bones / clips |
 |---|---|
+| `steve`, `legionary` | the plain player body split at elbows and knees, drawn with the NPC's own CustomNPCs skin (64x64: file, URL or player); `legionary` also holds a gladius and a scutum. All human clips plus shield_advance (scutum raised, upper body only, the legs keep walking), shield_stab, shield_bash |
 | `humanoid`, `knight`, `skeleton_warrior` | one human skeleton (elbows, knees, sword, shield); idle, walk, guard, slash, overhead, thrust, block, kick, spin, leap_slam, warcry, salute, wave, hurt, death |
 | `troll`, `ogre` | giant with a club; idle, walk, smash, sweep, stomp, pound, backhand, throw, roar, hurt, death |
 | `warg` | bite, maul, pounce, howl (+ idle, walk, hurt, death) |
@@ -262,7 +266,7 @@ keyframes in seconds, `easing`, `loop`); they add to and replace the model's by 
 
 **Attacks are data.** A clip's `events` act on the server at their time: `hit` (area damage =
 `damage` x the NPC's melee strength; `shape` circle|arc, `forward`/`side`/`radius`/`arc`/`dir` in
-blocks and degrees, `knockback`, `lift`, `effect`, `fire`; only enemies by faction), `sound`
+blocks and degrees, measured from the NPC and scaled with its size; `knockback`, `lift`, `effect`, `fire`; only enemies by faction), `sound`
 (`minecraft:...` or a built-in `troll.roar`), `lunge` (`forward`, `up`), `heal` (`amount`). Every
 event also calls the script hook `animationEvent` (`event.type`, `event.data` = the event's JSON),
 plus `animationStart` and `animationEnd`.
@@ -270,8 +274,11 @@ plus `animationStart` and `animationEnd`.
 **How an AI makes an animated boss in 5 minutes (no Java, no rebuild):**
 
 1. Write one *rig package* `customnpcs/rigs/<name>.rig.json` (example:
-   `rig_src/examples/knight_boss.rig.json`): `model`, optional `name`, `scale`, `idle`/`walk`/
-   `hurt`/`death`, `clips` (own clips) and `script` (JS lines). The script picks attacks, e.g.
+   `rig_src/examples/knight_boss.rig.json`, `rig_src/examples/legionary.rig.json`: raises the scutum when it
+   engages, advances behind it, stabs or bashes in reach, raises it again): `model`, optional `name`, `scale`, `idle`/`walk`/
+   `hurt`/`death`, `skinTexture`/`skinUrl`/`skinPlayer` (for `steve`/`legionary`), `clips` (own clips) and
+   `script` (JS lines). A skin file goes to `customnpcs/assets/customnpcs/textures/entity/humanmale/`
+   (CustomNPCs reads that folder as a resource pack): `"skinTexture": "customnpcs:textures/entity/humanmale/<file>.png"`. The script picks attacks, e.g.
    in `tick`: `Animators.of(e.npc).play('slash')` when the target is close; `meleeAttack`:
    `e.setCanceled(true)` so damage comes only from the clips' `hit` events.
 2. In game: `/rwrig apply @near <name>.rig.json` (problems are listed in chat).
