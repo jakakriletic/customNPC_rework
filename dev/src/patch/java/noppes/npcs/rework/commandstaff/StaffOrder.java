@@ -1,6 +1,7 @@
 package noppes.npcs.rework.commandstaff;
 
 import java.util.UUID;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIBase;
@@ -8,7 +9,11 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.passive.AbstractHorse;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.pathfinding.Path;
+import net.minecraft.pathfinding.PathNavigate;
+import net.minecraft.pathfinding.PathNavigateGround;
+import net.minecraft.pathfinding.RwNavigatorAccess;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.ai.EntityAIWander;
@@ -27,6 +32,9 @@ public final class StaffOrder {
     private Vec3d post, move;
     private int replans, attempts;
     private double bestDistance;
+    private AbstractHorse horse;
+    private PathNavigate horsePath;
+    private boolean steerHorse;
 
     StaffOrder(EntityNPCInterface npc, UUID commander) {
         this.commander = commander;
@@ -99,7 +107,7 @@ public final class StaffOrder {
             npc.setRevengeTarget(null);
             npc.setAttackTarget(null);
         }
-        npc.getNavigator().clearPath();
+        next.clearPaths(npc);
         npc.updateAI = true;
     }
 
@@ -112,7 +120,7 @@ public final class StaffOrder {
         next.bestDistance = Double.POSITIVE_INFINITY;
         boolean rebuild = npc.rwStaffOrder == null || npc.rwStaffOrder != next;
         npc.rwStaffOrder = next;
-        npc.getNavigator().clearPath();
+        next.clearPaths(npc);
         if (rebuild) { npc.updateAI = true; }
     }
 
@@ -133,9 +141,56 @@ public final class StaffOrder {
 
     static void restore(EntityNPCInterface npc) {
         if (npc.rwStaffOrder == null) { return; }
+        npc.rwStaffOrder.clearPaths(npc);
         npc.rwStaffOrder = null;
-        npc.getNavigator().clearPath();
         npc.updateAI = true;
+    }
+
+    private void clearPaths(EntityNPCInterface npc) {
+        npc.getNavigator().clearPath();
+        if (horsePath != null) { horsePath.clearPath(); }
+        steerHorse = false;
+    }
+
+    private PathNavigate navigator(EntityNPCInterface npc) {
+        Entity vehicle = npc.getRidingEntity();
+        if (!(vehicle instanceof AbstractHorse) || !((AbstractHorse)vehicle).isHorseSaddled()) {
+            horse = null;
+            horsePath = null;
+            return npc.getNavigator();
+        }
+        if (horse != vehicle) {
+            horse = (AbstractHorse)vehicle;
+            // Vanilla copies the rider's path to the horse every tick. Advance a separate
+            // path using the horse's feet and dimensions so that copy cannot reset it.
+            horsePath = new PathNavigateGround(horse, npc.world) {
+                @Override public float getPathSearchRange() {
+                    return (float)npc.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getAttributeValue();
+                }
+            };
+        }
+        return horsePath;
+    }
+
+    public static void steerAfterRiderTick(EntityNPCInterface npc) {
+        StaffOrder order = npc.rwStaffOrder;
+        if (order == null || !order.steerHorse) { return; }
+        order.steerHorse = false;
+        if (npc.getRidingEntity() != order.horse) { return; }
+        AbstractHorse mount = order.horse;
+        PathNavigate navigator = order.horsePath;
+        navigator.onUpdateNavigation();
+        npc.setMoveStrafing(0);
+        npc.setMoveForward(0);
+        if (navigator.noPath()) { return; }
+        Vec3d waypoint = navigator.getPath().getPosition(mount);
+        double dx = waypoint.x - mount.posX, dz = waypoint.z - mount.posZ;
+        float desired = (float)Math.toDegrees(MathHelper.atan2(dz, dx)) - 90;
+        float turn = MathHelper.wrapDegrees(desired - mount.rotationYaw);
+        npc.rotationYaw = mount.rotationYaw + MathHelper.clamp(turn, -45, 45);
+        if (Math.abs(turn) <= 45) {
+            npc.setMoveForward(MathHelper.clamp((float)(Math.sqrt(dx * dx + dz * dz) * 0.55), 0.18f, 0.65f));
+        }
     }
 
     public static void addTasks(EntityNPCInterface npc, int priority) {
@@ -178,55 +233,62 @@ public final class StaffOrder {
         @Override public boolean shouldContinueExecuting() { return shouldExecute(); }
 
         @Override public void resetTask() {
-            if (navigating) { npc.getNavigator().clearPath(); }
+            if (navigating && npc.rwStaffOrder != null) { npc.rwStaffOrder.clearPaths(npc); }
             navigating = false;
             followDelay = 0;
         }
 
         @Override public void updateTask() {
             StaffOrder order = npc.rwStaffOrder;
+            PathNavigate navigator = order.navigator(npc);
+            Entity body = npc.isRiding() ? npc.getRidingEntity() : npc;
             if (order.move != null) {
                 Vec3d target = order.move;
-                net.minecraft.entity.Entity body = npc.isRiding() ? npc.getRidingEntity() : npc;
                 double distance = body.getDistanceSq(target.x, target.y, target.z);
-                if (distance <= 0.75 * 0.75) {
+                double reach = order.horse == null ? 0.75 : 1.1;
+                if (distance <= reach * reach) {
                     order.move = null;
                     order.post = target;
                     resetTask();
-                } else if (--order.replans <= 0 && npc.getNavigator().noPath()) {
+                } else if (--order.replans <= 0 && navigator.noPath()) {
                     order.replans = 12 + (npc.getEntityId() & 7);
                     if (distance + 1 < order.bestDistance) { order.attempts = 0; order.bestDistance = distance; }
                     if (++order.attempts > 6) {
                         order.move = null;
                         return;
                     }
-                    navigating = path(target);
+                    navigating = path(body, navigator, target);
                 }
-                return;
+            } else {
+                EntityPlayerMP leader = npc.getServer().getPlayerList().getPlayerByUUID(order.commander);
+                if (leader == null || leader.world != npc.world || !StaffNetwork.mayCommand(leader, npc)) {
+                    resetTask();
+                } else if (body.getDistanceSq(leader) > 4 * 4 && --followDelay <= 0) {
+                    followDelay = 12 + (npc.getEntityId() & 7);
+                    navigating = path(body, navigator, leader.getPositionVector()) || !navigator.noPath();
+                } else if (navigating && body.getDistanceSq(leader) < 3 * 3) {
+                    resetTask();
+                }
             }
-            EntityPlayerMP leader = npc.getServer().getPlayerList().getPlayerByUUID(order.commander);
-            if (leader == null || leader.world != npc.world || !StaffNetwork.mayCommand(leader, npc)) {
-                resetTask();
-            } else if (npc.getDistanceSq(leader) > 4 * 4 && --followDelay <= 0) {
-                followDelay = 12 + (npc.getEntityId() & 7);
-                navigating = path(leader.getPositionVector());
-            } else if (navigating && npc.getDistanceSq(leader) < 3 * 3) {
-                resetTask();
-            }
+            order.steerHorse = order.horse != null;
         }
 
-        private boolean path(Vec3d target) {
-            net.minecraft.entity.Entity body = npc.isRiding() ? npc.getRidingEntity() : npc;
+        private boolean path(Entity body, PathNavigate navigator, Vec3d target) {
             double[] next = ArmyWaypoints.next(body.posX, body.posY, body.posZ, target.x, target.y, target.z,
-                    CustomNpcs.NpcNavRange, npc.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getAttributeValue());
+                    CustomNpcs.NpcNavRange, navigator.getPathSearchRange());
             if (next == null || !npc.world.isBlockLoaded(new BlockPos(next[0], next[1], next[2]))) { return false; }
             double y = next[1];
             if (!ArmyWaypoints.finalLeg(next, target.x, target.y, target.z)) {
                 double ground = new WorldTerrain(npc.world).standY(next[0], y, next[2]);
                 if (Double.isFinite(ground)) { y = ground; }
             }
-            Path p = npc.getNavigator().getPathToXYZ(next[0], y, next[2]);
-            return p != null && npc.getNavigator().setPath(p, 1.0);
+            Path p = navigator.getPathToXYZ(next[0], y, next[2]);
+            if (p == null) { return false; }
+            if (navigator != npc.getNavigator()) {
+                if (p == navigator.getPath() && !navigator.noPath()) { return true; }
+                RwNavigatorAccess.restartTimeout(navigator);
+            }
+            return navigator.setPath(p, 1.0);
         }
     }
 }

@@ -609,6 +609,9 @@ IAnimals {
         if (mountGuard != null) {
             mountGuard.restore();
         }
+        if (!this.world.isRemote && this.rwStaffOrder != null) {
+            noppes.npcs.rework.commandstaff.StaffOrder.steerAfterRiderTick(this);
+        }
         if (this.world.isRemote) {
             if (this.roleInterface != null) {
                 this.roleInterface.clientUpdate();

@@ -21,5 +21,12 @@ spustu, štiri pešce v ločenih položajih in pot klona Konjenik. Konjenik se u
 krog ga izbere pri vodoravnem pogledu in do cilja pride na konju. Scenarij kliče obdelavo
 stanja tipk znotraj Forge klienta. Unit, build in preverba paketa so zeleni.
 
-**Meje.** Preizkus je singleplayer v ravnem svetu. Velike skupine, zahteven teren in
-migracija produkcijskih svetov ostajajo nepreverjeni.
+**Premikanje konjenice po stopnici.** V `staff-cavalry-slope-before` je do zgornjega dela
+proge prišlo 3/4 konjenikov. Vanilla je preverjala višino vozlišča glede na sedečega jezdeca,
+ki je bil več kot blok nad tlemi. Ukaz za premik in sledenje zdaj načrtuje in sledi poti
+s konjevo višino in širino. Konj pred ostrim zavojem upočasni. V dev Forge (`staff-cavalry-slope-fix1`)
+in kombiniranem 31Mar23 JAR-u (`staff-cavalry-slope-jar`) so 4/4 prečkali stopnico,
+obdržali razmik vsaj 1,4 bloka in ostali na mestu še 45 tickov po prihodu.
+
+**Meje.** Preizkus je singleplayer v pripravljeni progi. Velike skupine, razgiban teren
+na uporabnikovem zemljevidu in migracija produkcijskih svetov ostajajo nepreverjeni.

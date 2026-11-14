@@ -22,6 +22,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameType;
 import net.minecraft.world.WorldServer;
@@ -45,6 +46,7 @@ public final class CommandStaffHarness {
     private final StaffClient input = new StaffClient();
     private int stage, delay;
     private Vec3d start, afterFollow, afterGuard;
+    private Vec3d[] slopePositions;
     private volatile boolean complete;
     private volatile RuntimeException failure;
     private EntityVindicator enemy;
@@ -328,6 +330,57 @@ public final class CommandStaffHarness {
                     EntityNPCInterface mounted = cavalry();
                     if (mounted == null || mounted.posZ < 16 || !(mounted.getRidingEntity() instanceof EntityHorse)) { return; }
                     check("mounted NPC reached the order without dismounting");
+                    server(this::setUpCavalrySlope);
+                    next(33, 20);
+                    break;
+                case 33:
+                    if (!complete || cavalryGroup().size() != 4) { return; }
+                    sneak(true);
+                    selectionInput(true, 16);
+                    selectionInput(false, 1);
+                    next(34, 8);
+                    break;
+                case 34:
+                    clickWorld(1, true);
+                    clickWorld(1, false);
+                    next(35, 10);
+                    break;
+                case 35:
+                    if (!(mc.currentScreen instanceof GuiCommandStaff)) { return; }
+                    Field groupCount = GuiCommandStaff.class.getDeclaredField("count");
+                    groupCount.setAccessible(true);
+                    require(groupCount.getInt(mc.currentScreen) == 4, "slope selection contains four horses");
+                    clickGui(7);
+                    sneak(false);
+                    mc.player.rotationPitch = 1.4f;
+                    next(36, 8);
+                    break;
+                case 36:
+                    clickWorld(1, true);
+                    clickWorld(1, false);
+                    next(37, 240);
+                    break;
+                case 37:
+                    List<EntityNPCInterface> horses = cavalryGroup();
+                    for (EntityNPCInterface horse : horses) { System.out.println("STAFF SLOPE " + horse.getPositionVector()); }
+                    require(horses.size() == 4 && horses.stream().allMatch(npc -> npc.posZ >= 52 && npc.posY >= 6
+                            && npc.getRidingEntity() instanceof EntityHorse), "four riders crossed the offset step and reached the upper plateau");
+                    Vec3d[] settled = horses.stream().map(Entity::getPositionVector).toArray(Vec3d[]::new);
+                    for (int i = 0; i < settled.length; i++) {
+                        for (int j = i + 1; j < settled.length; j++) {
+                            require(settled[i].squareDistanceTo(settled[j]) >= 1.4 * 1.4, "mounted formation has separate slots");
+                        }
+                    }
+                    slopePositions = settled;
+                    next(38, 45);
+                    break;
+                case 38:
+                    List<EntityNPCInterface> stopped = cavalryGroup();
+                    require(stopped.size() == slopePositions.length, "all four riders remained in the formation");
+                    for (int i = 0; i < stopped.size(); i++) {
+                        require(stopped.get(i).getPositionVector().squareDistanceTo(slopePositions[i]) < 0.25,
+                                "horse held its position after arriving");
+                    }
                     finish(true);
                     break;
                 default: break;
@@ -336,6 +389,40 @@ public final class CommandStaffHarness {
             problem.printStackTrace();
             finish(false);
         }
+    }
+
+    private void setUpCavalrySlope() {
+        MinecraftServer s = mc.getIntegratedServer();
+        WorldServer w = s.getWorld(0);
+        String player = mc.player.getName();
+        String[] commands = {
+            "fill 38 4 45 65 4 66 minecraft:grass",
+            "fill 45 4 43 55 4 44 minecraft:grass",
+            "fill 38 4 44 44 5 45 minecraft:stone",
+            "fill 56 4 44 65 5 45 minecraft:stone",
+            "tp " + player + " 50 4 32 0 11"
+        };
+        for (String command : commands) { s.getCommandManager().executeCommand(s, command); }
+        try {
+            NBTTagCompound clone = noppes.npcs.util.NBTJsonUtil.LoadFile(cavalryClone);
+            for (int i = 0; i < 4; i++) {
+                clone.setString("Name", "Slope_" + i);
+                Entity entity = noppes.npcs.NoppesUtilServer.spawnClone(clone.copy(), 46.5 + i * 2.5, 4, 37.5, w);
+                // Start sideways so the riders need to turn into the approach.
+                entity.rotationYaw = MathHelper.wrapDegrees(90 + 60 * i);
+            }
+        } catch (Exception error) { throw new IllegalStateException(error); }
+    }
+
+    private List<EntityNPCInterface> cavalryGroup() {
+        List<EntityNPCInterface> riders = new ArrayList<>();
+        for (Entity entity : mc.world.loadedEntityList) {
+            if (entity instanceof EntityNPCInterface && entity.getName().startsWith("Slope_")) {
+                riders.add((EntityNPCInterface)entity);
+            }
+        }
+        riders.sort(java.util.Comparator.comparing(Entity::getName));
+        return riders;
     }
 
     private void server(Runnable work) {
