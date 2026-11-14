@@ -28,5 +28,13 @@ s konjevo višino in širino. Konj pred ostrim zavojem upočasni. V dev Forge (`
 in kombiniranem 31Mar23 JAR-u (`staff-cavalry-slope-jar`) so 4/4 prečkali stopnico,
 obdržali razmik vsaj 1,4 bloka in ostali na mestu še 45 tickov po prihodu.
 
+**Odrivanje konjenice.** Vanilla pri navadnem trku ne odrine konja, ki nosi jezdeca.
+Na strežniku prekrivajoči se hitboxi konj z NPC-jezdeci sprožijo omejen vodoravni potisk.
+Pri identičnih koordinatah dobi vsak par nasprotni smeri. To velja tudi za mirujoče
+jezdece in pri `RwHitbox=0`. Preizkus `staff-mounted-stack-before` je po 140 tickih
+izmeril največ 1,396 bloka prekrivanja pri osmih konjenikih na eni točki. Kombinirani JAR
+(`staff-mounted-stack-jar`) je v istem scenariju izmeril 0,000. Vseh osem je ostalo v sedlu,
+štirje na progi s stopnico pa so prišli v formacijo in obdržali položaj.
+
 **Meje.** Preizkus je singleplayer v pripravljeni progi. Velike skupine, razgiban teren
 na uporabnikovem zemljevidu in migracija produkcijskih svetov ostajajo nepreverjeni.

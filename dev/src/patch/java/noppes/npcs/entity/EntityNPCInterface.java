@@ -612,6 +612,9 @@ IAnimals {
         if (!this.world.isRemote && this.rwStaffOrder != null) {
             noppes.npcs.rework.commandstaff.StaffOrder.steerAfterRiderTick(this);
         }
+        if (!this.world.isRemote) {
+            RwHitbox.separateMountedHorses(this);
+        }
         if (this.world.isRemote) {
             if (this.roleInterface != null) {
                 this.roleInterface.clientUpdate();

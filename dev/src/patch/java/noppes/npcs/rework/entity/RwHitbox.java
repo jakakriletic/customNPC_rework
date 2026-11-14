@@ -8,12 +8,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.passive.AbstractHorse;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemShield;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
@@ -41,6 +43,43 @@ public final class RwHitbox {
     private static volatile Set<String> extraItems = new HashSet<>();
 
     private RwHitbox() {
+    }
+
+    /** Vanilla exempts both horses from ordinary pushing when both have riders. */
+    public static void separateMountedHorses(EntityNPCInterface rider) {
+        if (!(rider.getRidingEntity() instanceof AbstractHorse) || !rider.isEntityAlive() || !rider.canBePushed()) { return; }
+        AbstractHorse horse = (AbstractHorse)rider.getRidingEntity();
+        if (horse.noClip || !horse.isEntityAlive() || horse.getControllingPassenger() != rider) { return; }
+
+        AxisAlignedBB box = horse.getEntityBoundingBox();
+        double pushX = 0, pushZ = 0;
+        for (AbstractHorse other : horse.world.getEntitiesWithinAABB(AbstractHorse.class, box,
+                candidate -> candidate != horse && candidate.isEntityAlive() && !candidate.noClip
+                        && candidate.getControllingPassenger() instanceof EntityNPCInterface
+                        && ((EntityNPCInterface)candidate.getControllingPassenger()).canBePushed())) {
+            AxisAlignedBB otherBox = other.getEntityBoundingBox();
+            double overlapX = Math.min(box.maxX, otherBox.maxX) - Math.max(box.minX, otherBox.minX);
+            double overlapZ = Math.min(box.maxZ, otherBox.maxZ) - Math.max(box.minZ, otherBox.minZ);
+            double dx = horse.posX - other.posX, dz = horse.posZ - other.posZ;
+            double distance = Math.hypot(dx, dz);
+            if (distance < 0.001) {
+                // Exact stacks have no geometric direction. Give each pair opposite directions.
+                int a = horse.getEntityId(), b = other.getEntityId();
+                int hash = Math.min(a, b) * 73428767 ^ Math.max(a, b) * 912931;
+                double angle = (hash & 1023) * (Math.PI * 2 / 1024) + (a < b ? 0 : Math.PI);
+                dx = Math.cos(angle);
+                dz = Math.sin(angle);
+                distance = 1;
+            }
+            double push = Math.min(0.19, Math.min(overlapX, overlapZ) * 0.35) / distance;
+            pushX += dx * push;
+            pushZ += dz * push;
+        }
+        double pushLength = Math.hypot(pushX, pushZ);
+        if (pushLength > 0) {
+            double limit = Math.min(1, 0.24 / pushLength);
+            horse.addVelocity(pushX * limit, 0, pushZ * limit);
+        }
     }
 
     /** Nacin entitete za trk: NPC-jev ucinkovit nacin, vse ostalo ORIGINAL. */

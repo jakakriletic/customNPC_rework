@@ -22,6 +22,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameType;
@@ -381,6 +382,26 @@ public final class CommandStaffHarness {
                         require(stopped.get(i).getPositionVector().squareDistanceTo(slopePositions[i]) < 0.25,
                                 "horse held its position after arriving");
                     }
+                    server(this::spawnCavalryPile);
+                    next(39, 140);
+                    break;
+                case 39:
+                    if (!complete) { return; }
+                    List<EntityNPCInterface> pile = cavalryGroup("Pile_");
+                    require(pile.size() == 8 && pile.stream().allMatch(npc -> npc.getRidingEntity() instanceof EntityHorse),
+                            "all eight stacked cavalry stayed mounted");
+                    double deepest = 0;
+                    for (int i = 0; i < pile.size(); i++) {
+                        AxisAlignedBB a = pile.get(i).getRidingEntity().getEntityBoundingBox();
+                        for (int j = i + 1; j < pile.size(); j++) {
+                            AxisAlignedBB b = pile.get(j).getRidingEntity().getEntityBoundingBox();
+                            double overlapX = Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX);
+                            double overlapZ = Math.min(a.maxZ, b.maxZ) - Math.max(a.minZ, b.minZ);
+                            deepest = Math.max(deepest, Math.min(overlapX, overlapZ));
+                        }
+                    }
+                    System.out.println("STAFF STACK maximum horizontal overlap=" + deepest);
+                    require(deepest < 0.08, "eight horse bodies spawned at one point separated when idle");
                     finish(true);
                     break;
                 default: break;
@@ -415,9 +436,24 @@ public final class CommandStaffHarness {
     }
 
     private List<EntityNPCInterface> cavalryGroup() {
+        return cavalryGroup("Slope_");
+    }
+
+    private void spawnCavalryPile() {
+        WorldServer w = mc.getIntegratedServer().getWorld(0);
+        try {
+            NBTTagCompound clone = noppes.npcs.util.NBTJsonUtil.LoadFile(cavalryClone);
+            for (int i = 0; i < 8; i++) {
+                clone.setString("Name", "Pile_" + i);
+                noppes.npcs.NoppesUtilServer.spawnClone(clone.copy(), 32.5, 4, 48.5, w);
+            }
+        } catch (Exception error) { throw new IllegalStateException(error); }
+    }
+
+    private List<EntityNPCInterface> cavalryGroup(String namePrefix) {
         List<EntityNPCInterface> riders = new ArrayList<>();
         for (Entity entity : mc.world.loadedEntityList) {
-            if (entity instanceof EntityNPCInterface && entity.getName().startsWith("Slope_")) {
+            if (entity instanceof EntityNPCInterface && entity.getName().startsWith(namePrefix)) {
                 riders.add((EntityNPCInterface)entity);
             }
         }

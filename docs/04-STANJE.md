@@ -12,6 +12,9 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**14. 11. — Odrivanje konjenice.** Prekrivajoči se konji z NPC-jezdeci se razmaknejo
+tudi v mirovanju. [Zapis](meritve/2026-11-14-command-staff-varied.md).
+
 **14. 11. — Premikanje konjenice s palico.** Pri ukazu za premik se pot in napredovanje
 računata pri tleh pod konjem. Štirje konjeniki prečkajo stopnico in se ustavijo na ločenih
 mestih. [Zapis](meritve/2026-11-14-command-staff-varied.md).
