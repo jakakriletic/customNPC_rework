@@ -241,6 +241,8 @@ public class CustomNpcs {
     public static int RwAnimCore = 0;
     @ConfigProp(info="Rework M11.1 (Q297, Q299): armies. With 1 the server has the command /rwarmy (create, assign, unassign, list, info, remove; operators) and the script API noppes.npcs.rework.army.ArmyApi; the army register is saved with the world in data/rwarmies.dat and an NPC stores its army name in NBT RwArmy. An army is owned by a player (UUID) or a CustomNPCs faction. The channel rwarmy only answers snapshot requests. M11.3 adds move/stop/status: saved orders, companies of RwArmyCompany ground members sharing one army path, and join orders for stragglers. Long paths and chunk tickets are later packages. Read at startup. 0 = original: no command, the API changes nothing, the register is not loaded; an RwArmy name already on an NPC is kept unchanged. Default 0")
     public static int RwArmies = 0;
+    @ConfigProp(info="Enable the Command Staff for selecting NPCs, issuing formation moves and setting their orders. Match on client and server. Default 0")
+    public static int RwCommandStaff = 0;
     @ConfigProp(info="Rework M11.2: with RwArmies=1, members of one army this close (blocks, horizontally, 1-512) are one cluster, the point of the army on a map. Read at startup. Default 48")
     public static int RwArmyClusterRadius = 48;
     @ConfigProp(info="Rework M11.2: with RwArmies=1, a cluster with at least this many members (1-1024) is a group; a smaller one is a straggler. The largest cluster is always the main one. Read at startup. Default 8")
@@ -387,10 +389,15 @@ public class CustomNpcs {
         }
         // M11.8a/Q435: staff on every client, on a dedicated server only with the switch; no channel or action at 0.
         MinecraftForge.EVENT_BUS.register(new noppes.npcs.rework.army.ArmyStaff.Registration());
+        MinecraftForge.EVENT_BUS.register(new noppes.npcs.rework.commandstaff.CommandStaff.Registration());
+        if (RwCommandStaff == 1) { noppes.npcs.rework.commandstaff.StaffNetwork.install(); }
         if (ev.getSide().isClient()) {
             try {
                 Class.forName("noppes.npcs.rework.army.ArmyStaffClient").getMethod("installModel").invoke(null);
             } catch (ReflectiveOperationException e) { LogWriter.error("RWARMY staff model", e); }
+            try {
+                Class.forName("noppes.npcs.rework.commandstaff.StaffClient").getMethod("install").invoke(null);
+            } catch (ReflectiveOperationException e) { LogWriter.error("Command staff client", e); }
         }
         // M11.2 (Q299): the rwarmy channel exists only with the switch.
         if (RwArmies >= 1) {

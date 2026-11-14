@@ -189,6 +189,7 @@ implements ICloneHandler {
         nbttagcompound.removeTag("MovingPathNew");
         nbttagcompound.removeTag("Pos");
         nbttagcompound.removeTag("Riding");
+        nbttagcompound.removeTag("RwCommandStaff");
         nbttagcompound.removeTag("UUID");
         nbttagcompound.removeTag("UUIDMost");
         nbttagcompound.removeTag("UUIDLeast");

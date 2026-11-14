@@ -106,6 +106,11 @@ public final class ArmyStaffServer {
     }
     /** Stop at the first unloaded chunk. No ray or safety query may load/generate terrain. */
     public static BlockPos rayTarget(EntityPlayerMP p) {
+        RayTraceResult hit = rayHit(p);
+        return hit != null && hit.typeOfHit == RayTraceResult.Type.BLOCK ? hit.getBlockPos().offset(hit.sideHit) : null;
+    }
+
+    public static RayTraceResult rayHit(EntityPlayerMP p) {
         Vec3d eye = p.getPositionEyes(1), look = p.getLook(1);
         double distance = 0;
         BlockPos previous = new BlockPos(eye);
@@ -121,8 +126,7 @@ public final class ArmyStaffServer {
             previous = next;
         }
         if (distance == 0) { return null; }
-        RayTraceResult hit = p.world.rayTraceBlocks(eye, eye.add(look.scale(distance)), false, true, false);
-        return hit != null && hit.typeOfHit == RayTraceResult.Type.BLOCK ? hit.getBlockPos().offset(hit.sideHit) : null;
+        return p.world.rayTraceBlocks(eye, eye.add(look.scale(distance)), false, true, false);
     }
     private static boolean safe(EntityPlayerMP p, BlockPos pos) {
         return pos.getY() > 0 && pos.getY() < 255 && p.world.isBlockLoaded(pos)

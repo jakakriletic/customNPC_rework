@@ -196,6 +196,7 @@ public final class ClientHarness {
             // M16: built-in animation core acceptance, explicit functional job.
             if (RigHarness.installIfRequested(path)) { return; }
             if (CreatureHarness.installIfRequested(path)) { return; }
+            if (CommandStaffHarness.installIfRequested(path)) { return; }
             if (ArmySnapshotHarness.installIfRequested(path)) { return; }
             if (ArmyGuiHarness.installIfRequested(path)) { return; }
             if (ArmyPermHarness.installIfRequested(path)) { return; }

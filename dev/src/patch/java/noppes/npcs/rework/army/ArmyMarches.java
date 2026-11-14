@@ -102,6 +102,13 @@ public final class ArmyMarches {
                 && installed.passive.contains(npc);
     }
 
+    public static boolean hasActiveOrder(EntityNPCInterface npc) {
+        if (installed == null || npc.getRwArmy().isEmpty()) { return false; }
+        ArmyWorldData data = ArmyWorldData.get(installed.server);
+        ArmyOrder order = data == null ? null : data.registry().order(npc.getRwArmy());
+        return order != null && order.active() && order.dimension == npc.dimension;
+    }
+
     /** Membership changes invalidate only army-controlled squads, never an unrelated /rwsquad. */
     public static void detach(EntityNPCInterface npc) {
         if (installed == null) { return; }

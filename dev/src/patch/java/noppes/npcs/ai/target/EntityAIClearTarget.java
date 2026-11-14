@@ -27,6 +27,7 @@ extends EntityAIBase {
         if (this.target == null) {
             return false;
         }
+        if (!noppes.npcs.rework.commandstaff.StaffOrder.canEngage(this.npc, this.target)) { return true; }
         if (this.npc.getOwner() != null && !this.npc.isInRange((Entity)this.npc.getOwner(), this.npc.stats.aggroRange * 2)) {
             return true;
         }

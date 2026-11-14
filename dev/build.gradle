@@ -438,7 +438,8 @@ task buildPatchedMod(dependsOn: ['reobfJar', 'test', 'testOriginal']) {
         try {
             // M16: plus the built-in rigged models (new resource files under assets/customnpcs/rig and textures/rig).
             def replacements = patches.entries().findAll { !it.directory && (it.name.endsWith('.class')
-                    || it.name.startsWith('assets/customnpcs/rig/') || it.name.startsWith('assets/rwrig/') || it.name.startsWith('assets/customnpcs/textures/rig/')) }
+                    || it.name.startsWith('assets/customnpcs/rig/') || it.name.startsWith('assets/rwrig/') || it.name.startsWith('assets/customnpcs/textures/rig/')
+                    || it.name.startsWith('assets/rwcommandstaff/')) }
             def names = replacements.collect { it.name } as Set
             // M5.15 (D-031): manifest dobi dva vnosa, da je jar hkrati coremod in mod. To je edini
             // vnos originala, ki ni bitna kopija; verify-package.ps1 ga zato preveri posebej in

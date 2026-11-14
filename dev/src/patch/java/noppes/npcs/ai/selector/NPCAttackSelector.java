@@ -36,6 +36,7 @@ implements Predicate<EntityLivingBase> {
         if (!entity.isEntityAlive() || entity == this.npc || !this.npc.isInRange((Entity)entity, this.npc.stats.aggroRange) || entity.getHealth() < 1.0f) {
             return false;
         }
+        if (!noppes.npcs.rework.commandstaff.StaffOrder.canEngage(this.npc, entity)) { return false; }
         // M5-S S1: kandidata, do katerega NPC gotovo ni sovrazen, zavrne pred raytraceom.
         // V nacinu 0 (privzeto) vrne false in predikat tece kot v originalu.
         if (TargetPrefilter.rejectsEarly(this.npc, entity)) {
@@ -47,7 +48,8 @@ implements Predicate<EntityLivingBase> {
         if (!this.npc.ais.attackInvisible && entity.isPotionActive(MobEffects.INVISIBILITY) && !this.npc.isInRange((Entity)entity, 3.0)) {
             return false;
         }
-        if (!this.npc.isFollower() && this.npc.ais.shouldReturnHome()) {
+        if (!this.npc.isFollower() && this.npc.ais.shouldReturnHome()
+                && !noppes.npcs.rework.commandstaff.StaffOrder.active(this.npc)) {
             int allowedDistance = this.npc.stats.aggroRange * 2;
             if (this.npc.ais.getMovingType() == 1) {
                 allowedDistance += this.npc.ais.walkingRange;

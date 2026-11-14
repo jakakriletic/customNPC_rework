@@ -2,6 +2,10 @@
 
 ## v2 development
 
+- Optional single-JAR build with Varied Commodities, with its original Forge mod and registry IDs.
+- Command Staff selects ground NPCs in a growing circle, applies six behaviour modes and sends
+  the selection to separate formation slots (`RwCommandStaff=1`).
+
 - NPC wand → **Global → Armies** lets operators create and list armies in game.
 - With `RwAnimCore=1`, **Display → Rig model...** selects a built-in or server creature model.
 - Server creature folders support custom models, textures, animation events, clone settings and scripts.

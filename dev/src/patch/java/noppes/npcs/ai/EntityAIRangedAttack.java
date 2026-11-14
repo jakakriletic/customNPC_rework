@@ -43,6 +43,7 @@ extends EntityAIBase {
         if (this.attackTarget == null || !this.attackTarget.isEntityAlive() || !this.npc.isInRange((Entity)this.attackTarget, this.npc.stats.aggroRange) || this.npc.inventory.getProjectile() == null) {
             return false;
         }
+        if (!noppes.npcs.rework.commandstaff.StaffOrder.canEngage(this.npc, this.attackTarget)) { return false; }
         return this.npc.stats.ranged.getMeleeRange() < 1 || !this.npc.isInRange((Entity)this.attackTarget, this.npc.stats.ranged.getMeleeRange());
     }
 
@@ -59,7 +60,7 @@ extends EntityAIBase {
         this.npc.getLookHelper().setLookPositionWithEntity((Entity)this.attackTarget, 30.0f, 30.0f);
         double var1 = this.npc.getDistanceSq(this.attackTarget.posX, this.attackTarget.getEntityBoundingBox().minY, this.attackTarget.posZ);
         float range = this.npc.stats.ranged.getRange() * this.npc.stats.ranged.getRange();
-        if (!this.navOverride && this.npc.ais.directLOS) {
+        if (!this.navOverride && this.npc.ais.directLOS && !noppes.npcs.rework.commandstaff.StaffOrder.guarding(this.npc)) {
             int v;
             this.moveTries = this.npc.getEntitySenses().canSee((Entity)this.attackTarget) ? ++this.moveTries : 0;
             int n = v = this.npc.ais.tacticalVariant == 0 ? 20 : 5;

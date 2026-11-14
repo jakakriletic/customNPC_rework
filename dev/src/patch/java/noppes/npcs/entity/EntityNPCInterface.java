@@ -294,6 +294,7 @@ IAnimals {
     public IChatMessages messages;
     public boolean updateClient = false;
     public boolean updateAI = false;
+    public noppes.npcs.rework.commandstaff.StaffOrder rwStaffOrder;
     /** M7: per-NPC opt-in, persisted only when enabled to preserve old NBT by default. */
     private int rwNavBackend;
     /** M4.2/M4.3: per-NPC flight selection; original is the default. */
@@ -768,7 +769,8 @@ IAnimals {
     }
 
     public void onAttack(EntityLivingBase entity) {
-        if (entity == null || entity == this || this.isAttacking() || this.ais.onAttack == 3 || entity == this.getOwner()) {
+        if (entity == null || entity == this || this.isAttacking() || this.ais.onAttack == 3 || entity == this.getOwner()
+                || !noppes.npcs.rework.commandstaff.StaffOrder.canEngage(this, entity)) {
             return;
         }
         super.setAttackTarget(entity);
@@ -779,6 +781,7 @@ IAnimals {
             super.setAttackTarget(null);
             return;
         }
+        if (entity != null && !noppes.npcs.rework.commandstaff.StaffOrder.canEngage(this, entity)) { return; }
         Line line;
         if (entity instanceof EntityPlayer && ((EntityPlayer)entity).capabilities.disableDamage || entity != null && entity == this.getOwner() || this.getAttackTarget() == entity) {
             return;
@@ -807,7 +810,8 @@ IAnimals {
 
     @Override
     public void setRevengeTarget(EntityLivingBase entity) {
-        super.setRevengeTarget(noppes.npcs.rework.army.ArmyMarches.isPassive(this) ? null : entity);
+        super.setRevengeTarget(noppes.npcs.rework.army.ArmyMarches.isPassive(this)
+                || entity != null && !noppes.npcs.rework.commandstaff.StaffOrder.canEngage(this, entity) ? null : entity);
     }
 
     public void attackEntityWithRangedAttack(EntityLivingBase entity, float f) {
@@ -898,9 +902,13 @@ IAnimals {
         this.taskCount = 1;
         this.addRegularEntries();
         this.doorInteractType();
-        this.seekShelter();
+        if (!noppes.npcs.rework.commandstaff.StaffOrder.active(this)) { this.seekShelter(); }
         this.setResponse();
-        this.setMoveType();
+        if (noppes.npcs.rework.commandstaff.StaffOrder.active(this)) {
+            noppes.npcs.rework.commandstaff.StaffOrder.addTasks(this, ++this.taskCount);
+        } else {
+            this.setMoveType();
+        }
         // All task constructors have now captured the new vanilla navigator. API 2 rewires them.
         RwNavBackend.afterTasks(this);
     }
@@ -908,6 +916,16 @@ IAnimals {
     private void setResponse() {
         this.aiRange = null;
         this.aiAttackTarget = null;
+        if (noppes.npcs.rework.commandstaff.StaffOrder.active(this)) {
+            this.aiAttackTarget = new EntityAIAttackTarget(this);
+            this.tasks.addTask(this.taskCount, this.aiAttackTarget);
+            if (this.inventory.getProjectile() != null) {
+                this.aiRange = new EntityAIRangedAttack(this);
+                this.tasks.addTask(this.taskCount, this.aiRange);
+            }
+            this.taskCount++;
+            return;
+        }
         if (this.ais.canSprint) {
             this.tasks.addTask(this.taskCount++, (EntityAIBase)new EntityAISprintToTarget(this));
         }
@@ -1025,8 +1043,10 @@ IAnimals {
     }
 
     public void addRegularEntries() {
-        this.tasks.addTask(this.taskCount++, (EntityAIBase)new EntityAIReturn(this));
-        this.tasks.addTask(this.taskCount++, (EntityAIBase)new EntityAIFollow(this));
+        if (!noppes.npcs.rework.commandstaff.StaffOrder.active(this)) {
+            this.tasks.addTask(this.taskCount++, (EntityAIBase)new EntityAIReturn(this));
+            this.tasks.addTask(this.taskCount++, (EntityAIBase)new EntityAIFollow(this));
+        }
         if (this.ais.getStandingType() != 1 && this.ais.getStandingType() != 3) {
             this.tasks.addTask(this.taskCount++, (EntityAIBase)new EntityAIWatchClosest(this, EntityLivingBase.class, 5.0f));
         }
@@ -1161,6 +1181,7 @@ IAnimals {
         this.display.readToNBT(compound);
         this.stats.readToNBT(compound);
         this.ais.readToNBT(compound);
+        this.rwStaffOrder = noppes.npcs.rework.commandstaff.StaffOrder.read(this, compound);
         this.rwNavBackend = compound.getInteger("RwNavBackend") == 1 ? 1 : 0;
         this.rwFlightMode = FlightMode.read(compound).id();
         this.rwHitboxMode = HitboxWeights.sanitize(compound.getInteger("RwHitboxMode"));
@@ -1192,6 +1213,8 @@ IAnimals {
         this.display.writeToNBT(compound);
         this.stats.writeToNBT(compound);
         this.ais.writeToNBT(compound);
+        if (this.rwStaffOrder != null) { this.rwStaffOrder.write(compound); }
+        else { compound.removeTag("RwCommandStaff"); }
         this.getRwFlightMode().write(compound);
         if (this.rwNavBackend == 1) {
             compound.setInteger("RwNavBackend", 1);

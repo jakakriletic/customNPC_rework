@@ -7,7 +7,7 @@ $allowed = @(Get-ChildItem (Join-Path $PSScriptRoot 'dev\build\classes\java\main
 })
 # M16: built-in rigged models (new files only, never an original entry).
 $rigRoot = Join-Path $PSScriptRoot 'dev\build\resources\main'
-foreach ($sub in @('assets\rwrig', 'assets\customnpcs\rig', 'assets\customnpcs\textures\rig')) {
+foreach ($sub in @('assets\rwrig', 'assets\customnpcs\rig', 'assets\customnpcs\textures\rig', 'assets\rwcommandstaff')) {
     $dir = Join-Path $rigRoot $sub
     if (Test-Path -LiteralPath $dir) {
         $allowed += @(Get-ChildItem $dir -Recurse -File | ForEach-Object { $_.FullName.Substring($rigRoot.Length + 1).Replace('\', '/') })

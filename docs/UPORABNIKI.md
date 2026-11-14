@@ -234,6 +234,26 @@ select the next action, rather than showing current grants. Changes are checked 
 server at every click. Multiple armies are processed in order; denial or timeout stops
 the remaining changes and keeps those already confirmed. Closing the GUI stops the queue.
 
+### Command Staff (individual NPC orders)
+
+Set `RwCommandStaff=1` on both sides. Find **Command Staff** in Creative Tools
+(`customnpcs:command_staff`). It works with ground NPCs. Operators with NPC editor permission,
+NPC owners and players with command rights for an NPC's army can select those NPCs.
+
+- **Shift + hold left click** makes a gold circle grow where you look. Release left click
+  to replace your selection with the NPCs in the circle. The circle reaches 24 blocks and
+  selects up to 256 loaded NPCs. Selected NPCs have a gold outline.
+- **Shift + right click** opens orders for the selection. **Follow** follows you. **Stay**
+  ends follow and keeps the NPC in that area. **Wander** lets it roam when idle and **Stationary**
+  stops wandering. **Attack** pursues hostile targets. **Guard** holds ground during combat
+  and still attacks enemies in reach. **Restore NPC AI** returns control to the NPC's editor settings.
+- **Right click toward the ground** sends the selection to separate places in a rectangular
+  formation. The destination must be in loaded terrain within 256 blocks. Follow ends when
+  the move is issued. NPCs already on an active army march continue their army orders.
+
+An NPC's selected modes are saved with the world. Your selection and a move in progress are
+session-only. The item can be used with `RwArmies=0` and with either distribution of the mod.
+
 ### Animated NPCs: models with bones (M16, `RwAnimCore=1`)
 
 Set `RwAnimCore=1` on the server **and** every client. Then any NPC can wear a model with bones
@@ -346,6 +366,15 @@ server across restarts.
   After `/npcanim reload` a queued or running clip of a changed NPC is stopped; play it again.
 
 ## 5. Migration and rollback
+
+**Varied Commodities in one JAR.** Build Rework and run
+`./bundle-varied.ps1 -VariedJar 'C:/path/to/VariedCommodities.jar'`. The output in
+`dev/build/libs/` includes both Forge mods with the original registry IDs. For worlds
+using Varied Commodities, use the release already installed in that world. The bundler
+accepts the original 21 Nov 2019 and 31 Mar 2023 releases. On client and server, install
+the same combined JAR in place of the separate CustomNPCs and Varied Commodities JARs.
+Varied Commodities by Noppes is included under
+[CC BY-NC 3.0](https://www.curseforge.com/minecraft/mc-mods/varied-commodities/license).
 
 - **No migration is needed.** The rework reads original worlds as they are and writes the same
   formats plus a few extra NBT keys (`Rw…`).

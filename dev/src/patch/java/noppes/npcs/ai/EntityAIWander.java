@@ -96,6 +96,7 @@ extends EntityAIBase {
     private Vec3d getVec() {
         if (this.entity.ais.walkingRange > 0) {
             BlockPos start = new BlockPos((double)this.entity.getStartXPos(), this.entity.getStartYPos(), (double)this.entity.getStartZPos());
+            start = noppes.npcs.rework.commandstaff.StaffOrder.wanderCenter(this.entity, start);
             int distance = (int)MathHelper.sqrt((double)this.entity.getDistanceSq(start));
             int range = this.entity.ais.walkingRange - distance;
             if (range > CustomNpcs.NpcNavRange) {

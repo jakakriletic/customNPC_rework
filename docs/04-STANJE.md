@@ -12,6 +12,10 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**14. 11. — Command Staff in Varied Commodities.** Ločena palica izbira talne NPC-je s krogom,
+ureja njihove ukaze in jih pošlje na ločene položaje. Združeni JAR je izdelan za izdaji 21Nov19
+in 31Mar23. [Zapis](meritve/2026-11-14-command-staff-varied.md).
+
 **14. 11. — Army GUI in M15.** Global → Armies registrira vojsko brez ukaza.
 M15 uporablja vgrajeno animacijsko jedro M16: mape bitij na strežniku, prenos modela,
 teksture in klipov klientom ter izbira modela v Display. [Zapis](meritve/2026-11-14-armies-m15.md).

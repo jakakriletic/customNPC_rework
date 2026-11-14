@@ -48,6 +48,10 @@ extends EntityAIBase {
             return false;
         }
         this.entityTarget = entitylivingbase;
+        if (noppes.npcs.rework.commandstaff.StaffOrder.guarding(this.npc)) {
+            this.entityPathEntity = null;
+            return noppes.npcs.rework.commandstaff.StaffOrder.canEngage(this.npc, entitylivingbase);
+        }
         this.entityPathEntity = this.npc.getNavigator().getPathToEntityLiving((Entity)entitylivingbase);
         return this.entityPathEntity != null;
     }
@@ -67,11 +71,14 @@ extends EntityAIBase {
         if (melee > 0 && !this.npc.isInRange((Entity)this.entityTarget, melee)) {
             return false;
         }
+        if (noppes.npcs.rework.commandstaff.StaffOrder.active(this.npc)) {
+            return noppes.npcs.rework.commandstaff.StaffOrder.canEngage(this.npc, this.entityTarget);
+        }
         return this.npc.isWithinHomeDistanceFromPosition(new BlockPos((Entity)this.entityTarget));
     }
 
     public void startExecuting() {
-        if (!this.navOverride) {
+        if (!this.navOverride && !noppes.npcs.rework.commandstaff.StaffOrder.guarding(this.npc)) {
             this.npc.getNavigator().setPath(this.entityPathEntity, 1.3);
         }
         this.delayCounter = 0;
@@ -85,7 +92,7 @@ extends EntityAIBase {
 
     public void updateTask() {
         this.npc.getLookHelper().setLookPositionWithEntity((Entity)this.entityTarget, 30.0f, 30.0f);
-        if (!this.navOverride && --this.delayCounter <= 0) {
+        if (!this.navOverride && !noppes.npcs.rework.commandstaff.StaffOrder.guarding(this.npc) && --this.delayCounter <= 0) {
             this.delayCounter = 4 + this.npc.getRNG().nextInt(7);
             this.npc.getNavigator().tryMoveToEntityLiving((Entity)this.entityTarget, (double)1.3f);
         }
