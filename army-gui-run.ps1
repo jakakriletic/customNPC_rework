@@ -161,7 +161,7 @@ try {
     Send "deop $player"
     Expect "De-opped $player" 'real player deopped'
     Sync 'revoke' "rwarmy revoke $player all alpha" 'RWARMY revoked all alpha'
-    $keys = @('staff-npc-open','staff-assign','staff-membership','editor-button','editor-prefill','editor-assign','editor-membership',
+    $keys = @('global-create','global-list','global-parent','staff-npc-open','staff-assign','staff-membership','editor-button','editor-prefill','editor-assign','editor-membership',
       'all-tab','near-tab','bulk-confirm','bulk-assign','bulk-count','aim-closes','ray-move','physical-move','stop','stopped-state',
       'return-here','physical-return','return-stop','ray-miss','miss-preserves-order','view-filter','view-command-disabled',
       'forged-stop-denied','revoke-filter','revoked-status-hidden','connection-alive')
@@ -181,7 +181,7 @@ try {
     Assert (-not (Log).Contains('RWARMY channel')) 'no channel with RwArmies=0'
     Assert (-not (Log).Contains('Unidentified mapping from registry')) 'Q435: saved staff entry ignored at 0, no startup query'
     Start-Client 'off'
-    [void](Finish-Client 'off' @('off-no-gui','off-no-channel','off-item','off-hidden'))
+    [void](Finish-Client 'off' @('off-no-gui','off-no-channel','off-item','off-hidden','off-global-hidden'))
     Stop-Phase 'p3-off'
     Assert (-not (Log).Contains('RWARMY register loaded')) 'register not loaded at 0'
     Assert ((Fingerprint $dat) -ceq $datHash) 'register bitwise unchanged at 0'
@@ -192,7 +192,7 @@ try {
             Assert ((Test-Path -LiteralPath $path) -and (Get-Item -LiteralPath $path).Length -gt 1000) "screenshot $image"
         }
     }
-    Assert (@($main.screenshots).Count -eq 4 -and @($verify.screenshots).Count -eq 1) 'five required screenshots'
+    Assert (@($main.screenshots).Count -eq 5 -and @($verify.screenshots).Count -eq 1) 'six required screenshots'
     Unchanged
     @{success=$true; package='M11.8a'; checks=@($checks); inputs=$hashes; harness=(Get-FileHash -LiteralPath $PSCommandPath).Hash;
       register=$datHash; main=$main; verify=$verify;

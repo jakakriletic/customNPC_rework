@@ -745,36 +745,18 @@ originalu; stikalo vrne original.
 
 ## M15 — Bitja iz mape (animirani in skriptani NPC-ji brez rebuilda)
 
-**Cilj:** lastnik naroči npr. »epskega trolla«, AI ga izdela kot datoteke v server mapi (klon,
-skripte, animacije, po M15.3 tudi model), lastnik jih skopira na živ strežnik in NPC je narejen —
-brez rebuilda jarja in brez restarta. Zahteva lastnika 3. 11. 2026; JavaScript/Java skripte in
-animacije (M6, M7, P5, P7) so bile narejene prav za to.
+**Izvedba na M16 (14. 11.):** paket v `customnpcs/creatures/<id>/` nastavi model, napade,
+klon in strežniško skripto. Deluje z `RwAnimCore=1` (privzeto 0).
 
-**Izhodišče (3. 11.):** že deluje samo iz datotek: klon (`customnpcs/clones/…`, `/noppes clone
-spawn`), JS/Java skripte z `Animators.of(npc)`, `blendTo`, vrsto klipov in hooki (P7a/b), nove ali
-spremenjene animacije obstoječih bitij `customNPC_entities_mod` (troll, cave_bear, giant_spider,
-warg) v `config/customnpcs/animations/<id>.animation.json` + `/npcanim reload` (P7c, do 128
-klipov, samo obstoječe kosti, klipov iz tabele napadov ni mogoče izbrisati). Manjka:
+| ID | Paket |
+|---|---|
+| M15.0–M15.2 | Različica modela določi `base`. Lastne animacije prepišejo ali dodajo klipe; dogodki in skripta M16 določajo napad. Mape se naložijo ob zagonu in prek `/rwcreature reload`. |
+| M15.3 | Novo bitje prinese geometrijo in PNG. Klienti dobijo model, teksturo in klipe ob prijavi ali reloadu. Prenos ima omejitev velikosti, SHA-256 in potrditev revizije. **Display → Rig model...** izbere model obstoječega NPC-ja. |
+| M15.4 | `/rwcreature deploy` naloži sveže kopiran paket in postavi NPC-ja. `/rwcreature spawn` uporabi že naložen paket. [Navodila](UPORABNIKI.md#creature-folders-m15-rwanimcore1). |
+| M15.5 | Dedicated test z dvema klientoma, pozni vstop, napačen JSON, nov klip, postavitev novega bitja in restart. |
 
-### Paketi
-
-| ID | Paket | Vel. |
-|---|---|---|
-| M15.0 | Raziskava: preveri izhodišče na kodi, primer »epski troll« od začetka do konca samo z datotekami, kje se zatakne | S |
-| M15.1 | **Override ob zagonu:** datoteke v `config/customnpcs/animations/` se uveljavijo že ob zagonu strežnika (in pri prijavi klienta), ne šele po `/npcanim reload`; slaba datoteka → jasna napaka in jar klipi, ne crash | S |
-| M15.2 | **Tabela napadov iz datoteke:** override sme spremeniti tudi `mob` (napadi, škoda, cooldowni, dogodki), z validacijo kot P7c; brez datoteke original | S–M |
-| M15.3 | **Novo bitje iz mape:** generično animirano bitje (`EntityAnimatedNpc` je že podatkovno gnan), ki `geo`, teksturo, animacije in `mob` prebere iz server mape; klienti dobijo model in teksturo ob prijavi/reloadu po transakciji P7c (SHA-256, potrditev, omejitev velikosti); izbira v GUI NPC-ja | M–L |
-| M15.4 | Paket bitja: ena mapa `customnpcs/creatures/<ime>/` (model, tekstura, animacije, `mob`, klon, skripte) in ukaz za uvoz/postavitev; navodila v `UPORABNIKI.md`, kako AI (ali lastnik) izdela novo bitje | S–M |
-| M15.5 | Preverba: »epski troll« in eno novo bitje izdelana samo iz datotek, na dedicated strežniku z dvema klientoma, restart, pozni vstop igralca; cena enkrat kot podatek | S |
-
-Vse pod stikali, privzeto original (`RwAnimHooks` ali novo stikalo).
-
-**Izhodni kriterij:** novo bitje in nov napad obstoječega bitja se pojavita na živem strežniku samo
-s kopiranjem datotek in enim ukazom, preživita restart, klient brez datotek jih dobi od strežnika;
-slaba datoteka ne podre strežnika ali klienta.
-
-**Tveganja:** prenos modelov/tekstur klientom (velikost, varnost, predpomnilnik); vezava na
-notranjost `customNPC_entities_mod` 0.7.0 (refleksija kot P7c); GUI se dokončno preveri ročno.
+**Izhodni kriterij:** novo bitje in nov napad se na živem strežniku pojavita iz datotek brez
+rebuilda, preživita restart in ju vidi klient brez lokalnega paketa. Slaba datoteka se zavrne.
 
 ---
 

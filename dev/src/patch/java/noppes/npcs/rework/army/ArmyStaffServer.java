@@ -19,8 +19,12 @@ public final class ArmyStaffServer {
     public static ArmyStaffCodec.Response execute(EntityPlayerMP p, ArmyStaffCodec.Request r) {
         if (!ArmyCommandService.enabled()) { return reply(r, false, "", "RWARMY off"); }
         ArmyActor actor = ArmyCommandService.actorFor(p.getServer(), p.getUniqueID());
-        boolean editor = p.getHeldItemMainhand().getItem() == CustomItems.wand
-                && p.canUseCommand(2, "rwarmy");
+        boolean editor = p.getHeldItemMainhand().getItem() == CustomItems.wand && actor.operator();
+        if (r.op == ArmyStaffCodec.Op.CREATE) {
+            if (!editor) { return reply(r, false, "", "Creating an army requires an operator with the NPC wand."); }
+            ArmyCommandService.Reply result = ArmyCommandService.create(p.getServer(), actor, r.army, "uuid:" + p.getUniqueID());
+            return reply(r, result.ok, result.ok ? r.army : "", result.message);
+        }
         if (!holding(p) && !(editor && (r.op == ArmyStaffCodec.Op.INSPECT || r.op == ArmyStaffCodec.Op.ASSIGN))) {
             return reply(r, false, "", "RWARMY hold the command staff");
         }

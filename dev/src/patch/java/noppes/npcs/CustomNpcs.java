@@ -466,6 +466,7 @@ public class CustomNpcs {
     public void setAboutToStart(FMLServerAboutToStartEvent event) {
         Availability.scoreboardValues.clear();
         Server = event.getServer();
+        noppes.npcs.rework.rig.RigCreatureTransfer.start();
         // M11.1 (Q299): the army service reads its own copy, before any world or script loads.
         ArmyCommandService.setSwitch(RwArmies);
         ArmyCommandService.setClusters(RwArmyClusterRadius, RwArmyClusterMin);
@@ -540,6 +541,7 @@ public class CustomNpcs {
         SquadManager.clear();
         HitboxTrack.stop();
         ReloadServer.stopped();
+        noppes.npcs.rework.rig.RigCreatureTransfer.stop();
         if (!WorldSaveSession.end(30L, TimeUnit.SECONDS)) {
             LogWriter.error("CustomNPCs world save queue did not drain cleanly before shutdown");
         }
@@ -597,7 +599,10 @@ public class CustomNpcs {
         // P7c: only the switch adds the reload command.
         if (RwAnimHooks >= 1) { event.registerServerCommand((ICommand)new CommandNpcAnim()); }
         // M16: only the switch adds the rig command.
-        if (RwAnimCore == 1) { event.registerServerCommand((ICommand)new noppes.npcs.rework.rig.CommandRwRig()); }
+        if (RwAnimCore == 1) {
+            event.registerServerCommand(new noppes.npcs.rework.rig.CommandRwRig());
+            event.registerServerCommand(new noppes.npcs.rework.rig.CommandRwCreature());
+        }
         // M13.2: only the switch adds the linked group command.
         if (RwLinkedGroups == 1) { event.registerServerCommand((ICommand)new CommandRwLinked()); }
         // M11.1 (Q299): only the switch adds the army command.

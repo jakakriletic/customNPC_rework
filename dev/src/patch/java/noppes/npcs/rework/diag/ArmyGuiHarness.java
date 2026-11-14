@@ -19,6 +19,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import noppes.npcs.CustomItems;
 import noppes.npcs.client.gui.mainmenu.GuiNpcAI;
+import noppes.npcs.client.gui.mainmenu.GuiNPCGlobalMainMenu;
 import noppes.npcs.client.gui.util.*;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.rework.army.*;
@@ -146,6 +147,9 @@ public final class ArmyGuiHarness {
             act("AI off",()->top(6));
             add("off AI check",20,()->{},()->mc.currentScreen instanceof GuiNpcAI);
             act("off-hidden",()->check("off-hidden",((GuiNpcAI)mc.currentScreen).getButton(80)==null,"no army editor button"));
+            act("off Global",()->top(5));
+            add("off Global hidden",20,()->{},()->mc.currentScreen instanceof GuiNPCGlobalMainMenu);
+            act("off Global check",()->check("off-global-hidden",((GuiNPCGlobalMainMenu)mc.currentScreen).getButton(17)==null,"no Global Armies button"));
             act("off close",()->top(0));
         } else if("load".equals(phase)) {
             planLoad(mc);
@@ -160,6 +164,22 @@ public final class ArmyGuiHarness {
         } else {
             for(String army:new String[]{"alpha","beta","hidden","remote"}) { cmd("rwarmy create "+army+" uuid:0b5a1c2e-1111-4a2b-9c3d-123456789abc"); }
             for(int i=0;i<3;i++) { cmd("noppes clone spawn AGUI_"+(char)('A'+i)+" 1 "+(600+i*3)+",4,3"); }
+            cmd("replaceitem entity @p slot.hotbar.0 customnpcs:npcwand");
+            add("wand Global",20,()->mc.playerController.interactWithEntity(mc.player,npc("AGUI_A"),EnumHand.MAIN_HAND),()->mc.currentScreen instanceof GuiNPCInterface2);
+            act("Global",()->top(5));
+            add("Global Armies",20,()->{},()->mc.currentScreen instanceof GuiNPCGlobalMainMenu);
+            act("registry open",()->click(17));
+            act("type new army",()->{
+                Method key = GuiScreen.class.getDeclaredMethod("keyTyped",char.class,int.class); key.setAccessible(true);
+                for (char c : "gui_army".toCharArray()) { key.invoke(mc.currentScreen,c,0); }
+            });
+            button("global-create",0,true,"created gui_army");
+            snapshot("global-list",()->names().contains("gui_army:0:true"));
+            act("registry image",()->screen("registry"));
+            act("registry back",()->click(3));
+            act("back Global",()->check("global-parent",mc.currentScreen instanceof GuiNPCGlobalMainMenu,"Done returns to Global"));
+            act("close Global",()->top(0));
+            cmd("rwarmy remove gui_army");
             cmd("replaceitem entity @p slot.hotbar.0 customnpcs:army_staff");
             openNpc("AGUI_A");
             act("initial inspect",()->{ check("staff-npc-open",ArmyClient.staffReply().ok && ArmyClient.staffReply().army.isEmpty(),ArmyClient.staffReply().text); data.addProperty("uuid",npc("AGUI_A").getUniqueID().toString()); });

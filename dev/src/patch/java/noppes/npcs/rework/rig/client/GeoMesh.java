@@ -98,6 +98,12 @@ public final class GeoMesh {
         return bones.containsKey(name);
     }
 
+    void release() {
+        for (Bone bone : bones.values()) {
+            if (bone.displayList != -1) { GLAllocation.deleteDisplayLists(bone.displayList); }
+        }
+    }
+
     /** Draws the model in the current GL frame (model pixels, Y up, facing -Z). */
     public void render(Pose pose) {
         Tessellator tessellator = Tessellator.getInstance();

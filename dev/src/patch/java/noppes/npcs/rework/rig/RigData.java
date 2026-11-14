@@ -79,20 +79,29 @@ public final class RigData {
     }
 
     public RigModels.Model modelDef() {
-        return RigModels.get(model);
+        return modelDef(false);
+    }
+
+    public RigModels.Model modelDef(boolean client) {
+        return RigModels.get(model, client);
     }
 
     /** The model's clips with this NPC's own added; empty when the model is unknown. */
     public AnimLibrary library() {
-        String key = model + "\n" + clips;
+        return library(false);
+    }
+
+    public AnimLibrary library(boolean client) {
+        String key = (client ? "c" : "s") + model + "\n" + clips;
         // Model or own clips changed (RigApi, /rwrig) or files reloaded: look the library up again.
         if (library == null || libraryGen != generation || !key.equals(libraryKey)) {
-            libraryGen = generation;
+            int currentGeneration = generation;
+            RigModels.Model m = modelDef(client);
+            libraryGen = currentGeneration;
             libraryKey = key;
             synchronized (LIBRARIES) {
                 library = LIBRARIES.get(key);
                 if (library == null) {
-                    RigModels.Model m = modelDef();
                     List<String> found = new ArrayList<String>();
                     library = AnimLibrary.merge(m == null ? AnimLibrary.EMPTY : m.clips, clips, found);
                     LIBRARIES.put(key, library);

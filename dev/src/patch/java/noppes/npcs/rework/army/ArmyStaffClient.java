@@ -35,6 +35,7 @@ public final class ArmyStaffClient {
     }
     public static void received(ArmyStaffCodec.Response reply) {
         Minecraft mc = Minecraft.getMinecraft();
+        if (mc.currentScreen instanceof GuiArmyRegistry && ((GuiArmyRegistry)mc.currentScreen).received(reply)) { return; }
         if (mc.currentScreen instanceof GuiArmyStaff) { ((GuiArmyStaff)mc.currentScreen).received(reply); }
         else if (mc.player != null) { mc.player.sendMessage(new TextComponentString(reply.text)); }
     }

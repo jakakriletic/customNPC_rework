@@ -1,5 +1,12 @@
 # Changelog — CustomNPCs Rework 1.12.2
 
+## v2 development
+
+- NPC wand → **Global → Armies** lets operators create and list armies in game.
+- With `RwAnimCore=1`, **Display → Rig model...** selects a built-in or server creature model.
+- Server creature folders support custom models, textures, animation events, clone settings and scripts.
+  `/rwcreature deploy` synchronizes assets to clients and places a complete pack.
+
 ## v1.0 candidate (2026-10-30)
 
 Base: **CustomNPCs 1.12.2 (01Oct19)**, Forge 14.23.5.2847, Java 8. Settings, installation and

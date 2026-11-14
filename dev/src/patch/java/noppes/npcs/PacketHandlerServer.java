@@ -444,9 +444,20 @@ public class PacketHandlerServer {
         } else if (type == EnumPacketServer.PlayerDataRemove) {
             NoppesUtilServer.removePlayerData(buffer, player);
         } else if (type == EnumPacketServer.MainmenuDisplayGet) {
-            Server.sendData(player, EnumPacketClient.GUI_DATA, npc.display.writeToNBT(new NBTTagCompound()));
+            NBTTagCompound display = npc.display.writeToNBT(new NBTTagCompound());
+            if (CustomNpcs.RwAnimCore == 1) {
+                display.setString("RwRigGuiModel", npc.rwRig.model);
+            }
+            Server.sendData(player, EnumPacketClient.GUI_DATA, display);
         } else if (type == EnumPacketServer.MainmenuDisplaySave) {
-            npc.display.readToNBT(Server.readNBT(buffer));
+            NBTTagCompound display = Server.readNBT(buffer);
+            npc.display.readToNBT(display);
+            if (CustomNpcs.RwAnimCore == 1 && display.hasKey("RwRigGuiModel", 8)) {
+                String model = display.getString("RwRigGuiModel");
+                if (!model.equals(npc.rwRig.model) && !noppes.npcs.rework.rig.RigApi.setModel(npc.wrappedNPC, model)) {
+                    player.sendMessage(new net.minecraft.util.text.TextComponentString("Unknown rig model: " + model));
+                }
+            }
             npc.updateClient = true;
         } else if (type == EnumPacketServer.MainmenuStatsGet) {
             Server.sendData(player, EnumPacketClient.GUI_DATA, npc.stats.writeToNBT(new NBTTagCompound()));

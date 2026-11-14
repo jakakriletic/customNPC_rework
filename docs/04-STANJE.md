@@ -12,6 +12,10 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**14. 11. — Army GUI in M15.** Global → Armies registrira vojsko brez ukaza.
+M15 uporablja vgrajeno animacijsko jedro M16: mape bitij na strežniku, prenos modela,
+teksture in klipov klientom ter izbira modela v Display. [Zapis](meritve/2026-11-14-armies-m15.md).
+
 | | |
 |---|---|
 | Zadnja posodobitev | **2026-11-11** (seja 230) — M11.11 `freeforall` sprejet: 199/199 skozi progo z grlom po restartu, zaprti član edini blokiran, Xaero v0.1.10 nameščen (Q446). [Zapis](meritve/2026-11-11-M11.11-freeforall.md). |

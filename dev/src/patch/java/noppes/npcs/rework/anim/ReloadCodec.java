@@ -20,10 +20,10 @@ import java.util.regex.Pattern;
  * animation file, sorted), sent in checked parts; its SHA-256 binds prepare, confirmation and commit.
  * All sizes are checked before any allocation. */
 public final class ReloadCodec {
-    static final byte PART = 2, COMMIT = 3, ABORT = 4, ACK = 5;
+    public static final byte PART = 2, COMMIT = 3, ABORT = 4, ACK = 5;
     public static final int MAX_FILE = 2 << 20, MAX_BUNDLE = 8 << 20, PART_SIZE = 256 * 1024, MAX_IDS = 64, HASH_SIZE = 32;
     /** Largest message: kind, revision, total, offset, one part. */
-    static final int MAX_MESSAGE = 1 + 4 + 4 + 4 + PART_SIZE;
+    public static final int MAX_MESSAGE = 1 + 4 + 4 + 4 + PART_SIZE;
     private static final int COMMIT_SIZE = 1 + 4 + HASH_SIZE, ABORT_SIZE = 1 + 4, ACK_SIZE = 1 + 4 + 1 + HASH_SIZE;
     private static final Pattern ID = Pattern.compile("[a-z0-9_]{1,64}");
 
@@ -45,7 +45,7 @@ public final class ReloadCodec {
 
     static boolean isReload(byte first) { return first >= PART && first <= ACK; }
 
-    static byte[][] parts(int revision, byte[] bundle) {
+    public static byte[][] parts(int revision, byte[] bundle) {
         if (bundle.length == 0 || bundle.length > MAX_BUNDLE) { throw new IllegalArgumentException("bundle size " + bundle.length); }
         List<byte[]> out = new ArrayList<>();
         for (int offset = 0; offset < bundle.length; offset += PART_SIZE) {
@@ -56,11 +56,11 @@ public final class ReloadCodec {
         return out.toArray(new byte[0][]);
     }
 
-    static byte[] commit(int revision, byte[] hash) { return ByteBuffer.allocate(COMMIT_SIZE).put(COMMIT).putInt(revision).put(hash).array(); }
+    public static byte[] commit(int revision, byte[] hash) { return ByteBuffer.allocate(COMMIT_SIZE).put(COMMIT).putInt(revision).put(hash).array(); }
 
-    static byte[] abort(int revision) { return ByteBuffer.allocate(ABORT_SIZE).put(ABORT).putInt(revision).array(); }
+    public static byte[] abort(int revision) { return ByteBuffer.allocate(ABORT_SIZE).put(ABORT).putInt(revision).array(); }
 
-    static byte[] ack(int revision, boolean ok, byte[] hash) {
+    public static byte[] ack(int revision, boolean ok, byte[] hash) {
         return ByteBuffer.allocate(ACK_SIZE).put(ACK).putInt(revision).put((byte) (ok ? 1 : 0)).put(hash).array();
     }
 
@@ -93,7 +93,7 @@ public final class ReloadCodec {
         }
     }
 
-    static byte[] encodeBundle(Map<String, byte[]> files) {
+    public static byte[] encodeBundle(Map<String, byte[]> files) {
         if (files.size() > MAX_IDS) { throw new IllegalArgumentException("too many entity ids"); }
         try {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -110,7 +110,7 @@ public final class ReloadCodec {
     }
 
     /** @return the sorted files, or null for anything {@link #encodeBundle} would not write */
-    static TreeMap<String, byte[]> decodeBundle(byte[] bundle) {
+    public static TreeMap<String, byte[]> decodeBundle(byte[] bundle) {
         if (bundle == null || bundle.length < 4 || bundle.length > MAX_BUNDLE) { return null; }
         try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(bundle))) {
             int count = in.readInt();
@@ -130,7 +130,7 @@ public final class ReloadCodec {
         } catch (IOException malformed) { return null; }
     }
 
-    static byte[] hash(byte[] bundle) {
+    public static byte[] hash(byte[] bundle) {
         try { return MessageDigest.getInstance("SHA-256").digest(bundle); }
         catch (NoSuchAlgorithmException impossible) { throw new IllegalStateException(impossible); }
     }
@@ -143,13 +143,13 @@ public final class ReloadCodec {
     }
 
     /** Puts checked parts of one bundle back together, in order. */
-    static final class Assembler {
+    public static final class Assembler {
         private int revision;
         private byte[] buffer;
         private int filled;
 
         /** @return the whole bundle after its last part, otherwise null; a part out of order drops the bundle */
-        byte[] accept(Message part) {
+        public byte[] accept(Message part) {
             if (part.offset == 0) {
                 revision = part.revision; buffer = new byte[part.total]; filled = 0;
             } else if (buffer == null || part.revision != revision || part.total != buffer.length || part.offset != filled) {

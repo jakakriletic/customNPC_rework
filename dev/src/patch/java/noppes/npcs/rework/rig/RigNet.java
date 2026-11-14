@@ -25,7 +25,10 @@ public final class RigNet {
     }
 
     public static synchronized void init() {
-        if (channel == null) { channel = NetworkRegistry.INSTANCE.newEventDrivenChannel(CHANNEL); }
+        if (channel == null) {
+            channel = NetworkRegistry.INSTANCE.newEventDrivenChannel(CHANNEL);
+            RigCreatureTransfer.install();
+        }
     }
 
     public static FMLEventChannel channel() { return channel; }

@@ -205,8 +205,10 @@ Set `RwArmies=1` on both sides. A dedicated server has the staff only with `RwAr
 client cannot join such a server. Get `customnpcs:army_staff` from Creative Tools or
 `/give <player> customnpcs:army_staff` (no recipe). Hold it in the main hand and right-click
 an NPC to edit its army, or air/ground to open the army list. An op holding the NPC wand
-can also use AI → Army.... Enter an existing army name and click **Set NPC army**; empty
-clears membership. Creating an army remains an op command with an owner.
+can also use **Global → Armies → Create army** to register a new army, then **AI → Army...**
+to select it from the list or enter its name and click **Set NPC army**. The operator who creates
+the army owns it. An empty selection clears membership. The create command also accepts another
+player or faction as owner.
 
 **Nearby (256)** lists loaded clusters within 256 horizontal blocks in your dimension;
 **All armies** includes visible empty/unloaded armies and their last position. Counts are
@@ -251,8 +253,10 @@ rebuilding the jar:
 geometry), `<id>.png` and `<id>.animation.json` in `customnpcs/rigs/` (next to `clones/`) on the
 server and the clients, then `/rwrig reload`.
 
-**In game:** `/rwrig set @near knight` (nearest NPC within 16 blocks, or a name prefix),
-`/rwrig play @near leap_slam`, `/rwrig clear @near` (back to the original look).
+**In game:** open an NPC with the wand and choose **Display → Rig model...**. Choose a built-in
+rig or a server creature model, or **Original** to clear the rig. The selection saves with the
+rest of the Display settings. The equivalent commands are `/rwrig set @near knight` (nearest NPC
+within 16 blocks, or a name prefix), `/rwrig clear @near` and `/rwrig play @near leap_slam`.
 
 **Everything is in the NPC (`RwRig` in its NBT)**, so the clone tab, `/noppes clone` and spawners
 keep it:
@@ -293,6 +297,32 @@ New clips with preview pictures (Python 3 with numpy, pyyaml, Pillow): named pos
 events), `py -3 tools/rig/anim/preview.py clip <model> <clip>` draws it with the hit areas,
 `py -3 tools/rig/anim/compile.py <model>` writes the JSON. Copy a clip from the result into an
 NPC's `Clips` (or a package), or rebuild to ship it built in.
+
+### Creature folders (M15, `RwAnimCore=1`)
+
+Put a directory such as `customnpcs/creatures/epic_troll/` on the **server** beside `rigs/`.
+Use a lowercase directory ID with letters, digits or underscores.
+
+| File | Contents |
+|---|---|
+| `creature.json` | For a variant, for example `{"base":"troll","name":"Epic Troll"}`. For an original model, omit `base` and use a new directory ID. Supports the `name`, `scale`, skin and idle/walk/hurt/death settings of a rig package. |
+| `animations.json` | Bedrock clips under `animations`, including timed events. Reuse a built-in clip name to override it or give the new attack its own name for a script or `/rwrig play`. |
+| `model.geo.json`, `texture.png` | Required for an original model. Use the rig renderer's per-face UV format and a PNG up to 1024×1024. |
+| `clone.json` | Optional CustomNPCs server clone as a starting point for stats, AI, inventory and other NPC settings. |
+| `script.js` | Optional server-side script. Use the existing `Animators` API to pick attacks. A script supplied with a pack replaces the clone's script tabs on spawn. |
+
+The server loads packs at startup. In a running world use **`/rwcreature deploy epic_troll [x y z]`**
+after copying files to reload the directory and place the NPC in one command. Use
+**`/rwcreature reload`** to refresh the files without placing an NPC. A bad file refuses the live
+reload and leaves the current packs active. The server
+sends the model, PNG and clips to clients with the switch enabled, including players who join later.
+The NPC script stays on the server. `/rwcreature list` lists valid packs.
+
+Use **`/rwcreature spawn epic_troll [x y z]`** to place a new NPC from the pack. Omit coordinates
+to use your position. **Display → Rig model...** changes the model of an existing NPC. Spawn applies
+the pack's NPC settings and script. Changes to the pack's model and clips take effect on reload,
+including for existing NPCs. The files for any custom models used in the world must remain on the
+server across restarts.
 
 ## 4. Java NPC scripts
 

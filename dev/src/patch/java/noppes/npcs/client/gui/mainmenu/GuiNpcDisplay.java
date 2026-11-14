@@ -13,6 +13,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import noppes.npcs.CustomNpcs;
 import noppes.npcs.client.Client;
 import noppes.npcs.client.NoppesUtil;
 import noppes.npcs.client.gui.GuiNpcTextureCloaks;
@@ -31,19 +32,23 @@ import noppes.npcs.entity.EntityCustomNpc;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.entity.data.DataDisplay;
 import noppes.npcs.rework.entity.HitboxGui;
+import noppes.npcs.rework.rig.RigModels;
 
 public class GuiNpcDisplay
 extends GuiNPCInterface2
 implements ITextfieldListener,
-IGuiData {
+IGuiData, noppes.npcs.client.gui.util.ISubGuiListener {
     private DataDisplay display;
     /** M3.8b: izbrani nacin hitboxa (shranjeni, ne ucinkovit); na server gre ob save(). */
     private int rwHitboxMode;
+    private String rigModel;
+    private boolean rigChanged;
 
     public GuiNpcDisplay(EntityNPCInterface npc) {
         super(npc, 1);
         this.display = npc.display;
         this.rwHitboxMode = npc.getRwHitboxModeForGui();
+        this.rigModel = npc.rwRig.model;
         Client.sendData(EnumPacketServer.MainmenuDisplayGet, new Object[0]);
     }
 
@@ -60,6 +65,9 @@ IGuiData {
         this.addTextField(new GuiNpcTextField(11, this, this.fontRenderer, this.guiLeft + 50, y, 200, 20, this.display.getTitle()));
         this.addLabel(new GuiNpcLabel(1, "display.model", this.guiLeft + 5, (y += rowStep) + 5));
         this.addButton(new GuiNpcButton(1, this.guiLeft + 50, y, 110, 20, "selectServer.edit"));
+        if (CustomNpcs.RwAnimCore == 1) {
+            this.addButton(new GuiNpcButton(15, this.guiLeft + 290, y, 105, 20, "Rig model..."));
+        }
         this.addLabel(new GuiNpcLabel(2, "display.size", this.guiLeft + 175, y + 5));
         this.addTextField(new GuiNpcTextField(2, this, this.fontRenderer, this.guiLeft + 203, y, 40, 20, this.display.getSize() + ""));
         this.getTextField((int)2).numbersOnly = true;
@@ -171,6 +179,8 @@ IGuiData {
             this.display.setHasHitbox(((GuiNpcButtonYesNo)button).getBoolean());
         } else if (button.id == 14) {
             this.rwHitboxMode = button.getValue();
+        } else if (button.id == 15 && CustomNpcs.RwAnimCore == 1) {
+            this.setSubGui(new noppes.npcs.rework.rig.client.GuiRigModel(rigModel, RigModels.ids(true)));
         }
     }
 
@@ -184,13 +194,30 @@ IGuiData {
         this.mc.renderGlobal.onEntityAdded((Entity)this.npc);
         NBTTagCompound compound = this.display.writeToNBT(new NBTTagCompound());
         HitboxGui.writeRequest(compound, this.rwHitboxMode);
+        if (rigChanged) {
+            compound.setString("RwRigGuiModel", rigModel);
+            rigChanged = false;
+        }
         Client.sendData(EnumPacketServer.MainmenuDisplaySave, compound);
     }
 
     @Override
     public void setGuiData(NBTTagCompound compound) {
         this.display.readToNBT(compound);
+        if (!rigChanged && compound.hasKey("RwRigGuiModel", 8)) {
+            rigModel = compound.getString("RwRigGuiModel");
+        }
         this.initGui();
+    }
+
+    @Override public void subGuiClosed(noppes.npcs.client.gui.util.SubGuiInterface subGui) {
+        if (subGui instanceof noppes.npcs.rework.rig.client.GuiRigModel) {
+            String selected = ((noppes.npcs.rework.rig.client.GuiRigModel) subGui).selected();
+            if (selected != null && !selected.equals(rigModel)) {
+                rigModel = selected;
+                rigChanged = true;
+            }
+        }
     }
 }
 

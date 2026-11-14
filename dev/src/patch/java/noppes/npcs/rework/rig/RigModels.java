@@ -54,10 +54,18 @@ public final class RigModels {
         public final boolean skin;
         /** A second mesh {@code <id>_gear} (weapon, shield ...) with its own texture, same bones. */
         public final boolean gear;
+        public final String assetId;
+        public final byte[] geometry, png;
 
         Model(String id, String headBone, float shadow, File folder, AnimLibrary clips, List<String> errors, boolean skin, boolean gear) {
+            this(id, headBone, shadow, folder, clips, errors, skin, gear, id, null, null);
+        }
+
+        Model(String id, String headBone, float shadow, File folder, AnimLibrary clips, List<String> errors,
+              boolean skin, boolean gear, String assetId, byte[] geometry, byte[] png) {
             this.id = id; this.headBone = headBone; this.shadow = shadow; this.folder = folder;
             this.clips = clips; this.errors = Collections.unmodifiableList(errors); this.skin = skin; this.gear = gear;
+            this.assetId = assetId; this.geometry = geometry; this.png = png;
         }
 
         public boolean builtIn() { return folder == null; }
@@ -83,7 +91,12 @@ public final class RigModels {
 
     /** Every model id, built-in and from the folder, sorted. */
     public static List<String> ids() {
+        return ids(false);
+    }
+
+    public static List<String> ids(boolean client) {
         TreeSet<String> out = new TreeSet<String>();
+        out.addAll(RigCreatureAssets.models(client).keySet());
         for (Object[] b : BUILT_IN) { out.add((String) b[0]); }
         File[] files = folder().listFiles();
         if (files != null) {
@@ -100,10 +113,16 @@ public final class RigModels {
 
     /** The model, or null when the id is unknown. */
     public static synchronized Model get(String id) {
+        return get(id, false);
+    }
+
+    public static synchronized Model get(String id, boolean client) {
+        Model creature = id == null ? null : RigCreatureAssets.models(client).get(id);
+        if (creature != null) { return creature; }
         if (!validId(id)) { return null; }
         Model m = CACHE.get(id);
         if (m == null && !CACHE.containsKey(id)) {
-            m = load(id);
+            m = load(id, true);
             CACHE.put(id, m);
         }
         return m;
@@ -112,11 +131,24 @@ public final class RigModels {
     /** Forgets every parsed model (files changed); the next lookup reads them again. */
     public static synchronized void reload() {
         CACHE.clear();
+        invalidate();
+    }
+
+    static void invalidate() {
         generation++;
         RigData.clearCache();
     }
 
-    private static Model load(String id) {
+    static Model builtIn(String id) {
+        return load(id, false);
+    }
+
+    static boolean isBuiltIn(String id) {
+        for (Object[] b : BUILT_IN) { if (b[0].equals(id)) { return true; } }
+        return false;
+    }
+
+    private static Model load(String id, boolean allowFile) {
         String head = "head";
         float shadow = 0.6F;
         boolean builtIn = false, skin = false, gear = false;
@@ -128,7 +160,7 @@ public final class RigModels {
         }
         File dir = folder();
         File geo = new File(dir, id + ".geo.json");
-        boolean user = geo.isFile();
+        boolean user = allowFile && geo.isFile();
         if (!user && !builtIn) { return null; }
         List<String> errors = new ArrayList<String>();
         AnimLibrary clips = AnimLibrary.EMPTY;

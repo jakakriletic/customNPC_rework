@@ -57,6 +57,7 @@ public final class RigClient {
         Listener l = new Listener();
         if (RigNet.channel() != null) { RigNet.channel().register(l); }
         MinecraftForge.EVENT_BUS.register(l);
+        RigCreatureClient.install();
     }
 
     public static final class Listener {
@@ -89,17 +90,23 @@ public final class RigClient {
     static synchronized GeoMesh mesh(String id) {
         int gen = RigModels.generation();
         if (gen != generation) {
+            for (GeoMesh mesh : MESHES.values()) { if (mesh != null) { mesh.release(); } }
+            for (ResourceLocation texture : FILE_TEXTURES.values()) { Minecraft.getMinecraft().getTextureManager().deleteTexture(texture); }
             MESHES.clear();
             FILE_TEXTURES.clear();
             generation = gen;
         }
         if (MESHES.containsKey(id)) { return MESHES.get(id); }
         GeoMesh mesh = null;
-        RigModels.Model m = RigModels.get(id.endsWith("_gear") ? id.substring(0, id.length() - 5) : id);
+        RigModels.Model m = RigModels.get(id, true);
+        boolean gear = m == null && id.endsWith("_gear");
+        if (gear) { m = RigModels.get(id.substring(0, id.length() - 5), true); }
         if (m != null) {
             try {
-                if (m.builtIn()) {
-                    mesh = new GeoMesh(new ResourceLocation("customnpcs", "rig/" + id + ".geo.json"));
+                if (m.geometry != null && !gear) {
+                    mesh = new GeoMesh(GeoMesh.parse(new InputStreamReader(new java.io.ByteArrayInputStream(m.geometry), StandardCharsets.UTF_8)));
+                } else if (m.builtIn()) {
+                    mesh = new GeoMesh(new ResourceLocation("customnpcs", "rig/" + m.assetId + (gear ? "_gear" : "") + ".geo.json"));
                 } else {
                     try (InputStream in = new FileInputStream(new File(m.folder, id + ".geo.json"))) {
                         mesh = new GeoMesh(GeoMesh.parse(new InputStreamReader(in, StandardCharsets.UTF_8)));
@@ -115,7 +122,7 @@ public final class RigClient {
 
     static synchronized ResourceLocation texture(Render<?> render, EntityNPCInterface npc, RigData rig) {
         if (!rig.texture.isEmpty()) { return new ResourceLocation(rig.texture); }
-        RigModels.Model def = RigModels.get(rig.model);
+        RigModels.Model def = RigModels.get(rig.model, true);
         // A player-shaped model wears the NPC's own skin (file, URL or player, as CustomNPCs loads it).
         if (def != null && def.skin && render instanceof noppes.npcs.client.renderer.RenderNPCInterface) {
             @SuppressWarnings({"unchecked", "rawtypes"})
@@ -127,21 +134,25 @@ public final class RigClient {
 
     /** The model's own (or its gear's) texture: in the jar, or a file of a user model. */
     static synchronized ResourceLocation ownTexture(String id) {
-        RigModels.Model m = RigModels.get(id.endsWith("_gear") ? id.substring(0, id.length() - 5) : id);
-        if (m == null || m.builtIn()) { return new ResourceLocation("customnpcs", "textures/rig/" + id + ".png"); }
-        RigData rig = new RigData();
-        rig.model = id;
-        ResourceLocation loc = FILE_TEXTURES.get(rig.model);
-        if (loc == null && !new File(m.folder, rig.model + ".png").isFile()) { return new ResourceLocation("customnpcs", "textures/rig/" + rig.model + ".png"); }
+        RigModels.Model m = RigModels.get(id, true);
+        boolean gear = m == null && id.endsWith("_gear");
+        if (gear) { m = RigModels.get(id.substring(0, id.length() - 5), true); }
+        String asset = m == null ? id : m.assetId + (gear ? "_gear" : "");
+        ResourceLocation fallback = new ResourceLocation("customnpcs", "textures/rig/" + asset + ".png");
+        if (m == null || (m.builtIn() && m.png == null)) { return fallback; }
+        ResourceLocation loc = FILE_TEXTURES.get(id);
+        File file = m.folder == null ? null : new File(m.folder, id + ".png");
+        if (loc == null && m.png == null && (file == null || !file.isFile())) { return fallback; }
         if (loc == null) {
-            loc = new ResourceLocation("customnpcs", "rigfile/" + rig.model);
+            loc = new ResourceLocation("customnpcs", "rigfile/" + id);
             try {
-                BufferedImage img = ImageIO.read(new File(m.folder, rig.model + ".png"));
+                BufferedImage img = m.png == null ? ImageIO.read(file) : ImageIO.read(new java.io.ByteArrayInputStream(m.png));
                 Minecraft.getMinecraft().getTextureManager().loadTexture(loc, new DynamicTexture(img));
             } catch (Exception e) {
-                LogWriter.error("RWRIG cannot load the texture of " + rig.model, e);
+                LogWriter.error("RWRIG cannot load the texture of " + id, e);
+                return fallback;
             }
-            FILE_TEXTURES.put(rig.model, loc);
+            FILE_TEXTURES.put(id, loc);
         }
         return loc;
     }
@@ -154,8 +165,8 @@ public final class RigClient {
         RigData rig = npc.rwRig;
         GeoMesh mesh = mesh(rig.model);
         if (mesh == null) { return; }
-        AnimLibrary lib = rig.library();
-        RigModels.Model def = rig.modelDef();
+        AnimLibrary lib = rig.library(true);
+        RigModels.Model def = rig.modelDef(true);
         float bodyYaw = interp(npc.prevRenderYawOffset, npc.renderYawOffset, partial);
         float headYaw = interp(npc.prevRotationYawHead, npc.rotationYawHead, partial) - bodyYaw;
         float pitch = npc.prevRotationPitch + (npc.rotationPitch - npc.prevRotationPitch) * partial;

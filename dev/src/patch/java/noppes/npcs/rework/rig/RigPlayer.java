@@ -81,7 +81,7 @@ public final class RigPlayer {
             if (remote) { clip = ""; age = 0; } else { queue.clear(); end(npc, false); }
             return;
         }
-        AnimClip c = npc.rwRig.library().clipOrNull(clip);
+        AnimClip c = npc.rwRig.library(remote).clipOrNull(clip);
         if (c == null) {
             if (remote) { age++; } else { end(npc, false); }
             return;
