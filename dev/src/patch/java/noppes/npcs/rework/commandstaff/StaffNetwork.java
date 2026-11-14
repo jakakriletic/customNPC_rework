@@ -14,7 +14,6 @@ import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
@@ -41,7 +40,7 @@ import noppes.npcs.rework.formation.WorldTerrain;
 /** The server owns selection and resolves both ray traces from the player's current look. */
 public final class StaffNetwork {
     static final String CHANNEL = "rwcmdstaff";
-    static final int BEGIN = 0, SELECT = 1, MENU = 2, MODES = 3, MOVE = 4, RESTORE = 5, CANCEL = 6;
+    static final int SELECT = 1, MENU = 2, MODES = 3, MOVE = 4, RESTORE = 5;
     static final int MAX_SELECTION = 256, MAX_GROW_TICKS = 37, MAX_RANGE = 256;
     private static FMLEventChannel channel;
     private final WeakHashMap<EntityPlayerMP, Selection> selections = new WeakHashMap<>();
@@ -49,7 +48,7 @@ public final class StaffNetwork {
     private static final class Selection {
         final int dimension;
         final List<EntityNPCInterface> npcs = new ArrayList<>();
-        int started = -1, lastAction = -10;
+        int lastAction = -10;
         Selection(int dimension) { this.dimension = dimension; }
     }
 
@@ -65,8 +64,7 @@ public final class StaffNetwork {
     static float radius(int ticks) { return Math.min(24F, 2F + Math.max(0, ticks) * 0.6F); }
 
     static boolean mayCommand(EntityPlayerMP player, EntityNPCInterface npc) {
-        if (player == null || player.world != npc.world || !npc.isEntityAlive() || npc.ais.movementType != 0
-                || npc.isRiding() || npc.isBeingRidden()) { return false; }
+        if (player == null || player.world != npc.world || !npc.isEntityAlive() || !StaffOrder.canMove(npc)) { return false; }
         if (player.canUseCommand(2, "rwarmy") && CustomNpcsPermissions.hasPermission(player, CustomNpcsPermissions.NPC_GUI)) {
             return true;
         }
@@ -84,8 +82,10 @@ public final class StaffNetwork {
         int operation = data.getUnsignedByte(data.readerIndex());
         int mask = data.getUnsignedByte(data.readerIndex() + 1);
         int values = data.getUnsignedByte(data.readerIndex() + 2);
-        if (operation > CANCEL || (mask & ~StaffOrder.MODES) != 0 || (values & ~mask) != 0
-                || (operation != MODES && mask != 0)) { return; }
+        if (operation < SELECT || operation > RESTORE) { return; }
+        if (operation == SELECT ? mask > MAX_GROW_TICKS || values != 0
+                : operation == MODES ? (mask & ~StaffOrder.MODES) != 0 || (values & ~mask) != 0
+                : mask != 0 || values != 0) { return; }
         EntityPlayerMP player = ((NetHandlerPlayServer)event.getHandler()).player;
         if (player.getServer() != null) {
             player.getServer().addScheduledTask(() -> act(player, operation, mask, values));
@@ -104,27 +104,20 @@ public final class StaffNetwork {
             selections.put(player, selection);
         }
         int now = player.getServer().getTickCounter();
-        switch (op) {
-            case BEGIN:
-                if (player.isSneaking()) { selection.started = now; }
-                return;
-            case CANCEL: selection.started = -1; return;
-            case SELECT:
-                int started = selection.started;
-                selection.started = -1;
-                if (started < 0 || now - selection.lastAction < 4) { return; }
-                selection.lastAction = now;
-                select(player, selection, radius(now - started));
-                reply(player, SELECT, selection.npcs);
-                return;
-            default: break;
+        if (op == SELECT) {
+            if (now - selection.lastAction < 4) { return; }
+            selection.lastAction = now;
+            select(player, selection, radius(mask));
+            reply(player, SELECT, selection.npcs);
+            player.sendStatusMessage(new TextComponentString(selection.npcs.size() + " NPCs selected."), true);
+            return;
         }
         if (now - selection.lastAction < 4 && op != MENU) { return; }
         if (op != MENU) { selection.lastAction = now; }
         selection.npcs.removeIf(npc -> player.world.getEntityByID(npc.getEntityId()) != npc
                 || !mayCommand(player, npc) || player.getDistanceSq(npc) > MAX_RANGE * MAX_RANGE);
         if (op == MENU) {
-            if (player.isSneaking()) { reply(player, MENU, selection.npcs); }
+            reply(player, MENU, selection.npcs);
             return;
         }
         if (selection.npcs.isEmpty()) {
@@ -140,7 +133,7 @@ public final class StaffNetwork {
             return;
         }
         if (op == MOVE) {
-            if (!player.isSneaking()) { move(player, available); }
+            move(player, available);
         } else {
             SquadManager.stop(available);
             for (EntityNPCInterface npc : available) {
@@ -152,9 +145,7 @@ public final class StaffNetwork {
     }
 
     private void select(EntityPlayerMP player, Selection selection, double radius) {
-        RayTraceResult hit = ArmyStaffServer.rayHit(player);
-        boolean hitGround = hit != null && hit.typeOfHit == RayTraceResult.Type.BLOCK;
-        Vec3d center = hitGround ? hit.hitVec : player.getPositionVector();
+        Vec3d center = StaffSelection.center(player);
         selection.npcs.clear();
         AxisAlignedBB box = new AxisAlignedBB(center, center).grow(radius, 8, radius);
         List<EntityNPCInterface> candidates = player.world.getEntitiesWithinAABB(EntityNPCInterface.class, box,
@@ -183,7 +174,8 @@ public final class StaffNetwork {
         double[] xs = new double[count], zs = new double[count];
         for (int i = 0; i < count; i++) {
             EntityNPCInterface npc = npcs.get(i);
-            spacing = Math.max(spacing, npc.width + 0.65);
+            Entity vehicle = npc.getRidingEntity();
+            spacing = Math.max(spacing, (vehicle == null ? npc.width : vehicle.width) + 0.65);
             xs[i] = npc.posX;
             zs[i] = npc.posZ;
         }

@@ -16,6 +16,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntityVindicator;
+import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Item;
@@ -39,6 +40,7 @@ public final class CommandStaffHarness {
     private final Minecraft mc = Minecraft.getMinecraft();
     private final String world;
     private final boolean bundled;
+    private final File cavalryClone;
     private final long deadline = System.nanoTime() + 190_000_000_000L;
     private final StaffClient input = new StaffClient();
     private int stage, delay;
@@ -47,16 +49,19 @@ public final class CommandStaffHarness {
     private volatile RuntimeException failure;
     private EntityVindicator enemy;
 
-    private CommandStaffHarness(String world, boolean bundled) {
+    private CommandStaffHarness(String world, boolean bundled, File cavalryClone) {
         this.world = world;
         this.bundled = bundled;
+        this.cavalryClone = cavalryClone;
     }
 
     static boolean installIfRequested(String path) throws Exception {
         Properties job = new Properties();
         try (Reader in = Files.newBufferedReader(new File(path).toPath(), StandardCharsets.UTF_8)) { job.load(in); }
         if (!"1".equals(job.getProperty("commandStaff"))) { return false; }
-        MinecraftForge.EVENT_BUS.register(new CommandStaffHarness(job.getProperty("world"), "1".equals(job.getProperty("bundledVaried"))));
+        String clone = job.getProperty("cavalryClone");
+        MinecraftForge.EVENT_BUS.register(new CommandStaffHarness(job.getProperty("world"), "1".equals(job.getProperty("bundledVaried")),
+                clone == null ? null : new File(clone)));
         return true;
     }
 
@@ -110,10 +115,13 @@ public final class CommandStaffHarness {
                     break;
                 case 3:
                     clickWorld(0, true);
+                    selectionInput(true, 1);
                     next(4, 12);
                     break;
                 case 4:
                     clickWorld(0, false);
+                    selectionInput(true, 12);
+                    selectionInput(false, 1);
                     next(5, 7);
                     break;
                 case 5:
@@ -267,7 +275,60 @@ public final class CommandStaffHarness {
                     next(26, 10);
                     break;
                 case 26:
-                    if (complete) { finish(true); }
+                    if (!complete) { return; }
+                    if (cavalryClone == null) { finish(true); return; }
+                    server(() -> {
+                        try {
+                            WorldServer w = mc.getIntegratedServer().getWorld(0);
+                            NBTTagCompound cloneData = noppes.npcs.util.NBTJsonUtil.LoadFile(cavalryClone);
+                            require(noppes.npcs.NoppesUtilServer.spawnClone(cloneData, 0.5, 4, 4.5, w) != null, "clone tab spawn path loads Konjenik");
+                            mc.getIntegratedServer().getCommandManager().executeCommand(mc.getIntegratedServer(),
+                                    "tp " + mc.player.getName() + " 0 4 -4 0 0");
+                        } catch (Exception error) { throw new IllegalStateException(error); }
+                    });
+                    clickGui(7);
+                    next(27, 25);
+                    break;
+                case 27:
+                    EntityNPCInterface rider = cavalry();
+                    if (!complete || rider == null || !(rider.getRidingEntity() instanceof EntityHorse)) { return; }
+                    require(((EntityHorse)rider.getRidingEntity()).isHorseSaddled(), "horse spawned saddled with rider attached");
+                    sneak(true);
+                    next(28, 5);
+                    break;
+                case 28:
+                    mc.player.rotationYaw = 0;
+                    mc.player.rotationPitch = 0;
+                    selectionInput(true, 1);
+                    selectionInput(false, 1);
+                    next(29, 7);
+                    break;
+                case 29:
+                    clickWorld(1, true);
+                    clickWorld(1, false);
+                    next(30, 10);
+                    break;
+                case 30:
+                    if (!(mc.currentScreen instanceof GuiCommandStaff)) { return; }
+                    Field mountedCount = GuiCommandStaff.class.getDeclaredField("count");
+                    mountedCount.setAccessible(true);
+                    require(mountedCount.getInt(mc.currentScreen) == 1, "horizontal aim selects mounted NPC at the crosshair");
+                    clickGui(7);
+                    sneak(false);
+                    mc.player.rotationYaw = 0;
+                    mc.player.rotationPitch = 4;
+                    next(31, 8);
+                    break;
+                case 31:
+                    clickWorld(1, true);
+                    clickWorld(1, false);
+                    next(32, 80);
+                    break;
+                case 32:
+                    EntityNPCInterface mounted = cavalry();
+                    if (mounted == null || mounted.posZ < 16 || !(mounted.getRidingEntity() instanceof EntityHorse)) { return; }
+                    check("mounted NPC reached the order without dismounting");
+                    finish(true);
                     break;
                 default: break;
             }
@@ -301,6 +362,12 @@ public final class CommandStaffHarness {
         require(Boolean.TRUE.equals(mouse.invoke(input, button, pressed)), "captured mouse button " + button + " " + pressed);
     }
 
+    private void selectionInput(boolean down, int ticks) throws Exception {
+        Method update = StaffClient.class.getDeclaredMethod("updateSelection", Minecraft.class, boolean.class, boolean.class);
+        update.setAccessible(true);
+        for (int i = 0; i < ticks; i++) { update.invoke(input, mc, down, true); }
+    }
+
     private void clickGui(int id) throws Exception {
         GuiScreen screen = mc.currentScreen;
         Field buttons = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
@@ -332,6 +399,13 @@ public final class CommandStaffHarness {
 
     private EntityNPCInterface npcClient() {
         return members(mc.world.loadedEntityList).stream().filter(npc -> "Staff_0".equals(npc.getName())).findFirst().get();
+    }
+
+    private EntityNPCInterface cavalry() {
+        for (Entity e : mc.world.loadedEntityList) {
+            if (e instanceof EntityNPCInterface && "Konjenik".equals(e.getName())) { return (EntityNPCInterface)e; }
+        }
+        return null;
     }
 
     private static int modes(EntityNPCInterface npc) {

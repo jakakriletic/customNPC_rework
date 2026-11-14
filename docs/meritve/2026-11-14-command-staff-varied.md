@@ -15,7 +15,11 @@ načine, sledenje, držanje tal proti oddaljenemu nasprotniku, zasledovanje v At
 ločene položaje, zapis načinov in vrnitev prvotnega AI-ja. Test tudi v obeh reobf paketih na
 Forge 2860 (`staff-bundled-2026-11-14-150521`, `staff-bundled2019-2026-11-14-150613`),
 vključno z naloženima modeloma žetona in palice.
-Vhod pokliče isto obdelavo klikov kot Forge MouseEvent.
+**Popravek izbora in konjenica.** Dev Forge in kombinirani 31Mar23 JAR na Forge 2860
+(`staff-2026-11-14-172307`, `staff-bundled-2026-11-14-selection`) sta preverila izbor po
+spustu, štiri pešce v ločenih položajih in pot klona Konjenik. Konjenik se ustvari v sedlu,
+krog ga izbere pri vodoravnem pogledu in do cilja pride na konju. Scenarij kliče obdelavo
+stanja tipk znotraj Forge klienta. Unit, build in preverba paketa so zeleni.
 
-**Meje.** Preizkus palice je singleplayer z naloženim ravnim svetom in štirimi talnimi NPC-ji.
-Velike skupine, zahteven teren in migracija produkcijskih svetov ostajajo nepreverjeni.
+**Meje.** Preizkus je singleplayer v ravnem svetu. Velike skupine, zahteven teren in
+migracija produkcijskih svetov ostajajo nepreverjeni.

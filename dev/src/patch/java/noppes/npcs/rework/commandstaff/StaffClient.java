@@ -13,7 +13,6 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -23,6 +22,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.common.network.internal.FMLProxyPacket;
@@ -36,7 +36,8 @@ public final class StaffClient {
     private final Set<Integer> selected = new LinkedHashSet<>();
     private World world;
     private int held = -1;
-    private boolean leftCaptured, rightCaptured;
+    private boolean previousLeft;
+    private Vec3d circleCenter;
 
     public static void install() {
         StaffClient client = new StaffClient();
@@ -48,7 +49,8 @@ public final class StaffClient {
         ModelLoader.setCustomModelResourceLocation(CommandStaff.item(), 0, new ModelResourceLocation("rwcommandstaff:command_staff", "inventory"));
     }
 
-    @SubscribeEvent public void mouse(MouseEvent event) {
+    @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
+    public void mouse(MouseEvent event) {
         if (mouseButton(event.getButton(), event.isButtonstate())) { event.setCanceled(true); }
     }
 
@@ -56,32 +58,16 @@ public final class StaffClient {
         if (button != 0 && button != 1) { return false; }
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.currentScreen != null || mc.player == null) { return false; }
-        if (!pressed) {
-            if (button == 0 && leftCaptured) {
-                leftCaptured = false;
-                if (held >= 0 && CommandStaff.holding(mc.player)) { send(StaffNetwork.SELECT, 0, 0); }
-                held = -1;
-                return true;
-            }
-            if (button == 1 && rightCaptured) {
-                rightCaptured = false;
-                return true;
-            }
-            return false;
-        }
         if (!CommandStaff.holding(mc.player)) { return false; }
-        boolean sneak = mc.gameSettings.keyBindSneak.isKeyDown() || mc.player.isSneaking();
-        if (button == 0 && sneak) {
-            held = 0;
-            leftCaptured = true;
-            send(StaffNetwork.BEGIN, 0, 0);
-            return true;
-        } else if (button == 1) {
-            rightCaptured = true;
-            if (held < 0) { send(sneak ? StaffNetwork.MENU : StaffNetwork.MOVE, 0, 0); }
-            return true;
+        if (button == 0) {
+            return held >= 0 || sneaking(mc);
         }
-        return false;
+        if (pressed && held < 0) {
+            boolean menu = sneaking(mc);
+            if (!menu) { sendLook(mc); }
+            send(menu ? StaffNetwork.MENU : StaffNetwork.MOVE, 0, 0);
+        }
+        return true;
     }
 
     @SubscribeEvent public void tick(TickEvent.ClientTickEvent event) {
@@ -90,7 +76,8 @@ public final class StaffClient {
         if (world != mc.world) {
             selected.clear();
             held = -1;
-            leftCaptured = rightCaptured = false;
+            previousLeft = false;
+            circleCenter = null;
             world = mc.world;
         }
         if (mc.player == null || mc.world == null) { return; }
@@ -98,16 +85,32 @@ public final class StaffClient {
             Entity entity = mc.world.getEntityByID(id);
             return entity == null || !entity.isEntityAlive();
         });
-        if (held < 0) { return; }
-        if (mc.currentScreen != null || !CommandStaff.holding(mc.player) || !mc.player.isEntityAlive()) {
+        updateSelection(mc, Mouse.isButtonDown(0), mc.inGameHasFocus);
+    }
+
+    private static boolean sneaking(Minecraft mc) {
+        return net.minecraft.client.gui.GuiScreen.isShiftKeyDown() || mc.gameSettings.keyBindSneak.isKeyDown() || mc.player.isSneaking();
+    }
+
+    private void updateSelection(Minecraft mc, boolean left, boolean focused) {
+        if (!focused || mc.currentScreen != null || !CommandStaff.holding(mc.player) || !mc.player.isEntityAlive()) {
             held = -1;
-            send(StaffNetwork.CANCEL, 0, 0);
-        } else if (!Mouse.isButtonDown(0)) {
-            send(StaffNetwork.SELECT, 0, 0);
-            held = -1;
-        } else {
+            circleCenter = null;
+        } else if (left && (held >= 0 || (!previousLeft && sneaking(mc)))) {
             held = Math.min(StaffNetwork.MAX_GROW_TICKS, held + 1);
+            circleCenter = StaffSelection.center(mc.player);
+        } else if (!left && held >= 0) {
+            sendLook(mc);
+            send(StaffNetwork.SELECT, held, 0);
+            held = -1;
+            circleCenter = null;
         }
+        previousLeft = left;
+    }
+
+    private static void sendLook(Minecraft mc) {
+        mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketPlayer.Rotation(
+                mc.player.rotationYaw, mc.player.rotationPitch, mc.player.onGround));
     }
 
     static void send(int op, int mask, int values) {
@@ -143,7 +146,9 @@ public final class StaffClient {
     @SubscribeEvent public void overlay(RenderGameOverlayEvent.Post event) {
         Minecraft mc = Minecraft.getMinecraft();
         if (event.getType() != RenderGameOverlayEvent.ElementType.ALL || mc.player == null || !CommandStaff.holding(mc.player)) { return; }
-        mc.fontRenderer.drawStringWithShadow(selected.size() + " NPCs selected", 8, 8, 0xf2cf70);
+        String label = held >= 0 ? "Release left click to select NPCs"
+                : selected.isEmpty() ? "Shift + hold left click to select NPCs" : selected.size() + " NPCs selected";
+        mc.fontRenderer.drawStringWithShadow(label, 8, 8, 0xf2cf70);
     }
 
     @SubscribeEvent public void render(RenderWorldLastEvent event) {
@@ -158,6 +163,7 @@ public final class StaffClient {
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
                 GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
         GlStateManager.disableTexture2D();
+        GlStateManager.disableDepth();
         GlStateManager.depthMask(false);
         GlStateManager.glLineWidth(2F);
         try {
@@ -169,9 +175,8 @@ public final class StaffClient {
                 double dz = (entity.lastTickPosZ - entity.posZ) * (1 - partial);
                 RenderGlobal.drawSelectionBoundingBox(entity.getEntityBoundingBox().offset(dx - x, dy - y, dz - z).grow(0.06), 0.97F, 0.77F, 0.29F, 0.9F);
             }
-            if (held >= 0) {
-                RayTraceResult hit = mc.player.rayTrace(StaffNetwork.MAX_RANGE, partial);
-                Vec3d point = hit != null && hit.typeOfHit == RayTraceResult.Type.BLOCK ? hit.hitVec : mc.player.getPositionVector();
+            if (circleCenter != null) {
+                Vec3d point = circleCenter;
                 double radius = StaffNetwork.radius(held);
                 Tessellator tess = Tessellator.getInstance();
                 BufferBuilder buffer = tess.getBuffer();
@@ -186,6 +191,7 @@ public final class StaffClient {
         } finally {
             GlStateManager.glLineWidth(1F);
             GlStateManager.depthMask(true);
+            GlStateManager.enableDepth();
             GlStateManager.enableTexture2D();
             GlStateManager.disableBlend();
         }

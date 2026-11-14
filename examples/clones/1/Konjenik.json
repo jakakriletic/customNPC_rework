@@ -1,0 +1,51 @@
+{
+    "id": "customnpcs:customnpc",
+    "ModRev": 18,
+    "Name": "Konjenik",
+    "Title": "",
+    "ShowName": 0,
+    "Size": 5,
+    "Texture": "customnpcs:textures/entity/humanmale/knightsteve.png",
+    "UsingSkinUrl": 0b,
+    "PositionOffsetX": 5.0f,
+    "PositionOffsetY": 5.0f,
+    "PositionOffsetZ": 5.0f,
+    "MaxHealth": 32,
+    "Health": 32.0f,
+    "Attributes": [
+        {"Name": "generic.maxHealth", "Base": 32.0d}
+    ],
+    "Resistances": {
+        "Arrow": 1.0f,
+        "Explosion": 1.0f,
+        "Knockback": 1.0f,
+        "Melee": 1.0f
+    },
+    "Air": 300s,
+    "Fire": -1s,
+    "PersistenceRequired": 1b,
+    "CanSwim": 1b,
+    "CanDrown": 1b,
+    "FactionID": 0,
+    "DefendFaction": 1b,
+    "AttackOtherFactions": 1b,
+    "AttackStrenght": 7,
+    "AttackRange": 3,
+    "AttackSpeed": 20,
+    "AggroRange": 24,
+    "DirectLOS": 1b,
+    "MoveSpeed": 5,
+    "OnAttack": 0,
+    "MovingState": 0,
+    "FindShelter": 2,
+    "DoorInteract": 2,
+    "SpawnCycle": 3,
+    "Weapons": [
+        {"Slot": 0b, "id": "minecraft:iron_sword", "Count": 1b, "Damage": 0s}
+    ],
+    "Armor": [
+        {"Slot": 0b, "id": "minecraft:iron_helmet", "Count": 1b, "Damage": 0s},
+        {"Slot": 1b, "id": "minecraft:iron_chestplate", "Count": 1b, "Damage": 0s}
+    ],
+    "RwCloneHorse": {"Variant": 4}
+}

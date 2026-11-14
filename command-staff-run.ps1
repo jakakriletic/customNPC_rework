@@ -27,6 +27,7 @@ try {
     $text = [regex]::Replace([IO.File]::ReadAllText($cfg), '(?m)^RwCommandStaff=.*\r?\n?', '')
     [IO.File]::WriteAllText($cfg, $text + "`nRwCommandStaff=1`n")
     $jobLines = @('commandStaff=1', 'world=command-staff-proof')
+    $jobLines += ('cavalryClone=' + ((Join-Path $root 'examples/clones/1/Konjenik.json').Replace('\','/')))
     if ($Bundle) {
         $jobLines += 'bundledVaried=1'
         $mods = New-Item -ItemType Directory -Path (Join-Path $work 'mods')

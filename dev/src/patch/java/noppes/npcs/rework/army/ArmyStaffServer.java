@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
@@ -110,7 +111,7 @@ public final class ArmyStaffServer {
         return hit != null && hit.typeOfHit == RayTraceResult.Type.BLOCK ? hit.getBlockPos().offset(hit.sideHit) : null;
     }
 
-    public static RayTraceResult rayHit(EntityPlayerMP p) {
+    public static RayTraceResult rayHit(EntityPlayer p) {
         Vec3d eye = p.getPositionEyes(1), look = p.getLook(1);
         double distance = 0;
         BlockPos previous = new BlockPos(eye);

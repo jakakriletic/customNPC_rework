@@ -295,6 +295,7 @@ IAnimals {
     public boolean updateClient = false;
     public boolean updateAI = false;
     public noppes.npcs.rework.commandstaff.StaffOrder rwStaffOrder;
+    private NBTTagCompound pendingCloneHorse;
     /** M7: per-NPC opt-in, persisted only when enabled to preserve old NBT by default. */
     private int rwNavBackend;
     /** M4.2/M4.3: per-NPC flight selection; original is the default. */
@@ -456,6 +457,9 @@ IAnimals {
 
     public void onUpdate() {
         super.onUpdate();
+        if (!this.world.isRemote && this.pendingCloneHorse != null && this.isEntityAlive()) {
+            this.mountCloneHorse();
+        }
         if (this.ticksExisted % 10 == 0) {
             this.startYPos = this.calculateStartYPos(this.ais.startPos()) + 1.0;
             if (this.startYPos < 0.0 && !this.isRemote()) {
@@ -474,6 +478,25 @@ IAnimals {
         this.wasKilled = this.isKilled();
         if (this.currentAnimation == 14) {
             this.deathTime = 19;
+        }
+    }
+
+    private void mountCloneHorse() {
+        NBTTagCompound data = this.pendingCloneHorse;
+        this.pendingCloneHorse = null;
+        if (this.isRiding()) { return; }
+        net.minecraft.entity.passive.EntityHorse horse = new net.minecraft.entity.passive.EntityHorse(this.world);
+        horse.setHorseVariant(data.getInteger("Variant") & 0x3ff);
+        horse.setHorseTamed(true);
+        horse.enablePersistence();
+        horse.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(28);
+        horse.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.275);
+        horse.setHealth(28);
+        horse.replaceItemInInventory(400, new ItemStack(net.minecraft.init.Items.SADDLE));
+        horse.replaceItemInInventory(401, new ItemStack(net.minecraft.init.Items.IRON_HORSE_ARMOR));
+        horse.setLocationAndAngles(this.posX, this.posY, this.posZ, this.rotationYaw, 0);
+        if (this.world.spawnEntity(horse) && !this.startRiding(horse, true)) {
+            horse.setDead();
         }
     }
 
@@ -1181,6 +1204,7 @@ IAnimals {
         this.display.readToNBT(compound);
         this.stats.readToNBT(compound);
         this.ais.readToNBT(compound);
+        this.pendingCloneHorse = compound.hasKey("RwCloneHorse", 10) ? compound.getCompoundTag("RwCloneHorse").copy() : null;
         this.rwStaffOrder = noppes.npcs.rework.commandstaff.StaffOrder.read(this, compound);
         this.rwNavBackend = compound.getInteger("RwNavBackend") == 1 ? 1 : 0;
         this.rwFlightMode = FlightMode.read(compound).id();
@@ -1213,6 +1237,7 @@ IAnimals {
         this.display.writeToNBT(compound);
         this.stats.writeToNBT(compound);
         this.ais.writeToNBT(compound);
+        if (this.pendingCloneHorse != null) { compound.setTag("RwCloneHorse", this.pendingCloneHorse.copy()); }
         if (this.rwStaffOrder != null) { this.rwStaffOrder.write(compound); }
         else { compound.removeTag("RwCommandStaff"); }
         this.getRwFlightMode().write(compound);

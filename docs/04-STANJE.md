@@ -12,6 +12,10 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**14. 11. — Izbor Command Staff in Konjenik.** Krog med držanjem sledi terenu ali NPC-ju
+pod merkom. Konjenik iz klona pride v sedlu, palica ga izbere in pošlje do cilja.
+[Zapis](meritve/2026-11-14-command-staff-varied.md).
+
 **14. 11. — Command Staff in Varied Commodities.** Ločena palica izbira talne NPC-je s krogom,
 ureja njihove ukaze in jih pošlje na ločene položaje. Združeni JAR je izdelan za izdaji 21Nov19
 in 31Mar23. [Zapis](meritve/2026-11-14-command-staff-varied.md).

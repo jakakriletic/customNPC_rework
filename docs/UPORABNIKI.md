@@ -237,10 +237,10 @@ the remaining changes and keeps those already confirmed. Closing the GUI stops t
 ### Command Staff (individual NPC orders)
 
 Set `RwCommandStaff=1` on both sides. Find **Command Staff** in Creative Tools
-(`customnpcs:command_staff`). It works with ground NPCs. Operators with NPC editor permission,
+(`customnpcs:command_staff`). It works with ground NPCs and NPCs riding horses. Operators with NPC editor permission,
 NPC owners and players with command rights for an NPC's army can select those NPCs.
 
-- **Shift + hold left click** makes a gold circle grow where you look. Release left click
+- **Shift + hold left click** makes a gold circle grow around the NPC or terrain you're looking at. Release left click
   to replace your selection with the NPCs in the circle. The circle reaches 24 blocks and
   selects up to 256 loaded NPCs. Selected NPCs have a gold outline.
 - **Shift + right click** opens orders for the selection. **Follow** follows you. **Stay**
@@ -253,6 +253,10 @@ NPC owners and players with command rights for an NPC's army can select those NP
 
 An NPC's selected modes are saved with the world. Your selection and a move in progress are
 session-only. The item can be used with `RwArmies=0` and with either distribution of the mod.
+
+To add the **Konjenik** clone to tab 1 on your client, copy
+[`Konjenik.json`](../examples/clones/1/Konjenik.json) into `customnpcs/clones/1`.
+It spawns a rider with an iron sword on a saddled horse.
 
 ### Animated NPCs: models with bones (M16, `RwAnimCore=1`)
 

@@ -5,6 +5,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.passive.AbstractHorse;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.util.math.BlockPos;
@@ -57,8 +58,13 @@ public final class StaffOrder {
     }
 
     public static boolean active(EntityNPCInterface npc) {
-        return CustomNpcs.RwCommandStaff == 1 && npc.rwStaffOrder != null && npc.ais.movementType == 0
-                && !npc.isRiding() && !npc.isBeingRidden();
+        return CustomNpcs.RwCommandStaff == 1 && npc.rwStaffOrder != null && canMove(npc);
+    }
+
+    static boolean canMove(EntityNPCInterface npc) {
+        return npc.ais.movementType == 0 && !npc.isBeingRidden()
+                && (!npc.isRiding() || npc.getRidingEntity() instanceof AbstractHorse
+                        && npc.getRidingEntity().getControllingPassenger() == npc);
     }
 
     public static boolean guarding(EntityNPCInterface npc) {
@@ -181,7 +187,8 @@ public final class StaffOrder {
             StaffOrder order = npc.rwStaffOrder;
             if (order.move != null) {
                 Vec3d target = order.move;
-                double distance = npc.getDistanceSq(target.x, target.y, target.z);
+                net.minecraft.entity.Entity body = npc.isRiding() ? npc.getRidingEntity() : npc;
+                double distance = body.getDistanceSq(target.x, target.y, target.z);
                 if (distance <= 0.75 * 0.75) {
                     order.move = null;
                     order.post = target;
@@ -209,7 +216,8 @@ public final class StaffOrder {
         }
 
         private boolean path(Vec3d target) {
-            double[] next = ArmyWaypoints.next(npc.posX, npc.posY, npc.posZ, target.x, target.y, target.z,
+            net.minecraft.entity.Entity body = npc.isRiding() ? npc.getRidingEntity() : npc;
+            double[] next = ArmyWaypoints.next(body.posX, body.posY, body.posZ, target.x, target.y, target.z,
                     CustomNpcs.NpcNavRange, npc.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getAttributeValue());
             if (next == null || !npc.world.isBlockLoaded(new BlockPos(next[0], next[1], next[2]))) { return false; }
             double y = next[1];
