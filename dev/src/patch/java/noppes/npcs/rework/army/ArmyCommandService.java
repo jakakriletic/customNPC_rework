@@ -730,7 +730,10 @@ public final class ArmyCommandService {
         return out;
     }
 
-    /** Loaded, living server NPCs whose RwArmy names this army (without case), in every dimension. */
+    /**
+     * Loaded, living server NPCs whose RwArmy names this army (without case), in every dimension. Living is
+     * {@code isEntityAlive}: a member in its 20-tick death (health 0) or waiting to respawn is left out (Q458).
+     */
     public static List<EntityNPCInterface> members(MinecraftServer server, String name) {
         List<EntityNPCInterface> out = new ArrayList<EntityNPCInterface>();
         if (!enabled() || server == null || name == null || name.isEmpty()) {
@@ -739,7 +742,7 @@ public final class ArmyCommandService {
         String key = Army.key(name);
         for (WorldServer world : server.worlds) {
             for (Entity e : world.loadedEntityList) {
-                if (e instanceof EntityNPCInterface && !e.isDead
+                if (e instanceof EntityNPCInterface && e.isEntityAlive()
                         && key.equals(Army.key(((EntityNPCInterface) e).getRwArmy()))) {
                     out.add((EntityNPCInterface) e);
                 }

@@ -110,6 +110,10 @@ function losses() {
         check('loss-damage-' + j, victim.attackEntityFrom(Damage.OUT_OF_WORLD, 1000), victim.getUniqueID());
         check('loss-dead-' + j, !victim.isEntityAlive() && victim.getHealth() <= 0, victim.getHealth());
     }
+    // Q458: still loaded in their 20-tick death, the victims are no longer listed as members.
+    var after = A.members('loss'), listed = 0;
+    for (var v = 0; v < after.length; v++) { if (victims[String(after[v].getUUID())]) { listed++; } }
+    check('loss-members-exclude-dying', listed === 0 && after.length === 6, 'listed=' + listed + ' members=' + after.length);
     var left = members[2]; left.getStoreddata().put('m119left', 1);
     check('loss-unassign', A.unassign(left), left.getUUID());
     check('loss-unassigned-nbt', A.armyOf(left) === '', A.armyOf(left));

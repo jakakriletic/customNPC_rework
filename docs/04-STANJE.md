@@ -12,6 +12,8 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**16. 11. — `ArmyApi.members` brez umirajočih (Q458).** Filter `isEntityAlive()` namesto `!isDead`; `q458-edges-v1` PASS. Naslednje: Linked `removeData` (Q393), nato M16 (Q444). [Zapis](meritve/2026-11-16-Q458-armyapi-members.md).
+
 **16. 11. — Q84 zid odpravljen (Q457).** Pri `RwFlyLineOfSight=1` + `RwPathResume=1` proga zid 6/6 v vseh fazah (komolec po `WAIT`); stikali ostaneta 0. Naslednje: `ArmyApi.members` (Q454). [Zapis](meritve/2026-11-16-Q84-zid-komolec.md).
 
 **16. 11. — M10.4 heap sprejet (Q452).** Rast heapa v soaku je vanilla `CombatTracker` v neskončnem
@@ -81,7 +83,14 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 229 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 230 → 1, novejši zgoraj).*
+
+### 2026-11-16 (232) — Q458: `ArmyApi.members` brez umirajočih članov (sprejet)
+
+**Paket:** omejitev §6 po Q407/Q454 točka 1 (Q458) · **Stanje:** sprejet; `RwArmies` ostane 0.
+`ArmyCommandService.members` filtrira z `isEntityAlive()` namesto `!isDead` (vanilla postavi `isDead` šele po 20 tickih smrti; NPC na respawnu ves čas).
+Na `88b5c53b…` PASS unit/build/package in `q458-edges-v1` (M11.9 robovi + nova provera `loss-members-exclude-dying`: `listed=0 members=6`).
+Meje: en zagon, respawn samo iz kode. Naslednje: Linked `removeData` (Q393), nato M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](meritve/2026-11-16-Q458-armyapi-members.md).
 
 ### 2026-11-16 (231) — Q84: zid 6/6 pri vidni črti + nadaljevanju (sprejet)
 
@@ -92,12 +101,3 @@ Na `e72ac98c…` PASS unit/build/package, `q455-letenje-orig-v1` (180/180 = P3 o
 `q455-letenje-vidnad-v1`: Z **6/6 v A, B, C** (prej 5/6 v A/C), ostale proge enake P3. Naslednje (Q454): `ArmyApi.members` umirajoči član,
 nato Linked `removeData` (Q393), nato M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](meritve/2026-11-16-Q84-zid-komolec.md).
 
-### 2026-11-11 (230) — M11.11: pohod `freeforall` brez čakanja (sprejet)
-
-**Paket:** M11.11 (Q445, Q446) · **Stanje:** sprejet pod stikalom; `RwArmies` ostane 0. Interaktivna seja na zahtevo lastnika.
-Q446: hibrid namesto »vsak svojo pot«: ena skupna pot po odsekih, vsak član hodi s svojo hitrostjo, lastno iskanje samo odrinjen, obtičal ali oddaljen član; mesto v obliki šele na cilju, blokiran ne zadrži nikogar.
-`army-ffa-run.ps1` PASS (`m1111-ffa-2026-11-11-221824`): 199 razmetanih + 1 zaprt, zid z grlom 3, hrib, stebri, ribnik, restart pri 139 za zidom; 199/199 na mestu, zaprti edini blokiran, 0 skokov, razmik ≥0,83. Unit 827/827, build, paket PASS.
-Cena `army-cost-run.ps1 -Cell ffa`: pohod p95 15,20 / idle 7,08 ms, 110 MB/s (čete M11.10: 10,75 / 6,42). Trije neuspeli teki zapisani (luknja v poti, `fill hollow`, razmik).
-Xaero v0.1.11 (`0.6.1-armies`, gumb Free for all privzet, cilj na poljubni razdalji): 84 JUnit + reobf PASS, sinhroniziran v `ladja_mod`, nameščen v 7/7 mods mapah z backupom. Živa mapa ostane ročna.
-M11.11b dolg pohod `army-ffa-far-run.ps1` PASS: 100/100 do cilja 600 blokov v negeneriranem svetu brez igralca, samo tiketi vojske (`freeforall` do 400 chunkov).
-Meje: dev dedicated, ploska proga, brez nenaloženega sveta, klienta in boja med pohodom. Naslednje: M10.4 heap (229, v delu) in ostale §6. [Zapis](meritve/2026-11-11-M11.11-freeforall.md).

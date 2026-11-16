@@ -509,7 +509,7 @@ Not proven, so not claimed:
   A far march passed too: 100 members walked to a target 600 blocks away in never generated flat terrain with no
   player, held only by the army's own chunk tickets (`RwArmyMaxMarches`, a free-for-all army may hold up to 400
   chunks); all 100 took their slot. Natural terrain far away and a restart during such a march were not tested.
-  `ArmyApi.members` can return a dying member for up to 20 ticks, so scripts should check health. M11.6 travelling chunk tickets (`RwArmyMaxMarches`, accepted under the
+  `ArmyApi.members` leaves out members that are dying or waiting to respawn (Q458). M11.6 travelling chunk tickets (`RwArmyMaxMarches`, accepted under the
   switch, Q355): at most that many armies hold tickets (members' chunks plus one ring, at most 49 chunks); further
   armies march without tickets and get no progress in unloaded chunks. M11.5 clears a stale member path before
   each new anchor request; the strict ticket regression now requires and proves ARRIVED after both unload

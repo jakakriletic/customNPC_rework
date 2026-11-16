@@ -2,6 +2,8 @@
 
 ## v2 development
 
+- `ArmyApi.members` and army orders no longer include a member in its death ticks or waiting to
+  respawn (Q458).
 - With `RwFlyLineOfSight=1` and `RwPathResume=1`, flying NPCs no longer stall at the edge of a wall:
   the wall test course passes 6/6 instead of 5/6 (Q84, Q457).
 - Optional single-JAR build with Varied Commodities, with its original Forge mod and registry IDs.

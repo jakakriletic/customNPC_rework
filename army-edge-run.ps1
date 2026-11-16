@@ -156,6 +156,7 @@ try {
     $mid = [regex]::Match($p2, 'ARMYEDGE MID restart checks=(\d+) failed=0 [^\r\n]*state=MOVING')
     Assert ($mid.Success) 'all script checks pass before restart'
     Assert (-not ($p2 -match 'ARMYEDGE CHECK [^\r\n]*ok=0')) 'no failed check hidden by a final marker'
+    Assert ($p2.Contains('key=loss-members-exclude-dying ok=1')) 'ArmyApi.members leaves out members in their death ticks (Q458)'
     foreach ($name in $names) {
         $want = if ($name -in @('gap', 'trap')) { 'BLOCKED' } else { 'ARRIVED' }
         Assert ($p2 -match ('ARMYEDGE METRIC army=' + $name + ' state=' + $want)) "$name expected terminal state and position metrics"
