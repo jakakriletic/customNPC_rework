@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 236 → 1)
+# Arhiv: dnevnik sej (vnosi 237 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,17 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-16 (237) — M14.0: raziskava izrisa bližnjih NPC-jev
+
+**Paket:** M14.0 (Q473–Q475, D-106) · **Stanje:** raziskava zaključena, izvedba še ni začeta.
+Pregledana običajna in M16 render pot, Forge/vanilla viri, K10/K13/K14/K3 ter pretekle meritve;
+primarni Khronos/LWJGL/Forge/Flywheel viri. Izbrana omejena meja `ModelScaleRenderer`,
+guard/fallback pred kandidatom, CPU poza za K10 in trenutni A/B namesto stare absolutne številke.
+Pragovi slike zamrznjeni, ogled lastnika in živa združljivost ostaneta za končni vklop.
+Samo dokumentacija; produkcija/testi/scenariji na `72ad0c90…`, brez testov, builda ali Minecrafta (Q90).
+Naslednji M14.1a: nevtralen prenos + deterministični baseline. M12 zadnji, M10.3 blokiran Q1.
+[Raziskava in sprejemna merila](../raziskave/M14.0-izris-bliznjih-npc.md).
 
 ### 2026-11-16 (236) — M16.6b sprejet
 

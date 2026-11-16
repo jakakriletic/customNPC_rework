@@ -48,7 +48,6 @@ import noppes.npcs.rework.far.ImpostorBaker;
 import noppes.npcs.rework.render.HeadwearSkip;
 import noppes.npcs.rework.render.Lod;
 import noppes.npcs.rework.render.LabelCache;
-import noppes.npcs.rework.render.ModelVbo;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -161,8 +160,6 @@ public final class ClientHarness {
     /** M16.5: rig frames (RigClient.frames) at the start and end of the measurement window. */
     private int rigFramesAtMeasure = -1;
     private int rigFramesAtEnd = -1;
-    private long vboDrawsAtMeasure;
-    private long vboDrawsAtEnd;
     private long farBytesAtMeasure = -1L;
     private long farBytesAtEnd = -1L;
     /** M5-V.8: hoja po merjenju (zicni in rwfar bajti, cas). */
@@ -189,7 +186,6 @@ public final class ClientHarness {
     /** Klice {@code CustomNpcs} prek refleksije, samo na klientu in samo z lastnostjo. */
     public static void install(String path) {
         try {
-            if (ModelVboCheck.installIfRequested(path)) { return; }
             if (ModelScaleBaseline.installIfRequested(path)) { return; }
             if (HitboxGuiHarness.installIfRequested(path)) { return; }
             // M4.15c is a separate, explicitly requested functional job, never a timing run.
@@ -368,7 +364,6 @@ public final class ClientHarness {
                         this.bytesAtMeasure = this.bytesIn.get();
                         this.farAtMeasure = FarClient.size();
                         this.rigFramesAtMeasure = rigFrames();
-                        this.vboDrawsAtMeasure = ModelVbo.draws;
                         this.farBytesAtMeasure = FarClient.payloadBytes;
                         FarRender.resetStats();
                         this.measureStartNs = System.nanoTime();
@@ -387,7 +382,6 @@ public final class ClientHarness {
                         this.bytesAtEnd = this.bytesIn.get();
                         this.farBytesAtEnd = FarClient.payloadBytes;
                         this.rigFramesAtEnd = rigFrames();
-                        this.vboDrawsAtEnd = ModelVbo.draws;
                         if ((this.job.seamCheck || this.job.walk) && this.errors.isEmpty()) {
                             // M5-V.5: JSON merjenja zdaj; skripta ob fazi SEAM prebere streznik.
                             this.jsonBody = buildJson(mc, Phase.MEASURE);
@@ -949,11 +943,6 @@ public final class ClientHarness {
         // M5-K K12: okvir upodobitve ob koncu merjenja (vsi NPC-ji v svetu klienta).
         // M16.5: rig izrisi v merilnem oknu (RigClient steje en izris na NPC na sliko).
         num(b, "rwAnimCore", CustomNpcs.RwAnimCore);
-        num(b, "rwModelVbo", CustomNpcs.RwModelVbo);
-        num(b, "modelVboDraws", this.vboDrawsAtEnd - this.vboDrawsAtMeasure);
-        num(b, "modelVboLive", ModelVbo.live());
-        num(b, "modelVboGlError", GL11.glGetError());
-        kv(b, "modelVboFallbacks", ModelVbo.fallbacks().toString());
         num(b, "rigIzrisovMeritev", this.rigFramesAtEnd >= 0 && this.rigFramesAtMeasure >= 0 ? this.rigFramesAtEnd - this.rigFramesAtMeasure : -1);
         num(b, "rwRenderBox", CustomNpcs.RwRenderBox);
         kv(b, "okvir", RenderBoxAudit.summary(mc.world, mc.getRenderViewEntity(), FarRender.specialPrefix));

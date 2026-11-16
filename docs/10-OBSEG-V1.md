@@ -137,6 +137,8 @@ rebuilda. `customnpcentities` ni več pogoj; obstoječi API `Animators`/hooki os
 unit/build/package in GPU dokaz PASS na `07b888c3…`, 93 primerjav in 6 pregledanih PNG.
 Naslednji M14.1b, omejen VBO po merilih raziskave; uspešnih serij ne ponavljamo (Q90).
 
+**M14.1b zavrnjeno (Q483):** [per-part VBO](meritve/2026-11-16-M14.1b-vbo.md) bitno enak, a idle-500 p95 10,02 → 18,71 ms; kandidat odstranjen. Naslednji M14.2 instancing.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela

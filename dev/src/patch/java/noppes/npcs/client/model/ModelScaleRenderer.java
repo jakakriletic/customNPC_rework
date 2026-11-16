@@ -56,10 +56,7 @@ extends ModelRenderer {
         }
         GlStateManager.pushMatrix();
         this.postRender(par1);
-        if (noppes.npcs.CustomNpcs.RwModelVbo != 1
-                || !noppes.npcs.rework.render.ModelVbo.draw(this, par1)) {
-            GlStateManager.callList((int)this.displayList);
-        }
+        GlStateManager.callList((int)this.displayList);
         if (this.childModels != null) {
             for (int i = 0; i < this.childModels.size(); ++i) {
                 ((ModelRenderer)this.childModels.get(i)).render(par1);
@@ -96,9 +93,6 @@ extends ModelRenderer {
         }
         GL11.glEndList();
         this.isCompiled = true;
-        if (noppes.npcs.CustomNpcs.RwModelVbo == 1) {
-            noppes.npcs.rework.render.ModelVbo.compiled(this, par1);
-        }
     }
 }
 
