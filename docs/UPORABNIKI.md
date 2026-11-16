@@ -393,6 +393,15 @@ Varied Commodities by Noppes is included under
 
 Not proven, so not claimed:
 
+- **Built-in animation core (`RwAnimCore`, M16.5):** one integrated dev-client run per switch value
+  with 200 idle `knight` models gave frame p50/p95 6.445/7.017 ms at 0 and 5.307/5.822 ms at 1.
+  At 1 the rig counter recorded 2,220,800 draws; at 0 the original renderer branch is used.
+  This compares different models and rendering layers, so it does not establish a speedup for the
+  same image. No walking/combat cost, allocation profile, screenshots or pixel equality comparison
+  was collected. Dedicated reload and late join with two clients were tested separately in
+  [M15](meritve/2026-11-14-armies-m15.md). No packaged pair or real modpack was tested.
+  Rigs omit the normal armour, held-item and CNPC-part layers; `steve`/`legionary` skins need 64×64.
+  The switch stays 0 by default. [Measurement and limits](meritve/2026-11-16-M16.5-cena-rig.md).
 - **Client compatibility matrix passed in all four cells on a dev pair** (Q436): rework on both sides on
   an integrated and a dedicated server, an original client on a rework dedicated server, and a rework
   client on an original dedicated server. Login sync, dialog/quest clicks, trader, bank, skin download

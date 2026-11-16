@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). v2 M11 sprejet z omejitvami, M11.5 sprejet po ponovnem odprtju Q418; M13.0–M13.5 zaključeni (Q433). Matrika P2 zelena (Q436); soak heap pojasnjen in omejen s `RwCombatEntryCap` (Q452); naslednja razvrstitev ostalih omejitev §6 (Q453), nato M16 (Q444). Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; pri privzeto 0 ni cenovne meje, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
+**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5 zaključen (Q462), naslednji M16.6 (berljivi kloni); jedra M16 in M15, izvedenega 12.–14. 11., ne podvajamo. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -785,7 +785,7 @@ dotika):
 | M16.2 | Strežnik in omrežje: ukaz za klip, dolžine/dogodki na strežniku (zvok, škoda, orožje), sinhronizacija na klient tudi za pozni vstop; obstoječi `Animators.of(npc)` in hooki `animationStart/Event/End` delajo na novem jedru (ko `customnpcentities` ni nameščen) in ostanejo združljivi, ko je | M |
 | M16.3 | Orodja za AI: knjižnica poimenovanih poz, `*.anim.yaml` → JSON prevajalnik z IK (po vzoru `scripts/gusarji`), predogled klipa v PNG brez Minecrafta, `/npcanim reload` brez restarta, datoteke iz `config/customnpcs/animations/` | M |
 | M16.4 | Privzeta knjižnica klipov za biped NPC (napad z mečem, blok, strel, met, pitje, pozdrav, smrt, idle variante), izbira v GUI-ju NPC-ja in vezava na dogodke (napad, zadetek, smrt, idle); navodila v `UPORABNIKI.md` »kako AI naredi novo animacijo v 5 minutah« | M |
-| M16.5 | Preverba: nova animacija iz same datoteke na dedicated strežniku z dvema klientoma, reload, pozni vstop, 200 animiranih NPC-jev (cena enkrat kot podatek), stikalo 0 = original | S |
+| M16.5 | **Zaključeno 16. 11. (Q462):** dedicated dva klienta, nova datoteka/reload/pozni vstop iz [M15](meritve/2026-11-14-armies-m15.md); [cena 200 idle rigov](meritve/2026-11-16-M16.5-cena-rig.md) 0/1 in unit/build/package PASS na `dce93d19…`. Pri 0 originalna veja izrisa; brez bitne primerjave slike. Privzeto 0, cena samo podatek (Q92). | S |
 | M16.6 | Zahteva lastnika 12. 11.: predelava shranjenih NPC-jev (clone tab, `/noppes clone`) v datoteko, ki je za AI najbolj intuitivna: berljiva imena ključev namesto CNPC okrajšav, privzete vrednosti izpuščene, sklopi (videz, statistike, AI, inventar, skripte kot vrstice, `RwRig`), kratek opis polj ob datoteki; uvoz in izvoz brez izgub ter združljivost s starimi klonami (stari JSON se še vedno bere) | M |
 
 Pod stikalom (novo, npr. `RwAnimCore`, privzeto 0); pravila Q407 (brez omejitve poskusov, testi po

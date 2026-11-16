@@ -20,6 +20,7 @@ import noppes.npcs.config.ConfigProp;
  */
 public final class ConfigDefaults {
     public static final String PROPERTY = "rwprivzeto";
+    public static final String SET_PROPERTY = "rwset";
 
     private final List<Field> fields;
     private final List<Object> values;
@@ -73,6 +74,34 @@ public final class ConfigDefaults {
             sb.append(' ').append(f.getName()).append('=').append(read(f));
         }
         return "RWPRIVZETO " + (restore ? 1 : 0) + " spremenjenih=" + changed + " stikal=" + fields.size() + sb;
+    }
+
+    /**
+     * M16.5: test override of single integer switches, JVM property {@code rwset} (gradle {@code -PrwSet}),
+     * e.g. {@code RwAnimCore=1,RwFarView=0}; used by measurement harnesses that share the dev config and
+     * need a switch read at startup. Applied after the config and {@link #apply}; the file is not written.
+     * Returns the log line, or null without the property. An unknown or non-integer switch is an error.
+     */
+    public String applySet(String property) {
+        if (property == null || property.trim().isEmpty()) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder("RWSET");
+        for (String part : property.split(",")) {
+            String[] kv = part.trim().split("=", 2);
+            Field f = null;
+            for (Field c : fields) {
+                if (c.getName().equals(kv[0].trim())) {
+                    f = c;
+                }
+            }
+            if (kv.length != 2 || f == null || f.getType() != int.class) {
+                throw new IllegalArgumentException("rwset: unknown integer switch in '" + part + "'");
+            }
+            write(f, Integer.valueOf(kv[1].trim()));
+            sb.append(' ').append(f.getName()).append('=').append(read(f));
+        }
+        return sb.toString();
     }
 
     private static Object read(Field f) {

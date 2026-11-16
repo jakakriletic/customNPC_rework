@@ -315,6 +315,10 @@ public class CustomNpcs {
         if (rwDefaultsLine != null) {
             LogWriter.info(rwDefaultsLine);
         }
+        String rwSetLine = rwDefaults.applySet(System.getProperty(ConfigDefaults.SET_PROPERTY));
+        if (rwSetLine != null) {
+            LogWriter.info(rwSetLine);
+        }
         if (NpcNavRange < 16) {
             NpcNavRange = 16;
         }

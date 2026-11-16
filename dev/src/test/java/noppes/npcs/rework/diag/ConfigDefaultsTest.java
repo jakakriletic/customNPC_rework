@@ -70,4 +70,25 @@ public class ConfigDefaultsTest {
         Cfg.RwB = 1;
         assertEquals("RWPRIVZETO 1 spremenjenih=2 stikal=3 RwA=2 RwB=1 RwS=x", defaults.apply("1"));
     }
+
+    @Test
+    public void rwsetNastaviSamoNavedenaStikala() {
+        assertNull(defaults.applySet(null));
+        assertNull(defaults.applySet(" "));
+        assertEquals("RWSET RwA=1 RwB=3", defaults.applySet("RwA=1, RwB=3"));
+        assertEquals(1, Cfg.RwA);
+        assertEquals(3, Cfg.RwB);
+        assertEquals("", Cfg.RwS);
+        assertEquals(0, Cfg.Other);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void rwsetZavrneNeznanoStikalo() {
+        defaults.applySet("Other=1");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void rwsetZavrneNecelostevilskoStikalo() {
+        defaults.applySet("RwS=1");
+    }
 }

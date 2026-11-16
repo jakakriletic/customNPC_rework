@@ -57,7 +57,11 @@ param(
     [ValidateRange(0, 1)][int]$Posebni = 0,
     # M5-K K12: RwRenderBox za ta zagon (0 = hitbox, 1 = okvir modela); -1 = iz CustomNpcs.cfg. S -Posebni 1 doda
     # NPC RWV7_Mec (diamantni mec v roki) in merilo K18 (okvir objame hitbox in pecen obris modela, domet brez hitboxa).
-    [ValidateRange(-1, 1)][int]$RenderBox = -1
+    [ValidateRange(-1, 1)][int]$RenderBox = -1,
+    # M16.5: model z rigom (npr. knight) za vse NPC-je idle: klon RWRIG_Idle = PERF_Idle z NBT RwRig {Model}; merilo K19.
+    [string]$Rig = '',
+    # M16.5: RwAnimCore za ta zagon (bere se ob zagonu, zato gradle -PrwSet); -1 = iz CustomNpcs.cfg.
+    [ValidateRange(-1, 1)][int]$AnimCore = -1
 )
 
 $ErrorActionPreference = 'Stop'
@@ -79,6 +83,8 @@ function Check([string]$What, [bool]$Ok) {
 # celice. Zato se generator ukazov in konstante mreze NE prepisejo, ampak preberejo iz perf-run.ps1
 # (AST: samo definicije funkcij in prirejanja konstant, nic se ne izvede).
 $perfAst = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $root 'perf-run.ps1'), [ref]$null, [ref]$null)
+# P8 (Q292): perf-run.ps1 ima $gridW = $MrezaSirina (parameter, privzeto 25); klient meri vedno ozko mrezo.
+$MrezaSirina = 25
 foreach ($ime in @('gridX', 'gridZ', 'gridW', 'bojGap', 'kontrolaAt')) {
     $a = $perfAst.Find({ param($x) $x -is [System.Management.Automation.Language.AssignmentStatementAst] -and "$($x.Left)" -eq ('$' + $ime) }, $false)
     if (-not $a) { throw "perf-run.ps1 nima konstante `$$ime" }
@@ -133,6 +139,14 @@ if ($RenderBox -ge 0) {
     $posebniNpc['RWV7_Mec'] = @{ x = 73; zamenjaj = @(,@('(?m)"Weapons": \[\s*\]', '"Weapons": [{"Slot": 0b, "id": "minecraft:diamond_sword", "Count": 1b, "Damage": 0s}]')) }
 }
 $zPosebni = $gridZ - 4
+if ($Rig -ne '') {
+    if ($Variant -ne 'idle' -or $Rig -notmatch '^[a-z_]+$') { throw "-Rig potrebuje -Variant idle in id modela (a-z, _): $Rig" }
+    $vzorRig = [System.IO.File]::ReadAllText((Join-Path $save 'customnpcs\clones\1\PERF_Idle.json'))
+    $tRig = $vzorRig.Replace('"Name": "PERF_Idle",', ('"Name": "RWRIG_Idle",' + "`n" + '    "RwRig": {"Model": "' + $Rig + '"},'))
+    if ($tRig -eq $vzorRig) { throw 'klon RWRIG_Idle: "Name": "PERF_Idle" ni v PERF_Idle.json' }
+    [System.IO.File]::WriteAllText((Join-Path $save 'customnpcs\clones\1\RWRIG_Idle.json'), $tRig, (New-Object System.Text.UTF8Encoding($false)))
+    Check ("M16.5: klon RWRIG_Idle z RwRig Model={0} zapisan v svet" -f $Rig) $true
+}
 $skinProc = $null
 $skinLog = ''
 if ($Posebni -eq 1) {
@@ -190,6 +204,7 @@ foreach ($l in (Get-Content (Join-Path $seed 'perf-setup-commands.txt'))) {
 }
 $cmds += 'difficulty 0'
 $cmds += @(Get-SpawnCommands $Variant $N)
+if ($Rig -ne '') { $cmds = @($cmds | ForEach-Object { $_ -replace '^noppes clone grid PERF_Idle ', 'noppes clone grid RWRIG_Idle ' }) }
 $pricakovano = $N
 if ($Variant -eq 'boj' -or $Variant -eq 'nedosegljiva') {
     # Frakciji 1 in 2 sovrazni nastavi PERF_Kontrola (kot v perf-run.ps1); tudi on je NPC.
@@ -226,7 +241,8 @@ $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 $log = Join-Path $audit "k-$Variant-$N-$stamp.log"
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 $psi.FileName = $env:ComSpec
-$psi.Arguments = ('/c gradlew.bat runClient --offline --no-daemon --console=plain "-PrwHarness={0}" > "{1}" 2>&1' -f ($jobPath -replace '\\', '/'), $log)
+$rwSet = if ($AnimCore -ge 0) { ' "-PrwSet=RwAnimCore={0}"' -f $AnimCore } else { '' }
+$psi.Arguments = ('/c gradlew.bat runClient --offline --no-daemon --console=plain "-PrwHarness={0}"{2} > "{1}" 2>&1' -f ($jobPath -replace '\\', '/'), $log, $rwSet)
 $psi.WorkingDirectory = Join-Path $root 'dev'
 $psi.UseShellExecute = $false
 $psi.CreateNoWindow = $true
@@ -470,6 +486,12 @@ if ($Posebni -eq 1 -and $RenderBox -ge 0) {
         Check ("K18e: obcutljivost - obris modela sega cez hitbox originala (cez mejo {0}, Kip {1} bloka; {2})" -f (OkNum 'videzIzven'), $(if ($kip) { $kip.presega } else { '-' }), $obrisi) (((OkNum 'videzIzven') -ge 1) -and ((SpPresega 'RWV7_Kip') -gt 0.3))
     }
 }
+if ($r -and ($Rig -ne '' -or $AnimCore -ge 0)) {
+    # M16.5: z RwAnimCore 1 je vsak NPC z rigom vsako sliko izrisan kot model (RigClient.frames), z 0 nikoli.
+    $rigMin = if ($Rig -ne '' -and $r.rwAnimCore -eq 1) { [math]::Floor(0.9 * $N * $r.slicic) } else { 0 }
+    $rigOk = ($AnimCore -lt 0 -or $r.rwAnimCore -eq $AnimCore) -and $(if ($rigMin -gt 0) { $r.rigIzrisovMeritev -ge $rigMin } else { $r.rigIzrisovMeritev -eq 0 })
+    Check ("K19: RwAnimCore {0} (zahtevano {1}), rig {2}, izrisov riga {3} (pricakovano {4})" -f $r.rwAnimCore, $AnimCore, $(if ($Rig) { $Rig } else { '-' }), $r.rigIzrisovMeritev, $(if ($rigMin -gt 0) { '>= ' + $rigMin } else { '0' })) $rigOk
+}
 if ($r -and $PreveriPokrivalo) {
     foreach ($ser in ("$($r.pokrivaloSerije)" -split ' \| ')) { Write-Host ("    pokrivalo {0}" -f $ser) }
     Check ("K9: slika in globina pokrivala bitno enaki z RwHeadwearSkip 0 in 1 ({0} NPC; skin, vzorec, 5 pravih skinov), vzorec spremeni {1} pikslov {2}" -f $r.pokrivaloNpc, $r.pokrivaloObcutljivost, $r.pokrivaloNapaka) ($r.pokrivaloPreverba -eq 1)
@@ -514,6 +536,8 @@ if ($r) {
         if ($Dalec -ne 0) { $odtis['dalec'] = $Dalec }
         if ($Posebni -ne 0) { $odtis['posebni'] = $Posebni }
         if ($RenderBox -ge 0) { $odtis['rwRenderBox'] = $RenderBox }
+        if ($Rig -ne '') { $odtis['rig'] = $Rig }
+        if ($AnimCore -ge 0) { $odtis['rwAnimCore'] = $AnimCore }
         $vel = @{ 'frame.p50' = $r.frameMsP50; 'frame.p95' = $r.frameMsP95; 'frame.p99' = $r.frameMsP99; 'frame.max' = $r.frameMsMax;
                   'fps' = $r.fps; 'fps.low1' = $r.fpsLow1; 'fps.low01' = $r.fpsLow01; 'gc.stevilo' = $r.gcStevilo; 'gc.ms' = $r.gcMs;
                   'upodobljeno.min' = $r.upodobljenoMin; 'streznik.ms' = $r.integriraniStreznikMsPovp }

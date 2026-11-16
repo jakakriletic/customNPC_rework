@@ -2,6 +2,9 @@
 
 ## v2 development
 
+- M16.5: measured 200 idle rigged NPCs with `RwAnimCore` off and on; frame p95 7.017/5.822 ms
+  on one integrated dev client. The rig replaces the normal model and layers; this is cost data
+  for that configuration. `RwAnimCore` stays 0 by default. See [limits](meritve/2026-11-16-M16.5-cena-rig.md).
 - With `RwLinkedGroups=1`, removing a Linked NPC group deletes `<group>.json` and `<group>.json_prev`, so the
   group no longer comes back after a restart (Q393, Q459).
 - `ArmyApi.members` and army orders no longer include a member in its death ticks or waiting to

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 231 → 1)
+# Arhiv: dnevnik sej (vnosi 232 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,13 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-16 (232) — Q458: `ArmyApi.members` brez umirajočih članov (sprejet)
+
+**Paket:** omejitev §6 po Q407/Q454 točka 1 (Q458) · **Stanje:** sprejet; `RwArmies` ostane 0.
+`ArmyCommandService.members` filtrira z `isEntityAlive()` namesto `!isDead` (vanilla postavi `isDead` šele po 20 tickih smrti; NPC na respawnu ves čas).
+Na `88b5c53b…` PASS unit/build/package in `q458-edges-v1` (M11.9 robovi + nova provera `loss-members-exclude-dying`: `listed=0 members=6`).
+Meje: en zagon, respawn samo iz kode. Naslednje: Linked `removeData` (Q393), nato M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](../meritve/2026-11-16-Q458-armyapi-members.md).
 
 ### 2026-11-16 (231) — Q84: zid 6/6 pri vidni črti + nadaljevanju (sprejet)
 

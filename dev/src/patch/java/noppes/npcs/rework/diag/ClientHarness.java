@@ -157,6 +157,9 @@ public final class ClientHarness {
     private long bytesAtEnd = -1L;
     /** M5-V.2: nadomestki v shrambi in koristni bajti kanala rwfar ob zacetku merjenja. */
     private int farAtMeasure = -1;
+    /** M16.5: rig frames (RigClient.frames) at the start and end of the measurement window. */
+    private int rigFramesAtMeasure = -1;
+    private int rigFramesAtEnd = -1;
     private long farBytesAtMeasure = -1L;
     private long farBytesAtEnd = -1L;
     /** M5-V.8: hoja po merjenju (zicni in rwfar bajti, cas). */
@@ -358,6 +361,7 @@ public final class ClientHarness {
                         this.tickCount = 0;
                         this.bytesAtMeasure = this.bytesIn.get();
                         this.farAtMeasure = FarClient.size();
+                        this.rigFramesAtMeasure = rigFrames();
                         this.farBytesAtMeasure = FarClient.payloadBytes;
                         FarRender.resetStats();
                         this.measureStartNs = System.nanoTime();
@@ -375,6 +379,7 @@ public final class ClientHarness {
                         this.measureEndNs = System.nanoTime();
                         this.bytesAtEnd = this.bytesIn.get();
                         this.farBytesAtEnd = FarClient.payloadBytes;
+                        this.rigFramesAtEnd = rigFrames();
                         if ((this.job.seamCheck || this.job.walk) && this.errors.isEmpty()) {
                             // M5-V.5: JSON merjenja zdaj; skripta ob fazi SEAM prebere streznik.
                             this.jsonBody = buildJson(mc, Phase.MEASURE);
@@ -745,6 +750,10 @@ public final class ClientHarness {
         mc.shutdown();
     }
 
+    private static int rigFrames() {
+        return CustomNpcs.RwAnimCore == 1 ? noppes.npcs.rework.rig.client.RigClient.frames : 0;
+    }
+
     private void writeJson(Minecraft mc, Phase reached) throws Exception {
         StringBuilder b = new StringBuilder(this.jsonBody != null ? this.jsonBody : buildJson(mc, reached));
         FarDrawCheck.Seam sm = this.seam;
@@ -930,6 +939,9 @@ public final class ClientHarness {
         num(b, "impPrenosCakanj", ImpostorBaker.downloadWaits);
         kv(b, "posebni", FarRender.specialSummary(mc.world));
         // M5-K K12: okvir upodobitve ob koncu merjenja (vsi NPC-ji v svetu klienta).
+        // M16.5: rig izrisi v merilnem oknu (RigClient steje en izris na NPC na sliko).
+        num(b, "rwAnimCore", CustomNpcs.RwAnimCore);
+        num(b, "rigIzrisovMeritev", this.rigFramesAtEnd >= 0 && this.rigFramesAtMeasure >= 0 ? this.rigFramesAtEnd - this.rigFramesAtMeasure : -1);
         num(b, "rwRenderBox", CustomNpcs.RwRenderBox);
         kv(b, "okvir", RenderBoxAudit.summary(mc.world, mc.getRenderViewEntity(), FarRender.specialPrefix));
         FarDrawCheck fd = this.farDraw;

@@ -150,6 +150,10 @@ afterEvaluate {
         if (project.hasProperty('rwPrivzeto')) {
             tasks.getByName(taskName).systemProperty 'rwprivzeto', project.property('rwPrivzeto')
         }
+        // M16.5: -PrwSet=RwAnimCore=1 preglasi posamezna celostevilska stikala ob zagonu (k-run.ps1 -AnimCore)
+        if (project.hasProperty('rwSet')) {
+            tasks.getByName(taskName).systemProperty 'rwset', project.property('rwSet')
+        }
         // M5-K.0: -PrwHarness=<navodilo> vklopi klientski merilni harness (k-run.ps1)
         if (taskName == 'runClient' && project.hasProperty('rwHarness')) {
             tasks.getByName(taskName).systemProperty 'rwharness', project.property('rwHarness')

@@ -110,6 +110,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-16 | M16.5, `k-run.ps1 -Variant idle -N 200 -Rig knight -AnimCore 0/1`, ena celica na vrednost | PASS unit/build/package in obe celici na `dce93d19…`; p50/p95 0 = 6,445/7,017 ms, 1 = 5,307/5,822 ms; rig 0 / 2.220.800 izrisov. Različna izrisa, cena samo podatek (Q462) | [zapis](meritve/2026-11-16-M16.5-cena-rig.md) |
 | 2026-11-16 | M10.4 heap: zaklenjen svet, 200 NPC (80/80/40), `RwCombatEntryCap=64`, `m104-heap-run.ps1 -CombatCap 64` | Delni tek `153707` 20/24 vzorcev (1,67 h, ustavil lastnik, sprejet Q452): vnosi 5120, heap 0,152 MiB/h proti 24,2 brez cap (`132104`), histo 1→12 brez rasti | [zapis](meritve/2026-11-04-M10.4-heap.md) |
 | 2026-11-12 | M16 legionar (Steve + scutum, JS dvigne ščit in napade), privzetki NPC-ja (brez oči, brez respawna), pošteno štetje škode: `rig-run.ps1` 10 modelov | PASS `m16-rig-2026-11-12-132013` 21/21: troll smash 5,0, JS vitez 26+, legionar ščit → vbod 6,0 + sunek 2,0; unit 844, paket PASS; prejšnja vrstica M16 ni dokazala `hit` (sonce) | [zapis](meritve/2026-11-12-M16-animacijsko-jedro.md) |
 | 2026-11-12 | M16 animacijsko jedro: `rig-run.ps1` integriran dev klient, `RwAnimCore=1`, brez customnpcentities, 8 modelov le z NBT `RwRig`, paket `knight_boss.rig.json` z JS | PASS `m16-rig-2026-11-12-123724` 14/14: risanje, sinhronizacija klipa, `hit` škoda, klon ohrani rig in klipe, JS napad zombi 20 → 14; unit 842, paket PASS | [zapis](meritve/2026-11-12-M16-animacijsko-jedro.md) |

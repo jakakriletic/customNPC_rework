@@ -12,6 +12,10 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**16. 11. — M16.5 cena izmerjena (Q462).** 200 idle rigov: p95 0/1 = 7,017/5,822 ms;
+vseh pet zahtevanih testov PASS na `dce93d19…`. Naslednje M16.6 (berljivi kloni), `RwAnimCore` ostane 0.
+[Zapis](meritve/2026-11-16-M16.5-cena-rig.md).
+
 **16. 11. — Odstranjena skupina Linked NPC se ne vrne (Q459).** Pri `RwLinkedGroups=1` `removeData` izbriše datoteko skupine in `.json_prev`; `q459-remove-v1` PASS. Naslednje: M16 (Q444). [Zapis](meritve/2026-11-16-Q459-linked-remove.md).
 
 **16. 11. — `ArmyApi.members` brez umirajočih (Q458).** Filter `isEntityAlive()` namesto `!isDead`; `q458-edges-v1` PASS. Naslednje: Linked `removeData` (Q393), nato M16 (Q444). [Zapis](meritve/2026-11-16-Q458-armyapi-members.md).
@@ -43,12 +47,12 @@ teksture in klipov klientom ter izbira modela v Display. [Zapis](meritve/2026-11
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-11** (seja 230) — M11.11 `freeforall` sprejet: 199/199 skozi progo z grlom po restartu, zaprti član edini blokiran, Xaero v0.1.10 nameščen (Q446). [Zapis](meritve/2026-11-11-M11.11-freeforall.md). |
-| Trenutni milestone | **Omejitve `UPORABNIKI.md` §6 po Q407**: matrika P2 zaprta (Q436), naslednji soak heap (Q437). M13 zaključen pod stikali, M11.5 sprejet. v1.0 sprejet z omejitvami; M10.3/IO4 odprta (Q1). |
-| Naslednji paketi | **Soak: rast heapa po full GC (P1, Q437)**, nato ostale omejitve `UPORABNIKI.md` §6 po Q407. M12 na koncu; M15 po odločitvi lastnika. Q90/Q92 veljata s spremembami Q407: brez meje poskusov ali proračuna testov, timeout ≤14400 s; kratki zapisi in privzeto izklopljena stikala brez cenovne meje. |
+| Zadnja posodobitev | **2026-11-16** (seja 234) — M16.5 sprejet (Q462): obe celici 200 idle rigov in unit/build/package PASS na `dce93d19…`. [Zapis](meritve/2026-11-16-M16.5-cena-rig.md). |
+| Trenutni milestone | **M16 — vgrajeno animacijsko jedro** (Q444): M16.5 zaključen z navedenimi mejami; obstoječega jedra 12.–14. 11. ne podvajamo. M10.3/IO4 ostajata blokirana Q1. |
+| Naslednji paketi | **M16.6: berljivi kloni**, stari JSON združljiv, uvoz/izvoz brez izgub. Nato ostanek plana po Q444; M12 na koncu. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi; Q407: brez meje poskusov ali proračuna testov, timeout ≤14400 s. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **309** datotek `.java` v `src/patch`, od tega **229** rework. Build/package PASS na M11.11. |
-| Testi | **827** testov v **116** razredih (826 metod `@Test`). Unit PASS na M11.11; klientska matrika PASS na `e22ef824…`. |
+| Prevedljivih razredov | **342** datotek `.java` v `src/patch`, od tega **261** rework. Build/package PASS na `dce93d19…`. |
+| Testi | **859** testov v zadnjem JUnit rezultatu, **122** testnih datotek. M16.5: unit (+3 `ConfigDefaultsTest`), build/package in obe celici PASS na `dce93d19…`. |
 | Odprti pojavi | nobenega blokirnega; Q84 odpravljen 16. 11. (Q457); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -76,6 +80,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b brez sprejema, M10.1d kot [P2 zelen](meritve/2026-10-30-P2-klientska-matrika.md) (Q436); celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
 | M11 Poveljevanje prek zemljevida | **M11.11 sprejet** (`freeforall`) | 199/199 razmetanih skozi progo z grlom po restartu, zaprti član edini blokiran ([zapis](meritve/2026-11-11-M11.11-freeforall.md)); Xaero v0.1.10 nameščen. M11.5 sprejet po Q407. Celoten izhod M11 (200 skozi nenaložen svet in živa mapa) ostaja nepokrit. |
 | M13 Povezani NPC-ji | **M13.0–M13.5 zaključeni pod stikali** (v2, Q433) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun, GUI, seznam palice, kloner (`RwLinkedGroups`); obe stikali privzeto 0. [M13.5](meritve/2026-11-04-M13.5-sto.md): 100 z eno izbiro in sprememba do vseh. Izhod pokrit z ločenimi scenariji, ne z enim skupnim. |
+| M16 Vgrajeno animacijsko jedro | **M16.5 zaključen, naslednji M16.6** (Q462) | Jedro 12. 11., dedicated dva klienta/reload/pozni vstop 14. 11.; [cena 200 idle rigov](meritve/2026-11-16-M16.5-cena-rig.md) izmerjena 16. 11. Privzeto `RwAnimCore=0`, brez trditve o bitni enakosti slik. |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -85,7 +90,15 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 231 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 232 → 1, novejši zgoraj).*
+
+### 2026-11-16 (234) — M16.5: cena 200 animiranih NPC-jev (sprejet)
+
+**Paket:** manjkajoča celica M16.5 (Q460–Q462) · **Stanje:** zaključen, `RwAnimCore` ostane 0.
+Na `dce93d19…` PASS unit (+3 testi), build/package in `m165-rig-200-off/on-v1`; controller zagona, brez ponavljanja (Q90).
+200 idle vitezov: p50/p95 0 = 6,445/7,017 ms, 1 = 5,307/5,822 ms; 2.220.800 izrisov riga pri 1.
+To je cena različnih izrisov, ne enake slike; pri 0 originalna veja kode, brez bitne primerjave slike. Dva klienta/reload/pozni vstop iz ločenega M15 teka 14. 11.
+Naslednji paket M16.6: berljivi kloni brez izgub, stari JSON ostane berljiv. M10.3 blokiran Q1. [Zapis](meritve/2026-11-16-M16.5-cena-rig.md).
 
 ### 2026-11-16 (233) — Q459: odstranjena skupina Linked NPC se ne vrne (sprejet)
 
@@ -93,10 +106,3 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 Pri 1 `removeData` izbriše `<skupina>.json` in `.json_prev`; pri 0 original (datoteka ostane, skupina se po restartu vrne).
 Na `d5ffbe14…` PASS unit (+4 `LinkedRemoveTest`), build, package in `q459-remove-v1` (4 zagoni 0/0/1/1, 47 + 17 provera): Q393 reproduciran pri 0, popravljen pri 1.
 Meje: samo strežnik, odstranitev iz skripte, en zagon. Naslednje: M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](meritve/2026-11-16-Q459-linked-remove.md).
-
-### 2026-11-16 (232) — Q458: `ArmyApi.members` brez umirajočih članov (sprejet)
-
-**Paket:** omejitev §6 po Q407/Q454 točka 1 (Q458) · **Stanje:** sprejet; `RwArmies` ostane 0.
-`ArmyCommandService.members` filtrira z `isEntityAlive()` namesto `!isDead` (vanilla postavi `isDead` šele po 20 tickih smrti; NPC na respawnu ves čas).
-Na `88b5c53b…` PASS unit/build/package in `q458-edges-v1` (M11.9 robovi + nova provera `loss-members-exclude-dying`: `listed=0 members=6`).
-Meje: en zagon, respawn samo iz kode. Naslednje: Linked `removeData` (Q393), nato M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](meritve/2026-11-16-Q458-armyapi-members.md).
