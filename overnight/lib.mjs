@@ -63,7 +63,12 @@ export function fingerprint(c) {
   };
   for (const relative of [...c.fingerprintPaths].sort()) visit(within(c.projectRoot, relative));
   // New scenario scripts are measurement inputs even if absent from the original path list.
-  for (const script of [...new Set(Object.values(c.tests || {}).map(t => t.script).filter(Boolean))].sort()) visit(within(c.projectRoot, script));
+  // A registered test whose script was later deleted (e.g. a rejected candidate's harness) cannot run;
+  // skip it instead of crashing the controller on every start. Hash is unchanged while all scripts exist.
+  for (const script of [...new Set(Object.values(c.tests || {}).map(t => t.script).filter(Boolean))].sort()) {
+    const file = within(c.projectRoot, script);
+    if (fs.existsSync(file)) visit(file);
+  }
   return hash.digest('hex');
 }
 export function alive(pid) {
