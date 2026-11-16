@@ -2,6 +2,11 @@
 
 ## v2 development
 
+- M16.6 adds readable clone JSON through `RwReadableClones=1`, with descriptive sections,
+  script lines, four frozen defaults and typed extra data. Both formats load at 0 and 1.
+  The first explicit overwrite of legacy preserves `.json.v0.bak`. The original mod requires
+  that backup or a legacy export for rollback. Default 0 writes legacy.
+  [Coverage and limits](meritve/2026-11-16-M16.6-berljivi-kloni.md).
 - M16.5: measured 200 idle rigged NPCs with `RwAnimCore` off and on; frame p95 7.017/5.822 ms
   on one integrated dev client. The rig replaces the normal model and layers; this is cost data
   for that configuration. `RwAnimCore` stays 0 by default. See [limits](meritve/2026-11-16-M16.5-cena-rig.md).

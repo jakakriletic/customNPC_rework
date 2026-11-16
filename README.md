@@ -14,10 +14,10 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-11-16 |
-| Trenutna faza | **v2: M16.6a raziskava zaključena (Q463–Q465)**: [pogodba berljivih klonov](docs/raziskave/M16.6a-berljivi-kloni.md); format še ni implementiran. M16.5 ostaja sprejet (Q462), M10.3 blokiran Q1. |
-| Naslednji korak | **M16.6b: implementacija in controller dokaz** uvoza/izvoza brez izgub za lokalni clone tab in `/noppes clone`. Ločeno stikalo `RwReadableClones` (načrt, privzeto 0), zamrznjeni privzetki z ohranitvijo odsotnosti, tipno ohranjeni dodatki; stari JSON se še bere. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, cena pri privzeto 0 samo podatek, kratki zapisi; Q407: brez meje poskusov ali testnega proračuna, timeout ≤14400 s. `RwAnimCore` ostane 0, M12 na koncu. |
+| Trenutna faza | **v2: M16.6b sprejet (Q471)**. [Berljivi kloni](docs/meritve/2026-11-16-M16.6-berljivi-kloni.md) za lokalni/strežniški clone tab in ukaze, tipni roundtrip, backup in restart; unit/build/package ter 126 funkcionalnih preverb PASS na `72ad0c90…`. `RwReadableClones=0`, M10.3 blokiran Q1. |
+| Naslednji korak | **M14.0 raziskava izrisa** (Q472), najprej primerjava obstoječe kode in K10 meritev, nato prilagoditev paketov. Jedri M16/M15 sta izvedeni. Q90/Q92 velja za v1.0 in nadaljnje pakete pod stikali, brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407 odstrani mejo poskusov in testni proračun, timeout ≤14400 s. M12 na koncu. |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 342 datotek `.java` v `src/patch` (261 rework), 122 testnih datotek; zadnji JUnit rezultat 859 testov. Package PASS: 1716 originalnih vnosov, 89 pričakovanih sprememb. |
+| Prevedljivih razredov | 347 datotek `.java` v `src/patch` (266 rework), 123 testnih datotek; zadnji JUnit rezultat 875 testov. Package PASS: 1716 originalnih vnosov, 89 pričakovanih sprememb. |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in

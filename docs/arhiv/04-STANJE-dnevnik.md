@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 233 → 1)
+# Arhiv: dnevnik sej (vnosi 234 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,14 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-16 (234) — M16.5: cena 200 animiranih NPC-jev (sprejet)
+
+**Paket:** manjkajoča celica M16.5 (Q460–Q462) · **Stanje:** zaključen, `RwAnimCore` ostane 0.
+Na `dce93d19…` PASS unit (+3 testi), build/package in `m165-rig-200-off/on-v1`; controller zagona, brez ponavljanja (Q90).
+200 idle vitezov: p50/p95 0 = 6,445/7,017 ms, 1 = 5,307/5,822 ms; 2.220.800 izrisov riga pri 1.
+To je cena različnih izrisov, ne enake slike; pri 0 originalna veja kode, brez bitne primerjave slike. Dva klienta/reload/pozni vstop iz ločenega M15 teka 14. 11.
+Naslednji paket M16.6: berljivi kloni brez izgub, stari JSON ostane berljiv. M10.3 blokiran Q1. [Zapis](../meritve/2026-11-16-M16.5-cena-rig.md).
 
 ### 2026-11-16 (233) — Q459: odstranjena skupina Linked NPC se ne vrne (sprejet)
 

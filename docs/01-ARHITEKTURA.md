@@ -1113,4 +1113,5 @@ Načrt izvedbe: `ServerCloneController` uporablja ločen verzioniran JSON kodek;
 Zamrznjen katalog tipov/privzetkov, oznake odsotnosti in tipna raw rezerva preprečijo izgube;
 skripte/klipi ohranijo vrstni red in konce vrstic. Prvi izrecni prepis legacy ohrani izvirne
 bajte (D-004), novi zapis preveri `SafeFileWriter`. Nobene migracije ob branju.
-[Raziskava in sprejemna merila](raziskave/M16.6a-berljivi-kloni.md); M16.6b še ni izveden.
+[Raziskava in sprejemna merila](raziskave/M16.6a-berljivi-kloni.md),
+[M16.6b sprejet 16. 11. (Q471)](meritve/2026-11-16-M16.6-berljivi-kloni.md).

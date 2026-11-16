@@ -12,9 +12,10 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
-**16. 11. — M16.6a raziskava zaključena (Q463–Q465).** [Pogodba berljivih klonov](raziskave/M16.6a-berljivi-kloni.md)
-določa ohranitev tipov/odsotnosti, privzetke, skripte in varno diskovno mejo. Naslednje M16.6b:
-implementacija in controller dokaz; funkcija še ni izvedena. Produkcija/testni vhodi nespremenjeni, brez novih meritev.
+**16. 11. — M16.6b sprejet (Q471).** Unit/build/package in `m166-readable-v3` PASS na
+`72ad0c90…`, 126 preverb in 6 pregledanih PNG. Berljivi lokalni/strežniški kloni, ukazi,
+tipni roundtrip, backup in restart. `RwReadableClones=0`. Sledi raziskava M14.0 (Q472).
+[Zapis](meritve/2026-11-16-M16.6-berljivi-kloni.md).
 
 **16. 11. — Odstranjena skupina Linked NPC se ne vrne (Q459).** Pri `RwLinkedGroups=1` `removeData` izbriše datoteko skupine in `.json_prev`; `q459-remove-v1` PASS. Naslednje: M16 (Q444). [Zapis](meritve/2026-11-16-Q459-linked-remove.md).
 
@@ -47,12 +48,12 @@ teksture in klipov klientom ter izbira modela v Display. [Zapis](meritve/2026-11
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-16** (seja 235) — M16.6a raziskava zaključena (Q463–Q465, D-105): [pogodba in sprejem](raziskave/M16.6a-berljivi-kloni.md). Samo dokumentacija; merjeni vhodi in harnessi nespremenjeni, brez novih testov po Q90. |
-| Trenutni milestone | **M16 — vgrajeno animacijsko jedro** (Q444): M16.6a raziskava zaključena, funkcija M16.6 še ni izvedena. M16.5 ostaja sprejet; M10.3/IO4 blokirana Q1. |
-| Naslednji paketi | **M16.6b: izvedba berljivih klonov** in controller dokaz po M16.6a; načrtovano `RwReadableClones=0`, stari JSON ostane berljiv. Nato ostanek plana po Q444; M12 na koncu. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi; Q407: brez meje poskusov ali proračuna testov, timeout ≤14400 s. |
+| Zadnja posodobitev | **2026-11-16** (seja 236) — M16.6b sprejet Q471, vsi štirje controller testi PASS na `72ad0c90…`, 126 preverb in 6 pregledanih PNG. Izvoz/uvoz 2,1295/0,9416 ms enkrat kot podatek, `RwReadableClones=0`. [Zapis](meritve/2026-11-16-M16.6-berljivi-kloni.md). |
+| Trenutni milestone | **M16.6 zaključen** pod privzeto izklopljenim stikalom (Q471), M16/M15 dokazi ostajajo ločeni scenariji. M10.3/IO4 blokirana Q1. |
+| Naslednji paketi | **M14.0 raziskava izrisa** po Q472/D-029, preveri trenutno kodo in prejšnje K10/K13 meritve pred izvedbo. M15 že izveden, M12 na koncu. Q90/Q92 velja za naslednje pakete, brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407 odstrani mejo poskusov in testni proračun, timeout ≤14400 s. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **342** datotek `.java` v `src/patch`, od tega **261** rework. Build/package PASS na `dce93d19…`. |
-| Testi | **859** testov v zadnjem JUnit rezultatu, **122** testnih datotek. M16.5: unit (+3 `ConfigDefaultsTest`), build/package in obe celici PASS na `dce93d19…`. |
+| Prevedljivih razredov | **347** datotek `.java` v `src/patch`, od tega **266** rework. Build/package PASS na `72ad0c90…`. |
+| Testi | **875** testov v zadnjem JUnit rezultatu, **123** testnih datotek. M16.6 unit (+16), build/package in `m166-readable-v3` PASS na `72ad0c90…`. |
 | Odprti pojavi | nobenega blokirnega; Q84 odpravljen 16. 11. (Q457); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -80,7 +81,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b brez sprejema, M10.1d kot [P2 zelen](meritve/2026-10-30-P2-klientska-matrika.md) (Q436); celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
 | M11 Poveljevanje prek zemljevida | **M11.11 sprejet** (`freeforall`) | 199/199 razmetanih skozi progo z grlom po restartu, zaprti član edini blokiran ([zapis](meritve/2026-11-11-M11.11-freeforall.md)); Xaero v0.1.10 nameščen. M11.5 sprejet po Q407. Celoten izhod M11 (200 skozi nenaložen svet in živa mapa) ostaja nepokrit. |
 | M13 Povezani NPC-ji | **M13.0–M13.5 zaključeni pod stikali** (v2, Q433) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun, GUI, seznam palice, kloner (`RwLinkedGroups`); obe stikali privzeto 0. [M13.5](meritve/2026-11-04-M13.5-sto.md): 100 z eno izbiro in sprememba do vseh. Izhod pokrit z ločenimi scenariji, ne z enim skupnim. |
-| M16 Vgrajeno animacijsko jedro | **M16.6a raziskana, naslednji M16.6b** (Q463–Q465) | [Pogodba klonov](raziskave/M16.6a-berljivi-kloni.md), izvedba še odprta. M16.5 cena sprejeta Q462; `RwAnimCore=0`, brez trditve o bitni enakosti slik. |
+| M16 Vgrajeno animacijsko jedro | **M16.6b sprejet** (Q471) | [Berljivi kloni](meritve/2026-11-16-M16.6-berljivi-kloni.md), 126 preverb, 6 PNG. M16.5 cena sprejeta Q462; privzeto `RwAnimCore=0`, `RwReadableClones=0`. Sledi M14.0. |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -90,7 +91,18 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 233 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 234 → 1, novejši zgoraj).*
+
+### 2026-11-16 (236) — M16.6b sprejet
+
+**Paket:** M16.6b (Q466–Q471, D-105) · **Stanje:** sprejet, `RwReadableClones=0`.
+Opisni katalog, tipna rezerva, točne skripte/klipi, štirje privzetki z odsotnostmi in varni backup/zapis.
+Unit (16 novih, korpus 89), build/package in `m166-readable-v3` PASS na `72ad0c90…`.
+126 preverb skozi dev par 0/1/1/0 potrdi obe diskovni meji, ukaze, postavitvi, rig/skripto in restart.
+Šest PNG pregledanih. Izvoz/uvoz 2,1295/0,9416 ms, 25.821/7.987 B, en podatek.
+V1/v2 sta padla v harnessu, Q469/Q470 popravljena pred veljavnim v3. Samo controller zagoni.
+Dokumentacija zaključena, nepovezane datoteke ohranjene. Sledi raziskava M14.0 (Q472), M12 zadnji.
+[Dokaz in omejitve](meritve/2026-11-16-M16.6-berljivi-kloni.md).
 
 ### 2026-11-16 (235) — M16.6a: raziskava berljivih klonov
 
@@ -100,11 +112,3 @@ Izbrano: ločen diskovni kodek in `RwReadableClones=0`, zamrznjeni privzetki z o
 Samo dokumentacija; produkcija in vsi merilni/testni vhodi ostajajo na `dce93d19…`, testov/meritev nismo izvajali ali zahtevali (Q90).
 Naslednje M16.6b: implementacija, nov PowerShell harness in controller unit/build/package + lokalni/strežniški clone/ukaz/restart dokaz. M10.3 blokiran Q1.
 [Raziskava in merila](raziskave/M16.6a-berljivi-kloni.md).
-
-### 2026-11-16 (234) — M16.5: cena 200 animiranih NPC-jev (sprejet)
-
-**Paket:** manjkajoča celica M16.5 (Q460–Q462) · **Stanje:** zaključen, `RwAnimCore` ostane 0.
-Na `dce93d19…` PASS unit (+3 testi), build/package in `m165-rig-200-off/on-v1`; controller zagona, brez ponavljanja (Q90).
-200 idle vitezov: p50/p95 0 = 6,445/7,017 ms, 1 = 5,307/5,822 ms; 2.220.800 izrisov riga pri 1.
-To je cena različnih izrisov, ne enake slike; pri 0 originalna veja kode, brez bitne primerjave slike. Dva klienta/reload/pozni vstop iz ločenega M15 teka 14. 11.
-Naslednji paket M16.6: berljivi kloni brez izgub, stari JSON ostane berljiv. M10.3 blokiran Q1. [Zapis](meritve/2026-11-16-M16.5-cena-rig.md).

@@ -429,6 +429,7 @@ task testOriginal(type: Test) {
     exclude '**/CombatEntryCapTest.class'
     // Q459: removeData(name, deleteFiles) and the switch text are new.
     exclude '**/LinkedRemoveTest.class'
+    exclude '**/ReadableCloneTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

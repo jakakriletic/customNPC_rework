@@ -391,10 +391,10 @@ registry model. Za vsako funkcijo:
 
 **M16.6 (zahteva lastnika 12. 11.; Q463–Q465):** tudi celoten shranjeni NPC dobi berljiv
 diskovni format, z opisnimi sklopi, izpuščenimi potrjenimi privzetki, skriptami po vrsticah
-in `RwRig`. [M16.6a pogodba](raziskave/M16.6a-berljivi-kloni.md) je raziskana; M16.6b še ni
-implementiran. Sprejem zahteva ohranitev NBT tipov, odsotnosti, neznanih dodatkov in točnih
-skript ter delovanje lokalnega/strežniškega clone taba in `/noppes clone` z restartom.
-Načrtovano ločeno stikalo `RwReadableClones=0`; stari JSON ostane berljiv, omrežni NBT se ne spreminja.
+in `RwRig`. [M16.6b je sprejet](meritve/2026-11-16-M16.6-berljivi-kloni.md) po pogodbi M16.6a
+(Q471), s tipnim roundtripom, odsotnostmi, dodatki in točnimi skriptami. Controller potrdi
+lokalni/strežniški clone tab in `/noppes clone` z restartom. Ločeno stikalo `RwReadableClones=0`
+privzeto, oba formata se bereta pri 0/1, novi zapis pa za rollback zahteva backup ali legacy izvoz.
 
 > *"Rad bi naredil svoje okolje namenjeno da je maksimalno razumljivo AI-ju za izdelavo NPC
 > animacij in integracijo teh v skripte, da bi mi AI delal animacije."*

@@ -129,7 +129,7 @@ prevajalnik poz/YAML → JSON), tako da je nova animacija za AI samo podatkovna 
 rebuilda. `customnpcentities` ni več pogoj; obstoječi API `Animators`/hooki ostanejo združljivi. M15
 (bitja iz mape) gradi na M16.
 
-**16. 11. (Q463–Q465):** M16.5 sprejet; [M16.6a raziskava berljivih klonov](raziskave/M16.6a-berljivi-kloni.md) zaključena, naslednji M16.6b (izvedba in controller dokaz), brez spremembe cilja ali vrstnega reda Q444.
+**16. 11. (Q471–Q472):** M16.5 in [M16.6b berljivi kloni](meritve/2026-11-16-M16.6-berljivi-kloni.md) sprejeti pod privzeto izklopljenimi stikali. Sledi raziskava M14.0, ker je M15 že izveden na M16 (12.–14. 11.), M12 ostane zadnji. Raziskava najprej preveri trenutno kodo in prejšnje K10 meritve po D-029.
 
 ## Ocena
 

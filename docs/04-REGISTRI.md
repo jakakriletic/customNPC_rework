@@ -24,6 +24,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
+| 2026-11-16 | Berljivi clone JSON z opisnimi sklopi, štirimi zamrznjenimi privzetki, točnimi skriptnimi vrsticami in tipnimi dodatki. Branje obeh formatov pri 0/1, prvi izrecni legacy prepis shrani `.json.v0.bak`, opis ob datoteki | M16.6, D-105, Q471 | `RwReadableClones`, stran shranjevanja | **0** (legacy zapis) |
 | 2026-11-16 | Odstranitev skupine Linked NPC izbriše `<skupina>.json` in `<skupina>.json_prev`; skupina se po restartu ne vrne | Q393, Q459 | `RwLinkedGroups`, strežnik | **0** (original: datoteka ostane, skupina se po restartu vrne) |
 | 2026-11-16 | Strežnik takoj po vpisu udarca (`damageEntity`) NPC-ju pusti samo zadnjih N vnosov `CombatTracker`; starejši udarci ne štejejo za najboljšega napadalca in smrtno sporočilo | M10.4/P1, Q449–Q452 | `RwCombatEntryCap`, strežnik | **0** (original: vnosi do reseta 100–300 tickov po zadnjem udarcu) |
 | 2026-11-04 | Dedicated strežnik registrira `customnpcs:army_staff` samo pri `RwArmies>=1` (klient vedno), shranjeni vnos se pri 0 prezre; originalni klient se lahko poveže pri 0, pri 1 ne; palice se pri 1→0 na dedicated izgubijo | P2, D-101, Q435 | `RwArmies` | **0** (predmeta na dedicated strežniku ni) |
@@ -110,6 +111,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-16 | M16.6b, `readable-clone-run.ps1`, en dev par, štirje zagoni 0/1/1/0 | unit/build/package in v3 PASS na `72ad0c90…`, 126 preverb, 6 pregledanih PNG, tipni roundtrip/backup/restart. Izvoz/uvoz 2,1295/0,9416 ms, 25.821 B proti 7.987 B, en podatek | [zapis](meritve/2026-11-16-M16.6-berljivi-kloni.md) |
 | 2026-11-16 | M16.5, `k-run.ps1 -Variant idle -N 200 -Rig knight -AnimCore 0/1`, ena celica na vrednost | PASS unit/build/package in obe celici na `dce93d19…`; p50/p95 0 = 6,445/7,017 ms, 1 = 5,307/5,822 ms; rig 0 / 2.220.800 izrisov. Različna izrisa, cena samo podatek (Q462) | [zapis](meritve/2026-11-16-M16.5-cena-rig.md) |
 | 2026-11-16 | M10.4 heap: zaklenjen svet, 200 NPC (80/80/40), `RwCombatEntryCap=64`, `m104-heap-run.ps1 -CombatCap 64` | Delni tek `153707` 20/24 vzorcev (1,67 h, ustavil lastnik, sprejet Q452): vnosi 5120, heap 0,152 MiB/h proti 24,2 brez cap (`132104`), histo 1→12 brez rasti | [zapis](meritve/2026-11-04-M10.4-heap.md) |
 | 2026-11-12 | M16 legionar (Steve + scutum, JS dvigne ščit in napade), privzetki NPC-ja (brez oči, brez respawna), pošteno štetje škode: `rig-run.ps1` 10 modelov | PASS `m16-rig-2026-11-12-132013` 21/21: troll smash 5,0, JS vitez 26+, legionar ščit → vbod 6,0 + sunek 2,0; unit 844, paket PASS; prejšnja vrstica M16 ni dokazala `hit` (sonce) | [zapis](meritve/2026-11-12-M16-animacijsko-jedro.md) |

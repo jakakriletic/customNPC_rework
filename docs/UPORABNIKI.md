@@ -84,6 +84,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwNavBackend` | 0 | permits NPCs with per-NPC `RwNavBackend=1` to use Baritone (needs the `npcbaritone` library) |
 | `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`); >=1 also enables `blendTo` and `/npcanim` (set on server and clients) |
 | `RwAnimCore` | 0 | built-in animation core: NPCs with `RwRig` drawn as models with bones, clips, data attacks, `/rwrig` (server and clients; see "Animated NPCs") |
+| `RwReadableClones` | 0 | writes readable clone JSON at 1, legacy at 0, on the side storing the clone. Both formats can be read at either value. Independent of `RwAnimCore` |
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
 | `RwArmies` | 0 | armies: `/rwarmy`, `ArmyApi` and the channel `rwarmy`, register and move orders saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs); also `RwArmyClusterRadius` (48, 1–512), `RwArmyClusterMin` (8, 1–1024), `RwArmyCompany` (8, 1–24; only 8 tested in-world), `RwArmyMaxMarches` (2, 0–16: armies with an active move that hold travelling chunk tickets; 0 = no tickets) |
 | `RwLinkedOwnFields` | 0 | Linked NPCs: each member keeps its own home, orientation, moving path and place on that path when group data is applied; 0 = original (see §6). Does not repair values already overwritten |
@@ -258,6 +259,35 @@ To add the **Konjenik** clone to tab 1 on your client, copy
 [`Konjenik.json`](../examples/clones/1/Konjenik.json) into `customnpcs/clones/1`.
 It spawns a rider with an iron sword on a saddled horse.
 
+### Readable clone files (M16.6)
+
+Set `RwReadableClones=1` in the config of the client for local clones, or the server for
+server clones. Restart that process. Saving through the cloner or `/noppes clone add`
+writes UTF-8 JSON with descriptive sections for appearance, stats, AI, inventory, scripts
+and rig settings. Files keep the `.json` extension in the existing clone tab directory.
+The first readable save creates `CLONE-FORMAT.md` beside them with the field catalogue,
+types, units and defaults. An existing guide is preserved.
+
+Use the example as a starting point, copy it to a clone tab, edit its descriptive fields,
+then place it with the cloner or `/noppes clone spawn`. `scripts.tabs[].sourceLines` holds
+one string per line, including a final empty string for a trailing newline. Script execution
+is controlled by the usual NPC settings. Rig rendering uses `RwAnimCore=1`.
+[Example knight](../examples/readable-clones/knight.json).
+
+The versioned profile restores four omitted defaults, model size 5, empty title and minimum
+and maximum experience 0. `_nbt.absent` preserves fields that were absent from the original
+NBT. `_nbt.raw` preserves typed extra data, including item tags, roles and other mods' fields.
+When editing a field listed in `_nbt.absent`, remove that absence entry as you add the value.
+Conflicting aliases/raw data, unknown versions, invalid types and malformed JSON are rejected.
+Readable documents have a 32 MiB UTF-8 limit and a JSON nesting limit of 512.
+
+Both formats load at 0 and 1. Reading a legacy JSON file leaves its bytes intact. The first
+explicit overwrite of legacy at 1 keeps its original bytes in `<name>.json.v0.bak`, and later
+saves preserve that backup. The original mod requires legacy files. Before rollback, restore
+the backup or set `RwReadableClones=0`, restart and explicitly save the loaded clone in legacy
+format. Merely changing the switch leaves existing readable files in their current format.
+[Measured coverage and limits](meritve/2026-11-16-M16.6-berljivi-kloni.md).
+
 ### Animated NPCs: models with bones (M16, `RwAnimCore=1`)
 
 Set `RwAnimCore=1` on the server **and** every client. Then any NPC can wear a model with bones
@@ -393,6 +423,14 @@ Varied Commodities by Noppes is included under
 
 Not proven, so not claimed:
 
+- **Readable clones (M16.6)** passed 126 checks across four starts of one dev client/dedicated
+  pair with `RwReadableClones=0/1/1/0` and `RwAnimCore=1`. Local/server saves, clone tab placement,
+  commands, exact backup, script execution and restart passed. Unit tests cover 89 legacy clones,
+  Java text, NBT types and invalid input. Packaged/integrated pairs, concurrent writers and an
+  interrupted disk replacement were unmeasured. Only four confirmed defaults are omitted.
+  One conversion took 2.1295 ms to export and 0.9416 ms to import, producing 25,821 bytes against
+  7,987 legacy bytes. Rollback requires a legacy export or backup. The switch stays 0 by default.
+  [Evidence](meritve/2026-11-16-M16.6-berljivi-kloni.md).
 - **Built-in animation core (`RwAnimCore`, M16.5):** one integrated dev-client run per switch value
   with 200 idle `knight` models gave frame p50/p95 6.445/7.017 ms at 0 and 5.307/5.822 ms at 1.
   At 1 the rig counter recorded 2,220,800 draws; at 0 the original renderer branch is used.

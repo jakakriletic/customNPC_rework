@@ -122,7 +122,7 @@ implements ICloneHandler {
             return null;
         }
         try {
-            return NBTJsonUtil.LoadFile(file);
+            return noppes.npcs.rework.data.ReadableCloneFiles.load(file);
         }
         catch (Exception e) {
             LogWriter.error("Error loading: " + file.getAbsolutePath(), e);
@@ -141,10 +141,12 @@ implements ICloneHandler {
             }
             String filename = name + ".json";
             File file = new File(dir, filename);
-            NBTJsonUtil.SaveFile(file, compound);
+            noppes.npcs.rework.data.ReadableCloneFiles.save(file, compound, CustomNpcs.RwReadableClones == 1);
         }
         catch (Exception e) {
             LogWriter.except(e);
+            // An opt-in rejected write must not return a successful clone name to commands/GUI callers.
+            if (CustomNpcs.RwReadableClones == 1) { throw new IllegalStateException("Could not save clone " + name, e); }
         }
     }
 

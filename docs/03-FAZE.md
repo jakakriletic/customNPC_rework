@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5 zaključen (Q462), M16.6a raziskava zaključena (Q463–Q465), naslednji M16.6b (izvedba berljivih klonov); jedra M16 in M15, izvedenega 12.–14. 11., ne podvajamo. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
+**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5 in M16.6 zaključena (Q462, Q471), naslednja raziskava M14.0 (Q472); jedra M16 in M15, izvedenega 12.–14. 11., ne podvajamo. M12 zadnji. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -723,12 +723,14 @@ privzetega vklopa. Lastnik je zahteval vklop. Ozadje: lasten senčilnik mora pon
 razlike zaokroževanja. [Ponovna ocena K10](raziskave/M5-K-K13-K10-ponovna-ocena.md) §3.
 
 **Vhodni pogoj:** nič; pogoj za ponovno odprtje iz D-053 nadomesti odločitev lastnika.
-**Vrstni red:** po M13, pred M6.
+**Vrstni red (Q472):** po M16.6 in obstoječi izvedbi M15, najprej raziskava M14.0 po D-029.
+M12 ostane zadnji.
 
 ### Paketi
 
 | ID | Paket | Vel. |
 |---|---|---|
+| M14.0 | **Naslednji (Q472)** — raziskava trenutnega izrisa, obstoječih K10/K13 meritev in primarnih zunanjih virov, kritika paketov ter sprejemnih meril po D-029, pred izvedbo M14.1 | S |
 | M14.1 | **K10a** — deli modela iz VBO namesto display listov, fiksna pot, **ista slika** (piksel-enakost kot doslej). A/B idle-200/500 na prizorišču M5-K.1, 3 ponovitve; loči »oglišča v gonilniku« od »oglišč sploh«. Če je hitreje, privzeto vklopljeno po D-032 | S–M |
 | M14.2 | **K10** — instanciran izris z lastnim senčilnikom: vsi enaki deli/modeli v enem klicu, poza v senčilniku, ponovljena fiksna pot. Merilo **vizualno enako**: primerjava posnetkov na vseh prizoriščih M5-K in M5-V.7 (prag razlike na kanal in delež pikslov določi paket vnaprej, preden vidi rezultat) + ročni ogled lastnika v klientu; A/B kot M14.1 | L |
 | M14.3 | Združljivost in povratek: OptiFine s senčilniškim paketom → samodejno original (kot `FarCompat`, D-050); nepodprti modeli in sloji (lastni deli, MorePlayerModels, oklep, morf, rdeč blisk, glint) → original za tega NPC-ja; stikalo za izklop | M |
@@ -788,7 +790,7 @@ dotika):
 | M16.5 | **Zaključeno 16. 11. (Q462):** dedicated dva klienta, nova datoteka/reload/pozni vstop iz [M15](meritve/2026-11-14-armies-m15.md); [cena 200 idle rigov](meritve/2026-11-16-M16.5-cena-rig.md) 0/1 in unit/build/package PASS na `dce93d19…`. Pri 0 originalna veja izrisa; brez bitne primerjave slike. Privzeto 0, cena samo podatek (Q92). | S |
 | M16.6 | Zahteva lastnika 12. 11.: predelava shranjenih NPC-jev (clone tab, `/noppes clone`) v datoteko, ki je za AI najbolj intuitivna: berljiva imena ključev namesto CNPC okrajšav, privzete vrednosti izpuščene, sklopi (videz, statistike, AI, inventar, skripte kot vrstice, `RwRig`), kratek opis polj ob datoteki; uvoz in izvoz brez izgub ter združljivost s starimi klonami (stari JSON se še vedno bere) | M |
 | M16.6a | **Zaključeno 16. 11. (Q463–Q465, D-105):** [raziskava/pogodba](raziskave/M16.6a-berljivi-kloni.md), brez spremembe merjenih vhodov. Verzija JSON, zamrznjeni privzetki + odsotnosti, tipna rezerva, točne vrstice skript, clone-only meja in kriteriji. Funkcija še ni izvedena. | S |
-| M16.6b | **Naslednji:** izvedba M16.6 po pogodbi M16.6a, `RwReadableClones=0` privzeto; branje obeh formatov neodvisno od stikala. Unit/build/package ter nov controller harness: lokalni/strežniški clone tab, ukaz, legacy enakost pri 0, tipni roundtrip pri 1, backup, zavrnitve in restart. Cena pretvorbe enkrat kot podatek. | M |
+| M16.6b | **Sprejet 16. 11. (Q471)** — [dokaz](meritve/2026-11-16-M16.6-berljivi-kloni.md), `RwReadableClones=0`, oba formata berljiva pri 0/1. Unit/build/package in `m166-readable-v3` PASS na `72ad0c90…`, 126 preverb, 6 pregledanih PNG; lokalni/strežniški CloneSave, obe postavitvi, ukazi, backup in restart. 16 novih unit testov, korpus 89 klonov. Izvoz/uvoz 2,1295/0,9416 ms enkrat kot podatek. En dev par, meje v zapisu. | M |
 
 Pod stikalom (novo, npr. `RwAnimCore`, privzeto 0); pravila Q407 (brez omejitve poskusov, testi po
 potrebi). M15 nato uporablja M16 namesto notranjosti `customnpcentities`.
