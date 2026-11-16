@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5 in M16.6 zaključena (Q462, Q471), naslednja raziskava M14.0 (Q472); jedra M16 in M15, izvedenega 12.–14. 11., ne podvajamo. M12 zadnji. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
+**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5 in M16.6 zaključena (Q462, Q471), M14.0 raziskava zaključena (Q473–Q475); naslednji M14.1a, nevtralen prenos in baseline. Jeder M16/M15 ne podvajamo. M12 zadnji. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -712,9 +712,9 @@ stotine naloženih NPC-jev hkrati (cena, paketi); GUI se dokončno preveri samo 
 
 ## M14 — Instanciran izris bližnjih NPC-jev (K10a → K10)
 
-**Cilj:** model NPC-ja znotraj dometa impostorjev (56 blokov) ne stane več ~10 µs na NPC, ampak
-blizu cene impostorja (~0,2 µs, M5-V.6). Ocena **[H]**: pri 500 bližnjih NPC-jih p95 ~9,8 →
-~5–6 ms. Pomaga samo gneči modelov blizu (bitke, mesta, tabori).
+**Cilj:** zmanjšati čas izrisa gneče bližnjih modelov brez vidne spremembe. Cena impostorja
+ni ciljna cena enako podrobnega modela; projekcija p95 5–6 ms je po M14.0 umaknjena kot
+nedokazana. [Raziskava M14.0](raziskave/M14.0-izris-bliznjih-npc.md) (D-106, Q473–Q475).
 
 **Odločitev lastnika (26. 10. 2026):** za K10 velja merilo **vizualno enako** namesto piksel-enako
 (izjema od D-032 samo za ta milestone): razlike, ki jih s prostim očesom ne vidiš, ne preprečijo
@@ -730,15 +730,17 @@ M12 ostane zadnji.
 
 | ID | Paket | Vel. |
 |---|---|---|
-| M14.0 | **Naslednji (Q472)** — raziskava trenutnega izrisa, obstoječih K10/K13 meritev in primarnih zunanjih virov, kritika paketov ter sprejemnih meril po D-029, pred izvedbo M14.1 | S |
-| M14.1 | **K10a** — deli modela iz VBO namesto display listov, fiksna pot, **ista slika** (piksel-enakost kot doslej). A/B idle-200/500 na prizorišču M5-K.1, 3 ponovitve; loči »oglišča v gonilniku« od »oglišč sploh«. Če je hitreje, privzeto vklopljeno po D-032 | S–M |
-| M14.2 | **K10** — instanciran izris z lastnim senčilnikom: vsi enaki deli/modeli v enem klicu, poza v senčilniku, ponovljena fiksna pot. Merilo **vizualno enako**: primerjava posnetkov na vseh prizoriščih M5-K in M5-V.7 (prag razlike na kanal in delež pikslov določi paket vnaprej, preden vidi rezultat) + ročni ogled lastnika v klientu; A/B kot M14.1 | L |
-| M14.3 | Združljivost in povratek: OptiFine s senčilniškim paketom → samodejno original (kot `FarCompat`, D-050); nepodprti modeli in sloji (lastni deli, MorePlayerModels, oklep, morf, rdeč blisk, glint) → original za tega NPC-ja; stikalo za izklop | M |
-| M14.4 | Sprejem: original proti vsem privzetim stikalom (kot M5-K.2) z M14 vklopljenim, regresija M5.Z | S |
+| M14.0 | **Zaključeno 16. 11.** — [koda, meritve, primarni viri in merila](raziskave/M14.0-izris-bliznjih-npc.md), Q473–Q475/D-106. Samo dokumentacija | S |
+| M14.1a | **Naslednji** — nevtralen prenos `ModelScaleRenderer` v ločen commit po protokolu; nov PS harness za deterministični A/A2 baseline, dejansko geometrijo in stanje. Controller unit/build/package + funkcionalni baseline, brez cenovne serije | S |
+| M14.1b | **K10a** — VBO samo za dovoljene običajne dele namesto display listov, fiksna pot, bitno ista RGBA/depth in obnovljeno GL stanje. `RwModelVbo=0` do sprejema; capability/fallback/reload takoj. Cena enkrat kot podatek, 3+3 šele pred vklopom. Brez koristi nad šumom odstrani kandidat in nadaljuj K10 | S–M |
+| M14.2 | **K10** — samostojen instanced backend, `RwNpcInstancing=0` do sprejema; obstoječa CPU poza → matrike delov → GPU. Najprej običajni opaki človeški modeli, združeni po mreži/teksturi/stanju; M16 rig in posebni primeri na obstoječi poti. Vizualna merila zamrznjena v raziskavi §5, ročni ogled lastnika ostane; brez slepega preklica celotnega `RenderLivingEvent.Pre` | L |
+| M14.3 | Združljivost in povratek **od prvega kandidata**, tu živa matrika: OptiFine/shader, nepodprti modeli/plasti, M16, GUI/peka, L2 prehod, reload/svet in napaka programa; originalni izris, dogodki, ime in GL stanje ohranjeni. K13 ni samostojen paket | M |
+| M14.4 | Končni privzeti vklop po dokazu: A/B na isti trenutni kodi in drugih sprejetih privzetkih, 3+3 idle/dalec-200/500, potrebna regresija M5.Z po Q90; stari p95 9,817 ms je kontekst | S |
 
-**Izhodni kriterij:** p95 pri idle-500 izmerljivo nižji od M5-K.2 (9,817 ms) z ločenima razponoma;
-lastnik razlike v klientu ne vidi; s senčilniškim paketom in pri nepodprtih modelih slika enaka
-originalu; stikalo vrne original.
+**Izhodni kriterij:** p95 idle-500 izmerljivo nižji pri vklopu kot pri izklopu M14 na isti kodi,
+z ločenima razponoma treh ponovitev, drugje brez >10 % regresije p95. Merila slike iz raziskave §5
+in ogled lastnika potrdita vizualno enakost; s senčilniškim paketom in pri nepodprtih modelih
+obstoječi izris; stikalo vrne original. Brez teh dokazov M14.4/vklop ni sprejet.
 
 **Tveganja:** obseg ponovitve fiksne poti; raznolikost CNPC modelov; gonilniki (Intel/AMD/NVIDIA);
 če K10a ne pokaže koristi, je dobitek M14.2 še vedno samo ocena.

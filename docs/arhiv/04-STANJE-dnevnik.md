@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 234 → 1)
+# Arhiv: dnevnik sej (vnosi 235 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-16 (235) — M16.6a: raziskava berljivih klonov
+
+**Paket:** M16.6a (Q463–Q465, D-105) · **Stanje:** raziskava zaključena, M16.6b še ni izveden.
+Pregledana skupna lokalna/strežniška clone meja, privzetki, NBT tipi, skripte in rig; primarni viri JSON/JSON Schema.
+Izbrano: ločen diskovni kodek in `RwReadableClones=0`, zamrznjeni privzetki z odsotnostmi, tipna rezerva, točne vrstice ter backup pred izrecnim prepisom legacy.
+Samo dokumentacija; produkcija in vsi merilni/testni vhodi ostajajo na `dce93d19…`, testov/meritev nismo izvajali ali zahtevali (Q90).
+Naslednje M16.6b: implementacija, nov PowerShell harness in controller unit/build/package + lokalni/strežniški clone/ukaz/restart dokaz. M10.3 blokiran Q1.
+[Raziskava in merila](../raziskave/M16.6a-berljivi-kloni.md).
 
 ### 2026-11-16 (234) — M16.5: cena 200 animiranih NPC-jev (sprejet)
 

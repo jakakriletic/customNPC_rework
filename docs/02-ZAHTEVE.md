@@ -578,6 +578,18 @@ Raziskava: [`raziskave/M5-V.0-daljna-vidnost.md`](raziskave/M5-V.0-daljna-vidnos
 **Kaj je treba še preveriti:** cena variante A proti B (M5-V.1), OptiFine/senčilniki (M5-V.7), vanilla cena
 `view-distance` 24 proti 10 na dediciranem strežniku (M5-V.1), preverba vidnosti `RwFarLos` (Q26 → D-035: privzeto 0, operater lahko vklopi).
 
+### Izris bližnjih modelov (M14, raziskava 16. 11. 2026)
+
+[M14.0](raziskave/M14.0-izris-bliznjih-npc.md) (D-106, Q473–Q475): najprej nevtralen
+prenos/baseline `ModelScaleRenderer`, nato VBO s fiksno potjo in bitno isto RGBA/depth,
+šele nato ločen instanced backend z vizualno enakostjo po odločitvi lastnika 26. 10.
+Kandidata `RwModelVbo`/`RwNpcInstancing` sta načrtovana, še ne obstajata in do sprejema ostaneta 0.
+CPU animacije, ticki, NBT in omrežje ostanejo enaki; M16 rig in nepodprti modeli/plasti
+ohranijo obstoječi izris. Guard in obnova GL stanja sta del prvega kandidata.
+Vklop zahteva dokaz slike, združljivosti in izboljšanja p95 nad šumom na isti trenutni kodi;
+oktobrski p95 9,817 ms in cena impostorja nista absolutna cilja. Pragovi in dokazna matrika
+so v raziskavi §5; ročni ogled lastnika ostane del končnega sprejema. K13 samostojno ni odprt.
+
 ### Izrecno prepovedano brez ločenega projekta
 
 Večnitni AI, deljen script engine med NPC-ji, globalno redkejši NPC tick, uspavanje

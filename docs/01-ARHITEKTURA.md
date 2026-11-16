@@ -1115,3 +1115,14 @@ skripte/klipi ohranijo vrstni red in konce vrstic. Prvi izrecni prepis legacy oh
 bajte (D-004), novi zapis preveri `SafeFileWriter`. Nobene migracije ob branju.
 [Raziskava in sprejemna merila](raziskave/M16.6a-berljivi-kloni.md),
 [M16.6b sprejet 16. 11. (Q471)](meritve/2026-11-16-M16.6-berljivi-kloni.md).
+
+### D-106 — M14: omejen VBO pred instanciranjem (2026-11-16, Q473–Q475)
+
+K10a zamenja oddajo dovoljenih `ModelScaleRenderer` delov, ne globalnega vanilla rendererja;
+nevtralen prenos in deterministični baseline sta ločen prvi paket M14.1a.
+Kandidata `RwModelVbo`/`RwNpcInstancing` do sprejema 0; guard, fallback in GPU lifecycle od začetka.
+Instancing uporabi obstoječo CPU pozo, grupira po mreži/teksturi/stanju; K13 ni samostojen paket.
+M16 in nepodprti primeri ostanejo na obstoječi poti, pogodba dogodkov/plasti se ohrani.
+Izboljšanje se dokaže s trenutnim A/B, ne s starimi 9,817 ms ali ceno impostorja.
+Pragovi slike zamrznjeni pred rezultati; ročni ogled lastnika in dokaz združljivosti ostaneta za vklop.
+[Raziskava, kritika paketov in merila](raziskave/M14.0-izris-bliznjih-npc.md).

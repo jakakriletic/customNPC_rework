@@ -131,6 +131,8 @@ rebuilda. `customnpcentities` ni več pogoj; obstoječi API `Animators`/hooki os
 
 **16. 11. (Q471–Q472):** M16.5 in [M16.6b berljivi kloni](meritve/2026-11-16-M16.6-berljivi-kloni.md) sprejeti pod privzeto izklopljenimi stikali. Sledi raziskava M14.0, ker je M15 že izveden na M16 (12.–14. 11.), M12 ostane zadnji. Raziskava najprej preveri trenutno kodo in prejšnje K10 meritve po D-029.
 
+**M14.0 zaključeno (Q473–Q475/D-106):** [raziskava](raziskave/M14.0-izris-bliznjih-npc.md); naslednji M14.1a (nevtralen prenos in baseline), nato omejen VBO in instancing z varnim povratkom od prvega kandidata. Končni vklop po sliki, združljivosti in trenutnem A/B; M12 ostaja zadnji.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela
