@@ -150,7 +150,7 @@ public final class RigCreatureAssets {
                     }
                     String clone = Files.exists(dir.resolve("clone.json"))
                             ? new String(read(dir, "clone.json", MAX_JSON), StandardCharsets.UTF_8) : "";
-                    if (!clone.isEmpty()) { NBTJsonUtil.Convert(clone); }
+                    if (!clone.isEmpty()) { noppes.npcs.rework.data.ReadableCloneFiles.parse(clone); }
                     byte[] baseBytes = base.getBytes(StandardCharsets.UTF_8);
                     int size = animations.length + baseBytes.length + 2 * (8 + id.length());
                     if (custom) { size += geo.length + png.length + 2 * (8 + id.length()); }

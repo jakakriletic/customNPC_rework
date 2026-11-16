@@ -66,7 +66,7 @@ public final class CommandRwCreature extends CommandBase {
         EntityCustomNpc npc = new EntityCustomNpc(world);
         try {
             if (!pack.clone.isEmpty()) {
-                NBTTagCompound clone = NBTJsonUtil.Convert(pack.clone);
+                NBTTagCompound clone = noppes.npcs.rework.data.ReadableCloneFiles.parse(pack.clone);
                 ServerCloneController.Instance.cleanTags(clone);
                 npc.readFromNBT(clone);
                 npc.rwRig = new RigData();

@@ -363,7 +363,7 @@ Use a lowercase directory ID with letters, digits or underscores.
 | `creature.json` | For a variant, for example `{"base":"troll","name":"Epic Troll"}`. For an original model, omit `base` and use a new directory ID. Supports the `name`, `scale`, skin and idle/walk/hurt/death settings of a rig package. |
 | `animations.json` | Bedrock clips under `animations`, including timed events. Reuse a built-in clip name to override it or give the new attack its own name for a script or `/rwrig play`. |
 | `model.geo.json`, `texture.png` | Required for an original model. Use the rig renderer's per-face UV format and a PNG up to 1024×1024. |
-| `clone.json` | Optional CustomNPCs server clone as a starting point for stats, AI, inventory and other NPC settings. |
+| `clone.json` | Optional CustomNPCs server clone as a starting point for stats, AI, inventory and other NPC settings. Legacy or readable format (M16.7b), so a pack can hold readable settings beside `script.js` and `animations.json`. |
 | `script.js` | Optional server-side script. Use the existing `Animators` API to pick attacks. A script supplied with a pack replaces the clone's script tabs on spawn. |
 
 The server loads packs at startup. In a running world use **`/rwcreature deploy epic_troll [x y z]`**

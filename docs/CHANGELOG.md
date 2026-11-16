@@ -2,6 +2,8 @@
 
 ## v2 development
 
+- M16.7b: `clone.json` in a creature folder accepts the readable clone format as well as legacy.
+  Unit tested; not yet run in game.
 - Readable clone JSON is now the default (`RwReadableClones=1`, Q484). Existing configs keep
   their written value; set 0 to write legacy files for the original mod.
 - M14.1a prepares nearby-model rendering with a neutral `ModelScaleRenderer` source transfer,

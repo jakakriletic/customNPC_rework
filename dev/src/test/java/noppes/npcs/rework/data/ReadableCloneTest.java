@@ -170,6 +170,14 @@ public class ReadableCloneTest {
     @Test public void deterministicGeneratedStructuresKeepTypesAndPresence() {
         for (int seed = 0; seed < 200; seed++) { round(random(new Random(seed),0)); }
     }
+    @Test public void parseReadsBothFormatsForCreaturePacks() throws Exception {
+        NBTTagCompound n = new NBTTagCompound();
+        n.setString("Name", "Pack troll"); n.setInteger("Size", 7); n.setLong("Big", Long.MAX_VALUE);
+        assertTrue(ReadableClone.same(n, ReadableCloneFiles.parse(ReadableClone.encode(n))));
+        assertTrue(ReadableClone.same(n, ReadableCloneFiles.parse(NBTJsonUtil.Convert(n))));
+        try { ReadableCloneFiles.parse("{\"$format\":\"customnpcs-readable-clone\",\"version\":99}"); fail("unknown version must not fall back to legacy"); }
+        catch (IllegalArgumentException expected) { }
+    }
     private static NBTTagCompound random(Random r,int depth) {
         NBTTagCompound n = new NBTTagCompound();
         for (int i = 0; i < 6; i++) {

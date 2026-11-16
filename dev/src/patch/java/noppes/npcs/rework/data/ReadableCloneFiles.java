@@ -36,6 +36,12 @@ public final class ReadableCloneFiles {
         }
         return false;
     }
+    /** M16.7b: clone text from another container (creature pack): readable or legacy, chosen by the root marker. */
+    public static NBTTagCompound parse(String text) throws NBTJsonUtil.JsonException {
+        if (!hasEnvelope(text)) { return NBTJsonUtil.Convert(text); }
+        if (text.length() > ReadableClone.MAX_BYTES) { throw new IllegalArgumentException("Readable clone exceeds 32 MiB"); }
+        return ReadableClone.decode(text);
+    }
     public static NBTTagCompound load(File file) throws IOException {
         byte[] bytes = Files.readAllBytes(file.toPath());
         String text = new String(bytes, StandardCharsets.UTF_8);
