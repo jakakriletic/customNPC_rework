@@ -12,6 +12,8 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**16. 11. — Odstranjena skupina Linked NPC se ne vrne (Q459).** Pri `RwLinkedGroups=1` `removeData` izbriše datoteko skupine in `.json_prev`; `q459-remove-v1` PASS. Naslednje: M16 (Q444). [Zapis](meritve/2026-11-16-Q459-linked-remove.md).
+
 **16. 11. — `ArmyApi.members` brez umirajočih (Q458).** Filter `isEntityAlive()` namesto `!isDead`; `q458-edges-v1` PASS. Naslednje: Linked `removeData` (Q393), nato M16 (Q444). [Zapis](meritve/2026-11-16-Q458-armyapi-members.md).
 
 **16. 11. — Q84 zid odpravljen (Q457).** Pri `RwFlyLineOfSight=1` + `RwPathResume=1` proga zid 6/6 v vseh fazah (komolec po `WAIT`); stikali ostaneta 0. Naslednje: `ArmyApi.members` (Q454). [Zapis](meritve/2026-11-16-Q84-zid-komolec.md).
@@ -83,7 +85,14 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 230 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 231 → 1, novejši zgoraj).*
+
+### 2026-11-16 (233) — Q459: odstranjena skupina Linked NPC se ne vrne (sprejet)
+
+**Paket:** omejitev §6 po Q407/Q454 točka 2 (Q393, Q459) · **Stanje:** sprejet pod `RwLinkedGroups` (privzeto 0).
+Pri 1 `removeData` izbriše `<skupina>.json` in `.json_prev`; pri 0 original (datoteka ostane, skupina se po restartu vrne).
+Na `d5ffbe14…` PASS unit (+4 `LinkedRemoveTest`), build, package in `q459-remove-v1` (4 zagoni 0/0/1/1, 47 + 17 provera): Q393 reproduciran pri 0, popravljen pri 1.
+Meje: samo strežnik, odstranitev iz skripte, en zagon. Naslednje: M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](meritve/2026-11-16-Q459-linked-remove.md).
 
 ### 2026-11-16 (232) — Q458: `ArmyApi.members` brez umirajočih članov (sprejet)
 
@@ -91,13 +100,3 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 `ArmyCommandService.members` filtrira z `isEntityAlive()` namesto `!isDead` (vanilla postavi `isDead` šele po 20 tickih smrti; NPC na respawnu ves čas).
 Na `88b5c53b…` PASS unit/build/package in `q458-edges-v1` (M11.9 robovi + nova provera `loss-members-exclude-dying`: `listed=0 members=6`).
 Meje: en zagon, respawn samo iz kode. Naslednje: Linked `removeData` (Q393), nato M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](meritve/2026-11-16-Q458-armyapi-members.md).
-
-### 2026-11-16 (231) — Q84: zid 6/6 pri vidni črti + nadaljevanju (sprejet)
-
-**Paket:** omejitev §6 po Q407/Q454 (Q455–Q457) · **Stanje:** sprejet pod `RwFlyLineOfSight` (privzeto 0).
-Sled Z (`q455-zid-sled-v1`): NPC pred robom zida miruje (`WAIT` originalnega `FlyingMoveHelper`), vanilla `checkForStuck` izbriše pot.
-Popravek: pri 1 NPC po `WAIT` z zaprto ravno črto leti prek komolca (`FlightFollow.elbow`, števec `vidKomolcev`).
-Na `e72ac98c…` PASS unit/build/package, `q455-letenje-orig-v1` (180/180 = P3 orig), `q455-letenje-vid-v1` (= M4.17 vid),
-`q455-letenje-vidnad-v1`: Z **6/6 v A, B, C** (prej 5/6 v A/C), ostale proge enake P3. Naslednje (Q454): `ArmyApi.members` umirajoči član,
-nato Linked `removeData` (Q393), nato M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](meritve/2026-11-16-Q84-zid-komolec.md).
-

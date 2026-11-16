@@ -346,12 +346,30 @@ public class LinkedNpcController {
     }
 
     public void removeData(String name) {
+        this.removeData(name, CustomNpcs.RwLinkedGroups == 1);
+    }
+
+    /** Q459: deleteFiles=false is the original, which leaves the group file on disk. */
+    public void removeData(String name, boolean deleteFiles) {
         Iterator<LinkedData> ita = this.list.iterator();
         while (ita.hasNext()) {
-            if (!ita.next().name.equalsIgnoreCase(name)) continue;
+            LinkedData data = ita.next();
+            if (!data.name.equalsIgnoreCase(name)) continue;
             ita.remove();
+            if (deleteFiles) {
+                this.deleteFiles(data);
+            }
         }
         this.save();
+    }
+
+    /** Q459: the original kept the group file, so a removed group came back after a restart (Q393). */
+    private void deleteFiles(LinkedData data) {
+        for (File file : new File[]{new File(this.getDir(), data.name + ".json"), this.previousFile(data)}) {
+            if (file.isFile() && !file.delete()) {
+                LogWriter.error("Could not delete " + file.getAbsolutePath());
+            }
+        }
     }
 
     public void addData(String name) {

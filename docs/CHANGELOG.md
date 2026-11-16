@@ -2,6 +2,8 @@
 
 ## v2 development
 
+- With `RwLinkedGroups=1`, removing a Linked NPC group deletes `<group>.json` and `<group>.json_prev`, so the
+  group no longer comes back after a restart (Q393, Q459).
 - `ArmyApi.members` and army orders no longer include a member in its death ticks or waiting to
   respawn (Q458).
 - With `RwFlyLineOfSight=1` and `RwPathResume=1`, flying NPCs no longer stall at the edge of a wall:

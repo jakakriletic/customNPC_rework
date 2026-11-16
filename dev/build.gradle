@@ -423,6 +423,8 @@ task testOriginal(type: Test) {
     exclude '**/LinkedClonerTest.class'
     // M10.4: the CombatTracker entry cap is new.
     exclude '**/CombatEntryCapTest.class'
+    // Q459: removeData(name, deleteFiles) and the switch text are new.
+    exclude '**/LinkedRemoveTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

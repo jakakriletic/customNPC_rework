@@ -566,8 +566,9 @@ Not proven, so not claimed:
   The M13 exit rests on separate scenarios: unloaded members, categories, undo and own fields were tested with a few members,
   not with 100. Packaged/integrated pairs and physical Shift/Ctrl were not tested; MSPT and packets were not measured.
   Saving one group rewrites the files of all groups (original behaviour).
-- **Original bug, not fixed:** removing a Linked NPC group does not delete its file, so the group comes back after a
-  restart (from the code, not run).
+- Removing a Linked NPC group at `RwLinkedGroups=0` keeps its file, so the group comes back after a restart (original
+  bug, reproduced). At 1 the group file and its undo copy are deleted and the group stays gone after a restart (Q459;
+  server side only, removal called from a script, one dev dedicated server).
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 230 → 1)
+# Arhiv: dnevnik sej (vnosi 231 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,15 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-16 (231) — Q84: zid 6/6 pri vidni črti + nadaljevanju (sprejet)
+
+**Paket:** omejitev §6 po Q407/Q454 (Q455–Q457) · **Stanje:** sprejet pod `RwFlyLineOfSight` (privzeto 0).
+Sled Z (`q455-zid-sled-v1`): NPC pred robom zida miruje (`WAIT` originalnega `FlyingMoveHelper`), vanilla `checkForStuck` izbriše pot.
+Popravek: pri 1 NPC po `WAIT` z zaprto ravno črto leti prek komolca (`FlightFollow.elbow`, števec `vidKomolcev`).
+Na `e72ac98c…` PASS unit/build/package, `q455-letenje-orig-v1` (180/180 = P3 orig), `q455-letenje-vid-v1` (= M4.17 vid),
+`q455-letenje-vidnad-v1`: Z **6/6 v A, B, C** (prej 5/6 v A/C), ostale proge enake P3. Naslednje (Q454): `ArmyApi.members` umirajoči član,
+nato Linked `removeData` (Q393), nato M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](../meritve/2026-11-16-Q84-zid-komolec.md).
 
 ### 2026-11-11 (230) — M11.11: pohod `freeforall` brez čakanja (sprejet)
 
