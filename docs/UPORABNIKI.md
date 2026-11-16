@@ -84,7 +84,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwNavBackend` | 0 | permits NPCs with per-NPC `RwNavBackend=1` to use Baritone (needs the `npcbaritone` library) |
 | `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`); >=1 also enables `blendTo` and `/npcanim` (set on server and clients) |
 | `RwAnimCore` | 0 | built-in animation core: NPCs with `RwRig` drawn as models with bones, clips, data attacks, `/rwrig` (server and clients; see "Animated NPCs") |
-| `RwReadableClones` | 0 | writes readable clone JSON at 1, legacy at 0, on the side storing the clone. Both formats can be read at either value. Independent of `RwAnimCore` |
+| `RwReadableClones` | 1 | writes readable clone JSON at 1, legacy at 0, on the side storing the clone. Both formats can be read at either value. Independent of `RwAnimCore` |
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
 | `RwArmies` | 0 | armies: `/rwarmy`, `ArmyApi` and the channel `rwarmy`, register and move orders saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs); also `RwArmyClusterRadius` (48, 1–512), `RwArmyClusterMin` (8, 1–1024), `RwArmyCompany` (8, 1–24; only 8 tested in-world), `RwArmyMaxMarches` (2, 0–16: armies with an active move that hold travelling chunk tickets; 0 = no tickets) |
 | `RwLinkedOwnFields` | 0 | Linked NPCs: each member keeps its own home, orientation, moving path and place on that path when group data is applied; 0 = original (see §6). Does not repair values already overwritten |
@@ -261,8 +261,9 @@ It spawns a rider with an iron sword on a saddled horse.
 
 ### Readable clone files (M16.6)
 
-Set `RwReadableClones=1` in the config of the client for local clones, or the server for
-server clones. Restart that process. Saving through the cloner or `/noppes clone add`
+Readable clones are on by default (`RwReadableClones=1`, Q484). A config written by an older
+build keeps its `RwReadableClones=0`: set 1 in the client config for local clones or the
+server config for server clones and restart that process. Saving through the cloner or `/noppes clone add`
 writes UTF-8 JSON with descriptive sections for appearance, stats, AI, inventory, scripts
 and rig settings. Files keep the `.json` extension in the existing clone tab directory.
 The first readable save creates `CLONE-FORMAT.md` beside them with the field catalogue,

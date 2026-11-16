@@ -2,6 +2,8 @@
 
 ## v2 development
 
+- Readable clone JSON is now the default (`RwReadableClones=1`, Q484). Existing configs keep
+  their written value; set 0 to write legacy files for the original mod.
 - M14.1a prepares nearby-model rendering with a neutral `ModelScaleRenderer` source transfer,
   four characterization tests and 93 identical GPU part comparisons on one dev client.
   [Coverage and limits](meritve/2026-11-16-M14.1a-baseline.md).

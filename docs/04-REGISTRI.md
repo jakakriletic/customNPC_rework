@@ -24,7 +24,7 @@ Prenos zgoraj je del obstoječe build osnove D-001. `NbtJson` je napisan na novo
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
-| 2026-11-16 | Berljivi clone JSON z opisnimi sklopi, štirimi zamrznjenimi privzetki, točnimi skriptnimi vrsticami in tipnimi dodatki. Branje obeh formatov pri 0/1, prvi izrecni legacy prepis shrani `.json.v0.bak`, opis ob datoteki | M16.6, D-105, Q471 | `RwReadableClones`, stran shranjevanja | **0** (legacy zapis) |
+| 2026-11-16 | Berljivi clone JSON z opisnimi sklopi, štirimi zamrznjenimi privzetki, točnimi skriptnimi vrsticami in tipnimi dodatki. Branje obeh formatov pri 0/1, prvi izrecni legacy prepis shrani `.json.v0.bak`, opis ob datoteki | M16.6, D-105, Q471 | `RwReadableClones`, stran shranjevanja | **1** od Q484 (prej 0) |
 | 2026-11-16 | Odstranitev skupine Linked NPC izbriše `<skupina>.json` in `<skupina>.json_prev`; skupina se po restartu ne vrne | Q393, Q459 | `RwLinkedGroups`, strežnik | **0** (original: datoteka ostane, skupina se po restartu vrne) |
 | 2026-11-16 | Strežnik takoj po vpisu udarca (`damageEntity`) NPC-ju pusti samo zadnjih N vnosov `CombatTracker`; starejši udarci ne štejejo za najboljšega napadalca in smrtno sporočilo | M10.4/P1, Q449–Q452 | `RwCombatEntryCap`, strežnik | **0** (original: vnosi do reseta 100–300 tickov po zadnjem udarcu) |
 | 2026-11-04 | Dedicated strežnik registrira `customnpcs:army_staff` samo pri `RwArmies>=1` (klient vedno), shranjeni vnos se pri 0 prezre; originalni klient se lahko poveže pri 0, pri 1 ne; palice se pri 1→0 na dedicated izgubijo | P2, D-101, Q435 | `RwArmies` | **0** (predmeta na dedicated strežniku ni) |
