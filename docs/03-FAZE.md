@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5 zaključen (Q462), naslednji M16.6 (berljivi kloni); jedra M16 in M15, izvedenega 12.–14. 11., ne podvajamo. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
+**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5 zaključen (Q462), M16.6a raziskava zaključena (Q463–Q465), naslednji M16.6b (izvedba berljivih klonov); jedra M16 in M15, izvedenega 12.–14. 11., ne podvajamo. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -787,6 +787,8 @@ dotika):
 | M16.4 | Privzeta knjižnica klipov za biped NPC (napad z mečem, blok, strel, met, pitje, pozdrav, smrt, idle variante), izbira v GUI-ju NPC-ja in vezava na dogodke (napad, zadetek, smrt, idle); navodila v `UPORABNIKI.md` »kako AI naredi novo animacijo v 5 minutah« | M |
 | M16.5 | **Zaključeno 16. 11. (Q462):** dedicated dva klienta, nova datoteka/reload/pozni vstop iz [M15](meritve/2026-11-14-armies-m15.md); [cena 200 idle rigov](meritve/2026-11-16-M16.5-cena-rig.md) 0/1 in unit/build/package PASS na `dce93d19…`. Pri 0 originalna veja izrisa; brez bitne primerjave slike. Privzeto 0, cena samo podatek (Q92). | S |
 | M16.6 | Zahteva lastnika 12. 11.: predelava shranjenih NPC-jev (clone tab, `/noppes clone`) v datoteko, ki je za AI najbolj intuitivna: berljiva imena ključev namesto CNPC okrajšav, privzete vrednosti izpuščene, sklopi (videz, statistike, AI, inventar, skripte kot vrstice, `RwRig`), kratek opis polj ob datoteki; uvoz in izvoz brez izgub ter združljivost s starimi klonami (stari JSON se še vedno bere) | M |
+| M16.6a | **Zaključeno 16. 11. (Q463–Q465, D-105):** [raziskava/pogodba](raziskave/M16.6a-berljivi-kloni.md), brez spremembe merjenih vhodov. Verzija JSON, zamrznjeni privzetki + odsotnosti, tipna rezerva, točne vrstice skript, clone-only meja in kriteriji. Funkcija še ni izvedena. | S |
+| M16.6b | **Naslednji:** izvedba M16.6 po pogodbi M16.6a, `RwReadableClones=0` privzeto; branje obeh formatov neodvisno od stikala. Unit/build/package ter nov controller harness: lokalni/strežniški clone tab, ukaz, legacy enakost pri 0, tipni roundtrip pri 1, backup, zavrnitve in restart. Cena pretvorbe enkrat kot podatek. | M |
 
 Pod stikalom (novo, npr. `RwAnimCore`, privzeto 0); pravila Q407 (brez omejitve poskusov, testi po
 potrebi). M15 nato uporablja M16 namesto notranjosti `customnpcentities`.

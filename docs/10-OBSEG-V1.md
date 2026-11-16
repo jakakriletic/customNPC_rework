@@ -129,6 +129,8 @@ prevajalnik poz/YAML → JSON), tako da je nova animacija za AI samo podatkovna 
 rebuilda. `customnpcentities` ni več pogoj; obstoječi API `Animators`/hooki ostanejo združljivi. M15
 (bitja iz mape) gradi na M16.
 
+**16. 11. (Q463–Q465):** M16.5 sprejet; [M16.6a raziskava berljivih klonov](raziskave/M16.6a-berljivi-kloni.md) zaključena, naslednji M16.6b (izvedba in controller dokaz), brez spremembe cilja ali vrstnega reda Q444.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela

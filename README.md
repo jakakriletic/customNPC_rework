@@ -14,8 +14,8 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-11-16 |
-| Trenutna faza | **v2: M16.5 zaključen (Q462)**, cena 200 idle rigov izmerjena; jedro in dvoklientski scenariji že izvedeni 12.–14. 11. Omejitve §6 po Q454 odpravljene (Q457–Q459). M10.3 ostaja blokiran Q1. |
-| Naslednji korak | **M16.6: berljivi kloni**, uvoz/izvoz brez izgub, stari JSON ostane berljiv. [M16.5 dokazila](docs/meritve/2026-11-16-M16.5-cena-rig.md): vseh pet controller testov PASS na `dce93d19…`, p95 0/1 = 7,017/5,822 ms (različna izrisa); `RwAnimCore` ostane 0. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, cena pri privzeto 0 samo podatek, kratki zapisi; Q407: brez meje poskusov ali testnega proračuna, timeout ≤14400 s. Nato nadaljevanje po [planu](docs/03-FAZE.md); M12 na koncu. |
+| Trenutna faza | **v2: M16.6a raziskava zaključena (Q463–Q465)**: [pogodba berljivih klonov](docs/raziskave/M16.6a-berljivi-kloni.md); format še ni implementiran. M16.5 ostaja sprejet (Q462), M10.3 blokiran Q1. |
+| Naslednji korak | **M16.6b: implementacija in controller dokaz** uvoza/izvoza brez izgub za lokalni clone tab in `/noppes clone`. Ločeno stikalo `RwReadableClones` (načrt, privzeto 0), zamrznjeni privzetki z ohranitvijo odsotnosti, tipno ohranjeni dodatki; stari JSON se še bere. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, cena pri privzeto 0 samo podatek, kratki zapisi; Q407: brez meje poskusov ali testnega proračuna, timeout ≤14400 s. `RwAnimCore` ostane 0, M12 na koncu. |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
 | Prevedljivih razredov | 342 datotek `.java` v `src/patch` (261 rework), 122 testnih datotek; zadnji JUnit rezultat 859 testov. Package PASS: 1716 originalnih vnosov, 89 pričakovanih sprememb. |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |

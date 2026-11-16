@@ -389,6 +389,13 @@ registry model. Za vsako funkcijo:
 
 ## R4 — AI-prijazno okolje za NPC animacije
 
+**M16.6 (zahteva lastnika 12. 11.; Q463–Q465):** tudi celoten shranjeni NPC dobi berljiv
+diskovni format, z opisnimi sklopi, izpuščenimi potrjenimi privzetki, skriptami po vrsticah
+in `RwRig`. [M16.6a pogodba](raziskave/M16.6a-berljivi-kloni.md) je raziskana; M16.6b še ni
+implementiran. Sprejem zahteva ohranitev NBT tipov, odsotnosti, neznanih dodatkov in točnih
+skript ter delovanje lokalnega/strežniškega clone taba in `/noppes clone` z restartom.
+Načrtovano ločeno stikalo `RwReadableClones=0`; stari JSON ostane berljiv, omrežni NBT se ne spreminja.
+
 > *"Rad bi naredil svoje okolje namenjeno da je maksimalno razumljivo AI-ju za izdelavo NPC
 > animacij in integracijo teh v skripte, da bi mi AI delal animacije."*
 

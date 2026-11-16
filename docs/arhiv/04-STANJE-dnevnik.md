@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 232 → 1)
+# Arhiv: dnevnik sej (vnosi 233 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,13 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-16 (233) — Q459: odstranjena skupina Linked NPC se ne vrne (sprejet)
+
+**Paket:** omejitev §6 po Q407/Q454 točka 2 (Q393, Q459) · **Stanje:** sprejet pod `RwLinkedGroups` (privzeto 0).
+Pri 1 `removeData` izbriše `<skupina>.json` in `.json_prev`; pri 0 original (datoteka ostane, skupina se po restartu vrne).
+Na `d5ffbe14…` PASS unit (+4 `LinkedRemoveTest`), build, package in `q459-remove-v1` (4 zagoni 0/0/1/1, 47 + 17 provera): Q393 reproduciran pri 0, popravljen pri 1.
+Meje: samo strežnik, odstranitev iz skripte, en zagon. Naslednje: M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](../meritve/2026-11-16-Q459-linked-remove.md).
 
 ### 2026-11-16 (232) — Q458: `ArmyApi.members` brez umirajočih članov (sprejet)
 

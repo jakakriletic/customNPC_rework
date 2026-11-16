@@ -1104,3 +1104,13 @@ vanilla za isti cilj vrne tudi staro delno pot brez iskanja; dormant chunk lahko
 Nov neuspeh ostane BLOCKED, brez retry ali širjenja meril. Vseh devet controller testov na
 `299d947a…` PASS, oba ticket resume ARRIVED; sprejet Q418. Celoten izhod M11 še ni dokazan.
 [Zapis](meritve/2026-11-03-M11.5-dolg-pohod.md).
+
+### D-105 — M16.6: berljivi klon samo na diskovni meji (2026-11-16, Q463–Q465)
+
+Načrt izvedbe: `ServerCloneController` uporablja ločen verzioniran JSON kodek;
+`NBTJsonUtil`, javni podpisi in omrežni NBT ostanejo nespremenjeni. `RwReadableClones`
+(novo, privzeto 0) izbira samo pisanje; branje obeh formatov deluje tudi pri 0.
+Zamrznjen katalog tipov/privzetkov, oznake odsotnosti in tipna raw rezerva preprečijo izgube;
+skripte/klipi ohranijo vrstni red in konce vrstic. Prvi izrecni prepis legacy ohrani izvirne
+bajte (D-004), novi zapis preveri `SafeFileWriter`. Nobene migracije ob branju.
+[Raziskava in sprejemna merila](raziskave/M16.6a-berljivi-kloni.md); M16.6b še ni izveden.
