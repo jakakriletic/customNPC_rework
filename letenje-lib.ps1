@@ -40,8 +40,14 @@ function Get-LetMinifiedScript([string]$JsPath) {
 # M4.10 (Q78): -TrajanjeFaze (server ticki, veckratnik 20) zamenja v minificirani skripti
 # PHASE_LEN, zacetke faz B in C ter SUM_AT (razmik 4 skriptne ticke ostane). Pri 600 se
 # skripta ne spremeni (merilni pogoj M4.16).
-function Install-LetController([string]$CloneJson, [string]$JsPath, [string]$Destination, [int]$TrajanjeFaze = 600) {
+function Install-LetController([string]$CloneJson, [string]$JsPath, [string]$Destination, [int]$TrajanjeFaze = 600, [int]$SledZ = 0) {
     $mini = Get-LetMinifiedScript $JsPath
+    # Q455: -SledZ 1 vklopi sled proge Z v fazi A (vrstice LET-T); pri 0 ostane skripta enaka.
+    if ($SledZ -eq 1) {
+        $n = [regex]::Matches($mini, [regex]::Escape('var SLED = false;')).Count
+        if ($n -ne 1) { throw ("Skripta krmilnika: 'var SLED = false;' se pojavi {0}-krat, pricakovano 1." -f $n) }
+        $mini = $mini.Replace('var SLED = false;', 'var SLED = true;')
+    }
     if ($TrajanjeFaze -ne 600) {
         if ($TrajanjeFaze % 20 -ne 0) { throw 'TrajanjeFaze mora biti veckratnik 20 server tickov.' }
         $len = [int]($TrajanjeFaze / 10)

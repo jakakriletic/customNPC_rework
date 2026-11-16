@@ -12,6 +12,8 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**16. 11. — Q84 zid odpravljen (Q457).** Pri `RwFlyLineOfSight=1` + `RwPathResume=1` proga zid 6/6 v vseh fazah (komolec po `WAIT`); stikali ostaneta 0. Naslednje: `ArmyApi.members` (Q454). [Zapis](meritve/2026-11-16-Q84-zid-komolec.md).
+
 **16. 11. — M10.4 heap sprejet (Q452).** Rast heapa v soaku je vanilla `CombatTracker` v neskončnem
 boju; `RwCombatEntryCap` (privzeto 0) jo pri 64 ustavi. Naslednje: ostale omejitve §6 (Q453), nato M16.
 [Zapis](meritve/2026-11-04-M10.4-heap.md).
@@ -43,7 +45,7 @@ teksture in klipov klientom ter izbira modela v Display. [Zapis](meritve/2026-11
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **309** datotek `.java` v `src/patch`, od tega **229** rework. Build/package PASS na M11.11. |
 | Testi | **827** testov v **116** razredih (826 metod `@Test`). Unit PASS na M11.11; klientska matrika PASS na `e22ef824…`. |
-| Odprti pojavi | nobenega blokirnega; Q84 (M4.17 + M4.10 zid 6/6 → 5/6, vzrok [H], ovira za privzeti vklop kombinacije); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
+| Odprti pojavi | nobenega blokirnega; Q84 odpravljen 16. 11. (Q457); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
 
@@ -79,7 +81,16 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 228 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 229 → 1, novejši zgoraj).*
+
+### 2026-11-16 (231) — Q84: zid 6/6 pri vidni črti + nadaljevanju (sprejet)
+
+**Paket:** omejitev §6 po Q407/Q454 (Q455–Q457) · **Stanje:** sprejet pod `RwFlyLineOfSight` (privzeto 0).
+Sled Z (`q455-zid-sled-v1`): NPC pred robom zida miruje (`WAIT` originalnega `FlyingMoveHelper`), vanilla `checkForStuck` izbriše pot.
+Popravek: pri 1 NPC po `WAIT` z zaprto ravno črto leti prek komolca (`FlightFollow.elbow`, števec `vidKomolcev`).
+Na `e72ac98c…` PASS unit/build/package, `q455-letenje-orig-v1` (180/180 = P3 orig), `q455-letenje-vid-v1` (= M4.17 vid),
+`q455-letenje-vidnad-v1`: Z **6/6 v A, B, C** (prej 5/6 v A/C), ostale proge enake P3. Naslednje (Q454): `ArmyApi.members` umirajoči član,
+nato Linked `removeData` (Q393), nato M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](meritve/2026-11-16-Q84-zid-komolec.md).
 
 ### 2026-11-11 (230) — M11.11: pohod `freeforall` brez čakanja (sprejet)
 
@@ -90,16 +101,3 @@ Cena `army-cost-run.ps1 -Cell ffa`: pohod p95 15,20 / idle 7,08 ms, 110 MB/s (č
 Xaero v0.1.11 (`0.6.1-armies`, gumb Free for all privzet, cilj na poljubni razdalji): 84 JUnit + reobf PASS, sinhroniziran v `ladja_mod`, nameščen v 7/7 mods mapah z backupom. Živa mapa ostane ročna.
 M11.11b dolg pohod `army-ffa-far-run.ps1` PASS: 100/100 do cilja 600 blokov v negeneriranem svetu brez igralca, samo tiketi vojske (`freeforall` do 400 chunkov).
 Meje: dev dedicated, ploska proga, brez nenaloženega sveta, klienta in boja med pohodom. Naslednje: M10.4 heap (229, v delu) in ostale §6. [Zapis](meritve/2026-11-11-M11.11-freeforall.md).
-
-### 2026-11-16 (229) — M10.4: rast heapa pojasnjena in omejena (sprejet)
-
-**Paket:** P1/M10.4 po Q407 (Q438–Q452) · **Stanje:** sprejet Q452; `RwCombatEntryCap` ostane 0.
-Unit/build/package/samotest PASS na `59116532…`. Tek s cap 64 (`153707`) ustavil lastnik po 20/24
-vzorcih (1,67 h), sprejet kot dokaz: vnosi 5120 vsak vzorec, heap 0,152 MiB/h, histo 1→12 brez rasti.
-Zaklenjeni tek 132104 (`1ff6ff22…`): chunki 90/256 konstantni, heap 24,2 MiB/h (FAIL po meji 2,65).
-HistogramDiff: +549 739 `CombatEntry` + `NpcDamageSource` = 44 MB pojasni rast. Vzrok vanilla
-`CombatTracker` v neprekinjenem boju, tudi v originalu; ni uhajanje reworka (Q449).
-Novo stikalo `RwCombatEntryCap` (privzeto 0, N = zadnjih N vnosov na NPC); harness `-CombatCap`,
-pin 38 stikal (Q450). `.hprof` izbrisan. Prvi `m104-heap-cap-v1` FAIL pri vzorcu 0 (5199 > 5120):
-rez je tekel le vsakih 20 tickov; zdaj takoj po vpisu udarca (Q451).
-Naslednje: razvrstitev ostalih omejitev §6 po Q407 (Q453), nato M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](meritve/2026-11-04-M10.4-heap.md).

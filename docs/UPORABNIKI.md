@@ -421,7 +421,9 @@ Not proven, so not claimed:
 - `RwPathResume`/`RwFlyLineOfSight` (P3, Q256): the flying corner and maze test courses pass
   6/6 only with **both** switches on; `RwPathResume` alone still fails the corner. The wider search
   (1024 nodes, once per stalled resume, ~0.8 ms) is flying only; walking NPCs keep the vanilla
-  200-node limit. Cost in flying combat with the wider search was not measured.
+  200-node limit. Cost in flying combat with the wider search was not measured. With both switches
+  on, the wall course also passes 6/6 in every phase (Q457): a flying NPC that the original move
+  helper stops at the edge of an obstacle flies via an elbow (straight up or across first).
 - Baritone backend (`RwNavBackend`, P8, [note](meritve/2026-11-03-P8-baritone-cena.md)): at 2000 NPCs with an
   unreachable target, MSPT 87.5 → 65.8 ms (TPS 11.4 → 15.1, still below 20); in combat 43.9 → 41.5 ms
   (p99 58.7 → 60.8). Live heap after full GC is higher: +157 MB after the unreachable test, +449 MB after

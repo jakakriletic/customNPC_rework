@@ -2,6 +2,8 @@
 
 ## v2 development
 
+- With `RwFlyLineOfSight=1` and `RwPathResume=1`, flying NPCs no longer stall at the edge of a wall:
+  the wall test course passes 6/6 instead of 5/6 (Q84, Q457).
 - Optional single-JAR build with Varied Commodities, with its original Forge mod and registry IDs.
 - Command Staff selects ground NPCs in a growing circle, applies six behaviour modes and sends
   the selection to separate formation slots (`RwCommandStaff=1`).

@@ -96,6 +96,15 @@ public class RwPathNavigateFlying extends PathNavigateFlying {
         return FlightFollow.scan(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, this.cells);
     };
 
+    /** Q455: tocka, ki jo NPC cilja na komolcu, ter pot in tocka poti, za kateri velja. */
+    private Vec3d elbowAim;
+    private Path elbowPath;
+    private int elbowIndex;
+    private int elbowTicks;
+    /** Q455: trk kot v {@code FlyingMoveHelper.isNotColliding} ({@code World.getCollisionBoxes} z entiteto). */
+    private final FlightFollow.BoxTest moveBlocks = (minX, minY, minZ, maxX, maxY, maxZ) ->
+            !this.world.getCollisionBoxes(this.entity, new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ)).isEmpty();
+
     public RwPathNavigateFlying(EntityLiving entity, World world) {
         super(entity, world);
     }
@@ -165,10 +174,55 @@ public class RwPathNavigateFlying extends PathNavigateFlying {
 
     @Override
     public void onUpdateNavigation() {
+        boolean waited = FlightFollow.on() && !this.noPath() && !this.entity.getMoveHelper().isUpdating();
         super.onUpdateNavigation();
         if (this.resume.active()) {
             this.continuePath();
         }
+        if (FlightFollow.on()) {
+            this.steer(waited);
+        } else {
+            this.elbowAim = null;
+        }
+    }
+
+    /**
+     * Q455: ko je helper prejsnji tick dal {@code WAIT} in mu rob ovire zapre ravno crto do trenutne
+     * tocke ({@link FlightFollow#moveClear}), NPC leti prek komolca ({@link FlightFollow#elbow}) namesto
+     * da obmiruje. Komolec velja za isto pot in tocko, dokler ravna crta ni prosta, najvec
+     * {@link FlightFollow#ELBOW_TICKS} tickov. Ravna crta ostane naloga originalnega helperja.
+     */
+    private void steer(boolean waited) {
+        if (this.noPath()) {
+            this.elbowAim = null;
+            return;
+        }
+        Vec3d target = this.currentPath.getPosition(this.entity);
+        AxisAlignedBB box = this.entity.getEntityBoundingBox();
+        double dx = target.x - this.entity.posX;
+        double dy = target.y - this.entity.posY;
+        double dz = target.z - this.entity.posZ;
+        if (this.elbowAim != null) {
+            if (this.currentPath != this.elbowPath || this.currentPath.getCurrentPathIndex() != this.elbowIndex
+                    || ++this.elbowTicks > FlightFollow.ELBOW_TICKS
+                    || FlightFollow.moveClear(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ, dx, dy, dz, this.moveBlocks)) {
+                this.elbowAim = null;
+                return;
+            }
+        } else {
+            if (!waited || FlightFollow.moveClear(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ, dx, dy, dz, this.moveBlocks)) {
+                return;
+            }
+            double[] aim = FlightFollow.elbow(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ, dx, dy, dz, this.moveBlocks);
+            if (aim == null) {
+                return;
+            }
+            this.elbowAim = new Vec3d(this.entity.posX + aim[0], this.entity.posY + aim[1], this.entity.posZ + aim[2]);
+            this.elbowPath = this.currentPath;
+            this.elbowIndex = this.currentPath.getCurrentPathIndex();
+            this.elbowTicks = 0;
+        }
+        this.entity.getMoveHelper().setMoveTo(this.elbowAim.x, this.elbowAim.y, this.elbowAim.z, this.speed);
     }
 
     private void continuePath() {

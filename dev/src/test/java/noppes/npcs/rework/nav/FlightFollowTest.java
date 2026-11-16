@@ -375,6 +375,68 @@ public class FlightFollowTest {
         }
     }
 
+    /** Proga Z M4.16: tla y = 3, zid z = -56, y 4..7 (vrh 8). */
+    private static Grid wall() {
+        Grid g = new Grid();
+        g.fill(-100, 3, -80, -40, 3, -40);
+        g.fill(-100, 4, -56, -40, 7, -56);
+        return g;
+    }
+
+    private static boolean moveClear(Grid g, double px, double py, double pz, double tx, double ty, double tz) {
+        return FlightFollow.moveClear(px - W / 2, py, pz - W / 2, px + W / 2, py + H, pz + W / 2, tx - px, ty - py, tz - pz, g);
+    }
+
+    private static double[] elbow(Grid g, double px, double py, double pz, double tx, double ty, double tz) {
+        return FlightFollow.elbow(px - W / 2, py, pz - W / 2, px + W / 2, py + H, pz + W / 2, tx - px, ty - py, tz - pz, g);
+    }
+
+    @Test
+    public void q455NpcPredRobomZidaDobiNavpicniKomolec() {
+        // Polozaj obticanega NPC-ja i=4 iz q455-zid-sled-v1; tocka poti na vrhu zida.
+        Grid g = wall();
+        assertFalse("helper da WAIT", moveClear(g, -69.94, 6.28, -53.22, -69.5, 8, -55.5));
+        double[] a = elbow(g, -69.94, 6.28, -53.22, -69.5, 8, -55.5);
+        assertEquals(0.0, a[0], 1e-9);
+        assertEquals("navpicno do vrha in 0,6 cez", 8 - 6.28 + FlightFollow.ELBOW_OVERSHOOT, a[1], 1e-9);
+        assertEquals(0.0, a[2], 1e-9);
+        assertTrue("z vrha je ravna crta prosta", moveClear(g, -69.94, 8, -53.22, -69.5, 8, -55.5));
+        assertTrue(moveClear(g, -69.94, 8 + FlightFollow.ELBOW_OVERSHOOT, -53.22, -69.5, 8, -55.5));
+        assertEquals(1L, FlightFollow.elbows());
+    }
+
+    @Test
+    public void q455KomolecNavzdolGreNajprejVodoravno() {
+        // Nad zidom proti tocki za zidom pri tleh: diagonala zadane vrh zida, vodoravno nato navzdol je prosto.
+        Grid g = wall();
+        assertFalse(moveClear(g, -69.5, 8.2, -54.5, -69.5, 4, -58.5));
+        double[] a = elbow(g, -69.5, 8.2, -54.5, -69.5, 4, -58.5);
+        assertEquals(0.0, a[0], 1e-9);
+        assertEquals(0.0, a[1], 1e-9);
+        assertEquals(-4 - FlightFollow.ELBOW_OVERSHOOT, a[2], 1e-9);
+    }
+
+    @Test
+    public void q455BrezProstegaKomolcaOstaneOriginal() {
+        // Za zidom nizko, NPC pred zidom nizko: navpicni krak do y 5 in vodoravni skozi zid sta zaprta.
+        Grid g = wall();
+        g.fill(-100, 6, -55, -40, 6, -50); // strop nad NPC-jem
+        assertFalse(moveClear(g, -69.5, 4, -53.5, -69.5, 5, -58.5));
+        assertEquals(null, elbow(g, -69.5, 4, -53.5, -69.5, 5, -58.5));
+        assertEquals(0L, FlightFollow.elbows());
+    }
+
+    @Test
+    public void q455MoveClearPreveriSamoCeleKorakeKotHelper() {
+        Grid g = wall();
+        // Krajse od 1 bloka: helper ne preveri nicesar, tudi ce je cilj v zidu.
+        assertTrue(moveClear(g, -69.5, 5, -54.7, -69.5, 5, -55.6));
+        // 1,5 bloka: preveri samo polozaj po 1 bloku (z -55,7, ze v zidu).
+        assertFalse(moveClear(g, -69.5, 5, -54.7, -69.5, 5, -56.2));
+        assertEquals("stevci vidne crte ostanejo nespremenjeni",
+                "vidKlicev=0 vidDalec=0 vidZaprtih=0 vidProstih=0 vidUnija=0 vidCelic=0", FlightFollow.counters());
+    }
+
     @Test
     public void scanSamoPrebereCeliceInJihPresteje() {
         Trace t = new Trace();

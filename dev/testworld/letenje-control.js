@@ -36,6 +36,9 @@ var CELA_TOLERANCA = 2.0;
 var PRISPEL = 2.0;
 // Pod tem premikom med dvema vzorcema NPC steje za mirujocega (kot M2.3).
 var ZASTOJ_PRAG = 0.05;
+// Q455: sled posameznih NPC-jev proge Z v fazi A (vsak skriptni tick); vklopi jo samo
+// .letenje-run.ps1 -SledZ 1 z zamenjavo v minificirani skripti, sicer se skripta ne spremeni.
+var SLED = false;
 
 // Proge po x. Cilji so sredine blokov; tarca stoji na cilju.
 var LANES = [
@@ -262,6 +265,20 @@ function sampleLane(npc, lane, elapsed) {
         + ' gib=' + (gibSum / n).toFixed(4) + '/' + gibMax.toFixed(4));
 }
 
+// Q455: ena vrstica na NPC proge Z: polozaj, gibanje, navigacija in konec poti.
+function traceLane(npc, lane, elapsed) {
+    for (var j = 0; j < lane.members.length; j++) {
+        var e = lane.members[j];
+        var p = e.getNavigationPath();
+        say(npc, 'LET-T faza=' + phase.name + ' tick=' + elapsed + ' proga=' + lane.id + ' i=' + j
+            + ' x=' + e.getX().toFixed(2) + ' y=' + e.getY().toFixed(2) + ' z=' + e.getZ().toFixed(2)
+            + ' m=' + e.getMotionX().toFixed(3) + ',' + e.getMotionY().toFixed(3) + ',' + e.getMotionZ().toFixed(3)
+            + ' nav=' + (e.isNavigating() ? 1 : 0)
+            + ' konec=' + (p ? p.getX() + ',' + p.getY() + ',' + p.getZ() : '-')
+            + ' doCilja=' + toGoal(e, lane).toFixed(2));
+    }
+}
+
 function sampleAll(npc, elapsed) {
     for (var i = 0; i < LANES.length; i++) { sampleLane(npc, LANES[i], elapsed); }
 }
@@ -355,6 +372,7 @@ function tick(e) {
     var rel = t - phase.start;
     var elapsed = rel * TICKS_PER_SCRIPT_TICK;
     update(elapsed);
+    if (SLED && phase.name === 'A' && elapsed <= 600) { traceLane(npc, LANES[0], elapsed); }
     if (rel % SAMPLE_EVERY === 0) { sampleAll(npc, elapsed); }
     if (phase.refresh && rel % REFRESH_EVERY === 0) {
         for (var r = 0; r < LANES.length; r++) { navigateLane(LANES[r], phase.speed); }

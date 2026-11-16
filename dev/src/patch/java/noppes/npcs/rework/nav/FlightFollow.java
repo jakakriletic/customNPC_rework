@@ -63,6 +63,18 @@ public final class FlightFollow {
     static long unionClear;
     /** M4.17 poskus 3: prebrane celice v {@link #scan}. */
     static long cellCount;
+    /** Q455: zaceti komolci ({@link #elbow}). */
+    static long elbowCount;
+
+    /**
+     * Q455: za koliko blokov cez oglisce komolca NPC cilja. {@code FlyingMoveHelper} ob razdalji
+     * do 0,5 preneha pospesevati (WAIT); brez prestrela NPC obstane 0,5 pod robom.
+     */
+    public static final double ELBOW_OVERSHOOT = 0.6D;
+    /** Q455: najvec tickov enega komolca; potem spet original (zastoj, vanilla {@code clearPath}). */
+    public static final int ELBOW_TICKS = 60;
+    /** {@code FlyingMoveHelper}: pod to razdaljo do cilja NPC ne pospesuje. */
+    static final double MOVE_MIN = 0.5D;
 
     private FlightFollow() {
     }
@@ -90,6 +102,12 @@ public final class FlightFollow {
         clear = 0L;
         unionClear = 0L;
         cellCount = 0L;
+        elbowCount = 0L;
+    }
+
+    /** Q455: stevilo zacetih komolcev od zadnjega {@link #reset}. */
+    public static long elbows() {
+        return elbowCount;
     }
 
     public static String counters() {
@@ -205,6 +223,72 @@ public final class FlightFollow {
             return true;
         }
         return steps(x0, y0, z0, x1, y1, z1, width, dx, dy, dz, test);
+    }
+
+    /**
+     * Q455: {@code FlyingMoveHelper.isNotColliding} (original, nespremenjen): poln hitbox, premaknjen
+     * za 1, 2, ... blokov (manj od dolzine) proti {@code (dx, dy, dz)}; koncni polozaj se ne preveri.
+     * {@code false} pomeni, da helper da {@code WAIT} in NPC obmiruje.
+     */
+    public static boolean moveClear(double minX, double minY, double minZ, double maxX, double maxY, double maxZ,
+            double dx, double dy, double dz, BoxTest test) {
+        double len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (len < 1.0E-8D) {
+            return true;
+        }
+        double ux = dx / len;
+        double uy = dy / len;
+        double uz = dz / len;
+        for (int i = 1; i < len; i++) {
+            if (test.blocked(minX + ux * i, minY + uy * i, minZ + uz * i, maxX + ux * i, maxY + uy * i, maxZ + uz * i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Q455: obvoznica za NPC, ki mu {@link #moveClear} do trenutne tocke poti zapre rob ovire (izid
+     * {@code q455-zid-sled-v1} [M]: NPC proge Z pred robom zida obmiruje, po ~100 tickih vanilla
+     * {@code checkForStuck} poti izbrise in M4.10 nima vec cesa nadaljevati). Komolec je tocka, kjer
+     * se premik razdeli na navpicni in vodoravni del: pri cilju visje najprej navpicno, sicer najprej
+     * vodoravno; drugi vrstni red je rezerva. Komolec velja, ce sta hitbox na oglisce in na cilj
+     * NPC-ja prosta ter ce {@link #moveClear} prepusti oba kraka. NPC cilja
+     * {@link #ELBOW_OVERSHOOT} cez oglisce, ce je tam prosto.
+     *
+     * @return odmik tocke, ki jo NPC cilja, od trenutnega polozaja, ali {@code null}
+     */
+    public static double[] elbow(double minX, double minY, double minZ, double maxX, double maxY, double maxZ,
+            double dx, double dy, double dz, BoxTest test) {
+        double[][] corners = dy > 0.0D
+                ? new double[][] { { 0.0D, dy, 0.0D }, { dx, 0.0D, dz } }
+                : new double[][] { { dx, 0.0D, dz }, { 0.0D, dy, 0.0D } };
+        for (double[] c : corners) {
+            double len = Math.sqrt(c[0] * c[0] + c[1] * c[1] + c[2] * c[2]);
+            double rx = dx - c[0];
+            double ry = dy - c[1];
+            double rz = dz - c[2];
+            if (len < 1.0E-8D || rx * rx + ry * ry + rz * rz < 1.0E-8D) {
+                continue;
+            }
+            if (test.blocked(minX + c[0], minY + c[1], minZ + c[2], maxX + c[0], maxY + c[1], maxZ + c[2])
+                    || !moveClear(minX, minY, minZ, maxX, maxY, maxZ, c[0], c[1], c[2], test)
+                    || !moveClear(minX + c[0], minY + c[1], minZ + c[2], maxX + c[0], maxY + c[1], maxZ + c[2], rx, ry, rz, test)) {
+                continue;
+            }
+            double f = (len + ELBOW_OVERSHOOT) / len;
+            double[] aim = { c[0] * f, c[1] * f, c[2] * f };
+            if (test.blocked(minX + aim[0], minY + aim[1], minZ + aim[2], maxX + aim[0], maxY + aim[1], maxZ + aim[2])
+                    || !moveClear(minX, minY, minZ, maxX, maxY, maxZ, aim[0], aim[1], aim[2], test)) {
+                aim = c;
+            }
+            if (Math.sqrt(aim[0] * aim[0] + aim[1] * aim[1] + aim[2] * aim[2]) <= MOVE_MIN) {
+                continue;
+            }
+            elbowCount++;
+            return new double[] { aim[0], aim[1], aim[2] };
+        }
+        return null;
     }
 
     /** Premik po korakih (poskus 1), brez unije; {@code x0..z1} je ze zmanjsan hitbox. */

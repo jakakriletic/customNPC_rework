@@ -163,7 +163,7 @@ public class CommandRwPath extends CommandBase {
                 + " memoOcen=" + PathSearchMemo.lookups() + " memoIzracunov=" + PathSearchMemo.misses()
                 + " memoNeujemanj=" + PathSearchMemo.mismatches()
                 + " nadaljuj=" + PathResume.mode() + " " + PathResume.counters()
-                + " vidno=" + FlightFollow.mode() + " " + FlightFollow.counters();
+                + " vidno=" + FlightFollow.mode() + " " + FlightFollow.counters() + " vidKomolcev=" + FlightFollow.elbows();
         sender.sendMessage(new TextComponentString(msg));
         LogWriter.info(msg);
     }

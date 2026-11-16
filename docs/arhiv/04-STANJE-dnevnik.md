@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 228 → 1)
+# Arhiv: dnevnik sej (vnosi 229 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,19 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-16 (229) — M10.4: rast heapa pojasnjena in omejena (sprejet)
+
+**Paket:** P1/M10.4 po Q407 (Q438–Q452) · **Stanje:** sprejet Q452; `RwCombatEntryCap` ostane 0.
+Unit/build/package/samotest PASS na `59116532…`. Tek s cap 64 (`153707`) ustavil lastnik po 20/24
+vzorcih (1,67 h), sprejet kot dokaz: vnosi 5120 vsak vzorec, heap 0,152 MiB/h, histo 1→12 brez rasti.
+Zaklenjeni tek 132104 (`1ff6ff22…`): chunki 90/256 konstantni, heap 24,2 MiB/h (FAIL po meji 2,65).
+HistogramDiff: +549 739 `CombatEntry` + `NpcDamageSource` = 44 MB pojasni rast. Vzrok vanilla
+`CombatTracker` v neprekinjenem boju, tudi v originalu; ni uhajanje reworka (Q449).
+Novo stikalo `RwCombatEntryCap` (privzeto 0, N = zadnjih N vnosov na NPC); harness `-CombatCap`,
+pin 38 stikal (Q450). `.hprof` izbrisan. Prvi `m104-heap-cap-v1` FAIL pri vzorcu 0 (5199 > 5120):
+rez je tekel le vsakih 20 tickov; zdaj takoj po vpisu udarca (Q451).
+Naslednje: razvrstitev ostalih omejitev §6 po Q407 (Q453), nato M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](../meritve/2026-11-04-M10.4-heap.md).
 
 ### 2026-11-04 (228) — P2: klientska matrika zelena (sprejet)
 

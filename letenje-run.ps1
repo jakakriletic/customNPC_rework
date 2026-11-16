@@ -34,7 +34,8 @@
 
 param([string]$JsonPath = '', [switch]$AcceptEula, [int]$ChunkRadius = 2, [int]$WarmupSeconds = 10,
       [int]$ScenarioTimeoutSec = 300, [ValidateSet(-1, 0, 1)][int]$Nadaljevanje = -1, [ValidateSet(-1, 0, 1)][int]$VidnaCrta = -1,
-      [ValidateRange(200, 3000)][int]$TrajanjeFaze = 600, [ValidateSet(-1, 0, 1, 2)][int]$FlightMode = -1)
+      [ValidateRange(200, 3000)][int]$TrajanjeFaze = 600, [ValidateSet(-1, 0, 1, 2)][int]$FlightMode = -1,
+      [ValidateSet(0, 1)][int]$SledZ = 0)
 
 $ErrorActionPreference = 'Stop'
 $root  = $PSScriptRoot
@@ -186,7 +187,7 @@ try {
         }
     }
     $scriptLen = Install-LetController (Join-Path $seed 'customnpcs\clones\1\LET_Control.json') `
-                     (Join-Path $seed 'letenje-control.js') (Join-Path $clones 'LET_Control.json') $TrajanjeFaze
+                     (Join-Path $seed 'letenje-control.js') (Join-Path $clones 'LET_Control.json') $TrajanjeFaze $SledZ
     Write-Host ("  krmilnik namescen ({0} znakov skripte, faza {1} server tickov)" -f $scriptLen, $TrajanjeFaze)
     if ($FlightMode -ge 0) { Add-HoverProof (Join-Path $clones 'LET_Control.json') 'rememberHome();' 'npc' $FlightMode }
 
@@ -246,6 +247,10 @@ try {
         Check ("faza {0} se je koncala" -f $f.Id) (Wait-Marker $srv ("LET-{0}-END" -f $f.Id) 1 $ScenarioTimeoutSec)
     }
     Check 'LT1: scenarij je prisel do konca (LET-SUM)' (Wait-Marker $srv 'LET-SUM' 1 60)
+    if ($SledZ -eq 1) {
+        $sled = [regex]::Matches((Get-LetMarkerText (Get-Log $srv.Log)), 'LET-T faza=A ').Count
+        Check ("Q455: sled proge Z zapisana ({0} vrstic LET-T, pricakovano 354)" -f $sled) ($sled -eq 354)
+    }
     if (($Nadaljevanje -ge 0) -or ($VidnaCrta -ge 0)) {
         $pred = [regex]::Matches((Get-LetMarkerText (Get-Log $srv.Log)), 'RWPATH nacin=').Count
         Send-Command $srv 'rwpath'
