@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 235 → 1)
+# Arhiv: dnevnik sej (vnosi 236 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,17 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-16 (236) — M16.6b sprejet
+
+**Paket:** M16.6b (Q466–Q471, D-105) · **Stanje:** sprejet, `RwReadableClones=0`.
+Opisni katalog, tipna rezerva, točne skripte/klipi, štirje privzetki z odsotnostmi in varni backup/zapis.
+Unit (16 novih, korpus 89), build/package in `m166-readable-v3` PASS na `72ad0c90…`.
+126 preverb skozi dev par 0/1/1/0 potrdi obe diskovni meji, ukaze, postavitvi, rig/skripto in restart.
+Šest PNG pregledanih. Izvoz/uvoz 2,1295/0,9416 ms, 25.821/7.987 B, en podatek.
+V1/v2 sta padla v harnessu, Q469/Q470 popravljena pred veljavnim v3. Samo controller zagoni.
+Dokumentacija zaključena, nepovezane datoteke ohranjene. Sledi raziskava M14.0 (Q472), M12 zadnji.
+[Dokaz in omejitve](../meritve/2026-11-16-M16.6-berljivi-kloni.md).
 
 ### 2026-11-16 (235) — M16.6a: raziskava berljivih klonov
 

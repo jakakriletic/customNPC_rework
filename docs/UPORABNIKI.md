@@ -423,6 +423,11 @@ Varied Commodities by Noppes is included under
 
 Not proven, so not claimed:
 
+- **Nearby-model rendering (M14.1a)** has a neutral source transfer and a part-level baseline.
+  All 93 comparisons have identical RGBA, depth and audited GL state across original/patch/original,
+  with six reviewed PNGs on one RTX 3080 dev client. Full NPCs, layers, world lighting and shader/mod
+  compatibility require the later M14 packages. VBO and instancing implementation follows in M14.1b/M14.2.
+  [Evidence and scope](meritve/2026-11-16-M14.1a-baseline.md).
 - **Readable clones (M16.6)** passed 126 checks across four starts of one dev client/dedicated
   pair with `RwReadableClones=0/1/1/0` and `RwAnimCore=1`. Local/server saves, clone tab placement,
   commands, exact backup, script execution and restart passed. Unit tests cover 89 legacy clones,

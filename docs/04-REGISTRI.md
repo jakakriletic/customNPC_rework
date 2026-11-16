@@ -14,9 +14,9 @@ začetku. Ne preberi jih na začetku seje: išči z `grep` (npr. po imenu stikal
 
 | Datum | Kaj | Izvor | Licenca | Kje v našem drevesu |
 |---|---|---|---|---|
-| — | — | — | — | — |
+| 2026-11-16 | Nevtralen prenos `ModelScaleRenderer`, bajtna kopija obstoječe reference; 4 karakterizacijski testi + GPU baseline M14.1a (Q479) | CustomNPCs 01Oct19, `dev/reference-src/noppes/npcs/client/model/ModelScaleRenderer.java` | Noppes, pogoji originalne osnove D-001 | `dev/src/patch/java/noppes/npcs/client/model/ModelScaleRenderer.java` |
 
-Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
+Prenos zgoraj je del obstoječe build osnove D-001. `NbtJson` je napisan na novo; format posnema original, koda ne.
 
 ---
 
@@ -111,6 +111,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-16 | M14.1a, `model-scale-baseline-run.ps1`, en izoliran dev klient, RTX 3080 | Unit 879, build/package in GPU baseline PASS na `07b888c3…`; 31 delov × 3 poze, 93 bitno enakih RGBA/depth in preverjenih GL stanj A/B/A2, 279 nepraznih klicev, negativni kontroli zavrnjeni, 6 pregledanih PNG (Q479) | [zapis](meritve/2026-11-16-M14.1a-baseline.md) |
 | 2026-11-16 | M16.6b, `readable-clone-run.ps1`, en dev par, štirje zagoni 0/1/1/0 | unit/build/package in v3 PASS na `72ad0c90…`, 126 preverb, 6 pregledanih PNG, tipni roundtrip/backup/restart. Izvoz/uvoz 2,1295/0,9416 ms, 25.821 B proti 7.987 B, en podatek | [zapis](meritve/2026-11-16-M16.6-berljivi-kloni.md) |
 | 2026-11-16 | M16.5, `k-run.ps1 -Variant idle -N 200 -Rig knight -AnimCore 0/1`, ena celica na vrednost | PASS unit/build/package in obe celici na `dce93d19…`; p50/p95 0 = 6,445/7,017 ms, 1 = 5,307/5,822 ms; rig 0 / 2.220.800 izrisov. Različna izrisa, cena samo podatek (Q462) | [zapis](meritve/2026-11-16-M16.5-cena-rig.md) |
 | 2026-11-16 | M10.4 heap: zaklenjen svet, 200 NPC (80/80/40), `RwCombatEntryCap=64`, `m104-heap-run.ps1 -CombatCap 64` | Delni tek `153707` 20/24 vzorcev (1,67 h, ustavil lastnik, sprejet Q452): vnosi 5120, heap 0,152 MiB/h proti 24,2 brez cap (`132104`), histo 1→12 brez rasti | [zapis](meritve/2026-11-04-M10.4-heap.md) |

@@ -580,8 +580,9 @@ Raziskava: [`raziskave/M5-V.0-daljna-vidnost.md`](raziskave/M5-V.0-daljna-vidnos
 
 ### Izris bližnjih modelov (M14, raziskava 16. 11. 2026)
 
-[M14.0](raziskave/M14.0-izris-bliznjih-npc.md) (D-106, Q473–Q475): najprej nevtralen
-prenos/baseline `ModelScaleRenderer`, nato VBO s fiksno potjo in bitno isto RGBA/depth,
+[M14.0](raziskave/M14.0-izris-bliznjih-npc.md) (D-106, Q473–Q475) in
+[M14.1a](meritve/2026-11-16-M14.1a-baseline.md) (Q479) sta zaključena. Nevtralen
+prenos `ModelScaleRenderer` ima 93 bitno enakih primerjav delov modela. Sledi VBO s fiksno potjo in bitno isto RGBA/depth,
 šele nato ločen instanced backend z vizualno enakostjo po odločitvi lastnika 26. 10.
 Kandidata `RwModelVbo`/`RwNpcInstancing` sta načrtovana, še ne obstajata in do sprejema ostaneta 0.
 CPU animacije, ticki, NBT in omrežje ostanejo enaki; M16 rig in nepodprti modeli/plasti

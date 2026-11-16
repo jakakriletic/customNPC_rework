@@ -12,6 +12,12 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**16. 11. — M14.1a sprejet (Q476–Q479).** `unit`, `build`, `package` in
+`m141a-baseline-v1` PASS na `07b888c3…`. GPU baseline potrdi vseh 93 primerjav
+posameznih delov modela z bitno enakima RGBA/depth in preverjenimi GL stanji;
+vseh šest PNG pregledanih. Sledi M14.1b, omejen VBO.
+[Dokaz in meje](meritve/2026-11-16-M14.1a-baseline.md).
+
 **16. 11. — M14.0 raziskava zaključena (Q473–Q475, D-106).** Pregled trenutnega izrisa,
 K10/K13/K14/K3 in M16 dokazov; načrt omejenega VBO pred instanciranjem, fallback od začetka.
 Samo dokumentacija, produkcija/testni vhodi na `72ad0c90…`, brez novih zagonov.
@@ -48,12 +54,12 @@ teksture in klipov klientom ter izbira modela v Display. [Zapis](meritve/2026-11
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-16** (seja 237) — M14.0 raziskava zaključena (Q473–Q475, D-106), [dokazi in merila](raziskave/M14.0-izris-bliznjih-npc.md). Samo dokumentacija; produkcija, scenariji in testi nespremenjeni na `72ad0c90…`, brez zagonov ali novih trditev o hitrosti. |
-| Trenutni milestone | **M14.0 zaključen**, implementacija M14 še ni začeta. M16.6 sprejet Q471; M10.3/IO4 blokirana Q1. |
-| Naslednji paketi | **M14.1a: nevtralen prenos `ModelScaleRenderer` in deterministični baseline**, nato M14.1b omejen VBO. Guard/fallback od začetka, K13 samostojno zavržen, M16 na obstoječi poti. M12 na koncu. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
+| Zadnja posodobitev | **2026-11-16** (seja 238) — M14.1a sprejet Q479, vsi štirje controller testi PASS na `07b888c3…`. 93 bitno enakih A/B/A2 primerjav delov modela, 6 pregledanih PNG; [dokaz in meje](meritve/2026-11-16-M14.1a-baseline.md). |
+| Trenutni milestone | **M14.1a sprejet**, naslednji M14.1b. M16.6 sprejet Q471; M10.3/IO4 blokirana Q1. |
+| Naslednji paketi | **M14.1b: omejen VBO**, nato M14.2 instancing. Guard/fallback od začetka, K13 samostojno zavržen, M16 na obstoječi poti. M12 na koncu. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **347** datotek `.java` v `src/patch`, od tega **266** rework. Build/package PASS na `72ad0c90…`. |
-| Testi | **875** testov v zadnjem JUnit rezultatu, **123** testnih datotek. M16.6 unit (+16), build/package in `m166-readable-v3` PASS na `72ad0c90…`. |
+| Prevedljivih razredov | **349** datotek `.java` v `src/patch`, od tega **267** rework. Build/package PASS na `07b888c3…`, 90 pričakovanih sprememb. |
+| Testi | **879** testov v zadnjem JUnit rezultatu, **124** testnih datotek. M14.1a unit (+4, tudi proti originalu), build/package in `m141a-baseline-v1` PASS na `07b888c3…`. |
 | Odprti pojavi | nobenega blokirnega; Q84 odpravljen 16. 11. (Q457); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -82,7 +88,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M11 Poveljevanje prek zemljevida | **M11.11 sprejet** (`freeforall`) | 199/199 razmetanih skozi progo z grlom po restartu, zaprti član edini blokiran ([zapis](meritve/2026-11-11-M11.11-freeforall.md)); Xaero v0.1.10 nameščen. M11.5 sprejet po Q407. Celoten izhod M11 (200 skozi nenaložen svet in živa mapa) ostaja nepokrit. |
 | M13 Povezani NPC-ji | **M13.0–M13.5 zaključeni pod stikali** (v2, Q433) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun, GUI, seznam palice, kloner (`RwLinkedGroups`); obe stikali privzeto 0. [M13.5](meritve/2026-11-04-M13.5-sto.md): 100 z eno izbiro in sprememba do vseh. Izhod pokrit z ločenimi scenariji, ne z enim skupnim. |
 | M16 Vgrajeno animacijsko jedro | **M16.6b sprejet** (Q471) | [Berljivi kloni](meritve/2026-11-16-M16.6-berljivi-kloni.md), 126 preverb, 6 PNG. M16.5 cena sprejeta Q462; privzeto `RwAnimCore=0`, `RwReadableClones=0`. |
-| M14 Izris bližnjih NPC-jev | **M14.0 raziskava zaključena** (Q473–Q475) | [Koda, meritve in merila](raziskave/M14.0-izris-bliznjih-npc.md), D-106. Naslednji M14.1a; še brez produkcijske izvedbe ali novih meritev. |
+| M14 Izris bližnjih NPC-jev | **M14.1a sprejet** (Q479) | [Nevtralni prenos in baseline](meritve/2026-11-16-M14.1a-baseline.md); vsi štirje testi PASS, 93 primerjav in 6 pregledanih PNG. Sledi M14.1b VBO. |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -92,7 +98,22 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 235 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 236 → 1, novejši zgoraj).*
+
+### 2026-11-16 (238) — M14.1a sprejet
+
+**Paket:** M14.1a (Q476–Q479) · **Stanje:** sprejet, vsi štirje controller testi PASS na `07b888c3…`.
+Nevtralna bajtna kopija `ModelScaleRenderer` in 4 skupni karakterizacijski testi.
+Izoliran PS/Java baseline proti mapped originalu v ločenem classloaderju potrdi 31 delov
+v 3 pozah, 93 bitno enakih RGBA/depth in preverjenih GL stanj A/B/A2, 279 nepraznih klicev.
+Negativni kontroli poze/UV zavrnjeni, nič GL napak, 6 PNG pregledanih, RTX 3080.
+Junit 879, package 1716 vnosov/90 pričakovanih sprememb. Prejšnji napaki sta napačno
+ime LWJGL konstante (Q477) in manjkajoči zaklenjeni MDK ZIP (Q478).
+Merilni vhodi preverjeno enaki uspešnemu teku; zaključene evidence. Nevtralni prenos
+in testi v ločen commit, harness in dokumentacija v naslednjega. Nepovezano delo ohranjeno.
+Dokaz pokriva posamezne dele; svet/plasti/združljivost in cena sledijo s kandidatom M14.1b.
+Uspešnih M14.1a in M16 serij ne ponavljamo (Q90). M12 zadnji, M10.3 blokiran Q1.
+[Izvedba, merila in meje](meritve/2026-11-16-M14.1a-baseline.md).
 
 ### 2026-11-16 (237) — M14.0: raziskava izrisa bližnjih NPC-jev
 
@@ -104,14 +125,3 @@ Pragovi slike zamrznjeni, ogled lastnika in živa združljivost ostaneta za kon�
 Samo dokumentacija; produkcija/testi/scenariji na `72ad0c90…`, brez testov, builda ali Minecrafta (Q90).
 Naslednji M14.1a: nevtralen prenos + deterministični baseline. M12 zadnji, M10.3 blokiran Q1.
 [Raziskava in sprejemna merila](raziskave/M14.0-izris-bliznjih-npc.md).
-
-### 2026-11-16 (236) — M16.6b sprejet
-
-**Paket:** M16.6b (Q466–Q471, D-105) · **Stanje:** sprejet, `RwReadableClones=0`.
-Opisni katalog, tipna rezerva, točne skripte/klipi, štirje privzetki z odsotnostmi in varni backup/zapis.
-Unit (16 novih, korpus 89), build/package in `m166-readable-v3` PASS na `72ad0c90…`.
-126 preverb skozi dev par 0/1/1/0 potrdi obe diskovni meji, ukaze, postavitvi, rig/skripto in restart.
-Šest PNG pregledanih. Izvoz/uvoz 2,1295/0,9416 ms, 25.821/7.987 B, en podatek.
-V1/v2 sta padla v harnessu, Q469/Q470 popravljena pred veljavnim v3. Samo controller zagoni.
-Dokumentacija zaključena, nepovezane datoteke ohranjene. Sledi raziskava M14.0 (Q472), M12 zadnji.
-[Dokaz in omejitve](meritve/2026-11-16-M16.6-berljivi-kloni.md).

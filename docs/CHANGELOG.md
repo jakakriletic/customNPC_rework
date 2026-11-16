@@ -2,6 +2,9 @@
 
 ## v2 development
 
+- M14.1a prepares nearby-model rendering with a neutral `ModelScaleRenderer` source transfer,
+  four characterization tests and 93 identical GPU part comparisons on one dev client.
+  [Coverage and limits](meritve/2026-11-16-M14.1a-baseline.md).
 - M16.6 adds readable clone JSON through `RwReadableClones=1`, with descriptive sections,
   script lines, four frozen defaults and typed extra data. Both formats load at 0 and 1.
   The first explicit overwrite of legacy preserves `.json.v0.bak`. The original mod requires

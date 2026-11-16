@@ -133,6 +133,10 @@ rebuilda. `customnpcentities` ni več pogoj; obstoječi API `Animators`/hooki os
 
 **M14.0 zaključeno (Q473–Q475/D-106):** [raziskava](raziskave/M14.0-izris-bliznjih-npc.md); naslednji M14.1a (nevtralen prenos in baseline), nato omejen VBO in instancing z varnim povratkom od prvega kandidata. Končni vklop po sliki, združljivosti in trenutnem A/B; M12 ostaja zadnji.
 
+**M14.1a zaključeno (Q479):** [baseline](meritve/2026-11-16-M14.1a-baseline.md),
+unit/build/package in GPU dokaz PASS na `07b888c3…`, 93 primerjav in 6 pregledanih PNG.
+Naslednji M14.1b, omejen VBO po merilih raziskave; uspešnih serij ne ponavljamo (Q90).
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela
