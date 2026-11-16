@@ -61,7 +61,9 @@ param(
     # M16.5: model z rigom (npr. knight) za vse NPC-je idle: klon RWRIG_Idle = PERF_Idle z NBT RwRig {Model}; merilo K19.
     [string]$Rig = '',
     # M16.5: RwAnimCore za ta zagon (bere se ob zagonu, zato gradle -PrwSet); -1 = iz CustomNpcs.cfg.
-    [ValidateRange(-1, 1)][int]$AnimCore = -1
+    [ValidateRange(-1, 1)][int]$AnimCore = -1,
+    # M14.1b: fixed-function VBO candidate, same scene and measurement window.
+    [ValidateRange(-1, 1)][int]$ModelVbo = -1
 )
 
 $ErrorActionPreference = 'Stop'
@@ -241,7 +243,10 @@ $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 $log = Join-Path $audit "k-$Variant-$N-$stamp.log"
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 $psi.FileName = $env:ComSpec
-$rwSet = if ($AnimCore -ge 0) { ' "-PrwSet=RwAnimCore={0}"' -f $AnimCore } else { '' }
+$rwOverrides = @()
+if ($AnimCore -ge 0) { $rwOverrides += "RwAnimCore=$AnimCore" }
+if ($ModelVbo -ge 0) { $rwOverrides += "RwModelVbo=$ModelVbo" }
+$rwSet = if ($rwOverrides.Count) { ' "-PrwSet={0}"' -f ($rwOverrides -join ',') } else { '' }
 $psi.Arguments = ('/c gradlew.bat runClient --offline --no-daemon --console=plain "-PrwHarness={0}"{2} > "{1}" 2>&1' -f ($jobPath -replace '\\', '/'), $log, $rwSet)
 $psi.WorkingDirectory = Join-Path $root 'dev'
 $psi.UseShellExecute = $false
@@ -492,6 +497,14 @@ if ($r -and ($Rig -ne '' -or $AnimCore -ge 0)) {
     $rigOk = ($AnimCore -lt 0 -or $r.rwAnimCore -eq $AnimCore) -and $(if ($rigMin -gt 0) { $r.rigIzrisovMeritev -ge $rigMin } else { $r.rigIzrisovMeritev -eq 0 })
     Check ("K19: RwAnimCore {0} (zahtevano {1}), rig {2}, izrisov riga {3} (pricakovano {4})" -f $r.rwAnimCore, $AnimCore, $(if ($Rig) { $Rig } else { '-' }), $r.rigIzrisovMeritev, $(if ($rigMin -gt 0) { '>= ' + $rigMin } else { '0' })) $rigOk
 }
+if ($r -and $ModelVbo -ge 0) {
+    # The idle fixtures have at least six visible main-model parts per NPC.
+    # Counters bracket MEASURE, excluding setup, warmup and screenshot readback.
+    $vboMin = [math]::Floor(0.9 * 6 * $N * $r.slicic)
+    $vboOk = $r.rwModelVbo -eq $ModelVbo -and $r.modelVboGlError -eq 0 -and
+        $(if ($ModelVbo -eq 1) { $r.modelVboDraws -ge $vboMin -and $r.modelVboLive -gt 0 } else { $r.modelVboDraws -eq 0 -and $r.modelVboLive -eq 0 })
+    Check ("K20: RwModelVbo {0}, measured draws {1}, expected {2}, live {3}, GL error {4}, fallbacks {5}" -f $r.rwModelVbo, $r.modelVboDraws, $(if ($ModelVbo -eq 1) { ">= $vboMin" } else { '0' }), $r.modelVboLive, $r.modelVboGlError, $r.modelVboFallbacks) $vboOk
+}
 if ($r -and $PreveriPokrivalo) {
     foreach ($ser in ("$($r.pokrivaloSerije)" -split ' \| ')) { Write-Host ("    pokrivalo {0}" -f $ser) }
     Check ("K9: slika in globina pokrivala bitno enaki z RwHeadwearSkip 0 in 1 ({0} NPC; skin, vzorec, 5 pravih skinov), vzorec spremeni {1} pikslov {2}" -f $r.pokrivaloNpc, $r.pokrivaloObcutljivost, $r.pokrivaloNapaka) ($r.pokrivaloPreverba -eq 1)
@@ -538,9 +551,17 @@ if ($r) {
         if ($RenderBox -ge 0) { $odtis['rwRenderBox'] = $RenderBox }
         if ($Rig -ne '') { $odtis['rig'] = $Rig }
         if ($AnimCore -ge 0) { $odtis['rwAnimCore'] = $AnimCore }
+        if ($ModelVbo -ge 0) { $odtis['rwModelVbo'] = $ModelVbo }
         $vel = @{ 'frame.p50' = $r.frameMsP50; 'frame.p95' = $r.frameMsP95; 'frame.p99' = $r.frameMsP99; 'frame.max' = $r.frameMsMax;
                   'fps' = $r.fps; 'fps.low1' = $r.fpsLow1; 'fps.low01' = $r.fpsLow01; 'gc.stevilo' = $r.gcStevilo; 'gc.ms' = $r.gcMs;
                   'upodobljeno.min' = $r.upodobljenoMin; 'streznik.ms' = $r.integriraniStreznikMsPovp }
+        if ($ModelVbo -ge 0) {
+            $vel['modelVbo.draws'] = $r.modelVboDraws
+            $vel['modelVbo.live'] = $r.modelVboLive
+            $vel['modelVbo.glError'] = $r.modelVboGlError
+            $vel['modelVbo.fallbacks'] = $r.modelVboFallbacks
+            $vel['frame.count'] = $r.slicic
+        }
         $null = Write-MeritevJson -Path $JsonPath -Paket 'M5-K.0' -Scenarij ("klient {0}-{1}" -f $Variant, $N) -Odtis $odtis -Velicine $vel -Uspeh ($failures.Count -eq 0) -Padle $failures
     }
 }

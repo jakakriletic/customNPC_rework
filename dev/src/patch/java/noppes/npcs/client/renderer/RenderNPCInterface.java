@@ -188,6 +188,9 @@ extends RenderLiving<T> {
     }
 
     protected void renderModel(T npc, float par2, float par3, float par4, float par5, float par6, float par7) {
+        noppes.npcs.rework.render.ModelVbo.Scope rwVboScope = noppes.npcs.CustomNpcs.RwModelVbo == 1
+                ? noppes.npcs.rework.render.ModelVbo.beginWorld(this, this.mainModel, (EntityNPCInterface)((Object)npc)) : null;
+        try {
         super.renderModel(npc, par2, par3, par4, par5, par6, par7);
         if (!((EntityNPCInterface)((Object)npc)).display.getOverlayTexture().isEmpty()) {
             GlStateManager.depthFunc((int)515);
@@ -214,6 +217,7 @@ extends RenderLiving<T> {
             GlStateManager.depthFunc((int)515);
             GlStateManager.disableBlend();
         }
+        } finally { if (rwVboScope != null) { rwVboScope.close(); } }
     }
 
     protected float handleRotationFloat(T npc, float par2) {
