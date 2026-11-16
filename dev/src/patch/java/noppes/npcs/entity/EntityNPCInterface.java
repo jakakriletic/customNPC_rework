@@ -647,6 +647,9 @@ IAnimals {
 
     protected void damageEntity(DamageSource damageSrc, float damageAmount) {
         super.damageEntity(damageSrc, damageAmount);
+        if (CustomNpcs.RwCombatEntryCap > 0) {
+            noppes.npcs.rework.entity.CombatEntryCap.apply(this.getCombatTracker(), CustomNpcs.RwCombatEntryCap);
+        }
         this.combatHandler.damage(damageSrc, damageAmount);
     }
 

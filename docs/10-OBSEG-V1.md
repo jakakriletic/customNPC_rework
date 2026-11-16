@@ -115,7 +115,7 @@ proračun testov, odlaganje v v2 namesto popravka). Upravljalnik rešuje problem
 zadeve, dokler funkcija ne deluje. **Prvi naslednji paket po M13.3 je M11.5 (dolg pohod čez
 `NpcNavRange`)**, ki je bil odložen samo zaradi pravila 2 poskusov (~~sprejet Q418~~); nato M13 naprej
 (~~M13.4~~ sprejet Q429; ~~M13.5~~ izhodni dokaz 100 NPC-jev sprejet Q433), nato
-odpravljanje omejitev iz `UPORABNIKI.md` §6, ki so ostale zaradi pravila 2 poskusov (~~M10.1d~~ sprejet Q436; naslednji M10.4 soak heap, Q437).
+odpravljanje omejitev iz `UPORABNIKI.md` §6, ki so ostale zaradi pravila 2 poskusov (~~M10.1d~~ sprejet Q436; ~~M10.4~~ soak heap sprejet Q452 s stikalom `RwCombatEntryCap`; naslednja razvrstitev ostalih omejitev §6, Q453).
 
 **Q445 (odločitev lastnika 4. 11. 2026): M11.11 `freeforall` je naslednji paket**, pred nadaljevanjem
 M10.4 in ostalih popravkov §6: vojska se premakne tako, da vsak član takoj sam gre od svoje pozicije

@@ -12,6 +12,10 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**16. 11. — M10.4 heap sprejet (Q452).** Rast heapa v soaku je vanilla `CombatTracker` v neskončnem
+boju; `RwCombatEntryCap` (privzeto 0) jo pri 64 ustavi. Naslednje: ostale omejitve §6 (Q453), nato M16.
+[Zapis](meritve/2026-11-04-M10.4-heap.md).
+
 **14. 11. — Odrivanje konjenice.** Prekrivajoči se konji z NPC-jezdeci se razmaknejo
 tudi v mirovanju. [Zapis](meritve/2026-11-14-command-staff-varied.md).
 
@@ -75,7 +79,7 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 227 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 228 → 1, novejši zgoraj).*
 
 ### 2026-11-11 (230) — M11.11: pohod `freeforall` brez čakanja (sprejet)
 
@@ -87,10 +91,15 @@ Xaero v0.1.11 (`0.6.1-armies`, gumb Free for all privzet, cilj na poljubni razda
 M11.11b dolg pohod `army-ffa-far-run.ps1` PASS: 100/100 do cilja 600 blokov v negeneriranem svetu brez igralca, samo tiketi vojske (`freeforall` do 400 chunkov).
 Meje: dev dedicated, ploska proga, brez nenaloženega sveta, klienta in boja med pohodom. Naslednje: M10.4 heap (229, v delu) in ostale §6. [Zapis](meritve/2026-11-11-M11.11-freeforall.md).
 
-### 2026-11-04 (228) — P2: klientska matrika zelena (sprejet)
+### 2026-11-16 (229) — M10.4: rast heapa pojasnjena in omejena (sprejet)
 
-**Paket:** P2/M10.1d po Q407 (Q434–Q437) · **Stanje:** sprejet; vse štiri celice PASS na `e22ef824…`, `RwArmies` ostane 0.
-Q434: harness restart pred offline mailom tudi na dedicated. Q435: napaka produkcije iz M11.8a, palica na strežniku je originalnemu klientu zaprla povezavo; dedicated jo zdaj registrira samo pri `RwArmies>=1`, shranjeni vnos se prezre. D-101 zožen.
-`p2b-dedicated`, `-original-client`, `-original-server`, `-integrated`, `m118a-gui-v1` (98), `m118b-permissions-gui-v1` (102), unit/build/package PASS. Pet PNG pregledanih.
-Meje: en dev par, privzeta stikala, ni pakiranega klienta (Q22); O klient pri 1 ni pognan na končni kodi. Palice se pri 1→0 na dedicated izgubijo.
-Naslednji soak heap (Q437). M10.3 blokiran Q1. [Zapis](meritve/2026-10-30-P2-klientska-matrika.md).
+**Paket:** P1/M10.4 po Q407 (Q438–Q452) · **Stanje:** sprejet Q452; `RwCombatEntryCap` ostane 0.
+Unit/build/package/samotest PASS na `59116532…`. Tek s cap 64 (`153707`) ustavil lastnik po 20/24
+vzorcih (1,67 h), sprejet kot dokaz: vnosi 5120 vsak vzorec, heap 0,152 MiB/h, histo 1→12 brez rasti.
+Zaklenjeni tek 132104 (`1ff6ff22…`): chunki 90/256 konstantni, heap 24,2 MiB/h (FAIL po meji 2,65).
+HistogramDiff: +549 739 `CombatEntry` + `NpcDamageSource` = 44 MB pojasni rast. Vzrok vanilla
+`CombatTracker` v neprekinjenem boju, tudi v originalu; ni uhajanje reworka (Q449).
+Novo stikalo `RwCombatEntryCap` (privzeto 0, N = zadnjih N vnosov na NPC); harness `-CombatCap`,
+pin 38 stikal (Q450). `.hprof` izbrisan. Prvi `m104-heap-cap-v1` FAIL pri vzorcu 0 (5199 > 5120):
+rez je tekel le vsakih 20 tickov; zdaj takoj po vpisu udarca (Q451).
+Naslednje: razvrstitev ostalih omejitev §6 po Q407 (Q453), nato M16 (Q444). M10.3 ostane blokiran Q1. [Zapis](meritve/2026-11-04-M10.4-heap.md).

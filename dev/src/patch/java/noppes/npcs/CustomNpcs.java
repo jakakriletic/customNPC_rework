@@ -243,6 +243,8 @@ public class CustomNpcs {
     public static int RwArmies = 0;
     @ConfigProp(info="Enable the Command Staff for selecting NPCs, issuing formation moves and setting their orders. Match on client and server. Default 0")
     public static int RwCommandStaff = 0;
+    @ConfigProp(info="Rework M10.4 (Q449): the vanilla combat tracker keeps one entry per hit and clears them only 100-300 ticks after the last hit, so an NPC in endless combat (regenerating health, arena, training) keeps them all (about 80 bytes per hit, 24 MB/h with 80 fighters). With N > 0 the server keeps only the newest N entries per NPC (trimmed right after each hit); older hits no longer count for the best attacker and death message. 0 = original. Default 0")
+    public static int RwCombatEntryCap = 0;
     @ConfigProp(info="Rework M11.2: with RwArmies=1, members of one army this close (blocks, horizontally, 1-512) are one cluster, the point of the army on a map. Read at startup. Default 48")
     public static int RwArmyClusterRadius = 48;
     @ConfigProp(info="Rework M11.2: with RwArmies=1, a cluster with at least this many members (1-1024) is a group; a smaller one is a straggler. The largest cluster is always the main one. Read at startup. Default 8")

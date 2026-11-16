@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 227 → 1)
+# Arhiv: dnevnik sej (vnosi 228 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,14 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-04 (228) — P2: klientska matrika zelena (sprejet)
+
+**Paket:** P2/M10.1d po Q407 (Q434–Q437) · **Stanje:** sprejet; vse štiri celice PASS na `e22ef824…`, `RwArmies` ostane 0.
+Q434: harness restart pred offline mailom tudi na dedicated. Q435: napaka produkcije iz M11.8a, palica na strežniku je originalnemu klientu zaprla povezavo; dedicated jo zdaj registrira samo pri `RwArmies>=1`, shranjeni vnos se prezre. D-101 zožen.
+`p2b-dedicated`, `-original-client`, `-original-server`, `-integrated`, `m118a-gui-v1` (98), `m118b-permissions-gui-v1` (102), unit/build/package PASS. Pet PNG pregledanih.
+Meje: en dev par, privzeta stikala, ni pakiranega klienta (Q22); O klient pri 1 ni pognan na končni kodi. Palice se pri 1→0 na dedicated izgubijo.
+Naslednji soak heap (Q437). M10.3 blokiran Q1. [Zapis](../meritve/2026-10-30-P2-klientska-matrika.md).
 
 ### 2026-11-04 (227) — M13.5: 100 NPC-jev z eno izbiro (sprejet)
 

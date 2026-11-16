@@ -2,6 +2,8 @@
 // No production changes. All world operations run on the server thread.
 var OUT = @@OUTPUT@@, REQUEST = @@REQUEST@@;
 var s = null, dead = false;
+var LOCKED = false; // m104-heap-run.ps1: true recalls a drifting combat pair to its spawn points, so the visited world stops growing.
+var COMBAT_CAP = 0; // m104-heap-run.ps1 -CombatCap (Q449): sets RwCombatEntryCap at runtime; 0 leaves the code default.
 function log(x) { Java.type('java.lang.System').out.println('M104 ' + x); }
 function must(ok, detail) { if (!ok) { throw new Error(detail); } }
 function read(path) {
@@ -34,8 +36,44 @@ function spawn(w, name, x, z) {
     n.getStats().setHealthRegen(0); n.getStats().setCombatRegen(0);
     return n;
 }
+// Q443: barrier cells (Q440) left 30/80 fighters pressed against walls with no path. Open ground as in the 4 h soak,
+// plus a recall: once a member is more than RECALL blocks from its spawn point, the pair goes back to its spawn points
+// (2 blocks apart). The old runs hit with all pairs in sample 0; this fixture still needs controller proof.
+// No AI/entity reset or manual damage; this diagnostic is separate from Q237's no-teleport 4 h acceptance.
+var RECALL = 3;
+function recall(u, v) {
+    for each (var m in [u, v]) { m.n.setPosition(m.hx + 0.5, 4, m.hz + 0.5); m.n.setMotionX(0); m.n.setMotionY(0); m.n.setMotionZ(0); }
+    s.recalls++;
+}
+// Q442: failure-only detail for a fighter that took no damage. Packaged run has SRG names, dev has MCP names.
+function get(obj, names) {
+    for each (var name in names) { try { return field(obj, name); } catch (ignored) { } }
+    return '?';
+}
+function why(c) {
+    var e = c.n.getMCEntity(), t = c.target.getMCEntity(), out = [];
+    out.push('at=' + Math.floor(c.n.getX()) + ',' + Math.floor(c.n.getZ()) + ' tgtAt=' + Math.floor(c.target.getX()) + ',' + Math.floor(c.target.getZ()));
+    try { out.push('y=' + c.n.getY() + ' tgtY=' + c.target.getY()); } catch (x) { out.push('y=?'); }
+    out.push('ground=' + get(e, ['field_70122_E', 'onGround']));
+    try { out.push('atk=' + c.n.isAttacking()); } catch (x) { out.push('atk=?'); }
+    try {
+        var run = [], entries = get(get(e, ['field_70714_bg', 'tasks']), ['field_75780_b', 'executingTaskEntries']);
+        for each (var en in entries) { run.push(String(get(en, ['field_75733_a', 'action']).getClass().getSimpleName())); }
+        out.push('run=' + run.join('+'));
+    } catch (x) { out.push('run=?' + x); }
+    try {
+        var nav = null;
+        try { nav = e.func_70661_as(); } catch (x1) { nav = e.getNavigator(); }
+        // Q443: a real search; the default negative cache (RwPathNegCache=1) answers null for 20 ticks after a failure.
+        var NEG = Java.type('noppes.npcs.rework.nav.NegativePathCache'), neg = NEG.mode(), path = null;
+        NEG.setMode(0);
+        try { try { path = nav.func_75494_a(t); } catch (x2) { path = nav.getPathToEntityLiving(t); } } finally { NEG.setMode(neg); }
+        out.push('path=' + (path === null ? 'null' : 'ok'));
+    } catch (x) { out.push('path=?' + x); }
+    return out.join(' ');
+}
 function setup(npc) {
-    s = { workers: [], patrol: [], combat: [], scripted: [], steps: 0, seq: -1, started: 0, hourStart: 0 };
+    s = { workers: [], patrol: [], combat: [], scripted: [], steps: 0, seq: -1, started: 0, hourStart: 0, recalls: 0, peakDrift: 0 };
     var w = npc.getWorld();
     for (var i = 0; i < 80; i++) {
         var x = -56 + (i % 10) * 10, z = -56 + Math.floor(i / 10) * 6;
@@ -47,7 +85,7 @@ function setup(npc) {
     }
     // 40 independent melee pairs, zero weapon knockback. Hits are real AI damage.
     // P1 (Q250): full knockback resistance, otherwise vanilla hit knockback walks each pair
-    // ~1,000-2,000 blocks away over hours (M10.4 attempt 2). No teleport, no AI/entity reset.
+    // ~1,000-2,000 blocks away over hours (M10.4 attempt 2). No teleport, no AI/entity reset (LOCKED only: recall, Q443).
     for (var j = 0; j < 40; j++) {
         var bx = -56 + (j % 10) * 10, bz = 8 + Math.floor(j / 10) * 8;
         var a = spawn(w, 'SOAK_A' + j, bx, bz), b = spawn(w, 'SOAK_B' + j, bx + 2, bz);
@@ -67,6 +105,8 @@ function setup(npc) {
     s.player.playername = 'M104_Offline'; s.player.uuid = '2978a942-7037-49f8-954e-32402847b104';
     // Submit real asynchronous CNPC writes throughout the run, even with no connected player.
     s.player.save(false);
+    if (COMBAT_CAP > 0) { Java.type('noppes.npcs.CustomNpcs').RwCombatEntryCap = COMBAT_CAP; }
+    log('COMBATCAP ' + Java.type('noppes.npcs.CustomNpcs').RwCombatEntryCap);
     npc.getTimers().forceStart(1040, 20, true);
     log('READY workers=200 patrol=80 combat=80 scripted=40 observer=1');
 }
@@ -96,12 +136,12 @@ function snapshot(npc, seq) {
     var quests = persisted.getCompound('QuestData').getList('CompletedQuests', 10);
     must(quests.length === 1 && quests[0].getInteger('Quest') === 104
         && Number(quests[0].getLong('Date')) === Math.floor(s.steps / 20) * 20, 'Latest async write missing on disk');
-    var moved = 0, damaged = 0, timers = 0, minDistance = 1e99, minTicks = 1e99, maxDrift = 0;
+    var moved = 0, damaged = 0, timers = 0, minDistance = 1e99, minTicks = 1e99, maxDrift = 0, idle = [], stuck = [];
     for each (var p in s.patrol) {
         var dist = p.distance - p.previous; minDistance = Math.min(minDistance, dist); if (dist > 1) { moved++; } p.previous = p.distance;
     }
     for each (var c in s.combat) {
-        if (c.damage > c.previous) { damaged++; } c.previous = c.damage;
+        if (c.damage > c.previous) { damaged++; } else { idle.push(c.n.getName() + '@' + c.n.getX() + ',' + c.n.getZ() + '>' + (c.n.getAttackTarget() === null ? 'none' : c.n.getAttackTarget().getName())); stuck.push(c); } c.previous = c.damage;
         var fx = c.n.getX() - c.hx, fz = c.n.getZ() - c.hz; maxDrift = Math.max(maxDrift, Math.sqrt(fx * fx + fz * fz));
     }
     for each (var t in s.scripted) {
@@ -112,13 +152,29 @@ function snapshot(npc, seq) {
     for each (var entity in all) { if (String(entity.getName()).indexOf('SOAK_') === 0) { seen[String(entity.getUUID())] = true; } }
     for each (var worker in s.workers) { if (worker.isAlive() && seen[String(worker.getUUID())]) { alive++; } }
     must(alive === 200 && Object.keys(seen).length === 200, 'Worker set changed');
-    must(moved === 80 && damaged === 80 && timers === 40, 'Inactive workload ' + moved + '/' + damaged + '/' + timers);
+    // An idle fighter is one that took no hits, so its attacker (the target's entry) is logged too.
+    if (damaged !== 80) {
+        for each (var st in stuck) { for each (var o in s.combat) { if (o.n === st.target) { log('IDLE ' + st.n.getName() + ' ' + why(st) + ' | attacker ' + o.n.getName() + ' ' + why(o)); } } }
+    }
+    must(moved === 80 && damaged === 80 && timers === 40, 'Inactive workload ' + moved + '/' + damaged + '/' + timers + ' idle=' + idle.join(';'));
     var before = gcCount(); java.lang.System.gc(); var after = gcCount();
     must(after > before, 'Full GC did not complete');
     var M = Java.type('java.lang.management.ManagementFactory');
     var heap = Number(M.getMemoryMXBean().getHeapMemoryUsage().getUsed());
     var threads = Number(M.getThreadMXBean().getThreadCount());
     var diag = D.snapshot(), hist = diag.distribution('server.tick.ns');
+    var loadedChunks = -1;
+    // Q447: read-only count of vanilla CombatTracker entries; endless synthetic combat never clears them (cleared 100-300 ticks after the last hit).
+    var combatEntries = 0;
+    for each (var ce in s.combat) {
+        var tr = null, mc = ce.n.getMCEntity();
+        try { tr = mc.func_110142_aN(); } catch (x1) { try { tr = mc.getCombatTracker(); } catch (x2) { tr = null; } }
+        var list = tr === null ? '?' : get(tr, ['field_94556_a', 'combatEntries']);
+        if (list === '?') { combatEntries = -1; break; }
+        combatEntries += Number(list.size());
+    }
+    // SRG names: the packaged candidate runs without MCP names (getChunkProvider, getLoadedChunkCount).
+    try { loadedChunks = Number(npc.getWorld().getMCWorld().func_72863_F().func_73152_e()); } catch (ignored) { loadedChunks = -1; }
     var result = { success: true, seq: seq, elapsedSeconds: s.started === 0 ? 0 : (now - s.started) / 1e9,
         hourSeconds: s.hourStart === 0 ? 0 : (now - s.hourStart) / 1e9,
         alive: alive, moved: moved, damaged: damaged, timers: timers, minDistance: minDistance, minTimerDelta: minTicks,
@@ -126,7 +182,7 @@ function snapshot(npc, seq) {
         writes: Math.floor(s.steps / 20), writesCompleted: completed, persistedStep: Number(quests[0].getLong('Date')),
         ticks: Number(hist.count()), p95ns: Number(hist.percentile(0.95)),
         // P1 data only: combat drift from spawn and forced diag chunks (release mode, Q249).
-        maxDrift: maxDrift, forcedChunks: Number(Java.type('noppes.npcs.rework.diag.DiagChunkLoader').forcedChunks()) };
+        maxDrift: maxDrift, forcedChunks: Number(Java.type('noppes.npcs.rework.diag.DiagChunkLoader').forcedChunks()), loadedChunks: loadedChunks, combatEntries: combatEntries, recalls: s.recalls, peakDrift: s.peakDrift };
     if (seq > 0 && seq % 12 === 0) {
         write(OUT + '-hour' + (seq / 12) + '.json', JSON.parse(String(diag.toJson())));
     }
@@ -148,13 +204,26 @@ function timer(e) {
         }
         // Reissue targets only if lost, preserving ordinary combat AI work.
         for each (var c in s.combat) {
+            // Record before recall: a sample taken after recall must not hide an excursion.
+            var dx = c.n.getX() - c.hx, dz = c.n.getZ() - c.hz;
+            s.peakDrift = Math.max(s.peakDrift, Math.sqrt(dx * dx + dz * dz));
             var hp = c.n.getHealth(); c.damage += Math.max(0, c.hp - hp);
             // Vanilla attributes may clamp maximum health. Restore health before death, without
             // resetting entities, AI, targets or the monotonically accumulated actual damage.
             must(c.n.isAlive(), 'Combat worker died');
             if (hp < 500) { c.n.setHealth(c.n.getMaxHealth()); }
             c.hp = c.n.getHealth();
-            if (c.n.getAttackTarget() === null) { c.n.setAttackTarget(c.target); }
+            var aimed = c.n.getAttackTarget();
+            if (aimed === null || (LOCKED && String(aimed.getUUID()) !== String(c.target.getUUID()))) { c.n.setAttackTarget(c.target); }
+        }
+        if (LOCKED) {
+            for (var q = 0; q < s.combat.length; q += 2) {
+                var u = s.combat[q], v = s.combat[q + 1];
+                for each (var m in [u, v]) {
+                    var rx = m.n.getX() - m.hx - 0.5, rz = m.n.getZ() - m.hz - 0.5;
+                    if (rx * rx + rz * rz > RECALL * RECALL) { recall(u, v); break; }
+                }
+            }
         }
         if (s.steps % 20 === 0) {
             s.player.questData.finishedQuests.put(java.lang.Integer.valueOf(104), java.lang.Long.valueOf(String(s.steps)));

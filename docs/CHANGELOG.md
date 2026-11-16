@@ -6,6 +6,8 @@
 - Command Staff selects ground NPCs in a growing circle, applies six behaviour modes and sends
   the selection to separate formation slots (`RwCommandStaff=1`).
 
+- `RwCombatEntryCap=N` (default 0) keeps only the newest N combat-tracker hits per NPC, so NPCs
+  in endless combat no longer grow the heap (M10.4). Older hits stop counting for the death message.
 - NPC wand → **Global → Armies** lets operators create and list armies in game.
 - With `RwAnimCore=1`, **Display → Rig model...** selects a built-in or server creature model.
 - Server creature folders support custom models, textures, animation events, clone settings and scripts.

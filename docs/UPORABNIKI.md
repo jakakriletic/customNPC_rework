@@ -406,8 +406,13 @@ Not proven, so not claimed:
   (original behaviour). Server-side original vs rework comparison passed only on a partial matrix
   (M10.1c, Q225).
 - **Long-run stability:** a 4 h soak with 200 NPCs ran without a server fault (49/49 samples, p95
-  MSPT 3.28 → 3.47 ms), but the heap after full GC grew 168 → 242 MB (+44 %) while the test world
-  kept expanding; a slow leak is not ruled out (P1). `/rwdiag chunks` is a diagnostic tool only.
+  MSPT 3.28 → 3.47 ms), but the heap after full GC grew 168 → 242 MB (+44 %). A later run with
+  a locked world (M10.4, Q449) found the cause: the vanilla combat tracker of an NPC in endless
+  combat (regenerating health, arenas) keeps every hit, about 24 MB/h with 80 fighters, the same
+  as the original. Set `RwCombatEntryCap` (default 0 = original) to e.g. 64 to keep only the newest
+  hits per NPC; then the heap stayed flat (0.15 MB/h, Q452), but older hits no longer count for the
+  best attacker and death message. That run was stopped at 1.67 h of 2 h, on a dev server without
+  a player, with N=64 only. `/rwdiag chunks` is a diagnostic tool only.
 - **No real modpack test** (M10.3 blocked, Q1). OptiFine, shaders and Entity Culling are handled
   by fallbacks but were not checked in a full modpack; the client coremod in a packaged client was
   not tested.

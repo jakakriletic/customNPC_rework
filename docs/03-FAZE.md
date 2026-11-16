@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). v2 M11 sprejet z omejitvami, M11.5 sprejet po ponovnem odprtju Q418; M13.0–M13.5 zaključeni (Q433). Matrika P2 zelena (Q436); naslednja omejitev §6: soak heap (Q437). Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; pri privzeto 0 ni cenovne meje, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
+**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). v2 M11 sprejet z omejitvami, M11.5 sprejet po ponovnem odprtju Q418; M13.0–M13.5 zaključeni (Q433). Matrika P2 zelena (Q436); soak heap pojasnjen in omejen s `RwCombatEntryCap` (Q452); naslednja razvrstitev ostalih omejitev §6 (Q453), nato M16 (Q444). Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; pri privzeto 0 ni cenovne meje, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -582,7 +582,7 @@ CustomNPC+ repozitorija se ne prenesejo.
 | ~~M10.1d~~ | **Matrika zelena 4. 11. kot P2 (Q436, [zapis](meritve/2026-10-30-P2-klientska-matrika.md)).** Prej zaprt brez sprejema 30. 10. (Q233), validacija v2: oba poskusa porabljena, prevod v2 PASS, vse 4 funkcionalne celice FAIL; [zapis](meritve/2026-10-30-M10.1d-klient.md). Naslednji M10.5 → M10.4 (4 h) → M10.2 → M10.6 → M10.7 po Q92; release merila ostanejo odprta | M |
 | ~~M10.2~~ | **Sprejet 30. 10. (Q242):** kandidat `-Privzeto 1` proti baselineu 5. 10., vseh 9 celic brez alarma p95, 8/9 hitrejših; [zapis](meritve/2026-10-30-M10.2-baseline.md). Naslednji M10.6 → M10.7 po Q92 | S |
 | M10.3 | Test na **kopiji** uporabnikovega pravega sveta | M |
-| ~~M10.4~~ | **Zaprt brez sprejema 30. 10. (Q240), polni soak v2:** soak-v2 padel po 2 h 25 min, ker so bojni pari odtavali in diag chunkloader dosegel 2000 chunkov; [zapis](meritve/2026-10-30-M10.4-soak.md). Naslednji M10.2 → M10.6 → M10.7 po Q92 | S |
+| ~~M10.4~~ | **Zaprt brez sprejema 30. 10. (Q240), polni soak v2:** rast heapa pozneje pojasnjena (vanilla `CombatTracker` v neskončnem boju) in omejena s `RwCombatEntryCap`, sprejet Q452 ([zapis](meritve/2026-11-04-M10.4-heap.md)); soak-v2 padel po 2 h 25 min, ker so bojni pari odtavali in diag chunkloader dosegel 2000 chunkov; [zapis](meritve/2026-10-30-M10.4-soak.md). Naslednji M10.2 → M10.6 → M10.7 po Q92 | S |
 | ~~M10.5~~ | **Sprejet 30. 10., poskus 2 (Q236):** [rollback](meritve/2026-10-30-M10.5-rollback.md), 6 faz 58/58, obnova 42/42 datotek; sintetični obseg, izguba Rw ključev in vrnitev B3 izrecni; release ostane odprt | S |
 | ~~M10.6~~ | **Zaključen 30. 10. (Q244):** [`UPORABNIKI.md`](UPORABNIKI.md) — nastavitve, migracija/rollback, znane omejitve; [zapis](meritve/2026-10-30-M10.6-dokumentacija.md). Naslednji M10.7 po Q92 | M |
 | ~~M10.7~~ | **Zaključen 30. 10. (Q246–Q247):** [`CHANGELOG.md`](CHANGELOG.md) z eksplicitnim seznamom sprememb obnašanja, register dopolnjen; [zapis](meritve/2026-10-30-M10.7-changelog.md). Obseg v1 (Q92) brez izvedljivih paketov; M10.3 blokiran (Q1), M10.1a/b/d in M10.4 v2 | S |

@@ -421,6 +421,8 @@ task testOriginal(type: Test) {
     // M13.3: the wand selection and list classes are new.
     exclude '**/LinkedWandTest.class'
     exclude '**/LinkedClonerTest.class'
+    // M10.4: the CombatTracker entry cap is new.
+    exclude '**/CombatEntryCapTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

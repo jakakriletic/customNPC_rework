@@ -24,6 +24,7 @@ Nič prevzetega. `NbtJson` je napisan na novo; format posnema original, koda ne.
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
+| 2026-11-16 | Strežnik takoj po vpisu udarca (`damageEntity`) NPC-ju pusti samo zadnjih N vnosov `CombatTracker`; starejši udarci ne štejejo za najboljšega napadalca in smrtno sporočilo | M10.4/P1, Q449–Q452 | `RwCombatEntryCap`, strežnik | **0** (original: vnosi do reseta 100–300 tickov po zadnjem udarcu) |
 | 2026-11-04 | Dedicated strežnik registrira `customnpcs:army_staff` samo pri `RwArmies>=1` (klient vedno), shranjeni vnos se pri 0 prezre; originalni klient se lahko poveže pri 0, pri 1 ne; palice se pri 1→0 na dedicated izgubijo | P2, D-101, Q435 | `RwArmies` | **0** (predmeta na dedicated strežniku ni) |
 | 2026-11-04 | Kloner: izbira »Linked« postavi klon kot povezan v skupino z imenom klona (nova iz klona, obstoječa se ne prepiše), sveže strežniške pravice ob postavitvi; po urejanju povezanega NPC-ja klepet sporoči posodobljene/čakajoče naložene člane, nenaloženi ob nalaganju | M13.4, Q419–Q429 | `RwLinkedGroups`, obe strani | **0** (izvirni kloner; izbira šele po odgovoru strežnika) |
 | 2026-11-04 | Dolg pohod po omejenih pravih poteh; stabilne čete/pasovi/smer, naslednja etapa po prihodu vseh, dom šele na koncu. Zadnji prehodni meter vodi isti move helper; novo sidrno iskanje počisti staro pot vodje, brez ponavljanja svežega neuspeha ali širjenja prihoda | M11.5, D-104, Q412–Q418 | `RwArmies`, strežnik | **0** (brez army runtimea, navadni `/rwsquad` ostane isti) |
@@ -108,6 +109,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-16 | M10.4 heap: zaklenjen svet, 200 NPC (80/80/40), `RwCombatEntryCap=64`, `m104-heap-run.ps1 -CombatCap 64` | Delni tek `153707` 20/24 vzorcev (1,67 h, ustavil lastnik, sprejet Q452): vnosi 5120, heap 0,152 MiB/h proti 24,2 brez cap (`132104`), histo 1→12 brez rasti | [zapis](meritve/2026-11-04-M10.4-heap.md) |
 | 2026-11-12 | M16 legionar (Steve + scutum, JS dvigne ščit in napade), privzetki NPC-ja (brez oči, brez respawna), pošteno štetje škode: `rig-run.ps1` 10 modelov | PASS `m16-rig-2026-11-12-132013` 21/21: troll smash 5,0, JS vitez 26+, legionar ščit → vbod 6,0 + sunek 2,0; unit 844, paket PASS; prejšnja vrstica M16 ni dokazala `hit` (sonce) | [zapis](meritve/2026-11-12-M16-animacijsko-jedro.md) |
 | 2026-11-12 | M16 animacijsko jedro: `rig-run.ps1` integriran dev klient, `RwAnimCore=1`, brez customnpcentities, 8 modelov le z NBT `RwRig`, paket `knight_boss.rig.json` z JS | PASS `m16-rig-2026-11-12-123724` 14/14: risanje, sinhronizacija klipa, `hit` škoda, klon ohrani rig in klipe, JS napad zombi 20 → 14; unit 842, paket PASS | [zapis](meritve/2026-11-12-M16-animacijsko-jedro.md) |
 | 2026-11-12 | M11.11e pasovi Free for all: `army-ffa-far-run.ps1` (+ širina ≥30) in `army-ffa-run.ps1` dev dedicated | PASS `m1111-far-2026-11-12-120245` širina 58–60, 100/100; PASS `m1111-ffa-2026-11-12-115915` 199/199, razmik ≥0,96; unit 834, paket PASS | [zapis](meritve/2026-11-11-M11.11-freeforall.md) |
