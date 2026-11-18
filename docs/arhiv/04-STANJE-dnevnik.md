@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 244 → 1)
+# Arhiv: dnevnik sej (vnosi 245 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,18 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-18 (245) — M14.3b2: M16, GUI in izris peke sprejeti
+
+**Paket:** M14.3b2 (Q504–Q506) · **Stanje:** sprejet pod stikalom 0.
+Po popravku klica spawn NBT v harnessu so vsi štirje zahtevani controller testi
+PASS na `f03e496c…`: 895 patched + 51 original JUnit, package 1716/90,
+36/36 funkcionalnih preverb in 16 A/B/A2 vrstic. M16/GUI/izris peke so bitno enaki,
+običajni vrstici RGB max 1/255, negativni kontroli in obnova uspešni, GL napak ni.
+Pregledanih 49 PNG; vseh 604 zaščitenih vhodov je še enakih. Produkcija in cena
+nespremenjeni; uspešnih testov ne ponavljaj Q90. Q506: sledi živi prehod L2 M14.3b3,
+nato ostale meje Q500. GUI tok, atlas/L2 in širša združljivost/vklop ostajajo odprti.
+Nič zagnano ročno; nepovezano delo ohranjeno. [Zapis](../meritve/2026-11-18-M14.3b2-konteksti.md).
 
 ### 2026-11-18 (244) — M14.3b1: celoten zamrznjen izris sprejet
 

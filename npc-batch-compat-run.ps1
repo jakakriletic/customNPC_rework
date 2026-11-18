@@ -1,18 +1,19 @@
 <# Controller-only M14.3a native GL/lifecycle proof; -WholeRenderer selects M14.3b1
    frozen whole living-renderer fixtures instead; -Contexts selects M14.3b2
-   M16/CNPC GUI/baker render-stage fixtures. One isolated dev client, no cost
-   window. Neither mode installs or simulates OptiFine. #>
-param([switch]$WholeRenderer, [switch]$Contexts)
+   M16/CNPC GUI/baker render-stage fixtures; -ProgramFault selects M14.3b4 injected
+   compile/link/draw faults of the batch program with live original fallback and reload
+   recovery. One isolated dev client, no cost window. No mode installs or simulates OptiFine. #>
+param([switch]$WholeRenderer, [switch]$Contexts, [switch]$ProgramFault)
 $ErrorActionPreference = 'Stop'
-if ($WholeRenderer -and $Contexts) { throw 'Choose one scenario mode' }
+if ([int]$WholeRenderer.IsPresent + [int]$Contexts.IsPresent + [int]$ProgramFault.IsPresent -gt 1) { throw 'Choose one scenario mode' }
 $scene = $WholeRenderer -or $Contexts
 $root = $PSScriptRoot
 $run = Join-Path $root 'dev/run'
 . (Join-Path $root 'meritve-lib.ps1')
 . (Join-Path $root 'nav-meritve-lib.ps1')
 $stamp = Get-Date -Format 'yyyy-MM-dd-HHmmss'
-$tag = if ($Contexts) { 'm143b-contexts' } elseif ($WholeRenderer) { 'm143b-scene' } else { 'm143a-native' }
-$package = if ($Contexts) { 'M14.3b2' } elseif ($WholeRenderer) { 'M14.3b1' } else { 'M14.3a' }
+$tag = if ($ProgramFault) { 'm143b-fault' } elseif ($Contexts) { 'm143b-contexts' } elseif ($WholeRenderer) { 'm143b-scene' } else { 'm143a-native' }
+$package = if ($ProgramFault) { 'M14.3b4' } elseif ($Contexts) { 'M14.3b2' } elseif ($WholeRenderer) { 'M14.3b1' } else { 'M14.3a' }
 $prefix = Join-Path $root "audit/$tag-$stamp"
 $work = Join-Path $root "dev/run-$tag/$stamp"
 $lock = $null
@@ -80,7 +81,7 @@ try {
     $job = "$prefix.job"
     $log = "$prefix-client.log"
     [IO.File]::WriteAllLines($job, @('npcBatchCompat=1', ('world=' + $tag), ('wholeRenderer=' + [int]$WholeRenderer.IsPresent),
-        ('contexts=' + [int]$Contexts.IsPresent),
+        ('contexts=' + [int]$Contexts.IsPresent), ('programFault=' + [int]$ProgramFault.IsPresent),
         ('out=' + $out.Replace('\', '/'))), (New-Object Text.UTF8Encoding $false))
     $env:JAVA_HOME = Join-Path $root '.tools/jdk8'
     $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
@@ -117,6 +118,18 @@ try {
         $special = @($keys | Where-Object { $_ -cnotin @('ordinary-name', 'ordinary-after-specials') })
         $expected = @($keys) + @($keys | ForEach-Object { "$_-gl" }) + @('name-visible', 'pose-negative-control', 'uv-negative-control', 'recovery-baseline')
     }
+    if ($ProgramFault) {
+        $keys = @('compile-fault', 'compile-fault-later-frame', 'link-fault', 'draw-fault', 'draw-fault-later-frame', 'ordinary-after-faults')
+        $expected = @($keys) + @($keys | ForEach-Object { "$_-gl" }) + @('compile-fault-state', 'compile-fault-no-retry',
+            'live-world-original', 'live-world-original-gl', 'link-fault-state', 'draw-fault-state', 'draw-fault-no-retry', 'program-recovered')
+        # Each injected fault reaches the real driver/runtime exactly once; no retry storm.
+        foreach ($pair in @(@('RWBATCH shader compile failed', 1), @('RWBATCH program link failed', 1),
+                @('RWBATCH draw failed: java.lang.IllegalStateException: test draw fault', 1), @('RWBATCH draw failed', 1))) {
+            $count = ([regex]::Matches($text, [regex]::Escape($pair[0]))).Count
+            Write-Host ("LOG '{0}' x{1}" -f $pair[0], $count)
+            Assert ($count -eq $pair[1]) "log $($pair[0]) exactly $($pair[1])"
+        }
+    }
     $checks = @($proof.checks)
     Assert ($checks.Count -eq $expected.Count -and @($checks.key | Select-Object -Unique).Count -eq $expected.Count) 'exact distinct check count'
     foreach ($key in $expected) {
@@ -124,7 +137,7 @@ try {
         if ($row.Count -eq 1) { Write-Host ("RESULT {0} ok={1} {2}" -f $key, $row[0].ok, $row[0].detail) }
     }
     Assert ($proof.success -eq $true -and $proof.error -ceq '' -and $text.Contains('M143A DONE success=true')) 'compatibility proof success'
-    $joins = if ($scene) { 1 } else { 2 }
+    $joins = if ($scene -or $ProgramFault) { 1 } else { 2 }
     Assert ($proof.joins -eq $joins -and $proof.width -eq 256 -and $proof.height -eq 256) 'real world joins and fixed FBO'
     foreach ($key in $expected) {
         $row = @($checks | Where-Object { $_.key -ceq $key })
@@ -162,7 +175,8 @@ try {
     }
     $client = $null
     Unchanged
-    $condition = if ($Contexts) { 'one isolated integrated dev client/GPU; 16 frozen FBO A/B/A2 rows, real M16 knight idle/walk/hurt/death route, actual CNPC GUI drawNpc with ordinary/rig entity, actual ImpostorBaker createEntity/drawModel at 8 angles; bitwise excluded routes and GL/event comparison, ordinary recovery and negative controls; not full atlas pipeline, GUI interaction, rig networking, live AI, L2 transition, cost or optional-mod proof' }
+    $condition = if ($ProgramFault) { 'one isolated integrated dev client/GPU; injected batch-program compile fault (first build), link fault and draw-time exception with program/VAO bound, each followed by a later frame; frozen FBO A/B/A2 bitwise original image and GL state, no rebuild until a real resource reload, live world NPC at switch 1 drawn by the original renderer while failed, recovery to the batch draw after reload; injected faults, not a real driver/OptiFine/shader failure; no cost proof' }
+        elseif ($Contexts) { 'one isolated integrated dev client/GPU; 16 frozen FBO A/B/A2 rows, real M16 knight idle/walk/hurt/death route, actual CNPC GUI drawNpc with ordinary/rig entity, actual ImpostorBaker createEntity/drawModel at 8 angles; bitwise excluded routes and GL/event comparison, ordinary recovery and negative controls; not full atlas pipeline, GUI interaction, rig networking, live AI, L2 transition, cost or optional-mod proof' }
         elseif ($WholeRenderer) { 'one isolated integrated dev client/GPU; 25 frozen whole living-renderer fixtures in FBO A/B/A2, visible features, events/layer witness/name, Q475 and bitwise special fallback; no live AI motion, rig, URL, GUI/bake, L2, shadow, cost or optional-mod proof' }
         else { 'one isolated integrated dev client, ordinary main model, frozen FBO A/B/A2, native foreign program/VAO in same frame, real reload and world leave/rejoin at switch 0; no cost or optional-mod proof' }
     @{success = $true; package = $package; proof = $out; log = $log; inputs = $hashes; condition = $condition} |

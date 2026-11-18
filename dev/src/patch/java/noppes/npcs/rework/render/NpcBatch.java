@@ -59,11 +59,14 @@ public final class NpcBatch {
     public static final String[] REASONS = {"pass", "model", "state", "capability", "program", "geometry", "error"};
     static final int PASS = 0, MODEL = 1, STATE = 2, CAPABILITY = 3, PROGRAM = 4, GEOMETRY = 5, ERROR = 6;
     private static final long[] FALLBACK = new long[REASONS.length];
-    public static long draws, uploads, deletes, programs;
+    public static long draws, uploads, deletes, programs, programFailures, drawFailures;
     /** Explicitly requested harness passes run outside the world pass (RenderWorldLastEvent). */
     public static boolean checkScope;
     /** Harness negative controls only: extra head rotation (degrees) and U shift (texture units). */
     public static float testPoseDegrees, testUvShift;
+    /** Harness fault injection only (M14.3b4): 1 = invalid vertex source (compile), 2 = fragment
+     * stage without main (link), 3 = exception after the program and VAO are bound (draw). */
+    public static int testProgramFault;
 
     private static final int PARTS = 12;
     private static final ModelRenderer[] SCRATCH = new ModelRenderer[PARTS];
@@ -153,12 +156,16 @@ public final class NpcBatch {
                 UPLOAD.clear(); UPLOAD.put(CLIPS).flip();
                 GL20.glUniformMatrix4(locClips, false, UPLOAD);
                 bindVao(e.vao);
+                if (testProgramFault == 3) { throw new IllegalStateException("test draw fault"); }
                 GL11.glDrawArrays(GL11.GL_QUADS, 0, e.mesh.vertices);
             } finally {
                 bindVao(0);
                 GL20.glUseProgram(0);
             }
         } catch (RuntimeException error) {
+            // Original renderer until the next resource reload or world change.
+            System.out.println("RWBATCH draw failed: " + error);
+            drawFailures++;
             failed = true; frameOk = false; releaseAll();
             return fallback(ERROR);
         }
@@ -388,7 +395,7 @@ public final class NpcBatch {
                 && GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM) == 0;
         if (frameOk && program == 0) {
             program = buildProgram();
-            if (program == 0) { failed = true; frameOk = false; }
+            if (program == 0) { programFailures++; failed = true; frameOk = false; }
         }
         // EntityRenderer.setupFog selects radial fog distance where GL_NV_fog_distance exists.
         fogRadial = frameOk && caps.GL_NV_fog_distance && GL11.glGetInteger(0x855A) == 0x855B;
@@ -483,7 +490,9 @@ public final class NpcBatch {
     }
 
     private static int buildProgram() {
-        int vs = shader(GL20.GL_VERTEX_SHADER, VERTEX), fs = vs == 0 ? 0 : shader(GL20.GL_FRAGMENT_SHADER, FRAGMENT);
+        String vertex = testProgramFault == 1 ? VERTEX + "\nrwTestCompileFault" : VERTEX;
+        String fragment = testProgramFault == 2 ? "#version 120\nvoid rwTestNoMain() { }" : FRAGMENT;
+        int vs = shader(GL20.GL_VERTEX_SHADER, vertex), fs = vs == 0 ? 0 : shader(GL20.GL_FRAGMENT_SHADER, fragment);
         if (fs == 0) { if (vs != 0) { GL20.glDeleteShader(vs); } return 0; }
         int p = GL20.glCreateProgram();
         GL20.glAttachShader(p, vs); GL20.glAttachShader(p, fs);

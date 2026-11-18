@@ -14,8 +14,8 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-11-18 |
-| Trenutna faza | **v2: M14.3b2 sprejet** (Q506). [Dokaz](docs/meritve/2026-11-18-M14.3b2-konteksti.md): vsi štirje testi PASS na `f03e496c…`, 36/36 preverb in 16 slikovnih vrstic M16/GUI/izrisa peke. Produkcija nespremenjena; `RwNpcInstancing=0`, širša M14.3/vklop še odprta. M16.7b sprejet, `RwReadableClones=1` (Q484); M10.3 blokiran Q1. |
-| Naslednji korak | **M14.3b3: živi prehod L2**, nato napaka programa in preostale žive meje Q500 ter M14.4 po širši združljivosti, 3+3 in ogledu lastnika; native GL ni OptiFine/shader dokaz. [Merila M14.0](docs/raziskave/M14.0-izris-bliznjih-npc.md). Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. M16.7c po M14, M12 zadnji. |
+| Trenutna faza | **v2: M14.3b4 sprejet** (Q512). [Dokaz](docs/meritve/2026-11-18-M14.3b4-napaka-programa.md): vsi štirje testi PASS na `34a102f6…`, 20/20 preverb, bitni originalni fallback ob napakah compile/link/draw in obnova po reloadu. `RwNpcInstancing=0`, širša M14.3/vklop še odprta. M16.7b sprejet, `RwReadableClones=1` (Q484); M10.3 blokiran Q1. |
+| Naslednji korak | **M14.3b5: dejanska hoja/boj**, nato preostale žive meje Q500 ter M14.4 po širši združljivosti, 3+3 in ogledu lastnika; native GL ni OptiFine/shader dokaz. [Merila M14.0](docs/raziskave/M14.0-izris-bliznjih-npc.md). Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. M16.7c po M14, M12 zadnji. |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
 | Prevedljivih razredov | 356 datotek `.java` v `src/patch` (274 rework), 127 testnih datotek; zadnji JUnit rezultat 895 testov. Package PASS: 1716 originalnih vnosov, 90 pričakovanih sprememb. |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |

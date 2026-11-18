@@ -50,7 +50,10 @@ import org.lwjgl.opengl.GLContext;
 /** M14.3a controller-only native GL boundary and resource-lifetime proof. One real integrated
  * world/NPC supplies the ordinary main model; FBO A/B/A2 comparisons use frozen poses. This
  * deliberately does not claim whole-renderer, OptiFine, rig, layer or L2 coverage. No cost window.
- * Reflection observes production-owned GL names; it never forces the production decision. */
+ * Reflection observes production-owned GL names; it never forces the production decision.
+ * programFault=1 (M14.3b4) instead injects a compile, link and draw fault of the batch program
+ * through NpcBatch.testProgramFault: each must leave the bitwise original image, no retry
+ * storm, no live resources, and a later real resource reload must rebuild the program. */
 @SideOnly(Side.CLIENT)
 public final class NpcBatchCompatHarness {
     private static final int W = 256, H = 256;
@@ -70,8 +73,13 @@ public final class NpcBatchCompatHarness {
     private List<int[]> resources;
     private int oldProgram;
     private long builds;
+    private final boolean fault;
+    private String afterReload;
+    private long liveDraws, liveRefused, liveFailures;
 
-    private NpcBatchCompatHarness(Properties p) { job = p; out = new File(p.getProperty("out")); }
+    private NpcBatchCompatHarness(Properties p) {
+        job = p; out = new File(p.getProperty("out")); fault = "1".equals(p.getProperty("programFault"));
+    }
 
     static boolean installIfRequested(String path) throws Exception {
         Properties p = new Properties();
@@ -121,7 +129,9 @@ public final class NpcBatchCompatHarness {
                                 }
                             }
                             if (joins == 1 && mc.getIntegratedServer().getCommandManager().executeCommand(mc.getIntegratedServer(),
-                                    "summon customnpcs:customnpc 0 4 2 {Name:\"M143A\",MovingState:0,StandingState:1,Orientation:180}") < 1) {
+                                    "summon customnpcs:customnpc 0 4 2 {Name:\"M143A\",MovingState:0,StandingState:1,Orientation:180"
+                                    // Fault mode also renders it live: keep it standing where summoned (Q509).
+                                    + (fault ? ",StartPosNew:[I;0,4,2]" : "") + "}") < 1) {
                                 throw new IllegalStateException("summon");
                             }
                         } catch (Exception problem) { serverError = problem.toString(); }
@@ -138,7 +148,36 @@ public final class NpcBatchCompatHarness {
                     if (npc == null) { break; }
                     renderer = mc.getRenderManager().getEntityRenderObject(npc);
                     model = new ModelPlayerAlt(0, false);
-                    enter(joins == 1 ? "MATRIX" : "AFTER_REJOIN", 0);
+                    if (fault) {
+                        // The first program build of this client fails to compile.
+                        NpcBatch.testProgramFault = 1;
+                        enter("FAULT_COMPILE", 0);
+                    } else {
+                        enter(joins == 1 ? "MATRIX" : "AFTER_REJOIN", 0);
+                    }
+                    break;
+                case "LIVE_FAULT":
+                    // The living world renderer at switch 1 while the program has failed.
+                    liveDraws = NpcBatch.draws; liveRefused = NpcBatch.fallbacks()[4]; liveFailures = NpcBatch.programFailures;
+                    CustomNpcs.RwNpcInstancing = 1;
+                    enter("LIVE_FAULT_END", 40);
+                    break;
+                case "LIVE_FAULT_END": {
+                    CustomNpcs.RwNpcInstancing = 0;
+                    long refused = NpcBatch.fallbacks()[4] - liveRefused;
+                    check("live-world-original", NpcBatch.draws == liveDraws && refused > 0
+                            && NpcBatch.programFailures == liveFailures && program() == 0 && NpcBatch.live() == 0,
+                            "draws=" + (NpcBatch.draws - liveDraws) + " programRefusals=" + refused
+                            + " failures=" + NpcBatch.programFailures + " live=" + NpcBatch.live());
+                    check("live-world-original-gl", GL11.glGetError() == GL11.GL_NO_ERROR, "GL_NO_ERROR");
+                    NpcBatch.testProgramFault = 2;
+                    reloadThen("FAULT_LINK");
+                    break;
+                }
+                case "FAULT_RELOAD":
+                    // Real synchronous resource reload: the only production retry of a failed program.
+                    mc.refreshResources();
+                    enter(afterReload, 20);
                     break;
                 case "RELOAD":
                     // Real synchronous resource reload while the optimization is OFF. It must
@@ -172,7 +211,8 @@ public final class NpcBatchCompatHarness {
     }
 
     @SubscribeEvent public void render(RenderWorldLastEvent e) {
-        if (finished || !(phase.equals("MATRIX") || phase.equals("REBUILD") || phase.equals("AFTER_REJOIN"))) { return; }
+        if (finished || !(phase.equals("MATRIX") || phase.equals("REBUILD") || phase.equals("AFTER_REJOIN")
+                || phase.startsWith("FAULT_") && !phase.equals("FAULT_RELOAD"))) { return; }
         Minecraft mc = Minecraft.getMinecraft();
         Framebuffer fb = null;
         int savedProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
@@ -189,6 +229,7 @@ public final class NpcBatchCompatHarness {
             if (!OpenGlHelper.isFramebufferEnabled()) { throw new IllegalStateException("FBO required"); }
             NpcBatch.checkScope = true;
             fb = new Framebuffer(W, H, true); fb.setFramebufferColor(0, 0, 0, 0);
+            if (fault) { faultFrame(mc, fb); return; }
             if ("1".equals(job.getProperty("wholeRenderer")) || "1".equals(job.getProperty("contexts"))) {
                 String images = out.getPath().replace(".proof.json", "");
                 JsonObject scene = "1".equals(job.getProperty("contexts"))
@@ -247,6 +288,66 @@ public final class NpcBatchCompatHarness {
             mc.getFramebuffer().bindFramebuffer(true);
             if (fb != null) { fb.deleteFramebuffer(); }
         }
+    }
+
+    private void reloadThen(String next) { afterReload = next; enter("FAULT_RELOAD", 0); }
+
+    /** One fault step per rendered frame; the original warmup compiles display lists first.
+     * Only candidate calls reach production, so its per-frame decision is made inside the trial. */
+    private void faultFrame(Minecraft mc, Framebuffer fb) throws Exception {
+        shot(mc, fb, false, 0, 0);
+        long built = NpcBatch.programs, failures = NpcBatch.programFailures, drawn = NpcBatch.drawFailures, deleted = NpcBatch.deletes;
+        long uploaded = NpcBatch.uploads;
+        switch (phase) {
+            case "FAULT_COMPILE":
+                trial(mc, fb, "compile-fault", 0, 0, 0, 4, true);
+                failed("compile-fault-state", built, failures + 1, drawn);
+                enter("FAULT_COMPILE_LATER", 0);
+                break;
+            case "FAULT_COMPILE_LATER":
+                trial(mc, fb, "compile-fault-later-frame", 0, 0, 0, 4, true);
+                failed("compile-fault-no-retry", built, failures, drawn);
+                enter("LIVE_FAULT", 0);
+                break;
+            case "FAULT_LINK":
+                trial(mc, fb, "link-fault", 0, 0, 0, 4, true);
+                failed("link-fault-state", built, failures + 1, drawn);
+                NpcBatch.testProgramFault = 3;
+                reloadThen("FAULT_DRAW");
+                break;
+            case "FAULT_DRAW":
+                // The program builds and the mesh uploads; the draw then throws with both bound.
+                trial(mc, fb, "draw-fault", 0, 0, 0, 6, true);
+                check("draw-fault-state", NpcBatch.programs == built + 1 && NpcBatch.uploads == uploaded + 1 && NpcBatch.deletes == deleted + 1
+                        && NpcBatch.programFailures == failures && NpcBatch.drawFailures == drawn + 1
+                        && program() == 0 && NpcBatch.live() == 0 && !NpcBatch.programReady(),
+                        "programs=" + built + "->" + NpcBatch.programs + " deletes=" + deleted + "->" + NpcBatch.deletes
+                        + " drawFailures=" + NpcBatch.drawFailures + " live=" + NpcBatch.live() + " program=" + program());
+                enter("FAULT_DRAW_LATER", 0);
+                break;
+            case "FAULT_DRAW_LATER":
+                trial(mc, fb, "draw-fault-later-frame", 0, 0, 0, 4, true);
+                failed("draw-fault-no-retry", built, failures, drawn);
+                NpcBatch.testProgramFault = 0;
+                reloadThen("FAULT_RECOVERED");
+                break;
+            case "FAULT_RECOVERED":
+                trial(mc, fb, "ordinary-after-faults", 0, 0, 1, -1, false);
+                check("program-recovered", NpcBatch.programs == built + 1 && NpcBatch.programFailures == failures
+                        && NpcBatch.drawFailures == drawn && program() != 0 && NpcBatch.live() == 1 && NpcBatch.programReady(),
+                        "programs=" + built + "->" + NpcBatch.programs + " live=" + NpcBatch.live() + " program=" + program());
+                enter("FINISH", 0);
+                break;
+            default: throw new IllegalStateException("Fault phase " + phase);
+        }
+    }
+
+    /** The failed program stays failed: no new build attempt, no program or mesh names. */
+    private void failed(String key, long programs, long failures, long draws) throws Exception {
+        check(key, NpcBatch.programs == programs && NpcBatch.programFailures == failures && NpcBatch.drawFailures == draws
+                && program() == 0 && NpcBatch.live() == 0 && !NpcBatch.programReady(),
+                "programs=" + NpcBatch.programs + " failures=" + NpcBatch.programFailures + " drawFailures=" + NpcBatch.drawFailures
+                + " live=" + NpcBatch.live() + " program=" + program());
     }
 
     private String trial = "";
@@ -369,7 +470,7 @@ public final class NpcBatchCompatHarness {
     private void finish(Minecraft mc, String error) {
         finished = true;
         try {
-            CustomNpcs.RwNpcInstancing = 0;
+            CustomNpcs.RwNpcInstancing = 0; NpcBatch.testProgramFault = 0;
             JsonObject proof = new JsonObject(); proof.addProperty("success", allOk && error.isEmpty()); proof.addProperty("error", error);
             proof.addProperty("joins", joins); proof.addProperty("width", W); proof.addProperty("height", H);
             proof.add("checks", checks); proof.add("rows", rows);
