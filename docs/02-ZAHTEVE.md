@@ -589,7 +589,7 @@ Raziskava: [`raziskave/M5-V.0-daljna-vidnost.md`](raziskave/M5-V.0-daljna-vidnos
 [M14.0](raziskave/M14.0-izris-bliznjih-npc.md) (D-106, Q473–Q475) in
 [M14.1a](meritve/2026-11-16-M14.1a-baseline.md) (Q479) sta zaključena. Nevtralen
 prenos `ModelScaleRenderer` ima 93 bitno enakih primerjav delov modela. VBO M14.1b je
-zavrnjen zaradi cene (Q483). Izbirni `RwNpcInstancing` (privzeto 0) pri 1 nariše dvanajst delov
+zavrnjen zaradi cene (Q483). `RwNpcInstancing` (privzeto 1 po Q545) nariše dvanajst delov
 na NPC v enem klicu, brez med-NPC instancinga (Q487). M14.2a/M14.3a in omejeni M14.3b1 so sprejeti:
 [celoten zamrznjen living renderer](meritve/2026-11-18-M14.3b-celoten-izris.md) preverja
 poze, skine, luč/meglo/skalo, dogodke/ime in bitno originalne special rezerve (Q503).
@@ -603,13 +603,14 @@ originalni izris; tuj renderer/model, Classic in 64×32 ostanejo bitno originaln
 [M14.3b8](meritve/2026-11-18-M14.3b8-optifine.md) potrdi originalni izris s pravim
 OptiFine G5 brez shaderja in z BSL. [M14.4a](meritve/2026-11-18-M14.4a-3plus3.md)
 potrdi 3+3 idle/dalec-200/500: idle-500 p95 −19,13 %, ločena razpona, brez regresije
-p95 drugje (Q541). Privzeti vklop M14.4b ostane odložen do ogleda lastnika in potrebne
-regresije M5.Z (Q539); stikalo 0, celoten M14 še ni sprejet.
+p95 drugje (Q541). Lastnik je po tem poročilu izrecno naročil privzeti vklop M14.4b
+in drugih optimizacijskih režimov (Q545, D-109).
 CPU animacije, ticki, NBT in omrežje ostanejo enaki; M16 rig in nepodprti modeli/plasti
 ohranijo obstoječi izris. Guard in obnova GL stanja sta del prvega kandidata.
 Vklop zahteva dokaz slike, združljivosti in izboljšanja p95 nad šumom na isti trenutni kodi;
 oktobrski p95 9,817 ms in cena impostorja nista absolutna cilja. Pragovi in dokazna matrika
-so v raziskavi §5; ročni ogled lastnika ostane del končnega sprejema. K13 samostojno ni odprt.
+so v raziskavi §5. Izrecna odobritev lastnika nadomesti čakanje na ogled iz Q539.
+K13 samostojno ni odprt.
 
 ### Izrecno prepovedano brez ločenega projekta
 

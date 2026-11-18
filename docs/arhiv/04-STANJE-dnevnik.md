@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 251 → 1)
+# Arhiv: dnevnik sej (vnosi 252 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,17 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-18 (252) — M14.4a: meritev 3+3 sprejeta
+
+**Paket:** M14.4a (Q539–Q541) · **Stanje:** merilni paket sprejet, privzeti vklop odložen.
+Vseh osem zahtevanih controller testov PASS na `6fd26ee4…`, odtis ob zaključku enak.
+Idle-500 p95 9,9147 → 8,0180 ms (−19,13 %), razpona 9,6304–10,0276 in 7,9813–8,0653 ms;
+ostale tri celice brez regresije p95. K21 upošteva modelni del po L2 (Q540), K16 ostane.
+Produkcija in pogoji nespremenjeni, brez ponavljanja uspešnih serij (Q90).
+M14.4b in celoten M14 še nista sprejeta: manjka ogled lastnika, nato privzeti vklop
+in potrebna M5.Z regresija. Stikalo 0; naslednji neodvisni M16.7c, M12 zadnji.
+[Meritve, GC, pokritost in meje](../meritve/2026-11-18-M14.4a-3plus3.md).
 
 ### 2026-11-18 (251) — M14.3b8: OptiFine in shader sprejeta
 

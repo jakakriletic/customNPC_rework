@@ -14,8 +14,8 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-11-18 |
-| Trenutna faza | **v2: M16.7c0 pogodba zaključena** (Q542–Q544, D-108). [Raziskava](docs/raziskave/M16.7c0-pogodba-mape-klona.md): obstoječi M15 spawn prepiše kartice/jezik in rig, zato ločen marker mape in brezizgubni adapter. Funkcija M16.7c še ni izvedena. M14.4a sprejet; `RwNpcInstancing=0`. |
-| Naslednji korak | **M16.7c1: diskovni kodek in ukazi unpack/pack**, nato M16.7c2 startup/reload/spawn po [pogodbi](docs/raziskave/M16.7c0-pogodba-mape-klona.md). M14.4b čaka zahtevani ogled lastnika, nato privzeti vklop in potrebna M5.Z regresija (Q539); celoten M14 še ni sprejet. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi; obseg določa `docs/10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. M12 zadnji, M10.3 blokiran Q1. |
+| Trenutna faza | **v2: M14.4b privzeti vklop** (Q545, D-109): `RwNpcInstancing=1`, `RwLodStart=32`, `RwCombatEntryCap=64`. [Regresija](docs/meritve/2026-11-18-M14.4b-privzeti-rezimi.md). M16.7c0 pogodba zaključena (Q542–Q544, D-108). |
+| Naslednji korak | **M16.7c1: diskovni kodek in ukazi unpack/pack**, nato M16.7c2 startup/reload/spawn po [pogodbi](docs/raziskave/M16.7c0-pogodba-mape-klona.md). Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi; obseg določa `docs/10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. M12 zadnji, M10.3 blokiran Q1. |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
 | Prevedljivih razredov | 360 datotek `.java` v `src/patch` (278 rework), 127 testnih datotek; zadnji JUnit rezultat 895 patched + 51 original testov. Package PASS: 1716 originalnih vnosov, 90 pričakovanih sprememb. |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |

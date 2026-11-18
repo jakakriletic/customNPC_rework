@@ -12,19 +12,23 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**18. 11. — M14.4b sprejet (Q545/D-109).** Lastnik je naročil vklop optimizacij:
+`RwNpcInstancing=1`, `RwLodStart=32`, `RwCombatEntryCap=64`. Izrecne vrednosti v obstoječih
+configih veljajo še naprej. M5.Z obe matriki 5/5 in sled PASS. Klient: bližnji K22
+500/500, oddaljeni 437 L2 + 63 modelov, brez GL napak. [Regresija in meje](meritve/2026-11-18-M14.4b-privzeti-rezimi.md).
+
 **18. 11. — M16.7c0 pogodba zaključena (Q542–Q544, D-108).** M15 spawn izgubi
 kartice/jezik in rig klona; določeni ločen marker mape, tipni adapter, točni izvlečki,
 konflikti in no-clobber zapis. Samo raziskava, produkcija/testni vhodi in odtis
 `6fd26ee4…` nespremenjeni; nobenega novega testa ali meritve. Naslednji c1 disk/ukazi,
-nato c2 živa vključitev; funkcija M16.7c še ni izvedena. M14.4b ostaja odložen do ogleda
-lastnika, stikalo 0. [Pogodba in merila](raziskave/M16.7c0-pogodba-mape-klona.md).
+nato c2 živa vključitev; funkcija M16.7c še ni izvedena.
+[Pogodba in merila](raziskave/M16.7c0-pogodba-mape-klona.md).
 
 **18. 11. — M14.4a sprejet (Q539–Q541).** Vseh osem controller testov (24 tekov)
 PASS na trenutnem `6fd26ee4…`. Idle-500 p95 9,9147 → 8,0180 ms (−19,13 %),
 razpona ločena; druge celice brez regresije p95. Produkcija nespremenjena,
-`RwNpcInstancing=0`. M14.4b in celoten M14 še nista sprejeta: manjka ogled lastnika,
-nato privzeti vklop in potrebna M5.Z regresija. Naslednji neodvisni M16.7c,
-M12 zadnji; uspešnih testov ne ponavljaj. [Dokaz in meje](meritve/2026-11-18-M14.4a-3plus3.md).
+takrat `RwNpcInstancing=0`. Uspešnih testov ne ponavljaj (Q90).
+[Dokaz in meje](meritve/2026-11-18-M14.4a-3plus3.md).
 **18. 11. — M14.3b7 sprejet (Q529–Q532).** Vseh pet controller testov PASS na
 `e6c8610f…`: CNPC MPM deli, tuj renderer/model, Classic/64×32 bitno na originalnem
 izrisu; pravi MPM jar izoliran, NPC ob igralcu s krili ostane batch. 34/34 preverb,
@@ -142,12 +146,12 @@ teksture in klipov klientom ter izbira modela v Display. [Zapis](meritve/2026-11
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-18** (seja 253) — M16.7c0 pogodba zaključena (Q542–Q544/D-108). Samo dokumentacija, odtis `6fd26ee4…` nespremenjen, brez novih testov/meritev. [Pogodba](raziskave/M16.7c0-pogodba-mape-klona.md). |
-| Trenutni milestone | **M16.7c0 raziskava zaključena**, funkcija odprta do c1+c2. M14.4a sprejet; M14.4b in celoten M14 še čakata ogled lastnika in zaključni sprejem. |
-| Naslednji paketi | **M16.7c1: diskovni adapter/ukazi**, nato c2 startup/reload/spawn po [pogodbi](raziskave/M16.7c0-pogodba-mape-klona.md). M14.4b čaka ogled lastnika, nato vklop in potrebna M5.Z regresija (Q539). M12 zadnji, M10.3 blokiran Q1. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratek zapis; obseg `10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
+| Zadnja posodobitev | **2026-11-18** (seja 254) — M14.4b privzeti optimizacijski režimi (Q545/D-109). [Regresija](meritve/2026-11-18-M14.4b-privzeti-rezimi.md). |
+| Trenutni milestone | **M14.4b privzeti vklop po Q545.** M16.7c0 raziskava zaključena, funkcija odprta do c1+c2. |
+| Naslednji paketi | **M16.7c1: diskovni adapter/ukazi**, nato c2 startup/reload/spawn po [pogodbi](raziskave/M16.7c0-pogodba-mape-klona.md). M12 zadnji, M10.3 blokiran Q1. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratek zapis; obseg `10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **360** datotek `.java` v `src/patch`, od tega **278** rework. Build/package PASS na `2c433b7c…`, 90 pričakovanih sprememb. |
-| Testi | **895** patched + **51** original testov v zadnjem JUnit rezultatu, **127** testnih datotek; vseh pet sprejemnih testov PASS na `2c433b7c…`. |
+| Prevedljivih razredov | **360** datotek `.java` v `src/patch`, od tega **278** rework. Build/package M14.4b PASS, 90 pričakovanih sprememb. |
+| Testi | **895** patched + **51** original testov v M14.4b JUnit rezultatu, **127** testnih datotek. |
 | Odprti pojavi | nobenega blokirnega; Q84 odpravljen 16. 11. (Q457); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -176,7 +180,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M11 Poveljevanje prek zemljevida | **M11.11 sprejet** (`freeforall`) | 199/199 razmetanih skozi progo z grlom po restartu, zaprti član edini blokiran ([zapis](meritve/2026-11-11-M11.11-freeforall.md)); Xaero v0.1.10 nameščen. M11.5 sprejet po Q407. Celoten izhod M11 (200 skozi nenaložen svet in živa mapa) ostaja nepokrit. |
 | M13 Povezani NPC-ji | **M13.0–M13.5 zaključeni pod stikali** (v2, Q433) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun, GUI, seznam palice, kloner (`RwLinkedGroups`); obe stikali privzeto 0. [M13.5](meritve/2026-11-04-M13.5-sto.md): 100 z eno izbiro in sprememba do vseh. Izhod pokrit z ločenimi scenariji, ne z enim skupnim. |
 | M16 Vgrajeno animacijsko jedro | **M16.7c0 pogodba zaključena** (Q542–Q544/D-108) | [Pogodba](raziskave/M16.7c0-pogodba-mape-klona.md); naslednji c1 disk/ukazi, nato c2 živa vključitev. Funkcija odprta. M16.7b sprejet; `RwAnimCore=0`, `RwReadableClones=1` (Q484). |
-| M14 Izris bližnjih NPC-jev | **M14.4a sprejet** (Q541) | [3+3 dokaz](meritve/2026-11-18-M14.4a-3plus3.md): osem testov PASS, idle-500 p95 −19,13 %, ločena razpona, brez regresije p95 drugje. M14.4b čaka ogled lastnika; celoten M14 še ni sprejet, `RwNpcInstancing=0`. |
+| M14 Izris bližnjih NPC-jev | **M14.4b sprejet** (Q545) | `RwNpcInstancing=1`. [3+3 dokaz](meritve/2026-11-18-M14.4a-3plus3.md): idle-500 p95 −19,13 %, ločena razpona, brez regresije p95 drugje. [Zaključna regresija](meritve/2026-11-18-M14.4b-privzeti-rezimi.md). |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -186,7 +190,15 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 251 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 252 → 1, novejši zgoraj).*
+
+### 2026-11-18 (254) — M14.4b: privzeti optimizacijski režimi
+
+**Paket:** M14.4b (Q545/D-109). Lastnik je po poročilu naročil privzeti vklop.
+Nove vrednosti: `RwNpcInstancing=1`, `RwLodStart=32`, `RwCombatEntryCap=64`.
+L1 poenostavi videz za pragom, combat cap skrajša zgodovino zadetkov. Obstoječe
+izrecne vrednosti configa imajo prednost. [Dokaz in meje](meritve/2026-11-18-M14.4b-privzeti-rezimi.md).
+JUnit, build, paket, obe matriki, sled in oba klientska scenarija PASS.
 
 ### 2026-11-18 (253) — M16.7c0: pogodba mape klona
 
@@ -198,15 +210,4 @@ Zamrznjena merila korpusa ≥89, negativnih primerov, pravih ukazov ter živega 
 Produkcija/testi/pogoji in controller odtis `6fd26ee4…` nespremenjeni, brez novih zagonov
 ali meritev (Q90). Naslednji c1 disk/ukazi, nato c2 živa vključitev; celoten M16.7c še ni
 izveden. M14.4b še čaka ogled lastnika. [Pogodba, viri in meje](raziskave/M16.7c0-pogodba-mape-klona.md).
-
-### 2026-11-18 (252) — M14.4a: meritev 3+3 sprejeta
-
-**Paket:** M14.4a (Q539–Q541) · **Stanje:** merilni paket sprejet, privzeti vklop odložen.
-Vseh osem zahtevanih controller testov PASS na `6fd26ee4…`, odtis ob zaključku enak.
-Idle-500 p95 9,9147 → 8,0180 ms (−19,13 %), razpona 9,6304–10,0276 in 7,9813–8,0653 ms;
-ostale tri celice brez regresije p95. K21 upošteva modelni del po L2 (Q540), K16 ostane.
-Produkcija in pogoji nespremenjeni, brez ponavljanja uspešnih serij (Q90).
-M14.4b in celoten M14 še nista sprejeta: manjka ogled lastnika, nato privzeti vklop
-in potrebna M5.Z regresija. Stikalo 0; naslednji neodvisni M16.7c, M12 zadnji.
-[Meritve, GC, pokritost in meje](meritve/2026-11-18-M14.4a-3plus3.md).
 

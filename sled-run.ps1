@@ -248,9 +248,11 @@ try {
         Check ("k{0}: faza 1 vsebuje vse vrste dogodkov{1}" -f $krak, $(if ($manjka.Count) { ' - manjka ' + ($manjka -join ',') } else { '' })) ($manjka.Count -eq 0)
         $j2 = ($s2.Sled -join ' ')
         Check ("k{0}: timer 7 je prezivel restart (H7=true)" -f $krak) ($j2 -match '(^| )H7=true( |$)')
-        $r = @($s2.Razmiki -split ',' | Where-Object { $_ -match '^\d+$' } | ForEach-Object { [int]$_ })
-        Check ("k{0}: timer 7 po restartu proza v enakih razmikih ({1})" -f $krak, $s2.Razmiki) (($r.Count -ge 3) -and (@($r | Select-Object -Unique).Count -eq 1))
-        $kraki[$krak] = [pscustomobject]@{ S1 = $s1; S2 = $s2; Collide = $col; Priv = $(if ($priv.Success) { $priv.Value } else { '' }); Razmik = $(if ($r.Count) { $r[0] } else { -1 }) }
+        $r = @($s2.Razmiki -split ',')
+        $redniRazmiki = $s2.Razmiki -match '^[1-9]\d*(,[1-9]\d*){2,}$' -and
+            @($r | Select-Object -Unique).Count -eq 1
+        Check ("k{0}: timer 7 po restartu proza v enakih razmikih ({1})" -f $krak, $s2.Razmiki) $redniRazmiki
+        $kraki[$krak] = [pscustomobject]@{ S1 = $s1; S2 = $s2; Collide = $col; Priv = $(if ($priv.Success) { $priv.Value } else { '' }); Razmik = $(if ($redniRazmiki) { [int]$r[0] } else { -1 }) }
     }
 
     Step 3 'Primerjava krakov'
@@ -267,7 +269,9 @@ try {
         $opis = if ($prva -lt 0) { ("{0} dogodkov" -f $a.Count) } else { ("prva razlika pri dogodku {0}: original '{1}', privzeto '{2}'" -f $prva, $(if ($prva -lt $a.Count) { $a[$prva] } else { '<konec>' }), $(if ($prva -lt $b.Count) { $b[$prva] } else { '<konec>' })) }
         Check ("Z{0}: sled faze {0} je v obeh krakih enaka ({1})" -f $faza, $opis) (($prva -lt 0) -and ($a.Count -gt 0))
     }
-    Check ("Z3: razmiki timerja 7 po restartu so enaki (original {0}, privzeto {1})" -f $k0.S2.Razmiki, $k1.S2.Razmiki) ($k0.S2.Razmiki -eq $k1.S2.Razmiki)
+    # Shranjeni napredek timerja doloci prvi klic in s tem stevilo celih razmikov v oknu.
+    # Vsak razmik v kraku mora biti pravilen, med krakoma pa primerjamo periodo.
+    Check ("Z3: perioda timerja 7 po restartu je enaka (original {0}, privzeto {1} tickov)" -f $k0.Razmik, $k1.Razmik) ($k0.Razmik -gt 0 -and $k0.Razmik -eq $k1.Razmik)
     # Dokaz, da je krak 1 res tekel z drugo kodo poti: SLED_Sosed nima skript, zato S4 (RwCollideSkip=1)
     # njegovo poizvedbo preskoci; v originalu (nacin 0) se ne preskoci nic.
     $p0 = [regex]::Match($k0.Collide, 'nacin=(\d+).*preskocenih=(\d+)')

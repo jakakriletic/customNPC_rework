@@ -370,16 +370,16 @@ if ($r -and $Lod -ge 0) {
         $ok = $ok -and ($vsota -gt 0)
         $opis = 'delez L1 {0:P1}' -f $delez
         if ($Variant -eq 'idle' -or $Variant -eq 'skripte') {
-            $dalec = 0
+            $npcNaL1 = 0
             for ($vr = 0; $vr -lt [int]($N / $gridW); $vr++) {
                 for ($st = 0; $st -lt $gridW; $st++) {
                     $dx = $gridX + $st + 0.5 - $camX; $dy = 4 - $camY; $dz = $gridZ + $vr + 0.5 - $camZ
-                    if (($dx * $dx + $dy * $dy + $dz * $dz) -gt ($Lod * $Lod)) { $dalec++ }
+                    if (($dx * $dx + $dy * $dy + $dz * $dz) -gt ($Lod * $Lod)) { $npcNaL1++ }
                 }
             }
-            $pric = $dalec / $N
+            $pric = $npcNaL1 / $N
             $ok = $ok -and ([math]::Abs($delez - $pric) -le 0.05)
-            $opis += (', pricakovano {0:P1} ({1} od {2}, +-5 tock)' -f $pric, $dalec, $N)
+            $opis += (', pricakovano {0:P1} ({1} od {2}, +-5 tock)' -f $pric, $npcNaL1, $N)
         }
     }
     Check ("K15: RwLodStart {0} (zahtevano {1}), odlocitev pokrivala dalec/blizu {2}/{3}, {4}" -f $r.rwLodStart, $Lod, $r.lodDalec, $r.lodBlizu, $opis) $ok

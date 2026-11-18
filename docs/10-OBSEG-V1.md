@@ -159,16 +159,18 @@ Naslednji M14.1b, omejen VBO po merilih raziskave; uspešnih serij ne ponavljamo
 
 **M14.4a sprejet (18. 11., Q539–Q541):** [3+3 meritev](meritve/2026-11-18-M14.4a-3plus3.md),
 vseh osem controller testov PASS na `6fd26ee4…`. Idle-500 p95 9,9147 → 8,0180 ms
-(−19,13 %), razpona ločena; druge celice brez regresije p95. `RwNpcInstancing=0`.
-M14.4b (privzeti vklop + potrebna M5.Z regresija) odložen do zahtevanega ogleda lastnika;
-to ni sprejem celotnega M14. Naslednji neodvisni paket M16.7c po raziskavi M16.7a,
-M12 zadnji, M10.3 blokiran Q1; uspešnih serij ne ponavljaj (Q90).
+(−19,13 %), razpona ločena; druge celice brez regresije p95. Stikalo je bilo ob
+sprejemu meritev še 0. Uspešnih serij ne ponavljaj (Q90).
 
 **M16.7c0 zaključeno (18. 11., Q542–Q544/D-108):** [pogodba](raziskave/M16.7c0-pogodba-mape-klona.md),
 ker običajni M15 spawn prepiše skriptne kartice/jezik in rig. Samo raziskava, brez sprememb
 merjenih vhodov ali novih testov. Naslednji M16.7c1 (diskovni adapter/ukazi), nato c2
-(startup/reload/spawn, nujna regresija); celoten M16.7c še ni izveden. M14.4b čaka ogled
-lastnika, stikalo 0; M12 zadnji, M10.3 blokiran Q1. Q90/Q92/Q407 ostajajo.
+(startup/reload/spawn, nujna regresija); celoten M16.7c še ni izveden.
+M12 zadnji, M10.3 blokiran Q1. Q90/Q92/Q407 ostajajo.
+
+**M14.4b sprejet (18. 11., Q545/D-109):** lastnik je naročil privzeti vklop optimizacij.
+`RwNpcInstancing=1`, `RwLodStart=32`, `RwCombatEntryCap=64`.
+M5.Z in skupna klientska preverba PASS. [Regresija in meje](meritve/2026-11-18-M14.4b-privzeti-rezimi.md).
 
 ## Ocena
 

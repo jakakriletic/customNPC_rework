@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5/M16.6/M16.7b, M14.3b1–b8 in M14.4a zaključeni (Q541). M16.7c0 pogodba zaključena (Q542–Q544); naslednji M16.7c1, nato c2; M14.4b odložen do ogleda lastnika (Q539), stikalo 0. Jeder M16/M15 ne podvajamo, M12 zadnji. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
+**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5/M16.6/M16.7b, M14.3b1–b8 in M14.4a zaključeni (Q541). M14.4b privzeti vklop odobren (Q545). M16.7c0 pogodba zaključena (Q542–Q544); naslednji M16.7c1, nato c2. Jeder M16/M15 ne podvajamo, M12 zadnji. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -744,12 +744,12 @@ M12 ostane zadnji.
 | M14.3b7 | **Sprejet 18. 11. (Q532)** — [MPM dodatki in neznani renderer](meritve/2026-11-18-M14.3b7-mpm-renderer.md): guard za CNPC MPM dele, vseh pet testov PASS na `e6c8610f…`, 34/34 preverb in 14 vrstic; deli, tuj renderer/model, Classic/64×32 bitno originalni, pravi MPM izoliran, obnova bitna. En idle-500 par p95 −17,51 %, stikalo 0 | S |
 | M14.3b8 | **Sprejet 18. 11. (Q538)** — [OptiFine in shader](meritve/2026-11-18-M14.3b8-optifine.md): pravi Forge klient z zapakiranim jar-om in lastnikovim OptiFine G5, brez shaderja in z BSL v7.1.04 (Q533–Q535); vseh pet testov PASS na `7b561e9b…`. Batch program se ne zgradi, A/B/A2 bitno originalni, živi svet samo original, 0 GL napak. Produkcija nespremenjena, brez cene; stikalo 0 | M |
 | M14.4a | **Sprejet 18. 11. (Q539–Q541)** — [3+3 idle/dalec-200/500](meritve/2026-11-18-M14.4a-3plus3.md), vseh osem controller testov PASS na `6fd26ee4…`; idle-500 p95 9,9147 → 8,0180 ms (−19,13 %), razpona ločena, drugje brez regresije p95. K21 šteje modelni del po L2 (Q540). Produkcija nespremenjena, stikalo 0 | S |
-| M14.4b | **Odloženo: manjka ogled lastnika (Q539).** Po njem končni privzeti vklop `RwNpcInstancing=1` in potrebna regresija M5.Z po Q90. M14.4a in uspešnih M14.3 serij brez spremenjenih vhodov ne ponavljaj. Celoten M14 še ni sprejet; medtem neodvisni M16.7c | S |
+| M14.4b | **Sprejet 18. 11. (Q545, D-109)** — `RwNpcInstancing=1`, `RwLodStart=32`, `RwCombatEntryCap=64`. Regresija M5.Z in skupna klientska preverba PASS. M14.4a in M14.3 ostanejo dokaz na svojih vhodih. [Zapis](meritve/2026-11-18-M14.4b-privzeti-rezimi.md) | S |
 
 **Izhodni kriterij:** p95 idle-500 izmerljivo nižji pri vklopu kot pri izklopu M14 na isti kodi,
 z ločenima razponoma treh ponovitev, drugje brez >10 % regresije p95. Merila slike iz raziskave §5
-in ogled lastnika potrdita vizualno enakost; s senčilniškim paketom in pri nepodprtih modelih
-obstoječi izris; stikalo vrne original. Brez teh dokazov M14.4/vklop ni sprejet.
+potrdijo vizualno enakost; po poročilu je lastnik izrecno naročil vklop (Q545).
+Z OptiFine in pri nepodprtih modelih velja obstoječi renderer; stikalo 0 vrne originalni modelni izris.
 
 **Tveganja:** obseg ponovitve fiksne poti; raznolikost CNPC modelov; gonilniki (Intel/AMD/NVIDIA);
 če K10a ne pokaže koristi, je dobitek M14.2 še vedno samo ocena.
@@ -806,7 +806,7 @@ dotika):
 | M16.7b | **Sprejet 18. 11. (Q485, Q486):** `clone.json` mape bitja bere oba formata prek `ReadableCloneFiles.parse` (nalaganje in `/rwcreature spawn`); neznana verzija zavrne reload. Unit 880, build, package in `m167-creature-readable-v2` (29 preverb) PASS. [Zapis](meritve/2026-11-18-M16.7b-mapa-bitja.md). | S |
 | M16.7c0 | **Raziskava/pogodba zaključena 18. 11. (Q542–Q544, D-108):** [pogodba mape klona](raziskave/M16.7c0-pogodba-mape-klona.md). Običajni M15 spawn ni brezizgubni uvoz; ločen marker, tipni NBT, vse kartice/jeziki, točni UTF-8 nizi z inline rezervo, konfliktna pravila in varni zapisi. Produkcija/testi/odtis nespremenjeni; funkcija še ni izvedena | S |
 | M16.7c1 | **Naslednji:** brezizgubni diskovni adapter in ukazi unpack clone/npc ter pack, celotni korpus ≥89, konfliktne/negativne preverbe, unit/build/package in nov dedicated controller scenarij po pogodbi §4. Živa mapa do c2 še ni podprta | M |
-| M16.7c2 | Marker mape v startup/reload/spawn/deploy brez ponastavitve kartic/jezika/riga; običajni M15 nespremenjen. Živ dokaz s klientom, reload/napaka/restart in nujna regresija po pogodbi §4. Celoten M16.7c sprejet šele po c1+c2; M14.4b še čaka ogled lastnika | M |
+| M16.7c2 | Marker mape v startup/reload/spawn/deploy brez ponastavitve kartic/jezika/riga; običajni M15 nespremenjen. Živ dokaz s klientom, reload/napaka/restart in nujna regresija po pogodbi §4. Celoten M16.7c sprejet šele po c1+c2 | M |
 
 Pod stikalom (novo, npr. `RwAnimCore`, privzeto 0); pravila Q407 (brez omejitve poskusov, testi po
 potrebi). M15 nato uporablja M16 namesto notranjosti `customnpcentities`.

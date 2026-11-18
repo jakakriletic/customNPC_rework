@@ -66,11 +66,18 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwPathNegCache` | 1 | server | an NPC with no path to its target waits 20 ticks before searching again (reacts up to 20 ticks later) |
 | `RwHeadwearSkip` | 1 | client | 3D headwear skips fully transparent quads; single edge pixels may differ |
 | `RwRenderBox` | 1 | client | culling box covers the whole model; NPCs without a hitbox are visible as far as NPCs with one |
+| `RwNpcInstancing` | 1 | client | draws the twelve main parts of an ordinary NPC model in one call. Unsupported cases use the original renderer |
+| `RwLodStart` | 32 | client | beyond this many blocks, L1 omits the extra eyes, name and chat bubbles and uses flat headwear (0 disables L1) |
 | `RwFarView` | 2 | both | NPCs beyond the tracker range are sent as light placeholders and drawn as impostors (no limb animation, eyes or name) |
 | `RwFarRange` | 384 | server | max placeholder distance, also limited by (view distance − 1) × 16 |
 | `RwImpostorStart` | 56 | client | tracked NPCs farther than this are drawn as impostors (`RwFarView=2`) |
 | `RwImpostorAtlas` | 2048 | client | impostor atlas size (≈21 MB VRAM) |
-| `RwFarShaders` | 0 | client | with an OptiFine shader pack, impostors are off and NPCs are drawn as original |
+| `RwFarShaders` | 0 | client | with an OptiFine shader pack, impostors are off and NPCs use their models |
+| `RwCombatEntryCap` | 64 | server | keeps the newest 64 hits per NPC to bound combat history memory (0 removes the cap) |
+
+Existing `CustomNpcs.cfg` values override these defaults. To apply the new defaults in an
+existing installation, set `RwNpcInstancing=1` and `RwLodStart=32` on the client and
+`RwCombatEntryCap=64` on the server, then restart the affected game instances.
 
 ### Off by default — opt-in features
 
@@ -85,8 +92,6 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwAnimHooks` | 0 | `animationStart/animationEvent/animationEnd` script hooks for every action step (needs `customnpcentities`; read at startup); 2 = also walk/idle/death (`event.source`); >=1 also enables `blendTo` and `/npcanim` (set on server and clients) |
 | `RwAnimCore` | 0 | built-in animation core: NPCs with `RwRig` drawn as models with bones, clips, data attacks, `/rwrig` (server and clients; see "Animated NPCs") |
 | `RwReadableClones` | 1 | writes readable clone JSON at 1, legacy at 0, on the side storing the clone. Both formats can be read at either value. Independent of `RwAnimCore` |
-| `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
-| `RwNpcInstancing` | 0 | client: draws the twelve main parts of an ordinary CNPC player model in one call; limited M14.2a proof, compatibility testing pending (see §6) |
 | `RwArmies` | 0 | armies: `/rwarmy`, `ArmyApi` and the channel `rwarmy`, register and move orders saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs); also `RwArmyClusterRadius` (48, 1–512), `RwArmyClusterMin` (8, 1–1024), `RwArmyCompany` (8, 1–24; only 8 tested in-world), `RwArmyMaxMarches` (2, 0–16: armies with an active move that hold travelling chunk tickets; 0 = no tickets) |
 | `RwLinkedOwnFields` | 0 | Linked NPCs: each member keeps its own home, orientation, moving path and place on that path when group data is applied; 0 = original (see §6). Does not repair values already overwritten |
 | `RwLinkedGroups` | 0 | Linked NPCs: per-group transfer categories (scripts off by default), undo of the last change, `/rwlinked`, the boxes in *Global → Linked NPCs* and multiple selection in the wand list (read at startup); 0 = original (see §6) |
@@ -463,8 +468,8 @@ Not proven, so not claimed:
   MSPT 3.28 → 3.47 ms), but the heap after full GC grew 168 → 242 MB (+44 %). A later run with
   a locked world (M10.4, Q449) found the cause: the vanilla combat tracker of an NPC in endless
   combat (regenerating health, arenas) keeps every hit, about 24 MB/h with 80 fighters, the same
-  as the original. Set `RwCombatEntryCap` (default 0 = original) to e.g. 64 to keep only the newest
-  hits per NPC; then the heap stayed flat (0.15 MB/h, Q452), but older hits no longer count for the
+  as the original. The default `RwCombatEntryCap=64` keeps only the newest 64 hits per NPC.
+  With that cap the heap stayed flat (0.15 MB/h, Q452), but older hits no longer count for the
   best attacker and death message. That run was stopped at 1.67 h of 2 h, on a dev server without
   a player, with N=64 only. `/rwdiag chunks` is a diagnostic tool only.
 - **No real modpack test** (M10.3 blocked, Q1). OptiFine, shaders and Entity Culling are handled
@@ -624,7 +629,7 @@ Not proven, so not claimed:
   bug, reproduced). At 1 the group file and its undo copy are deleted and the group stays gone after a restart (Q459;
   server side only, removal called from a script, one dev dedicated server).
 
-- **Nearby model batching (`RwNpcInstancing`, off by default):** M14.2a draws twelve main
+- **Nearby model batching (`RwNpcInstancing=1` by default):** M14.2a draws twelve main
   parts in one call per NPC, preserving their place among the original layers and entities.
   It does not batch different NPCs together. One dev-client idle-200 scene passed all 200
   image comparisons (RGB difference at most 1/255); one idle-500 pair measured frame p95
@@ -638,8 +643,7 @@ Not proven, so not claimed:
   M14.3b2 adds 36 checks across 16 frozen image cases: M16 knight
   idle/walk/hurt/death, the CNPC GUI preview method and the baker render stage at eight
   angles retain bitwise original images. Full GUI interaction, rig networking, the complete
-  atlas pipeline, MPM/unknown renderers, shadows/fire and live
-  OptiFine/shader compatibility remain unverified. M14.3b3 verifies the live L1/L2
+  atlas pipeline and shadows/fire remain outside that test. M14.3b3 verifies the live L1/L2
   handover, and M14.3b4 verifies injected program failures and recovery.
   M14.3b5 verifies real patrol/combat AI on one dev client/GPU: 212 images, 825
   interpolation probes and 3,377 world frames. A reproduced depth mismatch is fixed
@@ -649,8 +653,10 @@ Not proven, so not claimed:
   M14.3b6 keeps URL skins on the complete original path during download, after success
   and after failure: 14 checks across six image cases passed with real loopback PNG/404,
   known skin references and ordinary batch recovery. This does not cover Internet
-  timeouts or disk caching. Default enablement needs the wider matrix, repeated cost
-  series and the owner's visual review.
+  timeouts or disk caching. M14.3b7 verifies the original renderer for MPM parts and
+  unknown renderers. M14.3b8 verifies original rendering with OptiFine G5, including BSL.
+  M14.4a measured p95 9.91 to 8.02 ms for 500 nearby idle NPCs on one dev client and GPU,
+  with L1 off for that comparison. M14.4b enables batching by default after owner approval.
   [M14.2a evidence](meritve/2026-11-18-M14.2-en-izris.md),
   [M14.3a evidence](meritve/2026-11-18-M14.3a-GL-meja.md),
   [M14.3b1 evidence and limits](meritve/2026-11-18-M14.3b-celoten-izris.md),

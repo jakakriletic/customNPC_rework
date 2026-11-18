@@ -1152,3 +1152,14 @@ običajni M15 pa ohrani sedanji pomen. Novi zapisovalni ukazi zahtevajo level 4,
 in preverjeno no-clobber objavo. Clone format, globalna stikala in omrežni protokol se ne
 spreminjajo. Najprej c1 (disk/ukazi), nato c2 (živa vključitev); funkcija odprta do obeh.
 [Dokazi iz kode, pogodba in sprejemna merila](raziskave/M16.7c0-pogodba-mape-klona.md).
+
+### D-109 — Privzeti optimizacijski režimi (2026-11-18, Q545)
+
+Lastnik je po poročilu M14.4a naročil privzeti vklop M14 in drugih optimizacijskih
+režimov. Njegova izrecna odobritev nadomesti čakanje na ogled iz Q539. Privzeto
+`RwNpcInstancing=1`, `RwLodStart=32` po K5 (spremeni videz za pragom) in
+`RwCombatEntryCap=64` po Q452 (starejši zadetki odpadejo pri izbiri najboljšega
+napadalca in sporočilu ob smrti). Za L1 to nadomesti privzetek iz D-039.
+`RwFarView=2` in sprejete optimizacije M5 so že privzeto vključene. Baritone
+je izbirni navigator z dodatno pomnilniško ceno, `RwFarShaders=0` pa ohranja
+varno združljivost s senčilniki. Izrecne vrednosti obstoječih konfiguracij se upoštevajo.

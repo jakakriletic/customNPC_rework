@@ -2,6 +2,14 @@
 
 ## v2 development
 
+- Nearby model batching is enabled by default (`RwNpcInstancing=1`). OptiFine and other
+  unsupported cases use the original renderer.
+- Simplified character details start beyond 32 blocks (`RwLodStart=32`), with flat headwear
+  and no extra eye layer, labels or chat bubbles at L1. L2/L3 impostors use the existing thresholds.
+- An NPC's combat tracker keeps its latest 64 hits by default (`RwCombatEntryCap=64`).
+  Older hits no longer count for the best attacker and death message.
+- Existing configs keep explicit values. Each new default can be overridden with 0.
+
 - M14.3b8 proves in a real packaged Forge client with the owner's OptiFine 1.12.2 HD U G5,
   without a shader pack and with BSL v7.1.04, that `RwNpcInstancing=1` never builds the batch
   program: frozen A/B/A2 images stay bitwise original and the living world draws only the
@@ -68,7 +76,7 @@
 - Command Staff selects ground NPCs in a growing circle, applies six behaviour modes and sends
   the selection to separate formation slots (`RwCommandStaff=1`).
 
-- `RwCombatEntryCap=N` (default 0) keeps only the newest N combat-tracker hits per NPC, so NPCs
+- M10.4 introduced `RwCombatEntryCap=N` to keep only the newest N combat-tracker hits per NPC, so NPCs
   in endless combat no longer grow the heap (M10.4). Older hits stop counting for the death message.
 - NPC wand → **Global → Armies** lets operators create and list armies in game.
 - With `RwAnimCore=1`, **Display → Rig model...** selects a built-in or server creature model.
