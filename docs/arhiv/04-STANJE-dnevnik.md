@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 238 → 1)
+# Arhiv: dnevnik sej (vnosi 241 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,19 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-16 (239–241) — M14.1b per-part VBO zavrnjen
+
+**Paket:** M14.1b (Q480–Q483) · **Stanje:** zavrnjen po M14.0 §5, kandidat odstranjen.
+Omejen VBO za glavne CNPC dele pod `RwModelVbo=0` z zamrznjenim formatom, zaznavo mutacij,
+fallbacki in GPU lifecycle; ločen PS/Java harness A/B/A2. Dokaz delov PASS na `99c2b572…`
+in `37b6b476…` (93 bitno enakih primerjav, 6 PNG, uravnoteženi viri). Prvi cenovni par
+(Q482) je razkril refleksijo/glGet na vsak del; po popravku `m141b-vbo-cost-pair-v2`:
+idle-500 p95 10,02 → 18,71 ms, GC enak. Oddaja 11 VBO izrisov/NPC je dražja od `glCallList`
+pri enakem številu izrisov, zato koristi ni (Q483). Koda in harness v `5d598d5`, nato
+produkcija/`k-run.ps1`/testi vrnjeni na M14.1a; unit/build/package na povrnjeni kodi.
+Celotni NPC-ji/plasti/svet niso merjeni. Naslednji M14.2 instancing (manj izrisov).
+[Zapis](../meritve/2026-11-16-M14.1b-vbo.md).
 
 ### 2026-11-16 (238) — M14.1a sprejet
 

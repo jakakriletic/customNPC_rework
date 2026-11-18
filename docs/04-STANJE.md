@@ -12,6 +12,14 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**18. 11. — M14.3a sprejet (Q499).** Popravljene tuje vezave VAO/programa znotraj
+sličice in sprostitev mrež/programa ob reloadu/izhodu tudi pri stikalu 0.
+Vseh pet controller testov PASS na `c9704453…`: 895 JUnit, 28/28 native preverb,
+10/10 bitno enakih slikovnih vrstic; idle-500 p95 10,0773 → 8,1998 ms (−18,63 %)
+v enem paru, brez fallbackov/GL napak. Sledi širša živa matrika M14.3b;
+native GL ni OptiFine/shader dokaz. `RwNpcInstancing=0`, M14.4 ostaja odprt.
+Uspešnih testov ne ponavljaj. [Zapis](meritve/2026-11-18-M14.3a-GL-meja.md).
+
 **18. 11. — M14.2a sprejet pod stikalom 0 (Q495).** Vseh pet controller testov PASS
 na `7ef49d0c…`: K22 200/200, RGB max1/255, 3 PNG pregledani; idle-500 par
 p95 10,2679 → 8,0747 ms (−21,36 %), brez rezerv/GL napak. Native GL matrike
@@ -72,12 +80,12 @@ teksture in klipov klientom ter izbira modela v Display. [Zapis](meritve/2026-11
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-18** (seja 242) — M14.2a sprejet Q495: vseh pet testov PASS na `7ef49d0c…`, K22 200/200, idle-500 p95 −21,36 % v enem paru. Sledi M14.3, stikalo ostane 0. [Zapis](meritve/2026-11-18-M14.2-en-izris.md). |
-| Trenutni milestone | **M14: M14.2a sprejet** (Q495), združljivost in končni vklop še odprta. M16.7b sprejet; M10.3/IO4 blokirana Q1. |
-| Naslednji paketi | **M14.3 združljivost in fallback** za trenutni en-izris/NPC backend (Q495); nato M14.4 po širši matriki in 3+3 ter ogledu lastnika. M16.7c po M14, M12 zadnji. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
+| Zadnja posodobitev | **2026-11-18** (seja 243) — M14.3a sprejet Q499: vseh pet testov PASS na `c9704453…`, 28/28 native preverb, idle-500 p95 −18,63 % v enem paru. Sledi M14.3b, stikalo ostane 0. [Zapis](meritve/2026-11-18-M14.3a-GL-meja.md). |
+| Trenutni milestone | **M14: M14.3a sprejet** (Q499), širša združljivost in končni vklop še odprta. M16.7b sprejet; M10.3/IO4 blokirana Q1. |
+| Naslednji paketi | **M14.3b širša živa matrika celotnega izrisa** po M14.0 §5.3/5.5 (Q499), vključno z originalnim fallbackom/dogodki/imenom; native program ne nadomesti OptiFine/shader dokaza. Nato M14.4 po širši matriki in 3+3 ter ogledu lastnika. M16.7c po M14, M12 zadnji. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **354** datotek `.java` v `src/patch`, od tega **272** rework. Build/package PASS na `7ef49d0c…`, 90 pričakovanih sprememb. |
-| Testi | **895** testov v zadnjem JUnit rezultatu, **127** testnih datotek; unit/build/package, `m142-batch-v1` in `m142-cost-pair-v1` PASS na `7ef49d0c…`. |
+| Prevedljivih razredov | **355** datotek `.java` v `src/patch`, od tega **273** rework. Build/package PASS na `c9704453…`, 90 pričakovanih sprememb. |
+| Testi | **895** testov v zadnjem JUnit rezultatu, **127** testnih datotek; unit/build/package, `m143a-native-v1` in `m142-cost-pair-v1` PASS na `c9704453…`. |
 | Odprti pojavi | nobenega blokirnega; Q84 odpravljen 16. 11. (Q457); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -106,7 +114,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M11 Poveljevanje prek zemljevida | **M11.11 sprejet** (`freeforall`) | 199/199 razmetanih skozi progo z grlom po restartu, zaprti član edini blokiran ([zapis](meritve/2026-11-11-M11.11-freeforall.md)); Xaero v0.1.10 nameščen. M11.5 sprejet po Q407. Celoten izhod M11 (200 skozi nenaložen svet in živa mapa) ostaja nepokrit. |
 | M13 Povezani NPC-ji | **M13.0–M13.5 zaključeni pod stikali** (v2, Q433) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun, GUI, seznam palice, kloner (`RwLinkedGroups`); obe stikali privzeto 0. [M13.5](meritve/2026-11-04-M13.5-sto.md): 100 z eno izbiro in sprememba do vseh. Izhod pokrit z ločenimi scenariji, ne z enim skupnim. |
 | M16 Vgrajeno animacijsko jedro | **M16.7b sprejet** (Q485) | [Berljivi kloni](meritve/2026-11-16-M16.6-berljivi-kloni.md), 126 preverb, 6 PNG; [mapa bitja](meritve/2026-11-18-M16.7b-mapa-bitja.md) bere berljivi `clone.json`. M16.7c po M14. M16.5 cena sprejeta Q462; privzeto `RwAnimCore=0`, `RwReadableClones=1` (Q484). |
-| M14 Izris bližnjih NPC-jev | **M14.2a sprejet** (Q495) | En izris/NPC: vseh pet testov PASS na `7ef49d0c…`, K22 200/200; idle-500 p95 −21,36 % v enem paru. Sledi M14.3, `RwNpcInstancing=0`. |
+| M14 Izris bližnjih NPC-jev | **M14.3a sprejet** (Q499) | Native GL meja/reload/svet 28/28, vseh pet testov PASS na `c9704453…`; idle-500 p95 −18,63 % v enem paru. Sledi širša M14.3b, `RwNpcInstancing=0`. |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -116,7 +124,19 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 238 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 241 → 1, novejši zgoraj).*
+
+### 2026-11-18 (243) — M14.3a: GL meja in viri sprejeti
+
+**Paket:** M14.3a (Q496–Q499) · **Stanje:** sprejet pod stikalom 0.
+Native reprodukcija 23/28 potrdi pet napak, popravek preverja tuj program/VAO pred
+vsakim izrisom ter sprosti mreže/program na klientovi niti ob reloadu/izhodu tudi pri 0.
+Vseh pet zahtevanih controller testov PASS na `c9704453…`, 895 JUnit, package 1716/90;
+28/28 preverb, 10/10 bitno enakih slikovnih vrstic in zajetih GL stanj.
+En trenutni idle-500 par p95 10,0773 → 8,1998 ms (−18,63 %), GC 40/96 → 41/102 ms,
+nič fallbackov/GL napak; 531 cenovnih vhodov še enakih. Q499: sledi širša M14.3b,
+celoten M14.3/vklop še odprt. Stikalo ostane 0; brez ponovitev uspešnih testov Q90.
+Nič zagnano ročno; nepovezano delo ohranjeno. [Zapis](meritve/2026-11-18-M14.3a-GL-meja.md).
 
 ### 2026-11-18 (242) — M14.2a: en izris na NPC sprejet
 
@@ -130,16 +150,3 @@ brez rezerv/GL napak; vseh 530 cenovnih vhodov ob analizi enakih.
 Q495: sledi M14.3, brez med-NPC instancinga; širša matrika/3+3/lastnikov ogled
 še manjkajo. `RwNpcInstancing=0`, uspešnih testov ne ponavljamo (Q90).
 Nič zagnano ročno; nepovezano delo ohranjeno. [Zapis](meritve/2026-11-18-M14.2-en-izris.md).
-
-### 2026-11-16 (239–241) — M14.1b per-part VBO zavrnjen
-
-**Paket:** M14.1b (Q480–Q483) · **Stanje:** zavrnjen po M14.0 §5, kandidat odstranjen.
-Omejen VBO za glavne CNPC dele pod `RwModelVbo=0` z zamrznjenim formatom, zaznavo mutacij,
-fallbacki in GPU lifecycle; ločen PS/Java harness A/B/A2. Dokaz delov PASS na `99c2b572…`
-in `37b6b476…` (93 bitno enakih primerjav, 6 PNG, uravnoteženi viri). Prvi cenovni par
-(Q482) je razkril refleksijo/glGet na vsak del; po popravku `m141b-vbo-cost-pair-v2`:
-idle-500 p95 10,02 → 18,71 ms, GC enak. Oddaja 11 VBO izrisov/NPC je dražja od `glCallList`
-pri enakem številu izrisov, zato koristi ni (Q483). Koda in harness v `5d598d5`, nato
-produkcija/`k-run.ps1`/testi vrnjeni na M14.1a; unit/build/package na povrnjeni kodi.
-Celotni NPC-ji/plasti/svet niso merjeni. Naslednji M14.2 instancing (manj izrisov).
-[Zapis](meritve/2026-11-16-M14.1b-vbo.md).

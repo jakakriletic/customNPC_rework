@@ -16,6 +16,7 @@ import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -117,6 +118,10 @@ public final class NpcBatch {
         int now = mc.getFrameTimer().getIndex();
         if (now != frame) { frame = now; beginFrame(mc); }
         if (!frameOk) { return fallback(capable && reflected ? PROGRAM : CAPABILITY); }
+        // Other renderers can change these after our first draw in the SAME frame.
+        // Refuse before uploading or binding anything: the original must see their state.
+        if (GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM) != 0) { return fallback(PROGRAM); }
+        if (GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING) != 0) { return fallback(STATE); }
         Entry e = entry((ModelPlayerAlt) model, scale);
         if (e == null) { return fallback(GEOMETRY); }
         if (!state()) { return fallback(STATE); }
@@ -345,8 +350,8 @@ public final class NpcBatch {
         if (vUv != testUvShift) { GL20.glUniform2f(locUv, vUv = testUvShift, 0.0f); }
     }
 
-    /** Once per frame: context, world, resource reload, capability, active program, fog distance. */
-    private static void beginFrame(Minecraft mc) {
+    /** Never delete names belonging to another GL context. */
+    private static ContextCapabilities syncContext() {
         ContextCapabilities caps = GLContext.getCapabilities();
         if (caps != context) {
             // IDs of another context must not be deleted in this one.
@@ -356,6 +361,13 @@ public final class NpcBatch {
             arbVao = !caps.OpenGL30 && caps.GL_ARB_vertex_array_object;
             capable = caps.OpenGL20 && (caps.OpenGL30 || caps.GL_ARB_vertex_array_object);
         }
+        return caps;
+    }
+
+    /** Once per frame: context, world, resource reload, capability and fog distance.
+     * Program/VAO bindings are checked per draw, before any candidate GL mutation. */
+    private static void beginFrame(Minecraft mc) {
+        ContextCapabilities caps = syncContext();
         if (resetPending || mc.world != world) {
             releaseAll();
             world = mc.world; resetPending = false; failed = false;
@@ -416,6 +428,25 @@ public final class NpcBatch {
 
     private static void releaseAll() {
         for (Entry e : OWNED) { release(e); }
+        if (program != 0) {
+            if (context == GLContext.getCapabilities()) { GL20.glDeleteProgram(program); }
+            program = 0;
+        }
+    }
+
+    /** Reload/unload must retire resources even with the feature OFF and no later draw.
+     * Forge's server-world events must never access the client's GL context. */
+    private static void resetResources() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (!mc.isCallingFromMinecraftThread()) {
+            resetPending = true;
+            mc.addScheduledTask(NpcBatch::resetResources);
+            return;
+        }
+        syncContext();
+        releaseAll();
+        MODELS.clear(); OWNED.clear();
+        resetPending = false; failed = false; frameOk = false; frame = Integer.MIN_VALUE;
     }
 
     public static int live() {
@@ -520,7 +551,7 @@ public final class NpcBatch {
             System.out.println("RWBATCH GlStateManager mirror unavailable: " + e);
             reflected = false;
         }
-        ((IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(manager -> resetPending = true);
+        ((IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(manager -> resetResources());
         MinecraftForge.EVENT_BUS.register(new Listener());
     }
 
@@ -536,6 +567,11 @@ public final class NpcBatch {
 
     /** The world pass is from the render tick start to RenderWorldLastEvent; GUI comes later. */
     public static final class Listener {
+        @SubscribeEvent
+        public void unload(WorldEvent.Unload event) {
+            if (event.getWorld().isRemote) { resetResources(); }
+        }
+
         @SubscribeEvent(priority = EventPriority.HIGHEST)
         public void renderTick(TickEvent.RenderTickEvent event) {
             worldPass = event.phase == TickEvent.Phase.START;

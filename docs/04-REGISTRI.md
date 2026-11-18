@@ -24,6 +24,7 @@ Prenos zgoraj je del obstoječe build osnove D-001. `NbtJson` je napisan na novo
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
+| 2026-11-18 | Pred vsakim kandidatovim izrisom zavrne tuj program/VAO brez spreminjanja vezav; reload in klientski unload sprostita lastne mreže/program tudi pri 0 | R5, M14.3a, Q496–Q499 | `RwNpcInstancing`, klient | **0** (originalni izris) |
 | 2026-11-18 | Glavni običajni CNPC player model nariše 12 delov v enem klicu z native GL matrikami in GLSL 1.20; vrstni red NPC-jev/plasti ostane. Omejeni sprejem M14.2a, širša združljivost še odprta | R5, M14.2a, Q495 | `RwNpcInstancing`, klient | **0** (originalni izris) |
 | 2026-11-16 | Berljivi clone JSON z opisnimi sklopi, štirimi zamrznjenimi privzetki, točnimi skriptnimi vrsticami in tipnimi dodatki. Branje obeh formatov pri 0/1, prvi izrecni legacy prepis shrani `.json.v0.bak`, opis ob datoteki | M16.6, D-105, Q471 | `RwReadableClones`, stran shranjevanja | **1** od Q484 (prej 0) |
 | 2026-11-16 | Odstranitev skupine Linked NPC izbriše `<skupina>.json` in `<skupina>.json_prev`; skupina se po restartu ne vrne | Q393, Q459 | `RwLinkedGroups`, strežnik | **0** (original: datoteka ostane, skupina se po restartu vrne) |
@@ -112,6 +113,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-18 | M14.3a: native GL A/B/A2, reload in ponovni vstop; en trenutni idle-500 par 0/1 | Vseh pet testov PASS na `c9704453…`, 895 JUnit, 28/28 preverb, 10/10 slikovnih vrstic bitno enakih, viri izbrisani pri 0; p95 10,0773 → 8,1998 ms (−18,63 %), brez rezerv/GL napak. Stikalo ostane 0, širša M14.3 odprta | [zapis](meritve/2026-11-18-M14.3a-GL-meja.md) |
 | 2026-11-18 | M14.2a: idle-200 A/B/A2 ter en idle-500 par 0/1 na dev klientu | Vseh pet testov PASS na `7ef49d0c…`, 895 JUnit, K22 200/200, RGB max1/255, 3 PNG; p95 10,2679 → 8,0747 ms (−21,36 %), brez rezerv/GL napak. Stikalo ostane 0; M14.3 naslednji | [zapis](meritve/2026-11-18-M14.2-en-izris.md) |
 | 2026-11-16 | M14.1a, `model-scale-baseline-run.ps1`, en izoliran dev klient, RTX 3080 | Unit 879, build/package in GPU baseline PASS na `07b888c3…`; 31 delov × 3 poze, 93 bitno enakih RGBA/depth in preverjenih GL stanj A/B/A2, 279 nepraznih klicev, negativni kontroli zavrnjeni, 6 pregledanih PNG (Q479) | [zapis](meritve/2026-11-16-M14.1a-baseline.md) |
 | 2026-11-16 | M16.6b, `readable-clone-run.ps1`, en dev par, štirje zagoni 0/1/1/0 | unit/build/package in v3 PASS na `72ad0c90…`, 126 preverb, 6 pregledanih PNG, tipni roundtrip/backup/restart. Izvoz/uvoz 2,1295/0,9416 ms, 25.821 B proti 7.987 B, en podatek | [zapis](meritve/2026-11-16-M16.6-berljivi-kloni.md) |

@@ -2,6 +2,11 @@
 
 ## v2 development
 
+- M14.3a preserves foreign GL program/VAO bindings between NPC draws in the same frame and
+  releases batch meshes and shaders on resource reload and world unload, even with the switch off.
+  Native checks passed (28/28); one current idle-500 pair measured p95 10.077 → 8.200 ms.
+  `RwNpcInstancing` stays 0; wider compatibility remains open.
+  [Coverage and limits](meritve/2026-11-18-M14.3a-GL-meja.md).
 - M14.2a adds optional single-draw rendering for the twelve main parts of an ordinary CNPC
   player model (`RwNpcInstancing=0` by default). All 200 image comparisons passed; one idle-500
   pair measured frame p95 10.268 → 8.075 ms. Compatibility and default enablement remain open.
