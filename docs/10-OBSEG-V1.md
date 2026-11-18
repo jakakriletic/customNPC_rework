@@ -143,6 +143,8 @@ Naslednji M14.1b, omejen VBO po merilih raziskave; uspešnih serij ne ponavljamo
 
 **M14.3a sprejet (18. 11., Q499):** [native GL meja in viri](meritve/2026-11-18-M14.3a-GL-meja.md), vseh pet testov PASS na `c9704453…`, 28/28 preverb in idle-500 p95 −18,63 % v enem paru. `RwNpcInstancing=0`; sledi M14.3b širša živa matrika po M14.0 §5.3/5.5, vključno z živim OptiFine/shader dokazom. M14.4 ostaja odprt do širše združljivosti, 3+3 in ogleda lastnika; M16.7c po M14, M12 zadnji.
 
+**M14.3b1 sprejet (18. 11., Q503):** [celoten zamrznjen living renderer](meritve/2026-11-18-M14.3b-celoten-izris.md), vseh pet testov PASS na `928e7110…`, 54/54 preverb in 25 slikovnih vrstic; en idle-500 par p95 −20,50 %. Sledi M14.3b2 M16/GUI/peka, nato preostale žive meje Q500. Širša M14.3b/M14.4 ostajata odprta, `RwNpcInstancing=0`; Q90/Q92/Q407 ostajajo.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela

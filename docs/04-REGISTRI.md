@@ -24,6 +24,7 @@ Prenos zgoraj je del obstoječe build osnove D-001. `NbtJson` je napisan na novo
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
+| 2026-11-18 | NPC z overlayem, opremo v rokah/oklepu ali na nosilcu pred kandidatovim izrisom v celoti uporabi original; celoten renderer 54/54 preverb | R5, M14.3b1, Q501/Q503 | `RwNpcInstancing`, klient | **0** (originalni izris) |
 | 2026-11-18 | Pred vsakim kandidatovim izrisom zavrne tuj program/VAO brez spreminjanja vezav; reload in klientski unload sprostita lastne mreže/program tudi pri 0 | R5, M14.3a, Q496–Q499 | `RwNpcInstancing`, klient | **0** (originalni izris) |
 | 2026-11-18 | Glavni običajni CNPC player model nariše 12 delov v enem klicu z native GL matrikami in GLSL 1.20; vrstni red NPC-jev/plasti ostane. Omejeni sprejem M14.2a, širša združljivost še odprta | R5, M14.2a, Q495 | `RwNpcInstancing`, klient | **0** (originalni izris) |
 | 2026-11-16 | Berljivi clone JSON z opisnimi sklopi, štirimi zamrznjenimi privzetki, točnimi skriptnimi vrsticami in tipnimi dodatki. Branje obeh formatov pri 0/1, prvi izrecni legacy prepis shrani `.json.v0.bak`, opis ob datoteki | M16.6, D-105, Q471 | `RwReadableClones`, stran shranjevanja | **1** od Q484 (prej 0) |
@@ -113,6 +114,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-18 | M14.3b1: celoten zamrznjen living renderer A/B/A2, en trenutni idle-500 par | Vseh pet testov PASS na `928e7110…`, 54/54 preverb, 25 slikovnih vrstic, bitne special rezerve, ime/dogodki/GL; p95 10,0943 → 8,0247 ms (−20,50 %), brez rezerv/GL napak. Stikalo ostane 0, širša matrika/vklop odprta | [zapis](meritve/2026-11-18-M14.3b-celoten-izris.md) |
 | 2026-11-18 | M14.3a: native GL A/B/A2, reload in ponovni vstop; en trenutni idle-500 par 0/1 | Vseh pet testov PASS na `c9704453…`, 895 JUnit, 28/28 preverb, 10/10 slikovnih vrstic bitno enakih, viri izbrisani pri 0; p95 10,0773 → 8,1998 ms (−18,63 %), brez rezerv/GL napak. Stikalo ostane 0, širša M14.3 odprta | [zapis](meritve/2026-11-18-M14.3a-GL-meja.md) |
 | 2026-11-18 | M14.2a: idle-200 A/B/A2 ter en idle-500 par 0/1 na dev klientu | Vseh pet testov PASS na `7ef49d0c…`, 895 JUnit, K22 200/200, RGB max1/255, 3 PNG; p95 10,2679 → 8,0747 ms (−21,36 %), brez rezerv/GL napak. Stikalo ostane 0; M14.3 naslednji | [zapis](meritve/2026-11-18-M14.2-en-izris.md) |
 | 2026-11-16 | M14.1a, `model-scale-baseline-run.ps1`, en izoliran dev klient, RTX 3080 | Unit 879, build/package in GPU baseline PASS na `07b888c3…`; 31 delov × 3 poze, 93 bitno enakih RGBA/depth in preverjenih GL stanj A/B/A2, 279 nepraznih klicev, negativni kontroli zavrnjeni, 6 pregledanih PNG (Q479) | [zapis](meritve/2026-11-16-M14.1a-baseline.md) |

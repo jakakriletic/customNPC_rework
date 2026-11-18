@@ -2,6 +2,11 @@
 
 ## v2 development
 
+- M14.3b1 keeps NPCs with overlay textures, equipment or a mount on the complete original
+  render path. The whole-renderer proof passed 54 checks across 25 frozen fixtures, including
+  events, layers and visible names; one idle-500 pair measured p95 10.094 → 8.025 ms.
+  `RwNpcInstancing` stays 0; live compatibility and default enablement remain open.
+  [Coverage and limits](meritve/2026-11-18-M14.3b-celoten-izris.md).
 - M14.3a preserves foreign GL program/VAO bindings between NPC draws in the same frame and
   releases batch meshes and shaders on resource reload and world unload, even with the switch off.
   Native checks passed (28/28); one current idle-500 pair measured p95 10.077 → 8.200 ms.

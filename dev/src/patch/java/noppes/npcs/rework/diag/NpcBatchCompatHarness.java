@@ -189,6 +189,15 @@ public final class NpcBatchCompatHarness {
             if (!OpenGlHelper.isFramebufferEnabled()) { throw new IllegalStateException("FBO required"); }
             NpcBatch.checkScope = true;
             fb = new Framebuffer(W, H, true); fb.setFramebufferColor(0, 0, 0, 0);
+            if ("1".equals(job.getProperty("wholeRenderer"))) {
+                JsonObject scene = NpcBatchSceneCheck.run(mc, fb, (noppes.npcs.entity.EntityCustomNpc) npc,
+                        out.getPath().replace(".proof.json", ""));
+                for (com.google.gson.JsonElement c : scene.getAsJsonArray("checks")) { checks.add(c); }
+                for (com.google.gson.JsonElement r : scene.getAsJsonArray("rows")) { rows.add(r); }
+                allOk &= scene.get("success").getAsBoolean();
+                enter("FINISH", 0);
+                return;
+            }
             // Original warmup compiles display lists before state/image comparisons. Candidate
             // warmup pins the production per-frame decision before testing a later program/VAO.
             shot(mc, fb, false, 0, 0);
@@ -294,7 +303,7 @@ public final class NpcBatchCompatHarness {
         return shot;
     }
 
-    private static Map<String, String> state() {
+    static Map<String, String> state() {
         Map<String, String> out = new TreeMap<String, String>();
         for (int key : new int[] {GL20.GL_CURRENT_PROGRAM, GL30.GL_VERTEX_ARRAY_BINDING, GL15.GL_ARRAY_BUFFER_BINDING,
                 GL15.GL_ELEMENT_ARRAY_BUFFER_BINDING, GL13.GL_ACTIVE_TEXTURE, GL13.GL_CLIENT_ACTIVE_TEXTURE,
@@ -341,7 +350,7 @@ public final class NpcBatchCompatHarness {
     }
     private static boolean coreVao() { return GLContext.getCapabilities().OpenGL30; }
     private static int createVao() { return coreVao() ? GL30.glGenVertexArrays() : ARBVertexArrayObject.glGenVertexArrays(); }
-    private static void bindVao(int id) { if (coreVao()) { GL30.glBindVertexArray(id); } else { ARBVertexArrayObject.glBindVertexArray(id); } }
+    static void bindVao(int id) { if (coreVao()) { GL30.glBindVertexArray(id); } else { ARBVertexArrayObject.glBindVertexArray(id); } }
     private static void deleteVao(int id) { if (coreVao()) { GL30.glDeleteVertexArrays(id); } else { ARBVertexArrayObject.glDeleteVertexArrays(id); } }
     private static boolean isVao(int id) { return coreVao() ? GL30.glIsVertexArray(id) : ARBVertexArrayObject.glIsVertexArray(id); }
     private static int foreignProgram() {

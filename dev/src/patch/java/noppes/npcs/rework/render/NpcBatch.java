@@ -109,6 +109,16 @@ public final class NpcBatch {
         if (renderer.getClass() != RenderCustomNpc.class || model.getClass() != ModelPlayerAlt.class) {
             return fallback(MODEL);
         }
+        // The M14 main-model contract excludes special layers and riders. Decide before
+        // binding a texture or drawing any part: their entire renderer must stay original,
+        // including depth and the geometry subsequently reused by overlay/equipment layers.
+        if (npc.isRiding() || !npc.display.getOverlayTexture().isEmpty()
+                || !npc.getHeldItemMainhand().isEmpty() || !npc.getHeldItemOffhand().isEmpty()) {
+            return fallback(MODEL);
+        }
+        for (net.minecraft.item.ItemStack armor : npc.getArmorInventoryList()) {
+            if (!armor.isEmpty()) { return fallback(MODEL); }
+        }
         return true;
     }
 

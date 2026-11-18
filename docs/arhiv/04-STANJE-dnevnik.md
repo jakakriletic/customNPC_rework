@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 241 → 1)
+# Arhiv: dnevnik sej (vnosi 242 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,19 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-18 (242) — M14.2a: en izris na NPC sprejet
+
+**Paket:** M14.2a (Q487–Q495) · **Stanje:** sprejet pod stikalom 0.
+Vseh pet controller testov PASS na `7ef49d0c…`, 895 JUnit, package 1716/90;
+K22 200/200, RGB max1/255, maska/alfa enaki, globina max1,19e-7, A=A2 bitno;
+negativni kontroli padeta, 3 PNG pregledani. Native GL matrike odpravijo numerični
+neuspeh; merila/pogoji nespremenjeni. En idle-500 par p50/p95/p99
+8,923/10,268/15,291 → 6,794/8,075/11,304 ms, GC 40/96 → 42/105 ms,
+brez rezerv/GL napak; vseh 530 cenovnih vhodov ob analizi enakih.
+Q495: sledi M14.3, brez med-NPC instancinga; širša matrika/3+3/lastnikov ogled
+še manjkajo. `RwNpcInstancing=0`, uspešnih testov ne ponavljamo (Q90).
+Nič zagnano ročno; nepovezano delo ohranjeno. [Zapis](../meritve/2026-11-18-M14.2-en-izris.md).
 
 ### 2026-11-16 (239–241) — M14.1b per-part VBO zavrnjen
 

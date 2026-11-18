@@ -631,12 +631,16 @@ Not proven, so not claimed:
   10.268 → 8.075 ms. M14.3a now preserves foreign program/VAO bindings in the same frame and
   deletes owned meshes/programs on reload/world unload even at 0: 28 native checks and ten
   image/state rows passed; one current idle-500 pair measured p95 10.077 → 8.200 ms.
-  This covers one ordinary main model in an FBO on one dev client/GPU. Walking/combat,
-  varied skins/light/fog/scale, special layers/models, M16, L2 transitions, GUI/baking,
-  whole-renderer events/names and live OptiFine/shader compatibility remain unverified.
+  M14.3b1 keeps overlay/equipment/riding NPCs on the complete original path. Its 25 frozen
+  whole-renderer fixtures passed 54 checks: poses, skins/light/fog/scale, bitwise special
+  fallback, events/layers/names and GL state. One current idle-500 pair measured p95
+  10.094 → 8.025 ms. This covers one dev client/GPU; frozen poses do not test live walking
+  or combat AI. M16, L2 transitions, GUI/baking, program failure, URL transfers, MPM/unknown
+  renderers, shadows/fire and live OptiFine/shader compatibility remain unverified.
   Default enablement needs the wider matrix, repeated cost series and the owner's visual review.
   [M14.2a evidence](meritve/2026-11-18-M14.2-en-izris.md),
-  [M14.3a evidence and limits](meritve/2026-11-18-M14.3a-GL-meja.md).
+  [M14.3a evidence](meritve/2026-11-18-M14.3a-GL-meja.md),
+  [M14.3b1 evidence and limits](meritve/2026-11-18-M14.3b-celoten-izris.md).
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).
