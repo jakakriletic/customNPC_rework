@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 248 → 1)
+# Arhiv: dnevnik sej (vnosi 249 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,18 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-18 (249) — M14.3b6: URL originalni izris sprejet
+
+**Paket:** M14.3b6 (Q526–Q528) · **Stanje:** sprejet pod stikalom 0.
+Reprodukcija v1 FAIL, minimalen skinType=2 guard; vseh pet zahtevanih testov PASS
+na `2c433b7c…`: 895+51 JUnit/build/package, URL-v2 14/14 preverb in šest vrstic.
+Pravi PNG/404, štiri bitne URL rezerve, dve običajni obnovi, reference/dogodki/GL;
+24 novih PNG pregledanih. En idle-500 par p95 9,8663 → 8,2063 ms (−16,82 %).
+536 cenovnih vhodov enakih; funkcionalnih 607/608, le poznejši Forge splash
+komentar/vrstni red, nekomentarske vrednosti enake. Produkcija/testi nespremenjeni.
+Brez novih zagonov (Q90), nepovezano delo ohranjeno. Sledi MPM/neznani renderer,
+nato OptiFine/shader; širša matrika/vklop odprta. [Dokaz](../meritve/2026-11-18-M14.3b6-url.md).
 
 ### 2026-11-18 (248) — M14.3b5: dejanska hoja/boj sprejeta
 

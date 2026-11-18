@@ -2,6 +2,11 @@
 
 ## v2 development
 
+- M14.3b8 proves in a real packaged Forge client with the owner's OptiFine 1.12.2 HD U G5,
+  without a shader pack and with BSL v7.1.04, that `RwNpcInstancing=1` never builds the batch
+  program: frozen A/B/A2 images stay bitwise original and the living world draws only the
+  original renderer, with no GL errors. Production code is unchanged; `RwNpcInstancing` stays 0.
+  [Coverage and limits](meritve/2026-11-18-M14.3b8-optifine.md).
 - M14.3b7 sends NPCs with CNPC MorePlayerModels parts (legs, wings, tail, ears, breasts)
   to the complete original renderer, and proves that subclassed renderers/models, Classic
   and 64×32 models stay bitwise original. With the real MorePlayerModels jar (network

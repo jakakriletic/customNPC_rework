@@ -37,6 +37,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.client.model.ModelPlayerAlt;
 import noppes.npcs.entity.EntityNPCInterface;
+import noppes.npcs.rework.far.FarCompat;
 import noppes.npcs.rework.render.NpcBatch;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.ARBVertexArrayObject;
@@ -53,7 +54,10 @@ import org.lwjgl.opengl.GLContext;
  * Reflection observes production-owned GL names; it never forces the production decision.
  * programFault=1 (M14.3b4) instead injects a compile, link and draw fault of the batch program
  * through NpcBatch.testProgramFault: each must leave the bitwise original image, no retry
- * storm, no live resources, and a later real resource reload must rebuild the program. */
+ * storm, no live resources, and a later real resource reload must rebuild the program.
+ * optifine=1 (M14.3b8) runs in a packaged Forge client with the real OptiFine jar, without or
+ * with a shader pack: the batch gate stays closed, no program is built, A/B/A2 and the living
+ * world at switch 1 draw the original. */
 @SideOnly(Side.CLIENT)
 public final class NpcBatchCompatHarness {
     private static final int W = 256, H = 256;
@@ -75,14 +79,20 @@ public final class NpcBatchCompatHarness {
     private long builds;
     private final boolean fault;
     private final boolean urlSkin, mpm;
+    /** M14.3b8: packaged Forge client with the real OptiFine jar, without or with a shader pack. */
+    private final boolean optifine;
     private NpcBatchUrlCheck urlCheck;
     private String afterReload;
     private long liveDraws, liveRefused, liveFailures;
+    private long[] liveFallbacks;
+    private long liveErrors, liveUploads;
+    private volatile String pendingShot;
 
     private NpcBatchCompatHarness(Properties p) {
         job = p; out = new File(p.getProperty("out")); fault = "1".equals(p.getProperty("programFault"));
         urlSkin = "1".equals(p.getProperty("urlSkin"));
         mpm = "1".equals(p.getProperty("mpm"));
+        optifine = "1".equals(p.getProperty("optifine"));
     }
 
     static boolean installIfRequested(String path) throws Exception {
@@ -148,10 +158,12 @@ public final class NpcBatchCompatHarness {
                                     throw new IllegalStateException(c);
                                 }
                             }
+                            // The flat spawn is far from 0,0; load the summon chunk first instead of relying on timing (Q537).
+                            mc.getIntegratedServer().getWorld(0).getChunkFromChunkCoords(0, 0);
                             if (joins == 1 && mc.getIntegratedServer().getCommandManager().executeCommand(mc.getIntegratedServer(),
                                     "summon customnpcs:customnpc 0 4 2 {Name:\"M143A\",MovingState:0,StandingState:1,Orientation:180"
                                     // Fault mode also renders it live: keep it standing where summoned (Q509).
-                                    + (fault || urlSkin ? ",StartPosNew:[I;0,4,2]" : "") + "}") < 1) {
+                                    + (fault || urlSkin || optifine ? ",StartPosNew:[I;0,4,2]" : "") + "}") < 1) {
                                 throw new IllegalStateException("summon");
                             }
                         } catch (Exception problem) { serverError = problem.toString(); }
@@ -175,6 +187,8 @@ public final class NpcBatchCompatHarness {
                         // The first program build of this client fails to compile.
                         NpcBatch.testProgramFault = 1;
                         enter("FAULT_COMPILE", 0);
+                    } else if (optifine) {
+                        enter("OF_MATRIX", 0);
                     } else {
                         enter(joins == 1 ? "MATRIX" : "AFTER_REJOIN", 0);
                     }
@@ -195,6 +209,38 @@ public final class NpcBatchCompatHarness {
                     check("live-world-original-gl", GL11.glGetError() == GL11.GL_NO_ERROR, "GL_NO_ERROR");
                     NpcBatch.testProgramFault = 2;
                     reloadThen("FAULT_LINK");
+                    break;
+                }
+                case "OF_LIVE":
+                    // Living world with OptiFine (and its shader pipeline) at switch 0, then 1.
+                    pendingShot = "live-0";
+                    enter("OF_LIVE_ON", 10);
+                    break;
+                case "OF_LIVE_ON":
+                    liveDraws = NpcBatch.draws; liveFallbacks = NpcBatch.fallbacks(); liveErrors = drainGlErrors();
+                    builds = NpcBatch.programs; liveUploads = NpcBatch.uploads;
+                    CustomNpcs.RwNpcInstancing = 1;
+                    enter("OF_LIVE_SHOT", 30);
+                    break;
+                case "OF_LIVE_SHOT":
+                    pendingShot = "live-1";
+                    enter("OF_LIVE_END", 10);
+                    break;
+                case "OF_LIVE_END": {
+                    CustomNpcs.RwNpcInstancing = 0;
+                    long[] now = NpcBatch.fallbacks(); long refused = 0;
+                    for (int i = 0; i < now.length; i++) { refused += now[i] - liveFallbacks[i]; }
+                    check("live-world-original", NpcBatch.draws == liveDraws && refused > 0 && NpcBatch.programs == builds
+                            && NpcBatch.uploads == liveUploads && program() == 0 && NpcBatch.live() == 0,
+                            "draws=" + (NpcBatch.draws - liveDraws) + " refusals=" + refused + " reasons=" + NpcBatch.fallbackText()
+                            + " programs=" + NpcBatch.programs + " uploads=" + NpcBatch.uploads + " live=" + NpcBatch.live());
+                    long errors = drainGlErrors();
+                    check("live-world-original-gl", errors == 0, "glErrorsInWindow=" + errors + " before=" + liveErrors);
+                    for (String s : new String[] {"live-0", "live-1"}) {
+                        File f = new File(out.getPath().replace(".proof.json", "-" + s + ".png"));
+                        check(s + "-image", f.isFile() && f.length() > 0 && varied(f), f.getName() + " bytes=" + f.length());
+                    }
+                    enter("OF_AFTER", 0);
                     break;
                 }
                 case "FAULT_RELOAD":
@@ -235,15 +281,17 @@ public final class NpcBatchCompatHarness {
 
     @SubscribeEvent public void render(RenderWorldLastEvent e) {
         if (finished || !(phase.equals("MATRIX") || phase.equals("REBUILD") || phase.equals("AFTER_REJOIN")
-                || phase.equals("URL_MATRIX") || phase.startsWith("FAULT_") && !phase.equals("FAULT_RELOAD"))) { return; }
+                || phase.equals("URL_MATRIX") || phase.equals("OF_MATRIX") || phase.equals("OF_AFTER") || phase.startsWith("FAULT_") && !phase.equals("FAULT_RELOAD"))) { return; }
         Minecraft mc = Minecraft.getMinecraft();
         Framebuffer fb = null;
+        String framePhase = phase;
         int savedProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
         int savedVao = GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING);
         int savedBuffer = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
         int savedClient = GL11.glGetInteger(GL13.GL_CLIENT_ACTIVE_TEXTURE);
         int savedUnit = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
         int savedMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
+        int savedFbo = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
         SavedMirrors mirrors = new SavedMirrors();
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GL11.glPushClientAttrib(GL11.GL_ALL_CLIENT_ATTRIB_BITS);
@@ -260,6 +308,7 @@ public final class NpcBatchCompatHarness {
                 return;
             }
             if (fault) { faultFrame(mc, fb); return; }
+            if (optifine) { optiFineFrame(mc, fb); return; }
             if ("1".equals(job.getProperty("wholeRenderer")) || "1".equals(job.getProperty("contexts")) || mpm) {
                 String images = out.getPath().replace(".proof.json", "");
                 JsonObject scene = "1".equals(job.getProperty("contexts"))
@@ -308,17 +357,102 @@ public final class NpcBatchCompatHarness {
         } catch (Exception | LinkageError problem) { problem.printStackTrace(); finish(mc, problem.toString()); }
         finally {
             NpcBatch.checkScope = false;
+            // OptiFine shaders draw the world into their own FBO: delete ours first (it unbinds
+            // FBO and texture), then return to exactly the incoming binding, not Minecraft's.
+            if (optifine && fb != null) { fb.deleteFramebuffer(); fb = null; }
             GL20.glUseProgram(savedProgram); bindVao(savedVao); GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, savedBuffer);
             GL13.glClientActiveTexture(savedClient);
             for (int mode : new int[] {GL11.GL_MODELVIEW, GL11.GL_PROJECTION}) { GlStateManager.matrixMode(mode); GlStateManager.popMatrix(); }
             GlStateManager.matrixMode(savedMode);
+            // The shader FBO must be bound again before glPopAttrib: the pushed draw buffers
+            // (COLOR_ATTACHMENT0..n) are invalid on framebuffer 0 and raise GL 1282 (Q538).
+            if (optifine) { OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, savedFbo); }
             // Raw glPopAttrib alone would restore the driver while leaving Minecraft's
             // mirror stale. Restore the exact incoming mirrored values first.
             mirrors.restore();
             GL11.glPopClientAttrib(); GL11.glPopAttrib(); GL13.glActiveTexture(savedUnit);
-            mc.getFramebuffer().bindFramebuffer(true);
+            if (optifine) {
+                int error = GL11.glGetError();
+                check(framePhase.equals("OF_MATRIX") ? "optifine-restore-gl" : "optifine-restore-gl-after-live", error == GL11.GL_NO_ERROR, error == GL11.GL_NO_ERROR ? "GL_NO_ERROR" : "glError=" + error);
+            } else { mc.getFramebuffer().bindFramebuffer(true); }
             if (fb != null) { fb.deleteFramebuffer(); }
         }
+    }
+
+    /** M14.3b8, one frame each: real OptiFine (and shader pack state) is detected, the batch
+     * gate stays closed without building any program, and A/B/A2 are the bitwise original. */
+    private void optiFineFrame(Minecraft mc, Framebuffer fb) throws Exception {
+        long before = drainGlErrors();
+        long[] f = NpcBatch.fallbacks();
+        if (phase.equals("OF_MATRIX")) {
+            String version = "?";
+            try { version = String.valueOf(Class.forName("Config", false, NpcBatch.class.getClassLoader()).getField("VERSION").get(null)); }
+            catch (ReflectiveOperationException | LinkageError problem) { version = problem.toString(); }
+            check("optifine-loaded", FarCompat.optifine() && version.equals(job.getProperty("optifineVersion")),
+                    "version=" + version + " " + FarCompat.status(CustomNpcs.RwFarShaders));
+            boolean pack = "1".equals(job.getProperty("shaderPack"));
+            String name = "?";
+            try {
+                Field current = Class.forName("net.optifine.shaders.Shaders", false, NpcBatch.class.getClassLoader()).getDeclaredField("currentShaderName");
+                current.setAccessible(true); name = String.valueOf(current.get(null));
+            } catch (ReflectiveOperationException | LinkageError problem) { name = problem.toString(); }
+            check("shader-pack", FarCompat.shaderPack() == pack && (!pack || name.contains(job.getProperty("shaderName"))),
+                    "expected=" + pack + " loaded=" + FarCompat.shaderPack() + " name=" + name + " glErrorsBefore=" + before);
+        }
+        shot(mc, fb, false, 0, 0);
+        shot(mc, fb, true, 0, 0);
+        String key = phase.equals("OF_MATRIX") ? "optifine-ordinary" : "optifine-ordinary-after-live";
+        trial(mc, fb, key, 0, 0, 0, -1, true);
+        long[] after = NpcBatch.fallbacks();
+        long gate = after[PROGRAM_REASON] - f[PROGRAM_REASON] + after[CAPABILITY_REASON] - f[CAPABILITY_REASON];
+        long all = 0;
+        for (int i = 0; i < f.length; i++) { all += after[i] - f[i]; }
+        boolean frameOk = (Boolean) field(null, NpcBatch.class, "frameOk"), failed = (Boolean) field(null, NpcBatch.class, "failed");
+        check(key + "-gate", FarCompat.optifine() && !frameOk && !failed && gate == all && gate > 0
+                && NpcBatch.programs == 0 && NpcBatch.uploads == 0 && program() == 0 && NpcBatch.live() == 0,
+                "frameRefusals=" + gate + "/" + all + " capable=" + field(null, NpcBatch.class, "capable")
+                + " reflected=" + field(null, NpcBatch.class, "reflected") + " programs=" + NpcBatch.programs
+                + " uploads=" + NpcBatch.uploads + " live=" + NpcBatch.live());
+        enter(phase.equals("OF_MATRIX") ? "OF_LIVE" : "FINISH", phase.equals("OF_MATRIX") ? 10 : 0);
+    }
+
+    private static final int PROGRAM_REASON = java.util.Arrays.asList(NpcBatch.REASONS).indexOf("program"),
+            CAPABILITY_REASON = java.util.Arrays.asList(NpcBatch.REASONS).indexOf("capability");
+
+    private static long drainGlErrors() {
+        long n = 0;
+        while (GL11.glGetError() != GL11.GL_NO_ERROR && n < 64) { n++; }
+        return n;
+    }
+
+    /** A real frame, not a cleared buffer: more than one colour. */
+    private static boolean varied(File f) {
+        try {
+            java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(f);
+            int first = img.getRGB(0, 0);
+            for (int y = 0; y < img.getHeight(); y += 4) {
+                for (int x = 0; x < img.getWidth(); x += 4) { if (img.getRGB(x, y) != first) { return true; } }
+            }
+        } catch (Exception problem) { problem.printStackTrace(); }
+        return false;
+    }
+
+    @SubscribeEvent public void frame(TickEvent.RenderTickEvent e) {
+        String name = pendingShot;
+        if (finished || name == null || e.phase != TickEvent.Phase.END) { return; }
+        pendingShot = null;
+        try {
+            Minecraft mc = Minecraft.getMinecraft();
+            Framebuffer main = mc.getFramebuffer();
+            int w = main.framebufferWidth, h = main.framebufferHeight;
+            main.bindFramebuffer(false);
+            java.nio.IntBuffer buf = BufferUtils.createIntBuffer(w * h);
+            GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 4); GL11.glPixelStorei(GL11.GL_PACK_ROW_LENGTH, 0);
+            GL11.glReadPixels(0, 0, w, h, org.lwjgl.opengl.GL12.GL_BGRA, org.lwjgl.opengl.GL12.GL_UNSIGNED_INT_8_8_8_8_REV, buf);
+            java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_RGB);
+            for (int y = 0; y < h; y++) { for (int x = 0; x < w; x++) { img.setRGB(x, h - 1 - y, buf.get(y * w + x) & 0xFFFFFF); } }
+            javax.imageio.ImageIO.write(img, "png", new File(out.getPath().replace(".proof.json", "-" + name + ".png")));
+        } catch (Exception problem) { problem.printStackTrace(); }
     }
 
     private void reloadThen(String next) { afterReload = next; enter("FAULT_RELOAD", 0); }
