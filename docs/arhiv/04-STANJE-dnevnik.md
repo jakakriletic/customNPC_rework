@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 247 → 1)
+# Arhiv: dnevnik sej (vnosi 248 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,20 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-18 (248) — M14.3b5: dejanska hoja/boj sprejeta
+
+**Paket:** M14.3b5 (Q513–Q524) · **Stanje:** sprejet pod stikalom 0.
+Vseh 11 controller testov PASS na `bb8346fa…`: 146 globinskih regresij s staro
+formulo kot negativno kontrolo, 212 živih slik + 825 sond in 3377 svetovnih sličic
+brez napak. Prava patrulja 7,81 bloka in obojestranska škoda; hurt bitno originalen.
+D-107 določi fma vrstni red, GL3.2 + ARB_gpu_shader5 ali originalni izris.
+Shader regresije in 895+51 JUnit/build/package PASS; en idle-500 par p95 −21,42 %.
+16 živih PNG, 3 K22 ter scene/konteksti na kontaktnih listih pregledani; produkcija
+in testni vhodi nespremenjeni, poznejši časovni komentar splash razložen v zapisu.
+Sledi URL v prenosu, nato MPM/neznani renderer in OptiFine/shader. Q90 brez ponovitev.
+Nič zagnano ročno; nepovezano delo ohranjeno.
+[Pogodba in meje](../meritve/2026-11-18-M14.3b5-hoja-boj.md).
 
 ### 2026-11-18 (247) — M14.3b4: napaka programa sprejeta
 

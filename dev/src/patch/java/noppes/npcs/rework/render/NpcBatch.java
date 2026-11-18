@@ -24,9 +24,12 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import noppes.npcs.CustomNpcs;
+import noppes.npcs.ModelDataShared;
 import noppes.npcs.client.model.ModelPlayerAlt;
 import noppes.npcs.client.model.ModelScaleRenderer;
 import noppes.npcs.client.renderer.RenderCustomNpc;
+import noppes.npcs.constants.EnumParts;
+import noppes.npcs.entity.EntityCustomNpc;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.rework.far.FarCompat;
 import org.lwjgl.BufferUtils;
@@ -50,7 +53,7 @@ import org.lwjgl.opengl.GLContext;
  * <p>Anything else draws the original model: GUI, impostor baking, fake entities, other models
  * or renderers, outline mode, invisible NPCs, hurt overlay, extra texture units or lights,
  * texgen, OptiFine, an active GL program, no GL 3.2 + ARB_gpu_shader5, changed geometry
- * or child parts. Each refusal is counted by reason. Lighting state comes from GlStateManager;
+ * or child parts, MPM body parts. Each refusal is counted by reason. Lighting state comes from GlStateManager;
  * original GL matrix operations and readbacks preserve driver rounding for each part.
  * Their cost is included in the controller cost pair. Render thread only.
  */
@@ -98,7 +101,7 @@ public final class NpcBatch {
     private static float vUv;
 
     // GlStateManager mirror (its own CPU cache of the GL state), resolved once.
-    private static Field fCurrent, fCmFace, fCmMode, fFogMode, fActiveUnit;
+    private static Field fCurrent, fCmFace, fCmMode, fFogMode, fActiveUnit, fParts;
     private static Object sLighting, sColorMaterial, sColorMaterialFlag, sFog, sFogFlag, sNormalize, sRescale;
     private static Object[] sLights, sTextures, sTexGen;
 
@@ -127,7 +130,21 @@ public final class NpcBatch {
         for (net.minecraft.item.ItemStack armor : npc.getArmorInventoryList()) {
             if (!armor.isEmpty()) { return fallback(MODEL); }
         }
+        // M14.3b7: MPM body parts (ears, wings, tail, breasts, ... and non-standard legs) are
+        // outside the M14.0 contract; the whole NPC stays original. Eyes are an ordinary layer.
+        if (!(npc instanceof EntityCustomNpc) || hasParts(((EntityCustomNpc) npc).modelData)) {
+            return fallback(MODEL);
+        }
         return true;
+    }
+
+    private static boolean hasParts(ModelDataShared data) {
+        if (data.getPartData(EnumParts.LEGS).type != 0) { return true; }
+        try {
+            return fParts == null || !((java.util.Map<?, ?>) fParts.get(data)).isEmpty();
+        } catch (IllegalAccessException e) {
+            return true;
+        }
     }
 
     /** Draws the main model after the original texture bind; false = caller draws the original. */
@@ -550,6 +567,13 @@ public final class NpcBatch {
 
     private static void install() {
         installed = true;
+        try {
+            fParts = ModelDataShared.class.getDeclaredField("parts");
+            fParts.setAccessible(true);
+        } catch (NoSuchFieldException e) {
+            System.out.println("RWBATCH model part map unavailable: " + e);
+            fParts = null;
+        }
         try {
             fCurrent = field(Class.forName("net.minecraft.client.renderer.GlStateManager$BooleanState"), "currentState", "field_179201_b");
             sLighting = staticField("lightingState", "field_179158_b");

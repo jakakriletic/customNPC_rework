@@ -35,8 +35,11 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import noppes.npcs.CustomNpcs;
+import noppes.npcs.client.model.ModelBipedAlt;
+import noppes.npcs.client.model.ModelClassicPlayer;
 import noppes.npcs.client.model.ModelPlayerAlt;
 import noppes.npcs.client.renderer.RenderCustomNpc;
+import noppes.npcs.constants.EnumParts;
 import noppes.npcs.entity.EntityCustomNpc;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.client.gui.util.GuiNPCInterface;
@@ -67,13 +70,27 @@ public final class NpcBatchSceneCheck {
     private static final String[] CONTEXT_KEYS = {"ordinary-name", "rig-idle", "rig-walk", "rig-hurt", "rig-death",
         "gui-ordinary", "gui-rig", "bake-0", "bake-45", "bake-90", "bake-135", "bake-180", "bake-225",
         "bake-270", "bake-315", "ordinary-after-specials"};
+    /** M14.3b7: CNPC MPM body parts, renderers/models this contract does not know, and the
+     * real MorePlayerModels mod drawing a player directly before/after the batched NPC. */
+    private static final String[] MPM_KEYS = {"ordinary-name", "eyes-off", "parts-legs", "parts-wings", "parts-tail",
+        "parts-ears", "parts-breasts", "foreign-renderer", "foreign-model", "classic-model", "model-64x32",
+        "mpm-player-before", "mpm-player-after", "ordinary-after-specials"};
+    /** Calls into the subclassed renderer/model; proves the unknown class was really used. */
+    static long foreignCalls;
     private final Minecraft mc;
     private final Framebuffer fb;
     private final EntityCustomNpc npc;
     private final RenderCustomNpc renderer;
     private final JsonArray checks = new JsonArray(), rows = new JsonArray();
     private final String images;
-    private final boolean contexts;
+    private final boolean contexts, mpm;
+    private Map<Class<?>, Object> renderMap;
+    private final Map<String, RenderCustomNpc<EntityCustomNpc>> foreign = new java.util.HashMap<String, RenderCustomNpc<EntityCustomNpc>>();
+    private net.minecraft.client.entity.EntityOtherPlayerMP probe;
+    private Object probeData, probeWings;
+    private java.lang.reflect.Method probeCreate, probeRemove;
+    /** The NPC's own yaw; the breasts row turns it to face the fixed FBO camera. */
+    private float[] yaw;
     private EntityNPCInterface target;
     private final NBTTagCompound display, model;
     private final StringBuilder trace = new StringBuilder();
@@ -81,19 +98,23 @@ public final class NpcBatchSceneCheck {
     private String key;
     private float partial = 0.5f;
 
-    private NpcBatchSceneCheck(Minecraft mc, Framebuffer fb, EntityCustomNpc npc, String images, boolean contexts) {
+    private NpcBatchSceneCheck(Minecraft mc, Framebuffer fb, EntityCustomNpc npc, String images, boolean contexts, boolean mpm) {
         this.mc = mc; this.fb = fb; this.npc = npc; this.images = images;
-        this.contexts = contexts; target = npc;
+        this.contexts = contexts; this.mpm = mpm; target = npc;
         renderer = (RenderCustomNpc) mc.getRenderManager().getEntityRenderObject(npc);
         display = npc.display.writeToNBT(new NBTTagCompound()); model = npc.modelData.writeToNBT();
     }
 
     static JsonObject run(Minecraft mc, Framebuffer fb, EntityCustomNpc npc, String images) throws Exception {
-        return new NpcBatchSceneCheck(mc, fb, npc, images, false).run();
+        return new NpcBatchSceneCheck(mc, fb, npc, images, false, false).run();
+    }
+
+    static JsonObject runMpm(Minecraft mc, Framebuffer fb, EntityCustomNpc npc, String images) throws Exception {
+        return new NpcBatchSceneCheck(mc, fb, npc, images, false, true).run();
     }
 
     static JsonObject runContexts(Minecraft mc, Framebuffer fb, EntityCustomNpc npc, String images) throws Exception {
-        return new NpcBatchSceneCheck(mc, fb, npc, images, true).run();
+        return new NpcBatchSceneCheck(mc, fb, npc, images, true, false).run();
     }
 
     /** M14.3b6: keep the real URL object and downloader untouched during A/B/A2. A separate
@@ -102,7 +123,7 @@ public final class NpcBatchSceneCheck {
     @SuppressWarnings({"unchecked", "rawtypes"})
     static JsonObject url(Minecraft mc, Framebuffer fb, EntityCustomNpc npc, String key,
                           net.minecraft.util.ResourceLocation expected, String images, boolean original) throws Exception {
-        NpcBatchSceneCheck c = new NpcBatchSceneCheck(mc, fb, npc, images, false);
+        NpcBatchSceneCheck c = new NpcBatchSceneCheck(mc, fb, npc, images, false, false);
         c.key = key;
         int mode = CustomNpcs.RwNpcInstancing;
         boolean scope = NpcBatch.checkScope, shadow = mc.getRenderManager().isRenderShadow();
@@ -170,7 +191,7 @@ public final class NpcBatchSceneCheck {
      * swing/hurt values or tick the client between A/B/A2. The caller saves outer GL state. */
     static JsonObject live(Minecraft mc, Framebuffer fb, EntityCustomNpc npc, float partial, String images,
                            boolean controls, String failureBase, boolean diagnoseFailure) throws Exception {
-        NpcBatchSceneCheck c = new NpcBatchSceneCheck(mc, fb, npc, images, false);
+        NpcBatchSceneCheck c = new NpcBatchSceneCheck(mc, fb, npc, images, false, false);
         c.key = "live"; c.partial = partial;
         int mode = CustomNpcs.RwNpcInstancing;
         boolean scope = NpcBatch.checkScope, shadow = mc.getRenderManager().isRenderShadow();
@@ -388,6 +409,7 @@ public final class NpcBatchSceneCheck {
         };
         layers.add(witness); MinecraftForge.EVENT_BUS.register(this);
         try {
+            if (mpm) { prepareMpm(witness); }
             // Deterministic input to the living renderer; no shadow/world terrain in this FBO.
             mc.getRenderManager().setRenderShadow(false);
             mc.gameSettings.hideGUI = false;
@@ -398,7 +420,7 @@ public final class NpcBatchSceneCheck {
             mc.getRenderManager().playerViewX = 12;
             mc.getRenderManager().playerViewY = 160;
             Shot baseline = null, dark = null, rigIdle = null;
-            for (String k : contexts ? CONTEXT_KEYS : KEYS) {
+            for (String k : contexts ? CONTEXT_KEYS : mpm ? MPM_KEYS : KEYS) {
                 key = k; configure();
                 shot(0); shot(1); // lazy original lists, skin and candidate mesh outside the comparison
                 Shot a = shot(0), b = shot(1), a2 = shot(0);
@@ -426,14 +448,30 @@ public final class NpcBatchSceneCheck {
                 long changed = baseline == null ? 0 : difference(a, key.equals("block-lightmap") ? dark : baseline);
                 if (contexts && key.startsWith("rig-") && !key.equals("rig-idle")) { changed = difference(a, rigIdle); }
                 if (key.equals("rig-idle")) { rigIdle = a; }
+                // Rows whose pose/orientation differs from the baseline compare with the same
+                // pose/orientation without the feature (part removed, production renderer).
+                if (mpm && (key.equals("eyes-off") || key.equals("parts-breasts") || key.equals("classic-model"))) {
+                    if (key.equals("eyes-off")) { npc.modelData.eyes.type = 0; }
+                    else if (key.equals("parts-breasts")) { npc.modelData.removePart(EnumParts.BREASTS); }
+                    else { renderMap.put(EntityCustomNpc.class, renderer); }
+                    Shot without = shot(0);
+                    png(without.color, images + "-" + key + "-without-A.png", null);
+                    configure();
+                    changed = difference(a, without);
+                }
                 if (key.equals("dark-lightmap")) { dark = a; }
                 boolean feature = key.equals("ordinary-name") || key.equals("ordinary-after-specials") || empty || changed > 0;
+                // A subclassed renderer/model draws the same picture; prove it was really used.
+                if (key.equals("foreign-renderer") || key.equals("foreign-model")) {
+                    feature = a.foreign > 0 && b.foreign > 0 && a2.foreign > 0;
+                }
                 JsonObject row = new JsonObject(); row.addProperty("key", key); row.addProperty("exact", exact);
                 row.addProperty("repeatEqual", repeat); row.addProperty("stateEqual", state); row.addProperty("imageEqual", image);
                 row.addProperty("eventsEqual", eventOk); row.addProperty("visible", visible); row.addProperty("featureVisible", feature);
                 row.addProperty("featurePixels", changed); row.addProperty("draws", b.draws); row.addProperty("fallbacks", b.fallbacks);
                 row.addProperty("offDraws", a.draws); row.addProperty("repeatDraws", a2.draws);
                 row.addProperty("events", b.events); row.addProperty("reasons", b.reasons); row.add("pixels", new Gson().toJsonTree(cmp));
+                if (mpm) { row.addProperty("foreignCalls", b.foreign); }
                 if (contexts) {
                     row.addProperty("rigFrames", b.rigFrames); row.addProperty("offRigFrames", a.rigFrames);
                     row.addProperty("repeatRigFrames", a2.rigFrames); row.addProperty("passFallbacks", b.passFallbacks);
@@ -468,6 +506,16 @@ public final class NpcBatchSceneCheck {
                 if (key.equals("ordinary-after-specials")) {
                     check("recovery-baseline", equal(a, baseline) && a.state.equals(baseline.state), "ordinary image/state after all fixtures");
                 }
+                if (key.equals("mpm-player-before")) {
+                    // The real MPM renderer must have drawn the probe's MPM wings in this row.
+                    probeRemove.invoke(probeData, probeWings);
+                    Shot plain = shot(0);
+                    probeCreate.invoke(probeData, probeWings);
+                    long wings = difference(a, plain);
+                    check("mpm-active", wings > 0 && net.minecraftforge.fml.common.Loader.isModLoaded("moreplayermodels"),
+                            "wingPixels=" + wings + " loaded=" + net.minecraftforge.fml.common.Loader.isModLoaded("moreplayermodels"));
+                    png(plain.color, images + "-mpm-no-wings-A.png", null);
+                }
             }
         } finally {
             observing = false; cancel = false; NpcBatch.testPoseDegrees = 0; NpcBatch.testUvShift = 0;
@@ -487,6 +535,10 @@ public final class NpcBatchSceneCheck {
             mc.getRenderManager().playerViewX = savedViewX;
             mc.getRenderManager().playerViewY = savedViewY;
             layers.remove(witness); MinecraftForge.EVENT_BUS.unregister(this);
+            if (renderMap != null) { renderMap.put(EntityCustomNpc.class, renderer); }
+            if (yaw != null) {
+                npc.renderYawOffset = yaw[0]; npc.prevRenderYawOffset = yaw[1]; npc.rotationYawHead = yaw[2]; npc.prevRotationYawHead = yaw[3];
+            }
             savedState.restore();
         }
         JsonObject result = new JsonObject(); result.addProperty("success", ok); result.add("checks", checks); result.add("rows", rows);
@@ -496,6 +548,7 @@ public final class NpcBatchSceneCheck {
     /** The initial M14 contract keeps special models/layers/riders on the complete original path. */
     private boolean unsupported() {
         if (contexts) { return !key.equals("ordinary-name") && !key.equals("ordinary-after-specials"); }
+        if (mpm) { return key.startsWith("parts-") || foreign.containsKey(key); }
         return key.equals("hurt") || key.equals("death") || key.equals("overlay") || key.startsWith("armor")
             || key.equals("held-item") || key.equals("riding") || key.equals("morph-zombie") || key.equals("outline") || key.equals("cancel-pre");
     }
@@ -535,6 +588,27 @@ public final class NpcBatchSceneCheck {
             case "riding": npc.startRiding(new EntityHorse(mc.world), true); break;
             case "morph-zombie": npc.modelData.setEntityClass(EntityZombie.class); break;
             default: break;
+        }
+        if (mpm) {
+            if (yaw == null) { yaw = new float[] {npc.renderYawOffset, npc.prevRenderYawOffset, npc.rotationYawHead, npc.prevRotationYawHead}; }
+            // The FBO camera sees the back; front features (eyes, breasts) need the NPC turned toward it.
+            float turn = key.equals("eyes-off") || key.equals("parts-breasts") ? 180 : 0;
+            npc.renderYawOffset = yaw[0] + turn; npc.prevRenderYawOffset = yaw[1] + turn;
+            npc.rotationYawHead = yaw[2] + turn; npc.prevRotationYawHead = yaw[3] + turn;
+            // ModelClassicPlayer differs from ModelPlayerAlt only in the arm swing while walking.
+            if (key.equals("classic-model")) { npc.limbSwing = 2.3f; npc.limbSwingAmount = npc.prevLimbSwingAmount = 0.8f; }
+            // Default eyes (EnableDefaultEyes=true) are an ordinary CNPC layer; parts are not.
+            npc.modelData.eyes.type = (byte) (key.equals("eyes-off") ? -1 : 0);
+            RenderCustomNpc<EntityCustomNpc> other = foreign.get(key);
+            renderMap.put(EntityCustomNpc.class, other != null ? other : renderer);
+            switch (key) {
+                case "parts-legs": npc.modelData.getOrCreatePart(EnumParts.LEGS).setType(1); break;
+                case "parts-wings": npc.modelData.getOrCreatePart(EnumParts.WINGS); break;
+                case "parts-tail": npc.modelData.getOrCreatePart(EnumParts.TAIL); break;
+                case "parts-ears": npc.modelData.getOrCreatePart(EnumParts.EARS); break;
+                case "parts-breasts": npc.modelData.getOrCreatePart(EnumParts.BREASTS).setType(2); break; // CNPC female preset
+                default: break;
+            }
         }
         if (contexts) {
             npc.maxHurtTime = 10;
@@ -594,6 +668,7 @@ public final class NpcBatchSceneCheck {
         }
         NpcBatch.checkScope = !(contexts && key.startsWith("gui-"));
         trace.setLength(0); long draws = NpcBatch.draws; long[] before = NpcBatch.fallbacks(); int rigFrames = RigClient.frames;
+        long foreignBefore = foreignCalls;
         observing = true;
         try {
             if (contexts && key.startsWith("gui-")) {
@@ -605,10 +680,17 @@ public final class NpcBatchSceneCheck {
                 // checkScope remains true: refusal must come from entity membership, not time.
                 ImpostorBaker.drawModel(mc, mc.getRenderManager().getEntityRenderObject(target), target,
                         Float.parseFloat(key.substring(5)));
-            } else { mc.getRenderManager().renderEntity(npc, 0, 0, 0, 180, partial, false); }
+            } else {
+                // Real MPM player in the same pass, directly before or after the NPC.
+                boolean player = mpm && key.startsWith("mpm-player");
+                if (player && key.endsWith("-before")) { renderProbe(); }
+                mc.getRenderManager().renderEntity(npc, 0, 0, 0, 180, partial, false);
+                if (player && key.endsWith("-after")) { renderProbe(); }
+            }
         }
         finally { observing = false; }
         Shot s = new Shot(); s.draws = NpcBatch.draws - draws; s.events = trace.toString(); s.rigFrames = RigClient.frames - rigFrames;
+        s.foreign = foreignCalls - foreignBefore;
         long[] after = NpcBatch.fallbacks(); StringBuilder reasons = new StringBuilder();
         for (int i = 0; i < before.length; i++) {
             long delta = after[i] - before[i]; s.fallbacks += delta;
@@ -659,7 +741,45 @@ public final class NpcBatchSceneCheck {
 
     private static final class Shot {
         ByteBuffer color; FloatBuffer depth; Map<String, String> state;
-        String events, reasons; long draws, fallbacks, passFallbacks; int gl, rigFrames;
+        String events, reasons; long draws, fallbacks, passFallbacks, foreign; int gl, rigFrames;
+    }
+
+    /** Renderers another mod could register for CNPC NPCs, each with the layer witness, and
+     * a player probe whose MPM wings are set through the real MPM API (absent mod = error). */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void prepareMpm(LayerRenderer<EntityCustomNpc> witness) throws Exception {
+        renderMap = (Map<Class<?>, Object>) ReflectionHelper.findField(net.minecraft.client.renderer.entity.RenderManager.class,
+                "entityRenderMap", "field_78729_o").get(mc.getRenderManager());
+        if (renderMap.get(EntityCustomNpc.class) != renderer) { throw new IllegalStateException("production CNPC renderer not registered"); }
+        foreign.put("foreign-renderer", new RenderCustomNpc<EntityCustomNpc>(new ModelPlayerAlt(0.0f, false)) {
+            @Override public void doRender(EntityCustomNpc n, double x, double y, double z, float yaw, float p) {
+                foreignCalls++; super.doRender(n, x, y, z, yaw, p);
+            }
+        });
+        foreign.put("foreign-model", new RenderCustomNpc<EntityCustomNpc>(new ModelPlayerAlt(0.0f, false) {
+            @Override public void render(net.minecraft.entity.Entity e, float a, float b, float c, float d, float f, float s) {
+                foreignCalls++; super.render(e, a, b, c, d, f, s);
+            }
+        }));
+        foreign.put("classic-model", new RenderCustomNpc<EntityCustomNpc>(new ModelClassicPlayer(0.0f)));
+        foreign.put("model-64x32", new RenderCustomNpc<EntityCustomNpc>(new ModelBipedAlt(0.0f)));
+        for (RenderCustomNpc<EntityCustomNpc> r : foreign.values()) {
+            ((List<LayerRenderer>) ReflectionHelper.findField(RenderLivingBase.class, "layerRenderers", "field_177097_h").get(r)).add(witness);
+        }
+        probe = new net.minecraft.client.entity.EntityOtherPlayerMP(mc.world, new com.mojang.authlib.GameProfile(
+                java.util.UUID.nameUUIDFromBytes("M143MpmProbe".getBytes(java.nio.charset.StandardCharsets.UTF_8)), "M143MpmProbe"));
+        probe.renderYawOffset = probe.prevRenderYawOffset = probe.rotationYawHead = probe.prevRotationYawHead = 200;
+        probe.rotationYaw = probe.prevRotationYaw = 200;
+        Class<?> data = Class.forName("noppes.mpm.ModelData"), parts = Class.forName("noppes.mpm.constants.EnumParts");
+        probeData = data.getMethod("get", net.minecraft.entity.player.EntityPlayer.class).invoke(null, probe);
+        if (probeData == null) { throw new IllegalStateException("MPM model data missing on player probe"); }
+        probeWings = Enum.valueOf((Class) parts, "WINGS");
+        probeCreate = data.getMethod("getOrCreatePart", parts); probeRemove = data.getMethod("removePart", parts);
+        probeCreate.invoke(probeData, probeWings);
+    }
+
+    private void renderProbe() {
+        mc.getRenderManager().renderEntity(probe, -1.0, 0, 0.6, 200, partial, false);
     }
 
     /** Restore Minecraft's mirrors before the caller restores raw GL attributes. */

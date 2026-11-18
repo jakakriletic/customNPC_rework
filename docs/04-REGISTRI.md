@@ -24,6 +24,7 @@ Prenos zgoraj je del obstoječe build osnove D-001. `NbtJson` je napisan na novo
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
+| 2026-11-18 | NPC s CNPC MPM deli (noge, krila, rep, ušesa, prsi) gre na celoten originalni renderer; tuj renderer/model, Classic in 64×32 bitno originalni, pravi MPM izoliran; 34/34 preverb | R5, M14.3b7, Q529–Q532 | `RwNpcInstancing`, klient | **0** (originalni izris) |
 | 2026-11-18 | URL skin (`skinType=2`) ohrani celoten originalni renderer med prenosom, po uspehu in napaki; 14/14 preverb PNG/404, reference/GL in običajna obnova | R5, M14.3b6, Q527/Q528 | `RwNpcInstancing`, klient | **0** (originalni izris) |
 | 2026-11-18 | Clip transformacija z izrecnim x/y/z/w fma vrstnim redom odpravi reproducirano globinsko razliko; GL3.2 + ARB_gpu_shader5 / GLSL1.50 compatibility, sicer celoten original | R5, M14.3b5, Q522/Q524, D-107 | `RwNpcInstancing`, klient | **0** (originalni izris) |
 | 2026-11-18 | NPC z overlayem, opremo v rokah/oklepu ali na nosilcu pred kandidatovim izrisom v celoti uporabi original; celoten renderer 54/54 preverb | R5, M14.3b1, Q501/Q503 | `RwNpcInstancing`, klient | **0** (originalni izris) |

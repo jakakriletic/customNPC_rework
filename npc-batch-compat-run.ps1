@@ -3,18 +3,22 @@
    M16/CNPC GUI/baker render-stage fixtures; -ProgramFault selects M14.3b4 injected
    compile/link/draw faults of the batch program with live original fallback and reload
    recovery. -UrlSkin selects M14.3b6 real loopback HTTP with latched PNG body and HTTP 404.
+   -Mpm selects M14.3b7: CNPC MPM body parts, unknown CNPC renderers/models and the owner's
+   real MorePlayerModels jar (pinned SHA256) loaded with its network paths disabled.
    One isolated dev client, no cost window. No mode installs or simulates OptiFine. #>
-param([switch]$WholeRenderer, [switch]$Contexts, [switch]$ProgramFault, [switch]$UrlSkin)
+param([switch]$WholeRenderer, [switch]$Contexts, [switch]$ProgramFault, [switch]$UrlSkin, [switch]$Mpm)
 $ErrorActionPreference = 'Stop'
-if ([int]$WholeRenderer.IsPresent + [int]$Contexts.IsPresent + [int]$ProgramFault.IsPresent + [int]$UrlSkin.IsPresent -gt 1) { throw 'Choose one scenario mode' }
-$scene = $WholeRenderer -or $Contexts
+if ([int]$WholeRenderer.IsPresent + [int]$Contexts.IsPresent + [int]$ProgramFault.IsPresent + [int]$UrlSkin.IsPresent + [int]$Mpm.IsPresent -gt 1) { throw 'Choose one scenario mode' }
+$scene = $WholeRenderer -or $Contexts -or $Mpm
+$mpmJar = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../ladja_mod/_packlab-multiplayer-20261031/mods/MorePlayerModels_1.12.2-(05Dec19).jar'))
+$mpmHash = '5B17BE98531CCD526F4C341E5BD069BF8463D37AF11D324A707BD4745BE8BFCE'
 $root = $PSScriptRoot
 $run = Join-Path $root 'dev/run'
 . (Join-Path $root 'meritve-lib.ps1')
 . (Join-Path $root 'nav-meritve-lib.ps1')
 $stamp = Get-Date -Format 'yyyy-MM-dd-HHmmss'
-$tag = if ($UrlSkin) { 'm143b-url' } elseif ($ProgramFault) { 'm143b-fault' } elseif ($Contexts) { 'm143b-contexts' } elseif ($WholeRenderer) { 'm143b-scene' } else { 'm143a-native' }
-$package = if ($UrlSkin) { 'M14.3b6' } elseif ($ProgramFault) { 'M14.3b4' } elseif ($Contexts) { 'M14.3b2' } elseif ($WholeRenderer) { 'M14.3b1' } else { 'M14.3a' }
+$tag = if ($Mpm) { 'm143b-mpm' } elseif ($UrlSkin) { 'm143b-url' } elseif ($ProgramFault) { 'm143b-fault' } elseif ($Contexts) { 'm143b-contexts' } elseif ($WholeRenderer) { 'm143b-scene' } else { 'm143a-native' }
+$package = if ($Mpm) { 'M14.3b7' } elseif ($UrlSkin) { 'M14.3b6' } elseif ($ProgramFault) { 'M14.3b4' } elseif ($Contexts) { 'M14.3b2' } elseif ($WholeRenderer) { 'M14.3b1' } else { 'M14.3a' }
 $prefix = Join-Path $root "audit/$tag-$stamp"
 $work = Join-Path $root "dev/run-$tag/$stamp"
 $lock = $null
@@ -78,6 +82,22 @@ try {
     Copy-Item -LiteralPath (Join-Path $run 'config') -Destination (Join-Path $work 'config') -Recurse
     if (Test-Path -LiteralPath (Join-Path $run 'options.txt')) { Copy-Item -LiteralPath (Join-Path $run 'options.txt') -Destination $work }
     Assert (-not (Test-Path -LiteralPath (Join-Path $work 'mods'))) 'no optional rendering mods (native test only)'
+    if ($Mpm) {
+        # Read-only copy of the owner's jar; the source stays untouched and is re-hashed at the end.
+        Assert ((Fingerprint $mpmJar) -ceq $mpmHash) 'pinned MorePlayerModels 1.12.2-(05Dec19) jar'
+        $hashes[$mpmJar] = $mpmHash
+        New-Item -ItemType Directory -Path (Join-Path $work 'mods') | Out-Null
+        Copy-Item -LiteralPath $mpmJar -Destination (Join-Path $work 'mods')
+        $files = @(Get-ChildItem -LiteralPath (Join-Path $work 'mods') -Recurse -File)
+        Assert ($files.Count -eq 1 -and (Fingerprint $files[0].FullName) -ceq $mpmHash) 'only the pinned MPM jar in isolated mods'
+        # Network isolation, no rendering setting: MC/MPM snooper (MPM login analytics) and MPM update check off.
+        $utf8 = New-Object Text.UTF8Encoding $false
+        $options = Join-Path $work 'options.txt'
+        $lines = @(); if (Test-Path -LiteralPath $options) { $lines = @([IO.File]::ReadAllLines($options) | Where-Object { $_ -notlike 'snooperEnabled:*' }) }
+        [IO.File]::WriteAllLines($options, @($lines) + @('snooperEnabled:false'), $utf8)
+        Assert (-not (Test-Path -LiteralPath (Join-Path $work 'config/MorePlayerModels.cfg'))) 'no inherited MPM config'
+        [IO.File]::WriteAllLines((Join-Path $work 'config/MorePlayerModels.cfg'), @('EnableUpdateChecker=false'), $utf8)
+    }
     $out = "$prefix.proof.json"
     $job = "$prefix.job"
     $log = "$prefix-client.log"
@@ -88,7 +108,7 @@ try {
     }
     [IO.File]::WriteAllLines($job, @('npcBatchCompat=1', ('world=' + $tag), ('wholeRenderer=' + [int]$WholeRenderer.IsPresent),
         ('contexts=' + [int]$Contexts.IsPresent), ('programFault=' + [int]$ProgramFault.IsPresent),
-        ('urlSkin=' + [int]$UrlSkin.IsPresent),
+        ('urlSkin=' + [int]$UrlSkin.IsPresent), ('mpm=' + [int]$Mpm.IsPresent),
         ('out=' + $out.Replace('\', '/'))), (New-Object Text.UTF8Encoding $false))
     $env:JAVA_HOME = Join-Path $root '.tools/jdk8'
     $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
@@ -137,6 +157,16 @@ try {
             Assert ($count -eq $pair[1]) "log $($pair[0]) exactly $($pair[1])"
         }
     }
+    if ($Mpm) {
+        $keys = @('ordinary-name', 'eyes-off', 'parts-legs', 'parts-wings', 'parts-tail', 'parts-ears', 'parts-breasts',
+            'foreign-renderer', 'foreign-model', 'classic-model', 'model-64x32', 'mpm-player-before', 'mpm-player-after',
+            'ordinary-after-specials')
+        $special = @($keys | Where-Object { $_ -like 'parts-*' }) + @('foreign-renderer', 'foreign-model', 'classic-model', 'model-64x32')
+        $expected = @($keys) + @($keys | ForEach-Object { "$_-gl" }) + @('name-visible', 'pose-negative-control', 'uv-negative-control',
+            'recovery-baseline', 'mpm-active', 'mpm-network-isolated')
+        Assert ($text -match 'moreplayermodels') 'MPM present in client log'
+        Assert (-not ($text -match 'google-analytics|nopapi\.nl|kodevelopment\.nl')) 'no MPM network endpoint in client log'
+    }
     if ($UrlSkin) {
         $keys = @('url-pending', 'url-pending-later', 'url-loaded', 'ordinary-after-url', 'url-failed', 'ordinary-after-failure')
         $expected = @($keys) + @('pending-before', 'pending-after', 'pending-later-before', 'pending-later-after', 'body-held', 'loaded', 'failed', 'http-counts')
@@ -164,6 +194,7 @@ try {
             Assert ($row.eventsEqual -eq $true -and $row.visible -eq $true -and $row.featureVisible -eq $true) "whole renderer and visible feature $($row.key)"
             Assert ($row.offDraws -eq 0 -and $row.repeatDraws -eq 0) "original route at 0 $($row.key)"
             Assert ($row.draws -eq [int]$native -and ((-not $native) -or $row.fallbacks -eq 0)) "actual route $($row.key)"
+            if ($Mpm -and -not $native) { Assert ($row.reasons -ceq 'model=1,') "model refusal reason $($row.key)" }
             if ($native) {
                 $pixels = $row.pixels
                 Assert ($pixels.union -gt 0 -and $pixels.maskDiff -eq 0 -and $pixels.alphaDiff -eq 0 -and $pixels.outsideDiff -eq 0 -and
@@ -199,7 +230,8 @@ try {
     }
     $client = $null
     Unchanged
-    $condition = if ($UrlSkin) { 'one isolated integrated dev client/GPU; real loopback HTTP and original ImageDownloadAlt, body latched across two render callbacks, then successful PNG and separate HTTP 404; six complete living-renderer FBO A/B/A2 rows, bitwise URL fallback, known local image references, event/layer/GL audit and ordinary batch recovery; no downloader-field injection, M12 optimization, optional-mod, cost or packaged-client proof' }
+    $condition = if ($Mpm) { 'one isolated integrated dev client/GPU with the owner''s real MorePlayerModels 1.12.2-(05Dec19) jar (pinned SHA256, snooper/update check/web API off); 14 complete living-renderer FBO A/B/A2 rows: default eyes on/off, five CNPC MPM body parts, a subclassed RenderCustomNpc, a subclassed ModelPlayerAlt, classic and 64x32 CNPC models, a real MPM player with wings drawn before/after the batched NPC; bitwise original for parts/unknown classes, Q475 for supported rows, event/layer/GL audit, ordinary recovery and negative controls; no OptiFine/shader, other optional mods, MPM GUI/animations, cost or packaged-client proof' }
+        elseif ($UrlSkin) { 'one isolated integrated dev client/GPU; real loopback HTTP and original ImageDownloadAlt, body latched across two render callbacks, then successful PNG and separate HTTP 404; six complete living-renderer FBO A/B/A2 rows, bitwise URL fallback, known local image references, event/layer/GL audit and ordinary batch recovery; no downloader-field injection, M12 optimization, optional-mod, cost or packaged-client proof' }
         elseif ($ProgramFault) { 'one isolated integrated dev client/GPU; injected batch-program compile fault (first build), link fault and draw-time exception with program/VAO bound, each followed by a later frame; frozen FBO A/B/A2 bitwise original image and GL state, no rebuild until a real resource reload, live world NPC at switch 1 drawn by the original renderer while failed, recovery to the batch draw after reload; injected faults, not a real driver/OptiFine/shader failure; no cost proof' }
         elseif ($Contexts) { 'one isolated integrated dev client/GPU; 16 frozen FBO A/B/A2 rows, real M16 knight idle/walk/hurt/death route, actual CNPC GUI drawNpc with ordinary/rig entity, actual ImpostorBaker createEntity/drawModel at 8 angles; bitwise excluded routes and GL/event comparison, ordinary recovery and negative controls; not full atlas pipeline, GUI interaction, rig networking, live AI, L2 transition, cost or optional-mod proof' }
         elseif ($WholeRenderer) { 'one isolated integrated dev client/GPU; 25 frozen whole living-renderer fixtures in FBO A/B/A2, visible features, events/layer witness/name, Q475 and bitwise special fallback; no live AI motion, rig, URL, GUI/bake, L2, shadow, cost or optional-mod proof' }

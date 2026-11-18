@@ -74,7 +74,7 @@ public final class NpcBatchCompatHarness {
     private int oldProgram;
     private long builds;
     private final boolean fault;
-    private final boolean urlSkin;
+    private final boolean urlSkin, mpm;
     private NpcBatchUrlCheck urlCheck;
     private String afterReload;
     private long liveDraws, liveRefused, liveFailures;
@@ -82,6 +82,7 @@ public final class NpcBatchCompatHarness {
     private NpcBatchCompatHarness(Properties p) {
         job = p; out = new File(p.getProperty("out")); fault = "1".equals(p.getProperty("programFault"));
         urlSkin = "1".equals(p.getProperty("urlSkin"));
+        mpm = "1".equals(p.getProperty("mpm"));
     }
 
     static boolean installIfRequested(String path) throws Exception {
@@ -101,6 +102,21 @@ public final class NpcBatchCompatHarness {
 
     private void enter(String next, int wait) { phase = next; delay = wait; since = System.nanoTime(); }
 
+    /** M14.3b7: the real MPM jar has a web API sync, analytics on login (only with the snooper on)
+     * and an update check. Before any world exists, confirm the isolated run disabled the latter
+     * two and stop the web API at its own error limit. No rendering setting is changed. */
+    private void isolateMpm(Minecraft mc) throws Exception {
+        Class<?> api = Class.forName("noppes.mpm.sync.WebApi");
+        Object instance = api.getField("instance").get(null);
+        java.lang.reflect.Field errors = api.getDeclaredField("errors");
+        errors.setAccessible(true); errors.setInt(instance, 4);
+        boolean update = Class.forName("noppes.mpm.MorePlayerModels").getField("EnableUpdateChecker").getBoolean(null);
+        boolean isolated = !mc.gameSettings.snooperEnabled && !update && errors.getInt(instance) > 3;
+        check("mpm-network-isolated", isolated,
+                "snooper=" + mc.gameSettings.snooperEnabled + " updateChecker=" + update + " webApiErrors=" + errors.getInt(instance));
+        if (!isolated) { throw new IllegalStateException("MPM network not isolated; no world is started"); }
+    }
+
     @SubscribeEvent public void tick(TickEvent.ClientTickEvent e) {
         if (finished || e.phase != TickEvent.Phase.END) { return; }
         Minecraft mc = Minecraft.getMinecraft();
@@ -114,6 +130,7 @@ public final class NpcBatchCompatHarness {
                     if (!(mc.currentScreen instanceof GuiMainMenu)) { break; }
                     mc.gameSettings.pauseOnLostFocus = false;
                     CustomNpcs.RwNpcInstancing = 0;
+                    if (mpm && joins == 0) { isolateMpm(mc); }
                     joins++;
                     enter("JOIN", 20);
                     mc.launchIntegratedServer(job.getProperty("world"), job.getProperty("world"),
@@ -243,10 +260,11 @@ public final class NpcBatchCompatHarness {
                 return;
             }
             if (fault) { faultFrame(mc, fb); return; }
-            if ("1".equals(job.getProperty("wholeRenderer")) || "1".equals(job.getProperty("contexts"))) {
+            if ("1".equals(job.getProperty("wholeRenderer")) || "1".equals(job.getProperty("contexts")) || mpm) {
                 String images = out.getPath().replace(".proof.json", "");
                 JsonObject scene = "1".equals(job.getProperty("contexts"))
                         ? NpcBatchSceneCheck.runContexts(mc, fb, (noppes.npcs.entity.EntityCustomNpc) npc, images)
+                        : mpm ? NpcBatchSceneCheck.runMpm(mc, fb, (noppes.npcs.entity.EntityCustomNpc) npc, images)
                         : NpcBatchSceneCheck.run(mc, fb, (noppes.npcs.entity.EntityCustomNpc) npc, images);
                 for (com.google.gson.JsonElement c : scene.getAsJsonArray("checks")) { checks.add(c); }
                 for (com.google.gson.JsonElement r : scene.getAsJsonArray("rows")) { rows.add(r); }

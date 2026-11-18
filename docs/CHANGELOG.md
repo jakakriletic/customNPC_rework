@@ -2,6 +2,12 @@
 
 ## v2 development
 
+- M14.3b7 sends NPCs with CNPC MorePlayerModels parts (legs, wings, tail, ears, breasts)
+  to the complete original renderer, and proves that subclassed renderers/models, Classic
+  and 64×32 models stay bitwise original. With the real MorePlayerModels jar (network
+  isolated) an ordinary NPC next to a winged player stays batched. 34/34 checks; one
+  idle-500 pair measured p95 9.93 → 8.19 ms. `RwNpcInstancing` stays 0.
+  [Coverage and limits](meritve/2026-11-18-M14.3b7-mpm-renderer.md).
 - M14.3b6 keeps URL skins on the complete original render path while downloading,
   after success and after failure. Real loopback PNG/404 checks passed (14/14), with
   bitwise URL images, known skin references and ordinary batch recovery. One idle-500

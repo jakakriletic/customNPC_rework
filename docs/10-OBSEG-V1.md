@@ -153,6 +153,8 @@ Naslednji M14.1b, omejen VBO po merilih raziskave; uspešnih serij ne ponavljamo
 
 **M14.3b6 sprejet (18. 11., Q528):** [URL med prenosom/uspehom/404](meritve/2026-11-18-M14.3b6-url.md), vseh pet testov PASS na `2c433b7c…`, 14/14 preverb in 24 pregledanih PNG. Minimalni guard ohrani bitni originalni izris URL skinov, običajna pot se obnovi. En idle-500 par p95 −16,82 %, stikalo 0. Naslednji M14.3b7 MPM/neznani renderer, nato OptiFine/shader; M14.4 po širši matriki, 3+3 in ogledu lastnika. M16.7c po M14, M12 zadnji; Q90/Q92/Q407 ostajajo.
 
+**M14.3b7 sprejet (18. 11., Q529–Q532):** [MPM dodatki in neznani renderer](meritve/2026-11-18-M14.3b7-mpm-renderer.md), vseh pet testov PASS na `e6c8610f…`, 34/34 preverb in 14 vrstic. NPC z MPM deli gre na celoten originalni izris; tuj renderer/model, Classic in 64×32 ostanejo bitno originalni, pravi MPM jar izoliran. En idle-500 par p95 −17,51 %, stikalo 0. Naslednji OptiFine/shader (Q500), nato M14.4 po širši matriki, 3+3 in ogledu lastnika. M16.7c po M14, M12 zadnji; Q90/Q92/Q407 ostajajo.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela
