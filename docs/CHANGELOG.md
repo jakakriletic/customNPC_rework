@@ -2,6 +2,10 @@
 
 ## v2 development
 
+- M14.2a adds optional single-draw rendering for the twelve main parts of an ordinary CNPC
+  player model (`RwNpcInstancing=0` by default). All 200 image comparisons passed; one idle-500
+  pair measured frame p95 10.268 → 8.075 ms. Compatibility and default enablement remain open.
+  [Coverage and limits](meritve/2026-11-18-M14.2-en-izris.md).
 - M16.7b: `clone.json` in a creature folder accepts the readable clone format as well as legacy.
   Accepted on a dev dedicated server (29 checks); an unknown readable version refuses the
   reload. [Note](meritve/2026-11-18-M16.7b-mapa-bitja.md).

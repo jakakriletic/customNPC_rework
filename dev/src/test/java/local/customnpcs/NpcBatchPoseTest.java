@@ -122,4 +122,44 @@ public class NpcBatchPoseTest {
         NpcBatchPose.compute(new ModelRenderer[] {p}, false, SCALE, out);
         assertClose(mul(t(0, 0, 3 * SCALE), r(0.4f * (180F / (float) Math.PI), 1)), out, 0);
     }
+
+    @Test public void fullModelViewIsTheStartingMatrixOfEveryPart() {
+        ModelScaleRenderer a = part(), b = part();
+        a.rotationPointX = 5; a.rotateAngleZ = 0.3f;
+        a.config.transZ = 0.25f; a.config.scaleY = 0.7f;
+        b.rotationPointY = 12;
+        double[] source = mul(mul(t(1.5, -4.0, -17.0), r(37, 1)), s(0.9f, -1.2f, -1.1f));
+        float[] base = new float[16], out = new float[32];
+        for (int k = 0; k < 16; k++) { base[k] = (float) source[k]; source[k] = base[k]; }
+        float[] saved = base.clone();
+        NpcBatchPose.compute(new ModelRenderer[] {a, b}, true, SCALE, base, out);
+        double[] expected = mul(source, t(0, 0.2f, 0));
+        expected = mul(expected, t(0, 0, 0.25f));
+        expected = mul(expected, t(5 * SCALE, 0, 0));
+        expected = mul(expected, r(0.3f * (180F / (float) Math.PI), 2));
+        assertClose(mul(expected, s(1, 0.7f, 1)), out, 0);
+        assertClose(mul(mul(source, t(0, 0.2f, 0)), t(0, 12 * SCALE, 0)), out, 16);
+        assertArrayEquals(saved, base, 0.0f);
+    }
+
+    @Test public void projectionComposesEveryFullMatrixAndPreservesInputs() {
+        float[] projection = {1.3f, 0, 0, 0, 0, 1.7f, 0, 0, 0, 0, -1.002f, -1, 0, 0, -0.2f, 0};
+        float[] models = new float[32], out = new float[32];
+        double[] first = mul(t(3, -2, -10), r(17, 0)), second = mul(t(-8, 4, -20), r(31, 1));
+        double[] dp = new double[16];
+        for (int k = 0; k < 16; k++) {
+            dp[k] = projection[k];
+            models[k] = (float) first[k]; first[k] = models[k];
+            models[16 + k] = (float) second[k]; second[k] = models[16 + k];
+        }
+        float[] saved = models.clone(), savedProjection = projection.clone();
+        NpcBatchPose.project(projection, models, out);
+        double[] ea = mul(dp, first), eb = mul(dp, second);
+        for (int k = 0; k < 16; k++) {
+            assertEquals((float) ea[k], out[k], 0.0f);
+            assertEquals((float) eb[k], out[16 + k], 0.0f);
+        }
+        assertArrayEquals(saved, models, 0.0f);
+        assertArrayEquals(savedProjection, projection, 0.0f);
+    }
 }

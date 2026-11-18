@@ -41,7 +41,7 @@ import org.lwjgl.opengl.GLContext;
 /** M14.2 (RwNpcInstancing=1): one draw call for all twelve main-model parts of an ordinary
  * CNPC player model, issued exactly where the original issued twelve display lists, so draw
  * order, depth, layers, name, events and every later draw stay original. The CPU pose is the
- * existing model state; {@link NpcBatchPose} turns it into part matrices, the GPU applies them.
+ * existing model state; original postRender operations supply the part matrices, the GPU applies them.
  * A GLSL 1.20 program repeats the fixed-function steps the original uses for these parts:
  * vertex transform, two-light colour-material lighting with normal rescale/normalize, texture
  * and lightmap modulate and fog. Alpha test, blending and depth stay fixed-function.
@@ -49,8 +49,9 @@ import org.lwjgl.opengl.GLContext;
  * <p>Anything else draws the original model: GUI, impostor baking, fake entities, other models
  * or renderers, outline mode, invisible NPCs, hurt overlay, extra texture units or lights,
  * texgen, OptiFine, an active GL program, no GL 2.0 + vertex array objects, changed geometry
- * or child parts. Each refusal is counted by reason. No per-NPC glGet: the GL state comes from
- * GlStateManager, the program and fog distance mode are read once per frame. Render thread only.
+ * or child parts. Each refusal is counted by reason. Lighting state comes from GlStateManager;
+ * original GL matrix operations and readbacks preserve driver rounding for each part.
+ * Their cost is included in the controller cost pair. Render thread only.
  */
 @SideOnly(Side.CLIENT)
 public final class NpcBatch {
@@ -66,6 +67,17 @@ public final class NpcBatch {
     private static final int PARTS = 12;
     private static final ModelRenderer[] SCRATCH = new ModelRenderer[PARTS];
     private static final float[] MATRICES = new float[PARTS * 16];
+    private static final float[] CLIPS = new float[PARTS * 16];
+    private static final float[] MODEL_VIEW = new float[16], PROJECTION = new float[16];
+    private static final FloatBuffer READ_MATRIX = BufferUtils.createFloatBuffer(16);
+    private static final float[] CPU_AUDIT = new float[PARTS * 16];
+    private static final float[] CPU_CLIPS = new float[PARTS * 16];
+    private static final java.util.Set<Integer> AUDITED = new java.util.HashSet<Integer>();
+    public static long auditElements;
+    public static float auditMaxError;
+    public static long auditClipElements, auditClipDifferent;
+    public static float auditClipMaxError;
+    private static int auditLogs;
     private static final FloatBuffer UPLOAD = BufferUtils.createFloatBuffer(PARTS * 16);
     private static final WeakHashMap<ModelBase, Entry> MODELS = new WeakHashMap<ModelBase, Entry>();
     private static final List<Entry> OWNED = new ArrayList<Entry>();
@@ -74,7 +86,7 @@ public final class NpcBatch {
     private static volatile boolean resetPending;
     private static int frame = Integer.MIN_VALUE;
     private static Object context, world;
-    private static int program, locParts, locNormal, locLighting, locLight0, locLight1, locRadial, locUv, locLightmap, locFog;
+    private static int program, locParts, locClips, locNormal, locLighting, locLight0, locLight1, locRadial, locUv, locLightmap, locFog;
     private static int vNormal, vLighting, vLight0, vLight1, vRadial, vLightmap, vFog;
     private static float vUv;
 
@@ -110,13 +122,21 @@ public final class NpcBatch {
         if (!state()) { return fallback(STATE); }
         try {
             if (e.vao == 0) { upload(e); }
-            NpcBatchPose.compute(e.fields, npc.isSneaking(), scale, MATRICES);
-            if (testPoseDegrees != 0.0f) { NpcBatchPose.rotateX(MATRICES, 0, testPoseDegrees); }
+            boolean audit = checkScope && AUDITED.add(npc.getEntityId());
+            if (audit) {
+                readMatrix(GL11.GL_PROJECTION_MATRIX, PROJECTION);
+                readMatrix(GL11.GL_MODELVIEW_MATRIX, MODEL_VIEW);
+                NpcBatchPose.compute(e.fields, npc.isSneaking(), scale, MODEL_VIEW, CPU_AUDIT);
+            }
+            capturePose(e, npc, scale);
+            if (audit) { auditPose(e, npc); }
             UPLOAD.clear(); UPLOAD.put(MATRICES).flip();
             GL20.glUseProgram(program);
             try {
                 uniforms();
                 GL20.glUniformMatrix4(locParts, false, UPLOAD);
+                UPLOAD.clear(); UPLOAD.put(CLIPS).flip();
+                GL20.glUniformMatrix4(locClips, false, UPLOAD);
                 bindVao(e.vao);
                 GL11.glDrawArrays(GL11.GL_QUADS, 0, e.mesh.vertices);
             } finally {
@@ -139,6 +159,108 @@ public final class NpcBatch {
         draws++;
         return true;
     }
+
+    private static void readMatrix(int name, float[] out) {
+        readMatrix(name, out, 0);
+    }
+
+    private static void readMatrix(int name, float[] out, int at) {
+        READ_MATRIX.clear();
+        GL11.glGetFloat(name, READ_MATRIX);
+        READ_MATRIX.get(out, at, 16);
+    }
+
+    /** Use the driver's own postRender composition, including its trigonometry and
+     * intermediate precision. An approximately equal CPU matrix may move texel/face boundaries
+     * in K22. The matrix stack is restored before drawing; this runs in every candidate pass,
+     * including timed passes, rather than substituting a more accurate harness-only path. */
+    private static void capturePose(Entry e, EntityNPCInterface npc, float scale) {
+        GlStateManager.pushMatrix();
+        try {
+            if (npc.isSneaking()) { GlStateManager.translate(0.0f, 0.2f, 0.0f); }
+            for (int i = 0; i < PARTS; i++) {
+                ModelRenderer p = e.fields[i];
+                int at = i * 16;
+                if (!p.showModel || p.isHidden) {
+                    Arrays.fill(MATRICES, at, at + 16, 0.0f);
+                    MATRICES[at + 15] = 1.0f;
+                    Arrays.fill(CLIPS, at, at + 16, 0.0f);
+                    CLIPS[at + 15] = 1.0f;
+                    continue;
+                }
+                GlStateManager.pushMatrix();
+                try {
+                    p.postRender(scale);
+                    if (i == 0 && testPoseDegrees != 0.0f) {
+                        GlStateManager.rotate(testPoseDegrees, 1.0f, 0.0f, 0.0f);
+                    }
+                    readMatrix(GL11.GL_MODELVIEW_MATRIX, MATRICES, at);
+                    captureClip(at);
+                } finally { GlStateManager.popMatrix(); }
+            }
+        } finally { GlStateManager.popMatrix(); }
+    }
+
+    /** Let the same driver compose projection * model-view, rather than assuming its
+     * product rounds like the Java double dot products. Work on a temporary projection
+     * stack entry: the actual projection and model-view are unchanged on return/exception.
+     * This is the production path too, so all matrix calls/readbacks enter the cost pair.
+     * The exact RenderCustomNpc main-model call site is in GL_MODELVIEW mode. */
+    private static void captureClip(int at) {
+        GlStateManager.matrixMode(GL11.GL_PROJECTION);
+        try {
+            GlStateManager.pushMatrix();
+            try {
+                READ_MATRIX.clear();
+                READ_MATRIX.put(MATRICES, at, 16).flip();
+                GL11.glMultMatrix(READ_MATRIX);
+                readMatrix(GL11.GL_PROJECTION_MATRIX, CLIPS, at);
+            } finally { GlStateManager.popMatrix(); }
+        } finally { GlStateManager.matrixMode(GL11.GL_MODELVIEW); }
+    }
+
+    /** Harness only: compare the rejected CPU composition with the native matrices once
+     * per NPC, outside the timed window. Diagnostic only; image pass criteria are unchanged. */
+    private static void auditPose(Entry e, EntityNPCInterface npc) {
+        NpcBatchPose.project(PROJECTION, MATRICES, CPU_CLIPS);
+        for (int i = 0; i < PARTS; i++) {
+            ModelRenderer p = e.fields[i];
+            if (!p.showModel || p.isHidden) { continue; }
+            for (int k = 0; k < 16; k++) {
+                int at = i * 16 + k;
+                float clipError = Math.abs(CLIPS[at] - CPU_CLIPS[at]);
+                auditClipElements++;
+                if (Float.floatToRawIntBits(CLIPS[at]) != Float.floatToRawIntBits(CPU_CLIPS[at])) {
+                    auditClipDifferent++;
+                }
+                if (clipError > auditClipMaxError) {
+                    auditClipMaxError = clipError;
+                    if (auditClipLogs++ < 8) {
+                        System.out.println("RWBATCH clip npc=" + npc.getEntityId() + " part=" + i + " element=" + k
+                                + " GL=" + CLIPS[at] + " CPU=" + CPU_CLIPS[at] + " error=" + clipError);
+                    }
+                }
+                float error = Math.abs(MATRICES[i * 16 + k] - CPU_AUDIT[i * 16 + k]);
+                auditElements++;
+                if (error > auditMaxError) {
+                    auditMaxError = error;
+                    if (auditLogs++ < 8) {
+                        System.out.println("RWBATCH matrix npc=" + npc.getEntityId() + " part=" + i + " element=" + k
+                                + " GL=" + MATRICES[i * 16 + k] + " CPU=" + CPU_AUDIT[i * 16 + k] + " error=" + error);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void beginMatrixAudit() {
+        AUDITED.clear(); auditElements = 0; auditMaxError = 0.0f; auditLogs = 0;
+        auditClipElements = auditClipDifferent = 0; auditClipMaxError = 0.0f; auditClipLogs = 0;
+    }
+
+    private static int auditClipLogs;
+
+    public static void endMatrixAudit() { AUDITED.clear(); }
 
     private static Entry entry(ModelPlayerAlt m, float scale) {
         ModelRenderer[] f = SCRATCH;
@@ -333,6 +455,7 @@ public final class NpcBatch {
             return 0;
         }
         locParts = GL20.glGetUniformLocation(p, "rwParts");
+        locClips = GL20.glGetUniformLocation(p, "rwClips");
         locNormal = GL20.glGetUniformLocation(p, "rwNormalMode");
         locLighting = GL20.glGetUniformLocation(p, "rwLighting");
         locLight0 = GL20.glGetUniformLocation(p, "rwLight0");
@@ -456,7 +579,9 @@ public final class NpcBatch {
 
     private static final String VERTEX = String.join("\n",
         "#version 120",
+        "invariant gl_Position;",
         "uniform mat4 rwParts[12];",
+        "uniform mat4 rwClips[12];",
         "uniform int rwNormalMode;",
         "uniform bool rwLighting;",
         "uniform bool rwLight0;",
@@ -490,22 +615,22 @@ public final class NpcBatch {
         "    return att * r;",
         "}",
         "void main() {",
-        "    mat4 part = rwParts[int(gl_Vertex.w + 0.5)];",
-        "    vec4 local = part * vec4(gl_Vertex.xyz, 1.0);",
-        "    vec4 eye = gl_ModelViewMatrix * local;",
-        "    gl_Position = gl_ModelViewProjectionMatrix * local;",
+        "    int index = int(gl_Vertex.w + 0.5);",
+        "    mat4 part = rwParts[index];",
+        "    vec4 eye = part * vec4(gl_Vertex.xyz, 1.0);",
+        "    gl_Position = rwClips[index] * vec4(gl_Vertex.xyz, 1.0);",
         "    vec4 c = gl_Color;",
         "    if (rwLighting) {",
-        // transpose(inverse(A)) of the part's 3x3 by cofactors; the base model-view part is gl_NormalMatrix.
+        // Inverse transpose of the complete model-view 3x3 by cofactors.
         "        vec3 a0 = part[0].xyz, a1 = part[1].xyz, a2 = part[2].xyz;",
         "        vec3 c0 = cross(a1, a2), c1 = cross(a2, a0), c2 = cross(a0, a1);",
         "        mat3 inv = mat3(c0, c1, c2) / dot(a0, c0);",
-        "        vec3 n = gl_NormalMatrix * (inv * gl_Normal);",
+        "        vec3 n = inv * gl_Normal;",
         "        if (rwNormalMode == 2) {",
         "            n = normalize(n);",
         "        } else if (rwNormalMode == 1) {",
         // GL_RESCALE_NORMAL: f = 1 / |third row of the inverse model-view 3x3|.
-        "            vec3 row = gl_NormalMatrix * inv[2];",
+        "            vec3 row = inv[2];",
         "            n *= inversesqrt(dot(row, row));",
         "        }",
         "        vec4 lit = gl_FrontMaterial.emission + gl_LightModel.ambient * c;",

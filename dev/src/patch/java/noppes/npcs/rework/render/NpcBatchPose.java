@@ -20,8 +20,16 @@ public final class NpcBatchPose {
     private NpcBatchPose() { }
 
     public static void compute(ModelRenderer[] parts, boolean sneaking, float scale, float[] out) {
+        compute(parts, sneaking, scale, null, out);
+    }
+
+    /** Compose each operation directly onto the incoming model-view, like the original
+     * GL matrix stack. Multiplying an independently rounded local matrix afterwards
+     * is not the same floating-point expression at shared edges or texel boundaries. */
+    public static void compute(ModelRenderer[] parts, boolean sneaking, float scale, float[] modelView, float[] out) {
         float[] base = BASE;
-        identity(base, 0);
+        if (modelView == null) { identity(base, 0); }
+        else { System.arraycopy(modelView, 0, base, 0, 16); }
         if (sneaking) { translate(base, 0, 0.0f, 0.2f, 0.0f); }
         for (int i = 0; i < parts.length; i++) {
             int at = i * 16;
@@ -45,6 +53,23 @@ public final class NpcBatchPose {
                 if (p.rotateAngleX != 0.0F) { rotateX(out, at, p.rotateAngleX * DEG); }
             }
             if (config != null) { scale(out, at, config.scaleX, config.scaleY, config.scaleZ); }
+        }
+    }
+
+    /** Diagnostic projection times each complete model-view, rounded once per element.
+     * Not a numerical equality guarantee for the driver's fixed-function product.
+     * The production candidate obtains that product from the native matrix stack. */
+    public static void project(float[] projection, float[] modelViews, float[] out) {
+        for (int at = 0; at < modelViews.length; at += 16) {
+            for (int col = 0; col < 4; col++) {
+                for (int row = 0; row < 4; row++) {
+                    double value = 0.0;
+                    for (int k = 0; k < 4; k++) {
+                        value += (double) projection[k * 4 + row] * modelViews[at + col * 4 + k];
+                    }
+                    out[at + col * 4 + row] = (float) value;
+                }
+            }
         }
     }
 

@@ -86,6 +86,7 @@ Except for `RwTargetPrefilter`, value 2 on these keys is a verify mode for tests
 | `RwAnimCore` | 0 | built-in animation core: NPCs with `RwRig` drawn as models with bones, clips, data attacks, `/rwrig` (server and clients; see "Animated NPCs") |
 | `RwReadableClones` | 1 | writes readable clone JSON at 1, legacy at 0, on the side storing the clone. Both formats can be read at either value. Independent of `RwAnimCore` |
 | `RwLodStart` | 0 | client: distant NPCs without eyes, labels and 3D headwear beyond this many blocks |
+| `RwNpcInstancing` | 0 | client: draws the twelve main parts of an ordinary CNPC player model in one call; limited M14.2a proof, compatibility testing pending (see §6) |
 | `RwArmies` | 0 | armies: `/rwarmy`, `ArmyApi` and the channel `rwarmy`, register and move orders saved in `data/rwarmies.dat` (read at startup; 0 keeps `RwArmy` names on NPCs); also `RwArmyClusterRadius` (48, 1–512), `RwArmyClusterMin` (8, 1–1024), `RwArmyCompany` (8, 1–24; only 8 tested in-world), `RwArmyMaxMarches` (2, 0–16: armies with an active move that hold travelling chunk tickets; 0 = no tickets) |
 | `RwLinkedOwnFields` | 0 | Linked NPCs: each member keeps its own home, orientation, moving path and place on that path when group data is applied; 0 = original (see §6). Does not repair values already overwritten |
 | `RwLinkedGroups` | 0 | Linked NPCs: per-group transfer categories (scripts off by default), undo of the last change, `/rwlinked`, the boxes in *Global → Linked NPCs* and multiple selection in the wand list (read at startup); 0 = original (see §6) |
@@ -622,6 +623,15 @@ Not proven, so not claimed:
 - Removing a Linked NPC group at `RwLinkedGroups=0` keeps its file, so the group comes back after a restart (original
   bug, reproduced). At 1 the group file and its undo copy are deleted and the group stays gone after a restart (Q459;
   server side only, removal called from a script, one dev dedicated server).
+
+- **Nearby model batching (`RwNpcInstancing`, off by default):** M14.2a draws twelve main
+  parts in one call per NPC, preserving their place among the original layers and entities.
+  It does not batch different NPCs together. One dev-client idle-200 scene passed all 200
+  image comparisons (RGB difference at most 1/255); one idle-500 pair measured frame p95
+  10.268 → 8.075 ms. Walking/combat, varied skins/light/fog/scale, special layers/models,
+  M16, L2 transitions, GUI/baking, reload/world changes and live OptiFine/shader compatibility
+  remain unverified. Default enablement needs the wider matrix, repeated cost series and
+  the owner's visual review. [Evidence](meritve/2026-11-18-M14.2-en-izris.md).
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).

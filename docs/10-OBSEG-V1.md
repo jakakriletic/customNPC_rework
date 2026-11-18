@@ -139,6 +139,8 @@ Naslednji M14.1b, omejen VBO po merilih raziskave; uspešnih serij ne ponavljamo
 
 **M14.1b zavrnjeno (Q483):** [per-part VBO](meritve/2026-11-16-M14.1b-vbo.md) bitno enak, a idle-500 p95 10,02 → 18,71 ms; kandidat odstranjen. Naslednji M14.2 instancing.
 
+**M14.2a sprejet (18. 11., Q495):** [en izris na NPC](meritve/2026-11-18-M14.2-en-izris.md), vseh pet testov PASS na `7ef49d0c…`, K22 200/200 in idle-500 p95 −21,36 % v enem paru. `RwNpcInstancing=0`; naslednji M14.3 (živa združljivost), nato M14.4 po 3+3 in ogledu lastnika. M16.7c po M14, M12 zadnji.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela

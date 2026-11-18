@@ -121,11 +121,13 @@ public final class NpcBatchCheck {
             // Only errors raised by the check itself are counted.
             for (int i = 0; i < 16 && GL11.glGetError() != GL11.GL_NO_ERROR; i++) { }
             NpcBatch.checkScope = true;
+            NpcBatch.beginMatrixAudit();
             // Warm-up: program, mesh upload and every lazy original list outside compared passes.
             pass(mc, fb, list, partialTicks, 1, null, null);
             pass(mc, fb, list, partialTicks, 0, null, null);
 
             r.scene = series(mc, fb, list, partialTicks, n, ca, da, cb, db, cc, dc);
+            if (!r.scene.pass(r.npcs)) { pixels("scene", ca, da, cb, db, r.width, n); }
             if (!imageBase.isEmpty()) {
                 r.images = png(ca, r.width, r.height, imageBase + "-instancing-A.png", null) + ","
                         + png(cb, r.width, r.height, imageBase + "-instancing-B.png", null) + ","
@@ -152,6 +154,11 @@ public final class NpcBatchCheck {
                 }
                 if (!c.pass(1) && r.firstFailed.isEmpty()) {
                     r.firstFailed = e.getEntityId() + ": " + c;
+                    pixels("npc=" + e.getEntityId(), ca, da, cb, db, r.width, n);
+                    if (!imageBase.isEmpty()) {
+                        r.images += "," + png(ca, r.width, r.height, imageBase + "-instancing-failed-A.png", null)
+                                + "," + png(cb, r.width, r.height, imageBase + "-instancing-failed-B.png", null);
+                    }
                 }
                 long perMille = c.union == 0 ? 0 : c.within2 * 1000L / c.union;
                 if (r.worst.isEmpty() || perMille < r.worstWithin2PerMille
@@ -162,10 +169,14 @@ public final class NpcBatchCheck {
                 }
             }
             r.glError = GL11.glGetError();
+            System.out.println("RWBATCH matrix audit elements=" + NpcBatch.auditElements + " maxError=" + NpcBatch.auditMaxError);
+            System.out.println("RWBATCH clip audit elements=" + NpcBatch.auditClipElements + " different=" + NpcBatch.auditClipDifferent
+                    + " maxError=" + NpcBatch.auditClipMaxError);
         } catch (Exception e) {
             r.error = String.valueOf(e);
         } finally {
             NpcBatch.checkScope = false;
+            NpcBatch.endMatrixAudit();
             NpcBatch.testPoseDegrees = 0.0f;
             NpcBatch.testUvShift = 0.0f;
             CustomNpcs.RwNpcInstancing = saved;
@@ -181,6 +192,21 @@ public final class NpcBatchCheck {
             }
         }
         return r;
+    }
+
+    /** Bounded raw diagnostics for the first failing image. No filtering or adjustment. */
+    private static void pixels(String label, ByteBuffer a, FloatBuffer za, ByteBuffer b, FloatBuffer zb, int w, int n) {
+        int logged = 0;
+        for (int i = 0; i < n && logged < 8; i++) {
+            int diff = 0;
+            for (int k = 0; k < 4; k++) { diff = Math.max(diff, Math.abs((a.get(4 * i + k) & 255) - (b.get(4 * i + k) & 255))); }
+            if (diff > 8 || Math.abs(za.get(i) - zb.get(i)) > 1.0e-6f || (za.get(i) < 1) != (zb.get(i) < 1)) {
+                System.out.println("RWBATCH pixel " + label + " x=" + (i % w) + " yFromBottom=" + (i / w)
+                        + " rgbaA=" + Integer.toHexString(a.getInt(4 * i)) + " rgbaB=" + Integer.toHexString(b.getInt(4 * i))
+                        + " depthA=" + za.get(i) + " depthB=" + zb.get(i));
+                logged++;
+            }
+        }
     }
 
     /** A (0), B (1), A2 (0); A stays in ca/da, B in cb/db. */

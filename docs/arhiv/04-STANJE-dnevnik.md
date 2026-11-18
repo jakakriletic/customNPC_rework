@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 237 → 1)
+# Arhiv: dnevnik sej (vnosi 238 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,21 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-16 (238) — M14.1a sprejet
+
+**Paket:** M14.1a (Q476–Q479) · **Stanje:** sprejet, vsi štirje controller testi PASS na `07b888c3…`.
+Nevtralna bajtna kopija `ModelScaleRenderer` in 4 skupni karakterizacijski testi.
+Izoliran PS/Java baseline proti mapped originalu v ločenem classloaderju potrdi 31 delov
+v 3 pozah, 93 bitno enakih RGBA/depth in preverjenih GL stanj A/B/A2, 279 nepraznih klicev.
+Negativni kontroli poze/UV zavrnjeni, nič GL napak, 6 PNG pregledanih, RTX 3080.
+Junit 879, package 1716 vnosov/90 pričakovanih sprememb. Prejšnji napaki sta napačno
+ime LWJGL konstante (Q477) in manjkajoči zaklenjeni MDK ZIP (Q478).
+Merilni vhodi preverjeno enaki uspešnemu teku; zaključene evidence. Nevtralni prenos
+in testi v ločen commit, harness in dokumentacija v naslednjega. Nepovezano delo ohranjeno.
+Dokaz pokriva posamezne dele; svet/plasti/združljivost in cena sledijo s kandidatom M14.1b.
+Uspešnih M14.1a in M16 serij ne ponavljamo (Q90). M12 zadnji, M10.3 blokiran Q1.
+[Izvedba, merila in meje](../meritve/2026-11-16-M14.1a-baseline.md).
 
 ### 2026-11-16 (237) — M14.0: raziskava izrisa bližnjih NPC-jev
 

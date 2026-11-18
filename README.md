@@ -13,11 +13,11 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 
 | | |
 |---|---|
-| Datum zadnje posodobitve | 2026-11-16 |
-| Trenutna faza | **v2: M14.1b zavrnjen** (Q483): per-part VBO bitno enak, a idle-500 p95 10,02 → 18,71 ms; [zapis](docs/meritve/2026-11-16-M14.1b-vbo.md), kandidat odstranjen. **M14.1a sprejet** (Q479). [Nevtralen prenos in GPU baseline](docs/meritve/2026-11-16-M14.1a-baseline.md), unit/build/package in `m141a-baseline-v1` PASS na `07b888c3…`, 93 bitno enakih primerjav delov in 6 pregledanih PNG. M16.6b sprejet, `RwReadableClones=0`, M10.3 blokiran Q1. |
-| Naslednji korak | **M14.2: instancing** (manj izrisov, ne drugačna oddaja istih klicev) po [merilih M14.0](docs/raziskave/M14.0-izris-bliznjih-npc.md). Jedri M16/M15 sta izvedeni. Q90/Q92 velja za v1.0 in nadaljnje pakete pod stikali, brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407 odstrani mejo poskusov in testni proračun, timeout ≤14400 s. M12 na koncu. |
+| Datum zadnje posodobitve | 2026-11-18 |
+| Trenutna faza | **v2: M14.2a sprejet** (Q495), en izris na NPC pod `RwNpcInstancing=0`. [Dokaz](docs/meritve/2026-11-18-M14.2-en-izris.md): vseh pet testov PASS na `7ef49d0c…`, K22 200/200, idle-500 p95 10,268 → 8,075 ms v enem paru; celoten M14/vklop še odprt. M16.7b sprejet, `RwReadableClones=1` (Q484); M10.3 blokiran Q1. |
+| Naslednji korak | **M14.3: združljivost in fallback**, nato M14.4 po širši matriki, 3+3 in ogledu lastnika; med-NPC instancing zdaj ni potreben (Q487/Q495). [Merila M14.0](docs/raziskave/M14.0-izris-bliznjih-npc.md). Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. M16.7c po M14, M12 zadnji. |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 349 datotek `.java` v `src/patch` (267 rework), 124 testnih datotek; zadnji JUnit rezultat 879 testov. Package PASS: 1716 originalnih vnosov, 90 pričakovanih sprememb. |
+| Prevedljivih razredov | 354 datotek `.java` v `src/patch` (272 rework), 127 testnih datotek; zadnji JUnit rezultat 895 testov. Package PASS: 1716 originalnih vnosov, 90 pričakovanih sprememb. |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in
