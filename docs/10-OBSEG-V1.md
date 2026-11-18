@@ -164,6 +164,12 @@ M14.4b (privzeti vklop + potrebna M5.Z regresija) odložen do zahtevanega ogleda
 to ni sprejem celotnega M14. Naslednji neodvisni paket M16.7c po raziskavi M16.7a,
 M12 zadnji, M10.3 blokiran Q1; uspešnih serij ne ponavljaj (Q90).
 
+**M16.7c0 zaključeno (18. 11., Q542–Q544/D-108):** [pogodba](raziskave/M16.7c0-pogodba-mape-klona.md),
+ker običajni M15 spawn prepiše skriptne kartice/jezik in rig. Samo raziskava, brez sprememb
+merjenih vhodov ali novih testov. Naslednji M16.7c1 (diskovni adapter/ukazi), nato c2
+(startup/reload/spawn, nujna regresija); celoten M16.7c še ni izveden. M14.4b čaka ogled
+lastnika, stikalo 0; M12 zadnji, M10.3 blokiran Q1. Q90/Q92/Q407 ostajajo.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela

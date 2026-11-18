@@ -389,6 +389,12 @@ registry model. Za vsako funkcijo:
 
 ## R4 — AI-prijazno okolje za NPC animacije
 
+**M16.7c0 (Q542–Q544):** [pogodba razpakiranja klona](raziskave/M16.7c0-pogodba-mape-klona.md)
+je zaključena, izvedba še odprta: tipni NBT in vse skriptne kartice/jeziki ostanejo
+ohranjeni, koda in Clips dobijo prave datoteke s pravili konfliktov. Obstoječi M15 spawn
+prepiše skripte in rig, zato nova mapa dobi ločen marker; navadni paketi ohranijo svoje
+obnašanje. Sledita c1 (disk/ukazi) in c2 (živa vključitev); ni nove verzije clone formata.
+
 **M16.6 (zahteva lastnika 12. 11.; Q463–Q465):** tudi celoten shranjeni NPC dobi berljiv
 diskovni format, z opisnimi sklopi, izpuščenimi potrjenimi privzetki, skriptami po vrsticah
 in `RwRig`. [M16.6b je sprejet](meritve/2026-11-16-M16.6-berljivi-kloni.md) po pogodbi M16.6a

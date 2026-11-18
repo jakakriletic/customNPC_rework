@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 250 → 1)
+# Arhiv: dnevnik sej (vnosi 251 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,16 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-18 (251) — M14.3b8: OptiFine in shader sprejeta
+
+**Paket:** M14.3b8 (Q533–Q538) · **Stanje:** sprejet pod stikalom 0.
+Pravi Forge 14.23.5.2860 klient z zapakiranim jar-om in lastnikovim OptiFine G5 (Q533/Q534),
+brez shaderja in z BSL v7.1.04 (Q535). v1/v2/v3 zavrnjeni kot napake harnessa (Q536 zip,
+Q537 chunk za summon, Q538 GL 1282 iz `glPopAttrib` na FBO 0). v4 obeh primerov PASS na
+`7b561e9b…` skupaj z unit/build/package: vrata `program` zaprta, A/B/A2 bitno, živi svet
+0 batch izrisov in 0 GL napak, obnova GL brez napake, PNG pregledani. Produkcija
+nespremenjena. Sledi M14.4. [Dokaz](../meritve/2026-11-18-M14.3b8-optifine.md).
 
 ### 2026-11-18 (250) — M14.3b7: MPM dodatki in neznani renderer sprejeti
 

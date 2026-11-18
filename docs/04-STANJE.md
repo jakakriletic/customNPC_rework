@@ -12,6 +12,13 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**18. 11. — M16.7c0 pogodba zaključena (Q542–Q544, D-108).** M15 spawn izgubi
+kartice/jezik in rig klona; določeni ločen marker mape, tipni adapter, točni izvlečki,
+konflikti in no-clobber zapis. Samo raziskava, produkcija/testni vhodi in odtis
+`6fd26ee4…` nespremenjeni; nobenega novega testa ali meritve. Naslednji c1 disk/ukazi,
+nato c2 živa vključitev; funkcija M16.7c še ni izvedena. M14.4b ostaja odložen do ogleda
+lastnika, stikalo 0. [Pogodba in merila](raziskave/M16.7c0-pogodba-mape-klona.md).
+
 **18. 11. — M14.4a sprejet (Q539–Q541).** Vseh osem controller testov (24 tekov)
 PASS na trenutnem `6fd26ee4…`. Idle-500 p95 9,9147 → 8,0180 ms (−19,13 %),
 razpona ločena; druge celice brez regresije p95. Produkcija nespremenjena,
@@ -135,9 +142,9 @@ teksture in klipov klientom ter izbira modela v Display. [Zapis](meritve/2026-11
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-18** (seja 252) — M14.4a sprejet Q541: osem testov PASS na `6fd26ee4…`, idle-500 p95 −19,13 % z ločenima razponoma, druge celice brez regresije p95. Produkcija nespremenjena, stikalo 0. [Dokaz in meje](meritve/2026-11-18-M14.4a-3plus3.md). |
-| Trenutni milestone | **M14: M14.4a sprejet** (Q541). M14.3b1–b8 in meritev 3+3 zaključeni; M14.4b/vklop čaka ogled lastnika, celoten M14 še ni sprejet. |
-| Naslednji paketi | **M16.7c: razpakiranje klona v mapo bitja in nazaj** po raziskavi M16.7a. M14.4b odložen do ogleda lastnika, nato vklop in potrebna M5.Z regresija (Q539). M12 zadnji, M10.3 blokiran Q1. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratek zapis; obseg določa `10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
+| Zadnja posodobitev | **2026-11-18** (seja 253) — M16.7c0 pogodba zaključena (Q542–Q544/D-108). Samo dokumentacija, odtis `6fd26ee4…` nespremenjen, brez novih testov/meritev. [Pogodba](raziskave/M16.7c0-pogodba-mape-klona.md). |
+| Trenutni milestone | **M16.7c0 raziskava zaključena**, funkcija odprta do c1+c2. M14.4a sprejet; M14.4b in celoten M14 še čakata ogled lastnika in zaključni sprejem. |
+| Naslednji paketi | **M16.7c1: diskovni adapter/ukazi**, nato c2 startup/reload/spawn po [pogodbi](raziskave/M16.7c0-pogodba-mape-klona.md). M14.4b čaka ogled lastnika, nato vklop in potrebna M5.Z regresija (Q539). M12 zadnji, M10.3 blokiran Q1. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratek zapis; obseg `10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **360** datotek `.java` v `src/patch`, od tega **278** rework. Build/package PASS na `2c433b7c…`, 90 pričakovanih sprememb. |
 | Testi | **895** patched + **51** original testov v zadnjem JUnit rezultatu, **127** testnih datotek; vseh pet sprejemnih testov PASS na `2c433b7c…`. |
@@ -168,7 +175,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b brez sprejema, M10.1d kot [P2 zelen](meritve/2026-10-30-P2-klientska-matrika.md) (Q436); celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
 | M11 Poveljevanje prek zemljevida | **M11.11 sprejet** (`freeforall`) | 199/199 razmetanih skozi progo z grlom po restartu, zaprti član edini blokiran ([zapis](meritve/2026-11-11-M11.11-freeforall.md)); Xaero v0.1.10 nameščen. M11.5 sprejet po Q407. Celoten izhod M11 (200 skozi nenaložen svet in živa mapa) ostaja nepokrit. |
 | M13 Povezani NPC-ji | **M13.0–M13.5 zaključeni pod stikali** (v2, Q433) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun, GUI, seznam palice, kloner (`RwLinkedGroups`); obe stikali privzeto 0. [M13.5](meritve/2026-11-04-M13.5-sto.md): 100 z eno izbiro in sprememba do vseh. Izhod pokrit z ločenimi scenariji, ne z enim skupnim. |
-| M16 Vgrajeno animacijsko jedro | **M16.7b sprejet** (Q485) | [Mapa bitja](meritve/2026-11-18-M16.7b-mapa-bitja.md) bere berljivi `clone.json`. M16.7c naslednji neodvisni paket med odlogom M14.4b (Q539/Q541). Privzeto `RwAnimCore=0`, `RwReadableClones=1` (Q484). |
+| M16 Vgrajeno animacijsko jedro | **M16.7c0 pogodba zaključena** (Q542–Q544/D-108) | [Pogodba](raziskave/M16.7c0-pogodba-mape-klona.md); naslednji c1 disk/ukazi, nato c2 živa vključitev. Funkcija odprta. M16.7b sprejet; `RwAnimCore=0`, `RwReadableClones=1` (Q484). |
 | M14 Izris bližnjih NPC-jev | **M14.4a sprejet** (Q541) | [3+3 dokaz](meritve/2026-11-18-M14.4a-3plus3.md): osem testov PASS, idle-500 p95 −19,13 %, ločena razpona, brez regresije p95 drugje. M14.4b čaka ogled lastnika; celoten M14 še ni sprejet, `RwNpcInstancing=0`. |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
@@ -179,7 +186,18 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 250 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 251 → 1, novejši zgoraj).*
+
+### 2026-11-18 (253) — M16.7c0: pogodba mape klona
+
+**Paket:** M16.7c0 (Q542–Q544, D-108) · **Stanje:** raziskava zaključena, izvedba odprta.
+Obstoječi M15 spawn ponastavi rig in prepiše vse skripte v ECMAScript; neposredno
+razpakiranje prve kartice zato ne izpolni tipnega roundtripa. Določeni ločen marker,
+vse kartice/jeziki, točni izvlečki z inline rezervo, konfliktna pravila in varni novi cilji.
+Zamrznjena merila korpusa ≥89, negativnih primerov, pravih ukazov ter živega reload/spawn.
+Produkcija/testi/pogoji in controller odtis `6fd26ee4…` nespremenjeni, brez novih zagonov
+ali meritev (Q90). Naslednji c1 disk/ukazi, nato c2 živa vključitev; celoten M16.7c še ni
+izveden. M14.4b še čaka ogled lastnika. [Pogodba, viri in meje](raziskave/M16.7c0-pogodba-mape-klona.md).
 
 ### 2026-11-18 (252) — M14.4a: meritev 3+3 sprejeta
 
@@ -191,14 +209,4 @@ Produkcija in pogoji nespremenjeni, brez ponavljanja uspešnih serij (Q90).
 M14.4b in celoten M14 še nista sprejeta: manjka ogled lastnika, nato privzeti vklop
 in potrebna M5.Z regresija. Stikalo 0; naslednji neodvisni M16.7c, M12 zadnji.
 [Meritve, GC, pokritost in meje](meritve/2026-11-18-M14.4a-3plus3.md).
-
-### 2026-11-18 (251) — M14.3b8: OptiFine in shader sprejeta
-
-**Paket:** M14.3b8 (Q533–Q538) · **Stanje:** sprejet pod stikalom 0.
-Pravi Forge 14.23.5.2860 klient z zapakiranim jar-om in lastnikovim OptiFine G5 (Q533/Q534),
-brez shaderja in z BSL v7.1.04 (Q535). v1/v2/v3 zavrnjeni kot napake harnessa (Q536 zip,
-Q537 chunk za summon, Q538 GL 1282 iz `glPopAttrib` na FBO 0). v4 obeh primerov PASS na
-`7b561e9b…` skupaj z unit/build/package: vrata `program` zaprta, A/B/A2 bitno, živi svet
-0 batch izrisov in 0 GL napak, obnova GL brez napake, PNG pregledani. Produkcija
-nespremenjena. Sledi M14.4. [Dokaz](meritve/2026-11-18-M14.3b8-optifine.md).
 

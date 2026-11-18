@@ -1140,3 +1140,15 @@ Q475 se ne širi. Sprejeto Q524 na `bb8346fa…`: negativna kontrola ponovi napa
 146/146 regresijskih slik, nova živa hoja/boj in zahtevane shader regresije ter
 unit/build/package PASS; en idle-500 par p95 −21,42 % kot podatek. Širša združljivost
 in privzeti vklop ostajata odprta. [Podatki in pogodba](meritve/2026-11-18-M14.3b5-hoja-boj.md).
+
+### D-108 — M16.7c: delovna mapa klona brez izgubne veje M15 (2026-11-18, Q542–Q544)
+
+Pogodba za izvedbo, ne že implementirana funkcija: `clone-workspace.json` označi mapo
+berljivega clone v1 in izvlečenih skript/Clips. Tipni adapter ne uporablja entitete ali
+`RigData.read/write`; vsi jeziki, kartice, includes in dodatki ostanejo. Nespremenjeni
+izvlečki se tipno povrnejo; hkratno različno urejanje inline in datoteke zavrne uvoz.
+Ne-UTF-8 niz ostane inline brez nadomeščanja. Posebna spawn veja ohrani rig in skripte,
+običajni M15 pa ohrani sedanji pomen. Novi zapisovalni ukazi zahtevajo level 4, nove cilje
+in preverjeno no-clobber objavo. Clone format, globalna stikala in omrežni protokol se ne
+spreminjajo. Najprej c1 (disk/ukazi), nato c2 (živa vključitev); funkcija odprta do obeh.
+[Dokazi iz kode, pogodba in sprejemna merila](raziskave/M16.7c0-pogodba-mape-klona.md).
