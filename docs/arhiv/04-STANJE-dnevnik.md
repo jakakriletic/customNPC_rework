@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 243 → 1)
+# Arhiv: dnevnik sej (vnosi 244 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,20 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-18 (244) — M14.3b1: celoten zamrznjen izris sprejet
+
+**Paket:** M14.3b1 (Q500–Q503) · **Stanje:** sprejet pod stikalom 0.
+Po reprodukciji 46/54, special rezervah in popravku billboard konteksta je na
+`928e7110…` unit/build/package in `m143b-scene-v1` PASS: 54/54 preverb,
+25 slikovnih vrstic, vidno ime (990 pikslov), obe negativni kontroli in brez GL napak.
+Pregledanih 27 PNG; shranjeni vhodi nespremenjeni. Q475 in bitne rezerve ostanejo.
+Tudi `m143b-cost-pair-v1` PASS na istem odtisu: idle-500 p50/p95/p99
+8,7653/10,0943/14,0133 → 6,7690/8,0247/11,1570 ms, GC 40/98 → 42/100 ms,
+brez rezerv/GL napak; 532 cenovnih vhodov še enakih. Cena samo podatek Q92.
+Q503: sledi M14.3b2 M16/GUI/peka, nato ostale meje Q500; širša M14.3/vklop odprta.
+Q90: uspešnih testov ne ponavljaj. Nič zagnano ročno; nepovezano delo ohranjeno.
+[Pogodba in meje](../meritve/2026-11-18-M14.3b-celoten-izris.md).
 
 ### 2026-11-18 (243) — M14.3a: GL meja in viri sprejeti
 

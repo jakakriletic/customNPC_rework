@@ -12,6 +12,12 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**18. 11. — M14.3b3 sprejet (Q507–Q510).** `m143b-l2-v3`, unit, build in package PASS
+na `6ef1a126…`: živi prehod L1/L2 pri `RwNpcInstancing` 0/1/0 brez dvojnega ali
+manjkajočega NPC-ja (620/620 sličic, 35/35 preverb), globinska vidnost in šest PNG
+potrjeni. Produkcija nespremenjena. Sledi napaka programa in preostala matrika Q500;
+širša M14.3/vklop odprta. [Dokaz in meje](meritve/2026-11-18-M14.3b3-prehod-L2.md).
+
 **18. 11. — M14.3b2 sprejet (Q504–Q506).** Vsi štirje controller testi PASS na
 `f03e496c…`: 36/36 preverb, 16 A/B/A2 vrstic M16/GUI/izrisa peke, posebne poti
 bitno enake in običajni RGB max 1/255 znotraj Q475. Pregledanih 49 PNG;
@@ -96,12 +102,12 @@ teksture in klipov klientom ter izbira modela v Display. [Zapis](meritve/2026-11
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-18** (seja 245) — M14.3b2 sprejet Q506: vsi štirje controller testi PASS na `f03e496c…`, 36/36 preverb in 16 slikovnih vrstic. Produkcija nespremenjena; širša združljivost/vklop ostajata odprta. [Zapis](meritve/2026-11-18-M14.3b2-konteksti.md). |
-| Trenutni milestone | **M14: M14.3b2 sprejet** (Q506); širša združljivost in končni vklop še odprta. M16.7b sprejet; M10.3/IO4 blokirana Q1. |
-| Naslednji paketi | **M14.3b3: živi prehod L2**, nato napaka programa in preostale žive meje Q500 po M14.0 §5.3/5.5; native dokaz ne nadomesti OptiFine/shader scenarija. Nato M14.4 po širši matriki in 3+3 ter ogledu lastnika. M16.7c po M14, M12 zadnji. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
+| Zadnja posodobitev | **2026-11-18** (seja 246) — M14.3b3 sprejet Q510: `m143b-l2-v3` in unit/build/package PASS na `6ef1a126…`, 35/35 preverb, prehod L1/L2 brez dvojnega/manjkajočega izrisa. Produkcija nespremenjena. [Zapis](meritve/2026-11-18-M14.3b3-prehod-L2.md). |
+| Trenutni milestone | **M14: M14.3b3 sprejet** (Q510); širša združljivost in končni vklop še odprta. M16.7b sprejet; M10.3/IO4 blokirana Q1. |
+| Naslednji paketi | **M14.3b4: napaka programa (originalni fallback)**, nato preostale žive meje Q500 (hoja/boj, URL v prenosu, MPM/neznani renderer, OptiFine/shader) po M14.0 §5.3/5.5; native dokaz ne nadomesti OptiFine/shader scenarija. Nato M14.4 po širši matriki in 3+3 ter ogledu lastnika. M16.7c po M14, M12 zadnji. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **356** datotek `.java` v `src/patch`, od tega **274** rework. Build/package PASS na `f03e496c…`, 90 pričakovanih sprememb. |
-| Testi | **895** patched + **51** original testov v zadnjem JUnit rezultatu, **127** testnih datotek; unit/build/package in `m143b-contexts-v1` PASS na `f03e496c…`. |
+| Testi | **895** patched + **51** original testov v zadnjem JUnit rezultatu, **127** testnih datotek; unit/build/package in `m143b-l2-v3` PASS na `6ef1a126…`. |
 | Odprti pojavi | nobenega blokirnega; Q84 odpravljen 16. 11. (Q457); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -130,7 +136,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M11 Poveljevanje prek zemljevida | **M11.11 sprejet** (`freeforall`) | 199/199 razmetanih skozi progo z grlom po restartu, zaprti član edini blokiran ([zapis](meritve/2026-11-11-M11.11-freeforall.md)); Xaero v0.1.10 nameščen. M11.5 sprejet po Q407. Celoten izhod M11 (200 skozi nenaložen svet in živa mapa) ostaja nepokrit. |
 | M13 Povezani NPC-ji | **M13.0–M13.5 zaključeni pod stikali** (v2, Q433) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun, GUI, seznam palice, kloner (`RwLinkedGroups`); obe stikali privzeto 0. [M13.5](meritve/2026-11-04-M13.5-sto.md): 100 z eno izbiro in sprememba do vseh. Izhod pokrit z ločenimi scenariji, ne z enim skupnim. |
 | M16 Vgrajeno animacijsko jedro | **M16.7b sprejet** (Q485) | [Berljivi kloni](meritve/2026-11-16-M16.6-berljivi-kloni.md), 126 preverb, 6 PNG; [mapa bitja](meritve/2026-11-18-M16.7b-mapa-bitja.md) bere berljivi `clone.json`. M16.7c po M14. M16.5 cena sprejeta Q462; privzeto `RwAnimCore=0`, `RwReadableClones=1` (Q484). |
-| M14 Izris bližnjih NPC-jev | **M14.3b2 sprejet** (Q506) | M16/GUI/izris peke 36/36, vsi štirje testi PASS na `f03e496c…`, 16 slikovnih vrstic; produkcija nespremenjena. Sledi M14.3b3 živi L2; širša matrika/vklop odprta, `RwNpcInstancing=0`. |
+| M14 Izris bližnjih NPC-jev | **M14.3b3 sprejet** (Q510) | Živi prehod L1/L2 35/35, vsi štirje testi PASS na `6ef1a126…`; M16/GUI/peka (M14.3b2) 36/36; produkcija nespremenjena. Sledi napaka programa; širša matrika/vklop odprta, `RwNpcInstancing=0`. |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -140,7 +146,19 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 243 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 244 → 1, novejši zgoraj).*
+
+### 2026-11-18 (246) — M14.3b3: živi prehod L1/L2 sprejet
+
+**Paket:** M14.3b3 (Q507–Q510) · **Stanje:** sprejet pod stikalom 0.
+Nov živi scenarij `NpcBatchL2Harness`/`npc-batch-l2-run.ps1`: integriran klient, običajen
+in oklepljen NPC, kamera 8 → 36 → 8 blokov, A(0)/B(1)/A2(0). v1 PASS, a PNG brez NPC-jev
+(Q508) → v2 doda globinsko preverbo vidnosti in pade; vzrok harness, NPC-ja brez
+`StartPosNew` v zemlji (Q509). v3 PASS na `6ef1a126…`: 35/35, 620/620 sličic brez dvojnega
+ali manjkajočega izrisa, vidnost ≥ 0,688, šest PNG pregledanih; unit/build/package PASS.
+Produkcija in cena nespremenjeni; Q90 brez ponovitev. Sledi napaka programa in preostala
+matrika Q500. Nič zagnano ročno; nepovezano delo ohranjeno.
+[Zapis](meritve/2026-11-18-M14.3b3-prehod-L2.md).
 
 ### 2026-11-18 (245) — M14.3b2: M16, GUI in izris peke sprejeti
 
@@ -154,16 +172,3 @@ nespremenjeni; uspešnih testov ne ponavljaj Q90. Q506: sledi živi prehod L2 M1
 nato ostale meje Q500. GUI tok, atlas/L2 in širša združljivost/vklop ostajajo odprti.
 Nič zagnano ročno; nepovezano delo ohranjeno. [Zapis](meritve/2026-11-18-M14.3b2-konteksti.md).
 
-### 2026-11-18 (244) — M14.3b1: celoten zamrznjen izris sprejet
-
-**Paket:** M14.3b1 (Q500–Q503) · **Stanje:** sprejet pod stikalom 0.
-Po reprodukciji 46/54, special rezervah in popravku billboard konteksta je na
-`928e7110…` unit/build/package in `m143b-scene-v1` PASS: 54/54 preverb,
-25 slikovnih vrstic, vidno ime (990 pikslov), obe negativni kontroli in brez GL napak.
-Pregledanih 27 PNG; shranjeni vhodi nespremenjeni. Q475 in bitne rezerve ostanejo.
-Tudi `m143b-cost-pair-v1` PASS na istem odtisu: idle-500 p50/p95/p99
-8,7653/10,0943/14,0133 → 6,7690/8,0247/11,1570 ms, GC 40/98 → 42/100 ms,
-brez rezerv/GL napak; 532 cenovnih vhodov še enakih. Cena samo podatek Q92.
-Q503: sledi M14.3b2 M16/GUI/peka, nato ostale meje Q500; širša M14.3/vklop odprta.
-Q90: uspešnih testov ne ponavljaj. Nič zagnano ročno; nepovezano delo ohranjeno.
-[Pogodba in meje](meritve/2026-11-18-M14.3b-celoten-izris.md).

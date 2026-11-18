@@ -145,6 +145,8 @@ Naslednji M14.1b, omejen VBO po merilih raziskave; uspešnih serij ne ponavljamo
 
 **M14.3b1 sprejet (18. 11., Q503):** [celoten zamrznjen living renderer](meritve/2026-11-18-M14.3b-celoten-izris.md), vseh pet testov PASS na `928e7110…`, 54/54 preverb in 25 slikovnih vrstic; en idle-500 par p95 −20,50 %. Sledi M14.3b2 M16/GUI/peka, nato preostale žive meje Q500. Širša M14.3b/M14.4 ostajata odprta, `RwNpcInstancing=0`; Q90/Q92/Q407 ostajajo.
 
+**M14.3b2 in M14.3b3 sprejeta (18. 11., Q506, Q510):** [M16/GUI/peka](meritve/2026-11-18-M14.3b2-konteksti.md) 36/36 na `f03e496c…`; [živi prehod L1/L2](meritve/2026-11-18-M14.3b3-prehod-L2.md) 35/35 na `6ef1a126…`, brez dvojnega ali manjkajočega izrisa. Sledi napaka programa in preostala matrika Q500; M14.4 odprt, `RwNpcInstancing=0`.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela
