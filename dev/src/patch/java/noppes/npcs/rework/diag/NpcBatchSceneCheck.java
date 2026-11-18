@@ -96,6 +96,76 @@ public final class NpcBatchSceneCheck {
         return new NpcBatchSceneCheck(mc, fb, npc, images, true).run();
     }
 
+    /** M14.3b6: keep the real URL object and downloader untouched during A/B/A2. A separate
+     * original-renderer reference using a known local image proves the displayed skin,
+     * not merely equality of two empty or stale images. Caller holds the HTTP body stable. */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    static JsonObject url(Minecraft mc, Framebuffer fb, EntityCustomNpc npc, String key,
+                          net.minecraft.util.ResourceLocation expected, String images, boolean original) throws Exception {
+        NpcBatchSceneCheck c = new NpcBatchSceneCheck(mc, fb, npc, images, false);
+        c.key = key;
+        int mode = CustomNpcs.RwNpcInstancing;
+        boolean scope = NpcBatch.checkScope, shadow = mc.getRenderManager().isRenderShadow();
+        boolean gui = mc.gameSettings.hideGUI;
+        float vx = mc.getRenderManager().playerViewX, vy = mc.getRenderManager().playerViewY;
+        long blink = npc.modelData.eyes.blinkStart;
+        byte skin = npc.display.skinType;
+        net.minecraft.util.ResourceLocation texture = npc.textureLocation;
+        List<LayerRenderer> layers = (List<LayerRenderer>) ReflectionHelper.findField(RenderLivingBase.class,
+            "layerRenderers", "field_177097_h").get(c.renderer);
+        LayerRenderer<EntityCustomNpc> witness = new LayerRenderer<EntityCustomNpc>() {
+            @Override public void doRenderLayer(EntityCustomNpc e, float l, float a, float p, float age, float y, float h, float s) {
+                if (c.observing && e == npc) { c.trace.append("layer,"); }
+            }
+            @Override public boolean shouldCombineTextures() { return false; }
+        };
+        SavedState saved = new SavedState();
+        layers.add(witness); MinecraftForge.EVENT_BUS.register(c);
+        try {
+            npc.modelData.eyes.blinkStart = 0; mc.gameSettings.hideGUI = false;
+            c.shot(0); c.shot(1);
+            Shot a = c.shot(0), b = c.shot(1), a2 = c.shot(0);
+            npc.display.skinType = 0; npc.textureLocation = expected;
+            Shot ref = c.shot(0);
+            boolean skinControl = true;
+            if (key.equals("url-loaded")) {
+                npc.textureLocation = net.minecraft.client.resources.DefaultPlayerSkin.getDefaultSkinLegacy();
+                Shot wrongSkin = c.shot(0);
+                skinControl = c.difference(ref, wrongSkin) > 100;
+            }
+            npc.display.skinType = skin; npc.textureLocation = texture;
+            NpcBatchCheck.Cmp cmp = NpcBatchCheck.compare(a.color, a.depth, b.color, b.depth, c.pixels());
+            boolean repeat = c.equal(a, a2) && a.state.equals(a2.state) && a.events.equals(a2.events);
+            boolean events = a.events.equals("pre,layer,post,") && a.events.equals(b.events)
+                && a.events.equals(a2.events) && a.events.equals(ref.events);
+            boolean image = original ? c.equal(a, b) : cmp.imageEqual();
+            boolean route = a.draws == 0 && a2.draws == 0 && b.draws == (original ? 0 : 1)
+                && b.fallbacks == (original ? 1 : 0) && (!original || b.reasons.equals("model=1,"));
+            boolean state = a.state.equals(b.state), gl = a.gl == 0 && b.gl == 0 && a2.gl == 0 && ref.gl == 0;
+            boolean reference = c.equal(a, ref), visible = cmp.union > 100;
+            JsonObject r = new JsonObject();
+            r.addProperty("key", key); r.addProperty("exact", original);
+            r.addProperty("success", repeat && events && image && route && state && gl && reference && visible && skinControl);
+            r.addProperty("repeatEqual", repeat); r.addProperty("eventsEqual", events); r.addProperty("imageEqual", image);
+            r.addProperty("stateEqual", state); r.addProperty("glEqual", gl); r.addProperty("referenceEqual", reference);
+            r.addProperty("visible", visible); r.addProperty("draws", b.draws); r.addProperty("fallbacks", b.fallbacks);
+            r.addProperty("skinControl", skinControl);
+            r.addProperty("offDraws", a.draws); r.addProperty("repeatDraws", a2.draws);
+            r.addProperty("reasons", b.reasons); r.addProperty("events", b.events);
+            r.add("pixels", new Gson().toJsonTree(cmp));
+            c.png(a.color, images + "-A.png", null); c.png(b.color, images + "-B.png", null);
+            c.png(a.color, images + "-diff.png", b.color); c.png(ref.color, images + "-reference.png", null);
+            return r;
+        } finally {
+            c.observing = false; layers.remove(witness); MinecraftForge.EVENT_BUS.unregister(c);
+            npc.display.skinType = skin; npc.textureLocation = texture; npc.modelData.eyes.blinkStart = blink;
+            NpcBatch.checkScope = scope; CustomNpcs.RwNpcInstancing = mode; mc.gameSettings.hideGUI = gui;
+            mc.getRenderManager().setRenderShadow(shadow);
+            mc.getRenderManager().playerViewX = vx; mc.getRenderManager().playerViewY = vy;
+            saved.restore();
+        }
+    }
+
     /** M14.3b5: sample the current networked pose. Never configure a fixture, change limb/
      * swing/hurt values or tick the client between A/B/A2. The caller saves outer GL state. */
     static JsonObject live(Minecraft mc, Framebuffer fb, EntityCustomNpc npc, float partial, String images,

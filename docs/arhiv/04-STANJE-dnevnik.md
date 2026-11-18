@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 246 → 1)
+# Arhiv: dnevnik sej (vnosi 247 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,18 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-18 (247) — M14.3b4: napaka programa sprejeta
+
+**Paket:** M14.3b4 (Q511–Q512) · **Stanje:** sprejet pod stikalom 0.
+Vbrizgane napake compile/link/draw skozi pravo pot gonilnika/izjeme; diagnostična števca
+in en zapis ob napaki izrisa. Vsi štirje controller testi PASS na `34a102f6…`: 20/20 preverb,
+6 bitno enakih FBO A/B/A2 vrstic, vsak tip napake 1×, brez ponavljanja gradnje, originalni
+živi izris pri 1 in obnova po reloadu. 605 zaščitenih vhodov še enakih; brez nove cene ali
+ponavljanja uspešnih testov (Q90). En GPU/vbrizgane napake niso dokaz OptiFine ali resnične
+okvare gonilnika. Sledi dejanska hoja/boj in preostala matrika Q500; `RwNpcInstancing=0`.
+Nič zagnano ročno; nepovezano delo ohranjeno.
+[Zapis](../meritve/2026-11-18-M14.3b4-napaka-programa.md).
 
 ### 2026-11-18 (246) — M14.3b3: živi prehod L1/L2 sprejet
 

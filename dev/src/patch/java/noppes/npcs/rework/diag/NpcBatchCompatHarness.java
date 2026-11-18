@@ -74,11 +74,14 @@ public final class NpcBatchCompatHarness {
     private int oldProgram;
     private long builds;
     private final boolean fault;
+    private final boolean urlSkin;
+    private NpcBatchUrlCheck urlCheck;
     private String afterReload;
     private long liveDraws, liveRefused, liveFailures;
 
     private NpcBatchCompatHarness(Properties p) {
         job = p; out = new File(p.getProperty("out")); fault = "1".equals(p.getProperty("programFault"));
+        urlSkin = "1".equals(p.getProperty("urlSkin"));
     }
 
     static boolean installIfRequested(String path) throws Exception {
@@ -131,7 +134,7 @@ public final class NpcBatchCompatHarness {
                             if (joins == 1 && mc.getIntegratedServer().getCommandManager().executeCommand(mc.getIntegratedServer(),
                                     "summon customnpcs:customnpc 0 4 2 {Name:\"M143A\",MovingState:0,StandingState:1,Orientation:180"
                                     // Fault mode also renders it live: keep it standing where summoned (Q509).
-                                    + (fault ? ",StartPosNew:[I;0,4,2]" : "") + "}") < 1) {
+                                    + (fault || urlSkin ? ",StartPosNew:[I;0,4,2]" : "") + "}") < 1) {
                                 throw new IllegalStateException("summon");
                             }
                         } catch (Exception problem) { serverError = problem.toString(); }
@@ -148,7 +151,10 @@ public final class NpcBatchCompatHarness {
                     if (npc == null) { break; }
                     renderer = mc.getRenderManager().getEntityRenderObject(npc);
                     model = new ModelPlayerAlt(0, false);
-                    if (fault) {
+                    if (urlSkin) {
+                        urlCheck = new NpcBatchUrlCheck(mc, rows, checks, out.getPath().replace(".proof.json", ""));
+                        enter("URL_MATRIX", 0);
+                    } else if (fault) {
                         // The first program build of this client fails to compile.
                         NpcBatch.testProgramFault = 1;
                         enter("FAULT_COMPILE", 0);
@@ -212,7 +218,7 @@ public final class NpcBatchCompatHarness {
 
     @SubscribeEvent public void render(RenderWorldLastEvent e) {
         if (finished || !(phase.equals("MATRIX") || phase.equals("REBUILD") || phase.equals("AFTER_REJOIN")
-                || phase.startsWith("FAULT_") && !phase.equals("FAULT_RELOAD"))) { return; }
+                || phase.equals("URL_MATRIX") || phase.startsWith("FAULT_") && !phase.equals("FAULT_RELOAD"))) { return; }
         Minecraft mc = Minecraft.getMinecraft();
         Framebuffer fb = null;
         int savedProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
@@ -229,6 +235,13 @@ public final class NpcBatchCompatHarness {
             if (!OpenGlHelper.isFramebufferEnabled()) { throw new IllegalStateException("FBO required"); }
             NpcBatch.checkScope = true;
             fb = new Framebuffer(W, H, true); fb.setFramebufferColor(0, 0, 0, 0);
+            if (urlSkin) {
+                if (urlCheck.frame(mc, fb, (noppes.npcs.entity.EntityCustomNpc) npc)) {
+                    allOk &= urlCheck.success(); urlCheck.close(); urlCheck = null;
+                    enter("FINISH", 0);
+                }
+                return;
+            }
             if (fault) { faultFrame(mc, fb); return; }
             if ("1".equals(job.getProperty("wholeRenderer")) || "1".equals(job.getProperty("contexts"))) {
                 String images = out.getPath().replace(".proof.json", "");
@@ -470,6 +483,7 @@ public final class NpcBatchCompatHarness {
     private void finish(Minecraft mc, String error) {
         finished = true;
         try {
+            if (urlCheck != null) { urlCheck.close(); urlCheck = null; }
             CustomNpcs.RwNpcInstancing = 0; NpcBatch.testProgramFault = 0;
             JsonObject proof = new JsonObject(); proof.addProperty("success", allOk && error.isEmpty()); proof.addProperty("error", error);
             proof.addProperty("joins", joins); proof.addProperty("width", W); proof.addProperty("height", H);

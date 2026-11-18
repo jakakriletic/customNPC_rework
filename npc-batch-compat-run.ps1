@@ -2,18 +2,19 @@
    frozen whole living-renderer fixtures instead; -Contexts selects M14.3b2
    M16/CNPC GUI/baker render-stage fixtures; -ProgramFault selects M14.3b4 injected
    compile/link/draw faults of the batch program with live original fallback and reload
-   recovery. One isolated dev client, no cost window. No mode installs or simulates OptiFine. #>
-param([switch]$WholeRenderer, [switch]$Contexts, [switch]$ProgramFault)
+   recovery. -UrlSkin selects M14.3b6 real loopback HTTP with latched PNG body and HTTP 404.
+   One isolated dev client, no cost window. No mode installs or simulates OptiFine. #>
+param([switch]$WholeRenderer, [switch]$Contexts, [switch]$ProgramFault, [switch]$UrlSkin)
 $ErrorActionPreference = 'Stop'
-if ([int]$WholeRenderer.IsPresent + [int]$Contexts.IsPresent + [int]$ProgramFault.IsPresent -gt 1) { throw 'Choose one scenario mode' }
+if ([int]$WholeRenderer.IsPresent + [int]$Contexts.IsPresent + [int]$ProgramFault.IsPresent + [int]$UrlSkin.IsPresent -gt 1) { throw 'Choose one scenario mode' }
 $scene = $WholeRenderer -or $Contexts
 $root = $PSScriptRoot
 $run = Join-Path $root 'dev/run'
 . (Join-Path $root 'meritve-lib.ps1')
 . (Join-Path $root 'nav-meritve-lib.ps1')
 $stamp = Get-Date -Format 'yyyy-MM-dd-HHmmss'
-$tag = if ($ProgramFault) { 'm143b-fault' } elseif ($Contexts) { 'm143b-contexts' } elseif ($WholeRenderer) { 'm143b-scene' } else { 'm143a-native' }
-$package = if ($ProgramFault) { 'M14.3b4' } elseif ($Contexts) { 'M14.3b2' } elseif ($WholeRenderer) { 'M14.3b1' } else { 'M14.3a' }
+$tag = if ($UrlSkin) { 'm143b-url' } elseif ($ProgramFault) { 'm143b-fault' } elseif ($Contexts) { 'm143b-contexts' } elseif ($WholeRenderer) { 'm143b-scene' } else { 'm143a-native' }
+$package = if ($UrlSkin) { 'M14.3b6' } elseif ($ProgramFault) { 'M14.3b4' } elseif ($Contexts) { 'M14.3b2' } elseif ($WholeRenderer) { 'M14.3b1' } else { 'M14.3a' }
 $prefix = Join-Path $root "audit/$tag-$stamp"
 $work = Join-Path $root "dev/run-$tag/$stamp"
 $lock = $null
@@ -80,8 +81,14 @@ try {
     $out = "$prefix.proof.json"
     $job = "$prefix.job"
     $log = "$prefix-client.log"
+    if ($UrlSkin) {
+        # Retain source/condition evidence even when the pre-fix reproduction fails.
+        @{package = $package; inputs = $hashes; proof = $out; log = $log} |
+            ConvertTo-Json -Depth 8 | Set-Content -LiteralPath "$prefix.inputs.json" -Encoding UTF8
+    }
     [IO.File]::WriteAllLines($job, @('npcBatchCompat=1', ('world=' + $tag), ('wholeRenderer=' + [int]$WholeRenderer.IsPresent),
         ('contexts=' + [int]$Contexts.IsPresent), ('programFault=' + [int]$ProgramFault.IsPresent),
+        ('urlSkin=' + [int]$UrlSkin.IsPresent),
         ('out=' + $out.Replace('\', '/'))), (New-Object Text.UTF8Encoding $false))
     $env:JAVA_HOME = Join-Path $root '.tools/jdk8'
     $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
@@ -130,6 +137,10 @@ try {
             Assert ($count -eq $pair[1]) "log $($pair[0]) exactly $($pair[1])"
         }
     }
+    if ($UrlSkin) {
+        $keys = @('url-pending', 'url-pending-later', 'url-loaded', 'ordinary-after-url', 'url-failed', 'ordinary-after-failure')
+        $expected = @($keys) + @('pending-before', 'pending-after', 'pending-later-before', 'pending-later-after', 'body-held', 'loaded', 'failed', 'http-counts')
+    }
     $checks = @($proof.checks)
     Assert ($checks.Count -eq $expected.Count -and @($checks.key | Select-Object -Unique).Count -eq $expected.Count) 'exact distinct check count'
     foreach ($key in $expected) {
@@ -137,7 +148,7 @@ try {
         if ($row.Count -eq 1) { Write-Host ("RESULT {0} ok={1} {2}" -f $key, $row[0].ok, $row[0].detail) }
     }
     Assert ($proof.success -eq $true -and $proof.error -ceq '' -and $text.Contains('M143A DONE success=true')) 'compatibility proof success'
-    $joins = if ($scene -or $ProgramFault) { 1 } else { 2 }
+    $joins = if ($scene -or $ProgramFault -or $UrlSkin) { 1 } else { 2 }
     Assert ($proof.joins -eq $joins -and $proof.width -eq 256 -and $proof.height -eq 256) 'real world joins and fixed FBO'
     foreach ($key in $expected) {
         $row = @($checks | Where-Object { $_.key -ceq $key })
@@ -172,10 +183,24 @@ try {
             Assert ($row.draws -eq [int]$native -and $row.fallbacks -eq [int](-not $native)) "actual route $($row.key)"
         }
         Assert ($row.exact -eq (-not $native)) "bitwise fallback $($row.key)"
+        if ($UrlSkin) {
+            Assert ($row.success -eq $true -and $row.referenceEqual -eq $true -and $row.visible -eq $true -and
+                $row.eventsEqual -eq $true -and $row.glEqual -eq $true -and $row.skinControl -eq $true -and
+                $row.events -ceq 'pre,layer,post,') "full original skin reference/events/GL $($row.key)"
+            Assert ($row.offDraws -eq 0 -and $row.repeatDraws -eq 0) "original route at 0 $($row.key)"
+            if (-not $native) { Assert ($row.reasons -ceq 'model=1,') "URL refusal reason $($row.key)" }
+            else {
+                $pixels = $row.pixels
+                Assert ($pixels.union -gt 0 -and $pixels.maskDiff -eq 0 -and $pixels.alphaDiff -eq 0 -and $pixels.outsideDiff -eq 0 -and
+                    $pixels.depthOver -eq 0 -and $pixels.maxDepth -le 0.000001 -and $pixels.over8 -eq 0 -and
+                    $pixels.maxChannel -le 8 -and $pixels.within2 * 1000 -ge $pixels.union * 999) "Q475 recovery $($row.key)"
+            }
+        }
     }
     $client = $null
     Unchanged
-    $condition = if ($ProgramFault) { 'one isolated integrated dev client/GPU; injected batch-program compile fault (first build), link fault and draw-time exception with program/VAO bound, each followed by a later frame; frozen FBO A/B/A2 bitwise original image and GL state, no rebuild until a real resource reload, live world NPC at switch 1 drawn by the original renderer while failed, recovery to the batch draw after reload; injected faults, not a real driver/OptiFine/shader failure; no cost proof' }
+    $condition = if ($UrlSkin) { 'one isolated integrated dev client/GPU; real loopback HTTP and original ImageDownloadAlt, body latched across two render callbacks, then successful PNG and separate HTTP 404; six complete living-renderer FBO A/B/A2 rows, bitwise URL fallback, known local image references, event/layer/GL audit and ordinary batch recovery; no downloader-field injection, M12 optimization, optional-mod, cost or packaged-client proof' }
+        elseif ($ProgramFault) { 'one isolated integrated dev client/GPU; injected batch-program compile fault (first build), link fault and draw-time exception with program/VAO bound, each followed by a later frame; frozen FBO A/B/A2 bitwise original image and GL state, no rebuild until a real resource reload, live world NPC at switch 1 drawn by the original renderer while failed, recovery to the batch draw after reload; injected faults, not a real driver/OptiFine/shader failure; no cost proof' }
         elseif ($Contexts) { 'one isolated integrated dev client/GPU; 16 frozen FBO A/B/A2 rows, real M16 knight idle/walk/hurt/death route, actual CNPC GUI drawNpc with ordinary/rig entity, actual ImpostorBaker createEntity/drawModel at 8 angles; bitwise excluded routes and GL/event comparison, ordinary recovery and negative controls; not full atlas pipeline, GUI interaction, rig networking, live AI, L2 transition, cost or optional-mod proof' }
         elseif ($WholeRenderer) { 'one isolated integrated dev client/GPU; 25 frozen whole living-renderer fixtures in FBO A/B/A2, visible features, events/layer witness/name, Q475 and bitwise special fallback; no live AI motion, rig, URL, GUI/bake, L2, shadow, cost or optional-mod proof' }
         else { 'one isolated integrated dev client, ordinary main model, frozen FBO A/B/A2, native foreign program/VAO in same frame, real reload and world leave/rejoin at switch 0; no cost or optional-mod proof' }

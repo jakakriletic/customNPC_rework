@@ -590,7 +590,9 @@ poze, skine, luč/meglo/skalo, dogodke/ime in bitno originalne special rezerve (
 [M14.3b5](meritve/2026-11-18-M14.3b5-hoja-boj.md) dodatno potrdi dejansko hojo/boj
 na enem dev klientu/GPU: 212 živih slik, 825 sond in 3377 svetovnih sličic.
 Popravljena clip numerika zahteva GL3.2 + `ARB_gpu_shader5`, sicer originalni izris
-(D-107/Q524). URL/MPM/OptiFine/shader in širša matrika/vklop ostajajo odprti.
+(D-107/Q524). [M14.3b6](meritve/2026-11-18-M14.3b6-url.md) ohrani celoten originalni
+izris URL skinov med prenosom, po uspehu in po 404 (14/14 preverb, Q528).
+MPM/OptiFine/shader in širša matrika/vklop ostajajo odprti.
 CPU animacije, ticki, NBT in omrežje ostanejo enaki; M16 rig in nepodprti modeli/plasti
 ohranijo obstoječi izris. Guard in obnova GL stanja sta del prvega kandidata.
 Vklop zahteva dokaz slike, združljivosti in izboljšanja p95 nad šumom na isti trenutni kodi;

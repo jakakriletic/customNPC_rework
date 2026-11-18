@@ -12,6 +12,11 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**18. 11. — M14.3b6 sprejet (Q526–Q528).** Vseh pet controller testov PASS na
+`2c433b7c…`: URL guard `skinType=2`, 14/14 preverb, štiri bitne URL rezerve in
+dve običajni batch obnovi, 24 pregledanih PNG. En idle-500 par p95 −16,82 %.
+Sledi MPM/neznani renderer, nato OptiFine/shader; `RwNpcInstancing=0`.
+[Dokaz in meje](meritve/2026-11-18-M14.3b6-url.md).
 **18. 11. — M14.3b5 sprejet (Q524/D-107).** Vseh 11 zahtevanih controller testov
 PASS na `bb8346fa…`: stara formula ponovi globinsko napako, popravljena prestane
 146 regresijskih slik, 212 živih slik in 825 sond (max globina 0, RGB max2/255),
@@ -119,12 +124,12 @@ teksture in klipov klientom ter izbira modela v Display. [Zapis](meritve/2026-11
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-18** (seja 248) — M14.3b5 sprejet Q524/D-107: vseh 11 testov PASS na `bb8346fa…`, 146 regresijskih in 212 živih slik + 825 sond; popravljen vrstni red fma. En idle-500 par p95 −21,42 %, stikalo 0. [Dokazi in meje](meritve/2026-11-18-M14.3b5-hoja-boj.md). |
-| Trenutni milestone | **M14: M14.3b5 sprejet** (Q524); širša združljivost in končni vklop še odprta. M16.7b sprejet; M10.3/IO4 blokirana Q1. |
-| Naslednji paketi | **M14.3b6: URL v prenosu**, nato MPM/neznani renderer in OptiFine/shader po Q500/M14.0 §5.3/5.5; native dokaz ne nadomesti OptiFine/shader scenarija. Nato M14.4 po širši matriki in 3+3 ter ogledu lastnika. M16.7c po M14, M12 zadnji. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
+| Zadnja posodobitev | **2026-11-18** (seja 249) — M14.3b6 sprejet Q528: vseh pet testov PASS na `2c433b7c…`, 14/14 preverb, 6 vrstic in 24 pregledanih PNG. En idle-500 par p95 −16,82 %, stikalo 0. [Dokaz in meje](meritve/2026-11-18-M14.3b6-url.md). |
+| Trenutni milestone | **M14: M14.3b6 sprejet** (Q528). Širša združljivost/vklop odprta, stikalo 0. |
+| Naslednji paketi | **M14.3b7: MPM/neznani renderer**, nato OptiFine/shader po Q500/M14.0 §5.3/5.5; native dokaz ne nadomesti OptiFine/shader scenarija. Nato M14.4 po širši matriki in 3+3 ter ogledu lastnika. M16.7c po M14, M12 zadnji. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **359** datotek `.java` v `src/patch`, od tega **277** rework. Build/package PASS na `bb8346fa…`, 90 pričakovanih sprememb. |
-| Testi | **895** patched + **51** original testov v zadnjem JUnit rezultatu, **127** testnih datotek; vseh 11 sprejemnih testov PASS na `bb8346fa…`. |
+| Prevedljivih razredov | **360** datotek `.java` v `src/patch`, od tega **278** rework. Build/package PASS na `2c433b7c…`, 90 pričakovanih sprememb. |
+| Testi | **895** patched + **51** original testov v zadnjem JUnit rezultatu, **127** testnih datotek; vseh pet sprejemnih testov PASS na `2c433b7c…`. |
 | Odprti pojavi | nobenega blokirnega; Q84 odpravljen 16. 11. (Q457); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
 | Omejitev orodij | Windows (DESKTOP-SN494C0), PowerShell, Gradle in JDK 8; **v avtonomni izmeni teste, build in Minecraft zaganja samo upravljalnik** (DIRECT OWNER INSTRUCTION). Seja ureja datoteke in zahteva test ID-je. Python ni nameščen (node je) |
@@ -153,7 +158,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M11 Poveljevanje prek zemljevida | **M11.11 sprejet** (`freeforall`) | 199/199 razmetanih skozi progo z grlom po restartu, zaprti član edini blokiran ([zapis](meritve/2026-11-11-M11.11-freeforall.md)); Xaero v0.1.10 nameščen. M11.5 sprejet po Q407. Celoten izhod M11 (200 skozi nenaložen svet in živa mapa) ostaja nepokrit. |
 | M13 Povezani NPC-ji | **M13.0–M13.5 zaključeni pod stikali** (v2, Q433) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun, GUI, seznam palice, kloner (`RwLinkedGroups`); obe stikali privzeto 0. [M13.5](meritve/2026-11-04-M13.5-sto.md): 100 z eno izbiro in sprememba do vseh. Izhod pokrit z ločenimi scenariji, ne z enim skupnim. |
 | M16 Vgrajeno animacijsko jedro | **M16.7b sprejet** (Q485) | [Berljivi kloni](meritve/2026-11-16-M16.6-berljivi-kloni.md), 126 preverb, 6 PNG; [mapa bitja](meritve/2026-11-18-M16.7b-mapa-bitja.md) bere berljivi `clone.json`. M16.7c po M14. M16.5 cena sprejeta Q462; privzeto `RwAnimCore=0`, `RwReadableClones=1` (Q484). |
-| M14 Izris bližnjih NPC-jev | **M14.3b5 sprejet** (Q524) | [Hoja/boj](meritve/2026-11-18-M14.3b5-hoja-boj.md): globinski popravek, 212 živih slik + 825 sond, vseh 11 testov PASS na `bb8346fa…`. Sledi URL v prenosu; širša matrika/vklop odprta, `RwNpcInstancing=0`. |
+| M14 Izris bližnjih NPC-jev | **M14.3b6 sprejet** (Q528) | [URL dokaz](meritve/2026-11-18-M14.3b6-url.md): vseh pet testov PASS, 14/14 preverb in 24 PNG; bitne URL rezerve, običajna obnova. Sledi MPM/neznani renderer; širša matrika/vklop odprta, `RwNpcInstancing=0`. |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -163,7 +168,19 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 246 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 247 → 1, novejši zgoraj).*
+
+### 2026-11-18 (249) — M14.3b6: URL originalni izris sprejet
+
+**Paket:** M14.3b6 (Q526–Q528) · **Stanje:** sprejet pod stikalom 0.
+Reprodukcija v1 FAIL, minimalen skinType=2 guard; vseh pet zahtevanih testov PASS
+na `2c433b7c…`: 895+51 JUnit/build/package, URL-v2 14/14 preverb in šest vrstic.
+Pravi PNG/404, štiri bitne URL rezerve, dve običajni obnovi, reference/dogodki/GL;
+24 novih PNG pregledanih. En idle-500 par p95 9,8663 → 8,2063 ms (−16,82 %).
+536 cenovnih vhodov enakih; funkcionalnih 607/608, le poznejši Forge splash
+komentar/vrstni red, nekomentarske vrednosti enake. Produkcija/testi nespremenjeni.
+Brez novih zagonov (Q90), nepovezano delo ohranjeno. Sledi MPM/neznani renderer,
+nato OptiFine/shader; širša matrika/vklop odprta. [Dokaz](meritve/2026-11-18-M14.3b6-url.md).
 
 ### 2026-11-18 (248) — M14.3b5: dejanska hoja/boj sprejeta
 
@@ -178,15 +195,3 @@ in testni vhodi nespremenjeni, poznejši časovni komentar splash razložen v za
 Sledi URL v prenosu, nato MPM/neznani renderer in OptiFine/shader. Q90 brez ponovitev.
 Nič zagnano ročno; nepovezano delo ohranjeno.
 [Pogodba in meje](meritve/2026-11-18-M14.3b5-hoja-boj.md).
-
-### 2026-11-18 (247) — M14.3b4: napaka programa sprejeta
-
-**Paket:** M14.3b4 (Q511–Q512) · **Stanje:** sprejet pod stikalom 0.
-Vbrizgane napake compile/link/draw skozi pravo pot gonilnika/izjeme; diagnostična števca
-in en zapis ob napaki izrisa. Vsi štirje controller testi PASS na `34a102f6…`: 20/20 preverb,
-6 bitno enakih FBO A/B/A2 vrstic, vsak tip napake 1×, brez ponavljanja gradnje, originalni
-živi izris pri 1 in obnova po reloadu. 605 zaščitenih vhodov še enakih; brez nove cene ali
-ponavljanja uspešnih testov (Q90). En GPU/vbrizgane napake niso dokaz OptiFine ali resnične
-okvare gonilnika. Sledi dejanska hoja/boj in preostala matrika Q500; `RwNpcInstancing=0`.
-Nič zagnano ročno; nepovezano delo ohranjeno.
-[Zapis](meritve/2026-11-18-M14.3b4-napaka-programa.md).

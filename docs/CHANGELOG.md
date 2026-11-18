@@ -2,6 +2,11 @@
 
 ## v2 development
 
+- M14.3b6 keeps URL skins on the complete original render path while downloading,
+  after success and after failure. Real loopback PNG/404 checks passed (14/14), with
+  bitwise URL images, known skin references and ordinary batch recovery. One idle-500
+  pair measured p95 9.8663 → 8.2063 ms. `RwNpcInstancing` stays 0; wider compatibility
+  and default enablement remain open. [Coverage and limits](meritve/2026-11-18-M14.3b6-url.md).
 - M14.3b5 fixes a reproduced depth mismatch during walking with an explicit fused clip
   transform (GL 3.2 + ARB_gpu_shader5 required, otherwise the original renderer).
   Live patrol/combat passed 212 images, 825 interpolation probes and 3,377 world frames;
