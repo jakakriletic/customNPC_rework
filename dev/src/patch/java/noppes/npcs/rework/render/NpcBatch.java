@@ -171,18 +171,20 @@ public final class NpcBatch {
     /** GL state the program repeats, from GlStateManager's cache; false = original path. */
     private static boolean state() {
         try {
-            if (fActiveUnit.getInt(null) != GL13.GL_TEXTURE0 || !on(sTextures[0])) { return false; }
-            for (int u = 2; u < Math.min(8, sTextures.length); u++) { if (on(sTextures[u])) { return false; } }
-            for (int l = 2; l < sLights.length; l++) { if (on(sLights[l])) { return false; } }
-            for (Object g : sTexGen) { if (on(g)) { return false; } }
+            // activeTextureUnit is the unit index (setActiveTexture stores texture - defaultTexUnit).
+            if (fActiveUnit.getInt(null) != 0) { return refuse("unit"); }
+            if (!on(sTextures[0])) { return refuse("texture0"); }
+            for (int u = 2; u < Math.min(8, sTextures.length); u++) { if (on(sTextures[u])) { return refuse("texture" + u); } }
+            for (int l = 2; l < sLights.length; l++) { if (on(sLights[l])) { return refuse("light" + l); } }
+            for (Object g : sTexGen) { if (on(g)) { return refuse("texgen"); } }
             boolean lighting = on(sLighting);
             if (lighting && (!on(sColorMaterialFlag) || fCmFace.getInt(sColorMaterial) != GL11.GL_FRONT_AND_BACK
-                    || fCmMode.getInt(sColorMaterial) != GL11.GL_AMBIENT_AND_DIFFUSE)) { return false; }
+                    || fCmMode.getInt(sColorMaterial) != GL11.GL_AMBIENT_AND_DIFFUSE)) { return refuse("colormaterial"); }
             int fog = 0;
             if (on(sFogFlag)) {
                 int mode = fFogMode.getInt(sFog);
                 fog = mode == GL11.GL_LINEAR ? 1 : mode == GL11.GL_EXP ? 2 : mode == GL11.GL_EXP2 ? 3 : -1;
-                if (fog < 0) { return false; }
+                if (fog < 0) { return refuse("fogmode"); }
             }
             nLighting = lighting ? 1 : 0;
             nLight0 = on(sLights[0]) ? 1 : 0;
@@ -196,6 +198,13 @@ public final class NpcBatch {
         }
     }
     private static int nLighting, nLight0, nLight1, nNormal, nLightmap, nFog;
+    private static final java.util.Set<String> REFUSED = new java.util.HashSet<String>();
+
+    /** Logs each distinct state refusal once, so a run shows which GL state kept the original path. */
+    private static boolean refuse(String what) {
+        if (REFUSED.add(what)) { System.out.println("RWBATCH state refused: " + what); }
+        return false;
+    }
 
     private static boolean on(Object booleanState) throws IllegalAccessException {
         return fCurrent.getBoolean(booleanState);

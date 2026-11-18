@@ -15,7 +15,7 @@ odprta vprašanja in odprti pojavi.
 **18. 11. — M14.2a kandidat (Q487–Q489), testi zahtevani.** `RwNpcInstancing=1` (privzeto 0)
 nariše 12 delov modela CNPC igralca v enem klicu (GLSL 1.20, matrike delov s CPU) na mestu
 originala. Čaka `unit`, `build`, `package`, `m142-batch-v1` (slika A/B/A2) in
-`m142-cost-pair-v1`. [Zapis](meritve/2026-11-18-M14.2-en-izris.md).
+`m142-cost-pair-v1`. Poskus 1: vsi NPC-ji zavrnjeni (`state`), napaka indeksa teksturne enote popravljena (Q490). [Zapis](meritve/2026-11-18-M14.2-en-izris.md).
 
 **18. 11. — M16.7b sprejet (Q485, Q486).** `clone.json` v mapi bitja sprejme berljivi format.
 `unit`, `build`, `package` in `m167-creature-readable-v2` (29 preverb) PASS na `cb6e5e27…`.
