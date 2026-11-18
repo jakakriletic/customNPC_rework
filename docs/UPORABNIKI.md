@@ -635,12 +635,16 @@ Not proven, so not claimed:
   whole-renderer fixtures passed 54 checks: poses, skins/light/fog/scale, bitwise special
   fallback, events/layers/names and GL state. One current idle-500 pair measured p95
   10.094 → 8.025 ms. This covers one dev client/GPU; frozen poses do not test live walking
-  or combat AI. M16, L2 transitions, GUI/baking, program failure, URL transfers, MPM/unknown
-  renderers, shadows/fire and live OptiFine/shader compatibility remain unverified.
+  or combat AI. M14.3b2 adds 36 checks across 16 frozen image cases: M16 knight
+  idle/walk/hurt/death, the CNPC GUI preview method and the baker render stage at eight
+  angles retain bitwise original images. Full GUI interaction, rig networking, the complete
+  atlas pipeline, L2 transitions, program failure, URL transfers, MPM/unknown renderers,
+  shadows/fire and live OptiFine/shader compatibility remain unverified.
   Default enablement needs the wider matrix, repeated cost series and the owner's visual review.
   [M14.2a evidence](meritve/2026-11-18-M14.2-en-izris.md),
   [M14.3a evidence](meritve/2026-11-18-M14.3a-GL-meja.md),
-  [M14.3b1 evidence and limits](meritve/2026-11-18-M14.3b-celoten-izris.md).
+  [M14.3b1 evidence and limits](meritve/2026-11-18-M14.3b-celoten-izris.md),
+  [M14.3b2 evidence and limits](meritve/2026-11-18-M14.3b2-konteksti.md).
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).

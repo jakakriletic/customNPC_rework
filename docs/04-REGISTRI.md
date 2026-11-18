@@ -114,6 +114,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-18 | M14.3b2: M16, GUI drawNpc in izris peke, 16 zamrznjenih A/B/A2 vrstic | Vsi štirje testi PASS na `f03e496c…`, 36/36 preverb, 49 pregledanih PNG, bitne posebne poti in GL/dogodki, 604 zaščiteni vhodi nespremenjeni. Produkcija nespremenjena, brez nove cene ali vklopa; L2/živa matrika ostajata odprta | [zapis](meritve/2026-11-18-M14.3b2-konteksti.md) |
 | 2026-11-18 | M14.3b1: celoten zamrznjen living renderer A/B/A2, en trenutni idle-500 par | Vseh pet testov PASS na `928e7110…`, 54/54 preverb, 25 slikovnih vrstic, bitne special rezerve, ime/dogodki/GL; p95 10,0943 → 8,0247 ms (−20,50 %), brez rezerv/GL napak. Stikalo ostane 0, širša matrika/vklop odprta | [zapis](meritve/2026-11-18-M14.3b-celoten-izris.md) |
 | 2026-11-18 | M14.3a: native GL A/B/A2, reload in ponovni vstop; en trenutni idle-500 par 0/1 | Vseh pet testov PASS na `c9704453…`, 895 JUnit, 28/28 preverb, 10/10 slikovnih vrstic bitno enakih, viri izbrisani pri 0; p95 10,0773 → 8,1998 ms (−18,63 %), brez rezerv/GL napak. Stikalo ostane 0, širša M14.3 odprta | [zapis](meritve/2026-11-18-M14.3a-GL-meja.md) |
 | 2026-11-18 | M14.2a: idle-200 A/B/A2 ter en idle-500 par 0/1 na dev klientu | Vseh pet testov PASS na `7ef49d0c…`, 895 JUnit, K22 200/200, RGB max1/255, 3 PNG; p95 10,2679 → 8,0747 ms (−21,36 %), brez rezerv/GL napak. Stikalo ostane 0; M14.3 naslednji | [zapis](meritve/2026-11-18-M14.2-en-izris.md) |

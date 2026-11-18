@@ -2,6 +2,10 @@
 
 ## v2 development
 
+- M14.3b2 verifies the existing M16 renderer, CNPC GUI preview method and baker render stage:
+  36 checks across 16 frozen image cases passed. Production rendering is unchanged;
+  full atlas/L2 transitions and wider compatibility remain open, `RwNpcInstancing` stays 0.
+  [Coverage and limits](meritve/2026-11-18-M14.3b2-konteksti.md).
 - M14.3b1 keeps NPCs with overlay textures, equipment or a mount on the complete original
   render path. The whole-renderer proof passed 54 checks across 25 frozen fixtures, including
   events, layers and visible names; one idle-500 pair measured p95 10.094 → 8.025 ms.

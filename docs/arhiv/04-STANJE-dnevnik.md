@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 242 → 1)
+# Arhiv: dnevnik sej (vnosi 243 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,19 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-18 (243) — M14.3a: GL meja in viri sprejeti
+
+**Paket:** M14.3a (Q496–Q499) · **Stanje:** sprejet pod stikalom 0.
+Native reprodukcija 23/28 potrdi pet napak, popravek preverja tuj program/VAO pred
+vsakim izrisom ter sprosti mreže/program na klientovi niti ob reloadu/izhodu tudi pri 0.
+Vseh pet zahtevanih controller testov PASS na `c9704453…`, 895 JUnit, package 1716/90;
+28/28 preverb, 10/10 bitno enakih slikovnih vrstic in zajetih GL stanj.
+En trenutni idle-500 par p95 10,0773 → 8,1998 ms (−18,63 %), GC 40/96 → 41/102 ms,
+nič fallbackov/GL napak; 531 cenovnih vhodov še enakih. Q499: sledi širša M14.3b,
+celoten M14.3/vklop še odprt. Stikalo ostane 0; brez ponovitev uspešnih testov Q90.
+Nič zagnano ročno; nepovezano delo ohranjeno. [Zapis](../meritve/2026-11-18-M14.3a-GL-meja.md).
+
 
 ### 2026-11-18 (242) — M14.2a: en izris na NPC sprejet
 

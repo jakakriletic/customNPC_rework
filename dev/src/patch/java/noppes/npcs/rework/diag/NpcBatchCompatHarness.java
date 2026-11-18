@@ -189,9 +189,11 @@ public final class NpcBatchCompatHarness {
             if (!OpenGlHelper.isFramebufferEnabled()) { throw new IllegalStateException("FBO required"); }
             NpcBatch.checkScope = true;
             fb = new Framebuffer(W, H, true); fb.setFramebufferColor(0, 0, 0, 0);
-            if ("1".equals(job.getProperty("wholeRenderer"))) {
-                JsonObject scene = NpcBatchSceneCheck.run(mc, fb, (noppes.npcs.entity.EntityCustomNpc) npc,
-                        out.getPath().replace(".proof.json", ""));
+            if ("1".equals(job.getProperty("wholeRenderer")) || "1".equals(job.getProperty("contexts"))) {
+                String images = out.getPath().replace(".proof.json", "");
+                JsonObject scene = "1".equals(job.getProperty("contexts"))
+                        ? NpcBatchSceneCheck.runContexts(mc, fb, (noppes.npcs.entity.EntityCustomNpc) npc, images)
+                        : NpcBatchSceneCheck.run(mc, fb, (noppes.npcs.entity.EntityCustomNpc) npc, images);
                 for (com.google.gson.JsonElement c : scene.getAsJsonArray("checks")) { checks.add(c); }
                 for (com.google.gson.JsonElement r : scene.getAsJsonArray("rows")) { rows.add(r); }
                 allOk &= scene.get("success").getAsBoolean();
