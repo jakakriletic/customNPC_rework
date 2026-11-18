@@ -19,6 +19,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.client.event.EntityViewRenderEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -61,6 +63,10 @@ public final class RigClient {
     }
 
     public static final class Listener {
+        private net.minecraft.world.World shakeWorld;
+        private long shakeStart, shakeLength;
+        private float shakeStrength;
+
         @SubscribeEvent
         public void onClientPacket(FMLNetworkEvent.ClientCustomPacketEvent event) {
             if (!RigNet.CHANNEL.equals(event.getPacket().channel())) { return; }
@@ -74,11 +80,50 @@ public final class RigClient {
             mc.addScheduledTask(() -> {
                 if ((Integer) m[0] == RigNet.RELOAD) { RigModels.reload(); return; }
                 if (mc.world == null) { return; }
+                if ((Integer) m[0] == RigNet.CAMERA_SHAKE) {
+                    int amplitude = (Integer) m[2], ticks = (Integer) m[3];
+                    if (mc.player == null || !Integer.toString(mc.player.dimension).equals(m[1])
+                            || amplitude < 1 || amplitude > 4000 || ticks < 1 || ticks > 40) { return; }
+                    long now = System.nanoTime();
+                    float strength = amplitude / 1000F;
+                    if (shakeWorld == mc.world && strength < remainingShake(now)) { return; }
+                    shakeWorld = mc.world;
+                    shakeStart = now;
+                    shakeLength = ticks * 50000000L;
+                    shakeStrength = strength;
+                    return;
+                }
                 Entity e = mc.world.getEntityByID((Integer) m[0]);
                 if (e instanceof EntityNPCInterface) {
                     ((EntityNPCInterface) e).rwRigPlayer.accept((String) m[1], (Integer) m[2], (Integer) m[3], (Integer) m[4]);
                 }
             });
+        }
+
+        private float remainingShake(long now) {
+            if (shakeLength == 0) { return 0; }
+            float left = Math.max(0, 1 - (now - shakeStart) / (float) shakeLength);
+            return shakeStrength * left * left;
+        }
+
+        @SubscribeEvent
+        public void onWorldUnload(WorldEvent.Unload event) {
+            if (event.getWorld() == shakeWorld) {
+                shakeLength = 0;
+                shakeWorld = null;
+            }
+        }
+
+        @SubscribeEvent
+        public void onCamera(EntityViewRenderEvent.CameraSetup event) {
+            Minecraft mc = Minecraft.getMinecraft();
+            if (shakeLength == 0 || mc.world == null || shakeWorld != mc.world || mc.isGamePaused()) { return; }
+            long now = System.nanoTime();
+            float strength = remainingShake(now);
+            if (strength <= 0) { shakeLength = 0; shakeWorld = null; return; }
+            double phase = (now - shakeStart) * 1e-9 * Math.PI * 2;
+            event.setPitch(event.getPitch() + strength * (float) Math.sin(phase * 11));
+            event.setRoll(event.getRoll() + 0.65F * strength * (float) Math.sin(phase * 8));
         }
     }
 

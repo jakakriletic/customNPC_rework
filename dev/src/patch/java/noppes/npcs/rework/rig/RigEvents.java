@@ -27,6 +27,8 @@ import noppes.npcs.entity.EntityNPCInterface;
  *   {@code volume}, {@code pitch}.</li>
  * <li>{@code lunge}: {@code forward} (blocks per tick), {@code up} (jump speed).</li>
  * <li>{@code heal}: {@code amount} (health points) to the NPC itself.</li>
+ * <li>{@code camera_shake}: cosmetic impact at {@code forward}/{@code side};
+ *   {@code radius} in blocks, {@code strength} in degrees and {@code duration} in seconds.</li>
  * </ul>
  * Any other type does nothing here; scripts get every event through {@code animationEvent}.
  */
@@ -46,6 +48,7 @@ public final class RigEvents {
             case "sound": for (String s : e.getStrings("sound")) { sound(npc, s, e.getFloat("volume", 1), e.getFloat("pitch", 1)); } break;
             case "lunge": lunge(npc, e); break;
             case "heal": npc.heal(e.getFloat("amount", 0)); break;
+            case "camera_shake": RigNet.sendShake(npc, e); break;
             default: break;
         }
     }

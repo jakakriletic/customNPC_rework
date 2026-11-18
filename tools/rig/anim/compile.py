@@ -38,7 +38,8 @@ EASE_WORDS = {
 
 # Keys every event may carry; the game ignores unknown keys.
 # Rework M16 acts on hit, sound, lunge and heal on the server; every event also reaches scripts (animationEvent).
-EVENT_TYPES = {"hit", "sound", "shake", "dust", "step", "lock", "lunge", "buff", "projectile", "summon", "heal", "script"}
+EVENT_TYPES = {"hit", "sound", "shake", "camera_shake", "dust", "step", "lock", "lunge", "buff",
+               "projectile", "summon", "heal", "script"}
 PROJECTILE_KINDS = {"rock", "web", "arrow", "small_fireball"}
 SOUNDS_JSON = ROOT / "dev/src/patch/resources/assets/rwrig/sounds.json"
 VANILLA_POTIONS = {"speed", "slowness", "haste", "mining_fatigue", "strength", "instant_health",

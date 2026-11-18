@@ -332,7 +332,9 @@ keyframes in seconds, `easing`, `loop`); they add to and replace the model's by 
 **Attacks are data.** A clip's `events` act on the server at their time: `hit` (area damage =
 `damage` x the NPC's melee strength; `shape` circle|arc, `forward`/`side`/`radius`/`arc`/`dir` in
 blocks and degrees, measured from the NPC and scaled with its size; `knockback`, `lift`, `effect`, `fire`; only enemies by faction), `sound`
-(`minecraft:...` or a built-in `troll.roar`), `lunge` (`forward`, `up`), `heal` (`amount`). Every
+(`minecraft:...` or a built-in `troll.roar`), `lunge` (`forward`, `up`), `heal` (`amount`),
+and `camera_shake` (`strength` in degrees, `radius` in blocks, `duration` in seconds).
+Camera shake fades over time and with distance from `forward`/`side` at the point of impact. Every
 event also calls the script hook `animationEvent` (`event.type`, `event.data` = the event's JSON),
 plus `animationStart` and `animationEnd`.
 
@@ -384,6 +386,13 @@ to use your position. **Display → Rig model...** changes the model of an exist
 the pack's NPC settings and script. Changes to the pack's model and clips take effect on reload,
 including for existing NPCs. The files for any custom models used in the world must remain on the
 server across restarts.
+
+**Logbreaker, a Gallic warrior.** Copy [the Logbreaker folder](../rig_src/examples/creatures/logbreaker) to
+`customnpcs/creatures/logbreaker` on the server. Use the updated mod on the server and clients,
+enable `RwAnimCore=1` on both, and run `/rwcreature deploy logbreaker`.
+It uses normal faction rules. To preview the slam as an operator, run
+`/rwrig play Logbreaker log_slam`. Nearby players feel the impact even when they take no damage.
+The shake lasts about 0.65 seconds, fading to zero at 16 blocks from the end of the log.
 
 ## 4. Java NPC scripts
 

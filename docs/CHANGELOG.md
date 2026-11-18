@@ -2,6 +2,9 @@
 
 ## v2 development
 
+- Added the Logbreaker creature pack with an original Gallic warrior, a shoulder-carried log,
+  and a ground slam. The `camera_shake` rig event adds a short local camera shake at impact.
+
 - Nearby model batching is enabled by default (`RwNpcInstancing=1`). OptiFine and other
   unsupported cases use the original renderer.
 - Simplified character details start beyond 32 blocks (`RwLodStart=32`), with flat headwear

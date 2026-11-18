@@ -9,6 +9,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.network.FMLEventChannel;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.internal.FMLProxyPacket;
+import noppes.npcs.entity.EntityNPCInterface;
 
 /**
  * M16: channel {@value #CHANNEL}, server to client only: "this NPC started clip X (age, fade)", or ended
@@ -61,6 +62,35 @@ public final class RigNet {
 
     /** Entity id of the "reload the model files" message. */
     public static final int RELOAD = -1;
+    /** Camera-only impulse. Old clients ignore this reserved entity id. */
+    public static final int CAMERA_SHAKE = -2;
+
+    static void sendShake(EntityNPCInterface npc, AnimEvent event) {
+        if (channel == null || !(npc.world instanceof WorldServer)) { return; }
+        float radius = event.getFloat("radius", 12);
+        float strength = event.getFloat("strength", 2);
+        float seconds = event.getFloat("duration", 0.6F);
+        if (!(radius > 0 && strength > 0 && seconds > 0)) { return; }
+        radius = Math.min(48, radius);
+        strength = Math.min(4, strength);
+        int ticks = Math.max(1, Math.round(Math.min(2, seconds) * 20));
+        double scale = Math.max(0.05, npc.rwRig.scale * npc.display.getSize() / 5.0);
+        double[] center = RigEvents.local(npc,
+                event.getFloat("forward", 0) * scale, event.getFloat("side", 0) * scale);
+        for (EntityPlayer player : npc.world.playerEntities) {
+            if (!(player instanceof EntityPlayerMP)) { continue; }
+            double distance = Math.sqrt(player.getDistanceSq(center[0], npc.posY, center[1]));
+            if (!(distance < radius)) { continue; }
+            int amplitude = shakeAmplitude(strength, radius, distance);
+            if (amplitude == 0) { continue; }
+            byte[] data = encode(CAMERA_SHAKE, Integer.toString(npc.dimension), amplitude, ticks, 0);
+            channel.sendTo(new FMLProxyPacket(new PacketBuffer(Unpooled.wrappedBuffer(data)), CHANNEL), (EntityPlayerMP) player);
+        }
+    }
+
+    static int shakeAmplitude(float strength, float radius, double distance) {
+        return distance < radius ? Math.round(strength * 1000 * (1 - (float) (distance / radius))) : 0;
+    }
 
     /** Every player reads the model files again (after /rwrig reload). */
     static void sendReload(net.minecraft.server.MinecraftServer server) {

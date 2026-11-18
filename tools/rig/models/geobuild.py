@@ -151,15 +151,15 @@ def px(img, u, v, colour):
 
 
 def build(entity, bones, materials, decals=None, atlas_width=256, seed=1337,
-          visible=(8, 7, 2.8)):
+          visible=(8, 7, 2.8), output_dir=None):
     """Write geo/<entity>.geo.json and textures/entity/<entity>.png; returns (geo path, texture path)."""
     decals = decals or {}
     names = [b[0] for b in bones]
     for name, parent, _, _ in bones:
         assert parent is None or parent in names, f"kost {name}: ni starša {parent}"
     assert len(set(names)) == len(names), "podvojena imena kosti"
-    geo_out = ASSETS / f"rig/{entity}.geo.json"
-    tex_out = ASSETS / f"textures/rig/{entity}.png"
+    geo_out = ASSETS / f"rig/{entity}.geo.json" if output_dir is None else output_dir / "model.geo.json"
+    tex_out = ASSETS / f"textures/rig/{entity}.png" if output_dir is None else output_dir / "texture.png"
     rng = np.random.default_rng(seed)
     atlas = Atlas(atlas_width)
     jobs = []           # (x, y, w, h, material, face, tag)

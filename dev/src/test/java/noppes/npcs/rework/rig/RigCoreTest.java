@@ -106,6 +106,15 @@ public class RigCoreTest {
         assertFalse(p.playing());
     }
 
+    @Test public void cameraShakeFallsOffAtTheImpactRadiusAndUsesAReservedMessage() {
+        assertEquals(3000, RigNet.shakeAmplitude(3, 16, 0));
+        assertEquals(1500, RigNet.shakeAmplitude(3, 16, 8));
+        assertEquals(0, RigNet.shakeAmplitude(3, 16, 16));
+        assertEquals(0, RigNet.shakeAmplitude(3, 16, 17));
+        assertArrayEquals(new Object[] {RigNet.CAMERA_SHAKE, "-1", 1500, 13, 0},
+                RigNet.decode(RigNet.encode(RigNet.CAMERA_SHAKE, "-1", 1500, 13, 0)));
+    }
+
     @Test public void everyBuiltInModelHasItsFilesAndClips() throws Exception {
         for (String id : new String[] {"humanoid", "knight", "skeleton_warrior", "ogre", "troll", "warg", "giant_spider", "cave_bear"}) {
             for (String path : new String[] {"/assets/customnpcs/rig/" + id + ".geo.json", "/assets/customnpcs/rig/" + id + ".animation.json",

@@ -12,6 +12,12 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**18. 11. — Logbreaker.** Ločen paket človeškega galskega bojevnika s hlodom na rami
+in napadom `log_slam`. Ob udarcu `camera_shake` strese kamero z upadom do 16 blokov.
+947 enotskih testov, build, paket in dedicated smoke PASS. Tarča je padla s 60 na 39,92 HP.
+Meja učinka pokrita enotsko, kamera ni bila preverjena v živem klientu.
+[Namestitev in ukazi](UPORABNIKI.md#creature-folders-m15-rwanimcore1).
+
 **18. 11. — M14.4b sprejet (Q545/D-109).** Lastnik je naročil vklop optimizacij:
 `RwNpcInstancing=1`, `RwLodStart=32`, `RwCombatEntryCap=64`. Izrecne vrednosti v obstoječih
 configih veljajo še naprej. M5.Z obe matriki 5/5 in sled PASS. Klient: bližnji K22
