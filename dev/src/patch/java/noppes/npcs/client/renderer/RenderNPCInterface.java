@@ -47,6 +47,7 @@ import noppes.npcs.CustomNpcs;
 import noppes.npcs.entity.EntityNPCInterface;
 import noppes.npcs.rework.render.LabelCache;
 import noppes.npcs.rework.render.Lod;
+import noppes.npcs.rework.render.NpcBatch;
 import org.lwjgl.opengl.GL11;
 
 public class RenderNPCInterface<T extends EntityNPCInterface>
@@ -188,7 +189,9 @@ extends RenderLiving<T> {
     }
 
     protected void renderModel(T npc, float par2, float par3, float par4, float par5, float par6, float par7) {
-        super.renderModel(npc, par2, par3, par4, par5, par6, par7);
+        if (CustomNpcs.RwNpcInstancing != 1 || !this.rwBatchModel(npc, par2, par3, par4, par5, par6, par7)) {
+            super.renderModel(npc, par2, par3, par4, par5, par6, par7);
+        }
         if (!((EntityNPCInterface)((Object)npc)).display.getOverlayTexture().isEmpty()) {
             GlStateManager.depthFunc((int)515);
             if (((EntityNPCInterface)((Object)npc)).textureGlowLocation == null) {
@@ -214,6 +217,18 @@ extends RenderLiving<T> {
             GlStateManager.depthFunc((int)515);
             GlStateManager.disableBlend();
         }
+    }
+
+    // M14.2: same visibility and texture bind as RenderLivingBase.renderModel; NpcBatch then draws
+    // all main-model parts in one call where the original drew them, otherwise the original model.
+    private boolean rwBatchModel(T npc, float par2, float par3, float par4, float par5, float par6, float par7) {
+        if (this.renderOutlines || !this.isVisible(npc) || !NpcBatch.accepts(this, this.mainModel, (EntityNPCInterface)((Object)npc))) {
+            return false;
+        }
+        if (this.bindEntityTexture(npc) && !NpcBatch.render(this.mainModel, (EntityNPCInterface)((Object)npc), par7)) {
+            this.mainModel.render(npc, par2, par3, par4, par5, par6, par7);
+        }
+        return true;
     }
 
     protected float handleRotationFloat(T npc, float par2) {

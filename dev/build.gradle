@@ -430,6 +430,10 @@ task testOriginal(type: Test) {
     // Q459: removeData(name, deleteFiles) and the switch text are new.
     exclude '**/LinkedRemoveTest.class'
     exclude '**/ReadableCloneTest.class'
+    // M14.2: part geometry, CPU part matrices and the combined mesh are new.
+    exclude '**/PartGeometryTest.class'
+    exclude '**/NpcBatchPoseTest.class'
+    exclude '**/NpcBatchMeshTest.class'
     testLogging { events 'passed', 'skipped', 'failed' }
 }
 

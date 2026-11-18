@@ -48,6 +48,7 @@ import noppes.npcs.rework.far.ImpostorBaker;
 import noppes.npcs.rework.render.HeadwearSkip;
 import noppes.npcs.rework.render.Lod;
 import noppes.npcs.rework.render.LabelCache;
+import noppes.npcs.rework.render.NpcBatch;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -135,6 +136,12 @@ public final class ClientHarness {
     private LabelCheck labelCheck;
     /** M5-V.4: izid primerjave impostor - model. */
     private ImpostorCheck impostorCheck;
+    /** M14.2: image proof of RwNpcInstancing and batch counters at the measurement bounds. */
+    private NpcBatchCheck instancingCheck;
+    private long batchDrawsAtMeasure;
+    private long batchDrawsAtEnd;
+    private long[] batchFallbacksAtMeasure = new long[NpcBatch.REASONS.length];
+    private long[] batchFallbacksAtEnd = new long[NpcBatch.REASONS.length];
     /** M5-V.5: A/B pikslov sonde (V23) in prehod cez mejo po merjenju (V24). */
     private FarDrawCheck farDraw;
     private FarDrawCheck.Seam seam;
@@ -336,7 +343,8 @@ public final class ClientHarness {
                     pinCamera(mc, false);
                     if (secondsInPhase() >= this.job.warmupSeconds && ((this.job.headwearCheck && this.headwearCheck == null)
                             || (this.job.labelCheck && this.labelCheck == null)
-                            || (this.job.impostorCheck && this.impostorCheck == null))) {
+                            || (this.job.impostorCheck && this.impostorCheck == null)
+                            || (this.job.instancingCheck && this.instancingCheck == null))) {
                         // M5-K K14b: preverba v naslednjem RenderWorldLastEvent, merjenje po njej.
                         this.headwearCheckPending = true;
                     } else if (secondsInPhase() >= this.job.warmupSeconds && this.job.farDrawCheck
@@ -364,6 +372,8 @@ public final class ClientHarness {
                         this.bytesAtMeasure = this.bytesIn.get();
                         this.farAtMeasure = FarClient.size();
                         this.rigFramesAtMeasure = rigFrames();
+                        this.batchDrawsAtMeasure = NpcBatch.draws;
+                        this.batchFallbacksAtMeasure = NpcBatch.fallbacks();
                         this.farBytesAtMeasure = FarClient.payloadBytes;
                         FarRender.resetStats();
                         this.measureStartNs = System.nanoTime();
@@ -382,6 +392,8 @@ public final class ClientHarness {
                         this.bytesAtEnd = this.bytesIn.get();
                         this.farBytesAtEnd = FarClient.payloadBytes;
                         this.rigFramesAtEnd = rigFrames();
+                        this.batchDrawsAtEnd = NpcBatch.draws;
+                        this.batchFallbacksAtEnd = NpcBatch.fallbacks();
                         if ((this.job.seamCheck || this.job.walk) && this.errors.isEmpty()) {
                             // M5-V.5: JSON merjenja zdaj; skripta ob fazi SEAM prebere streznik.
                             this.jsonBody = buildJson(mc, Phase.MEASURE);
@@ -497,6 +509,13 @@ public final class ClientHarness {
             }
             System.out.println("RWHARNESS-NAPISI ok=" + r.ok() + " npc=" + r.npcs + " vDometu=" + r.labelled + " obcutljivost=" + r.sensitivity + s + " " + r.error);
             this.labelCheck = r;
+        }
+        if (this.job.instancingCheck) {
+            NpcBatchCheck r = NpcBatchCheck.run(Minecraft.getMinecraft(), ev.getPartialTicks(), this.job.out.replaceAll("\\.json$", ""));
+            System.out.println("RWHARNESS-INSTANCING ok=" + r.ok() + " npc=" + r.npcs + " npcOk=" + r.npcPassed + " npcPadlih=" + r.npcFailed
+                    + " | scena " + r.scene + " | poza " + r.poseControl + " | uv " + r.uvControl + " | najslabsi " + r.worst
+                    + " | prvi padli " + r.firstFailed + " | gl=" + r.glError + " slike=" + r.images + " " + r.error);
+            this.instancingCheck = r;
         }
         if (this.job.impostorCheck) {
             ImpostorCheck r = ImpostorCheck.run(Minecraft.getMinecraft());
@@ -944,6 +963,37 @@ public final class ClientHarness {
         // M16.5: rig izrisi v merilnem oknu (RigClient steje en izris na NPC na sliko).
         num(b, "rwAnimCore", CustomNpcs.RwAnimCore);
         num(b, "rigIzrisovMeritev", this.rigFramesAtEnd >= 0 && this.rigFramesAtMeasure >= 0 ? this.rigFramesAtEnd - this.rigFramesAtMeasure : -1);
+        // M14.2: one-draw NPC model; draws and fallbacks inside the measurement window.
+        num(b, "rwNpcInstancing", CustomNpcs.RwNpcInstancing);
+        num(b, "instancingIzrisov", this.batchDrawsAtEnd - this.batchDrawsAtMeasure);
+        StringBuilder fbs = new StringBuilder();
+        long fbTotal = 0;
+        for (int i = 0; i < NpcBatch.REASONS.length; i++) {
+            long d = this.batchFallbacksAtEnd[i] - this.batchFallbacksAtMeasure[i];
+            fbTotal += d;
+            if (d != 0) {
+                fbs.append(fbs.length() == 0 ? "" : ",").append(NpcBatch.REASONS[i]).append('=').append(d);
+            }
+        }
+        num(b, "instancingRezerv", fbTotal);
+        kv(b, "instancingRezerveRazlogi", fbs.length() == 0 ? "none" : fbs.toString());
+        num(b, "instancingZivih", NpcBatch.live());
+        num(b, "instancingProgram", NpcBatch.programReady() ? 1 : 0);
+        num(b, "instancingGlNapaka", GL11.glGetError());
+        NpcBatchCheck ncheck = this.instancingCheck;
+        num(b, "instancingPreverba", ncheck == null ? -1 : (ncheck.ok() ? 1 : 0));
+        if (ncheck != null) {
+            num(b, "instancingNpc", ncheck.npcs);
+            num(b, "instancingNpcOk", ncheck.npcPassed);
+            num(b, "instancingNpcPadlih", ncheck.npcFailed);
+            kv(b, "instancingScena", String.valueOf(ncheck.scene));
+            kv(b, "instancingPoza", String.valueOf(ncheck.poseControl));
+            kv(b, "instancingUv", String.valueOf(ncheck.uvControl));
+            kv(b, "instancingNajslabsi", ncheck.worst);
+            kv(b, "instancingPrviPadli", ncheck.firstFailed);
+            kv(b, "instancingSlike", ncheck.images);
+            kv(b, "instancingNapaka", ncheck.error);
+        }
         num(b, "rwRenderBox", CustomNpcs.RwRenderBox);
         kv(b, "okvir", RenderBoxAudit.summary(mc.world, mc.getRenderViewEntity(), FarRender.specialPrefix));
         FarDrawCheck fd = this.farDraw;

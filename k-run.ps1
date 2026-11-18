@@ -61,7 +61,11 @@ param(
     # M16.5: model z rigom (npr. knight) za vse NPC-je idle: klon RWRIG_Idle = PERF_Idle z NBT RwRig {Model}; merilo K19.
     [string]$Rig = '',
     # M16.5: RwAnimCore za ta zagon (bere se ob zagonu, zato gradle -PrwSet); -1 = iz CustomNpcs.cfg.
-    [ValidateRange(-1, 1)][int]$AnimCore = -1
+    [ValidateRange(-1, 1)][int]$AnimCore = -1,
+    # M14.2: RwNpcInstancing za ta zagon (gradle -PrwSet); -1 = iz CustomNpcs.cfg; merilo K21.
+    [ValidateRange(-1, 1)][int]$Instancing = -1,
+    # M14.2: po ogrevanju primerjaj sliko z RwNpcInstancing 0/1/0 po merilih M14.0 5.2 (merilo K22).
+    [switch]$PreveriInstancing
 )
 
 $ErrorActionPreference = 'Stop'
@@ -228,7 +232,7 @@ $jobPath = Join-Path $audit "k-$Variant-$N-$stamp.job"
 $job = @("world=$world", 'createSeed=customnpc-rework', "expectNpc=$pricakovano", "expectNpcMin=$pricakovanoMin",
          # Invariantna kultura: v sl-SI bi -f dal decimalne vejice in HarnessJob kamere ne bi prebral.
          [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, 'cam={0},{1},{2},180,{3}', $camX, $camY, $camZ, $pitch),
-         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci", "headwearSkip=$Pokrivalo", ('headwearCheck={0}' -f [int][bool]$PreveriPokrivalo), "labelCache=$Napisi", ('labelCheck={0}' -f [int][bool]$PreveriNapise), "lodStart=$Lod", "farView=$Far", "impostorStart=$ImpostorStart", "renderBox=$RenderBox", ('specialPrefix={0}' -f $(if ($Posebni -eq 1) { 'RWV7_' } else { '' })), ('settle={0}' -f (3 + [int]($N / 250))),
+         "renderDistance=$RenderDistance", "fov=$Fov", ('hideGui={0}' -f [int][bool]$SkrijGui), "sampleMs=$Vzorci", "headwearSkip=$Pokrivalo", ('headwearCheck={0}' -f [int][bool]$PreveriPokrivalo), ('instancingCheck={0}' -f [int][bool]$PreveriInstancing), "labelCache=$Napisi", ('labelCheck={0}' -f [int][bool]$PreveriNapise), "lodStart=$Lod", "farView=$Far", "impostorStart=$ImpostorStart", "renderBox=$RenderBox", ('specialPrefix={0}' -f $(if ($Posebni -eq 1) { 'RWV7_' } else { '' })), ('settle={0}' -f (3 + [int]($N / 250))),
          "warmup=$Warmup", "measure=$Measure", ('out=' + ($out -replace '\\', '/')))
 for ($i = 0; $i -lt $cmds.Count; $i++) { $job += ('cmd.{0}={1}' -f ($i + 1), $cmds[$i]) }
 [System.IO.File]::WriteAllLines($jobPath, $job, (New-Object System.Text.UTF8Encoding($false)))
@@ -241,7 +245,10 @@ $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 $log = Join-Path $audit "k-$Variant-$N-$stamp.log"
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 $psi.FileName = $env:ComSpec
-$rwSet = if ($AnimCore -ge 0) { ' "-PrwSet=RwAnimCore={0}"' -f $AnimCore } else { '' }
+$rwOverrides = @()
+if ($AnimCore -ge 0) { $rwOverrides += "RwAnimCore=$AnimCore" }
+if ($Instancing -ge 0) { $rwOverrides += "RwNpcInstancing=$Instancing" }
+$rwSet = if ($rwOverrides.Count) { ' "-PrwSet={0}"' -f ($rwOverrides -join ',') } else { '' }
 $psi.Arguments = ('/c gradlew.bat runClient --offline --no-daemon --console=plain "-PrwHarness={0}"{2} > "{1}" 2>&1' -f ($jobPath -replace '\\', '/'), $log, $rwSet)
 $psi.WorkingDirectory = Join-Path $root 'dev'
 $psi.UseShellExecute = $false
@@ -486,6 +493,17 @@ if ($Posebni -eq 1 -and $RenderBox -ge 0) {
         Check ("K18e: obcutljivost - obris modela sega cez hitbox originala (cez mejo {0}, Kip {1} bloka; {2})" -f (OkNum 'videzIzven'), $(if ($kip) { $kip.presega } else { '-' }), $obrisi) (((OkNum 'videzIzven') -ge 1) -and ((SpPresega 'RWV7_Kip') -gt 0.3))
     }
 }
+if ($r -and $Instancing -ge 0) {
+    # M14.2: stevci objamejo MEASURE (preverba in branje slike sta pred njim). V idle so vsi NPC-ji
+    # primerni modeli (K16: brez L2), zato je pri 1 skoraj vsak NPC v vsaki slicici en izris; pri 0 nic.
+    $batchMin = [math]::Floor(0.9 * $N * $r.slicic)
+    $batchOk = ($r.rwNpcInstancing -eq $Instancing) -and ($r.instancingGlNapaka -eq 0) -and $(if ($Instancing -eq 1) { ($r.instancingIzrisov -ge $batchMin) -and ($r.instancingZivih -gt 0) -and ($r.instancingProgram -eq 1) } else { ($r.instancingIzrisov -eq 0) -and ($r.instancingZivih -eq 0) -and ($r.instancingRezerv -eq 0) })
+    Check ("K21: RwNpcInstancing {0} (zahtevano {1}), izrisov {2} (pricakovano {3}), rezerv {4} ({5}), zivih {6}, program {7}, GL napaka {8}" -f $r.rwNpcInstancing, $Instancing, $r.instancingIzrisov, $(if ($Instancing -eq 1) { '>= ' + $batchMin } else { '0' }), $r.instancingRezerv, $r.instancingRezerveRazlogi, $r.instancingZivih, $r.instancingProgram, $r.instancingGlNapaka) $batchOk
+}
+if ($r -and $PreveriInstancing) {
+    foreach ($k in @('instancingScena', 'instancingPoza', 'instancingUv', 'instancingNajslabsi', 'instancingPrviPadli', 'instancingSlike')) { Write-Host ("    {0}: {1}" -f $k, $r.$k) }
+    Check ("K22: slika RwNpcInstancing 0/1/0 po merilih M14.0 5.2 (scena in vsak NPC posebej {0}/{1}, padlih {2}; kontroli poze in UV zavrnjeni) {3}" -f $r.instancingNpcOk, $r.instancingNpc, $r.instancingNpcPadlih, $r.instancingNapaka) ($r.instancingPreverba -eq 1)
+}
 if ($r -and ($Rig -ne '' -or $AnimCore -ge 0)) {
     # M16.5: z RwAnimCore 1 je vsak NPC z rigom vsako sliko izrisan kot model (RigClient.frames), z 0 nikoli.
     $rigMin = if ($Rig -ne '' -and $r.rwAnimCore -eq 1) { [math]::Floor(0.9 * $N * $r.slicic) } else { 0 }
@@ -538,9 +556,17 @@ if ($r) {
         if ($RenderBox -ge 0) { $odtis['rwRenderBox'] = $RenderBox }
         if ($Rig -ne '') { $odtis['rig'] = $Rig }
         if ($AnimCore -ge 0) { $odtis['rwAnimCore'] = $AnimCore }
+        if ($Instancing -ge 0) { $odtis['rwNpcInstancing'] = $Instancing }
+        if ($PreveriInstancing) { $odtis['preveriInstancing'] = 1 }
         $vel = @{ 'frame.p50' = $r.frameMsP50; 'frame.p95' = $r.frameMsP95; 'frame.p99' = $r.frameMsP99; 'frame.max' = $r.frameMsMax;
                   'fps' = $r.fps; 'fps.low1' = $r.fpsLow1; 'fps.low01' = $r.fpsLow01; 'gc.stevilo' = $r.gcStevilo; 'gc.ms' = $r.gcMs;
                   'upodobljeno.min' = $r.upodobljenoMin; 'streznik.ms' = $r.integriraniStreznikMsPovp }
+        if ($Instancing -ge 0) {
+            $vel['instancing.izrisov'] = $r.instancingIzrisov
+            $vel['instancing.rezerv'] = $r.instancingRezerv
+            $vel['instancing.zivih'] = $r.instancingZivih
+            $vel['slicic'] = $r.slicic
+        }
         $null = Write-MeritevJson -Path $JsonPath -Paket 'M5-K.0' -Scenarij ("klient {0}-{1}" -f $Variant, $N) -Odtis $odtis -Velicine $vel -Uspeh ($failures.Count -eq 0) -Padle $failures
     }
 }

@@ -30,6 +30,7 @@ import java.util.Properties;
  *                             integrirani streznik si delita JVM); -1 = pusti nastavitev iz CustomNpcs.cfg
  * headwearCheck=0             M5-K K14b: 1 = po ogrevanju primerjaj piksle in globino z RwHeadwearSkip 0 in 1
  *                             ({@link HeadwearCheck}); izid v JSON
+ * instancingCheck=0           M14.2: 1 = po ogrevanju primerjaj sliko RwNpcInstancing 0/1/0 ({@link NpcBatchCheck}); izid v JSON
  * labelCache=-1               M5-K K4: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwLabelCache}; -1 = iz konfiguracije
  * labelCheck=0                M5-K K4: 1 = po ogrevanju primerjaj piksle in globino z RwLabelCache 0 in 1 ({@link LabelCheck})
  * lodStart=-1                 M5-K K5: &gt;= 0 = ob vstopu nastavi {@code CustomNpcs.RwLodStart} (bloki, 0 = original); -1 = iz konfiguracije
@@ -89,6 +90,8 @@ public final class HarnessJob {
     public final int headwearSkip;
     /** M5-K K14b: preverba enakosti slike pokrivala po ogrevanju. */
     public final boolean headwearCheck;
+    /** M14.2: A/B/A2 image proof of the one-draw NPC model ({@link NpcBatchCheck}). */
+    public final boolean instancingCheck;
     /** M5-K K4: RwLabelCache za zagon, -1 = iz konfiguracije. */
     public final int labelCache;
     /** M5-K K4: preverba enakosti slike napisov po ogrevanju. */
@@ -154,6 +157,7 @@ public final class HarnessJob {
         this.sampleMs = intValue(p, "sampleMs", 0);
         this.headwearSkip = intValue(p, "headwearSkip", -1);
         this.headwearCheck = intValue(p, "headwearCheck", 0) != 0;
+        this.instancingCheck = intValue(p, "instancingCheck", 0) != 0;
         this.labelCache = intValue(p, "labelCache", -1);
         this.labelCheck = intValue(p, "labelCheck", 0) != 0;
         this.lodStart = intValue(p, "lodStart", -1);
