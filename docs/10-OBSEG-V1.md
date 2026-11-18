@@ -149,6 +149,8 @@ Naslednji M14.1b, omejen VBO po merilih raziskave; uspešnih serij ne ponavljamo
 
 **M14.3b4 sprejet (18. 11., Q512):** [napaka programa](meritve/2026-11-18-M14.3b4-napaka-programa.md), vsi štirje testi PASS na `34a102f6…`, 20/20 preverb in 6 bitno enakih A/B/A2 vrstic. Vbrizgane napake compile/link/draw, originalni fallback brez ponavljanja gradnje ter obnova po reloadu. Sledi dejanska hoja/boj, nato preostala matrika Q500; M14.4 odprt, `RwNpcInstancing=0`. Uspešnih testov ne ponavljaj (Q90).
 
+**M14.3b5 sprejet (18. 11., Q524/D-107):** [dejanska hoja/boj](meritve/2026-11-18-M14.3b5-hoja-boj.md), vseh 11 testov PASS na `bb8346fa…`: 146 globinskih regresij, 212 živih slik, 825 sond in 3377 sličic brez napak. En idle-500 par p95 10,1121 → 7,9463 ms (−21,42 %); stikalo 0. Naslednji M14.3b6 URL v prenosu, nato MPM/neznani renderer in OptiFine/shader. M14.4, M16.7c po M14 in M12 zadnji ostajajo po prejšnjem vrstnem redu; uspešnih serij ne ponavljaj (Q90).
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela

@@ -24,6 +24,7 @@ Prenos zgoraj je del obstoječe build osnove D-001. `NbtJson` je napisan na novo
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
+| 2026-11-18 | Clip transformacija z izrecnim x/y/z/w fma vrstnim redom odpravi reproducirano globinsko razliko; GL3.2 + ARB_gpu_shader5 / GLSL1.50 compatibility, sicer celoten original | R5, M14.3b5, Q522/Q524, D-107 | `RwNpcInstancing`, klient | **0** (originalni izris) |
 | 2026-11-18 | NPC z overlayem, opremo v rokah/oklepu ali na nosilcu pred kandidatovim izrisom v celoti uporabi original; celoten renderer 54/54 preverb | R5, M14.3b1, Q501/Q503 | `RwNpcInstancing`, klient | **0** (originalni izris) |
 | 2026-11-18 | Pred vsakim kandidatovim izrisom zavrne tuj program/VAO brez spreminjanja vezav; reload in klientski unload sprostita lastne mreže/program tudi pri 0 | R5, M14.3a, Q496–Q499 | `RwNpcInstancing`, klient | **0** (originalni izris) |
 | 2026-11-18 | Glavni običajni CNPC player model nariše 12 delov v enem klicu z native GL matrikami in GLSL 1.20; vrstni red NPC-jev/plasti ostane. Omejeni sprejem M14.2a, širša združljivost še odprta | R5, M14.2a, Q495 | `RwNpcInstancing`, klient | **0** (originalni izris) |
@@ -114,6 +115,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-18 | M14.3b5: živa patrulja/boj, globinska regresija, shader matrika in en idle-500 par | 11 testov PASS na `bb8346fa…`, 146 regresijskih slik, 212 živih + 825 sond, globina max0/RGB max2, 3377 sličic brez napak; p95 10,1121 → 7,9463 ms (−21,42 %), 895+51 JUnit/build/package. Privzeto 0; širša matrika odprta | [zapis](meritve/2026-11-18-M14.3b5-hoja-boj.md) |
 | 2026-11-18 | M14.3b4: napake compile/link/draw, FBO A/B/A2 in obnova po reloadu | Vsi štirje testi PASS na `34a102f6…`, 20/20 preverb, 6 bitno enakih vrstic, vsak tip napake 1×, brez ponavljanja gradnje; 605 zaščitenih vhodov nespremenjenih. Vbrizgane napake na enem GPU, brez nove cene; stikalo 0 | [zapis](meritve/2026-11-18-M14.3b4-napaka-programa.md) |
 | 2026-11-18 | M14.3b2: M16, GUI drawNpc in izris peke, 16 zamrznjenih A/B/A2 vrstic | Vsi štirje testi PASS na `f03e496c…`, 36/36 preverb, 49 pregledanih PNG, bitne posebne poti in GL/dogodki, 604 zaščiteni vhodi nespremenjeni. Produkcija nespremenjena, brez nove cene ali vklopa; L2/živa matrika ostajata odprta | [zapis](meritve/2026-11-18-M14.3b2-konteksti.md) |
 | 2026-11-18 | M14.3b1: celoten zamrznjen living renderer A/B/A2, en trenutni idle-500 par | Vseh pet testov PASS na `928e7110…`, 54/54 preverb, 25 slikovnih vrstic, bitne special rezerve, ime/dogodki/GL; p95 10,0943 → 8,0247 ms (−20,50 %), brez rezerv/GL napak. Stikalo ostane 0, širša matrika/vklop odprta | [zapis](meritve/2026-11-18-M14.3b-celoten-izris.md) |

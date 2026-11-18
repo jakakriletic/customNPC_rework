@@ -43,13 +43,13 @@ import org.lwjgl.opengl.GLContext;
  * CNPC player model, issued exactly where the original issued twelve display lists, so draw
  * order, depth, layers, name, events and every later draw stay original. The CPU pose is the
  * existing model state; original postRender operations supply the part matrices, the GPU applies them.
- * A GLSL 1.20 program repeats the fixed-function steps the original uses for these parts:
+ * A GLSL 1.50 compatibility + ARB_gpu_shader5 program repeats the fixed-function steps:
  * vertex transform, two-light colour-material lighting with normal rescale/normalize, texture
  * and lightmap modulate and fog. Alpha test, blending and depth stay fixed-function.
  *
  * <p>Anything else draws the original model: GUI, impostor baking, fake entities, other models
  * or renderers, outline mode, invisible NPCs, hurt overlay, extra texture units or lights,
- * texgen, OptiFine, an active GL program, no GL 2.0 + vertex array objects, changed geometry
+ * texgen, OptiFine, an active GL program, no GL 3.2 + ARB_gpu_shader5, changed geometry
  * or child parts. Each refusal is counted by reason. Lighting state comes from GlStateManager;
  * original GL matrix operations and readbacks preserve driver rounding for each part.
  * Their cost is included in the controller cost pair. Render thread only.
@@ -65,8 +65,11 @@ public final class NpcBatch {
     /** Harness negative controls only: extra head rotation (degrees) and U shift (texture units). */
     public static float testPoseDegrees, testUvShift;
     /** Harness fault injection only (M14.3b4): 1 = invalid vertex source (compile), 2 = fragment
-     * stage without main (link), 3 = exception after the program and VAO are bound (draw). */
+     * stage without main (link), 3 = exception after the program and VAO are bound (draw),
+     * 4 = old matrix-vector clip transform (depth regression negative control). */
     public static int testProgramFault;
+    /** Diagnostic only: observes the native part stack before it is popped. Never set in normal play. */
+    public static java.util.function.IntConsumer testPartCapture;
 
     private static final int PARTS = 12;
     private static final ModelRenderer[] SCRATCH = new ModelRenderer[PARTS];
@@ -218,6 +221,7 @@ public final class NpcBatch {
                     }
                     readMatrix(GL11.GL_MODELVIEW_MATRIX, MATRICES, at);
                     captureClip(at);
+                    if (checkScope && testPartCapture != null) { testPartCapture.accept(i); }
                 } finally { GlStateManager.popMatrix(); }
             }
         } finally { GlStateManager.popMatrix(); }
@@ -376,7 +380,9 @@ public final class NpcBatch {
             program = 0;
             context = caps;
             arbVao = !caps.OpenGL30 && caps.GL_ARB_vertex_array_object;
-            capable = caps.OpenGL20 && (caps.OpenGL30 || caps.GL_ARB_vertex_array_object);
+            // Explicit fma/precise fixes the demonstrated clip-coordinate rounding error.
+            // Never silently compile the old approximate transform on older hardware.
+            capable = caps.OpenGL32 && caps.GL_ARB_gpu_shader5;
         }
         return caps;
     }
@@ -491,6 +497,9 @@ public final class NpcBatch {
 
     private static int buildProgram() {
         String vertex = testProgramFault == 1 ? VERTEX + "\nrwTestCompileFault" : VERTEX;
+        if (testProgramFault == 4) {
+            vertex = vertex.replace(PRECISE_POSITION, "    gl_Position = rwClips[index] * vec4(gl_Vertex.xyz, 1.0);");
+        }
         String fragment = testProgramFault == 2 ? "#version 120\nvoid rwTestNoMain() { }" : FRAGMENT;
         int vs = shader(GL20.GL_VERTEX_SHADER, vertex), fs = vs == 0 ? 0 : shader(GL20.GL_FRAGMENT_SHADER, fragment);
         if (fs == 0) { if (vs != 0) { GL20.glDeleteShader(vs); } return 0; }
@@ -632,8 +641,21 @@ public final class NpcBatch {
         }
     }
 
+    // On the measured driver the fixed transform accumulates x, y, z, w, while
+    // matrix-vector multiplication starts with y then fuses x: the 1-ULP x displacement changes
+    // raster setup of a narrow face and exceeded Q475 depth by 6.9e-6 (Q522).
+    // precise prevents reassociation; explicit fma retains fixed-path fused rounding.
+    private static final String PRECISE_POSITION = String.join("\n",
+        "    mat4 clip = rwClips[index];",
+        "    precise vec4 position = clip[0] * gl_Vertex.x;",
+        "    position = fma(clip[1], vec4(gl_Vertex.y), position);",
+        "    position = fma(clip[2], vec4(gl_Vertex.z), position);",
+        "    position = fma(clip[3], vec4(1.0), position);",
+        "    gl_Position = position;");
+
     private static final String VERTEX = String.join("\n",
-        "#version 120",
+        "#version 150 compatibility",
+        "#extension GL_ARB_gpu_shader5 : require",
         "invariant gl_Position;",
         "uniform mat4 rwParts[12];",
         "uniform mat4 rwClips[12];",
@@ -673,7 +695,7 @@ public final class NpcBatch {
         "    int index = int(gl_Vertex.w + 0.5);",
         "    mat4 part = rwParts[index];",
         "    vec4 eye = part * vec4(gl_Vertex.xyz, 1.0);",
-        "    gl_Position = rwClips[index] * vec4(gl_Vertex.xyz, 1.0);",
+        PRECISE_POSITION,
         "    vec4 c = gl_Color;",
         "    if (rwLighting) {",
         // Inverse transpose of the complete model-view 3x3 by cofactors.
@@ -701,7 +723,7 @@ public final class NpcBatch {
         "}");
 
     private static final String FRAGMENT = String.join("\n",
-        "#version 120",
+        "#version 150 compatibility",
         "uniform sampler2D rwTex;",
         "uniform sampler2D rwLightmap;",
         "uniform bool rwLightmapOn;",

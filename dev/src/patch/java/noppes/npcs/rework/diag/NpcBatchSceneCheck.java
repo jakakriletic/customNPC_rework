@@ -5,12 +5,15 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.List;
 import java.util.Map;
 import javax.imageio.ImageIO;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
@@ -76,6 +79,7 @@ public final class NpcBatchSceneCheck {
     private final StringBuilder trace = new StringBuilder();
     private boolean observing, cancel, ok = true;
     private String key;
+    private float partial = 0.5f;
 
     private NpcBatchSceneCheck(Minecraft mc, Framebuffer fb, EntityCustomNpc npc, String images, boolean contexts) {
         this.mc = mc; this.fb = fb; this.npc = npc; this.images = images;
@@ -90,6 +94,183 @@ public final class NpcBatchSceneCheck {
 
     static JsonObject runContexts(Minecraft mc, Framebuffer fb, EntityCustomNpc npc, String images) throws Exception {
         return new NpcBatchSceneCheck(mc, fb, npc, images, true).run();
+    }
+
+    /** M14.3b5: sample the current networked pose. Never configure a fixture, change limb/
+     * swing/hurt values or tick the client between A/B/A2. The caller saves outer GL state. */
+    static JsonObject live(Minecraft mc, Framebuffer fb, EntityCustomNpc npc, float partial, String images,
+                           boolean controls, String failureBase, boolean diagnoseFailure) throws Exception {
+        NpcBatchSceneCheck c = new NpcBatchSceneCheck(mc, fb, npc, images, false);
+        c.key = "live"; c.partial = partial;
+        int mode = CustomNpcs.RwNpcInstancing;
+        boolean scope = NpcBatch.checkScope, shadow = mc.getRenderManager().isRenderShadow();
+        float vx = mc.getRenderManager().playerViewX, vy = mc.getRenderManager().playerViewY;
+        long blink = npc.modelData.eyes.blinkStart;
+        try {
+            // Only the wall-clock blink is held open, exactly as in K22. All AI/animation
+            // fields are the real current client inputs, including interpolated head/body yaw.
+            npc.modelData.eyes.blinkStart = 0;
+            MinecraftForge.EVENT_BUS.register(c);
+            c.shot(0); c.shot(1); // lazy model/skin initialization outside compared images
+            Shot a = c.shot(0), b = c.shot(1), a2 = c.shot(0);
+            NpcBatchCheck.Cmp cmp = NpcBatchCheck.compare(a.color, a.depth, b.color, b.depth, c.pixels());
+            boolean exact = npc.hurtTime > 0 || npc.deathTime > 0;
+            boolean repeat = c.equal(a, a2) && a.state.equals(a2.state) && a.events.equals(a2.events);
+            boolean events = a.events.equals("pre,post,") && a.events.equals(b.events) && a.events.equals(a2.events);
+            boolean image = exact ? c.equal(a, b) : cmp.imageEqual();
+            boolean route = a.draws == 0 && a2.draws == 0 && b.draws == (exact ? 0 : 1)
+                    && (exact || b.fallbacks == 0);
+            boolean state = a.state.equals(b.state), gl = a.gl == 0 && b.gl == 0 && a2.gl == 0;
+            JsonObject r = new JsonObject();
+            r.addProperty("success", repeat && events && image && route && state && gl && cmp.union > 0);
+            r.addProperty("repeatEqual", repeat); r.addProperty("eventsEqual", events); r.addProperty("imageEqual", image);
+            r.addProperty("stateEqual", state); r.addProperty("glEqual", gl); r.addProperty("exact", exact);
+            r.addProperty("draws", b.draws); r.addProperty("offDraws", a.draws); r.addProperty("repeatDraws", a2.draws);
+            r.addProperty("fallbacks", b.fallbacks); r.addProperty("reasons", b.reasons); r.addProperty("events", b.events);
+            r.add("pixels", new Gson().toJsonTree(cmp));
+            r.add("inputs", c.liveInputs());
+            r.addProperty("poseControl", !controls); r.addProperty("uvControl", !controls);
+            if (controls) {
+                NpcBatch.testPoseDegrees = 5; Shot pose = c.shot(1); NpcBatch.testPoseDegrees = 0;
+                NpcBatch.testUvShift = 1f / 64; Shot uv = c.shot(1); NpcBatch.testUvShift = 0;
+                r.addProperty("poseControl", !NpcBatchCheck.compare(a.color, a.depth, pose.color, pose.depth, c.pixels()).imageEqual());
+                r.addProperty("uvControl", !NpcBatchCheck.compare(a.color, a.depth, uv.color, uv.depth, c.pixels()).imageEqual());
+            }
+            boolean failed = !r.get("success").getAsBoolean();
+            if (!images.isEmpty() || (failed && diagnoseFailure)) {
+                String base = images.isEmpty() ? failureBase : images;
+                c.png(a.color, base + "-A.png", null); c.png(b.color, base + "-B.png", null);
+                c.png(a.color, base + "-diff.png", b.color);
+            }
+            // Diagnostic passes never replace the full-model result above. Preserve the
+            // first failing live pose before client ticks advance; do not guess at a fix
+            // from an aggregate depth maximum or change Q475's acceptance threshold.
+            if (failed && diagnoseFailure) { r.add("diagnostic", c.diagnose(a, b, failureBase)); }
+            return r;
+        } finally {
+            c.observing = false; MinecraftForge.EVENT_BUS.unregister(c);
+            NpcBatch.testPoseDegrees = NpcBatch.testUvShift = 0;
+            NpcBatch.checkScope = scope; CustomNpcs.RwNpcInstancing = mode;
+            npc.modelData.eyes.blinkStart = blink;
+            mc.getRenderManager().setRenderShadow(shadow);
+            mc.getRenderManager().playerViewX = vx; mc.getRenderManager().playerViewY = vy;
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private JsonObject diagnose(Shot a, Shot b, String base) throws Exception {
+        JsonObject d = new JsonObject();
+        d.addProperty("vendor", GL11.glGetString(GL11.GL_VENDOR));
+        d.addProperty("renderer", GL11.glGetString(GL11.GL_RENDERER));
+        d.addProperty("version", GL11.glGetString(GL11.GL_VERSION));
+        for (String name : new String[] {"MATRICES", "CLIPS"}) {
+            java.lang.reflect.Field field = NpcBatch.class.getDeclaredField(name);
+            field.setAccessible(true);
+            d.add(name, new Gson().toJsonTree(((float[]) field.get(null)).clone()));
+        }
+        JsonArray pixels = new JsonArray();
+        for (int i = 0; i < pixels() && pixels.size() < 16; i++) {
+            if (Math.abs(a.depth.get(i) - b.depth.get(i)) <= 1e-6f) { continue; }
+            JsonObject p = new JsonObject();
+            p.addProperty("x", i % fb.framebufferWidth); p.addProperty("yFromBottom", i / fb.framebufferWidth);
+            p.addProperty("depthA", a.depth.get(i)); p.addProperty("depthB", b.depth.get(i));
+            p.addProperty("rgbaA", Integer.toHexString(a.color.getInt(4 * i)));
+            p.addProperty("rgbaB", Integer.toHexString(b.color.getInt(4 * i))); pixels.add(p);
+        }
+        d.add("depthPixels", pixels);
+        // Big-endian width/height ints, then raw A/B depth floats for every pixel,
+        // bottom-up. Retain all pixels, not just those outside the acceptance bound.
+        String depthFile = base + "-depth.bin";
+        depth(a, b, depthFile);
+        d.addProperty("depthFile", depthFile);
+        d.add("inputs", liveInputs());
+        ModelPlayerAlt model = (ModelPlayerAlt) renderer.getMainModel();
+        ModelRenderer[] parts = {model.bipedHead, model.bipedBody, model.bipedRightArm, model.bipedLeftArm,
+            model.bipedRightLeg, model.bipedLeftLeg, model.bipedHeadwear, model.bipedLeftLegwear,
+            model.bipedRightLegwear, model.bipedLeftArmwear, model.bipedRightArmwear, model.bipedBodyWear};
+        boolean[] hidden = new boolean[parts.length], shown = new boolean[parts.length];
+        for (int i = 0; i < parts.length; i++) { hidden[i] = parts[i].isHidden; shown[i] = parts[i].showModel; }
+        List<LayerRenderer> layers = (List<LayerRenderer>) ReflectionHelper.findField(RenderLivingBase.class,
+            "layerRenderers", "field_177097_h").get(renderer);
+        List<LayerRenderer> savedLayers = new java.util.ArrayList<>(layers);
+        boolean hideGui = mc.gameSettings.hideGUI;
+        JsonArray isolated = new JsonArray();
+        try {
+            // LayerLegs.preRender overwrites isHidden before every render. showModel
+            // survives that preparation. Remove layers/names ONLY in these diagnostic
+            // shots, so an isolated empty/hidden part cannot silently include both legs.
+            layers.clear(); mc.gameSettings.hideGUI = true;
+            for (int i = 0; i < parts.length; i++) {
+                for (int j = 0; j < parts.length; j++) {
+                    parts[j].showModel = j == i && shown[j]; parts[j].isHidden = hidden[j];
+                }
+                Shot pa = shot(0), pb = shot(1), pa2 = shot(0);
+                JsonObject p = new JsonObject(); p.addProperty("part", i);
+                p.addProperty("repeatEqual", equal(pa, pa2));
+                p.addProperty("draws", pb.draws); p.addProperty("gl", pa.gl | pb.gl | pa2.gl);
+                int visible = 0;
+                for (ModelRenderer part : parts) { if (part.showModel && !part.isHidden) { visible++; } }
+                p.addProperty("visibleParts", visible);
+                p.addProperty("expectedVisibleParts", shown[i] && !hidden[i] ? 1 : 0);
+                NpcBatchCheck.Cmp cmp = NpcBatchCheck.compare(pa.color, pa.depth, pb.color, pb.depth, pixels());
+                p.add("pixels", new Gson().toJsonTree(cmp));
+                if (cmp.depthOver > 0) {
+                    String partBase = base + "-part-" + i;
+                    depth(pa, pb, partBase + "-depth.bin");
+                    png(pa.color, partBase + "-A.png", null); png(pb.color, partBase + "-B.png", null);
+                    p.addProperty("depthFile", partBase + "-depth.bin");
+                }
+                ModelRenderer part = parts[i];
+                p.add("rotation", new Gson().toJsonTree(new float[] {part.rotateAngleX, part.rotateAngleY, part.rotateAngleZ}));
+                p.add("pivot", new Gson().toJsonTree(new float[] {part.rotationPointX, part.rotationPointY, part.rotationPointZ}));
+                isolated.add(p);
+            }
+        } finally {
+            for (int i = 0; i < parts.length; i++) { parts[i].isHidden = hidden[i]; parts[i].showModel = shown[i]; }
+            layers.clear(); layers.addAll(savedLayers); mc.gameSettings.hideGUI = hideGui;
+        }
+        d.add("isolatedParts", isolated);
+        JsonArray vertices = new JsonArray();
+        java.util.function.IntConsumer savedCapture = NpcBatch.testPartCapture;
+        try (NpcBatchVertexProbe probe = new NpcBatchVertexProbe()) {
+            java.lang.reflect.Field clips = NpcBatch.class.getDeclaredField("CLIPS"); clips.setAccessible(true);
+            float[] clipData = (float[]) clips.get(null);
+            NpcBatch.testPartCapture = i -> {
+                JsonObject row = probe.capture((noppes.npcs.client.model.ModelScaleRenderer) parts[i], 0.0625f,
+                    java.util.Arrays.copyOfRange(clipData, i * 16, i * 16 + 16));
+                row.addProperty("part", i); vertices.add(row);
+            };
+            Shot witness = shot(1);
+            d.addProperty("vertexWitnessEqual", equal(b, witness) && b.state.equals(witness.state)
+                && b.events.equals(witness.events) && witness.draws == 1 && witness.fallbacks == 0 && witness.gl == 0);
+        } finally { NpcBatch.testPartCapture = savedCapture; }
+        d.add("vertexTransforms", vertices);
+        return d;
+    }
+
+    private void depth(Shot a, Shot b, String path) throws Exception {
+        try (DataOutputStream out = new DataOutputStream(new FileOutputStream(path))) {
+            out.writeInt(fb.framebufferWidth); out.writeInt(fb.framebufferHeight);
+            for (int i = 0; i < pixels(); i++) { out.writeFloat(a.depth.get(i)); out.writeFloat(b.depth.get(i)); }
+        }
+    }
+
+    // Capture every sample, not only failures, so future investigations can replay
+    // a recorded pose rather than infer unrecorded head/body interpolation values.
+    private JsonObject liveInputs() {
+        float[] pose = {npc.limbSwing, npc.limbSwingAmount, npc.prevLimbSwingAmount,
+            npc.swingProgress, npc.prevSwingProgress, npc.renderYawOffset, npc.prevRenderYawOffset,
+            npc.rotationYawHead, npc.prevRotationYawHead, npc.rotationPitch, npc.prevRotationPitch, partial};
+        String[] names = {"limbSwing", "limbSwingAmount", "prevLimbSwingAmount", "swingProgress", "prevSwingProgress",
+            "bodyYaw", "prevBodyYaw", "headYaw", "prevHeadYaw", "pitch", "prevPitch", "partial"};
+        JsonObject inputs = new JsonObject(), bits = new JsonObject();
+        for (int i = 0; i < pose.length; i++) {
+            inputs.addProperty(names[i], pose[i]); bits.addProperty(names[i], Float.floatToRawIntBits(pose[i]));
+        }
+        inputs.addProperty("ticks", npc.ticksExisted); inputs.addProperty("hurt", npc.hurtTime);
+        inputs.addProperty("death", npc.deathTime); inputs.addProperty("animation", npc.currentAnimation);
+        inputs.add("floatBits", bits);
+        return inputs;
     }
 
     private void check(String name, boolean pass, String detail) {
@@ -354,7 +535,7 @@ public final class NpcBatchSceneCheck {
                 // checkScope remains true: refusal must come from entity membership, not time.
                 ImpostorBaker.drawModel(mc, mc.getRenderManager().getEntityRenderObject(target), target,
                         Float.parseFloat(key.substring(5)));
-            } else { mc.getRenderManager().renderEntity(npc, 0, 0, 0, 180, 0.5f, false); }
+            } else { mc.getRenderManager().renderEntity(npc, 0, 0, 0, 180, partial, false); }
         }
         finally { observing = false; }
         Shot s = new Shot(); s.draws = NpcBatch.draws - draws; s.events = trace.toString(); s.rigFrames = RigClient.frames - rigFrames;
@@ -412,7 +593,7 @@ public final class NpcBatchSceneCheck {
     }
 
     /** Restore Minecraft's mirrors before the caller restores raw GL attributes. */
-    private static final class SavedState {
+    static final class SavedState {
         final int fogMode = GL11.glGetInteger(GL11.GL_FOG_MODE), alphaFunc = GL11.glGetInteger(GL11.GL_ALPHA_TEST_FUNC),
                 cmFace = GL11.glGetInteger(GL11.GL_COLOR_MATERIAL_FACE), cmMode = GL11.glGetInteger(GL11.GL_COLOR_MATERIAL_PARAMETER),
                 src = GL11.glGetInteger(GL11.GL_BLEND_SRC), dst = GL11.glGetInteger(GL11.GL_BLEND_DST),

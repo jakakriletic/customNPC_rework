@@ -2,6 +2,12 @@
 
 ## v2 development
 
+- M14.3b5 fixes a reproduced depth mismatch during walking with an explicit fused clip
+  transform (GL 3.2 + ARB_gpu_shader5 required, otherwise the original renderer).
+  Live patrol/combat passed 212 images, 825 interpolation probes and 3,377 world frames;
+  depth regression and required shader regressions passed. One idle-500 pair measured
+  p95 10.1121 → 7.9463 ms. `RwNpcInstancing` stays 0; URL/MPM/OptiFine/shader proof and
+  default enablement remain open. [Coverage and limits](meritve/2026-11-18-M14.3b5-hoja-boj.md).
 - M14.3b2 verifies the existing M16 renderer, CNPC GUI preview method and baker render stage:
   36 checks across 16 frozen image cases passed. Production rendering is unchanged;
   full atlas/L2 transitions and wider compatibility remain open, `RwNpcInstancing` stays 0.

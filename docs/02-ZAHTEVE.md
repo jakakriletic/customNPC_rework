@@ -587,7 +587,10 @@ zavrnjen zaradi cene (Q483). Izbirni `RwNpcInstancing` (privzeto 0) pri 1 nariš
 na NPC v enem klicu, brez med-NPC instancinga (Q487). M14.2a/M14.3a in omejeni M14.3b1 so sprejeti:
 [celoten zamrznjen living renderer](meritve/2026-11-18-M14.3b-celoten-izris.md) preverja
 poze, skine, luč/meglo/skalo, dogodke/ime in bitno originalne special rezerve (Q503).
-To ne potrdi dejanske hoje/boja ali preostalih živih kontekstov; širša matrika in vklop ostajata odprta.
+[M14.3b5](meritve/2026-11-18-M14.3b5-hoja-boj.md) dodatno potrdi dejansko hojo/boj
+na enem dev klientu/GPU: 212 živih slik, 825 sond in 3377 svetovnih sličic.
+Popravljena clip numerika zahteva GL3.2 + `ARB_gpu_shader5`, sicer originalni izris
+(D-107/Q524). URL/MPM/OptiFine/shader in širša matrika/vklop ostajajo odprti.
 CPU animacije, ticki, NBT in omrežje ostanejo enaki; M16 rig in nepodprti modeli/plasti
 ohranijo obstoječi izris. Guard in obnova GL stanja sta del prvega kandidata.
 Vklop zahteva dokaz slike, združljivosti in izboljšanja p95 nad šumom na isti trenutni kodi;

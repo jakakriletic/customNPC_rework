@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 245 → 1)
+# Arhiv: dnevnik sej (vnosi 246 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,18 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-18 (246) — M14.3b3: živi prehod L1/L2 sprejet
+
+**Paket:** M14.3b3 (Q507–Q510) · **Stanje:** sprejet pod stikalom 0.
+Nov živi scenarij `NpcBatchL2Harness`/`npc-batch-l2-run.ps1`: integriran klient, običajen
+in oklepljen NPC, kamera 8 → 36 → 8 blokov, A(0)/B(1)/A2(0). v1 PASS, a PNG brez NPC-jev
+(Q508) → v2 doda globinsko preverbo vidnosti in pade; vzrok harness, NPC-ja brez
+`StartPosNew` v zemlji (Q509). v3 PASS na `6ef1a126…`: 35/35, 620/620 sličic brez dvojnega
+ali manjkajočega izrisa, vidnost ≥ 0,688, šest PNG pregledanih; unit/build/package PASS.
+Produkcija in cena nespremenjeni; Q90 brez ponovitev. Sledi napaka programa in preostala
+matrika Q500. Nič zagnano ročno; nepovezano delo ohranjeno.
+[Zapis](../meritve/2026-11-18-M14.3b3-prehod-L2.md).
 
 ### 2026-11-18 (245) — M14.3b2: M16, GUI in izris peke sprejeti
 

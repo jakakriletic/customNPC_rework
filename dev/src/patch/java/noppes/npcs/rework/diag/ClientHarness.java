@@ -195,6 +195,7 @@ public final class ClientHarness {
         try {
             if (NpcBatchCompatHarness.installIfRequested(path)) { return; }
             if (NpcBatchL2Harness.installIfRequested(path)) { return; }
+            if (NpcBatchMotionHarness.installIfRequested(path)) { return; }
             if (ModelScaleBaseline.installIfRequested(path)) { return; }
             if (HitboxGuiHarness.installIfRequested(path)) { return; }
             // M4.15c is a separate, explicitly requested functional job, never a timing run.

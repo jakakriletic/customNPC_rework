@@ -634,17 +634,24 @@ Not proven, so not claimed:
   M14.3b1 keeps overlay/equipment/riding NPCs on the complete original path. Its 25 frozen
   whole-renderer fixtures passed 54 checks: poses, skins/light/fog/scale, bitwise special
   fallback, events/layers/names and GL state. One current idle-500 pair measured p95
-  10.094 → 8.025 ms. This covers one dev client/GPU; frozen poses do not test live walking
-  or combat AI. M14.3b2 adds 36 checks across 16 frozen image cases: M16 knight
+  10.094 → 8.025 ms. Those frozen poses do not test live walking or combat AI.
+  M14.3b2 adds 36 checks across 16 frozen image cases: M16 knight
   idle/walk/hurt/death, the CNPC GUI preview method and the baker render stage at eight
   angles retain bitwise original images. Full GUI interaction, rig networking, the complete
-  atlas pipeline, L2 transitions, program failure, URL transfers, MPM/unknown renderers,
-  shadows/fire and live OptiFine/shader compatibility remain unverified.
+  atlas pipeline, URL transfers, MPM/unknown renderers, shadows/fire and live
+  OptiFine/shader compatibility remain unverified. M14.3b3 verifies the live L1/L2
+  handover, and M14.3b4 verifies injected program failures and recovery.
+  M14.3b5 verifies real patrol/combat AI on one dev client/GPU: 212 images, 825
+  interpolation probes and 3,377 world frames. A reproduced depth mismatch is fixed
+  with explicit fused clip arithmetic; batching now requires GL 3.2 + ARB_gpu_shader5
+  (GLSL 1.50 compatibility), otherwise it uses the original renderer. Required shader
+  regressions passed; one current idle-500 pair measured p95 10.1121 → 7.9463 ms.
   Default enablement needs the wider matrix, repeated cost series and the owner's visual review.
   [M14.2a evidence](meritve/2026-11-18-M14.2-en-izris.md),
   [M14.3a evidence](meritve/2026-11-18-M14.3a-GL-meja.md),
   [M14.3b1 evidence and limits](meritve/2026-11-18-M14.3b-celoten-izris.md),
-  [M14.3b2 evidence and limits](meritve/2026-11-18-M14.3b2-konteksti.md).
+  [M14.3b2 evidence and limits](meritve/2026-11-18-M14.3b2-konteksti.md),
+  [M14.3b5 evidence and limits](meritve/2026-11-18-M14.3b5-hoja-boj.md).
 
 The full list of behaviour changes is in the [changelog](CHANGELOG.md) and in
 [04-REGISTRI.md](04-REGISTRI.md#sprejete-spremembe-obnašanja).

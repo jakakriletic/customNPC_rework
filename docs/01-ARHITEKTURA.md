@@ -1126,3 +1126,17 @@ M16 in nepodprti primeri ostanejo na obstoječi poti, pogodba dogodkov/plasti se
 Izboljšanje se dokaže s trenutnim A/B, ne s starimi 9,817 ms ali ceno impostorja.
 Pragovi slike zamrznjeni pred rezultati; ročni ogled lastnika in dokaz združljivosti ostaneta za vklop.
 [Raziskava, kritika paketov in merila](raziskave/M14.0-izris-bliznjih-npc.md).
+
+### D-107 — M14.3b5: določeni vrstni red clip transformacije (2026-11-18, Q522)
+
+Depth-v2 lokalizira presežek Q475 na desno nogo. Vsi bazni vektorji se ujemajo,
+33 komponent oglišč pa loči fused akumulacija x,y,z,w od y,x,z,w na izmerjenem GPU.
+Kandidat zato uporabi izrecne `fma` in `precise` namesto navadnega matričnega produkta;
+za njuno pogodbo zahteva GL3.2 + `ARB_gpu_shader5`/GLSL1.50 compatibility. Brez podpore
+ohrani originalni renderer, stikalo ostane 0. To ni jamstvo bitne enakosti drugih
+gonilnikov. Pred sprejemom obvezen deterministični regresijski dokaz s staro formulo
+kot negativno kontrolo, nova živa hoja/boj, potrebna shader regresija in cena.
+Q475 se ne širi. Sprejeto Q524 na `bb8346fa…`: negativna kontrola ponovi napako,
+146/146 regresijskih slik, nova živa hoja/boj in zahtevane shader regresije ter
+unit/build/package PASS; en idle-500 par p95 −21,42 % kot podatek. Širša združljivost
+in privzeti vklop ostajata odprta. [Podatki in pogodba](meritve/2026-11-18-M14.3b5-hoja-boj.md).

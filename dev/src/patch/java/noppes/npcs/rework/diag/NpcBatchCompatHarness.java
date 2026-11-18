@@ -481,7 +481,7 @@ public final class NpcBatchCompatHarness {
     }
     private static final class Shot { ByteBuffer color; FloatBuffer depth; Map<String, String> state; }
 
-    private static final class SavedMirrors {
+    static final class SavedMirrors {
         final boolean depth = GL11.glIsEnabled(GL11.GL_DEPTH_TEST), blend = GL11.glIsEnabled(GL11.GL_BLEND),
                 cull = GL11.glIsEnabled(GL11.GL_CULL_FACE), alpha = GL11.glIsEnabled(GL11.GL_ALPHA_TEST),
                 lighting = GL11.glIsEnabled(GL11.GL_LIGHTING), fog = GL11.glIsEnabled(GL11.GL_FOG),
