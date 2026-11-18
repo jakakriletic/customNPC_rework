@@ -496,7 +496,9 @@ if ($Posebni -eq 1 -and $RenderBox -ge 0) {
 if ($r -and $Instancing -ge 0) {
     # M14.2: stevci objamejo MEASURE (preverba in branje slike sta pred njim). V idle so vsi NPC-ji
     # primerni modeli (K16: brez L2), zato je pri 1 skoraj vsak NPC v vsaki slicici en izris; pri 0 nic.
-    $batchMin = [math]::Floor(0.9 * $N * $r.slicic)
+    # M14.4: v -Dalec 1 so NPC-ji onkraj praga L2 (K16), zato se steje samo modelni del.
+    $modelov = if ($Dalec -eq 1) { $N - [int]$r.l2NarisanihMax } else { $N }
+    $batchMin = [math]::Floor(0.9 * $modelov * $r.slicic)
     $batchOk = ($r.rwNpcInstancing -eq $Instancing) -and ($r.instancingGlNapaka -eq 0) -and $(if ($Instancing -eq 1) { ($r.instancingIzrisov -ge $batchMin) -and ($r.instancingZivih -gt 0) -and ($r.instancingProgram -eq 1) } else { ($r.instancingIzrisov -eq 0) -and ($r.instancingZivih -eq 0) -and ($r.instancingRezerv -eq 0) })
     Check ("K21: RwNpcInstancing {0} (zahtevano {1}), izrisov {2} (pricakovano {3}), rezerv {4} ({5}), zivih {6}, program {7}, GL napaka {8}" -f $r.rwNpcInstancing, $Instancing, $r.instancingIzrisov, $(if ($Instancing -eq 1) { '>= ' + $batchMin } else { '0' }), $r.instancingRezerv, $r.instancingRezerveRazlogi, $r.instancingZivih, $r.instancingProgram, $r.instancingGlNapaka) $batchOk
 }

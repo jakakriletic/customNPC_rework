@@ -594,7 +594,11 @@ Popravljena clip numerika zahteva GL3.2 + `ARB_gpu_shader5`, sicer originalni iz
 izris URL skinov med prenosom, po uspehu in po 404 (14/14 preverb, Q528).
 [M14.3b7](meritve/2026-11-18-M14.3b7-mpm-renderer.md) pošlje NPC z MPM deli na celoten
 originalni izris; tuj renderer/model, Classic in 64×32 ostanejo bitno originalni (34/34, Q532).
-OptiFine/shader in širša matrika/vklop ostajajo odprti.
+[M14.3b8](meritve/2026-11-18-M14.3b8-optifine.md) potrdi originalni izris s pravim
+OptiFine G5 brez shaderja in z BSL. [M14.4a](meritve/2026-11-18-M14.4a-3plus3.md)
+potrdi 3+3 idle/dalec-200/500: idle-500 p95 −19,13 %, ločena razpona, brez regresije
+p95 drugje (Q541). Privzeti vklop M14.4b ostane odložen do ogleda lastnika in potrebne
+regresije M5.Z (Q539); stikalo 0, celoten M14 še ni sprejet.
 CPU animacije, ticki, NBT in omrežje ostanejo enaki; M16 rig in nepodprti modeli/plasti
 ohranijo obstoječi izris. Guard in obnova GL stanja sta del prvega kandidata.
 Vklop zahteva dokaz slike, združljivosti in izboljšanja p95 nad šumom na isti trenutni kodi;

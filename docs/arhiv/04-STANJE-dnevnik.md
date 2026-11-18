@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 249 → 1)
+# Arhiv: dnevnik sej (vnosi 250 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,17 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-18 (250) — M14.3b7: MPM dodatki in neznani renderer sprejeti
+
+**Paket:** M14.3b7 (Q529–Q532) · **Stanje:** sprejet pod stikalom 0.
+Guard v `NpcBatch.accepts` pošlje NPC z MPM deli na celoten originalni izris (M14.0 §4).
+`m143b-mpm-v1` zavrnjen kot napaka harnessa (Q531: sprednji deli in Classic niso bili
+vidni); v2 z obrnjenimi vrsticami in referencami v isti pozi PASS 34/34 na `e6c8610f…`,
+skupaj z unit/build/package. Deli, tuj renderer/model, Classic/64×32 bitno originalni;
+pravi MPM jar izoliran od omrežja, NPC ob igralcu s krili ostane batch, obnova bitna.
+PNG (vključno z `-without-A` in MPM krili) pregledani. En idle-500 par p95 9,93 → 8,19 ms
+(−17,51 %). Sledi OptiFine/shader. [Dokaz](../meritve/2026-11-18-M14.3b7-mpm-renderer.md).
 
 ### 2026-11-18 (249) — M14.3b6: URL originalni izris sprejet
 

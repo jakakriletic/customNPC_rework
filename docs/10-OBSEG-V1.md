@@ -157,6 +157,13 @@ Naslednji M14.1b, omejen VBO po merilih raziskave; uspešnih serij ne ponavljamo
 
 **M14.3b7 sprejet (18. 11., Q529–Q532):** [MPM dodatki in neznani renderer](meritve/2026-11-18-M14.3b7-mpm-renderer.md), vseh pet testov PASS na `e6c8610f…`, 34/34 preverb in 14 vrstic. NPC z MPM deli gre na celoten originalni izris; tuj renderer/model, Classic in 64×32 ostanejo bitno originalni, pravi MPM jar izoliran. En idle-500 par p95 −17,51 %, stikalo 0. Naslednji OptiFine/shader (Q500), nato M14.4 po širši matriki, 3+3 in ogledu lastnika. M16.7c po M14, M12 zadnji; Q90/Q92/Q407 ostajajo.
 
+**M14.4a sprejet (18. 11., Q539–Q541):** [3+3 meritev](meritve/2026-11-18-M14.4a-3plus3.md),
+vseh osem controller testov PASS na `6fd26ee4…`. Idle-500 p95 9,9147 → 8,0180 ms
+(−19,13 %), razpona ločena; druge celice brez regresije p95. `RwNpcInstancing=0`.
+M14.4b (privzeti vklop + potrebna M5.Z regresija) odložen do zahtevanega ogleda lastnika;
+to ni sprejem celotnega M14. Naslednji neodvisni paket M16.7c po raziskavi M16.7a,
+M12 zadnji, M10.3 blokiran Q1; uspešnih serij ne ponavljaj (Q90).
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela

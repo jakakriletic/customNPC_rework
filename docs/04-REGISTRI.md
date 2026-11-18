@@ -117,6 +117,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-18 | M14.4a: 3+3 idle/dalec-200/500, RwNpcInstancing 0/1 | Osem testov PASS na `6fd26ee4…`; idle-500 p95 9,9147 → 8,0180 ms (−19,13 %), razpona ločena, druge celice brez regresije p95. Stikalo 0; M14.4b čaka ogled lastnika | [zapis](meritve/2026-11-18-M14.4a-3plus3.md) |
 | 2026-11-18 | M14.3b6: pravi HTTP PNG/404, celoten renderer A/B/A2 in en idle-500 par | Vseh pet testov PASS na `2c433b7c…`, 14/14 preverb, 6 vrstic, 24 PNG; bitne URL rezerve in običajna obnova. P95 9,8663 → 8,2063 ms (−16,82 %), 895+51 JUnit/build/package; stikalo 0, širša matrika odprta | [zapis](meritve/2026-11-18-M14.3b6-url.md) |
 | 2026-11-18 | M14.3b5: živa patrulja/boj, globinska regresija, shader matrika in en idle-500 par | 11 testov PASS na `bb8346fa…`, 146 regresijskih slik, 212 živih + 825 sond, globina max0/RGB max2, 3377 sličic brez napak; p95 10,1121 → 7,9463 ms (−21,42 %), 895+51 JUnit/build/package. Privzeto 0; širša matrika odprta | [zapis](meritve/2026-11-18-M14.3b5-hoja-boj.md) |
 | 2026-11-18 | M14.3b4: napake compile/link/draw, FBO A/B/A2 in obnova po reloadu | Vsi štirje testi PASS na `34a102f6…`, 20/20 preverb, 6 bitno enakih vrstic, vsak tip napake 1×, brez ponavljanja gradnje; 605 zaščitenih vhodov nespremenjenih. Vbrizgane napake na enem GPU, brez nove cene; stikalo 0 | [zapis](meritve/2026-11-18-M14.3b4-napaka-programa.md) |
