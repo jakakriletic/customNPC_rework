@@ -61,6 +61,7 @@ public final class RigCreatureTransfer {
     public static void start() {
         if (instance == null) { return; }
         try {
+            RigCreatureAssets.installBundled();
             RigCreatureAssets.publishServer(RigCreatureAssets.read(true));
             if (!RigCreatureAssets.server().models.isEmpty()) { instance.revision = instance.nextRevision++; }
         } catch (IOException | RuntimeException failure) {

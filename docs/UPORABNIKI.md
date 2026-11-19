@@ -387,9 +387,12 @@ the pack's NPC settings and script. Changes to the pack's model and clips take e
 including for existing NPCs. The files for any custom models used in the world must remain on the
 server across restarts.
 
-**Logbreaker, a masked Gallic giant with a log on his shoulder.** Copy [the Logbreaker folder](../rig_src/examples/creatures/logbreaker) to
-`customnpcs/creatures/logbreaker` on the server. Use the updated mod on the server and clients,
-enable `RwAnimCore=1` on both, and run `/rwcreature deploy logbreaker`.
+**Logbreaker, a masked Gallic giant with a log on his shoulder.** The mod jar ships this pack. When
+the server starts and `customnpcs/creatures/logbreaker` does not exist, the mod creates it from the jar.
+An existing folder is never overwritten, so you can edit the pack, or delete the folder to get the
+shipped version back. [The source folder](../rig_src/examples/creatures/logbreaker) is the same pack.
+Use the updated mod on the server and clients, enable `RwAnimCore=1` on both, and run
+`/rwcreature deploy logbreaker`.
 It uses normal faction rules. To preview the slam as an operator, run
 `/rwrig play Logbreaker log_slam`. Nearby players feel the impact even when they take no damage.
 The shake lasts about 0.65 seconds, fading to zero at 16 blocks from the end of the log.

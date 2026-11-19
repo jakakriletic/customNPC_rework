@@ -79,6 +79,38 @@ public final class RigCreatureAssets {
 
     static void clearServer() { publishServer(Snapshot.empty()); }
 
+    /** Creature packs shipped inside the mod jar (assets/customnpcs/rig/creatures/&lt;id&gt;/). */
+    static final String[] BUNDLED = {"logbreaker"};
+    static final String[] PACK_FILES = {"creature.json", "animations.json", "model.geo.json", "texture.png", "script.js"};
+
+    /**
+     * Copies each bundled pack to customnpcs/creatures/&lt;id&gt; when that folder does not exist yet.
+     * An existing folder is never touched, so owners can edit or replace a pack.
+     */
+    static void installBundled() {
+        Path root = CustomNpcs.Dir.toPath().resolve("creatures");
+        if (Files.exists(root) && !Files.isDirectory(root)) { return; }
+        for (String id : BUNDLED) {
+            Path dir = root.resolve(id);
+            if (Files.exists(dir)) { continue; }
+            Path temp = root.resolve("." + id + ".installing");
+            try {
+                Files.createDirectories(temp);
+                for (String file : PACK_FILES) {
+                    try (InputStream in = RigCreatureAssets.class.getResourceAsStream(
+                            "/assets/customnpcs/rig/creatures/" + id + "/" + file)) {
+                        if (in == null) { throw new IOException("missing bundled file " + file); }
+                        Files.copy(in, temp.resolve(file), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    }
+                }
+                Files.move(temp, dir);
+                LogWriter.info("RWRIG installed bundled creature pack " + id);
+            } catch (IOException | RuntimeException failure) {
+                LogWriter.error("RWRIG could not install bundled creature pack " + id, failure);
+            }
+        }
+    }
+
     /** At startup ignore individual broken packs. A live reload keeps the previous snapshot on any error. */
     static Snapshot read(boolean startup) throws IOException {
         Path root = CustomNpcs.Dir.toPath().resolve("creatures");

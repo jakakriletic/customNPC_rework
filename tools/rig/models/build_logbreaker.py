@@ -23,6 +23,9 @@ from rig import Clip, RigConfig  # noqa: E402
 
 
 PACK = ROOT / "rig_src/examples/creatures/logbreaker"
+# The same pack ships inside the mod jar; the server installs it into customnpcs/creatures.
+BUNDLED = ROOT / "dev/src/patch/resources/assets/customnpcs/rig/creatures/logbreaker"
+PACK_FILES = ("creature.json", "animations.json", "model.geo.json", "texture.png", "script.js")
 IMPACT = 1.25
 LOG_LEN = 90
 
@@ -449,6 +452,9 @@ def main():
     clips = animations(rig)
     payload = {"format_version": "1.8.0", "rig": {"head": "head", "shadow": 1.9}, "animations": clips}
     (PACK / "animations.json").write_text(json.dumps(payload, separators=(",", ":")) + "\n", encoding="utf-8")
+    BUNDLED.mkdir(parents=True, exist_ok=True)
+    for name in PACK_FILES:
+        (BUNDLED / name).write_bytes((PACK / name).read_bytes())
     if args.preview:
         clip = Clip("log_slam", clips["log_slam"])
         frames = [(label, clip.sample(t)) for label, t in

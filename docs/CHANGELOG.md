@@ -2,6 +2,8 @@
 
 ## v2 development
 
+- The mod jar ships the Logbreaker pack and installs it into `customnpcs/creatures/logbreaker`
+  at server start when that folder is missing.
 - Logbreaker is now a hunched masked giant in dark iron and striped wraps. He carries a round
   sawn log resting on his shoulder with his arm wrapped over it, and lifts it to slam it
   down with both hands.
