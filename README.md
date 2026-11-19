@@ -14,10 +14,10 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 | | |
 |---|---|
 | Datum zadnje posodobitve | 2026-11-19 |
-| Trenutna faza | **v2: M16.7c1 sprejet** (Q546–Q550/D-108): diskovni adapter in administratorski ukazi unpack/pack, 178 dedicated preverb z restartom; [dokaz in meje](docs/meritve/2026-11-19-M16.7c1-disk-ukazi.md). M14.4b ostaja sprejet: `RwNpcInstancing=1`, `RwLodStart=32`, `RwCombatEntryCap=64`. |
-| Naslednji korak | **M16.7c2: startup/reload/spawn/deploy urejevalne mape**, po [pogodbi](docs/raziskave/M16.7c0-pogodba-mape-klona.md); celoten M16.7c še odprt. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi; obseg določa `docs/10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. M12 zadnji, M10.3 blokiran Q1. |
+| Trenutna faza | **v2: M16.7c zaključen** (Q554/D-108): disk/ukazi in živa urejevalna mapa, 222 preverb z dvema klientoma/restartom, pet pregledanih PNG; [dokaz in meje](docs/meritve/2026-11-19-M16.7c2-ziva-mapa.md). M14.4b ostaja sprejet: `RwNpcInstancing=1`, `RwLodStart=32`, `RwCombatEntryCap=64`. |
+| Naslednji korak | **M12.0: raziskava nalaganja URL skinov**, pred izvedbo po D-029. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi; obseg določa `docs/10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. M12 zadnji, M10.3 blokiran Q1. |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 361 datotek `.java` v `src/patch` (279 rework), 128 testnih datotek; zadnji JUnit rezultat 910 patched + 51 original testov. Package PASS: 1716 originalnih vnosov, 90 pričakovanih sprememb. |
+| Prevedljivih razredov | 362 datotek `.java` v `src/patch` (280 rework), 129 testnih datotek; zadnji JUnit rezultat 917 patched + 51 original testov. Package PASS: 1716 originalnih vnosov, 90 pričakovanih sprememb. |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in

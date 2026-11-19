@@ -295,7 +295,7 @@ the backup or set `RwReadableClones=0`, restart and explicitly save the loaded c
 format. Merely changing the switch leaves existing readable files in their current format.
 [Measured coverage and limits](meritve/2026-11-16-M16.6-berljivi-kloni.md).
 
-### Clone editing folders (M16.7c1)
+### Clone editing folders (M16.7c)
 
 Administrators with command permission level 4 can unpack a saved server clone or a live
 NPC into `customnpcs/creatures/<id>/`, edit it, and pack a new standalone clone:
@@ -323,9 +323,23 @@ Editing the same source differently in both `clone.json` and its extracted file 
 the whole import. A missing source, malformed UTF-8 or an ambiguous `creature.json`
 marker also refuses it. Pack follows `RwReadableClones=0/1` and verifies typed equality;
 if the legacy format cannot preserve a value, it refuses instead of losing data.
-To use edits, pack and place the resulting clone with the existing cloner or clone command.
-These editing folders do not yet appear in `/rwcreature list` or support direct
-reload/spawn/deploy; that is M16.7c2. [Evidence and limits](meritve/2026-11-19-M16.7c1-disk-ukazi.md).
+To archive edits, pack and place the resulting clone with the existing cloner or clone command.
+Editing folders also load at server startup and appear in `/rwcreature list`. For new
+live copies, enable `RwAnimCore=1` on the server and clients, then use:
+
+```text
+/rwcreature reload
+/rwcreature spawn my_knight
+```
+
+`/rwcreature deploy my_knight` reloads and then spawns in one command. Spawn/deploy accept
+optional `x y z` coordinates and use the existing creature command permissions. They keep
+the clone's script tabs, language, enabled state and rig. Existing NPCs keep their own
+clone data; edit/reload affects new copies. A bad reload keeps the entire previous revision;
+startup logs and skips a bad folder. Active rig dependencies and clips must be valid.
+The folder ID is not a new model ID. Clients receive model assets and NPC rig data, while
+scripts and the workspace stay on the server. Ordinary `creature.json` packs retain their
+existing behavior. [Live evidence and limits](meritve/2026-11-19-M16.7c2-ziva-mapa.md).
 
 ### Animated NPCs: models with bones (M16, `RwAnimCore=1`)
 
@@ -479,11 +493,12 @@ Not proven, so not claimed:
   with six reviewed PNGs on one RTX 3080 dev client. Full NPCs, layers, world lighting and shader/mod
   compatibility require the later M14 packages. A per-part VBO (M14.1b) was rejected: identical images, but idle-500 p95 10.0 → 18.7 ms ([evidence](meritve/2026-11-16-M14.1b-vbo.md)); instancing follows in M14.2.
   [Evidence and scope](meritve/2026-11-16-M14.1a-baseline.md).
-- **Clone editing folders (M16.7c1)** passed 178 checks on one dev dedicated server,
-  including Java/JS two-tab execution after restart; unit tests cover 89 clones and
-  invalid input. Direct workspace loading/spawn, client and integrated-server coverage
-  remain M16.7c2. No crash-transaction guarantee or bundled dependency export.
-  [Evidence and scope](meritve/2026-11-19-M16.7c1-disk-ukazi.md).
+- **Clone editing folders (M16.7c)**: c1 passed 178 disk/command checks; c2 passed 222
+  live checks on one dev dedicated server with two clients and a fresh restart client,
+  Java/JS two-tab execution, reload/deploy, invalid input and ordinary M15 regression.
+  Five screenshots reviewed; unit tests also cover 89 clones. Integrated/packaged c2
+  coverage, crash transactions and bundled dependency export remain unproven.
+  [Evidence and scope](meritve/2026-11-19-M16.7c2-ziva-mapa.md).
 - **Readable clones (M16.6)** passed 126 checks across four starts of one dev client/dedicated
   pair with `RwReadableClones=0/1/1/0` and `RwAnimCore=1`. Local/server saves, clone tab placement,
   commands, exact backup, script execution and restart passed. Unit tests cover 89 legacy clones,

@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5/M16.6/M16.7b, M14.3b1–b8 in M14.4a zaključeni (Q541). M14.4b privzeti vklop sprejet (Q545). M16.7c0 pogodba in c1 disk/ukazi zaključeni (Q550); naslednji c2 živa vključitev. Jeder M16/M15 ne podvajamo, M12 zadnji. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
+**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5/M16.6/M16.7b, M14.3b1–b8 in M14.4a zaključeni (Q541). M14.4b privzeti vklop sprejet (Q545). M16.7c0/c1/c2 zaključeni (Q554), živa mapa 222/222 s klientoma/restartom; naslednji M12.0 raziskava URL skinov. Jeder M16/M15 ne podvajamo, M12 zadnji. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -806,7 +806,7 @@ dotika):
 | M16.7b | **Sprejet 18. 11. (Q485, Q486):** `clone.json` mape bitja bere oba formata prek `ReadableCloneFiles.parse` (nalaganje in `/rwcreature spawn`); neznana verzija zavrne reload. Unit 880, build, package in `m167-creature-readable-v2` (29 preverb) PASS. [Zapis](meritve/2026-11-18-M16.7b-mapa-bitja.md). | S |
 | M16.7c0 | **Raziskava/pogodba zaključena 18. 11. (Q542–Q544, D-108):** [pogodba mape klona](raziskave/M16.7c0-pogodba-mape-klona.md). Običajni M15 spawn ni brezizgubni uvoz; ločen marker, tipni NBT, vse kartice/jeziki, točni UTF-8 nizi z inline rezervo, konfliktna pravila in varni zapisi. Produkcija/testi/odtis nespremenjeni; funkcija še ni izvedena | S |
 | M16.7c1 | **Sprejet 19. 11. (Q546–Q550):** [diskovni adapter/ukazi](meritve/2026-11-19-M16.7c1-disk-ukazi.md), korpus 89 v obeh formatih, 14 novih JUnit testov, unit/build/package PASS na `471bc049…`; dedicated v4 na `be9add35…` 178 preverb, Java/JS obe kartici pri 0/1 in po restartu. Produkcija/JUnit med odtisoma nespremenjena. Živa mapa do c2 še ni podprta | M |
-| M16.7c2 | **Naslednji:** marker mape v startup/reload/spawn/deploy brez ponastavitve kartic/jezika/riga; običajni M15 nespremenjen. Živ dokaz s klientom, reload/napaka/restart in nujna regresija po pogodbi §4. Celoten M16.7c sprejet šele po c1+c2 | M |
+| M16.7c2 | **Sprejet 19. 11. (Q554):** [živa mapa](meritve/2026-11-19-M16.7c2-ziva-mapa.md), marker v startup/reload/spawn/deploy, ohranjene kartice/jezik/rig; navadni M15 nespremenjen. Unit 917+51, build/package PASS; živi v2 na `5615bb49…` 222 preverb, dva klienta/restart, pet PNG pregledanih. Celoten M16.7c zaključen; naslednji M12.0 raziskava | M |
 
 Pod stikalom (novo, npr. `RwAnimCore`, privzeto 0); pravila Q407 (brez omejitve poskusov, testi po
 potrebi). M15 nato uporablja M16 namesto notranjosti `customnpcentities`.

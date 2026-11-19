@@ -22,6 +22,8 @@ import javax.imageio.stream.MemoryCacheImageInputStream;
 import noppes.npcs.CustomNpcs;
 import noppes.npcs.LogWriter;
 import noppes.npcs.rework.anim.ReloadCodec;
+import noppes.npcs.rework.data.CloneWorkspace;
+import net.minecraft.nbt.NBTTagCompound;
 import noppes.npcs.util.NBTJsonUtil;
 
 /** A server directory snapshot. The wire bundle contains only model, texture and animation data. */
@@ -37,11 +39,21 @@ public final class RigCreatureAssets {
     static final class Pack {
         final JsonObject config;
         final String clone;
+        private final NBTTagCompound workspace;
 
         Pack(JsonObject config, String clone) {
             this.config = config;
             this.clone = clone;
+            this.workspace = null;
         }
+
+        Pack(NBTTagCompound workspace) {
+            this.config = null;
+            this.clone = "";
+            this.workspace = workspace.copy();
+        }
+
+        NBTTagCompound workspace() { return workspace == null ? null : workspace.copy(); }
     }
 
     public static final class Snapshot {
@@ -121,20 +133,27 @@ public final class RigCreatureAssets {
         Map<String, byte[]> files = new TreeMap<>();
         Map<String, Pack> packs = new TreeMap<>();
         Map<String, RigModels.Model> models = new TreeMap<>();
+        Map<String, NBTTagCompound> workspaces = new TreeMap<>();
         int total = 4;
         try (java.nio.file.DirectoryStream<Path> dirs = Files.newDirectoryStream(root)) {
             List<Path> sorted = new ArrayList<>();
             for (Path dir : dirs) {
-                if (Files.isRegularFile(dir.resolve("creature.json"))) { sorted.add(dir); }
+                // Never discover staging folders or treat a workspace id as a model id.
+                if (!dir.getFileName().toString().startsWith(".") && (Files.exists(dir.resolve("creature.json"))
+                        || Files.exists(dir.resolve(CloneWorkspace.MARKER), java.nio.file.LinkOption.NOFOLLOW_LINKS))) { sorted.add(dir); }
             }
             Collections.sort(sorted);
             for (Path dir : sorted) {
                 String id = dir.getFileName().toString();
                 try {
-                    if (!RigModels.validId(id) || packs.size() == MAX_PACKS) {
+                    if (!RigModels.validId(id) || packs.size() + workspaces.size() == MAX_PACKS) {
                         throw new IllegalArgumentException("use a lowercase id and at most " + MAX_PACKS + " packs");
                     }
                     if (!dir.toRealPath().startsWith(root.toRealPath())) { throw new IOException("folder outside creatures"); }
+                    if (Files.exists(dir.resolve(CloneWorkspace.MARKER), java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+                        workspaces.put(id, CloneWorkspace.read(root, id));
+                        continue;
+                    }
                     JsonObject config = object(read(dir, "creature.json", MAX_JSON));
                     for (Map.Entry<String, JsonElement> field : config.entrySet()) {
                         if (!RIG_FIELDS.contains(field.getKey()) || field.getValue().isJsonNull()) {
@@ -203,7 +222,60 @@ public final class RigCreatureAssets {
                 }
             }
         }
+        // Resolve against the entire candidate revision, including models sorted after a workspace.
+        // Do not accidentally validate against a model removed from the current live revision.
+        for (Map.Entry<String, NBTTagCompound> entry : workspaces.entrySet()) {
+            try {
+                validateWorkspace(entry.getValue(), id -> models.containsKey(id) ? models.get(id) : RigModels.local(id));
+                packs.put(entry.getKey(), new Pack(entry.getValue()));
+            } catch (Exception error) {
+                String message = "RWRIG creature " + entry.getKey() + ": " + error.getMessage();
+                if (!startup) { throw new IOException(message, error); }
+                LogWriter.error(message);
+            }
+        }
         return new Snapshot(models, packs, ReloadCodec.encodeBundle(files));
+    }
+
+    /** Live validation only; disk roundtrips may preserve unknown models and invalid clip strings. */
+    static void validateWorkspace(NBTTagCompound clone, java.util.function.Function<String, RigModels.Model> resolve) {
+        RigData rig = RigData.read(clone);
+        NBTTagCompound raw = clone.getCompoundTag("RwRig");
+        String id = raw.getString("Model");
+        if (id.isEmpty()) { return; }
+        if (!RigModels.validId(id)) { throw new IllegalArgumentException("invalid workspace rig model " + id); }
+        RigModels.Model model = resolve.apply(id);
+        if (model == null || !model.errors.isEmpty()) { throw new IllegalArgumentException("missing or invalid workspace rig model " + id); }
+        if (raw.hasKey("Scale") && (!Float.isFinite(raw.getFloat("Scale")) || raw.getFloat("Scale") < 0.05F || raw.getFloat("Scale") > 20)) {
+            throw new IllegalArgumentException("workspace rig scale must be 0.05 to 20");
+        }
+        if (raw.getString("Clips").length() > RigData.MAX_CLIPS) { throw new IllegalArgumentException("workspace Clips exceeds " + RigData.MAX_CLIPS); }
+        if (raw.hasKey("Clips") && !raw.hasKey("Clips", 8)) { throw new IllegalArgumentException("workspace Clips must be text"); }
+        if (!rig.clips.trim().isEmpty()) {
+            JsonObject own = new JsonParser().parse(rig.clips).getAsJsonObject();
+            if (own.has("animations")) { own = own.getAsJsonObject("animations"); }
+            if (own == null) { throw new IllegalArgumentException("workspace animations must be an object"); }
+            for (Map.Entry<String, JsonElement> clip : own.entrySet()) {
+                if (!clip.getValue().isJsonObject()) { throw new IllegalArgumentException("workspace clip must be an object: " + clip.getKey()); }
+            }
+        }
+        List<String> errors = new ArrayList<>();
+        AnimLibrary library = AnimLibrary.merge(model.clips, rig.clips, errors);
+        if (!errors.isEmpty()) { throw new IllegalArgumentException(String.join(", ", errors)); }
+        // Check duration, event bounds and sampled vectors, also for the map-only clip form.
+        for (String name : library.clipNames()) {
+            AnimClip clip = library.clipOrNull(name);
+            if (name.length() > RigNet.MAX_NAME || !Float.isFinite(clip.length) || clip.length <= 0 || clip.length > 600 || !Float.isFinite(clip.stride)) {
+                throw new IllegalArgumentException("invalid workspace clip " + name);
+            }
+            for (AnimEvent event : clip.events) {
+                if (!Float.isFinite(event.time) || event.time < 0 || event.time > clip.length) { throw new IllegalArgumentException("event outside workspace clip " + name); }
+            }
+            clip.sample(0, new Pose());
+        }
+        for (String binding : new String[]{rig.idle, rig.walk, rig.hurt, rig.death}) {
+            if (!binding.isEmpty() && !library.has(binding)) { throw new IllegalArgumentException("no workspace clip '" + binding + "' (idle/walk/hurt/death)"); }
+        }
     }
 
     public static Snapshot decode(byte[] bundle) throws IOException {

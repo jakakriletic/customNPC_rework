@@ -2,11 +2,16 @@
 
 ## v2 development
 
+- M16.7c2 loads clone editing folders at startup and through `/rwcreature reload`.
+  Spawn/deploy preserve every script tab, language, enabled state and rig. Existing NPCs
+  keep their clone data; invalid reloads keep the previous revision. Ordinary M15 packs
+  retain their behavior. [Coverage and limits](meritve/2026-11-19-M16.7c2-ziva-mapa.md).
+
 - M16.7c1 adds administrator-only `/rwcreature unpack clone`, `unpack npc` and `pack`.
   Clone editing folders preserve typed settings, every script tab and exact animation text;
   conflicting edits or existing destinations are refused. Pack creates a standalone clone
-  in the configured readable or legacy format. Direct loading/spawning of editing folders
-  remains M16.7c2. [Coverage and limits](meritve/2026-11-19-M16.7c1-disk-ukazi.md).
+  in the configured readable or legacy format. Direct loading/spawning is provided by
+  M16.7c2 above. [Disk coverage and limits](meritve/2026-11-19-M16.7c1-disk-ukazi.md).
 
 - The mod jar ships the Logbreaker pack and installs it into `customnpcs/creatures/logbreaker`
   at server start when that folder is missing.

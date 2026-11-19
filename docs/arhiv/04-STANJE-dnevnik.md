@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 253 → 1)
+# Arhiv: dnevnik sej (vnosi 254 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,14 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-18 (254) — M14.4b: privzeti optimizacijski režimi
+
+**Paket:** M14.4b (Q545/D-109). Lastnik je po poročilu naročil privzeti vklop.
+Nove vrednosti: `RwNpcInstancing=1`, `RwLodStart=32`, `RwCombatEntryCap=64`.
+L1 poenostavi videz za pragom, combat cap skrajša zgodovino zadetkov. Obstoječe
+izrecne vrednosti configa imajo prednost. [Dokaz in meje](../meritve/2026-11-18-M14.4b-privzeti-rezimi.md).
+JUnit, build, paket, obe matriki, sled in oba klientska scenarija PASS.
 
 ### 2026-11-18 (253) — M16.7c0: pogodba mape klona
 

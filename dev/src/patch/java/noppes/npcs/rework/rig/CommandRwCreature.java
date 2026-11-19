@@ -103,15 +103,22 @@ public final class CommandRwCreature extends CommandBase {
         BlockPos pos = checkPosition(world, location);
         EntityCustomNpc npc = new EntityCustomNpc(world);
         try {
-            if (!pack.clone.isEmpty()) {
-                NBTTagCompound clone = noppes.npcs.rework.data.ReadableCloneFiles.parse(pack.clone);
-                ServerCloneController.Instance.cleanTags(clone);
-                npc.readFromNBT(clone);
-                npc.rwRig = new RigData();
+            NBTTagCompound workspace = pack.workspace();
+            if (workspace != null) {
+                // Copy from the accepted snapshot, never re-read files during spawn.
+                ServerCloneController.Instance.cleanTags(workspace);
+                npc.readFromNBT(workspace);
+            } else {
+                if (!pack.clone.isEmpty()) {
+                    NBTTagCompound clone = noppes.npcs.rework.data.ReadableCloneFiles.parse(pack.clone);
+                    ServerCloneController.Instance.cleanTags(clone);
+                    npc.readFromNBT(clone);
+                    npc.rwRig = new RigData();
+                }
+                if (pack.clone.isEmpty() && !pack.config.has("name")) { npc.display.setName(id); }
+                String[] problems = RigApi.applyPackage(npc.wrappedNPC, pack.config.toString());
+                if (problems.length > 0) { throw new IllegalArgumentException(String.join(", ", problems)); }
             }
-            if (pack.clone.isEmpty() && !pack.config.has("name")) { npc.display.setName(id); }
-            String[] problems = RigApi.applyPackage(npc.wrappedNPC, pack.config.toString());
-            if (problems.length > 0) { throw new IllegalArgumentException(String.join(", ", problems)); }
         } catch (Exception failure) {
             throw new CommandException("Invalid creature " + id + ": " + failure.getMessage());
         }

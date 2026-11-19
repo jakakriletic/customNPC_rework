@@ -41,7 +41,8 @@ public final class CloneWorkspace {
                     + "Keep the manifest and all listed files. Inline and external edits merge only when unambiguous; conflicting edits reject the entire import.\n"
                     + "To change tab structure, pack and unpack again. File extensions do not change ScriptLanguage.\n"
                     + "Includes, models, skins and libraries remain external dependencies. animations.json is the exact Clips string, not a validated animation library.\n"
-                    + "pack creates a new clone; it never overwrites this workspace or an existing clone. To use edits, pack and spawn the resulting clone.\n\n"
+                    + "pack creates a new clone; it never overwrites this workspace or an existing clone.\n"
+                    + "For new live copies, /rwcreature reload then spawn <id>, or deploy <id>. Existing NPCs keep their own clone data.\n\n"
                     + "Commands: /rwcreature unpack clone <tab> <id> <name...>; unpack npc <target> <id>; pack <id> <tab> <name...>\n\n");
             if (count != null) {
                 String ext = extension(expected);

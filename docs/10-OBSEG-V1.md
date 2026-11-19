@@ -179,6 +179,12 @@ odtisoma nespremenjena, Q90 brez ponavljanja. Naslednji **M16.7c2**: marker mape
 startup/reload/spawn/deploy, klient in nujna M15 regresija po pogodbi §4.
 Celoten M16.7c še odprt; M12 zadnji, M10.3 blokiran Q1. Privzetki enaki.
 
+**M16.7c2 sprejet (19. 11., Q554/D-108):** [živa urejevalna mapa](meritve/2026-11-19-M16.7c2-ziva-mapa.md).
+Živi v2 na `5615bb49…` 222/222, dva klienta/restart in pet pregledanih PNG;
+unit 917+51, build/package pokrivajo bajtno nespremenjene vhode (Q90).
+Celoten M16.7c zaključen, privzetki enaki. Naslednji **M12.0 raziskava URL skinov**,
+M10.3 blokiran Q1; Q90/Q92/Q407 ostajajo.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela

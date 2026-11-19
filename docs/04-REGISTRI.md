@@ -24,7 +24,8 @@ Prenos zgoraj je del obstoječe build osnove D-001. `NbtJson` je napisan na novo
 
 | Datum | Sprememba | Zahteva / bug | Stikalo | Privzeto |
 |---|---|---|---|---|
-| 2026-11-19 | Diskovna urejevalna mapa klona z vsemi karticami, točnim besedilom in konflikti; `/rwcreature unpack clone/npc` ter `pack` zahtevajo level 4 in nov cilj | R4, M16.7c1, Q550/D-108 | izrecni ukaz; pack sledi `RwReadableClones` | brez samodejnega nalaganja do c2; globalni privzetki enaki |
+| 2026-11-19 | Workspace marker v startup/reload/spawn/deploy; kopija združenega NBT ohrani vse kartice/jezik/enabled/rig, slab reload ohrani celotno prejšnjo revizijo, navadni M15 nespremenjen | R4, M16.7c2, Q554/D-108 | izrecna workspace mapa; obstoječi `RwAnimCore` | globalni privzetki enaki |
+| 2026-11-19 | Diskovna urejevalna mapa klona z vsemi karticami, točnim besedilom in konflikti; `/rwcreature unpack clone/npc` ter `pack` zahtevajo level 4 in nov cilj | R4, M16.7c1, Q550/D-108 | izrecni ukaz; pack sledi `RwReadableClones` | živo nalaganje dodano v c2; globalni privzetki enaki |
 | 2026-11-18 | Privzeti vklop optimizacij po naročilu lastnika. Izris navadnega modela v enem klicu, poenostavljene plasti L1 onkraj 32 blokov, največ 64 zadetkov v NPC-jevem combat trackerju | M14.4b, K5, M10.4, Q545/D-109 | `RwNpcInstancing`, `RwLodStart`, `RwCombatEntryCap` | **1 / 32 / 64** |
 | 2026-11-18 | NPC s CNPC MPM deli (noge, krila, rep, ušesa, prsi) gre na celoten originalni renderer; tuj renderer/model, Classic in 64×32 bitno originalni, pravi MPM izoliran; 34/34 preverb | R5, M14.3b7, Q529–Q532 | `RwNpcInstancing`, klient | **0** (originalni izris) |
 | 2026-11-18 | URL skin (`skinType=2`) ohrani celoten originalni renderer med prenosom, po uspehu in napaki; 14/14 preverb PNG/404, reference/GL in običajna obnova | R5, M14.3b6, Q527/Q528 | `RwNpcInstancing`, klient | **0** (originalni izris) |
@@ -119,6 +120,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-19 | M16.7c2: `clone-workspace-live-run.ps1`, dva klienta/restart, Java/JS, rig/brez/disabled in M15 regresija | V2 na `5615bb49…` 222/222, 51+31 strežniških in 20+20+12 klientskih preverb, pet pregledanih PNG; unit 917+51, build/package na `b6d0c4ea…`, bajtno isti vhodi razen sonde JS. Brez nove cene | [zapis](meritve/2026-11-19-M16.7c2-ziva-mapa.md) |
 | 2026-11-19 | M16.7c1: korpus/JUnit in dedicated `clone-workspace-run.ps1`, Java/JS dve kartici, formata 0/1/restart | Unit 910+51, build/package PASS na `471bc049…`; v4 na `be9add35…` 178 preverb, 35/35/13, nespremenjenih 41 datotek. Produkcija/JUnit med odtisoma enaka; unpack/merge 39,6724/23,4234 ms enkrat kot podatek | [zapis](meritve/2026-11-19-M16.7c1-disk-ukazi.md) |
 | 2026-11-18 | M14.4a: 3+3 idle/dalec-200/500, RwNpcInstancing 0/1 | Osem testov PASS na `6fd26ee4…`; idle-500 p95 9,9147 → 8,0180 ms (−19,13 %), razpona ločena, druge celice brez regresije p95. Stikalo 0; M14.4b čaka ogled lastnika | [zapis](meritve/2026-11-18-M14.4a-3plus3.md) |
 | 2026-11-18 | M14.3b6: pravi HTTP PNG/404, celoten renderer A/B/A2 in en idle-500 par | Vseh pet testov PASS na `2c433b7c…`, 14/14 preverb, 6 vrstic, 24 PNG; bitne URL rezerve in običajna obnova. P95 9,8663 → 8,2063 ms (−16,82 %), 895+51 JUnit/build/package; stikalo 0, širša matrika odprta | [zapis](meritve/2026-11-18-M14.3b6-url.md) |

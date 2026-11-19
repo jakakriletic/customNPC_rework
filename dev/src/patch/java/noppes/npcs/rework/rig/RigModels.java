@@ -143,6 +143,9 @@ public final class RigModels {
         return load(id, false);
     }
 
+    /** Local dependency lookup while a new creature revision is being prepared. */
+    static Model local(String id) { return validId(id) ? load(id, true) : null; }
+
     static boolean isBuiltIn(String id) {
         for (Object[] b : BUILT_IN) { if (b[0].equals(id)) { return true; } }
         return false;
