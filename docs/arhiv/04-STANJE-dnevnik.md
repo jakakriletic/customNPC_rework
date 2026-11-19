@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 254 → 1)
+# Arhiv: dnevnik sej (vnosi 255 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,20 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-19 (255) — M16.7c1: disk/ukazi sprejeti
+
+**Paket:** M16.7c1 (Q546–Q550/D-108) · **Stanje:** sprejet.
+Tipni adapter z vsemi karticami, točnim UTF-8, konflikti in no-clobber objavo;
+trije administratorski ukazi level 4. Unit/build/package PASS na `471bc049…`,
+910+51 JUnit (14 novih), korpus 89; unpack/merge 39,6724/23,4234 ms enkrat kot podatek.
+Dedicated v4 PASS na `be9add35…`: 178 preverb, fazi 0/1 po 35/35 in restart 13/13,
+Java/JS obe kartici delujeta, 41 datotek nespremenjenih. V1–v3 ostanejo zavrnjeni:
+priprava ticking pogoja, Nashorn permission adapter in PowerShell scalar/array;
+popravljen samo harness, produkcija/JUnit med odtisoma nespremenjena (Q90).
+Zaključena dokumentacija za commit/push samo c1. Naslednji c2 živa vključitev;
+celoten M16.7c ostaja odprt, privzeti režimi nespremenjeni.
+[Merila in meje](../meritve/2026-11-19-M16.7c1-disk-ukazi.md).
 
 ### 2026-11-18 (254) — M14.4b: privzeti optimizacijski režimi
 

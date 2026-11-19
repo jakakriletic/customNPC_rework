@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5/M16.6/M16.7b, M14.3b1–b8 in M14.4a zaključeni (Q541). M14.4b privzeti vklop sprejet (Q545). M16.7c0/c1/c2 zaključeni (Q554), živa mapa 222/222 s klientoma/restartom; naslednji M12.0 raziskava URL skinov. Jeder M16/M15 ne podvajamo, M12 zadnji. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
+**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5/M16.6/M16.7b, M14.3b1–b8 in M14.4a zaključeni (Q541). M14.4b privzeti vklop sprejet (Q545). M16.7c0/c1/c2 zaključeni (Q554), živa mapa 222/222 s klientoma/restartom; M12.0 raziskava zaključena (Q555–Q558/D-110), naslednji M12.1 harness/baseline originala. Jeder M16/M15 ne podvajamo, M12 zadnji. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -653,25 +653,36 @@ omejena (2048×2048 ≈ 16 MiB GPU + 16 MiB kopa); `BufferedImage` po nalaganju 
 pomnilniku; skinType 1 brez tekstur vsako sličico znova kliče `loadSkinFromCache`. Atlas skinov
 za bližnje NPC-je je zavržen (K13, D-053); M5-V.7 peka impostorja že čaka na prenos URL skina.
 
-**Vhodni pogoj:** M12.0 raziskava; prizorišče z URL skini (lokalni strežnik skinov iz M5-V.7,
+**Raziskava M12.0 zaključena (19. 11., Q555–Q558/D-110):**
+[koda, dokazi in pogodba](raziskave/M12.0-url-skini.md). Deduplikacija že obstaja;
+vanilla profilni cache ni izvajalec URL prenosov. Parser zadrži raster tudi po odpustu
+slike, zato sta reload/delete in pozni uspeh po 30 s peke del izvedbene pogodbe.
+Številčne meje v raziskavi so predlogi, ne meritve ali že delujoča varovala.
+
+**Vhodni pogoj:** M12.0 raziskava zaključena; prizorišče z URL skini (lokalni strežnik skinov iz M5-V.7,
 `k-run.ps1 -Posebni 1`) razširjeno na mnogo različnih URL-jev.
 
 ### Paketi
 
 | ID | Paket | Vel. |
 |---|---|---|
-| M12.0 | Raziskava izvedbe (D-029): ponovno branje poti `RenderNPCInterface.getEntityTexture` → `ImageDownloadAlt`, vanilla `SkinManager`, interakcija z impostorji (M5-V.7 `SkinDownload`) in `customNPC_entities_mod` | S |
-| M12.1 | Scenarij in baseline: 50/200/500 NPC-jev z različnimi URL-ji, tudi počasen, mrtev in prevelik URL; veličine: niti, čas do prikaza vseh skinov, zatikanje sličic ob nalaganju na GPU, pomnilnik (kopa + GPU) | S |
-| M12.2 | Omejen izvajalec prenosov s timeouti in ponovitvijo z zamikom; identične sočasne zahteve združene; napaka → privzeti skin brez zastoja | S–M |
-| M12.3 | Diskovni predpomnilnik URL skinov (ključ md5 URL-ja, veljavnost/ETag, varno ob pokvarjeni datoteki) | M |
-| M12.4 | Omejitev velikosti slike in sprostitev `BufferedImage` po nalaganju na GPU; razporeditev nalaganj na GPU čez več sličic | S |
-| M12.5 | skinType 1: oznaka »ni na voljo, poskusi ob ticku T« namesto klica vsako sličico | S |
+| ~~M12.0~~ | **Raziskava zaključena** (D-110): lokalna koda/bajtkoda, dosedanji dokazi, primarni zunanji viri in kritika vseh paketov; brez produkcije ali novih meritev | S |
+| M12.1 | **Naslednji: harness/baseline** 50/200/500 različnih URL-jev in 500 enakih; uspeh, počasne/mrtve/prevelike poti ločeno. Izolirana fixture in klient, čas do GPU prikaza, niti/HTTP/heap/ocena GPU, frame p50/p95/p99/max in >50 ms; občutljivost na omejitve originala, pogodba v raziskavi §5 | S |
+| M12.2 | `RwSkinPipeline=0`: omejeni delavci, vrsta in pošten sprejem, timeout/celotni rok/retry, varna objava/generacije. Že prvi loader omeji bajte in dimenzije **pred decode** ter skupne ready/decode bajte; nujna povezava pending/pozni uspeh L2/L3 in M16, brez nove niti ob zavrnitvi vrste | M |
+| M12.3 | Asinhron diskovni cache: SHA-256 točnih URL bajtov, obstoječi MD5 ResourceLocation ostane. Svežina/ETag/304/no-store, meja diska, varni zapisi, pokvarjen/nepisljiv disk in restart; omrežni fallback | M |
+| M12.4 | Dopolni omejene GPU uploade, odpusti **vse** CPU kopije vključno s parserjem; preveri delete/reload/disconnect in ponavljajoč življenjski cikel. Velikostna varovala so že v M12.2 | S–M |
+| M12.5 | `RwSkinProfileCache=0`: negative cache in invalidacija profila, dejanski ponovni poskus ≤15 s (upoštevaj vanilla `expireAfterAccess`); izmeri sinhroni miss, brez menjave downloaderja vseh igralcev | S–M |
+| M12.6 | Končni sprejem na zapakiranem Forge klientu: datoteka/URL/profil, L2/L3, M16 player rig, reload/restart in OptiFine brez/z BSL; potrebne regresije trenutne kode, Q90 | S–M |
 
 Vse pod stikali, privzeto original; privzeti vklop po D-032 (dokazano enako + izmerjeno hitreje).
 
-**Izhodni kriterij:** na scenariju M12.1 brez visečih niti ob mrtvem URL-ju, ponovni zagon klienta
-ne prenese že shranjenih skinov, prevelik skin ne preseže omejitve, zatikanje ob nalaganju
-izmerjeno proti originalu (3 ponovitve, D-016); prikaz skinov enak originalu.
+**Izhodni kriterij:** nova pot na scenarijih M12.1 dokaže omejene vire in konec mrtvih HTTP povezav, sprejem vseh
+dovoljenih URL-jev brez stradanja, mejo pred decode, enak prikaz dovoljenih skinov in pravo
+pozno peko L2/L3. Svež dovoljen diskovni vnos po restartu ne prenese telesa; pretečen/no-cache
+se preveri, no-store se ne shrani. Reload ne izgubi skina in ne zadrži CPU kopij. Zatikanje
+se izmeri proti originalu; za privzeto 0 en cenovni par kot podatek (Q92), 3+3 in D-032
+šele za predlagan privzeti vklop. DNS omejitve JDK8 se ločeno zapišejo, ne prikrijejo.
+Celoten M12 ostaja odprt; podrobna pogodba in meje so v raziskavi §4–§5.
 
 ---
 

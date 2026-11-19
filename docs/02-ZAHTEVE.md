@@ -617,6 +617,21 @@ oktobrski p95 9,817 ms in cena impostorja nista absolutna cilja. Pragovi in doka
 so v raziskavi §5. Izrecna odobritev lastnika nadomesti čakanje na ogled iz Q539.
 K13 samostojno ni odprt.
 
+### URL skini (M12, raziskava 19. 11. 2026)
+
+[M12.0](raziskave/M12.0-url-skini.md) (Q555–Q558/D-110) je raziskava, ne izvedba.
+Isti URL je že dedupliciran v `TextureManager`; cilj je omejiti sočasne prenose,
+čakanje, prebrane bajte in dimenzije pred dekodiranjem ter zadržane CPU kopije.
+Klientska pot `RwSkinPipeline=0` mora ohraniti original pri 0 in enak prikaz dovoljenih
+slik pri 1. Diskovni cache upošteva svežino/validatorje/no-store; ponovni zagon ne
+prenaša svežega dovoljenega vnosa. Upošteva reload/delete in pozni uspeh po 30 s
+čakanja impostorja; M16 player rig dobi isti skin, M14 URL guard ostane.
+Profilni cache `RwSkinProfileCache=0` je ločen: vanilla miss lahko sinhrono pridobi
+teksture, prazni rezultat pa se z `expireAfterAccess` ob dostopih ne izteče.
+Naslednji M12.1 naj najprej izmeri original 50/200/500 različnih in 500 istih URL-jev
+ter občutljivost na napake. Meje so predlogi do zamrznjene merilne pogodbe; novih
+meritev ali dokaza pospešitve še ni. Stikali ostaneta 0 do ločenega sprejema D-032.
+
 ### Izrecno prepovedano brez ločenega projekta
 
 Večnitni AI, deljen script engine med NPC-ji, globalno redkejši NPC tick, uspavanje

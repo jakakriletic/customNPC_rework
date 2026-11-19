@@ -1163,3 +1163,18 @@ napadalca in sporočilu ob smrti). Za L1 to nadomesti privzetek iz D-039.
 `RwFarView=2` in sprejete optimizacije M5 so že privzeto vključene. Baritone
 je izbirni navigator z dodatno pomnilniško ceno, `RwFarShaders=0` pa ohranja
 varno združljivost s senčilniki. Izrecne vrednosti obstoječih konfiguracij se upoštevajo.
+
+### D-110 — M12: omejena klientska pot URL skinov (2026-11-19, Q555–Q558)
+
+Pogodba za izvedbo, brez spremembe produkcije: `rework/skin` pod `RwSkinPipeline=0`,
+legacy pot pri 0 ostane. Isti URL je že dedupliciran; novi loader omeji delavce,
+vrsto/sprejem, čas HTTP poskusa, bajte/dimenzije pred decode in skupne ready bajte.
+Omejitev slike je del prvega loaderja, ne kasnejši popravek. Asinhron diskovni cache
+uporabi SHA-256 točnih URL bajtov, veljavnost/validatorje/no-store in varno objavo;
+obstoječi MD5 ResourceLocation, NBT in packet ID-ji ostanejo. GPU upload je izključno
+na render niti, z generacijami, odpustom parserjevega rastra in pogodbo reload/delete.
+L2/L3 dobi tipizirano pending stanje in ponovno peko po poznem uspehu; M14 URL
+guard ostane. Profilna optimizacija je ločena pod `RwSkinProfileCache=0`.
+Najprej M12.1 baseline originala, nato M12.2–M12.6; brez trditve hitrosti ali
+zagotovljene prekinitve OS DNS klica. Privzeti vklop zahteva ločen D-032 sprejem.
+[Dokazi, kritika plana in merila](raziskave/M12.0-url-skini.md).

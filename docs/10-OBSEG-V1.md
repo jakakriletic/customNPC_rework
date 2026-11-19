@@ -185,6 +185,14 @@ unit 917+51, build/package pokrivajo bajtno nespremenjene vhode (Q90).
 Celoten M16.7c zaključen, privzetki enaki. Naslednji **M12.0 raziskava URL skinov**,
 M10.3 blokiran Q1; Q90/Q92/Q407 ostajajo.
 
+**M12.0 zaključeno (19. 11., Q555–Q558/D-110):**
+[raziskava URL skinov](raziskave/M12.0-url-skini.md), samo dokumentacija na
+nespremenjenem `5615bb49…`; brez novih testov ali meritev. Naslednji **M12.1
+harness/baseline originala**, nato omejen loader z velikostnimi varovali od začetka,
+cache, življenjski cikel, profil in končni zapakirani sprejem M12.6. Stikali
+`RwSkinPipeline`/`RwSkinProfileCache` sta predlog, privzeto 0; sedanji privzetki
+ostanejo. Celoten M12 odprt; M10.3 blokiran Q1, Q90/Q92/Q407 veljajo.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela

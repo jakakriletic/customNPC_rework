@@ -12,6 +12,12 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**19. 11. — M12.0 raziskava zaključena (Q555–Q558/D-110).** Preverjen preostali
+osnutek proti kodi/bajtkodi in primarnim virom; pogodba omejenega loaderja/cache-a,
+reload/delete in pozne peke. Samo dokumentacija na nespremenjenem `5615bb49…`, brez
+novih testov ali meritev. Naslednji M12.1 harness/baseline originalne URL poti;
+izvedba M12 še odprta. [Raziskava in merila](raziskave/M12.0-url-skini.md).
+
 **19. 11. — M16.7c2 sprejet (Q551–Q554/D-108).** Marker v startup/reload,
 kopija združenega NBT pri spawn/deploy; kartice/jezik/rig ohranjeni, M15 nespremenjen.
 Živi v2 na `5615bb49…` 222/222, dva klienta/restart, pet PNG pregledanih.
@@ -176,9 +182,9 @@ teksture in klipov klientom ter izbira modela v Display. [Zapis](meritve/2026-11
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-19** (seja 256) — M16.7c2 sprejet: živi v2 222/222 na `5615bb49…`, pet PNG pregledanih. Unit/build/package dokazani na bajtno istih vhodih razen sonde JS (Q554/Q90); celoten M16.7c zaključen. [Dokaz](meritve/2026-11-19-M16.7c2-ziva-mapa.md). |
-| Trenutni milestone | **M16.7c zaključen.** C1 disk/ukazi in c2 živa vključitev sprejeta; M14.4b sprejet, privzetki enaki. |
-| Naslednji paketi | **M12.0 raziskava URL skinov** po D-029; pred izvedbo preberi kodo, dosedanje meritve in zunanje primarne vire. M12 zadnji, M10.3 blokiran Q1. Q90/Q92: brez ponavljanja uspešnih nespremenjenih serij, pri privzeto 0 cena samo podatek, kratek zapis; obseg `10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
+| Zadnja posodobitev | **2026-11-19** (seja 257) — M12.0 raziskava zaključena: preverjena koda/bajtkoda, primarni viri in popravljene premise plana (Q555–Q558/D-110). Samo dokumentacija; produkcija/testni vhodi in `5615bb49…` nespremenjeni, brez novih meritev. [Pogodba in meje](raziskave/M12.0-url-skini.md). |
+| Trenutni milestone | **M12.0 zaključen; izvedba M12 še odprta.** M16.7c in M14.4b sprejeta, privzetki enaki. |
+| Naslednji paketi | **M12.1 harness/baseline originalne URL poti**, 50/200/500 različnih in 500 istih po raziskavi §5. Novi scenarijski ID-ji, samo controller zaganja. M12 zadnji, M10.3 blokiran Q1. Q90/Q92: brez ponavljanja uspešnih nespremenjenih serij, pri privzeto 0 cena samo podatek, kratek zapis; obseg `10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
 | Prevedljivih razredov | **362** datotek `.java` v `src/patch`, od tega **280** rework. Build/package M16.7c2 PASS, 90 pričakovanih sprememb. |
 | Testi | **917** patched + **51** original testov v M16.7c2 JUnit rezultatu, **129** testnih datotek. |
@@ -209,8 +215,9 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M10 Release | **M10.1c primerjalno, M10.5 rollback in M10.2 baseline sprejeti** (Q225/Q236/Q242) | [M10.2](meritve/2026-10-30-M10.2-baseline.md) 9/9 brez alarma p95; [M10.5](meritve/2026-10-30-M10.5-rollback.md) 58/58, obnova 42 datotek; IN3/IA3/IS3/IL5/IL6 delni, M10.1a/b brez sprejema, M10.1d kot [P2 zelen](meritve/2026-10-30-P2-klientska-matrika.md) (Q436); celoten release odprt. M10.4 soak v2 (Q240). [M10.6](meritve/2026-10-30-M10.6-dokumentacija.md) dokumentacija zaključena (Q244). [M10.7](meritve/2026-10-30-M10.7-changelog.md) changelog zaključen (Q246). Obseg v1 izčrpan; M10.3/IO4 blokirana (Q1) |
 | M11 Poveljevanje prek zemljevida | **M11.11 sprejet** (`freeforall`) | 199/199 razmetanih skozi progo z grlom po restartu, zaprti član edini blokiran ([zapis](meritve/2026-11-11-M11.11-freeforall.md)); Xaero v0.1.10 nameščen. M11.5 sprejet po Q407. Celoten izhod M11 (200 skozi nenaložen svet in živa mapa) ostaja nepokrit. |
 | M13 Povezani NPC-ji | **M13.0–M13.5 zaključeni pod stikali** (v2, Q433) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun, GUI, seznam palice, kloner (`RwLinkedGroups`); obe stikali privzeto 0. [M13.5](meritve/2026-11-04-M13.5-sto.md): 100 z eno izbiro in sprememba do vseh. Izhod pokrit z ločenimi scenariji, ne z enim skupnim. |
-| M16 Vgrajeno animacijsko jedro | **M16.7c zaključen** (Q554/D-108) | C1 disk/ukazi sprejet; [c2 živa mapa](meritve/2026-11-19-M16.7c2-ziva-mapa.md) 222/222, dva klienta/restart, pet PNG. Unit 917+51, build/package PASS; naslednji M12.0, privzetki nespremenjeni. |
+| M16 Vgrajeno animacijsko jedro | **M16.7c zaključen** (Q554/D-108) | C1 disk/ukazi sprejet; [c2 živa mapa](meritve/2026-11-19-M16.7c2-ziva-mapa.md) 222/222, dva klienta/restart, pet PNG. Unit 917+51, build/package PASS; privzetki nespremenjeni. |
 | M14 Izris bližnjih NPC-jev | **M14.4b sprejet** (Q545) | `RwNpcInstancing=1`. [3+3 dokaz](meritve/2026-11-18-M14.4a-3plus3.md): idle-500 p95 −19,13 %, ločena razpona, brez regresije p95 drugje. [Zaključna regresija](meritve/2026-11-18-M14.4b-privzeti-rezimi.md). |
+| M12 URL skini | **M12.0 raziskava zaključena** (Q555–Q558/D-110) | [Koda, pogodba in merila](raziskave/M12.0-url-skini.md); naslednji M12.1 baseline. Izvedba in celoten izhod ostajata odprta. |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -220,7 +227,18 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 254 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 255 → 1, novejši zgoraj).*
+
+### 2026-11-19 (257) — M12.0: raziskava URL skinov
+
+**Paket:** M12.0 (Q555–Q558/D-110) · **Stanje:** raziskava zaključena.
+Preverjen osnutek po prekinitvi, koda/originalna bajtkoda, vanilla/Forge in primarni
+spletni viri; omejen loader s predhodnim preverjanjem slike, asinhron cache,
+reload/delete in pozni uspeh L2/L3. Popravljeni vsi paketi in izhodna merila.
+Samo dokumentacija, produkcija/testni vhodi in `5615bb49…` nespremenjeni;
+brez novih testov, builda ali meritev (Q90), noben zahtevani test ne čaka.
+Privzetki enaki. Naslednji M12.1 harness/baseline originala; celoten M12 ostaja
+odprt, M10.3 blokiran Q1. [Raziskava in meje](raziskave/M12.0-url-skini.md).
 
 ### 2026-11-19 (256) — M16.7c2: živa mapa sprejeta
 
@@ -232,18 +250,4 @@ rekonstruiran stari odtis: vsi drugi merjeni vhodi bajtno isti (Q90). V1 ostane 
 zaradi testnega JSON, popravljen samo probe. Dokumentacija zaključena za commit/push
 samo c2; tuje datoteke ohranjene. Celoten M16.7c zaključen; naslednji M12.0 raziskava,
 M10.3 blokiran Q1. [Dokaz in meje](meritve/2026-11-19-M16.7c2-ziva-mapa.md).
-
-### 2026-11-19 (255) — M16.7c1: disk/ukazi sprejeti
-
-**Paket:** M16.7c1 (Q546–Q550/D-108) · **Stanje:** sprejet.
-Tipni adapter z vsemi karticami, točnim UTF-8, konflikti in no-clobber objavo;
-trije administratorski ukazi level 4. Unit/build/package PASS na `471bc049…`,
-910+51 JUnit (14 novih), korpus 89; unpack/merge 39,6724/23,4234 ms enkrat kot podatek.
-Dedicated v4 PASS na `be9add35…`: 178 preverb, fazi 0/1 po 35/35 in restart 13/13,
-Java/JS obe kartici delujeta, 41 datotek nespremenjenih. V1–v3 ostanejo zavrnjeni:
-priprava ticking pogoja, Nashorn permission adapter in PowerShell scalar/array;
-popravljen samo harness, produkcija/JUnit med odtisoma nespremenjena (Q90).
-Zaključena dokumentacija za commit/push samo c1. Naslednji c2 živa vključitev;
-celoten M16.7c ostaja odprt, privzeti režimi nespremenjeni.
-[Merila in meje](meritve/2026-11-19-M16.7c1-disk-ukazi.md).
 
