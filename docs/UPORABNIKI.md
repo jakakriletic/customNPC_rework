@@ -295,6 +295,38 @@ the backup or set `RwReadableClones=0`, restart and explicitly save the loaded c
 format. Merely changing the switch leaves existing readable files in their current format.
 [Measured coverage and limits](meritve/2026-11-16-M16.6-berljivi-kloni.md).
 
+### Clone editing folders (M16.7c1)
+
+Administrators with command permission level 4 can unpack a saved server clone or a live
+NPC into `customnpcs/creatures/<id>/`, edit it, and pack a new standalone clone:
+
+```text
+/rwcreature unpack clone 1 my_knight Original Knight
+/rwcreature unpack npc <NPC-UUID> captured_knight
+/rwcreature pack my_knight 1 Edited Knight
+```
+
+The clone tab is 1–9; clone names may contain spaces. Use a new lowercase folder ID
+(letters, digits or underscores, at most 48 characters) and a new destination clone name.
+Existing folders and clones are never overwritten. The live capture uses normal clone
+cleanup on a copy and leaves the NPC unchanged.
+
+Edit settings in `clone.json`, the first script tab in `script.java`, `script.js` or
+`script.txt`, and later tabs in `scripts/tab-0002.<extension>`, etc. `animations.json`
+contains the exact rig Clips text when present. Keep `clone-workspace.json` and every
+file it lists; `WORKSPACE.md` explains the mapping and any strings kept inline.
+Language, script enabled state, includes and other fields stay in the clone. Includes,
+models and skins remain external dependencies. Changing an extension does not change
+the language. Preserve tab structure; pack and unpack again before restructuring tabs.
+
+Editing the same source differently in both `clone.json` and its extracted file refuses
+the whole import. A missing source, malformed UTF-8 or an ambiguous `creature.json`
+marker also refuses it. Pack follows `RwReadableClones=0/1` and verifies typed equality;
+if the legacy format cannot preserve a value, it refuses instead of losing data.
+To use edits, pack and place the resulting clone with the existing cloner or clone command.
+These editing folders do not yet appear in `/rwcreature list` or support direct
+reload/spawn/deploy; that is M16.7c2. [Evidence and limits](meritve/2026-11-19-M16.7c1-disk-ukazi.md).
+
 ### Animated NPCs: models with bones (M16, `RwAnimCore=1`)
 
 Set `RwAnimCore=1` on the server **and** every client. Then any NPC can wear a model with bones
@@ -447,6 +479,11 @@ Not proven, so not claimed:
   with six reviewed PNGs on one RTX 3080 dev client. Full NPCs, layers, world lighting and shader/mod
   compatibility require the later M14 packages. A per-part VBO (M14.1b) was rejected: identical images, but idle-500 p95 10.0 → 18.7 ms ([evidence](meritve/2026-11-16-M14.1b-vbo.md)); instancing follows in M14.2.
   [Evidence and scope](meritve/2026-11-16-M14.1a-baseline.md).
+- **Clone editing folders (M16.7c1)** passed 178 checks on one dev dedicated server,
+  including Java/JS two-tab execution after restart; unit tests cover 89 clones and
+  invalid input. Direct workspace loading/spawn, client and integrated-server coverage
+  remain M16.7c2. No crash-transaction guarantee or bundled dependency export.
+  [Evidence and scope](meritve/2026-11-19-M16.7c1-disk-ukazi.md).
 - **Readable clones (M16.6)** passed 126 checks across four starts of one dev client/dedicated
   pair with `RwReadableClones=0/1/1/0` and `RwAnimCore=1`. Local/server saves, clone tab placement,
   commands, exact backup, script execution and restart passed. Unit tests cover 89 legacy clones,

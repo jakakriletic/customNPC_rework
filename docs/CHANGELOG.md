@@ -2,6 +2,12 @@
 
 ## v2 development
 
+- M16.7c1 adds administrator-only `/rwcreature unpack clone`, `unpack npc` and `pack`.
+  Clone editing folders preserve typed settings, every script tab and exact animation text;
+  conflicting edits or existing destinations are refused. Pack creates a standalone clone
+  in the configured readable or legacy format. Direct loading/spawning of editing folders
+  remains M16.7c2. [Coverage and limits](meritve/2026-11-19-M16.7c1-disk-ukazi.md).
+
 - The mod jar ships the Logbreaker pack and installs it into `customnpcs/creatures/logbreaker`
   at server start when that folder is missing.
 - Logbreaker is now a hunched masked giant in dark iron and striped wraps. He carries a round

@@ -172,6 +172,13 @@ M12 zadnji, M10.3 blokiran Q1. Q90/Q92/Q407 ostajajo.
 `RwNpcInstancing=1`, `RwLodStart=32`, `RwCombatEntryCap=64`.
 M5.Z in skupna klientska preverba PASS. [Regresija in meje](meritve/2026-11-18-M14.4b-privzeti-rezimi.md).
 
+**M16.7c1 sprejet (19. 11., Q546–Q550/D-108):** [diskovni adapter in ukazi](meritve/2026-11-19-M16.7c1-disk-ukazi.md).
+Unit 910+51, build/package PASS na `471bc049…`; dedicated v4 na `be9add35…` potrdi
+178 preverb z obema karticama Java/JS pri 0/1 in po restartu. Produkcija/JUnit med
+odtisoma nespremenjena, Q90 brez ponavljanja. Naslednji **M16.7c2**: marker mape v
+startup/reload/spawn/deploy, klient in nujna M15 regresija po pogodbi §4.
+Celoten M16.7c še odprt; M12 zadnji, M10.3 blokiran Q1. Privzetki enaki.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela

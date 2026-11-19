@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 252 → 1)
+# Arhiv: dnevnik sej (vnosi 253 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,17 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-18 (253) — M16.7c0: pogodba mape klona
+
+**Paket:** M16.7c0 (Q542–Q544, D-108) · **Stanje:** raziskava zaključena, izvedba odprta.
+Obstoječi M15 spawn ponastavi rig in prepiše vse skripte v ECMAScript; neposredno
+razpakiranje prve kartice zato ne izpolni tipnega roundtripa. Določeni ločen marker,
+vse kartice/jeziki, točni izvlečki z inline rezervo, konfliktna pravila in varni novi cilji.
+Zamrznjena merila korpusa ≥89, negativnih primerov, pravih ukazov ter živega reload/spawn.
+Produkcija/testi/pogoji in controller odtis `6fd26ee4…` nespremenjeni, brez novih zagonov
+ali meritev (Q90). Naslednji c1 disk/ukazi, nato c2 živa vključitev; celoten M16.7c še ni
+izveden. M14.4b še čaka ogled lastnika. [Pogodba, viri in meje](../raziskave/M16.7c0-pogodba-mape-klona.md).
 
 ### 2026-11-18 (252) — M14.4a: meritev 3+3 sprejeta
 
