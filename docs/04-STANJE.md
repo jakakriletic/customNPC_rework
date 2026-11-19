@@ -14,8 +14,10 @@ odprta vprašanja in odprti pojavi.
 
 **19. 11. — Logbreaker po lastnikovi referenci.** Model prerisan v sključenega velikana
 v železni maski z rešetko, s temnimi naramniki, povoji s sivo-modrimi pasovi, bledimi
-pestmi in debelim temnim hlodom z modrimi obroči, ki leži poševno čez desno ramo.
-Kosti, napad in udarec ostanejo. Preverjeno v predogledu rig rendererja in z
+pestmi in masivnim temnim hlodom z modrimi obroči (debelejši od glave, 6,6 bloka),
+ki leži poševno nad desno ramo. `log_slam` je zdaj z obema rokama: leva pest je v
+vsaki fazi postavljena na ročaj hloda (iskalnik v `build_logbreaker.py`). Območje škode
+pokrije hlod od nog do konice. Preverjeno v predogledu rig rendererja in z
 validacijo UV. V živem klientu še ni bilo preverjeno.
 
 **18. 11. — Logbreaker.** Ločen paket človeškega galskega bojevnika s hlodom na rami

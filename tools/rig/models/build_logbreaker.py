@@ -17,14 +17,34 @@ from build_troll import BONES, MATERIALS
 from geobuild import ROOT, box, build, mirror_box
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "anim"))
-from compile import Library, compile_doc, load_yaml  # noqa: E402
+from compile import Library, beat_values, channels_to_pose, compile_doc, load_yaml  # noqa: E402
 from preview import Scene, render_sheet  # noqa: E402
 from rig import Clip, RigConfig  # noqa: E402
 
 
 PACK = ROOT / "rig_src/examples/creatures/logbreaker"
 IMPACT = 1.25
-LOG_TIP = [-23, 19, -60]
+LOG_TIP = [-23, 19, -106]
+FIST_L = (23, 19.5, -2)       # centre of the left fist in its bind pose
+GRIP_L = (-23, 19.5, -19)     # where the left fist holds the log, in the log's bind frame
+LEFT_ARM = ("arm_l.raise", "arm_l.out", "arm_l.swing", "elbow_l.bend", "wrist_l.bend", "wrist_l.in")
+
+# Two-handed overhead slam. The right arm drives the log; the left arm is solved onto
+# the grip (two_hand) so both fists hold the log through the whole swing.
+CENTER = {"tip": "hand_r", "using": "arm_r.out", "side": .1}   # right fist to the middle
+SLAM_POSES = {
+    "lb_grab": {"base": "stand", "torso.bend": 6, "head.nod": -18, "arm_r.raise": 120,
+                "elbow_r.bend": 70, "wrist_r.bend": -30, "solve": [CENTER]},
+    "lb_windup": {"base": "pound_windup", "torso.bend": -22, "arm_r.raise": 172,
+                  "elbow_r.bend": 48, "wrist_r.bend": -45, "wrist_r.in": 0, "solve": [CENTER]},
+    "lb_swing": {"base": "pound_windup", "torso.bend": 20, "head.nod": -6, "arm_r.raise": 125,
+                 "elbow_r.bend": 18, "wrist_r.bend": -20, "wrist_r.in": 0,
+                 "knee_r.bend": 26, "knee_l.bend": 26, "leg_r.raise": 14, "leg_l.raise": 14,
+                 "solve": [CENTER]},
+    "lb_hit": {"base": "pound_hit", "arm_r.raise": 70, "arm_r.out": 0, "elbow_r.bend": 4, "wrist_r.in": 0,
+               "solve": [{"tip": "hand_r", "using": "arm_r.swing", "side": .1},
+                         {"tip": "club", "using": "wrist_r.bend", "height": 0.15}]},
+}
 
 # Log on the right shoulder: fist up in front of the shoulder, log slanting back and up
 # behind the head (as in the reference).
@@ -131,18 +151,25 @@ def log_bark(img, face):
 
 
 def log():
-    """Huge rough log along -z from the fist (grip at z ~ -1.5), blue iron bands."""
+    """Massive log along -z from the fists: a trimmed grip end both fists can hold
+    (right fist at z ~ -2, left at GRIP_L), then a trunk thicker than his head."""
     return [
-        box((-30.5, 11.5, -60), (15, 15, 72), "log", .5, tag="bark"),
-        box((-29.5, 10.5, -59.5), (13, 17, 71), "log", .5, tag="bark"),
-        box((-28.5, 12.5, -60.6), (11, 13, 1), "log_end", 1, tag="rings"),
-        box((-28.5, 12.5, 11.6), (11, 13, 1), "log_end", 1, tag="rings"),
-        box((-31.2, 10.8, -51), (16.4, 16.4, 4), "band", 1),
-        box((-31.2, 10.8, -27), (16.4, 16.4, 3), "band", 1),
-        box((-31.2, 10.8, 5), (16.4, 16.4, 3), "band", 1),
-        box((-34, 19, -40), (4, 5, 5), "log", 1),              # knot stubs
-        box((-21, 26.5, -16), (5, 3, 4), "log", 1),
-        box((-17, 13, -55), (3, 4, 6), "log", 1),
+        # trimmed grip end, both fists close around it
+        box((-30, 12, -36), (14, 14, 44), "log", .5, tag="bark"),
+        box((-29, 11, -35.5), (12, 16, 43), "log", .5, tag="bark"),
+        box((-28, 13, 8.1), (10, 12, 1), "log_end", 1, tag="rings"),
+        box((-33, 9, -40), (20, 20, 6), "log", .5, tag="bark"),          # flare into the trunk
+        # trunk
+        box((-36, 8, -106), (26, 22, 68), "log", .5, tag="bark"),
+        box((-34, 6, -105.5), (22, 26, 67), "log", .5, tag="bark"),
+        box((-33, 9, -106.6), (20, 20, 1), "log_end", 1, tag="rings"),
+        box((-36.6, 5.4, -46), (27.2, 27.2, 4), "band", 1),
+        box((-36.6, 5.4, -74), (27.2, 27.2, 5), "band", 1),
+        box((-36.6, 5.4, -100), (27.2, 27.2, 4), "band", 1),
+        box((-40, 17, -62), (5, 6, 7), "log", 1),                         # knot stubs
+        box((-20, 31.5, -86), (6, 4, 6), "log", 1),
+        box((-11, 12, -58), (4, 6, 8), "log", 1),
+        box((-28, 3.5, -90), (7, 3, 6), "log", 1),
     ]
 
 
@@ -246,6 +273,51 @@ def leg_stripes(img, face):
         img[v] = img[v] * 0.5 + np.array((58, 92, 160)) * 0.5
 
 
+def two_hand(lib, name):
+    """Search the left arm so the left fist sits on GRIP_L; writes the values into the pose."""
+    rig = lib.rig
+    base = beat_values({"pose": name}, lib, [], name)
+    keys = {c: [((b, ch, a), sign) for b, ch, a, sign in rig.controls[c]] for c in LEFT_ARM}
+    values = {c: float(lib.pose(name).get(c, 0.0)) for c in LEFT_ARM}
+    mirror = {"arm_l.raise": "arm_r.raise", "arm_l.out": "arm_r.out", "elbow_l.bend": "elbow_r.bend"}
+    for c, r in mirror.items():
+        values[c] = float(lib.pose(name).get(r, values[c]))
+
+    def miss(vals):
+        trial = dict(base)
+        for c, v in vals.items():
+            for key, sign in keys[c]:
+                trial[key] = sign * v
+        mats = lib.model.world_matrices(channels_to_pose(trial))
+        return float(np.linalg.norm(np.array(lib.model.point(mats, "handL", FIST_L))
+                                    - np.array(lib.model.point(mats, "club", GRIP_L))))
+
+    def descend(values):
+        best = miss(values)
+        for step in (24, 12, 6, 3, 1.5, .75):
+            improved = True
+            while improved:
+                improved = False
+                for c in LEFT_ARM:
+                    lo, hi = rig.limits.get(c, (-180, 180))
+                    for d in (step, -step):
+                        trial = dict(values, **{c: min(hi, max(lo, values[c] + d))})
+                        m = miss(trial)
+                        if m < best - 1e-6:
+                            values, best, improved = trial, m, True
+        return values, best
+
+    starts = [values] + [dict(values, **{"arm_l.raise": r, "arm_l.out": o, "elbow_l.bend": e})
+                         for r in (40, 90, 140, 180) for o in (-30, 0, 30) for e in (10, 60, 110)]
+    values, best = min((descend(v) for v in starts), key=lambda vb: vb[1])
+    if best > 3:
+        print(f"{name}: left fist misses the log grip by {best / 16:.2f} blocks")
+    if best > 99:
+        raise ValueError(f"{name}: left fist misses the log grip by {best / 16:.2f} blocks")
+    lib.poses[name].update({c: round(v, 1) for c, v in values.items()})
+    return best
+
+
 def animations(rig):
     lib = Library(rig)
     for name in ("stand", "stand_breathe", "walk_contact_r", "walk_pass_l", "walk_contact_l", "walk_pass_r"):
@@ -253,14 +325,19 @@ def animations(rig):
         lib.poses[name].update(CARRY)
     for name in ("hurt", "death_kneel"):
         lib.poses[name].pop("solve", None)
+    for name, pose in SLAM_POSES.items():
+        lib.poses[name] = dict(pose)
+        print(f"{name}: left fist {two_hand(lib, name) / 16:.2f} blocks from the grip")
     docs = [load_yaml(rig.dir / f"{name}.anim.yaml") for name in ("idle", "walk", "hurt", "death")]
-    # Wind up over the shoulder, plant both feet and commit to the new impact pose.
+    # Grab the log with both hands, heave it overhead, and slam it down in front.
     docs.append({
         "name": "log_slam", "length": 2.35,
         "beats": [
             {"t": 0, "pose": "stand"},
-            {"t": .73, "pose": "pound_windup", "ease": "out", "hold": .20},
-            {"t": IMPACT, "pose": "pound_hit", "ease": "strike", "hold": .25},
+            {"t": .38, "pose": "lb_grab", "ease": "smooth"},
+            {"t": .78, "pose": "lb_windup", "ease": "out", "hold": .16},
+            {"t": 1.10, "pose": "lb_swing", "ease": "in"},
+            {"t": IMPACT, "pose": "lb_hit", "ease": "strike", "hold": .30},
             {"t": 2.35, "pose": "stand", "ease": "smooth"},
         ],
         "events": [
@@ -285,10 +362,14 @@ def animations(rig):
     x, y, z = lib.model.point(mats, tip["bone"], tip["at"])
     if not (-.15 <= y / 16 <= .4 and z < 0):
         raise ValueError(f"log must hit the ground in front of the warrior: {(x, y, z)}")
+    # The log lies on the ground from his feet to its tip: the damage circle covers that line.
+    reach = -z / 16
     print(f"Impact: forward={-z / 16:.2f} right={x / 16:.2f} height={y / 16:.2f} blocks")
     for event in clips["log_slam"]["events"]:
         if event["type"] == "camera_shake":
             event.update(forward=round(-z / 16, 3), side=round(x / 16, 3))
+        if event["type"] == "hit":
+            event.update(forward=round(reach / 2 + .3, 2), side=round(x / 32, 2), radius=round(reach / 2 + .3, 2))
     return clips
 
 
@@ -305,11 +386,11 @@ def main():
     if args.preview:
         clip = Clip("log_slam", clips["log_slam"])
         frames = [(label, clip.sample(t)) for label, t in
-                  (("Carry", 0), ("Windup", .80), ("Impact", IMPACT))]
+                  (("Carry", 0), ("Grab", .38), ("Windup", .85), ("Swing", 1.10), ("Impact", IMPACT))]
         rig.preview["side"] = .48
         rig.preview["three_quarter"] = .52
         render_sheet(Scene(rig), frames, "Logbreaker", ("front", "three_quarter", "side"),
-                     cell=(345, 330), ppu=1.85).save(args.preview)
+                     cell=(300, 330), ppu=1.35).save(args.preview)
 
 
 if __name__ == "__main__":
