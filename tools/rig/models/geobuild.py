@@ -154,6 +154,9 @@ def build(entity, bones, materials, decals=None, atlas_width=256, seed=1337,
           visible=(8, 7, 2.8), output_dir=None):
     """Write geo/<entity>.geo.json and textures/entity/<entity>.png; returns (geo path, texture path)."""
     decals = decals or {}
+    # A bone may carry a fifth item: its bind rotation in degrees (Bedrock "rotation").
+    bind_rot = {b[0]: b[4] for b in bones if len(b) > 4 and b[4]}
+    bones = [tuple(b[:4]) for b in bones]
     names = [b[0] for b in bones]
     for name, parent, _, _ in bones:
         assert parent is None or parent in names, f"kost {name}: ni starša {parent}"
@@ -186,6 +189,8 @@ def build(entity, bones, materials, decals=None, atlas_width=256, seed=1337,
         bone = {"name": name, "pivot": list(pivot)}
         if parent:
             bone["parent"] = parent
+        if name in bind_rot:
+            bone["rotation"] = list(bind_rot[name])
         if cubes:
             bone["cubes"] = cubes
         geo_bones.append(bone)

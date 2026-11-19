@@ -24,17 +24,34 @@ from rig import Clip, RigConfig  # noqa: E402
 
 PACK = ROOT / "rig_src/examples/creatures/logbreaker"
 IMPACT = 1.25
-LOG_TIP = [-23, 19, -106]
-FIST_L = (23, 19.5, -2)       # centre of the left fist in its bind pose
-GRIP_L = (-23, 19.5, -19)     # where the left fist holds the log, in the log's bind frame
+LOG_LEN = 90
+
+# Carried log: bone `log` (child of the torso) rests on the right shoulder, front end low in
+# front of him, back end rising behind his head, and the right arm hugs it: elbow under the
+# front of the log, forearm over it, fist on top (owner's reference photos).
+SHOULDER = (-25, 88, 4)                # where the log's axis lies on the shoulder (pivot)
+SHOULDER_TILT = (16, 6, 0)             # bind rotation: back end up, slightly away from the head
+SHOULDER_SPAN = (-40, 50)              # log along z through SHOULDER (front, back)
+HUG_FIST = (-25, 102, -24)             # in the log's frame: fist on top, in front of the shoulder
+HUG_ELBOW = (-31, 74, -26)             # elbow under the front of the log
+
+# Swung log: prop `prop_log` in the right fist, shown only while both hands hold it.
+# Its axis runs beside the fist (fist on the bark, not inside it).
+HAND_X, HAND_Y = -12, 19.5
+HAND_SPAN = (-78, 12)                  # along the fist's z: far end, near end
+LOG_TIP = [HAND_X, HAND_Y, HAND_SPAN[0]]
+FIST_R = (-23, 19.5, -2)
+FIST_L = (23, 19.5, -2)                # centres of the fists in their bind pose
+ELBOW_R = (-23, 49, -1.5)
+GRIP_L = (-23, 19.5, -20)              # left fist on the log beside the right one
+RIGHT_ARM = ("arm_r.raise", "arm_r.out", "arm_r.swing", "elbow_r.bend", "wrist_r.bend", "wrist_r.in")
 LEFT_ARM = ("arm_l.raise", "arm_l.out", "arm_l.swing", "elbow_l.bend", "wrist_l.bend", "wrist_l.in")
+SHOULDER_LOG, HAND_LOG = {"log.shoulder": 1, "log.hand": 0}, {"log.shoulder": 0, "log.hand": 1}
 
 # Two-handed overhead slam. The right arm drives the log; the left arm is solved onto
-# the grip (two_hand) so both fists hold the log through the whole swing.
+# the grip so both fists hold the log through the whole swing.
 CENTER = {"tip": "hand_r", "using": "arm_r.out", "side": .1}   # right fist to the middle
 SLAM_POSES = {
-    "lb_grab": {"base": "stand", "torso.bend": 6, "head.nod": -18, "arm_r.raise": 120,
-                "elbow_r.bend": 70, "wrist_r.bend": -30, "solve": [CENTER]},
     "lb_windup": {"base": "pound_windup", "torso.bend": -22, "arm_r.raise": 172,
                   "elbow_r.bend": 48, "wrist_r.bend": -45, "wrist_r.in": 0, "solve": [CENTER]},
     "lb_swing": {"base": "pound_windup", "torso.bend": 20, "head.nod": -6, "arm_r.raise": 125,
@@ -45,11 +62,7 @@ SLAM_POSES = {
                "solve": [{"tip": "hand_r", "using": "arm_r.swing", "side": .1},
                          {"tip": "club", "using": "wrist_r.bend", "height": 0.15}]},
 }
-
-# Log on the right shoulder: fist up in front of the shoulder, log slanting back and up
-# behind the head (as in the reference).
-CARRY = {"arm_r.raise": 50, "arm_r.out": 4, "arm_r.swing": 0, "elbow_r.bend": 125,
-         "wrist_r.bend": -20, "wrist_r.in": 0}
+CARRIED = ("stand", "stand_breathe", "walk_contact_r", "walk_pass_l", "walk_contact_l", "walk_pass_r", "hurt")
 
 SLIT = (20, 21, 30)
 GLINT = (228, 236, 250)
@@ -126,50 +139,57 @@ def knuckles(img, face):
 
 
 def log_rings(img, face):
+    """Sawn end: pale wood with growth rings and a dark heart."""
     if face not in ("north", "south"):
         return
     y, x = np.indices(img.shape[:2])
-    r = np.hypot(x - (img.shape[1] - 1) / 2, y - (img.shape[0] - 1) / 2)
-    img[:] = (88, 86, 100)
-    img[(r.astype(int) % 2) == 0] = (62, 60, 74)
-    img[r < 1.2] = (44, 42, 54)
+    r = np.hypot(x - (img.shape[1] - 1) * .55, y - (img.shape[0] - 1) * .45)
+    img[:] = (178, 140, 94)
+    img[(r.astype(int) % 3) == 0] = (138, 102, 64)
+    img[r < 1.5] = (96, 66, 40)
+    img[r > img.shape[0] / 2 - .5] = (120, 86, 54)
+    img[(x + y * 2) % 11 == 0] *= 0.82                       # radial crack
 
 
 def log_bark(img, face):
-    """Pale grey-blue streaks along the dark trunk."""
-    rng = np.random.default_rng(img.shape[0] * 31 + img.shape[1])
+    """Deep grooves along the trunk with pale grey-blue ridges."""
+    rng = np.random.default_rng(img.shape[0] * 31 + img.shape[1] + len(face))
     h, w = img.shape[:2]
-    along_u = face in ("east", "west", "up", "down")
-    count = max(2, (h if along_u else w) // 4)
-    for _ in range(count):
+    if face in ("north", "south"):
+        return
+    along_u = face in ("east", "west", "up", "down")       # z runs along u on these faces
+    for line in range(0, h if along_u else w, 2):
+        a = rng.integers(0, max(1, (w if along_u else h) - 8))
+        n = rng.integers(6, 22)
         if along_u:
-            v, u0 = rng.integers(0, h), rng.integers(0, max(1, w - 6))
-            img[v, u0:u0 + rng.integers(4, 14)] = (112, 116, 140)
+            img[line, a:a + n] *= 0.62
+            if line + 1 < h and rng.random() < .5:
+                img[line + 1, a + 2:a + n // 2] = (106, 108, 124)
         else:
-            u, v0 = rng.integers(0, w), rng.integers(0, max(1, h - 6))
-            img[v0:v0 + rng.integers(4, 14), u] = (112, 116, 140)
+            img[a:a + n, line] *= 0.62
+            if line + 1 < w and rng.random() < .5:
+                img[a + 2:a + n // 2, line + 1] = (106, 108, 124)
 
 
-def log():
-    """Massive log along -z from the fists: a trimmed grip end both fists can hold
-    (right fist at z ~ -2, left at GRIP_L), then a trunk thicker than his head."""
+def log(x, y, z0, z1, root_at_z1=True):
+    """A real round log along z from z0 to z1 with its axis at (x, y): three overlapping boxes
+    give the round section, sawn ends show rings, a thicker root end, knots, a broken branch."""
+    n = z1 - z0
+    rz = z1 - 26 if root_at_z1 else z0
+    m = lambda t: z0 + n * t                                    # position along the log
     return [
-        # trimmed grip end, both fists close around it
-        box((-30, 12, -36), (14, 14, 44), "log", .5, tag="bark"),
-        box((-29, 11, -35.5), (12, 16, 43), "log", .5, tag="bark"),
-        box((-28, 13, 8.1), (10, 12, 1), "log_end", 1, tag="rings"),
-        box((-33, 9, -40), (20, 20, 6), "log", .5, tag="bark"),          # flare into the trunk
-        # trunk
-        box((-36, 8, -106), (26, 22, 68), "log", .5, tag="bark"),
-        box((-34, 6, -105.5), (22, 26, 67), "log", .5, tag="bark"),
-        box((-33, 9, -106.6), (20, 20, 1), "log_end", 1, tag="rings"),
-        box((-36.6, 5.4, -46), (27.2, 27.2, 4), "band", 1),
-        box((-36.6, 5.4, -74), (27.2, 27.2, 5), "band", 1),
-        box((-36.6, 5.4, -100), (27.2, 27.2, 4), "band", 1),
-        box((-40, 17, -62), (5, 6, 7), "log", 1),                         # knot stubs
-        box((-20, 31.5, -86), (6, 4, 6), "log", 1),
-        box((-11, 12, -58), (4, 6, 8), "log", 1),
-        box((-28, 3.5, -90), (7, 3, 6), "log", 1),
+        box((x - 11, y - 6.5, z0), (22, 13, n), "bark", .5, tag="bark"),
+        box((x - 6.5, y - 11, z0 + .3), (13, 22, n - .6), "bark", .5, tag="bark"),
+        box((x - 9.5, y - 9.5, z0 + .15), (19, 19, n - .3), "bark", .5, tag="bark"),
+        box((x - 12, y - 7.5, rz + .2), (24, 15, 25.6), "bark", .5, tag="bark"),     # root flare
+        box((x - 7.5, y - 12, rz + .35), (15, 24, 25.3), "bark", .5, tag="bark"),
+        box((x - 8, y - 8, z0 - .5), (16, 16, .6), "wood", 1, tag="rings"),          # sawn ends
+        box((x - 9, y - 9, z1 - .1), (18, 18, .6), "wood", 1, tag="rings"),
+        box((x + 9.5, y - 2, m(.42)), (4, 5, 5), "bark", 1),                        # knots
+        box((x - 13, y + 1, m(.7)), (3, 4, 4), "bark", 1),
+        box((x - 3, y - 12.5, m(.22)), (5, 3, 6), "bark", 1),
+        box((x - 2, y + 9, m(.55)), (4, 12, 4), "bark", 1,                          # broken branch
+            rotation=(-28, 0, 14), pivot=(x, y + 9, m(.55) + 2)),
     ]
 
 
@@ -202,7 +222,7 @@ def geometry():
     ]
     arms = arm_r()
     replacement = {
-        "club": log(),
+        "club": [],
         "hips": [
             box((-14, 30, -9), (28, 13, 18), "navy", .5),
             box((-16, 35, -11), (32, 6, 22), "belt", .75),
@@ -239,6 +259,8 @@ def geometry():
         "handL": [mirror_box(b) for b in arms["handR"]],
     }
     bones = [(name, parent, pivot, replacement.get(name, boxes)) for name, parent, pivot, boxes in BONES]
+    bones.append(("log", "torso", SHOULDER, log(SHOULDER[0], SHOULDER[1], *SHOULDER_SPAN), SHOULDER_TILT))
+    bones.append(("prop_log", "handR", FIST_R, log(HAND_X, HAND_Y, *HAND_SPAN, root_at_z1=False)))
     materials = dict(MATERIALS,
                      iron=((58, 61, 76), 7, (74, 78, 96), .12),
                      steel=((150, 154, 166), 7, (122, 126, 140), .10),
@@ -249,8 +271,8 @@ def geometry():
                      navy=((40, 45, 70), 8, (30, 34, 54), .12, "stitch"),
                      belt=((34, 36, 48), 6, None, 0, "strap"),
                      boot=((32, 33, 44), 6, (46, 48, 62), .10),
-                     log=((56, 56, 74), 9, (76, 78, 100), .16, "grain"),
-                     log_end=((88, 86, 100), 4, None, 0, "plain"))
+                     bark=((70, 60, 58), 10, (96, 98, 116), .10, "grain"),
+                     wood=((178, 140, 94), 6, None, 0, "plain"))
     decals = {"wrap": wrap_stripes, "grille": grille, "grille_low": lambda img, f: grille_low(img, f),
               "helm": helm, "brow": brow_band, "plates": plates, "fist": knuckles,
               "rings": log_rings, "bark": log_bark, "leg_wrap": leg_stripes}
@@ -273,60 +295,97 @@ def leg_stripes(img, face):
         img[v] = img[v] * 0.5 + np.array((58, 92, 160)) * 0.5
 
 
-def two_hand(lib, name):
-    """Search the left arm so the left fist sits on GRIP_L; writes the values into the pose."""
+def reach(lib, name, controls, goals, weights=None, start=None):
+    """Search `controls` (degrees) so each (bone, point, target bone, target point) pair meets;
+    writes the found values into the pose and returns the worst miss in px."""
     rig = lib.rig
+    weights = weights or [1.0] * len(goals)
     base = beat_values({"pose": name}, lib, [], name)
-    keys = {c: [((b, ch, a), sign) for b, ch, a, sign in rig.controls[c]] for c in LEFT_ARM}
-    values = {c: float(lib.pose(name).get(c, 0.0)) for c in LEFT_ARM}
-    mirror = {"arm_l.raise": "arm_r.raise", "arm_l.out": "arm_r.out", "elbow_l.bend": "elbow_r.bend"}
-    for c, r in mirror.items():
-        values[c] = float(lib.pose(name).get(r, values[c]))
+    keys = {c: [((b, ch, a), sign) for b, ch, a, sign in rig.controls[c]] for c in controls}
+    values = {c: float(lib.pose(name).get(c, 0.0)) for c in controls}
+    values.update(start or {})
 
-    def miss(vals):
+    def misses(vals):
         trial = dict(base)
         for c, v in vals.items():
             for key, sign in keys[c]:
                 trial[key] = sign * v
         mats = lib.model.world_matrices(channels_to_pose(trial))
-        return float(np.linalg.norm(np.array(lib.model.point(mats, "handL", FIST_L))
-                                    - np.array(lib.model.point(mats, "club", GRIP_L))))
+        return [float(np.linalg.norm(np.array(lib.model.point(mats, b, p))
+                                     - np.array(lib.model.point(mats, tb, tp)))) for b, p, tb, tp in goals]
+
+    def cost(vals):
+        return sum(w * m * m for w, m in zip(weights, misses(vals)))
 
     def descend(values):
-        best = miss(values)
+        best = cost(values)
         for step in (24, 12, 6, 3, 1.5, .75):
             improved = True
             while improved:
                 improved = False
-                for c in LEFT_ARM:
+                for c in controls:
                     lo, hi = rig.limits.get(c, (-180, 180))
                     for d in (step, -step):
                         trial = dict(values, **{c: min(hi, max(lo, values[c] + d))})
-                        m = miss(trial)
+                        m = cost(trial)
                         if m < best - 1e-6:
                             values, best, improved = trial, m, True
         return values, best
 
-    starts = [values] + [dict(values, **{"arm_l.raise": r, "arm_l.out": o, "elbow_l.bend": e})
-                         for r in (40, 90, 140, 180) for o in (-30, 0, 30) for e in (10, 60, 110)]
-    values, best = min((descend(v) for v in starts), key=lambda vb: vb[1])
-    if best > 3:
-        print(f"{name}: left fist misses the log grip by {best / 16:.2f} blocks")
-    if best > 99:
-        raise ValueError(f"{name}: left fist misses the log grip by {best / 16:.2f} blocks")
+    raise_, out, bend = controls[0], controls[1], controls[3]
+    starts = [values] if start else [values] + [dict(values, **{raise_: r, out: o, bend: e})
+                                                for r in (40, 100, 160) for o in (-20, 20) for e in (20, 100)]
+    values, _ = min((descend(v) for v in starts), key=lambda vb: vb[1])
     lib.poses[name].update({c: round(v, 1) for c, v in values.items()})
-    return best
+    return misses(values)
+
+
+def two_hand(lib, name):
+    """Left fist onto the swung log beside the right fist."""
+    return max(reach(lib, name, LEFT_ARM, [("handL", FIST_L, "prop_log", GRIP_L)]))
+
+
+def hug(lib, name, start=None):
+    """Right arm around the shoulder log: fist on top of it, elbow under its front."""
+    return reach(lib, name, RIGHT_ARM, [("handR", FIST_R, "log", HUG_FIST), ("lowerArmR", ELBOW_R, "log", HUG_ELBOW)],
+                 weights=[1.0, .35], start=start)[0]
+
+
+def shoulder_log_in_torso(lib, point):
+    """A point of the shoulder log in the torso's bind frame (Bedrock coordinates)."""
+    p = lib.model.point(lib.model.world_matrices(), "log", point)
+    return [-p[0], p[1], p[2]]
+
+
+def take_off_shoulder(lib, name):
+    """Right arm so the swung log lies exactly where the shoulder log is: the swap between
+    the two bones is invisible."""
+    near, far = HAND_SPAN[1] - 8, HAND_SPAN[0] + 8
+    goals = [("prop_log", [HAND_X, HAND_Y, near], "torso",
+              shoulder_log_in_torso(lib, [SHOULDER[0], SHOULDER[1], SHOULDER_SPAN[0] + 8])),
+             ("prop_log", [HAND_X, HAND_Y, far], "torso",
+              shoulder_log_in_torso(lib, [SHOULDER[0], SHOULDER[1], SHOULDER_SPAN[1] - 8]))]
+    return max(reach(lib, name, RIGHT_ARM, goals))
 
 
 def animations(rig):
     lib = Library(rig)
-    for name in ("stand", "stand_breathe", "walk_contact_r", "walk_pass_l", "walk_contact_l", "walk_pass_r"):
+    for name in CARRIED + ("death_kneel",):
         lib.poses[name].pop("solve", None)
-        lib.poses[name].update(CARRY)
-    for name in ("hurt", "death_kneel"):
-        lib.poses[name].pop("solve", None)
+    first = None
+    for name in CARRIED:
+        miss = hug(lib, name, first)
+        first = first or {c: lib.poses[name][c] for c in RIGHT_ARM}
+        print(f"{name}: right fist {miss / 16:.2f} blocks from its hold on the log")
+    # Lift: both hands take the log on the shoulder, then the shoulder log is swapped for the
+    # held one at the same place (lb_take), so the log never jumps.
+    lib.poses["lb_take"] = dict({"base": "stand", "head.nod": -16}, **HAND_LOG)
+    miss = take_off_shoulder(lib, "lb_take")
+    print(f"lb_take: held log {miss / 16:.2f} blocks from the shoulder log")
+    print(f"lb_take: left fist {two_hand(lib, 'lb_take') / 16:.2f} blocks from the grip")
+    lib.poses["lb_lift"] = dict(lib.poses["lb_take"], **SHOULDER_LOG)
     for name, pose in SLAM_POSES.items():
-        lib.poses[name] = dict(pose)
+        lib.poses[name] = dict(pose, **HAND_LOG)
         print(f"{name}: left fist {two_hand(lib, name) / 16:.2f} blocks from the grip")
     docs = [load_yaml(rig.dir / f"{name}.anim.yaml") for name in ("idle", "walk", "hurt", "death")]
     # Grab the log with both hands, heave it overhead, and slam it down in front.
@@ -334,10 +393,13 @@ def animations(rig):
         "name": "log_slam", "length": 2.35,
         "beats": [
             {"t": 0, "pose": "stand"},
-            {"t": .38, "pose": "lb_grab", "ease": "smooth"},
+            {"t": .34, "pose": "lb_lift", "ease": "smooth"},
+            {"t": .36, "pose": "lb_take"},
             {"t": .78, "pose": "lb_windup", "ease": "out", "hold": .16},
             {"t": 1.10, "pose": "lb_swing", "ease": "in"},
-            {"t": IMPACT, "pose": "lb_hit", "ease": "strike", "hold": .30},
+            {"t": IMPACT, "pose": "lb_hit", "ease": "strike", "hold": .25},
+            {"t": 1.92, "pose": "lb_take", "ease": "smooth"},
+            {"t": 1.94, "pose": "lb_lift"},
             {"t": 2.35, "pose": "stand", "ease": "smooth"},
         ],
         "events": [
@@ -379,14 +441,18 @@ def main():
     args = parser.parse_args()
     rig = RigConfig("troll")
     rig.geo, rig.texture = geometry()
-    rig.tips["club"]["at"] = LOG_TIP
+    rig.controls["log.shoulder"] = [("log", "scale", 3, 1.0)]       # 0 = hidden while swung
+    rig.controls["log.hand"] = [("prop_log", "scale", 3, 1.0)]       # 1 = held in both hands
+    rig.tips["club"] = {"bone": "prop_log", "at": LOG_TIP}
+    rig.tips["log_hold"] = {"bone": "log", "at": list(HUG_FIST)}     # helper points
+    rig.tips["log_grip_l"] = {"bone": "prop_log", "at": list(GRIP_L)}
     clips = animations(rig)
     payload = {"format_version": "1.8.0", "rig": {"head": "head", "shadow": 1.9}, "animations": clips}
     (PACK / "animations.json").write_text(json.dumps(payload, separators=(",", ":")) + "\n", encoding="utf-8")
     if args.preview:
         clip = Clip("log_slam", clips["log_slam"])
         frames = [(label, clip.sample(t)) for label, t in
-                  (("Carry", 0), ("Grab", .38), ("Windup", .85), ("Swing", 1.10), ("Impact", IMPACT))]
+                  (("Carry", 0), ("Lift", .34), ("Take", .36), ("Windup", .85), ("Swing", 1.10), ("Impact", IMPACT))]
         rig.preview["side"] = .48
         rig.preview["three_quarter"] = .52
         render_sheet(Scene(rig), frames, "Logbreaker", ("front", "three_quarter", "side"),
