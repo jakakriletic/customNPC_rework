@@ -2,6 +2,8 @@
 
 ## v2 development
 
+- Logbreaker is now a hunched masked giant in dark iron and striped wraps, carrying a huge
+  banded log diagonally over his shoulder.
 - Added the Logbreaker creature pack with an original Gallic warrior, a shoulder-carried log,
   and a ground slam. The `camera_shake` rig event adds a short local camera shake at impact.
 

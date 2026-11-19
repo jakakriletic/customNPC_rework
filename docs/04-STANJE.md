@@ -12,6 +12,12 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**19. 11. — Logbreaker po lastnikovi referenci.** Model prerisan v sključenega velikana
+v železni maski z rešetko, s temnimi naramniki, povoji s sivo-modrimi pasovi, bledimi
+pestmi in debelim temnim hlodom z modrimi obroči, ki leži poševno čez desno ramo.
+Kosti, napad in udarec ostanejo. Preverjeno v predogledu rig rendererja in z
+validacijo UV. V živem klientu še ni bilo preverjeno.
+
 **18. 11. — Logbreaker.** Ločen paket človeškega galskega bojevnika s hlodom na rami
 in napadom `log_slam`. Ob udarcu `camera_shake` strese kamero z upadom do 16 blokov.
 947 enotskih testov, build, paket in dedicated smoke PASS. Tarča je padla s 60 na 39,92 HP.

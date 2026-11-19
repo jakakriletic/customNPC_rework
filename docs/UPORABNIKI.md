@@ -387,7 +387,7 @@ the pack's NPC settings and script. Changes to the pack's model and clips take e
 including for existing NPCs. The files for any custom models used in the world must remain on the
 server across restarts.
 
-**Logbreaker, a Gallic warrior.** Copy [the Logbreaker folder](../rig_src/examples/creatures/logbreaker) to
+**Logbreaker, a masked Gallic giant with a log on his shoulder.** Copy [the Logbreaker folder](../rig_src/examples/creatures/logbreaker) to
 `customnpcs/creatures/logbreaker` on the server. Use the updated mod on the server and clients,
 enable `RwAnimCore=1` on both, and run `/rwcreature deploy logbreaker`.
 It uses normal faction rules. To preview the slam as an operator, run
