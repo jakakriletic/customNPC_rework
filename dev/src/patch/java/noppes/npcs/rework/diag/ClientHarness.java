@@ -193,6 +193,7 @@ public final class ClientHarness {
     /** Klice {@code CustomNpcs} prek refleksije, samo na klientu in samo z lastnostjo. */
     public static void install(String path) {
         try {
+            if (UrlSkinBaselineHarness.installIfRequested(path)) { return; }
             if (NpcBatchCompatHarness.installIfRequested(path)) { return; }
             if (NpcBatchL2Harness.installIfRequested(path)) { return; }
             if (NpcBatchMotionHarness.installIfRequested(path)) { return; }

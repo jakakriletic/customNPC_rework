@@ -628,9 +628,11 @@ prenaša svežega dovoljenega vnosa. Upošteva reload/delete in pozni uspeh po 3
 čakanja impostorja; M16 player rig dobi isti skin, M14 URL guard ostane.
 Profilni cache `RwSkinProfileCache=0` je ločen: vanilla miss lahko sinhrono pridobi
 teksture, prazni rezultat pa se z `expireAfterAccess` ob dostopih ne izteče.
-Naslednji M12.1 naj najprej izmeri original 50/200/500 različnih in 500 istih URL-jev
-ter občutljivost na napake. Meje so predlogi do zamrznjene merilne pogodbe; novih
-meritev ali dokaza pospešitve še ni. Stikali ostaneta 0 do ločenega sprejema D-032.
+[M12.1 baseline sprejet 21. 11.](meritve/2026-11-19-M12.1-url-baseline.md): pet
+cold/warm parov, 3168 preverb, 500 niti pri 500 različnih in en prenos pri 500 istih
+URL-jih; viseče in prevelike poti potrdijo odsotnost varoval originala. Naslednji M12.2
+po zamrznjenih začetnih mejah Q567; novega loaderja ali dokaza pospešitve še ni.
+Predlagani stikali ostaneta privzeto 0 do ločenega sprejema D-032.
 
 ### Izrecno prepovedano brez ločenega projekta
 

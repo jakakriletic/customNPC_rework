@@ -13,11 +13,11 @@ Ta README je **vstopna točka**. Vsaka nova seja začne tukaj.
 
 | | |
 |---|---|
-| Datum zadnje posodobitve | 2026-11-19 |
-| Trenutna faza | **v2: M12.0 raziskava zaključena** (Q555–Q558/D-110): [pot URL skinov, omejitve in načrt](docs/raziskave/M12.0-url-skini.md); izvedba še ni začeta. M16.7c zaključen; M14.4b ostaja sprejet: `RwNpcInstancing=1`, `RwLodStart=32`, `RwCombatEntryCap=64`. |
-| Naslednji korak | **M12.1: harness in baseline originalne URL poti**, 50/200/500 različnih in 500 istih URL-jev po raziskavi §5; controller edini zaganja. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi; obseg določa `docs/10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. M12 zadnji, M10.3 blokiran Q1. |
+| Datum zadnje posodobitve | 2026-11-21 |
+| Trenutna faza | **v2: M12.1 baseline sprejet** (Q559–Q567): [pet cold/warm parov, 3168 preverb](docs/meritve/2026-11-19-M12.1-url-baseline.md); original odpre 500 niti za 500 URL-jev, novi loader še ni izveden. M16.7c zaključen; M14.4b ostaja sprejet: `RwNpcInstancing=1`, `RwLodStart=32`, `RwCombatEntryCap=64`. |
+| Naslednji korak | **M12.2: omejen URL loader pod `RwSkinPipeline=0`**, varovala pred decode in nujna L2/L3/M16 povezava po zamrznjeni pogodbi M12.1; controller edini zaganja. Q90/Q92: brez ponavljanja uspešnih serij na nespremenjeni kodi, pri privzeto 0 cena samo podatek, kratki zapisi; obseg določa `docs/10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. M12 zadnji, M10.3 blokiran Q1. |
 | Build base | uradni `CustomNPCs_1.12.2-(01Oct19).jar`, SHA-256 `cafacade…00fa1` |
-| Prevedljivih razredov | 362 datotek `.java` v `src/patch` (280 rework), 129 testnih datotek; zadnji JUnit rezultat 917 patched + 51 original testov. Package PASS: 1716 originalnih vnosov, 90 pričakovanih sprememb. |
+| Prevedljivih razredov | 363 datotek `.java` v `src/patch` (281 rework), 129 testnih datotek; zadnji JUnit rezultat 917 patched + 51 original testov (M16.7c2, v M12.1 brez novih JUnit vhodov). Package PASS: 1716 originalnih vnosov, 90 pričakovanih sprememb. |
 | Okolje deluje | da — `runClient` in `runServer` naložita Forge + CustomNPCs; NPC preživi save + restart (M0.5); testni svet z 8 NPC-ji in skripto preživi restart (M0.6) |
 
 **Pomembno:** jedro popravka R9 (tipno varen NBT↔JSON serializer) je implementirano in

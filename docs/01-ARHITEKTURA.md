@@ -1178,3 +1178,9 @@ guard ostane. Profilna optimizacija je ločena pod `RwSkinProfileCache=0`.
 Najprej M12.1 baseline originala, nato M12.2–M12.6; brez trditve hitrosti ali
 zagotovljene prekinitve OS DNS klica. Privzeti vklop zahteva ločen D-032 sprejem.
 [Dokazi, kritika plana in merila](raziskave/M12.0-url-skini.md).
+
+**21. 11., Q566–Q567:** [M12.1 baseline sprejet](meritve/2026-11-19-M12.1-url-baseline.md).
+Pred M12.2 zamrznjene začetne meje delavcev/sprejema, HTTP, slike, CPU in GPU
+v zadnjem razdelku zapisa; to so merila izvedbe, ne izmerjeni optimumi. Celotni
+aktivni rok URL z retry 25 s konča pred 30 s cleanup vira. Produkcija/privzetki
+nespremenjeni, novi loader in celoten M12 še odprta.

@@ -1,4 +1,4 @@
-# Arhiv: dnevnik sej (vnosi 255 → 1)
+# Arhiv: dnevnik sej (vnosi 256 → 1)
 
 Dobesedno prenesen iz `docs/04-STANJE.md` (razdelek "Dnevnik sej") 2026-10-19. Novejši vnosi so
 zgoraj. Povezave so popravljene na relativno pot iz mape `docs/arhiv/`; besedilo je nespremenjeno.
@@ -6,6 +6,17 @@ V `docs/04-STANJE.md` ostaneta samo zadnja 2 vnosa; ko se doda nov, se najstarej
 prestavi **na vrh** te datoteke (pod ta uvod).
 
 ---
+
+### 2026-11-19 (256) — M16.7c2: živa mapa sprejeta
+
+**Paket:** M16.7c2 (Q551–Q554/D-108) · **Stanje:** sprejet.
+Startup/reload/spawn/deploy ohranijo kartice/jezik/enabled/rig, M15 nespremenjen.
+Controller živi v2 PASS na `5615bb49…`: 222/222, dva klienta/restart, pet PNG pregledanih.
+Unit 917+51, build/package PASS na `b6d0c4ea…`; s prvotno sondo v pomnilniku točno
+rekonstruiran stari odtis: vsi drugi merjeni vhodi bajtno isti (Q90). V1 ostane zavrnjen
+zaradi testnega JSON, popravljen samo probe. Dokumentacija zaključena za commit/push
+samo c2; tuje datoteke ohranjene. Celoten M16.7c zaključen; naslednji M12.0 raziskava,
+M10.3 blokiran Q1. [Dokaz in meje](../meritve/2026-11-19-M16.7c2-ziva-mapa.md).
 
 ### 2026-11-19 (255) — M16.7c1: disk/ukazi sprejeti
 

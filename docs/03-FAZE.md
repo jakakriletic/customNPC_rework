@@ -1,6 +1,6 @@
 # 03 — Faze in delovni paketi
 
-**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5/M16.6/M16.7b, M14.3b1–b8 in M14.4a zaključeni (Q541). M14.4b privzeti vklop sprejet (Q545). M16.7c0/c1/c2 zaključeni (Q554), živa mapa 222/222 s klientoma/restartom; M12.0 raziskava zaključena (Q555–Q558/D-110), naslednji M12.1 harness/baseline originala. Jeder M16/M15 ne podvajamo, M12 zadnji. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
+**Q92: [obseg v1.0](10-OBSEG-V1.md) prevlada nad tem planom; v1.0/P1–P8 sprejeti z omejitvami (Q295). M11.5, M13.0–M13.5, matrika P2 in soak heap zaključeni; dodatne omejitve §6 po Q454 odpravljene (Q457–Q459). M16.5/M16.6/M16.7b, M14.3b1–b8 in M14.4a zaključeni (Q541). M14.4b privzeti vklop sprejet (Q545). M16.7c0/c1/c2 zaključeni (Q554), živa mapa 222/222 s klientoma/restartom; M12.0 raziskava in M12.1 baseline zaključena (Q567/D-110), naslednji M12.2 omejen loader po zamrznjenih mejah. Jeder M16/M15 ne podvajamo, M12 zadnji. Q90: brez ponavljanja uspešnih serij na nespremenjeni kodi; Q92: pri privzeto 0 cena samo podatek, kratki zapisi. Q407: brez omejitve poskusov ali testnega proračuna; samo timeout ≤14400 s.**
 
 Vsak milestone ima: **cilj**, **vhodni pogoj**, **delovne pakete**, **izhodni kriterij** in
 **tveganja**. Milestone ni zaključen, dokler ni izpolnjen izhodni kriterij — ne ko je koda
@@ -657,7 +657,9 @@ za bližnje NPC-je je zavržen (K13, D-053); M5-V.7 peka impostorja že čaka na
 [koda, dokazi in pogodba](raziskave/M12.0-url-skini.md). Deduplikacija že obstaja;
 vanilla profilni cache ni izvajalec URL prenosov. Parser zadrži raster tudi po odpustu
 slike, zato sta reload/delete in pozni uspeh po 30 s peke del izvedbene pogodbe.
-Številčne meje v raziskavi so predlogi, ne meritve ali že delujoča varovala.
+Številčne meje v raziskavi so predlogi; začetna merila loaderja so po baseline
+zamrznjena v [M12.1](meritve/2026-11-19-M12.1-url-baseline.md) § »Zamrznjene začetne meje«
+(Q567), še niso delujoča varovala ali izmerjeni optimumi.
 
 **Vhodni pogoj:** M12.0 raziskava zaključena; prizorišče z URL skini (lokalni strežnik skinov iz M5-V.7,
 `k-run.ps1 -Posebni 1`) razširjeno na mnogo različnih URL-jev.
@@ -667,8 +669,8 @@ slike, zato sta reload/delete in pozni uspeh po 30 s peke del izvedbene pogodbe.
 | ID | Paket | Vel. |
 |---|---|---|
 | ~~M12.0~~ | **Raziskava zaključena** (D-110): lokalna koda/bajtkoda, dosedanji dokazi, primarni zunanji viri in kritika vseh paketov; brez produkcije ali novih meritev | S |
-| M12.1 | **Naslednji: harness/baseline** 50/200/500 različnih URL-jev in 500 enakih; uspeh, počasne/mrtve/prevelike poti ločeno. Izolirana fixture in klient, čas do GPU prikaza, niti/HTTP/heap/ocena GPU, frame p50/p95/p99/max in >50 ms; občutljivost na omejitve originala, pogodba v raziskavi §5 | S |
-| M12.2 | `RwSkinPipeline=0`: omejeni delavci, vrsta in pošten sprejem, timeout/celotni rok/retry, varna objava/generacije. Že prvi loader omeji bajte in dimenzije **pred decode** ter skupne ready/decode bajte; nujna povezava pending/pozni uspeh L2/L3 in M16, brez nove niti ob zavrnitvi vrste | M |
+| M12.1 | **Sprejet 21. 11. (Q559–Q567):** [harness/baseline](meritve/2026-11-19-M12.1-url-baseline.md), štiri v4 obremenitve + faults-v5, pet cold/warm parov, 3168 preverb. Original 500 niti/500 URL-jev, 197 uploadov/sličico, brez timeouta/velikostnih varoval; 10 world in 112 funkcionalnih PNG pregledanih. Build/package PASS, veljavnost ločenih odtisov dokumentirana | S |
+| M12.2 | **Naslednji:** `RwSkinPipeline=0`, zamrznjene začetne meje Q567 v M12.1: 4 delavci, vrsta 64/register 1024, HTTP 5/5 s/poskus 15 s/celota 25 s, 8 MiB/2048/4.194.304 pred decode, decode/ready 64 MiB, upload 2/32 MiB. Pošten sprejem, generacije in nujna povezava pending/pozni uspeh L2/L3 ter M16; brez nove niti ob zavrnitvi vrste | M |
 | M12.3 | Asinhron diskovni cache: SHA-256 točnih URL bajtov, obstoječi MD5 ResourceLocation ostane. Svežina/ETag/304/no-store, meja diska, varni zapisi, pokvarjen/nepisljiv disk in restart; omrežni fallback | M |
 | M12.4 | Dopolni omejene GPU uploade, odpusti **vse** CPU kopije vključno s parserjem; preveri delete/reload/disconnect in ponavljajoč življenjski cikel. Velikostna varovala so že v M12.2 | S–M |
 | M12.5 | `RwSkinProfileCache=0`: negative cache in invalidacija profila, dejanski ponovni poskus ≤15 s (upoštevaj vanilla `expireAfterAccess`); izmeri sinhroni miss, brez menjave downloaderja vseh igralcev | S–M |

@@ -193,6 +193,14 @@ cache, življenjski cikel, profil in končni zapakirani sprejem M12.6. Stikali
 `RwSkinPipeline`/`RwSkinProfileCache` sta predlog, privzeto 0; sedanji privzetki
 ostanejo. Celoten M12 odprt; M10.3 blokiran Q1, Q90/Q92/Q407 veljajo.
 
+**M12.1 sprejet (21. 11., Q559–Q567):** [baseline originalne URL poti](meritve/2026-11-19-M12.1-url-baseline.md),
+pet celotnih cold/warm parov (štiri v4 obremenitve in faults-v5), 3168 preverb,
+10 world in 112 funkcionalnih PNG pregledanih. Build/package PASS; odtisa ostaneta
+ločena z dokazom nespremenjenih poti po Q90. Original 500 niti/500 URL-jev,
+brez timeouta/velikostnih varoval. Naslednji **M12.2**, omejen loader z varovali
+pred decode po zamrznjenih začetnih mejah Q567. Celoten M12 odprt, privzetki enaki;
+M10.3 blokiran Q1. Q90/Q92/Q407 veljajo.
+
 ## Ocena
 
 ~29 paketov (okoli 12 S, 15 M, 2 L). Ob pravilih zgoraj: S ~1,5 h, M ~3–4 h, L ~8 h dela

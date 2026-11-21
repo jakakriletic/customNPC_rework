@@ -120,6 +120,7 @@ prebrati.
 
 | Datum | Scenarij | Rezultat | Zapis |
 |---|---|---|---|
+| 2026-11-21 | M12.1: originalni URL baseline, 50/200/500 različnih, 500 istih in faults; vsak cold/warm | Štiri v4 obremenitve/build/package na `fa0b81e4…`, faults-v5 na `3614002d…` PASS, 3168 preverb. Original 500 niti, max 197 uploadov/sličico; brez timeouta/velikostnih varoval. 10 world/112 funkcionalnih PNG pregledanih; brez novega loaderja ali trditve izboljšanja | [zapis](meritve/2026-11-19-M12.1-url-baseline.md) |
 | 2026-11-19 | M16.7c2: `clone-workspace-live-run.ps1`, dva klienta/restart, Java/JS, rig/brez/disabled in M15 regresija | V2 na `5615bb49…` 222/222, 51+31 strežniških in 20+20+12 klientskih preverb, pet pregledanih PNG; unit 917+51, build/package na `b6d0c4ea…`, bajtno isti vhodi razen sonde JS. Brez nove cene | [zapis](meritve/2026-11-19-M16.7c2-ziva-mapa.md) |
 | 2026-11-19 | M16.7c1: korpus/JUnit in dedicated `clone-workspace-run.ps1`, Java/JS dve kartici, formata 0/1/restart | Unit 910+51, build/package PASS na `471bc049…`; v4 na `be9add35…` 178 preverb, 35/35/13, nespremenjenih 41 datotek. Produkcija/JUnit med odtisoma enaka; unpack/merge 39,6724/23,4234 ms enkrat kot podatek | [zapis](meritve/2026-11-19-M16.7c1-disk-ukazi.md) |
 | 2026-11-18 | M14.4a: 3+3 idle/dalec-200/500, RwNpcInstancing 0/1 | Osem testov PASS na `6fd26ee4…`; idle-500 p95 9,9147 → 8,0180 ms (−19,13 %), razpona ločena, druge celice brez regresije p95. Stikalo 0; M14.4b čaka ogled lastnika | [zapis](meritve/2026-11-18-M14.4a-3plus3.md) |

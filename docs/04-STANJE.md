@@ -12,6 +12,16 @@ odprta vprašanja in odprti pojavi.
 
 ## Trenutno stanje
 
+**21. 11. — M12.1 baseline sprejet (Q559–Q567).**
+Build/package in štiri obremenitve v4 PASS na `fa0b81e4…`; faults-v5
+cold/warm PASS na trenutnem `3614002d…`, 47/47 obakrat. Skupaj 3168 preverb,
+10 world in 112 funkcionalnih PNG pregledanih. Original 500 niti/500 URL-jev,
+brez timeouta/velikostnih varoval. Odtisa ostaneta ločena z dokazom istih
+obremenitvenih/prevajalnih vhodov (Q90). Naslednji M12.2 po zamrznjenih mejah;
+novi loader in celoten M12 še odprta, privzetki enaki. Controller edini zaganja,
+nepovezano delo ohranjeno.
+[Zamrznjena pogodba in meje](meritve/2026-11-19-M12.1-url-baseline.md).
+
 **19. 11. — M12.0 raziskava zaključena (Q555–Q558/D-110).** Preverjen preostali
 osnutek proti kodi/bajtkodi in primarnim virom; pogodba omejenega loaderja/cache-a,
 reload/delete in pozne peke. Samo dokumentacija na nespremenjenem `5615bb49…`, brez
@@ -182,11 +192,11 @@ teksture in klipov klientom ter izbira modela v Display. [Zapis](meritve/2026-11
 
 | | |
 |---|---|
-| Zadnja posodobitev | **2026-11-19** (seja 257) — M12.0 raziskava zaključena: preverjena koda/bajtkoda, primarni viri in popravljene premise plana (Q555–Q558/D-110). Samo dokumentacija; produkcija/testni vhodi in `5615bb49…` nespremenjeni, brez novih meritev. [Pogodba in meje](raziskave/M12.0-url-skini.md). |
-| Trenutni milestone | **M12.0 zaključen; izvedba M12 še odprta.** M16.7c in M14.4b sprejeta, privzetki enaki. |
-| Naslednji paketi | **M12.1 harness/baseline originalne URL poti**, 50/200/500 različnih in 500 istih po raziskavi §5. Novi scenarijski ID-ji, samo controller zaganja. M12 zadnji, M10.3 blokiran Q1. Q90/Q92: brez ponavljanja uspešnih nespremenjenih serij, pri privzeto 0 cena samo podatek, kratek zapis; obseg `10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
+| Zadnja posodobitev | **2026-11-21** (seja 258) — M12.1 sprejet: štiri v4 obremenitve in faults-v5 PASS, 3168 preverb. Pregledanih 10 world in 112 funkcionalnih PNG; potrjene omejitve originala, brez trditve izboljšanja. [Dokaz, ločena odtisa in meje](meritve/2026-11-19-M12.1-url-baseline.md). |
+| Trenutni milestone | **M12.1 sprejet; novi loader in M12 še odprta.** M16.7c in M14.4b sprejeta, privzetki enaki. |
+| Naslednji paketi | **M12.2 omejen URL loader pod `RwSkinPipeline=0`**, z varovali pred decode in nujno L2/L3/M16 povezavo po Q567. Novi scenarijski ID-ji, samo controller zaganja. M12 zadnji, M10.3 blokiran Q1. Q90/Q92: brez ponavljanja uspešnih nespremenjenih serij, pri privzeto 0 cena samo podatek, kratek zapis; obseg `10-OBSEG-V1.md`. Q407: brez meje poskusov/testnega proračuna, timeout ≤14400 s. |
 | Baritone (M7, izven vrstnega reda) | **V4 sprejet 28. 9.** (M7.10c): z `crowdYield` 8/8 na obeh grlih (vanilla 1/8, 6/8) in odprtem, razpon 0; izbirno ozadje, privzeto izklopljeno (`RwNavBackend=0`). [meritev](meritve/2026-09-28-M7.10-cakanje-v-gneci.md) |
-| Prevedljivih razredov | **362** datotek `.java` v `src/patch`, od tega **280** rework. Build/package M16.7c2 PASS, 90 pričakovanih sprememb. |
+| Prevedljivih razredov | **363** datotek `.java` v `src/patch`, od tega **281** rework. Build/package M12.1 PASS, 90 pričakovanih sprememb. |
 | Testi | **917** patched + **51** original testov v M16.7c2 JUnit rezultatu, **129** testnih datotek. |
 | Odprti pojavi | nobenega blokirnega; Q84 odpravljen 16. 11. (Q457); P1 (ovržen 21. 9., ostane R-P1b) in P2 — glej razdelek spodaj |
 | Blokade | Q1 je **trajna blokada do M10** (uporabnik nima dostopa do modpacka/sveta); Q8, Q10 in Q12 odprta; Q14 odločen (Q296); Q6/Q31 razrešeni v D-086. Specifična R9 forenzika odložena, ne blokirana |
@@ -217,7 +227,7 @@ Polna različica te tabele pred skrajšanjem (vključno s povzetki ~20 starejši
 | M13 Povezani NPC-ji | **M13.0–M13.5 zaključeni pod stikali** (v2, Q433) | Lastna polja (`RwLinkedOwnFields`), kategorije/undo/proračun, GUI, seznam palice, kloner (`RwLinkedGroups`); obe stikali privzeto 0. [M13.5](meritve/2026-11-04-M13.5-sto.md): 100 z eno izbiro in sprememba do vseh. Izhod pokrit z ločenimi scenariji, ne z enim skupnim. |
 | M16 Vgrajeno animacijsko jedro | **M16.7c zaključen** (Q554/D-108) | C1 disk/ukazi sprejet; [c2 živa mapa](meritve/2026-11-19-M16.7c2-ziva-mapa.md) 222/222, dva klienta/restart, pet PNG. Unit 917+51, build/package PASS; privzetki nespremenjeni. |
 | M14 Izris bližnjih NPC-jev | **M14.4b sprejet** (Q545) | `RwNpcInstancing=1`. [3+3 dokaz](meritve/2026-11-18-M14.4a-3plus3.md): idle-500 p95 −19,13 %, ločena razpona, brez regresije p95 drugje. [Zaključna regresija](meritve/2026-11-18-M14.4b-privzeti-rezimi.md). |
-| M12 URL skini | **M12.0 raziskava zaključena** (Q555–Q558/D-110) | [Koda, pogodba in merila](raziskave/M12.0-url-skini.md); naslednji M12.1 baseline. Izvedba in celoten izhod ostajata odprta. |
+| M12 URL skini | **M12.1 baseline sprejet** (Q559–Q567/D-110) | [Pet cold/warm parov](meritve/2026-11-19-M12.1-url-baseline.md), 3168 preverb in omejitve originala. Naslednji M12.2 po zamrznjenih mejah; novi loader in celoten izhod ostajata odprta. |
 
 Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih**:
 [`arhiv/04-STANJE-tabele.md`](arhiv/04-STANJE-tabele.md) §2–§3.
@@ -227,7 +237,20 @@ Polna tabela s podrobnimi opombami in tabeli **M1 po paketih** / **M2 po paketih
 ## Dnevnik sej
 
 *V tej datoteki ostaneta samo zadnja 2 vnosa (novejši zgoraj). Starejši:
-[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 255 → 1, novejši zgoraj).*
+[`arhiv/04-STANJE-dnevnik.md`](arhiv/04-STANJE-dnevnik.md) (vnosi 256 → 1, novejši zgoraj).*
+
+### 2026-11-21 (258) — M12.1: originalni URL baseline sprejet
+
+**Paket:** M12.1 (Q559–Q567/D-110) · **Stanje:** sprejet.
+Build/package in štiri v4 obremenitve PASS na `fa0b81e4…`; faults-v5
+na trenutnem `3614002d…` 47/47 ×2. Skupaj 3168 preverb, 10 world in 112
+funkcionalnih PNG pregledanih. 500 različnih: 500 niti, max sličica 679/626 ms;
+500 istih: en prenos/JVM. Viseče/prevelike poti potrdijo odsotnost varoval;
+cleanup vira po 30 s ni timeout loaderja. Odtisa/veljavnost dokazov ločena,
+uspešnih istih poti nismo ponavljali (Q90). Naslednji M12.2 po zamrznjenih
+mejah Q567; novi loader/celoten M12 odprta, privzetki enaki. Dokumentacija
+zaključena za commit/push samo paketa, nepovezano delo ohranjeno.
+[Dokaz, neuspešni poskusi in meje](meritve/2026-11-19-M12.1-url-baseline.md).
 
 ### 2026-11-19 (257) — M12.0: raziskava URL skinov
 
@@ -239,15 +262,4 @@ Samo dokumentacija, produkcija/testni vhodi in `5615bb49…` nespremenjeni;
 brez novih testov, builda ali meritev (Q90), noben zahtevani test ne čaka.
 Privzetki enaki. Naslednji M12.1 harness/baseline originala; celoten M12 ostaja
 odprt, M10.3 blokiran Q1. [Raziskava in meje](raziskave/M12.0-url-skini.md).
-
-### 2026-11-19 (256) — M16.7c2: živa mapa sprejeta
-
-**Paket:** M16.7c2 (Q551–Q554/D-108) · **Stanje:** sprejet.
-Startup/reload/spawn/deploy ohranijo kartice/jezik/enabled/rig, M15 nespremenjen.
-Controller živi v2 PASS na `5615bb49…`: 222/222, dva klienta/restart, pet PNG pregledanih.
-Unit 917+51, build/package PASS na `b6d0c4ea…`; s prvotno sondo v pomnilniku točno
-rekonstruiran stari odtis: vsi drugi merjeni vhodi bajtno isti (Q90). V1 ostane zavrnjen
-zaradi testnega JSON, popravljen samo probe. Dokumentacija zaključena za commit/push
-samo c2; tuje datoteke ohranjene. Celoten M16.7c zaključen; naslednji M12.0 raziskava,
-M10.3 blokiran Q1. [Dokaz in meje](meritve/2026-11-19-M16.7c2-ziva-mapa.md).
 
